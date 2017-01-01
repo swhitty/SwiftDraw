@@ -63,10 +63,10 @@ extension XMLParser {
     
     func parsePoints(_ text: String) -> [DOM.Point] {
         var points = Array<DOM.Point>()
-        var scanner = ScannerB(text: text)
-        
-        while let x = scanner.scanCoordinate(),
-            let y = scanner.scanCoordinate() {
+        var scanner = Scanner(text: text)
+    
+        while let x = try? scanner.scanCoordinate(),
+              let y = try? scanner.scanCoordinate() {
                 points.append(DOM.Point(x, y))
         }
         

@@ -11,59 +11,69 @@ import Foundation
 extension XMLParser {
 
     func parseColor(data: String) throws -> DOM.Color {
-
-        if let none = parseColorNone(data: data) {
-            return none
-        } else if let keyword = parseColorKeyword(data: data) {
-            return .keyword(keyword)
-        } else if let (r, g, b) = parseColorRGBi(data: data) {
-            return .rgbi(r, g, b)
-        } else if let (r, g, b) = parseColorRGBf(data: data) {
-            return .rgbf(r, g, b)
-        } else if let (r, g, b) = parseColorHex(data: data) {
-            return .hex(r, g, b)
-        }
         
+        if let c = try parseColorRGB(data: data) {
+            return c
+        } else if let c = try parseColorHex(data: data) {
+            return c
+        } else if let c = parseColorKeyword(data: data) {
+            return c
+        } else if let c = parseColorNone(data: data) {
+            return c
+        }
+
         throw Error.invalid
     }
 
     func parseColorNone(data: String) -> DOM.Color? {
-        if data == "none" {
-            return .none
+        if data.trimmingCharacters(in: .whitespaces) == "none" {
+            return DOM.Color.none //.none resolves to Optional.none
         }
         return nil
     }
     
-    func parseColorKeyword(data: String) -> DOM.Color.Keyword? {
-        return DOM.Color.Keyword(rawValue: data.trimmingCharacters(in: .whitespaces))
-    }
-    
-    func parseColorRGBi(data: String) -> (UInt8, UInt8, UInt8)? {
-        var scanner = ScannerB(text: data)
-
-        guard let _ = scanner.scanFunction("rgb"),
-              let r = scanner.scanUInt8(),
-              let g = scanner.scanUInt8(),
-              let b = scanner.scanUInt8() else {
+    func parseColorKeyword(data: String) -> DOM.Color? {
+        let raw = data.trimmingCharacters(in: .whitespaces)
+        guard let keyword = DOM.Color.Keyword(rawValue: raw) else {
             return nil
         }
-        
-        return (r, g, b)
+        return .keyword(keyword)
     }
-    
-    func parseColorRGBf(data: String) -> (DOM.Float, DOM.Float, DOM.Float)? {
-        var scanner = ScannerB(text: data)
+
+    func parseColorRGB(data: String) throws -> DOM.Color? {
+        var scanner = Scanner(text: data)
+        guard scanner.scan("rgb(") != nil else { return nil }
         
-        guard let _ = scanner.scanFunction("rgb"),
-            let r = scanner.scanPercentage(),
-            let g = scanner.scanPercentage(),
-            let b = scanner.scanPercentage() else {
-                return nil
+        if let c = try? parseColorRGBf(data: data) {
+            return c
         }
         
-        return (r, g, b)
+        return try parseColorRGBi(data: data)
     }
     
+    func parseColorRGBi(data: String) throws -> DOM.Color {
+        var scanner = Scanner(text: data)
+        guard scanner.scan("rgb(") != nil else { throw Error.invalid }
+        let r = try scanner.scanUInt8()
+        _ = scanner.scan(",")
+        let g = try scanner.scanUInt8()
+        _ = scanner.scan(",")
+        let b = try scanner.scanUInt8()
+        guard scanner.scan(")") != nil else { throw Error.invalid }
+        return .rgbi(r, g, b)
+    }
+    
+    func parseColorRGBf(data: String) throws -> DOM.Color {
+        var scanner = Scanner(text: data)
+        guard scanner.scan("rgb(") != nil else { throw Error.invalid }
+        let r = try scanner.scanPercentage()
+        _ = scanner.scan(",")
+        let g = try scanner.scanPercentage()
+        _ = scanner.scan(",")
+        let b = try scanner.scanPercentage()
+        guard scanner.scan(")") != nil else { throw Error.invalid }
+        return .rgbf(r, g, b)
+    }
 
     //#a5F should be parsed as #a050F0
     private func padHex(_ data: String) -> String? {
@@ -73,22 +83,21 @@ extension XMLParser {
         return "\(chars[0])0\(chars[1])0\(chars[2])0)"
     }
     
-    func parseColorHex(data: String) -> (UInt8, UInt8, UInt8)? {
+    func parseColorHex(data: String) throws -> DOM.Color? {
+        var scanner = Scanner(text: data)
+        guard scanner.scan("#") != nil else { return nil }
         
-        var scanner = ScannerB(text: data)
-        
-        guard let _ = scanner.scan("#"),
-              let code = scanner.scan(scanner.hexadecimal),
+        guard let code = scanner.scan(any: CharacterSet.hexadecimal),
               let paddedCode = padHex(code),
               let hex = UInt32(hex: paddedCode) else {
-                return nil
+                throw Error.invalid
             }
         
         let r = UInt8((hex >> 16) & 0xff)
         let g = UInt8((hex >> 8) & 0xff)
         let b = UInt8(hex & 0xff)
 
-        return (r, g, b)
+        return .hex(r, g, b)
     }
 }
 
