@@ -38,23 +38,23 @@ extension XMLParser {
     }
     
     struct PathScanner {
-        var scanner: ScannerB
+        var scanner: Scanner
         
         init(data: String) {
-            scanner = ScannerB(text: data)
+            scanner = Scanner(text: data)
         }
         
         enum Error: Swift.Error {
             case invalid
         }
         
-        let commands: Set<Character> = ["M","m","L","l","H","h","V","v","C","c","S","s","Q","q","T","t","A","a","Z","z"]
+        let commands: CharacterSet = "MmLlHhVvCcSsQqTtAaZz"
+        let delimiter: CharacterSet = ";,"
         
         mutating func scanCommand() throws -> Formatter.XML.Path.Command {
             let start = scanner.index
-            _ = scanner.scan(scanner.whitespace)
-            
-            guard let c = scanner.scanCharacter(commands),
+    
+            guard let c = scanner.scan(first: commands),
                 let cmd = Formatter.XML.Path.Command(rawValue: c) else {
                     scanner.index = start
                     throw Error.invalid
@@ -104,114 +104,93 @@ extension XMLParser {
         }
         
         mutating func scanMove() throws -> DOM.Path.Move {
-            let start = scanner.index
-            
-            guard let x = scanner.scanCoordinate(),
-                let y = scanner.scanCoordinate() else {
-                    scanner.index = start
-                    throw Error.invalid
-            }
-            
+            let x = try scanner.scanCoordinate()
+            _ = scanner.scan(first: delimiter)
+            let y = try scanner.scanCoordinate()
+         
             return DOM.Path.Move(x, y)
         }
         
         mutating func scanLine() throws -> DOM.Path.Line {
-            let start = scanner.index
-            
-            guard let x = scanner.scanCoordinate(),
-                let y = scanner.scanCoordinate() else {
-                    scanner.index = start
-                    throw Error.invalid
-            }
+            let x = try scanner.scanCoordinate()
+            _ = scanner.scan(first: delimiter)
+            let y = try scanner.scanCoordinate()
             
             return DOM.Path.Line(x, y)
         }
         
         mutating func scanHorizontal() throws -> DOM.Path.Horizontal {
-            guard let x = scanner.scanCoordinate() else {
-                throw Error.invalid
-            }
-            
+            let x = try scanner.scanCoordinate()
             return DOM.Path.Horizontal(x)
         }
         
         mutating func scanVertical() throws -> DOM.Path.Vertical {
-            guard let y = scanner.scanCoordinate() else {
-                throw Error.invalid
-            }
-            
+            let y = try scanner.scanCoordinate()
             return DOM.Path.Vertical(y)
         }
         
         mutating func scanCubic() throws -> DOM.Path.Cubic {
-            let start = scanner.index
-            
-            guard let x = scanner.scanCoordinate(),
-                let y = scanner.scanCoordinate(),
-                let x1 = scanner.scanCoordinate(),
-                let y1 = scanner.scanCoordinate(),
-                let x2 = scanner.scanCoordinate(),
-                let y2 = scanner.scanCoordinate()  else {
-                    scanner.index = start
-                    throw Error.invalid
-            }
-            
+            let x = try scanner.scanCoordinate()
+            _ = scanner.scan(first: delimiter)
+            let y = try scanner.scanCoordinate()
+            _ = scanner.scan(first: delimiter)
+            let x1 = try scanner.scanCoordinate()
+            _ = scanner.scan(first: delimiter)
+            let y1 = try scanner.scanCoordinate()
+            _ = scanner.scan(first: delimiter)
+            let x2 = try scanner.scanCoordinate()
+            _ = scanner.scan(first: delimiter)
+            let y2 = try scanner.scanCoordinate()
+
             return DOM.Path.Cubic(x, y, x1, y1, x2, y2)
         }
         
         mutating func scanCubicSmooth() throws -> DOM.Path.CubicSmooth {
-            let start = scanner.index
-            
-            guard let x = scanner.scanCoordinate(),
-                let y = scanner.scanCoordinate(),
-                let x2 = scanner.scanCoordinate(),
-                let y2 = scanner.scanCoordinate()  else {
-                    scanner.index = start
-                    throw Error.invalid
-            }
-            
+            let x = try scanner.scanCoordinate()
+            _ = scanner.scan(first: delimiter)
+            let y = try scanner.scanCoordinate()
+            _ = scanner.scan(first: delimiter)
+            let x2 = try scanner.scanCoordinate()
+            _ = scanner.scan(first: delimiter)
+            let y2 = try scanner.scanCoordinate()
+
             return DOM.Path.CubicSmooth(x, y, x2, y2)
         }
         
         mutating func scanQuadratic() throws -> DOM.Path.Quadratic {
-            let start = scanner.index
-            
-            guard let x = scanner.scanCoordinate(),
-                let y = scanner.scanCoordinate(),
-                let x1 = scanner.scanCoordinate(),
-                let y1 = scanner.scanCoordinate()  else {
-                    scanner.index = start
-                    throw Error.invalid
-            }
+            let x = try scanner.scanCoordinate()
+            _ = scanner.scan(first: delimiter)
+            let y = try scanner.scanCoordinate()
+            _ = scanner.scan(first: delimiter)
+            let x1 = try scanner.scanCoordinate()
+            _ = scanner.scan(first: delimiter)
+            let y1 = try scanner.scanCoordinate()
             
             return DOM.Path.Quadratic(x, y, x1, y1)
         }
         
         mutating func scanQuadraticSmooth() throws -> DOM.Path.QuadraticSmooth {
-            let start = scanner.index
-            
-            guard let x = scanner.scanCoordinate(),
-                let y = scanner.scanCoordinate()  else {
-                    scanner.index = start
-                    throw Error.invalid
-            }
+            let x = try scanner.scanCoordinate()
+            _ = scanner.scan(first: delimiter)
+            let y = try scanner.scanCoordinate()
             
             return DOM.Path.QuadraticSmooth(x, y)
         }
         
         mutating func scanArc() throws -> DOM.Path.Arc {
-            let start = scanner.index
-            
-            guard let x = scanner.scanCoordinate(),
-                let y = scanner.scanCoordinate(),
-                let rx = scanner.scanCoordinate(),
-                let ry = scanner.scanCoordinate(),
-                let rotate = scanner.scanCoordinate(),
-                let large = scanner.scanBool(),
-                let sweep = scanner.scanBool() else {
-                    scanner.index = start
-                    throw Error.invalid
-            }
+            let x = try scanner.scanCoordinate()
+            _ = scanner.scan(first: delimiter)
+            let y = try scanner.scanCoordinate()
+            _ = scanner.scan(first: delimiter)
+            let rx = try scanner.scanCoordinate()
+            _ = scanner.scan(first: delimiter)
+            let ry = try scanner.scanCoordinate()
+            _ = scanner.scan(first: delimiter)
+            let rotate = try scanner.scanCoordinate()
+            _ = scanner.scan(first: delimiter)
+            let large = try scanner.scanBool()
+            _ = scanner.scan(first: delimiter)
+            let sweep = try scanner.scanBool()
             
             return DOM.Path.Arc(x, y, rx, ry, rotate, large, sweep)
         }
