@@ -36,7 +36,6 @@
 		D9D0CFCC1E027B2000B7947B /* DOM.Path.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9F3EBD01DFF5C22006691A1 /* DOM.Path.swift */; };
 		D9D0CFCD1E027B2400B7947B /* Formatter.XML.Path.swift in Sources */ = {isa = PBXBuildFile; fileRef = D958D9F61E020184004D811F /* Formatter.XML.Path.swift */; };
 		D9D0CFCE1E027B4000B7947B /* DOM.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9F3EBD21DFF5C96006691A1 /* DOM.swift */; };
-		D9ECF1911E2EBE4D0029307E /* Scanner1.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9ECF1901E2EBE4D0029307E /* Scanner1.swift */; };
 		D9ECF1931E2EBEC90029307E /* Scanner1Tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9ECF1921E2EBEC90029307E /* Scanner1Tests.swift */; };
 		D9F281EE1E1EF9380060AE7F /* ElementTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9F281ED1E1EF9380060AE7F /* ElementTests.swift */; };
 		D9F3EBBB1DFF5BA3006691A1 /* SwiftVG.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D9F3EBB11DFF5BA3006691A1 /* SwiftVG.framework */; };
@@ -81,7 +80,6 @@
 		D99CC9981E5FF06F00E7886A /* Parser.XML.Element.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Parser.XML.Element.swift; sourceTree = "<group>"; };
 		D99CC99A1E5FF0FF00E7886A /* TextTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TextTests.swift; sourceTree = "<group>"; };
 		D99CC99D1E60366300E7886A /* DOM.ElementTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DOM.ElementTests.swift; sourceTree = "<group>"; };
-		D9ECF1901E2EBE4D0029307E /* Scanner1.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Scanner1.swift; sourceTree = "<group>"; };
 		D9ECF1921E2EBEC90029307E /* Scanner1Tests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Scanner1Tests.swift; sourceTree = "<group>"; };
 		D9F281ED1E1EF9380060AE7F /* ElementTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ElementTests.swift; sourceTree = "<group>"; };
 		D9F281EF1E1F8C140060AE7F /* Parser.XML.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Parser.XML.swift; sourceTree = "<group>"; };
@@ -235,7 +233,6 @@
 		D9F3EBCF1DFF5C0D006691A1 /* Parser */ = {
 			isa = PBXGroup;
 			children = (
-				D9ECF1901E2EBE4D0029307E /* Scanner1.swift */,
 				D9F281EF1E1F8C140060AE7F /* Parser.XML.swift */,
 				D99CC9981E5FF06F00E7886A /* Parser.XML.Element.swift */,
 				D933D0A21E5CFEEC00937A59 /* Parser.XML.Path.swift */,
@@ -388,7 +385,6 @@
 				D9002B111E08B6050090BCC8 /* Formatter.XML.swift in Sources */,
 				D99CC9991E5FF06F00E7886A /* Parser.XML.Element.swift in Sources */,
 				D933D0AE1E5E868400937A59 /* Parser.XML.Transform.swift in Sources */,
-				D9ECF1911E2EBE4D0029307E /* Scanner1.swift in Sources */,
 				D99CC98B1E5F8F1A00E7886A /* Scanner.swift in Sources */,
 				D9002B181E08B9CE0090BCC8 /* XML.swift in Sources */,
 				D99CC98F1E5FDB1D00E7886A /* DOM.Gradient.swift in Sources */,
