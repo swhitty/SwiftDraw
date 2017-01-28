@@ -11,20 +11,62 @@ import XCTest
 
 class ParserImageTests: XCTestCase {
     
-    func loadXml(_ filename: String) -> XML.Element? {
+    func loadSVG(_ filename: String) -> DOM.Group? {
+        
         let bundle = Bundle(for: TextTests.self)
-        let url = bundle.url(forResource: filename, withExtension: nil)!
-        return try? XML.SAXParser.parse(contentsOf: url)
+        
+        guard let url = bundle.url(forResource: filename, withExtension: nil),
+              let element = try? XML.SAXParser.parse(contentsOf: url),
+              let svg = try? XMLParser().parseSVG(element) else {
+                return nil
+        }
+        return svg as? DOM.Group
     }
     
     func testShapes() {
+        let svg = loadSVG("shapes.svg")
+        XCTAssertNotNil(svg)
+    
+        var c = svg!.childElements.enumerated().makeIterator()
+
+        XCTAssertTrue(c.next()!.element is DOM.Ellipse)
+        XCTAssertTrue(c.next()!.element is DOM.Group)
+        XCTAssertTrue(c.next()!.element is DOM.Circle)
+        XCTAssertTrue(c.next()!.element is DOM.Group)
+        XCTAssertTrue(c.next()!.element is DOM.Line)
+        XCTAssertTrue(c.next()!.element is DOM.Path)
+        XCTAssertTrue(c.next()!.element is DOM.Path)
+        XCTAssertTrue(c.next()!.element is DOM.Path)
+        XCTAssertTrue(c.next()!.element is DOM.Polyline)
+        XCTAssertTrue(c.next()!.element is DOM.Polyline)
+        XCTAssertTrue(c.next()!.element is DOM.Polygon)
+        XCTAssertTrue(c.next()!.element is DOM.Circle)
+        XCTAssertTrue(c.next()!.element is DOM.Rect)
+        XCTAssertTrue(c.next()!.element is DOM.Text)
+        XCTAssertTrue(c.next()!.element is DOM.Line)
+        XCTAssertNil(c.next())
+    }
+    
+    func testStarry() {
+        guard let svg = loadSVG("starry.svg"),
+              let g = svg.childElements.first as? DOM.Group,
+              let g1 = g.childElements.first as? DOM.Group else {
+                XCTFail("missing group")
+                return
+        }
         
-        let element = loadXml("shapes.svg")
-        XCTAssertNotNil(element)
+        XCTAssertEqual(g1.childElements.count, 9323)
         
+        var counter = [String: Int]()
         
+        for e in g1.childElements {
+            let key = String(describing: type(of: e))
+            counter[key] = (counter[key] ?? 0) + 1
+        }
         
-        
+        XCTAssertEqual(counter["Path"], 9314)
+        XCTAssertEqual(counter["Polygon"], 9)
     }
     
 }
+

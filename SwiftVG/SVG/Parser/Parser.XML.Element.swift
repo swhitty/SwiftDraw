@@ -9,6 +9,14 @@
 
 extension XMLParser {
     
+    //TODO: create DOM.SVG
+    func parseSVG(_ e: XML.Element) throws -> DOM.GraphicsElement {
+        guard let svg = try parseGraphicsElement(e) else {
+            throw Error.invalid
+        }
+        return svg
+    }
+    
     func parseLine(_ e: XML.Element) throws -> DOM.Line {
         guard e.name == "line",
             let x1 = try parseCoordinate(e.attributes["x1"]),
@@ -95,6 +103,37 @@ extension XMLParser {
         }
         
         return polygon
+    }
+    
+    func parseGraphicsElement(_ e: XML.Element) throws -> DOM.GraphicsElement? {
+        switch e.name {
+        case "g", "svg": return try parseGroup(e)
+        case "line": return try parseLine(e)
+        case "circle": return try parseCircle(e)
+        case "ellipse": return try parseEllipse(e)
+        case "rect": return try parseRect(e)
+        case "polyline": return try parsePolyline(e)
+        case "polygon": return try parsePolygon(e)
+        case "path": return try parsePath(e)
+        case "text": return try parseText(e)
+        default: return nil
+        }
+    }
+    
+    func parseGroup(_ e: XML.Element) throws -> DOM.Group {
+        guard e.name == "g" || e.name == "svg" else {
+            throw Error.invalid
+        }
+  
+        let group = DOM.Group()
+        
+        for n in e.children {
+            if let ge = try parseGraphicsElement(n) {
+                group.childElements.append(ge)
+            }
+        }
+        
+        return group
     }
 
 }

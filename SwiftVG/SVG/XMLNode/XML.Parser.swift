@@ -52,8 +52,8 @@ extension XML {
             
             let element = Element(name: elementName, attributes: attributeDict)
         
-            elements.append(element)
             elements.last?.children.append(element)
+            elements.append(element)
             
             if rootNode == nil {
                 rootNode = element
