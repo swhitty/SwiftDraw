@@ -6,6 +6,10 @@
 //  Copyright © 2016 WhileLoop Pty Ltd. All rights reserved.
 //
 
+protocol ContainerElement {
+    var childElements: Array<DOM.GraphicsElement> {get set}
+}
+
 extension DOM {
     class Element { }
     
@@ -96,7 +100,7 @@ extension DOM {
         }
     }
     
-    class Group : GraphicsElement {
+    class Group : GraphicsElement, ContainerElement {
         var childElements = [GraphicsElement]()
     }
 }

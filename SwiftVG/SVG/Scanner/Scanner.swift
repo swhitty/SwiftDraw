@@ -154,6 +154,10 @@ extension Scanner {
         return try scan(any: CharacterSet.numeric) { return DOM.Coordinate($0) }
     }
     
+    mutating func scanLength() throws -> DOM.Length {
+        return try scan(any: CharacterSet.digits) { return DOM.Length($0) }
+    }
+    
     mutating func scanPercentage() throws -> Float {
         let start = index
         guard let text = scan(any: CharacterSet.numeric),

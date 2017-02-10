@@ -11,16 +11,16 @@ import XCTest
 
 class ParserImageTests: XCTestCase {
     
-    func loadSVG(_ filename: String) -> DOM.Group? {
+    func loadSVG(_ filename: String) -> DOM.Svg? {
         
         let bundle = Bundle(for: TextTests.self)
         
         guard let url = bundle.url(forResource: filename, withExtension: nil),
               let element = try? XML.SAXParser.parse(contentsOf: url),
-              let svg = try? XMLParser().parseSVG(element) else {
+              let svg = try? XMLParser().parseSvg(element) else {
                 return nil
         }
-        return svg as? DOM.Group
+        return svg
     }
     
     func testShapes() {

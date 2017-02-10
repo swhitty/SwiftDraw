@@ -16,10 +16,20 @@ struct XMLParser {
         var scanner = Scanner(text: text)
         return try scanner.scanCoordinate()
     }
-    
+
     func parseCoordinate(_ text: String?) throws -> DOM.Coordinate? {
         guard let text = text else { return nil }
         return try parseCoordinate(text)
+    }
+    
+    func parseLength(_ text: String) throws -> DOM.Length {
+        var scanner = Scanner(text: text)
+        return try scanner.scanLength()
+    }
+    
+    func parseLength(_ text: String?) throws -> DOM.Length? {
+        guard let text = text else { return nil }
+        return try parseLength(text)
     }
     
     func parsePercentage(_ text: String) throws -> DOM.Float {
