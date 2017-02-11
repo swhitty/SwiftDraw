@@ -26,6 +26,11 @@ class ParserImageTests: XCTestCase {
     func testShapes() {
         let svg = loadSVG("shapes.svg")
         XCTAssertNotNil(svg)
+        
+        XCTAssertEqual(svg?.width, 500)
+        XCTAssertEqual(svg?.height, 700)
+        XCTAssertEqual(svg?.viewBox?.width, 500)
+        XCTAssertEqual(svg?.viewBox?.height, 700)
     
         var c = svg!.childElements.enumerated().makeIterator()
 
@@ -54,6 +59,9 @@ class ParserImageTests: XCTestCase {
                 XCTFail("missing group")
                 return
         }
+        
+        XCTAssertEqual(svg.width, 500)
+        XCTAssertEqual(svg.height, 500)
         
         XCTAssertEqual(g1.childElements.count, 9323)
         

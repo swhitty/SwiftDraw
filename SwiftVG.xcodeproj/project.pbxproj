@@ -27,6 +27,7 @@
 		D965B5871E3C5CF8003E859E /* starry.svg in Resources */ = {isa = PBXBuildFile; fileRef = D965B5851E3C5C87003E859E /* starry.svg */; };
 		D965B5891E4E11AD003E859E /* DOM.Svg.swift in Sources */ = {isa = PBXBuildFile; fileRef = D965B5881E4E11AD003E859E /* DOM.Svg.swift */; };
 		D965B58B1E4E1273003E859E /* Parser.XML.Svg.swift in Sources */ = {isa = PBXBuildFile; fileRef = D965B58A1E4E1273003E859E /* Parser.XML.Svg.swift */; };
+		D965B58D1E4F1378003E859E /* Parser.SvgTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D965B58C1E4F1378003E859E /* Parser.SvgTests.swift */; };
 		D99CC9861E5F8EE600E7886A /* CharacterSetTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D99CC9851E5F8EE600E7886A /* CharacterSetTests.swift */; };
 		D99CC9891E5F8F0000E7886A /* CharacterSet.swift in Sources */ = {isa = PBXBuildFile; fileRef = D99CC9881E5F8F0000E7886A /* CharacterSet.swift */; };
 		D99CC98B1E5F8F1A00E7886A /* Scanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = D99CC98A1E5F8F1A00E7886A /* Scanner.swift */; };
@@ -80,6 +81,7 @@
 		D965B5851E3C5C87003E859E /* starry.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = starry.svg; sourceTree = "<group>"; };
 		D965B5881E4E11AD003E859E /* DOM.Svg.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DOM.Svg.swift; sourceTree = "<group>"; };
 		D965B58A1E4E1273003E859E /* Parser.XML.Svg.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Parser.XML.Svg.swift; sourceTree = "<group>"; };
+		D965B58C1E4F1378003E859E /* Parser.SvgTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Parser.SvgTests.swift; sourceTree = "<group>"; };
 		D99CC9851E5F8EE600E7886A /* CharacterSetTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CharacterSetTests.swift; sourceTree = "<group>"; };
 		D99CC9881E5F8F0000E7886A /* CharacterSet.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CharacterSet.swift; sourceTree = "<group>"; };
 		D99CC98A1E5F8F1A00E7886A /* Scanner.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Scanner.swift; sourceTree = "<group>"; };
@@ -274,6 +276,7 @@
 			children = (
 				D9F3EBD51DFF6100006691A1 /* FormatterTests.swift */,
 				D9100F911E0A0EEC00190335 /* CoordinateTests.swift */,
+				D965B58C1E4F1378003E859E /* Parser.SvgTests.swift */,
 				D9F281ED1E1EF9380060AE7F /* ElementTests.swift */,
 				D9ECF1921E2EBEC90029307E /* Scanner1Tests.swift */,
 				D933D09E1E5CECF400937A59 /* ColorTests.swift */,
@@ -432,6 +435,7 @@
 				D933D0AC1E5E85D000937A59 /* TransformTests.swift in Sources */,
 				D99CC9931E5FE01A00E7886A /* GradientTests.swift in Sources */,
 				D9F3EBD61DFF6100006691A1 /* FormatterTests.swift in Sources */,
+				D965B58D1E4F1378003E859E /* Parser.SvgTests.swift in Sources */,
 				D9100F921E0A0EEC00190335 /* CoordinateTests.swift in Sources */,
 				D965B57D1E18D98C003E859E /* DOM.Element.Equality.swift in Sources */,
 				D99CC98D1E5FA04A00E7886A /* ScannerTests.swift in Sources */,

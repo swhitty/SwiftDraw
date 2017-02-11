@@ -18,9 +18,24 @@ extension XMLParser {
         
         let svg = DOM.Svg(width: width, height: height)
         svg.childElements = try parseContainerChildren(e)
+        svg.viewBox = try parseViewBox(e.attributes["viewBox"])
         
         return svg
     }
     
-    
+    func parseViewBox(_ data: String?) throws -> DOM.Svg.ViewBox? {
+        guard let data = data else { return nil }
+        var scanner = Scanner(text: data)
+        
+        let x = try scanner.scanCoordinate()
+        let y = try scanner.scanCoordinate()
+        let width = try scanner.scanCoordinate()
+        let height = try scanner.scanCoordinate()
+        
+        guard scanner.isEOF else {
+            throw Error.invalid
+        }
+        
+        return DOM.Svg.ViewBox(x: x, y: y, width: width, height: height)
+    }
 }
