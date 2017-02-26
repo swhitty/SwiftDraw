@@ -11,7 +11,7 @@ import Foundation
 extension DOM {
     class Path: GraphicsElement {
         
-        // segments[0] is always a .Move
+        // segments[0] is always a .move
         var segments: [Segment]
         
         var fillRule: FillRule?
