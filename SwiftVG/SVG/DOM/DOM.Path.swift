@@ -9,16 +9,15 @@
 import Foundation
 
 extension DOM {
-    
-    class Path : GraphicsElement {
-    
-        //segments[0] is always a .Move
-        var segments : [Segment]
+    class Path: GraphicsElement {
         
-        var fillRule: FillRule? = nil
+        // segments[0] is always a .Move
+        var segments: [Segment]
+        
+        var fillRule: FillRule?
         
         init(x: Coordinate, y: Coordinate) {
-            let s = Segment.move(Move(x,  y), .absolute)
+            let s = Segment.move(Move(x, y), .absolute)
             segments = [s]
             super.init()
         }
@@ -70,8 +69,8 @@ extension DOM {
         }
         
         struct Move: Equatable {
-            var x : Coordinate
-            var y : Coordinate
+            var x: Coordinate
+            var y: Coordinate
             
             init(_ x: Coordinate, _ y: Coordinate) {
                 self.x = x
@@ -80,13 +79,13 @@ extension DOM {
             
             static func ==(lhs: Move, rhs: Move) -> Bool {
                 return lhs.x == rhs.x &&
-                       lhs.y == rhs.y
+                    lhs.y == rhs.y
             }
         }
         
         struct Line: Equatable {
-            var x : Coordinate
-            var y : Coordinate
+            var x: Coordinate
+            var y: Coordinate
             
             init(_ x: Coordinate, _ y: Coordinate) {
                 self.x = x
@@ -95,12 +94,12 @@ extension DOM {
             
             static func ==(lhs: Line, rhs: Line) -> Bool {
                 return lhs.x == rhs.x &&
-                       lhs.y == rhs.y
+                    lhs.y == rhs.y
             }
         }
         
         struct Horizontal: Equatable {
-            var x : Coordinate
+            var x: Coordinate
             
             init(_ x: Coordinate) {
                 self.x = x
@@ -112,7 +111,7 @@ extension DOM {
         }
         
         struct Vertical: Equatable {
-            var y : Coordinate
+            var y: Coordinate
             
             init(_ y: Coordinate) {
                 self.y = y
@@ -124,12 +123,12 @@ extension DOM {
         }
         
         struct Cubic: Equatable {
-            var x : Coordinate
-            var y : Coordinate
-            var x1 : Coordinate
-            var y1 : Coordinate
-            var x2 : Coordinate
-            var y2 : Coordinate
+            var x: Coordinate
+            var y: Coordinate
+            var x1: Coordinate
+            var y1: Coordinate
+            var x2: Coordinate
+            var y2: Coordinate
             
             init(_ x: Coordinate, _ y: Coordinate,
                  _ x1: Coordinate, _ y1: Coordinate,
@@ -144,19 +143,19 @@ extension DOM {
             
             static func ==(lhs: Cubic, rhs: Cubic) -> Bool {
                 return lhs.x == rhs.x &&
-                       lhs.y == rhs.y &&
-                       lhs.x1 == rhs.x1 &&
-                       lhs.y1 == rhs.y1 &&
-                       lhs.x2 == rhs.x2 &&
-                       lhs.y2 == rhs.y2
+                    lhs.y == rhs.y &&
+                    lhs.x1 == rhs.x1 &&
+                    lhs.y1 == rhs.y1 &&
+                    lhs.x2 == rhs.x2 &&
+                    lhs.y2 == rhs.y2
             }
         }
         
         struct CubicSmooth: Equatable {
-            var x : Coordinate
-            var y : Coordinate
-            var x2 : Coordinate
-            var y2 : Coordinate
+            var x: Coordinate
+            var y: Coordinate
+            var x2: Coordinate
+            var y2: Coordinate
             
             init(_ x: Coordinate, _ y: Coordinate,
                  _ x2: Coordinate, _ y2: Coordinate) {
@@ -168,17 +167,17 @@ extension DOM {
             
             static func ==(lhs: CubicSmooth, rhs: CubicSmooth) -> Bool {
                 return lhs.x == rhs.x &&
-                       lhs.y == rhs.y &&
-                       lhs.x2 == rhs.x2 &&
-                       lhs.y2 == rhs.y2
+                    lhs.y == rhs.y &&
+                    lhs.x2 == rhs.x2 &&
+                    lhs.y2 == rhs.y2
             }
         }
         
         struct Quadratic: Equatable {
-            var x : Coordinate
-            var y : Coordinate
-            var x1 : Coordinate
-            var y1 : Coordinate
+            var x: Coordinate
+            var y: Coordinate
+            var x1: Coordinate
+            var y1: Coordinate
             
             init(_ x: Coordinate, _ y: Coordinate,
                  _ x1: Coordinate, _ y1: Coordinate) {
@@ -190,15 +189,15 @@ extension DOM {
             
             static func ==(lhs: Quadratic, rhs: Quadratic) -> Bool {
                 return lhs.x == rhs.x &&
-                       lhs.y == rhs.y &&
-                       lhs.x1 == rhs.x1 &&
-                       lhs.y1 == rhs.y1
+                    lhs.y == rhs.y &&
+                    lhs.x1 == rhs.x1 &&
+                    lhs.y1 == rhs.y1
             }
         }
         
         struct QuadraticSmooth: Equatable {
-            var x : Coordinate
-            var y : Coordinate
+            var x: Coordinate
+            var y: Coordinate
             
             init(_ x: Coordinate, _ y: Coordinate) {
                 self.x = x
@@ -207,18 +206,18 @@ extension DOM {
             
             static func ==(lhs: QuadraticSmooth, rhs: QuadraticSmooth) -> Bool {
                 return lhs.x == rhs.x &&
-                       lhs.y == rhs.y
+                    lhs.y == rhs.y
             }
         }
         
         struct Arc: Equatable {
-            var x : Coordinate
-            var y : Coordinate
-            var rx : Coordinate
-            var ry : Coordinate
-            var rotate : Coordinate
-            var large : Bool
-            var sweep : Bool
+            var x: Coordinate
+            var y: Coordinate
+            var rx: Coordinate
+            var ry: Coordinate
+            var rotate: Coordinate
+            var large: Bool
+            var sweep: Bool
             
             init(_ x: Coordinate, _ y: Coordinate,
                  _ rx: Coordinate, _ ry: Coordinate,
@@ -234,12 +233,12 @@ extension DOM {
             
             static func ==(lhs: Arc, rhs: Arc) -> Bool {
                 return lhs.x == rhs.x &&
-                       lhs.y == rhs.y &&
-                       lhs.rx == rhs.rx &&
-                       lhs.ry == rhs.ry &&
-                       lhs.rotate == rhs.rotate &&
-                       lhs.large == rhs.large &&
-                       lhs.sweep == rhs.sweep
+                    lhs.y == rhs.y &&
+                    lhs.rx == rhs.rx &&
+                    lhs.ry == rhs.ry &&
+                    lhs.rotate == rhs.rotate &&
+                    lhs.large == rhs.large &&
+                    lhs.sweep == rhs.sweep
             }
         }
     }
@@ -286,7 +285,7 @@ extension DOM.Path {
     func cubic(x: Coordinate, y: Coordinate,
                x1: Coordinate, y1: Coordinate,
                x2: Coordinate, y2: Coordinate,
-        space: CoordinateSpace = .absolute) {
+               space: CoordinateSpace = .absolute) {
         let c = Cubic(x, y, x1, y1, x2, y2)
         let s = Segment.cubic(c, space)
         segments.append(s)
@@ -318,4 +317,3 @@ extension DOM.Path {
         segments.append(.close)
     }
 }
-

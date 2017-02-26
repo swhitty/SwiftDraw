@@ -9,14 +9,12 @@
 import XCTest
 @testable import SwiftVG
 
-
-
 class TransformTests: XCTestCase {
     
     func testMatrix() {
-        AssertMatrixEqual("matrix(0 1 2 3 4 5)", (0,1,2,3,4,5))
-        AssertMatrixEqual("matrix(0,1,2,3,4,5)", (0,1,2,3,4,5))
-        AssertMatrixEqual("matrix(1.1,1.2,1.3,1.4,1.5,1.6)", (1.1,1.2,1.3,1.4,1.5,1.6))
+        AssertMatrixEqual("matrix(0 1 2 3 4 5)", (0, 1, 2, 3, 4, 5))
+        AssertMatrixEqual("matrix(0,1,2,3,4,5)", (0, 1, 2, 3, 4, 5))
+        AssertMatrixEqual("matrix(1.1,1.2,1.3,1.4,1.5,1.6)", (1.1, 1.2, 1.3, 1.4, 1.5, 1.6))
     }
     
     func testTranslate() {
@@ -135,4 +133,3 @@ private func AssertSkewYEqual(_ text: String, _ expected: DOM.Float, file: Stati
     
     XCTAssertEqual(parsed, .skewY(angle: expected), file: file, line: line)
 }
-

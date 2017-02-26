@@ -12,7 +12,7 @@ import XCTest
 class CharacterSetTests: XCTestCase {
     
     func testLiteral() {
-        AssertTrue(charset: "Simon", includes: ["S","i","m","o","n"])
+        AssertTrue(charset: "Simon", includes: ["S", "i", "m", "o", "n"])
         AssertTrue(charset: CharacterSet.whitespaces, includes: [" ", "\t"])
         AssertFalse(charset: CharacterSet.whitespaces, includes: ["\n"])
         AssertTrue(charset: CharacterSet.whitespacesAndNewLines, includes: [" ", "\t", "\n", "\r"])

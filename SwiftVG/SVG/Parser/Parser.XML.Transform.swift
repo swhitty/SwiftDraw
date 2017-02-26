@@ -7,7 +7,7 @@
 //
 
 extension XMLParser {
-
+    
     func parseTransform(_ data: String) throws -> [DOM.Transform] {
         
         var scanner = Scanner(text: data)
@@ -18,10 +18,10 @@ extension XMLParser {
         }
         
         guard scanner.isEOF else {
-            //expecting EOF
+            // expecting EOF
             throw Error.invalid
         }
-
+        
         return transforms
     }
     
@@ -29,20 +29,15 @@ extension XMLParser {
         
         if let t = try parseMatrix(&scanner) {
             return t
-        }
-        else if let t = try parseTranslate(&scanner) {
+        } else if let t = try parseTranslate(&scanner) {
             return t
-        }
-        else if let t = try parseScale(&scanner) {
+        } else if let t = try parseScale(&scanner) {
             return t
-        }
-        else if let t = try parseRotate(&scanner) {
+        } else if let t = try parseRotate(&scanner) {
             return t
-        }
-        else if let t = try parseSkewX(&scanner) {
+        } else if let t = try parseSkewX(&scanner) {
             return t
-        }
-        else if let t = try parseSkewY(&scanner) {
+        } else if let t = try parseSkewY(&scanner) {
             return t
         }
         return nil
@@ -53,7 +48,7 @@ extension XMLParser {
         guard scanner.scan("matrix(") != nil else {
             return nil
         }
-
+        
         let a = try scanner.scanFloat()
         _ = scanner.scan(",")
         let b = try scanner.scanFloat()
@@ -73,7 +68,7 @@ extension XMLParser {
         return .matrix(a: a, b: b, c: c, d: d, e: e, f: f)
     }
     
-    func parseTranslate(_ scanner: inout Scanner) throws -> DOM.Transform?  {
+    func parseTranslate(_ scanner: inout Scanner) throws -> DOM.Transform? {
         guard scanner.scan("translate(") != nil else {
             return nil
         }
@@ -93,7 +88,7 @@ extension XMLParser {
         return .translate(tx: tx, ty: ty)
     }
     
-    func parseScale(_ scanner: inout Scanner) throws -> DOM.Transform?  {
+    func parseScale(_ scanner: inout Scanner) throws -> DOM.Transform? {
         guard scanner.scan("scale(") != nil else {
             return nil
         }
@@ -113,7 +108,7 @@ extension XMLParser {
         return .scale(sx: sx, sy: sy)
     }
     
-    func parseRotate(_ scanner: inout Scanner) throws -> DOM.Transform?  {
+    func parseRotate(_ scanner: inout Scanner) throws -> DOM.Transform? {
         guard scanner.scan("rotate(") != nil else {
             return nil
         }

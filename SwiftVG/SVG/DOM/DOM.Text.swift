@@ -9,16 +9,16 @@
 extension DOM {
     
     final class Text: GraphicsElement {
-        var x : Coordinate
-        var y : Coordinate
-        var value : String
+        var x: Coordinate
+        var y: Coordinate
+        var value: String
         
-        var fontFamily : String? = nil
-        var fontSize : Float? = nil
+        var fontFamily: String?
+        var fontSize: Float?
         
-        //var textLength: Coordinate
-        //var text: [TSpan] child nodes
-   
+        // var textLength: Coordinate
+        // var text: [TSpan] child nodes
+        
         init(x: Coordinate, y: Coordinate, value: String) {
             self.x = x
             self.y = y

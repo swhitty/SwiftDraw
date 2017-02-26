@@ -16,7 +16,7 @@ class ElementTests: XCTestCase {
                                                           "y1": "10",
                                                           "x2": "50",
                                                           "y2": "60"])
-
+        
         XCTAssertEqual(DOM.Line(x1: 0, y1: 10, x2: 50, y2: 60), try? XMLParser().parseLine(node))
     }
     
@@ -53,17 +53,16 @@ class ElementTests: XCTestCase {
         XCTAssertEqual(rect, try? XMLParser().parseRect(node))
     }
     
-    
     func testPolyline() {
         let node = XML.Element(name: "polyline", attributes: ["points": "0,1 2 3; 4;5;6;7;8 9"])
-    
-        XCTAssertEqual(DOM.Polyline(0,1,2,3,4,5,6,7,8,9), try? XMLParser().parsePolyline(node))
+        
+        XCTAssertEqual(DOM.Polyline(0, 1, 2, 3, 4, 5, 6, 7, 8, 9), try? XMLParser().parsePolyline(node))
     }
     
     func testPolygon() {
         let node = XML.Element(name: "polygon", attributes: ["points": "0,1,2,3;4;5;6;7;8 9"])
         
-        XCTAssertEqual(DOM.Polygon(0,1,2,3,4,5,6,7,8,9), try? XMLParser().parsePolygon(node))
+        XCTAssertEqual(DOM.Polygon(0, 1, 2, 3, 4, 5, 6, 7, 8, 9), try? XMLParser().parsePolygon(node))
     }
     
     func testPolygonFillRule() {
@@ -85,13 +84,13 @@ class ElementTests: XCTestCase {
 
 extension DOM.Polyline {
     
-    //requires even number of elements
+    // requires even number of elements
     convenience init(_ p: DOM.Coordinate...) {
         
         var points = Array<DOM.Point>()
         
         for index in stride(from: 0, to: points.count, by: 2) {
-            points.append(DOM.Point(p[index], p[index+1]))
+            points.append(DOM.Point(p[index], p[index + 1]))
         }
         
         self.init(points: points)
@@ -100,13 +99,13 @@ extension DOM.Polyline {
 
 extension DOM.Polygon {
     
-    //requires even number of elements
+    // requires even number of elements
     convenience init(_ p: DOM.Coordinate...) {
         
         var points = Array<DOM.Point>()
         
         for index in stride(from: 0, to: points.count, by: 2) {
-            points.append(DOM.Point(p[index], p[index+1]))
+            points.append(DOM.Point(p[index], p[index + 1]))
         }
         
         self.init(points: points)

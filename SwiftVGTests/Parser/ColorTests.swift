@@ -15,7 +15,7 @@ private func AssertColorEqual(_ text: String, _ expected: DOM.Color, file: Stati
         XCTFail("Failed to parse from \(text)", file: file, line: line)
         return
     }
-
+    
     XCTAssertEqual(parsed, expected, file: file, line: line)
 }
 
@@ -45,12 +45,12 @@ class ParserColorTests: XCTestCase {
     }
     
     func testColorRGB() {
-        //integer 0-255
+        // integer 0-255
         AssertColorEqual("rgb(0,1,2)", .rgbi(0, 1, 2))
         AssertColorEqual(" rgb( 0 , 1 , 2) ", .rgbi(0, 1, 2))
         AssertColorEqual("rgb(255,100,78)", .rgbi(255, 100, 78))
         
-        //percentage 0-100%
+        // percentage 0-100%
         AssertColorEqual("rgb(0,1%,99%)", .rgbf(0.0, 0.01, 0.99))
         AssertColorEqual("rgb( 0%, 52% , 100%) ", .rgbf(0.0, 0.52, 1.0))
         AssertColorEqual("rgb(75%,25%,7%)", .rgbf(0.75, 0.25, 0.07))
@@ -59,6 +59,6 @@ class ParserColorTests: XCTestCase {
     func testColorHex() {
         AssertColorEqual("#a06", hex: 0xa00060)
         AssertColorEqual("#123456", hex: 0x123456)
-        AssertColorEqual("#FF11DD", hex: 0xFF11DD)
+        AssertColorEqual("#FF11DD", hex: 0xff11dd)
     }
 }

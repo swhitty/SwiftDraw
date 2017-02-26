@@ -10,7 +10,7 @@ import XCTest
 @testable import SwiftVG
 
 class CoordinateTests: XCTestCase {
-
+    
     func testPrecisionMax() {
         var f = Formatter.CoordinateFormatter()
         f.precision = .maximum

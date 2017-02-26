@@ -43,7 +43,7 @@ class GradientTests: XCTestCase {
         parsed = try? XMLParser().parseLinearGradientStop(node)
         XCTAssertEqual(parsed?.opacity, 0.99)
         
-        //test required properties
+        // test required properties
         node = XML.Element(name: "stop")
         XCTAssertThrowsError(try XMLParser().parseLinearGradientStop(node))
         node.attributes["offset"] = "10%"
@@ -52,5 +52,3 @@ class GradientTests: XCTestCase {
         XCTAssertNotNil(try XMLParser().parseLinearGradientStop(node))
     }
 }
-
-

@@ -13,11 +13,11 @@ extension XMLParser {
     
     func parseText(_ e: XML.Element) throws -> DOM.Text {
         guard e.name == "text",
-              let x = try parseCoordinate(e.attributes["x"]),
-              let y = try parseCoordinate(e.attributes["y"]),
-              let value = e.innerText?.trimmingCharacters(in: .whitespacesAndNewlines),
-              value.characters.count > 0 else {
-                throw Error.invalid
+            let x = try parseCoordinate(e.attributes["x"]),
+            let y = try parseCoordinate(e.attributes["y"]),
+            let value = e.innerText?.trimmingCharacters(in: .whitespacesAndNewlines),
+            value.characters.count > 0 else {
+            throw Error.invalid
         }
         
         let element = DOM.Text(x: x, y: y, value: value)

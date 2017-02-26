@@ -97,7 +97,7 @@ class ScannerTests: XCTestCase {
         AssertScanPercentage("29", nil)
         AssertScanPercentage("24", nil)
     }
-        
+    
 }
 
 private func AssertScanUInt8(_ text: String, _ expected: UInt8?, file: StaticString = #file, line: UInt = #line) {
@@ -114,4 +114,3 @@ private func AssertScanPercentage(_ text: String, _ expected: Float?, file: Stat
     var scanner = Scanner(text: text)
     XCTAssertEqual(try? scanner.scanPercentage(), expected, file: file, line: line)
 }
-

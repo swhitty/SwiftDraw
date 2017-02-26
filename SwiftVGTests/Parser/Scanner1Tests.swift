@@ -19,7 +19,6 @@ private func AssertScanBool(_ text: String, _ bool: DOM.Bool, file: StaticString
     XCTAssertEqual(try? scanner.scanBool(), bool, file: file, line: line)
 }
 
-
 class Scanner1Tests: XCTestCase {
     
     func testCharSet() {
@@ -57,29 +56,28 @@ class Scanner1Tests: XCTestCase {
         XCTAssertEqual(scanner.scan("fox "), "fox ")
         XCTAssertEqual(scanner.scan("jumps over the lazy dog."), "jumps over the lazy dog.")
     }
-
+    
     func testCoordinate() {
         AssertScanCoordinate("30", 30.0)
         AssertScanCoordinate("30.05", 30.05)
         AssertScanCoordinate("-30", -30)
         AssertScanCoordinate("-30.05", -30.05)
         
-        //E notation
+        // E notation
         AssertScanCoordinate("3E3", 3000)
         AssertScanCoordinate("3e3", 3000)
         AssertScanCoordinate("-3E3", -3000)
         AssertScanCoordinate("-3e3", -3000)
         
-        //-E notation
+        // -E notation
         AssertScanCoordinate("3E-3", 0.003)
         AssertScanCoordinate("3e-3", 0.003)
         AssertScanCoordinate("-3E-3", -0.003)
         AssertScanCoordinate("-3e-3", -0.003)
-       
+        
         AssertScanCoordinate(" 30", 30.0)
         AssertScanCoordinate(" 30 ", 30.0)
     }
-    
     
     func testCoordinateSequence() {
         var scanner = Scanner(text: "  30 10 30.40;  0.04    -10; -0.124 4 7E3")

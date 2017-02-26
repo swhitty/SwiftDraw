@@ -11,7 +11,7 @@ extension XMLParser {
     func parsePath(_ e: XML.Element) throws -> DOM.Path {
         guard e.name == "path",
             let d = e.attributes["d"] else {
-                throw Error.invalid
+            throw Error.invalid
         }
         
         let path = DOM.Path(x: 0, y: 0)
@@ -53,11 +53,11 @@ extension XMLParser {
         
         mutating func scanCommand() throws -> Formatter.XML.Path.Command {
             let start = scanner.index
-    
+            
             guard let c = scanner.scan(first: commands),
                 let cmd = Formatter.XML.Path.Command(rawValue: c) else {
-                    scanner.index = start
-                    throw Error.invalid
+                scanner.index = start
+                throw Error.invalid
             }
             
             return cmd
@@ -107,7 +107,7 @@ extension XMLParser {
             let x = try scanner.scanCoordinate()
             _ = scanner.scan(first: delimiter)
             let y = try scanner.scanCoordinate()
-         
+            
             return DOM.Path.Move(x, y)
         }
         
@@ -141,7 +141,7 @@ extension XMLParser {
             let x2 = try scanner.scanCoordinate()
             _ = scanner.scan(first: delimiter)
             let y2 = try scanner.scanCoordinate()
-
+            
             return DOM.Path.Cubic(x, y, x1, y1, x2, y2)
         }
         
@@ -153,7 +153,7 @@ extension XMLParser {
             let x2 = try scanner.scanCoordinate()
             _ = scanner.scan(first: delimiter)
             let y2 = try scanner.scanCoordinate()
-
+            
             return DOM.Path.CubicSmooth(x, y, x2, y2)
         }
         
@@ -220,6 +220,5 @@ extension XMLParser {
              .arcRelative: return .relative
         }
     }
-    
     
 }

@@ -9,7 +9,7 @@
 import Foundation
 
 extension XMLParser {
-
+    
     func parseColor(data: String) throws -> DOM.Color {
         
         if let c = try parseColorRGB(data: data) {
@@ -21,13 +21,13 @@ extension XMLParser {
         } else if let c = parseColorNone(data: data) {
             return c
         }
-
+        
         throw Error.invalid
     }
-
+    
     func parseColorNone(data: String) -> DOM.Color? {
         if data.trimmingCharacters(in: .whitespaces) == "none" {
-            return DOM.Color.none //.none resolves to Optional.none
+            return DOM.Color.none // .none resolves to Optional.none
         }
         return nil
     }
@@ -39,7 +39,7 @@ extension XMLParser {
         }
         return .keyword(keyword)
     }
-
+    
     func parseColorRGB(data: String) throws -> DOM.Color? {
         var scanner = Scanner(text: data)
         guard scanner.scan("rgb(") != nil else { return nil }
@@ -74,12 +74,12 @@ extension XMLParser {
         guard scanner.scan(")") != nil else { throw Error.invalid }
         return .rgbf(r, g, b)
     }
-
-    //#a5F should be parsed as #a050F0
+    
+    // #a5F should be parsed as #a050F0
     private func padHex(_ data: String) -> String? {
-        let chars = data.unicodeScalars.map({$0})
+        let chars = data.unicodeScalars.map({ $0 })
         guard chars.count == 3 else { return data }
-
+        
         return "\(chars[0])0\(chars[1])0\(chars[2])0)"
     }
     
@@ -88,15 +88,15 @@ extension XMLParser {
         guard scanner.scan("#") != nil else { return nil }
         
         guard let code = scanner.scan(any: CharacterSet.hexadecimal),
-              let paddedCode = padHex(code),
-              let hex = UInt32(hex: paddedCode) else {
-                throw Error.invalid
-            }
+            let paddedCode = padHex(code),
+            let hex = UInt32(hex: paddedCode) else {
+            throw Error.invalid
+        }
         
         let r = UInt8((hex >> 16) & 0xff)
         let g = UInt8((hex >> 8) & 0xff)
         let b = UInt8(hex & 0xff)
-
+        
         return .hex(r, g, b)
     }
 }

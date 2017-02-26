@@ -34,7 +34,7 @@ extension DOM {
         case nonzero
         case evenodd
     }
-
+    
     enum Transform {
         case matrix(a: Float, b: Float, c: Float, d: Float, e: Float, f: Float)
         case translate(tx: Float, ty: Float)
@@ -53,7 +53,7 @@ extension DOM.Point: Equatable {
 
 extension DOM.Transform: Equatable {
     static func ==(lhs: DOM.Transform, rhs: DOM.Transform) -> Bool {
-        switch(lhs, rhs) {
+        switch (lhs, rhs) {
         case (.matrix(let lval), .matrix(let rval)):
             return lval == rval
         case (.translate(let lval), .translate(let rval)):

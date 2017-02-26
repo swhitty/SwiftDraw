@@ -6,7 +6,6 @@
 //  Copyright © 2016 WhileLoop Pty Ltd. All rights reserved.
 //
 
-
 extension XMLParser {
     
     func parseLine(_ e: XML.Element) throws -> DOM.Line {
@@ -15,7 +14,7 @@ extension XMLParser {
             let y1 = try parseCoordinate(e.attributes["y1"]),
             let x2 = try parseCoordinate(e.attributes["x2"]),
             let y2 = try parseCoordinate(e.attributes["y2"]) else {
-                throw Error.invalid
+            throw Error.invalid
         }
         
         return DOM.Line(x1: x1, y1: y1, x2: x2, y2: y2)
@@ -26,7 +25,7 @@ extension XMLParser {
             let cx = try parseCoordinate(e.attributes["cx"]),
             let cy = try parseCoordinate(e.attributes["cy"]),
             let r = try parseCoordinate(e.attributes["r"]) else {
-                throw Error.invalid
+            throw Error.invalid
         }
         
         return DOM.Circle(cx: cx, cy: cy, r: r)
@@ -38,7 +37,7 @@ extension XMLParser {
             let cy = try parseCoordinate(e.attributes["cy"]),
             let rx = try parseCoordinate(e.attributes["rx"]),
             let ry = try parseCoordinate(e.attributes["ry"]) else {
-                throw Error.invalid
+            throw Error.invalid
         }
         
         return DOM.Ellipse(cx: cx, cy: cy, rx: rx, ry: ry)
@@ -50,7 +49,7 @@ extension XMLParser {
             let y = try parseCoordinate(e.attributes["y"]),
             let width = try parseCoordinate(e.attributes["width"]),
             let height = try parseCoordinate(e.attributes["height"]) else {
-                throw Error.invalid
+            throw Error.invalid
         }
         
         let rect = DOM.Rect(x: x, y: y, width: width, height: height)
@@ -64,10 +63,10 @@ extension XMLParser {
     func parsePoints(_ text: String) -> [DOM.Point] {
         var points = Array<DOM.Point>()
         var scanner = Scanner(text: text)
-    
+        
         while let x = try? scanner.scanCoordinate(),
-              let y = try? scanner.scanCoordinate() {
-                points.append(DOM.Point(x, y))
+            let y = try? scanner.scanCoordinate() {
+            points.append(DOM.Point(x, y))
         }
         
         return points
@@ -76,7 +75,7 @@ extension XMLParser {
     func parsePolyline(_ e: XML.Element) throws -> DOM.Polyline {
         guard e.name == "polyline",
             let points = e.attributes["points"] else {
-                throw Error.invalid
+            throw Error.invalid
         }
         
         return DOM.Polyline(points: parsePoints(points))
@@ -85,7 +84,7 @@ extension XMLParser {
     func parsePolygon(_ e: XML.Element) throws -> DOM.Polygon {
         guard e.name == "polygon",
             let points = e.attributes["points"] else {
-                throw Error.invalid
+            throw Error.invalid
         }
         
         let polygon = DOM.Polygon(points: parsePoints(points))
@@ -132,10 +131,10 @@ extension XMLParser {
         guard e.name == "g" else {
             throw Error.invalid
         }
-  
+        
         let group = DOM.Group()
         group.childElements = try parseContainerChildren(e)
         return group
     }
-
+    
 }

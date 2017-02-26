@@ -16,9 +16,9 @@ class ParserImageTests: XCTestCase {
         let bundle = Bundle(for: TextTests.self)
         
         guard let url = bundle.url(forResource: filename, withExtension: nil),
-              let element = try? XML.SAXParser.parse(contentsOf: url),
-              let svg = try? XMLParser().parseSvg(element) else {
-                return nil
+            let element = try? XML.SAXParser.parse(contentsOf: url),
+            let svg = try? XMLParser().parseSvg(element) else {
+            return nil
         }
         return svg
     }
@@ -31,9 +31,9 @@ class ParserImageTests: XCTestCase {
         XCTAssertEqual(svg?.height, 700)
         XCTAssertEqual(svg?.viewBox?.width, 500)
         XCTAssertEqual(svg?.viewBox?.height, 700)
-    
+        
         var c = svg!.childElements.enumerated().makeIterator()
-
+        
         XCTAssertTrue(c.next()!.element is DOM.Ellipse)
         XCTAssertTrue(c.next()!.element is DOM.Group)
         XCTAssertTrue(c.next()!.element is DOM.Circle)
@@ -54,10 +54,10 @@ class ParserImageTests: XCTestCase {
     
     func testStarry() {
         guard let svg = loadSVG("starry.svg"),
-              let g = svg.childElements.first as? DOM.Group,
-              let g1 = g.childElements.first as? DOM.Group else {
-                XCTFail("missing group")
-                return
+            let g = svg.childElements.first as? DOM.Group,
+            let g1 = g.childElements.first as? DOM.Group else {
+            XCTFail("missing group")
+            return
         }
         
         XCTAssertEqual(svg.width, 500)
@@ -77,4 +77,3 @@ class ParserImageTests: XCTestCase {
     }
     
 }
-

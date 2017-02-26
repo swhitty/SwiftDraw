@@ -8,13 +8,13 @@
 
 extension Formatter {
     
-    //XML Formatter
+    // XML Formatter
     struct XML {
         
         var coordinateFormatter = CoordinateFormatter()
-
-        static func attributes(for element: DOM.Element) -> [String: String] {
-            //common graphic element attributes
+        
+        static func attributes(for _: DOM.Element) -> [String: String] {
+            // common graphic element attributes
             return [:]
         }
     }
@@ -28,13 +28,13 @@ extension Formatter {
             case maximum
         }
         
-        enum Delimeter : String {
+        enum Delimeter: String {
             case space = " "
             case comma = ","
         }
         
         func format(_ coordinates: DOM.Coordinate...) -> String {
-            return coordinates.map{format(Double($0))}.joined(separator: delimeter.rawValue)
+            return coordinates.map { format(Double($0)) }.joined(separator: delimeter.rawValue)
         }
         
         func format(_ c: Double) -> String {
@@ -46,7 +46,7 @@ extension Formatter {
             }
         }
         
-        func format(integer n: Double, maxDigits: Int) -> String {
+        func format(integer n: Double, maxDigits _: Int) -> String {
             assert(n.sign == .plus)
             return String(format: "%d", Int(n))
         }
@@ -84,4 +84,3 @@ extension Formatter {
         }
     }
 }
-

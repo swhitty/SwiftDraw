@@ -52,7 +52,7 @@ class DOMElementTests: XCTestCase {
         another.fill = nil
         XCTAssertEqual(element, another)
     }
-
+    
     func createEllipse() -> DOM.Ellipse {
         return DOM.Ellipse(cx: 0, cy: 1, rx: 2, ry: 3)
     }
@@ -96,7 +96,7 @@ class DOMElementTests: XCTestCase {
     }
     
     func createPolygon() -> DOM.Polygon {
-        return DOM.Polygon(0,1,2,3,4,5)
+        return DOM.Polygon(0, 1, 2, 3, 4, 5)
     }
     
     func testPolygon() {
@@ -117,7 +117,7 @@ class DOMElementTests: XCTestCase {
     }
     
     func createPolyline() -> DOM.Polyline {
-        return DOM.Polyline(0,1,2,3,4,5)
+        return DOM.Polyline(0, 1, 2, 3, 4, 5)
     }
     
     func testPolyline() {
@@ -193,4 +193,3 @@ class DOMElementTests: XCTestCase {
         XCTAssertEqual(group, another)
     }
 }
-

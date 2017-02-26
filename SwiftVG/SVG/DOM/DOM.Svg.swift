@@ -7,10 +7,10 @@
 //
 
 extension DOM {
-    class Svg : GraphicsElement, ContainerElement {
-        var width : Length?
-        var height : Length?
-        var viewBox : ViewBox? = nil
+    class Svg: GraphicsElement, ContainerElement {
+        var width: Length?
+        var height: Length?
+        var viewBox: ViewBox?
         
         var childElements = [GraphicsElement]()
         
@@ -20,10 +20,10 @@ extension DOM {
         }
         
         struct ViewBox {
-            var x : Coordinate
-            var y : Coordinate
-            var width : Coordinate
-            var height : Coordinate
+            var x: Coordinate
+            var y: Coordinate
+            var width: Coordinate
+            var height: Coordinate
         }
     }
 }

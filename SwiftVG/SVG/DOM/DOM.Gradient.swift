@@ -6,7 +6,6 @@
 //  Copyright © 2016 WhileLoop Pty Ltd. All rights reserved.
 //
 
-
 extension DOM {
     
     final class LinearGradient: Element {
@@ -40,7 +39,7 @@ extension DOM.LinearGradient: Equatable {
 extension DOM.LinearGradient.Stop: Equatable {
     static func ==(lhs: DOM.LinearGradient.Stop, rhs: DOM.LinearGradient.Stop) -> Bool {
         return lhs.offset == rhs.offset &&
-                lhs.color == rhs.color &&
-                lhs.opacity == rhs.opacity
+            lhs.color == rhs.color &&
+            lhs.opacity == rhs.opacity
     }
 }

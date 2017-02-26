@@ -12,7 +12,7 @@ extension Formatter.XML {
         
         var coordinateFormatter = Formatter.CoordinateFormatter() { didSet {
             segmentFormatter.coordinateFormatter = coordinateFormatter
-            } }
+        } }
         
         var segmentFormatter = SegmentFormatter()
         
@@ -25,14 +25,14 @@ extension Formatter.XML {
         
         func format(_ segments: [DOM.Path.Segment]) -> String {
             let formatter = segmentFormatter
-            return segments.map{formatter.format($0)}.joined(separator: " ")
+            return segments.map { formatter.format($0) }.joined(separator: " ")
         }
     }
 }
 
 extension Formatter.XML.Path {
     
-    enum Command : Character {
+    enum Command: Character {
         case move = "M"
         case moveRelative = "m"
         case line = "L"
@@ -60,7 +60,7 @@ extension Formatter.XML.Path {
         var delimeter = Delimeter.space
         var coordinateFormatter = Formatter.CoordinateFormatter()
         
-        enum Delimeter : String {
+        enum Delimeter: String {
             case space = " "
             case none = ""
         }
@@ -117,7 +117,6 @@ extension Formatter.XML.Path {
                 return .close
             }
         }
-    
         
         func format(_ m: DOM.Path.Move) -> String {
             return coordinateFormatter.format(m.x, m.y)
@@ -158,7 +157,7 @@ extension Formatter.XML.Path {
             let large = a.large ? "1" : "0"
             let sweep = a.sweep ? "1" : "0"
             
-            return  "\(coords) \(large) \(sweep)"
+            return "\(coords) \(large) \(sweep)"
         }
     }
 }

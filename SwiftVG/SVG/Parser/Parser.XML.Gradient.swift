@@ -10,7 +10,7 @@ extension XMLParser {
     
     func parseLinearGradient(_ e: XML.Element) throws -> DOM.LinearGradient {
         guard e.name == "linearGradient" else {
-                throw Error.invalid
+            throw Error.invalid
         }
         
         let node = DOM.LinearGradient()
@@ -24,14 +24,14 @@ extension XMLParser {
     
     func parseLinearGradientStop(_ e: XML.Element) throws -> DOM.LinearGradient.Stop {
         guard e.name == "stop",
-              let offsetText = e.attributes["offset"],
-              let colorText = e.attributes["stop-color"] else {
-                throw Error.invalid
+            let offsetText = e.attributes["offset"],
+            let colorText = e.attributes["stop-color"] else {
+            throw Error.invalid
         }
         
         let offset = try parsePercentage(offsetText)
         let color = try parseColor(data: colorText)
-  
+        
         guard let opacityText = e.attributes["stop-opacity"] else {
             return DOM.LinearGradient.Stop(offset: offset, color: color)
         }

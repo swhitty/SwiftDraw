@@ -16,7 +16,7 @@ struct Scanner {
     var precedingCharactersToSkip: CharacterSet? = CharacterSet.whitespaces
     
     var isEOF: Bool {
-        //are there any more chars to scan?
+        // are there any more chars to scan?
         let idx = index(after: index, charset: precedingCharactersToSkip ?? CharacterSet.empty)
         return idx == characters.endIndex
     }
@@ -30,8 +30,8 @@ struct Scanner {
         var idx = startIndex
         
         while idx != characters.endIndex,
-              charset.contains(characters[idx]) {
-                idx = characters.index(after: idx)
+            charset.contains(characters[idx]) {
+            idx = characters.index(after: idx)
         }
         
         return idx
@@ -41,8 +41,8 @@ struct Scanner {
         var idx = startIndex
         
         while idx != characters.endIndex,
-              charset.contains(characters[idx]) == false {
-                idx = characters.index(after: idx)
+            charset.contains(characters[idx]) == false {
+            idx = characters.index(after: idx)
         }
         
         return idx
@@ -64,8 +64,8 @@ struct Scanner {
         let idx = index(after: index, charset: precedingCharactersToSkip ?? CharacterSet.empty)
         
         guard idx != characters.endIndex,
-              charset.contains(characters[idx]) else {
-                return nil
+            charset.contains(characters[idx]) else {
+            return nil
         }
         
         let c = characters[idx]
@@ -80,14 +80,14 @@ struct Scanner {
         var idxB = matchChars.startIndex
         
         while idxA != characters.endIndex,
-              idxB != matchChars.endIndex,
-              matchChars[idxB] == characters[idxA] {
-                
-                idxA = characters.index(after: idxA)
-                idxB = matchChars.index(after: idxB)
+            idxB != matchChars.endIndex,
+            matchChars[idxB] == characters[idxA] {
+            
+            idxA = characters.index(after: idxA)
+            idxB = matchChars.index(after: idxB)
         }
         
-        //idxB == endIndex if all chars have matched
+        // idxB == endIndex if all chars have matched
         guard idxB == matchChars.endIndex else {
             return nil
         }
@@ -109,21 +109,18 @@ struct Scanner {
     }
 }
 
-
-
-
 extension Scanner {
     
     enum Error: Swift.Error {
         case invalid
     }
-
+    
     mutating func scan<T>(any charset: CharacterSet, parser: (String) -> T?) throws -> T {
         let start = index
         guard let text = scan(any: charset),
-              let val = parser(text) else {
-                index = start
-                throw Error.invalid
+            let val = parser(text) else {
+            index = start
+            throw Error.invalid
         }
         return val
     }
@@ -142,12 +139,12 @@ extension Scanner {
     
     mutating func scanBool() throws -> Bool {
         return try scan(any: "trueTRUEfalseFALSE01") {
-                switch ($0.lowercased()) {
-                    case "true", "1": return true
-                    case "false", "0": return false
-                    default: return nil
-                }
+            switch $0.lowercased() {
+            case "true", "1": return true
+            case "false", "0": return false
+            default: return nil
             }
+        }
     }
     
     mutating func scanCoordinate() throws -> DOM.Coordinate {
@@ -161,10 +158,10 @@ extension Scanner {
     mutating func scanPercentage() throws -> Float {
         let start = index
         guard let text = scan(any: CharacterSet.numeric),
-              let val = Double(text),
-              val >= 0, val <= 100 else {
-                index = start
-                throw Error.invalid
+            let val = Double(text),
+            val >= 0, val <= 100 else {
+            index = start
+            throw Error.invalid
         }
         
         guard scan("%") != nil || val == 0 else {
@@ -172,6 +169,6 @@ extension Scanner {
             throw Error.invalid
         }
         
-        return Float(val/100.0)
+        return Float(val / 100.0)
     }
 }

@@ -7,20 +7,20 @@
 //
 
 protocol ContainerElement {
-    var childElements: Array<DOM.GraphicsElement> {get set}
+    var childElements: Array<DOM.GraphicsElement> { get set }
 }
 
 extension DOM {
-    class Element { }
+    class Element {}
     
-    class GraphicsElement : Element {
-        var stroke: Color? = nil
-        var fill: Color? = nil
-        var strokeWidth: Float? = nil
-        var transform: [Transform]? = nil
+    class GraphicsElement: Element {
+        var stroke: Color?
+        var fill: Color?
+        var strokeWidth: Float?
+        var transform: [Transform]?
     }
     
-    class Line : GraphicsElement {
+    class Line: GraphicsElement {
         var x1: Coordinate
         var y1: Coordinate
         var x2: Coordinate
@@ -35,7 +35,7 @@ extension DOM {
         }
     }
     
-    class Circle : GraphicsElement {
+    class Circle: GraphicsElement {
         var cx: Coordinate
         var cy: Coordinate
         var r: Coordinate
@@ -48,7 +48,7 @@ extension DOM {
         }
     }
     
-    class Ellipse : GraphicsElement {
+    class Ellipse: GraphicsElement {
         var cx: Coordinate
         var cy: Coordinate
         var rx: Coordinate
@@ -63,14 +63,14 @@ extension DOM {
         }
     }
     
-    class Rect : GraphicsElement {
+    class Rect: GraphicsElement {
         var x: Coordinate
         var y: Coordinate
         var width: Coordinate
         var height: Coordinate
         
-        var rx: Coordinate? = nil
-        var ry: Coordinate? = nil
+        var rx: Coordinate?
+        var ry: Coordinate?
         
         init(x: Coordinate, y: Coordinate, width: Coordinate, height: Coordinate) {
             self.x = x
@@ -81,7 +81,7 @@ extension DOM {
         }
     }
     
-    class Polyline : GraphicsElement {
+    class Polyline: GraphicsElement {
         var points: [Point]
         
         init(points: [Point]) {
@@ -90,9 +90,9 @@ extension DOM {
         }
     }
     
-    class Polygon : GraphicsElement {
+    class Polygon: GraphicsElement {
         var points: [Point]
-        var fillRule: FillRule? = nil
+        var fillRule: FillRule?
         
         init(points: [Point]) {
             self.points = points
@@ -100,7 +100,7 @@ extension DOM {
         }
     }
     
-    class Group : GraphicsElement, ContainerElement {
+    class Group: GraphicsElement, ContainerElement {
         var childElements = [GraphicsElement]()
     }
 }
