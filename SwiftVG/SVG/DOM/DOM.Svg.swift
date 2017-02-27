@@ -14,7 +14,7 @@ extension DOM {
         
         var childElements = [GraphicsElement]()
         
-        var clipPaths = [ClipPath]()
+        var defs = Defs()
         
         init(width: Length? = nil, height: Length? = nil) {
             self.width = width
@@ -26,6 +26,10 @@ extension DOM {
             var y: Coordinate
             var width: Coordinate
             var height: Coordinate
+        }
+        
+        struct Defs {
+            var clipPaths = [ClipPath]()
         }
     }
     

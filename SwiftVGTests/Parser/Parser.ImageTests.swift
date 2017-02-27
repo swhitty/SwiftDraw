@@ -31,7 +31,7 @@ class ParserImageTests: XCTestCase {
         XCTAssertEqual(svg?.height, 700)
         XCTAssertEqual(svg?.viewBox?.width, 500)
         XCTAssertEqual(svg?.viewBox?.height, 700)
-        XCTAssertEqual(svg?.clipPaths.count, 2)
+        XCTAssertEqual(svg?.defs.clipPaths.count, 2)
         
         var c = svg!.childElements.enumerated().makeIterator()
         
