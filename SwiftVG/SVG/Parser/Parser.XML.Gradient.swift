@@ -8,6 +8,19 @@
 
 extension XMLParser {
     
+    func parseLinearGradients(_ e: XML.Element) throws -> [DOM.LinearGradient] {
+        var gradients = Array<DOM.LinearGradient>()
+        
+        for n in e.children {
+            if n.name == "linearGradient" {
+                gradients.append(try parseLinearGradient(n))
+            } else {
+                gradients.append(contentsOf: try parseLinearGradients(n))
+            }
+        }
+        return gradients
+    }
+    
     func parseLinearGradient(_ e: XML.Element) throws -> DOM.LinearGradient {
         guard e.name == "linearGradient" else {
             throw Error.invalid

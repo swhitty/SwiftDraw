@@ -30,11 +30,18 @@ extension DOM {
         
         struct Defs {
             var clipPaths = [ClipPath]()
+            var masks = [Mask]()
+            var linearGradients = [LinearGradient]()
         }
     }
     
     
     struct ClipPath: ContainerElement {
+        var id: String
+        var childElements = [GraphicsElement]()
+    }
+    
+    struct Mask: ContainerElement {
         var id: String
         var childElements = [GraphicsElement]()
     }

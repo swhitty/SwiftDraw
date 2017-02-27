@@ -24,16 +24,19 @@ class ParserImageTests: XCTestCase {
     }
     
     func testShapes() {
-        let svg = loadSVG("shapes.svg")
-        XCTAssertNotNil(svg)
+        guard let svg = loadSVG("shapes.svg") else {
+            XCTFail("failed to load shapes.svg")
+            return
+        }
         
-        XCTAssertEqual(svg?.width, 500)
-        XCTAssertEqual(svg?.height, 700)
-        XCTAssertEqual(svg?.viewBox?.width, 500)
-        XCTAssertEqual(svg?.viewBox?.height, 700)
-        XCTAssertEqual(svg?.defs.clipPaths.count, 2)
-        
-        var c = svg!.childElements.enumerated().makeIterator()
+        XCTAssertEqual(svg.width, 500)
+        XCTAssertEqual(svg.height, 700)
+        XCTAssertEqual(svg.viewBox?.width, 500)
+        XCTAssertEqual(svg.viewBox?.height, 700)
+        XCTAssertEqual(svg.defs.clipPaths.count, 2)
+        XCTAssertEqual(svg.defs.linearGradients.count, 1)
+    
+        var c = svg.childElements.enumerated().makeIterator()
         
         XCTAssertTrue(c.next()!.element is DOM.Ellipse)
         XCTAssertTrue(c.next()!.element is DOM.Group)

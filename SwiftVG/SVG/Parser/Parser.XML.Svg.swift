@@ -48,6 +48,8 @@ extension XMLParser {
     func parseDefs(_ e: XML.Element) throws -> DOM.Svg.Defs {
         var defs = DOM.Svg.Defs()
         defs.clipPaths = try parseClipPaths(e)
+        defs.masks = try parseMasks(e)
+        defs.linearGradients = try parseLinearGradients(e)
         
         return defs
     }
@@ -75,5 +77,30 @@ extension XMLParser {
         
         let children = try parseContainerChildren(e)
         return DOM.ClipPath(id: id, childElements: children)
+    }
+    
+    func parseMasks(_ e: XML.Element) throws -> [DOM.Mask] {
+        var masks = Array<DOM.Mask>()
+        
+        for n in e.children {
+            if n.name == "mask" {
+                masks.append(try parseMask(n))
+            } else {
+                masks.append(contentsOf: try parseMasks(n))
+            }
+        }
+        return masks
+    }
+    
+    func parseMask(_ e: XML.Element) throws -> DOM.Mask {
+        let att = try parseStyleAttributes(e)
+        
+        guard e.name == "mask",
+            let id = att["id"] else {
+                throw Error.invalid
+        }
+        
+        let children = try parseContainerChildren(e)
+        return DOM.Mask(id: id, childElements: children)
     }
 }

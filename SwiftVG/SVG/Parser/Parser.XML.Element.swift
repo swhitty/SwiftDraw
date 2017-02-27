@@ -134,6 +134,7 @@ extension XMLParser {
     func parseContainerChildren(_ e: XML.Element) throws -> [DOM.GraphicsElement] {
         guard e.name == "svg" ||
               e.name == "clipPath" ||
+              e.name == "mask" ||
               e.name == "g" else {
             throw Error.invalid
         }
@@ -211,6 +212,9 @@ extension XMLParser {
         }
         if let val = att["clip-path"] {
             el.clipPath = try parseUrlAnchor(data: val)
+        }
+        if let val = att["mask"] {
+            el.mask = try parseUrlAnchor(data: val)
         }
     
         return el

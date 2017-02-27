@@ -16,6 +16,7 @@ protocol PresentationAttributes {
     var strokeWidth: DOM.Float?  { get set }
     var transform: [DOM.Transform]?  { get set }
     var clipPath: String?  { get set }
+    var mask: String?  { get set }
 }
 
 extension DOM {
@@ -27,6 +28,7 @@ extension DOM {
         var strokeWidth: Float?
         var transform: [Transform]?
         var clipPath: String?
+        var mask: String?
     }
     
     class Line: GraphicsElement {

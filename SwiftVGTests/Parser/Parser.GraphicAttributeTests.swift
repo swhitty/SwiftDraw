@@ -24,12 +24,14 @@ class ParserGraphicAttributeTests: XCTestCase {
         XCTAssertNil(parsed.strokeWidth)
         XCTAssertNil(parsed.transform)
         XCTAssertNil(parsed.clipPath)
+        XCTAssertNil(parsed.mask)
         
         let att = ["fill": "blue",
                    "stroke": "green",
                    "stroke-width": "15.0",
                    "transform": "scale(15)",
-                   "clip-path": "url(#circlePath)"]
+                   "clip-path": "url(#circlePath)",
+                   "mask": "url(#fancyMask)"]
         
         parsed = try XMLParser().parsePresentationAttributes(att)
         
@@ -38,6 +40,7 @@ class ParserGraphicAttributeTests: XCTestCase {
         XCTAssertEqual(parsed.strokeWidth, 15)
         XCTAssertEqual(parsed.transform!, [.scale(sx: 15, sy: 0)])
         XCTAssertEqual(parsed.clipPath, "circlePath")
+        XCTAssertEqual(parsed.mask, "fancyMask")
     }
     
     func testCircle() {
