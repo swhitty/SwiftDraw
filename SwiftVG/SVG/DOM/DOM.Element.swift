@@ -17,6 +17,9 @@ protocol PresentationAttributes {
     var stroke: DOM.Color?  { get set }
     var strokeWidth: DOM.Float?  { get set }
     var strokeOpacity: DOM.Float?  { get set }
+    var strokeLineCap: DOM.LineCap?  { get set }
+    var strokeLineJoin: DOM.LineJoin?  { get set }
+    var strokeDashArray: [DOM.Float]?  { get set }
     
     var fill: DOM.Color?  { get set }
     var fillOpacity: DOM.Float?  { get set }
@@ -39,6 +42,9 @@ extension DOM {
         var stroke: DOM.Color?
         var strokeWidth: DOM.Float?
         var strokeOpacity: DOM.Float?
+        var strokeLineCap: DOM.LineCap?
+        var strokeLineJoin: DOM.LineJoin?
+        var strokeDashArray: [DOM.Float]?
         
         var fill: DOM.Color?
         var fillOpacity: DOM.Float?

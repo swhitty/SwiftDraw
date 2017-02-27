@@ -53,8 +53,7 @@ struct XMLParser {
     }
     
     func parseFillRule(_ text: String) throws -> DOM.FillRule {
-        let v = text.trimmingCharacters(in: .whitespaces)
-        guard let rule = DOM.FillRule(rawValue: v) else {
+        guard let rule = DOM.FillRule(rawValue: trim(text)) else {
             throw Error.invalid
         }
         return rule
@@ -66,7 +65,7 @@ struct XMLParser {
     }
     
     func parseDisplayMode(_ text: String) throws -> DOM.DisplayMode {
-        guard let mode = DOM.DisplayMode(rawValue: text) else {
+        guard let mode = DOM.DisplayMode(rawValue: trim(text)) else {
             throw Error.invalid
         }
         return mode
@@ -76,6 +75,49 @@ struct XMLParser {
         guard let text = text else { return nil }
         return try parseDisplayMode(text)
     }
+    
+    func parseLineCap(_ text: String) throws -> DOM.LineCap {
+        guard let cap = DOM.LineCap(rawValue: trim(text)) else {
+            throw Error.invalid
+        }
+        return cap
+    }
+    
+    func parseLineCap(_ text: String?) throws -> DOM.LineCap? {
+        guard let text = text else { return nil }
+        return try parseLineCap(text)
+    }
+    
+    func parseLineJoin(_ text: String) throws -> DOM.LineJoin {
+        guard let join = DOM.LineJoin(rawValue: trim(text)) else {
+            throw Error.invalid
+        }
+        return join
+    }
+    
+    func parseLineJoin(_ text: String?) throws -> DOM.LineJoin? {
+        guard let text = text else { return nil }
+        return try parseLineJoin(text)
+    }
+    
+    func parseDashArray(_ text: String?) throws -> [DOM.Float]? {
+        guard let text = text else { return nil }
+
+        var array = Array<DOM.Float>()
+        var scanner = Scanner(text: text)
+        while scanner.isEOF == false {
+            array.append(try scanner.scanFloat())
+            _ = scanner.scan(",")
+        }
+
+        return array
+    }
+    
+    func trim(_ t: String) -> String {
+        return t.trimmingCharacters(in: .whitespaces)
+    }
+    
+    
 
     // parse #someId
     func parseAnchor(data: String) throws -> String {

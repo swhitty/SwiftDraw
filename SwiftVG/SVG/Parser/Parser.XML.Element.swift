@@ -210,6 +210,9 @@ extension XMLParser {
         el.stroke = try parseColor(att["stroke"])
         el.strokeWidth = try parseFloat(att["stroke-width"])
         el.strokeOpacity = try parsePercentage(att["stroke-opacity"])
+        el.strokeLineCap = try parseLineCap(att["stroke-linecap"])
+        el.strokeLineJoin = try parseLineJoin(att["stroke-linejoin"])
+        el.strokeDashArray = try parseDashArray(att["stroke-dasharray"])
         
         el.fill = try parseColor(att["fill"])
         el.fillOpacity = try parsePercentage(att["fill-opacity"])

@@ -36,9 +36,19 @@ extension DOM {
     }
     
     enum DisplayMode: String {
-        case inherit
-        case initial
         case none
+    }
+    
+    enum LineCap: String {
+        case butt
+        case round
+        case square
+    }
+    
+    enum LineJoin: String {
+        case miter
+        case round
+        case bevel
     }
     
     enum Transform {
