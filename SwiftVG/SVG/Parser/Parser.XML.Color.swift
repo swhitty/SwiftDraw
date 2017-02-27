@@ -25,6 +25,11 @@ extension XMLParser {
         throw Error.invalid
     }
     
+    func parseColor(_ data: String?) throws -> DOM.Color? {
+        guard  let data = data else { return nil }
+        return try parseColor(data: data)
+    }
+    
     func parseColorNone(data: String) -> DOM.Color? {
         if data.trimmingCharacters(in: .whitespaces) == "none" {
             return DOM.Color.none // .none resolves to Optional.none

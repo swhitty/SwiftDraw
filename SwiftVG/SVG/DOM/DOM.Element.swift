@@ -11,9 +11,17 @@ protocol ContainerElement {
 }
 
 protocol PresentationAttributes {
+    var opacity: DOM.Float?  { get set }
+    var display: DOM.DisplayMode?  { get set }
+    
     var stroke: DOM.Color?  { get set }
-    var fill: DOM.Color?  { get set }
     var strokeWidth: DOM.Float?  { get set }
+    var strokeOpacity: DOM.Float?  { get set }
+    
+    var fill: DOM.Color?  { get set }
+    var fillOpacity: DOM.Float?  { get set }
+    var fillRule: DOM.FillRule?  { get set }
+    
     var transform: [DOM.Transform]?  { get set }
     var clipPath: String?  { get set }
     var mask: String?  { get set }
@@ -24,10 +32,19 @@ extension DOM {
     
     class GraphicsElement: Element, PresentationAttributes {
         var id: String?
-        var stroke: Color?
-        var fill: Color?
-        var strokeWidth: Float?
-        var transform: [Transform]?
+        
+        var opacity: DOM.Float?
+        var display: DOM.DisplayMode?
+        
+        var stroke: DOM.Color?
+        var strokeWidth: DOM.Float?
+        var strokeOpacity: DOM.Float?
+        
+        var fill: DOM.Color?
+        var fillOpacity: DOM.Float?
+        var fillRule: DOM.FillRule?
+        
+        var transform: [DOM.Transform]?
         var clipPath: String?
         var mask: String?
     }
@@ -104,7 +121,6 @@ extension DOM {
     
     class Polygon: GraphicsElement {
         var points: [Point]
-        var fillRule: FillRule?
         
         init(points: [Point]) {
             self.points = points

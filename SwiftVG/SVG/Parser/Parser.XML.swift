@@ -52,12 +52,29 @@ struct XMLParser {
         return try parseFloat(text)
     }
     
-    func parseFillRule(data: String) throws -> DOM.FillRule {
-        let v = data.trimmingCharacters(in: .whitespaces)
+    func parseFillRule(_ text: String) throws -> DOM.FillRule {
+        let v = text.trimmingCharacters(in: .whitespaces)
         guard let rule = DOM.FillRule(rawValue: v) else {
             throw Error.invalid
         }
         return rule
+    }
+    
+    func parseFillRule(_ text: String?) throws -> DOM.FillRule? {
+        guard let text = text else { return nil }
+        return try parseFillRule(text)
+    }
+    
+    func parseDisplayMode(_ text: String) throws -> DOM.DisplayMode {
+        guard let mode = DOM.DisplayMode(rawValue: text) else {
+            throw Error.invalid
+        }
+        return mode
+    }
+    
+    func parseDisplayMode(_ text: String?) throws -> DOM.DisplayMode? {
+        guard let text = text else { return nil }
+        return try parseDisplayMode(text)
     }
 
     // parse #someId

@@ -17,11 +17,6 @@ extension XMLParser {
         
         let path = DOM.Path(x: 0, y: 0)
         path.segments = try parsePathSegments(data: d)
-        
-        if let fillRule = att["fill-rule"] {
-            path.fillRule = try parseFillRule(data: fillRule)
-        }
-        
         return path
     }
     

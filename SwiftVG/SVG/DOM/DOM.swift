@@ -35,6 +35,12 @@ extension DOM {
         case evenodd
     }
     
+    enum DisplayMode: String {
+        case inherit
+        case initial
+        case none
+    }
+    
     enum Transform {
         case matrix(a: Float, b: Float, c: Float, d: Float, e: Float, f: Float)
         case translate(tx: Float, ty: Float)

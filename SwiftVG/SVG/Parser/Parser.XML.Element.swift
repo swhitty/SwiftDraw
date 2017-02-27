@@ -94,11 +94,6 @@ extension XMLParser {
         }
         
         let polygon = DOM.Polygon(points: parsePoints(points))
-        
-        if let fillRule = att["fill-rule"] {
-            polygon.fillRule = try parseFillRule(data: fillRule)
-        }
-        
         return polygon
     }
     
@@ -125,11 +120,18 @@ extension XMLParser {
         ge.id = e.attributes["id"]
         
         let att = try parsePresentationAttributes(elementAttributes)
+
+        ge.opacity = att.opacity
+        ge.display = att.display
         ge.stroke = att.stroke
-        ge.fill = att.fill
         ge.strokeWidth = att.strokeWidth
+        ge.strokeOpacity = att.strokeOpacity
+        ge.fill = att.fill
+        ge.fillOpacity = att.fillOpacity
+        ge.fillRule = att.fillRule
         ge.transform = att.transform
         ge.clipPath = att.clipPath
+        ge.mask = att.mask
         
         return ge
     }
@@ -202,15 +204,17 @@ extension XMLParser {
     func parsePresentationAttributes(_ att: [String: String]) throws -> PresentationAttributes {
         let el = DOM.GraphicsElement()
 
-        if let val = att["stroke"] {
-            el.stroke = try parseColor(data: val)
-        }
-        if let val = att["fill"] {
-            el.fill = try parseColor(data: val)
-        }
-        if let val = att["stroke-width"] {
-            el.strokeWidth = try parseFloat(val)
-        }
+        el.opacity = try parsePercentage(att["opacity"])
+        el.display = try parseDisplayMode(att["display"])
+        
+        el.stroke = try parseColor(att["stroke"])
+        el.strokeWidth = try parseFloat(att["stroke-width"])
+        el.strokeOpacity = try parsePercentage(att["stroke-opacity"])
+        
+        el.fill = try parseColor(att["fill"])
+        el.fillOpacity = try parsePercentage(att["fill-opacity"])
+        el.fillRule = try parseFillRule(att["fill-rule"])
+        
         if let val = att["transform"] {
             el.transform = try parseTransform(val)
         }
@@ -220,7 +224,7 @@ extension XMLParser {
         if let val = att["mask"] {
             el.mask = try parseUrlAnchor(data: val)
         }
-    
+        
         return el
         
     }

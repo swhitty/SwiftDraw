@@ -14,8 +14,6 @@ extension DOM {
         // segments[0] is always a .move
         var segments: [Segment]
         
-        var fillRule: FillRule?
-        
         init(x: Coordinate, y: Coordinate) {
             let s = Segment.move(Move(x, y), .absolute)
             segments = [s]

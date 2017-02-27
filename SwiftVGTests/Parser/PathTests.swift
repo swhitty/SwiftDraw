@@ -41,16 +41,16 @@ class PathTests: XCTestCase {
         
         let node = XML.Element(name: "path")
         node.attributes["d"] = "M 10 10"
-        XCTAssertNil((try! XMLParser().parsePath(node)).fillRule)
+        XCTAssertNil((try! XMLParser().parseGraphicsElement(node))!.fillRule)
         
         node.attributes["fill-rule"] = "nonzero"
-        XCTAssertEqual(try XMLParser().parsePath(node).fillRule, .nonzero)
+        XCTAssertEqual(try XMLParser().parseGraphicsElement(node)!.fillRule, .nonzero)
         
         node.attributes["fill-rule"] = "evenodd"
-        XCTAssertEqual(try XMLParser().parsePath(node).fillRule, .evenodd)
+        XCTAssertEqual(try XMLParser().parseGraphicsElement(node)!.fillRule, .evenodd)
         
         node.attributes["fill-rule"] = "asdf"
-        XCTAssertThrowsError(try XMLParser().parsePath(node).fillRule)
+        XCTAssertThrowsError(try XMLParser().parseGraphicsElement(node)!.fillRule)
     }
     
     func testScanMove() {

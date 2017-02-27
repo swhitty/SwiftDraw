@@ -72,12 +72,12 @@ class ElementTests: XCTestCase {
         XCTAssertNil((try! XMLParser().parsePolygon(node)).fillRule)
         
         node.attributes["fill-rule"] = "nonzero"
-        XCTAssertEqual(try XMLParser().parsePolygon(node).fillRule, .nonzero)
+        XCTAssertEqual(try XMLParser().parseGraphicsElement(node)!.fillRule, .nonzero)
         
         node.attributes["fill-rule"] = "evenodd"
-        XCTAssertEqual(try XMLParser().parsePolygon(node).fillRule, .evenodd)
+        XCTAssertEqual(try XMLParser().parseGraphicsElement(node)!.fillRule, .evenodd)
         
         node.attributes["fill-rule"] = "asdf"
-        XCTAssertThrowsError(try XMLParser().parsePolygon(node).fillRule)
+        XCTAssertThrowsError(try XMLParser().parseGraphicsElement(node)!.fillRule)
     }
 }
