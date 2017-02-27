@@ -9,15 +9,16 @@
 extension XMLParser {
     
     func parsePath(_ e: XML.Element) throws -> DOM.Path {
+        let att = try parseStyleAttributes(e)
         guard e.name == "path",
-            let d = e.attributes["d"] else {
+            let d = att["d"] else {
             throw Error.invalid
         }
         
         let path = DOM.Path(x: 0, y: 0)
         path.segments = try parsePathSegments(data: d)
         
-        if let fillRule = e.attributes["fill-rule"] {
+        if let fillRule = att["fill-rule"] {
             path.fillRule = try parseFillRule(data: fillRule)
         }
         

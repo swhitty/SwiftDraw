@@ -100,6 +100,19 @@ struct Scanner {
         let start = index(after: index, charset: precedingCharactersToSkip ?? CharacterSet.empty)
         let end = index(after: start, until: charset)
         
+        guard end > start,
+              end != characters.endIndex else {
+            return nil
+        }
+        
+        index = end
+        return String(characters[start..<end])
+    }
+    
+    mutating func scanToEOF() -> String? {
+        let start = index(after: index, charset: precedingCharactersToSkip ?? CharacterSet.empty)
+        let end = characters.endIndex
+        
         guard end > start else {
             return nil
         }

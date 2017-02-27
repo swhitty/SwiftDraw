@@ -23,16 +23,17 @@ extension XMLParser {
     }
     
     func parseLinearGradientStop(_ e: XML.Element) throws -> DOM.LinearGradient.Stop {
+        let att = try parseStyleAttributes(e)
         guard e.name == "stop",
-            let offsetText = e.attributes["offset"],
-            let colorText = e.attributes["stop-color"] else {
+            let offsetText = att["offset"],
+            let colorText = att["stop-color"] else {
             throw Error.invalid
         }
         
         let offset = try parsePercentage(offsetText)
         let color = try parseColor(data: colorText)
         
-        guard let opacityText = e.attributes["stop-opacity"] else {
+        guard let opacityText = att["stop-opacity"] else {
             return DOM.LinearGradient.Stop(offset: offset, color: color)
         }
         

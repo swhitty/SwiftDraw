@@ -13,12 +13,13 @@ extension XMLParser {
             throw Error.invalid
         }
         
-        let width = try parseLength(e.attributes["width"])
-        let height = try parseLength(e.attributes["height"])
+        let att = try parseStyleAttributes(e)
+        let width = try parseLength(att["width"])
+        let height = try parseLength(att["height"])
         
         let svg = DOM.Svg(width: width, height: height)
         svg.childElements = try parseContainerChildren(e)
-        svg.viewBox = try parseViewBox(e.attributes["viewBox"])
+        svg.viewBox = try parseViewBox(att["viewBox"])
         
         return svg
     }
