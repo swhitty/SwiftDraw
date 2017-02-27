@@ -32,6 +32,8 @@ extension DOM {
             var clipPaths = [ClipPath]()
             var masks = [Mask]()
             var linearGradients = [LinearGradient]()
+            
+            var elements = [String: GraphicsElement]()
         }
     }
     

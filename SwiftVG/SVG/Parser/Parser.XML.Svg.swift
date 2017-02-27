@@ -21,7 +21,7 @@ extension XMLParser {
         svg.childElements = try parseContainerChildren(e)
         svg.viewBox = try parseViewBox(att["viewBox"])
         
-        svg.defs = try parseDefs(e)
+        svg.defs = try parseSVGDefs(e)
         
         return svg
     }
@@ -45,14 +45,38 @@ extension XMLParser {
     
     // search all nodes within document for any defs
     // not just the <defs> node
-    func parseDefs(_ e: XML.Element) throws -> DOM.Svg.Defs {
+    func parseSVGDefs(_ e: XML.Element) throws -> DOM.Svg.Defs {
         var defs = DOM.Svg.Defs()
         defs.clipPaths = try parseClipPaths(e)
         defs.masks = try parseMasks(e)
         defs.linearGradients = try parseLinearGradients(e)
+
+        //TODO parse all children for all defs nodes
+        if let node = e.children.first( where: { $0.name == "defs" }) {
+            defs.elements = try parseDefsElements(node)
+        }
+
+        return defs
+    }
+
+    func parseDefsElements(_ e: XML.Element) throws -> [String: DOM.GraphicsElement] {
+        guard e.name == "defs" else {
+                throw Error.invalid
+        }
+        
+        var defs = Dictionary<String, DOM.GraphicsElement>()
+        let elements = try parseContainerChildren(e)
+        
+        for e in elements {
+            guard let id = e.id else {
+                throw Error.invalid
+            }
+            defs[id] = e
+        }
         
         return defs
     }
+    
 
     func parseClipPaths(_ e: XML.Element) throws -> [DOM.ClipPath] {
         var clipPaths = Array<DOM.ClipPath>()

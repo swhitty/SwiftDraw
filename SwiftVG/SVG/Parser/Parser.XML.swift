@@ -59,6 +59,16 @@ struct XMLParser {
         }
         return rule
     }
+
+    // parse #someId
+    func parseAnchor(data: String) throws -> String {
+        var scanner = Scanner(text: data)
+        guard scanner.scan("#") != nil,
+            let anchorId = scanner.scan(upTo: .whitespaces, orEOF: true) else {
+                throw Error.invalid
+        }
+        return anchorId
+    }
     
     // parse url(#someId)
     func parseUrlAnchor(data: String) throws -> String {

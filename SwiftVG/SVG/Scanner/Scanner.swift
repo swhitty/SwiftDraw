@@ -96,12 +96,12 @@ struct Scanner {
         return string
     }
     
-    mutating func scan(upTo charset: CharacterSet) -> String? {
+    mutating func scan(upTo charset: CharacterSet, orEOF: Bool = false) -> String? {
         let start = index(after: index, charset: precedingCharactersToSkip ?? CharacterSet.empty)
         let end = index(after: start, until: charset)
         
         guard end > start,
-              end != characters.endIndex else {
+              (orEOF || end != characters.endIndex) else {
             return nil
         }
         

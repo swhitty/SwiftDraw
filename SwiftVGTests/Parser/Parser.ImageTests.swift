@@ -35,7 +35,9 @@ class ParserImageTests: XCTestCase {
         XCTAssertEqual(svg.viewBox?.height, 700)
         XCTAssertEqual(svg.defs.clipPaths.count, 2)
         XCTAssertEqual(svg.defs.linearGradients.count, 1)
-    
+        XCTAssertNotNil(svg.defs.elements["star"])
+        XCTAssertEqual(svg.defs.elements.count, 1)
+        
         var c = svg.childElements.enumerated().makeIterator()
         
         XCTAssertTrue(c.next()!.element is DOM.Ellipse)
@@ -54,6 +56,7 @@ class ParserImageTests: XCTestCase {
         XCTAssertTrue(c.next()!.element is DOM.Rect)
         XCTAssertTrue(c.next()!.element is DOM.Text)
         XCTAssertTrue(c.next()!.element is DOM.Line)
+        XCTAssertTrue(c.next()!.element is DOM.Use)
         XCTAssertNil(c.next())
     }
     

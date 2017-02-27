@@ -1,9 +1,16 @@
 <?xml version="1.0"?>
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:ns="http://www.w3.org/2000/svg" width="500" height="700" viewBox="0 0 500 700" >
+<svg xmlns="http://www.w3.org/2000/svg"
+	 xmlns:ns="http://www.w3.org/2000/svg" 
+	 xmlns:xlink="http://www.w3.org/1999/xlink" 
+	 width="500" height="700" viewBox="0 0 500 700" >
 	<ellipse cx="250" cy="250" rx="200" ry="120" stroke="green" />
 	<ns:g fill="yellow">
 		<circle cx="250" cy="250" r="100" stroke="blue" stroke-width="2"/>
 	</ns:g>
+	
+	<defs>
+	  <polygon id="star" points="100,10 40,198 190,78, 10,78, 160,198" fill-rule="nonzero" />
+	</defs>
 	
     <linearGradient id="MyGradient">
           <stop offset="5%"  stop-color="purple"/>
@@ -59,5 +66,7 @@
 	</text>
 	
 	<line x1="200" y1="650" x2="400" y2="650" stroke="fuchsia" stroke-width="2" />
+	
+	<use xlink:href="#star" x="0" y="0" fill="gold" stroke="orange" transform="translate(100, 300)  scale(0.5) rotate(45, 80, 80)" />
   
 </svg>

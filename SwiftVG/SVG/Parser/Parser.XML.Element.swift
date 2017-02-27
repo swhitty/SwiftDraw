@@ -118,8 +118,11 @@ extension XMLParser {
         case "polygon": ge = try parsePolygon(e)
         case "path": ge = try parsePath(e)
         case "text": ge = try parseText(e)
+        case "use": ge = try parseUse(e)
         default: return nil
         }
+        
+        ge.id = e.attributes["id"]
         
         let att = try parsePresentationAttributes(elementAttributes)
         ge.stroke = att.stroke
@@ -135,6 +138,7 @@ extension XMLParser {
         guard e.name == "svg" ||
               e.name == "clipPath" ||
               e.name == "mask" ||
+              e.name == "defs" ||
               e.name == "g" else {
             throw Error.invalid
         }

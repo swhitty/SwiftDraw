@@ -23,6 +23,7 @@ extension DOM {
     class Element {}
     
     class GraphicsElement: Element, PresentationAttributes {
+        var id: String?
         var stroke: Color?
         var fill: Color?
         var strokeWidth: Float?
