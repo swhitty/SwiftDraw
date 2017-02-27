@@ -12,9 +12,9 @@ extension DOM {
         var y: Coordinate?
 
         //references element ids within defs
-        var href: String
+        var href: URL
 
-        init(href: String) {
+        init(href: URL) {
             self.href = href
         }
     }

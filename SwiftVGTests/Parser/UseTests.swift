@@ -15,7 +15,7 @@ class UseTests: XCTestCase {
         let node = XML.Element(name: "use", attributes: ["xlink:href": "#line2", "href": "#line1"])
    
         var parsed = try XMLParser().parseUse(node)
-        XCTAssertEqual(parsed.href, "line2")
+        XCTAssertEqual(parsed.href.fragment, "line2")
         XCTAssertNil(parsed.x)
         XCTAssertNil(parsed.y)
         
@@ -23,7 +23,7 @@ class UseTests: XCTestCase {
         node.attributes["y"] = "30"
         
         parsed = try XMLParser().parseUse(node)
-        XCTAssertEqual(parsed.href, "line2")
+        XCTAssertEqual(parsed.href.fragment, "line2")
         XCTAssertEqual(parsed.x, 20)
         XCTAssertEqual(parsed.y, 30)
     }

@@ -15,7 +15,7 @@ extension XMLParser {
                 throw Error.invalid
         }
 
-        let use = DOM.Use(href: try parseAnchor(data: anchor))
+        let use = DOM.Use(href: try parseUrl(anchor))
         use.x = try parseCoordinate(att["x"])
         use.y = try parseCoordinate(att["y"])
 

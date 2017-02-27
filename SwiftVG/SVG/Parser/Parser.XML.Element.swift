@@ -222,10 +222,10 @@ extension XMLParser {
             el.transform = try parseTransform(val)
         }
         if let val = att["clip-path"] {
-            el.clipPath = try parseUrlAnchor(data: val)
+            el.clipPath = try parseUrlSelector(val)
         }
         if let val = att["mask"] {
-            el.mask = try parseUrlAnchor(data: val)
+            el.mask = try parseUrlSelector(val)
         }
         
         return el

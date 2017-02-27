@@ -26,8 +26,8 @@ protocol PresentationAttributes {
     var fillRule: DOM.FillRule?  { get set }
     
     var transform: [DOM.Transform]?  { get set }
-    var clipPath: String?  { get set }
-    var mask: String?  { get set }
+    var clipPath: URL?  { get set }
+    var mask: URL?  { get set }
 }
 
 extension DOM {
@@ -51,8 +51,8 @@ extension DOM {
         var fillRule: DOM.FillRule?
         
         var transform: [DOM.Transform]?
-        var clipPath: String?
-        var mask: String?
+        var clipPath: URL?
+        var mask: URL?
     }
     
     class Line: GraphicsElement {

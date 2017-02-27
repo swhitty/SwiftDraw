@@ -117,25 +117,29 @@ struct XMLParser {
         return t.trimmingCharacters(in: .whitespaces)
     }
     
-    
-
-    // parse #someId
-    func parseAnchor(data: String) throws -> String {
-        var scanner = Scanner(text: data)
-        guard scanner.scan("#") != nil,
-            let anchorId = scanner.scan(upTo: .whitespaces, orEOF: true) else {
-                throw Error.invalid
+    // parse any URL 
+    // #someId
+    // www.google.com
+    // data:image/png;base64,00aa
+    func parseUrl(_ text: String) throws -> URL {
+        guard let url = URL(string: text) else {
+            throw Error.invalid
         }
-        return anchorId
+        return url
     }
     
-    // parse url(#someId)
-    func parseUrlAnchor(data: String) throws -> String {
-        var scanner = Scanner(text: data)
+    func parseUrl(_ text: String?) throws -> URL? {
+        guard let text = text else { return nil }
+        return try parseUrl(text)
+    }
+    
+    // parse url wrapped in url()
+    // =url(#someId)
+    func parseUrlSelector(_ text: String) throws -> URL {
+        var scanner = Scanner(text: text)
         guard scanner.scan("url(") != nil,
-              scanner.scan("#") != nil,
-              let anchorId = scanner.scan(upTo: ")"),
-              anchorId.characters.count > 0 else {
+              let urlText = scanner.scan(upTo: ")"),
+              urlText.characters.count > 0 else {
                 throw Error.invalid
         }
         _ = scanner.scan(")")
@@ -144,6 +148,11 @@ struct XMLParser {
             throw Error.invalid
         }
         
-        return anchorId.trimmingCharacters(in: .whitespaces)
+        return try parseUrl(urlText.trimmingCharacters(in: .whitespaces))
+    }
+    
+    func parseUrlSelector(_ text: String?) throws -> URL? {
+        guard let text = text else { return nil }
+        return try parseUrlSelector(text)
     }
 }

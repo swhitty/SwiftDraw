@@ -11,10 +11,10 @@ import XCTest
 
 class ParserGraphicAttributeTests: XCTestCase {
     
-    func testURLAnchor() {
-        AssertURLAnchorEqual("url(#clipPath1)", "clipPath1")
-        AssertURLAnchorEqual("url(#cp1)", "cp1")
-        AssertURLAnchorEqual(" url( # cp1 )   ", "cp1")
+    func testURLSelector() {
+        AssertURLSelector("url(#clipPath1)", "#clipPath1")
+        AssertURLSelector("url(#cp1)", "#cp1")
+        AssertURLSelector(" url( #cp1 )   ", "#cp1")
     }
     
     func testPresentationAttributes() throws {
@@ -63,8 +63,8 @@ class ParserGraphicAttributeTests: XCTestCase {
         XCTAssertEqual(parsed.fillOpacity, 0.25)
         XCTAssertEqual(parsed.fillRule, .evenodd)
         XCTAssertEqual(parsed.transform!, [.scale(sx: 15, sy: 0)])
-        XCTAssertEqual(parsed.clipPath, "circlePath")
-        XCTAssertEqual(parsed.mask, "fancyMask")
+        XCTAssertEqual(parsed.clipPath?.fragment, "circlePath")
+        XCTAssertEqual(parsed.mask?.fragment, "fancyMask")
     }
     
     func testCircle() {
@@ -73,7 +73,7 @@ class ParserGraphicAttributeTests: XCTestCase {
         let parsed = try? XMLParser().parseGraphicsElement(el)
         let circle = parsed as? DOM.Circle
         XCTAssertNotNil(circle)
-        XCTAssertEqual(circle?.clipPath, "cp1")
+        XCTAssertEqual(circle?.clipPath?.fragment, "cp1")
         XCTAssertEqual(circle?.fill, .keyword(.black))
         XCTAssertEqual(circle?.strokeWidth, 2)
     }
@@ -115,9 +115,7 @@ class ParserGraphicAttributeTests: XCTestCase {
     
 }
 
-private func AssertURLAnchorEqual(_ text: String, _ expected: String, file: StaticString = #file, line: UInt = #line) {
-    XCTAssertEqual(try XMLParser().parseUrlAnchor(data: text), expected, file: file, line: line)
+private func AssertURLSelector(_ text: String, _ expected: String, file: StaticString = #file, line: UInt = #line) {
+    let url = URL(string: expected)!
+    XCTAssertEqual(try XMLParser().parseUrlSelector(text), url, file: file, line: line)
 }
-
-
-
