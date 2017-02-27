@@ -59,4 +59,22 @@ struct XMLParser {
         }
         return rule
     }
+    
+    // parse url(#someId)
+    func parseUrlAnchor(data: String) throws -> String {
+        var scanner = Scanner(text: data)
+        guard scanner.scan("url(") != nil,
+              scanner.scan("#") != nil,
+              let anchorId = scanner.scan(upTo: ")"),
+              anchorId.characters.count > 0 else {
+                throw Error.invalid
+        }
+        _ = scanner.scan(")")
+        
+        guard scanner.isEOF else {
+            throw Error.invalid
+        }
+        
+        return anchorId.trimmingCharacters(in: .whitespaces)
+    }
 }

@@ -14,6 +14,8 @@ extension DOM {
         
         var childElements = [GraphicsElement]()
         
+        var clipPaths = [ClipPath]()
+        
         init(width: Length? = nil, height: Length? = nil) {
             self.width = width
             self.height = height
@@ -25,5 +27,11 @@ extension DOM {
             var width: Coordinate
             var height: Coordinate
         }
+    }
+    
+    
+    struct ClipPath: ContainerElement {
+        var id: String
+        var childElements = [GraphicsElement]()
     }
 }

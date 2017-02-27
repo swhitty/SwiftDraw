@@ -10,14 +10,23 @@ protocol ContainerElement {
     var childElements: Array<DOM.GraphicsElement> { get set }
 }
 
+protocol PresentationAttributes {
+    var stroke: DOM.Color?  { get set }
+    var fill: DOM.Color?  { get set }
+    var strokeWidth: DOM.Float?  { get set }
+    var transform: [DOM.Transform]?  { get set }
+    var clipPath: String?  { get set }
+}
+
 extension DOM {
     class Element {}
     
-    class GraphicsElement: Element {
+    class GraphicsElement: Element, PresentationAttributes {
         var stroke: Color?
         var fill: Color?
         var strokeWidth: Float?
         var transform: [Transform]?
+        var clipPath: String?
     }
     
     class Line: GraphicsElement {

@@ -103,22 +103,38 @@ extension XMLParser {
     }
     
     func parseGraphicsElement(_ e: XML.Element) throws -> DOM.GraphicsElement? {
+        
+        let ge: DOM.GraphicsElement
+        
+        let elementAttributes = try parseStyleAttributes(e)
+   
         switch e.name {
-        case "g", "svg": return try parseGroup(e)
-        case "line": return try parseLine(e)
-        case "circle": return try parseCircle(e)
-        case "ellipse": return try parseEllipse(e)
-        case "rect": return try parseRect(e)
-        case "polyline": return try parsePolyline(e)
-        case "polygon": return try parsePolygon(e)
-        case "path": return try parsePath(e)
-        case "text": return try parseText(e)
+        case "g", "svg": ge = try parseGroup(e)
+        case "line": ge = try parseLine(e)
+        case "circle": ge = try parseCircle(e)
+        case "ellipse": ge = try parseEllipse(e)
+        case "rect": ge = try parseRect(e)
+        case "polyline": ge = try parsePolyline(e)
+        case "polygon": ge = try parsePolygon(e)
+        case "path": ge = try parsePath(e)
+        case "text": ge = try parseText(e)
         default: return nil
         }
+        
+        let att = try parsePresentationAttributes(elementAttributes)
+        ge.stroke = att.stroke
+        ge.fill = att.fill
+        ge.strokeWidth = att.strokeWidth
+        ge.transform = att.transform
+        ge.clipPath = att.clipPath
+        
+        return ge
     }
     
     func parseContainerChildren(_ e: XML.Element) throws -> [DOM.GraphicsElement] {
-        guard e.name == "g" || e.name == "svg" else {
+        guard e.name == "svg" ||
+              e.name == "clipPath" ||
+              e.name == "g" else {
             throw Error.invalid
         }
         
@@ -177,5 +193,29 @@ extension XMLParser {
         
         return (key, value.trimmingCharacters(in: .whitespaces))
     }
+    
+    func parsePresentationAttributes(_ att: [String: String]) throws -> PresentationAttributes {
+        let el = DOM.GraphicsElement()
+
+        if let val = att["stroke"] {
+            el.stroke = try parseColor(data: val)
+        }
+        if let val = att["fill"] {
+            el.fill = try parseColor(data: val)
+        }
+        if let val = att["stroke-width"] {
+            el.strokeWidth = try parseFloat(val)
+        }
+        if let val = att["transform"] {
+            el.transform = try parseTransform(val)
+        }
+        if let val = att["clip-path"] {
+            el.clipPath = try parseUrlAnchor(data: val)
+        }
+    
+        return el
+        
+    }
+    
     
 }

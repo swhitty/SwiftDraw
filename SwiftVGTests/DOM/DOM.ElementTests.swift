@@ -11,62 +11,50 @@ import XCTest
 
 class DOMElementTests: XCTestCase {
     
-    func createLine() -> DOM.Line {
-        return DOM.Line(x1: 0, y1: 1, x2: 3, y2: 4)
-    }
-    
     func testLine() {
-        let element = createLine()
-        var another = createLine()
+        let element = DOM.createLine()
+        var another = DOM.createLine()
         
         XCTAssertEqual(element, another)
         
         another.x1 = 1
         XCTAssertNotEqual(element, another)
         
-        another = createLine()
+        another = DOM.createLine()
         another.fill = .keyword(.black)
         XCTAssertNotEqual(element, another)
         
         another.fill = nil
         XCTAssertEqual(element, another)
-    }
-    
-    func createCircle() -> DOM.Circle {
-        return DOM.Circle(cx: 0, cy: 1, r: 2)
     }
     
     func testCircle() {
-        let element = createCircle()
-        var another = createCircle()
+        let element = DOM.createCircle()
+        var another = DOM.createCircle()
         
         XCTAssertEqual(element, another)
         
         another.cx = 1
         XCTAssertNotEqual(element, another)
         
-        another = createCircle()
+        another = DOM.createCircle()
         another.fill = .keyword(.black)
         XCTAssertNotEqual(element, another)
         
         another.fill = nil
         XCTAssertEqual(element, another)
-    }
-    
-    func createEllipse() -> DOM.Ellipse {
-        return DOM.Ellipse(cx: 0, cy: 1, rx: 2, ry: 3)
     }
     
     func testEllipse() {
-        let element = createEllipse()
-        var another = createEllipse()
+        let element = DOM.createEllipse()
+        var another = DOM.createEllipse()
         
         XCTAssertEqual(element, another)
         
         another.cx = 1
         XCTAssertNotEqual(element, another)
         
-        another = createEllipse()
+        another = DOM.createEllipse()
         another.fill = .keyword(.black)
         XCTAssertNotEqual(element, another)
         
@@ -74,83 +62,67 @@ class DOMElementTests: XCTestCase {
         XCTAssertEqual(element, another)
     }
     
-    func createRect() -> DOM.Rect {
-        return DOM.Rect(x: 0, y: 1, width: 2, height: 3)
-    }
-    
     func testRect() {
-        let element = createRect()
-        var another = createRect()
+        let element = DOM.createRect()
+        var another = DOM.createRect()
         
         XCTAssertEqual(element, another)
         
         another.x = 1
         XCTAssertNotEqual(element, another)
         
-        another = createRect()
+        another = DOM.createRect()
         another.fill = .keyword(.black)
         XCTAssertNotEqual(element, another)
         
         another.fill = nil
         XCTAssertEqual(element, another)
-    }
-    
-    func createPolygon() -> DOM.Polygon {
-        return DOM.Polygon(0, 1, 2, 3, 4, 5)
     }
     
     func testPolygon() {
-        let element = createPolygon()
-        var another = createPolygon()
+        let element = DOM.createPolygon()
+        var another = DOM.createPolygon()
         
         XCTAssertEqual(element, another)
         
         another.points.append(DOM.Point(6, 7))
         XCTAssertNotEqual(element, another)
         
-        another = createPolygon()
+        another = DOM.createPolygon()
         another.fill = .keyword(.black)
         XCTAssertNotEqual(element, another)
         
         another.fill = nil
         XCTAssertEqual(element, another)
-    }
-    
-    func createPolyline() -> DOM.Polyline {
-        return DOM.Polyline(0, 1, 2, 3, 4, 5)
     }
     
     func testPolyline() {
-        let element = createPolyline()
-        var another = createPolyline()
+        let element = DOM.createPolyline()
+        var another = DOM.createPolyline()
         
         XCTAssertEqual(element, another)
         
         another.points.append(DOM.Point(6, 7))
         XCTAssertNotEqual(element, another)
         
-        another = createPolyline()
+        another = DOM.createPolyline()
         another.fill = .keyword(.black)
         XCTAssertNotEqual(element, another)
         
         another.fill = nil
         XCTAssertEqual(element, another)
     }
-    
-    func createText() -> DOM.Text {
-        return DOM.Text(x: 0, y: 1, value: "The quick brown fox")
-    }
-    
+
     func testText() {
-        let element = createText()
-        var another = createText()
+        let element = DOM.createText()
+        var another = DOM.createText()
         
         XCTAssertEqual(element, another)
         
         another.value = "Simon"
         XCTAssertNotEqual(element, another)
         
-        another = createText()
+        another = DOM.createText()
         another.fill = .keyword(.black)
         XCTAssertNotEqual(element, another)
         
@@ -158,34 +130,16 @@ class DOMElementTests: XCTestCase {
         XCTAssertEqual(element, another)
     }
     
-    func createPath() -> DOM.Path {
-        let path = DOM.Path(x: 0, y: 1)
-        path.move(x: 10, y: 10)
-        path.horizontal(x: 20)
-        return path
-    }
-    
-    func createGroup() -> DOM.Group {
-        let group = DOM.Group()
-        group.childElements.append(createLine())
-        group.childElements.append(createPolygon())
-        group.childElements.append(createCircle())
-        group.childElements.append(createPath())
-        group.childElements.append(createRect())
-        group.childElements.append(createEllipse())
-        return group
-    }
-    
     func testGroup() {
-        let group = createGroup()
-        var another = createGroup()
+        let group = DOM.createGroup()
+        var another = DOM.createGroup()
         
         XCTAssertEqual(group, another)
         
-        another.childElements.append(createCircle())
+        another.childElements.append(DOM.createCircle())
         XCTAssertNotEqual(group, another)
         
-        another = createGroup()
+        another = DOM.createGroup()
         another.fill = .keyword(.black)
         XCTAssertNotEqual(group, another)
         

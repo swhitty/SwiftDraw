@@ -31,6 +31,7 @@ class ParserImageTests: XCTestCase {
         XCTAssertEqual(svg?.height, 700)
         XCTAssertEqual(svg?.viewBox?.width, 500)
         XCTAssertEqual(svg?.viewBox?.height, 700)
+        XCTAssertEqual(svg?.clipPaths.count, 2)
         
         var c = svg!.childElements.enumerated().makeIterator()
         
@@ -45,6 +46,7 @@ class ParserImageTests: XCTestCase {
         XCTAssertTrue(c.next()!.element is DOM.Polyline)
         XCTAssertTrue(c.next()!.element is DOM.Polyline)
         XCTAssertTrue(c.next()!.element is DOM.Polygon)
+        XCTAssertTrue(c.next()!.element is DOM.Group)
         XCTAssertTrue(c.next()!.element is DOM.Circle)
         XCTAssertTrue(c.next()!.element is DOM.Rect)
         XCTAssertTrue(c.next()!.element is DOM.Text)

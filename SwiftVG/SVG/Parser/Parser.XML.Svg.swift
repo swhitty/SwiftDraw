@@ -20,6 +20,7 @@ extension XMLParser {
         let svg = DOM.Svg(width: width, height: height)
         svg.childElements = try parseContainerChildren(e)
         svg.viewBox = try parseViewBox(att["viewBox"])
+        svg.clipPaths = try parseClipPaths(e)
         
         return svg
     }
@@ -38,5 +39,32 @@ extension XMLParser {
         }
         
         return DOM.Svg.ViewBox(x: x, y: y, width: width, height: height)
+    }
+    
+    
+    //search allChild nodes for any ClipPath
+    func parseClipPaths(_ e: XML.Element) throws -> [DOM.ClipPath] {
+        var clipPaths = Array<DOM.ClipPath>()
+        
+        for n in e.children {
+            if n.name == "clipPath" {
+                clipPaths.append(try parseClipPath(n))
+            } else {
+                clipPaths.append(contentsOf: try parseClipPaths(n))
+            }
+        }
+        return clipPaths
+    }
+    
+    func parseClipPath(_ e: XML.Element) throws -> DOM.ClipPath {
+        let att = try parseStyleAttributes(e)
+        
+        guard e.name == "clipPath",
+              let id = att["id"] else {
+            throw Error.invalid
+        }
+        
+        let children = try parseContainerChildren(e)
+        return DOM.ClipPath(id: id, childElements: children)
     }
 }

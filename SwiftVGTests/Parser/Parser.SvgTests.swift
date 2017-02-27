@@ -42,4 +42,20 @@ class SvgTests: XCTestCase {
         XCTAssertThrowsError(try XMLParser().parseViewBox(" 10\t20  300"))
         XCTAssertThrowsError(try XMLParser().parseViewBox("10 10 10 10a"))
     }
+    
+    func testClipPath() throws {
+        
+        let node = XML.Element(name: "clipPath", attributes: ["id": "hello"])
+        
+        var parsed = try XMLParser().parseClipPath(node)
+        XCTAssertEqual(parsed.id, "hello")
+        
+        node.children.append(XML.Element("line", style: "x1:0;y1:0;x2:50;y2:60"))
+        node.children.append(XML.Element("circle", style: "cx:0;cy:10;r:20"))
+
+        parsed = try XMLParser().parseClipPath(node)
+        XCTAssertEqual(parsed.id, "hello")
+        XCTAssertEqual(parsed.childElements.count, 2)
+    }
+
 }

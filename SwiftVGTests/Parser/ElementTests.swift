@@ -81,33 +81,3 @@ class ElementTests: XCTestCase {
         XCTAssertThrowsError(try XMLParser().parsePolygon(node).fillRule)
     }
 }
-
-extension DOM.Polyline {
-    
-    // requires even number of elements
-    convenience init(_ p: DOM.Coordinate...) {
-        
-        var points = Array<DOM.Point>()
-        
-        for index in stride(from: 0, to: points.count, by: 2) {
-            points.append(DOM.Point(p[index], p[index + 1]))
-        }
-        
-        self.init(points: points)
-    }
-}
-
-extension DOM.Polygon {
-    
-    // requires even number of elements
-    convenience init(_ p: DOM.Coordinate...) {
-        
-        var points = Array<DOM.Point>()
-        
-        for index in stride(from: 0, to: points.count, by: 2) {
-            points.append(DOM.Point(p[index], p[index + 1]))
-        }
-        
-        self.init(points: points)
-    }
-}

@@ -38,9 +38,11 @@
 		<rect x="440" y="55" width="20" height="20" />	
 	</clipPath>
 	
+	<g>
 	<clipPath id="cp2">
-		<circle cx="250" cy="65" r="10" fill="none" display="nones"/>
+		<circle cx="250" cy="65" r="10" fill="none"/>
 	</clipPath>
+	</g>
    
 	<circle cx="450" cy="75" r="20" fill="purple" clip-path="url(#cp)"/>
 	
