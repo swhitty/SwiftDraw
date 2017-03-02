@@ -14,6 +14,8 @@ struct XML {
         var children = [Element]()
         var innerText: String?
         
+        var parsedLocation: (line: Int, column: Int)?
+        
         init(name: String, attributes: [String: String] = [:]) {
             self.name = name
             self.attributes = attributes

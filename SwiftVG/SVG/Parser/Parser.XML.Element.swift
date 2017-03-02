@@ -8,10 +8,8 @@
 
 extension XMLParser {
     
-    func parseLine(_ e: XML.Element) throws -> DOM.Line {
-        let att = try parseStyleAttributes(e)
-        guard e.name == "line",
-            let x1 = try parseCoordinate(att["x1"]),
+    func parseLine(_ att: Attributes) throws -> DOM.Line {
+        guard let x1 = try parseCoordinate(att["x1"]),
             let y1 = try parseCoordinate(att["y1"]),
             let x2 = try parseCoordinate(att["x2"]),
             let y2 = try parseCoordinate(att["y2"]) else {
@@ -21,38 +19,32 @@ extension XMLParser {
         return DOM.Line(x1: x1, y1: y1, x2: x2, y2: y2)
     }
     
-    func parseCircle(_ e: XML.Element) throws -> DOM.Circle {
-        let att = try parseStyleAttributes(e)
-        guard e.name == "circle",
-            let cx = try parseCoordinate(att["cx"]),
-            let cy = try parseCoordinate(att["cy"]),
-            let r = try parseCoordinate(att["r"]) else {
+    func parseCircle(_ att: Attributes) throws -> DOM.Circle {
+        guard let cx = try parseCoordinate(att["cx"]),
+              let cy = try parseCoordinate(att["cy"]),
+              let r = try parseCoordinate(att["r"]) else {
             throw Error.invalid
         }
         
         return DOM.Circle(cx: cx, cy: cy, r: r)
     }
     
-    func parseEllipse(_ e: XML.Element) throws -> DOM.Ellipse {
-        let att = try parseStyleAttributes(e)
-        guard e.name == "ellipse",
-            let cx = try parseCoordinate(att["cx"]),
-            let cy = try parseCoordinate(att["cy"]),
-            let rx = try parseCoordinate(att["rx"]),
-            let ry = try parseCoordinate(att["ry"]) else {
+    func parseEllipse(_ att: Attributes) throws -> DOM.Ellipse {
+        guard let cx = try parseCoordinate(att["cx"]),
+              let cy = try parseCoordinate(att["cy"]),
+              let rx = try parseCoordinate(att["rx"]),
+              let ry = try parseCoordinate(att["ry"]) else {
             throw Error.invalid
         }
         
         return DOM.Ellipse(cx: cx, cy: cy, rx: rx, ry: ry)
     }
     
-    func parseRect(_ e: XML.Element) throws -> DOM.Rect {
-        let att = try parseStyleAttributes(e)
-        guard e.name == "rect",
-            let x = try parseCoordinate(att["x"]),
-            let y = try parseCoordinate(att["y"]),
-            let width = try parseCoordinate(att["width"]),
-            let height = try parseCoordinate(att["height"]) else {
+    func parseRect(_ att: Attributes) throws -> DOM.Rect {
+        guard let x = try parseCoordinate(att["x"]),
+              let y = try parseCoordinate(att["y"]),
+              let width = try parseCoordinate(att["width"]),
+              let height = try parseCoordinate(att["height"]) else {
             throw Error.invalid
         }
         
@@ -76,20 +68,16 @@ extension XMLParser {
         return points
         
     }
-    func parsePolyline(_ e: XML.Element) throws -> DOM.Polyline {
-        let att = try parseStyleAttributes(e)
-        guard e.name == "polyline",
-            let points = att["points"] else {
+    func parsePolyline(_ att: Attributes) throws -> DOM.Polyline {
+        guard let points = att["points"] else {
             throw Error.invalid
         }
         
         return DOM.Polyline(points: parsePoints(points))
     }
     
-    func parsePolygon(_ e: XML.Element) throws -> DOM.Polygon {
-        let att = try parseStyleAttributes(e)
-        guard e.name == "polygon",
-            let points = att["points"] else {
+    func parsePolygon(_ att: Attributes) throws -> DOM.Polygon {
+        guard let points = att["points"] else {
             throw Error.invalid
         }
         
@@ -101,25 +89,25 @@ extension XMLParser {
         
         let ge: DOM.GraphicsElement
         
-        let elementAttributes = try parseStyleAttributes(e)
+        let attributes = try parseAttributes(e)
    
         switch e.name {
         case "g", "svg": ge = try parseGroup(e)
-        case "line": ge = try parseLine(e)
-        case "circle": ge = try parseCircle(e)
-        case "ellipse": ge = try parseEllipse(e)
-        case "rect": ge = try parseRect(e)
-        case "polyline": ge = try parsePolyline(e)
-        case "polygon": ge = try parsePolygon(e)
-        case "path": ge = try parsePath(e)
-        case "text": ge = try parseText(e)
-        case "use": ge = try parseUse(e)
+        case "line": ge = try parseLine(attributes)
+        case "circle": ge = try parseCircle(attributes)
+        case "ellipse": ge = try parseEllipse(attributes)
+        case "rect": ge = try parseRect(attributes)
+        case "polyline": ge = try parsePolyline(attributes)
+        case "polygon": ge = try parsePolygon(attributes)
+        case "path": ge = try parsePath(attributes)
+        case "text": ge = try parseText(attributes, value: e.innerText)
+        case "use": ge = try parseUse(attributes)
         default: return nil
         }
         
         ge.id = e.attributes["id"]
         
-        let att = try parsePresentationAttributes(elementAttributes)
+        let att = try parsePresentationAttributes(attributes)
 
         ge.opacity = att.opacity
         ge.display = att.display
@@ -166,21 +154,26 @@ extension XMLParser {
         return group
     }
     
-    func parseStyleAttributes(_ e: XML.Element) throws -> [String: String] {
+    func parseStyleAttributes(_ e: XML.Element) throws -> Attributes {
+        return try parseAttributes(e)
+    }
+    
+    func parseAttributes(_ e: XML.Element) throws -> Attributes {
         guard let style = e.attributes["style"] else {
-            return e.attributes
+            return Attributes(element: e.attributes, style: [:])
         }
         
         var scanner = Scanner(text: style)
-        var attributes = e.attributes
-        attributes["style"] = nil
+        var styleProperties = [String: String]()
         
         while !scanner.isEOF {
             let att = try parseStyleAttribute(&scanner)
-            attributes[att.0] = att.1
+            styleProperties[att.0] = att.1
         }
         
-        return attributes
+        var element = e.attributes
+        element["style"] = nil
+        return Attributes(element: element, style: styleProperties)
     }
     
     func parseStyleAttribute(_ scanner: inout Scanner) throws -> (String, String) {
@@ -201,7 +194,7 @@ extension XMLParser {
         return (key, value.trimmingCharacters(in: .whitespaces))
     }
     
-    func parsePresentationAttributes(_ att: [String: String]) throws -> PresentationAttributes {
+    func parsePresentationAttributes(_ att: Attributes) throws -> PresentationAttributes {
         let el = DOM.GraphicsElement()
 
         el.opacity = try parsePercentage(att["opacity"])

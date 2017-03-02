@@ -12,6 +12,7 @@
 		D9100F921E0A0EEC00190335 /* CoordinateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9100F911E0A0EEC00190335 /* CoordinateTests.swift */; };
 		D92CE6061E64E96000E0BE1B /* URL.swift in Sources */ = {isa = PBXBuildFile; fileRef = D92CE6051E64E96000E0BE1B /* URL.swift */; };
 		D92CE6091E64E99600E0BE1B /* URL.swift in Sources */ = {isa = PBXBuildFile; fileRef = D92CE6081E64E99600E0BE1B /* URL.swift */; };
+		D92CE60D1E67955700E0BE1B /* Parser.XML.Attributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = D92CE60C1E67955700E0BE1B /* Parser.XML.Attributes.swift */; };
 		D933D09F1E5CECF400937A59 /* ColorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D933D09E1E5CECF400937A59 /* ColorTests.swift */; };
 		D933D0A11E5CEE1700937A59 /* DOM.Color.swift in Sources */ = {isa = PBXBuildFile; fileRef = D933D0A01E5CEE1700937A59 /* DOM.Color.swift */; };
 		D933D0A31E5CFEEC00937A59 /* Parser.XML.Path.swift in Sources */ = {isa = PBXBuildFile; fileRef = D933D0A21E5CFEEC00937A59 /* Parser.XML.Path.swift */; };
@@ -73,6 +74,7 @@
 		D9100F911E0A0EEC00190335 /* CoordinateTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CoordinateTests.swift; sourceTree = "<group>"; };
 		D92CE6051E64E96000E0BE1B /* URL.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = URL.swift; sourceTree = "<group>"; };
 		D92CE6081E64E99600E0BE1B /* URL.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = URL.swift; sourceTree = "<group>"; };
+		D92CE60C1E67955700E0BE1B /* Parser.XML.Attributes.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Parser.XML.Attributes.swift; sourceTree = "<group>"; };
 		D933D09E1E5CECF400937A59 /* ColorTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ColorTests.swift; sourceTree = "<group>"; };
 		D933D0A01E5CEE1700937A59 /* DOM.Color.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DOM.Color.swift; sourceTree = "<group>"; };
 		D933D0A21E5CFEEC00937A59 /* Parser.XML.Path.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Parser.XML.Path.swift; sourceTree = "<group>"; };
@@ -293,6 +295,7 @@
 			isa = PBXGroup;
 			children = (
 				D9F281EF1E1F8C140060AE7F /* Parser.XML.swift */,
+				D92CE60C1E67955700E0BE1B /* Parser.XML.Attributes.swift */,
 				D99CC9981E5FF06F00E7886A /* Parser.XML.Element.swift */,
 				D965B58A1E4E1273003E859E /* Parser.XML.Svg.swift */,
 				D933D0A21E5CFEEC00937A59 /* Parser.XML.Path.swift */,
@@ -454,6 +457,7 @@
 				D9002B111E08B6050090BCC8 /* Formatter.XML.swift in Sources */,
 				D99CC9991E5FF06F00E7886A /* Parser.XML.Element.swift in Sources */,
 				D9C1EEFC1E63C94600C0F213 /* DOM.Use.swift in Sources */,
+				D92CE60D1E67955700E0BE1B /* Parser.XML.Attributes.swift in Sources */,
 				D92CE6061E64E96000E0BE1B /* URL.swift in Sources */,
 				D933D0AE1E5E868400937A59 /* Parser.XML.Transform.swift in Sources */,
 				D99CC98B1E5F8F1A00E7886A /* Scanner.swift in Sources */,

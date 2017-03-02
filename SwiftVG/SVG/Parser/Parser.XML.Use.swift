@@ -8,10 +8,8 @@
 
 extension XMLParser {
     
-    func parseUse(_ e: XML.Element) throws -> DOM.Use {
-        let att = try parseStyleAttributes(e)
-        guard e.name == "use",
-              let anchor = att["xlink:href"] else {
+    func parseUse(_ att: Attributes) throws -> DOM.Use {
+        guard let anchor = att["xlink:href"] else {
                 throw Error.invalid
         }
 

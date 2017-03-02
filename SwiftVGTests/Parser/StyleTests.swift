@@ -34,7 +34,7 @@ class StyleTests: XCTestCase {
         let attributes = try XMLParser().parseStyleAttributes(e)
         let expected = ["x": "20", "y": "5", "stroke-color": "black", "fill": "red"]
         
-        XCTAssertEqual(attributes, expected)
+        XCTAssertEqual(attributes.properties, expected)
     }
 }
 
@@ -48,3 +48,4 @@ extension SwiftVG.XMLParser {
         return try XMLParser().parseStyleAttribute(&scanner)
     }
 }
+

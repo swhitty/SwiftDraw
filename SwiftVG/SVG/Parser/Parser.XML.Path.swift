@@ -8,10 +8,8 @@
 
 extension XMLParser {
     
-    func parsePath(_ e: XML.Element) throws -> DOM.Path {
-        let att = try parseStyleAttributes(e)
-        guard e.name == "path",
-            let d = att["d"] else {
+    func parsePath(_ att: Attributes) throws -> DOM.Path {
+        guard let d = att["d"] else {
             throw Error.invalid
         }
         

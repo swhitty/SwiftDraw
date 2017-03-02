@@ -51,6 +51,7 @@ extension XML {
                 namespaceURI == self.namespaceURI else { return }
             
             let element = Element(name: elementName, attributes: attributeDict)
+            element.parsedLocation = (line: parser.lineNumber, column: parser.columnNumber)
             
             elements.last?.children.append(element)
             elements.append(element)
@@ -59,6 +60,8 @@ extension XML {
                 rootNode = element
             }
         }
+        
+   
         
         func parser(_ parser: XMLParser, didEndElement elementName: String, namespaceURI: String?, qualifiedName _: String?) {
             guard self.parser === parser,

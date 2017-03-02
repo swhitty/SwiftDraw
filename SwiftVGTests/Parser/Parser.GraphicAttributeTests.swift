@@ -119,3 +119,28 @@ private func AssertURLSelector(_ text: String, _ expected: String, file: StaticS
     let url = URL(string: expected)!
     XCTAssertEqual(try XMLParser().parseUrlSelector(text), url, file: file, line: line)
 }
+
+extension SwiftVG.XMLParser {
+    func parsePresentationAttributes(_ elements: [String: String]) throws -> PresentationAttributes {
+        return try parsePresentationAttributes(Attributes(element: elements, style: [:]))
+    }
+}
+
+typealias Attributes = SwiftVG.XMLParser.Attributes
+
+extension Attributes: ExpressibleByDictionaryLiteral {
+    public typealias Key = String
+    public typealias Value = String
+
+    public convenience init(_ elements: [String: String]) {
+        self.init(element: elements, style: [:])
+    }
+    public convenience init(dictionaryLiteral elements: (String, String)...) {
+        var att = [String: String]()
+        for (key, value) in elements {
+            att[key] = value
+        }
+        self.init(element: att, style: [:])
+    }
+     
+}

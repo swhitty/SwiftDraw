@@ -12,64 +12,66 @@ import XCTest
 class ElementTests: XCTestCase {
     
     func testLine() {
-        let node = XML.Element(name: "line", attributes: ["x1": "0",
-                                                          "y1": "10",
-                                                          "x2": "50",
-                                                          "y2": "60"])
+        let node = ["x1": "0",
+                    "y1": "10",
+                    "x2": "50",
+                    "y2": "60"]
         
-        XCTAssertEqual(DOM.Line(x1: 0, y1: 10, x2: 50, y2: 60), try? XMLParser().parseLine(node))
+        let parsed = try? XMLParser().parseLine(Attributes(node))
+        XCTAssertEqual(DOM.Line(x1: 0, y1: 10, x2: 50, y2: 60), parsed)
     }
     
     func testCircle() {
-        let node = XML.Element(name: "circle", attributes: ["cx": "0",
-                                                            "cy": "10",
-                                                            "r": "20"])
+        let node = ["cx": "0",
+                    "cy": "10",
+                    "r": "20"]
         
-        XCTAssertEqual(DOM.Circle(cx: 0, cy: 10, r: 20), try? XMLParser().parseCircle(node))
+        let parsed = try? XMLParser().parseCircle(Attributes(node))
+        XCTAssertEqual(DOM.Circle(cx: 0, cy: 10, r: 20), parsed)
     }
     
     func testEllipse() {
-        let node = XML.Element(name: "ellipse", attributes: ["cx": "0",
-                                                             "cy": "10",
-                                                             "rx": "20",
-                                                             "ry": "30"])
+        let node = ["cx": "0",
+                    "cy": "10",
+                    "rx": "20",
+                    "ry": "30"]
         
-        XCTAssertEqual(DOM.Ellipse(cx: 0, cy: 10, rx: 20, ry: 30), try? XMLParser().parseEllipse(node))
+        let parsed = try? XMLParser().parseEllipse(Attributes(node))
+        XCTAssertEqual(DOM.Ellipse(cx: 0, cy: 10, rx: 20, ry: 30), parsed)
     }
     
     func testRect() {
-        let node = XML.Element(name: "rect", attributes: ["x": "0",
-                                                          "y": "10",
-                                                          "width": "20",
-                                                          "height": "30"])
+        var node = ["x": "0",
+                    "y": "10",
+                    "width": "20",
+                    "height": "30"]
         
         let rect = DOM.Rect(x: 0, y: 10, width: 20, height: 30)
-        XCTAssertEqual(rect, try? XMLParser().parseRect(node))
+        XCTAssertEqual(rect, try? XMLParser().parseRect(Attributes(node)))
         
-        node.attributes["rx"] = "3"
-        node.attributes["ry"] = "2"
+        node["rx"] = "3"
+        node["ry"] = "2"
         rect.rx = 3
         rect.ry = 2
-        XCTAssertEqual(rect, try? XMLParser().parseRect(node))
+        XCTAssertEqual(rect, try? XMLParser().parseRect(Attributes(node)))
     }
     
     func testPolyline() {
-        let node = XML.Element(name: "polyline", attributes: ["points": "0,1 2 3; 4;5;6;7;8 9"])
+        let node: Attributes = ["points": "0,1 2 3; 4;5;6;7;8 9"]
         
         XCTAssertEqual(DOM.Polyline(0, 1, 2, 3, 4, 5, 6, 7, 8, 9), try? XMLParser().parsePolyline(node))
     }
     
     func testPolygon() {
-        let node = XML.Element(name: "polygon", attributes: ["points": "0,1,2,3;4;5;6;7;8 9"])
-        
-        XCTAssertEqual(DOM.Polygon(0, 1, 2, 3, 4, 5, 6, 7, 8, 9), try? XMLParser().parsePolygon(node))
+        let parsed =  try? XMLParser().parsePolygon(["points": "0,1,2,3;4;5;6;7;8 9"])
+        XCTAssertEqual(DOM.Polygon(0, 1, 2, 3, 4, 5, 6, 7, 8, 9), parsed)
     }
     
     func testPolygonFillRule() {
+        XCTAssertNil((try! XMLParser().parsePolygon(["points": "0,1,2,3"])).fillRule)
         
         let node = XML.Element(name: "polygon")
         node.attributes["points"] = "0,1,2,3"
-        XCTAssertNil((try! XMLParser().parsePolygon(node)).fillRule)
         
         node.attributes["fill-rule"] = "nonzero"
         XCTAssertEqual(try XMLParser().parseGraphicsElement(node)!.fillRule, .nonzero)

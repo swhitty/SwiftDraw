@@ -12,25 +12,23 @@ import XCTest
 class TextTests: XCTestCase {
     
     func testText() {
-        let node = XML.Element(name: "text", attributes: ["x": "10", "y": "25"])
-        node.innerText = "Simon"
-        XCTAssertNotNil(try? XMLParser().parseText(node))
+        var node = ["x": "10", "y": "25"]
+        XCTAssertNotNil(try? XMLParser().parseText(Attributes(node), value: "Simon"))
         
-        node.attributes["font-family"] = "Futura"
-        node.attributes["font-size"] = "12.5"
+        node["font-family"] = "Futura"
+        node["font-size"] = "12.5"
         
         let expected = DOM.Text(x: 10, y: 25, value: "Simon")
         expected.fontFamily = "Futura"
         expected.fontSize = 12.5
         
-        let parsed = try? XMLParser().parseText(node)
+        let parsed = try? XMLParser().parseText(Attributes(node), value: "Simon")
         XCTAssertEqual(parsed, expected)
         
-        node.attributes = [:]
-        XCTAssertThrowsError(try XMLParser().parseText(node))
-        node.attributes["x"] = "1"
-        XCTAssertThrowsError(try XMLParser().parseText(node))
-        node.attributes["y"] = "1"
-        XCTAssertNotNil(try? XMLParser().parseText(node))
+        XCTAssertThrowsError(try XMLParser().parseText([:], value: "Simon"))
+        XCTAssertThrowsError(try XMLParser().parseText(["x": "1"], value: "Simon"))
+        XCTAssertThrowsError(try XMLParser().parseText(["y": "1"], value: "Simon"))
+        XCTAssertThrowsError(try XMLParser().parseText(["x": "1", "y": "1"], value: ""))
+        XCTAssertThrowsError(try XMLParser().parseText(["x": "1", "y": "1"], value: nil))
     }
 }
