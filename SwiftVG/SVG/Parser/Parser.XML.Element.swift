@@ -71,7 +71,7 @@ extension XMLParser {
         let attributes = try parseAttributes(e)
    
         switch e.name {
-        case "g", "svg": ge = try parseGroup(e)
+        case "g": ge = try parseGroup(e)
         case "line": ge = try parseLine(attributes)
         case "circle": ge = try parseCircle(attributes)
         case "ellipse": ge = try parseEllipse(attributes)
@@ -81,6 +81,7 @@ extension XMLParser {
         case "path": ge = try parsePath(attributes)
         case "text": ge = try parseText(attributes, value: e.innerText)
         case "use": ge = try parseUse(attributes)
+        case "switch": ge = try parseSwitch(e)
         default: return nil
         }
         
@@ -108,6 +109,7 @@ extension XMLParser {
               e.name == "clipPath" ||
               e.name == "mask" ||
               e.name == "defs" ||
+              e.name == "switch" ||
               e.name == "g" else {
             throw Error.invalid
         }
@@ -131,6 +133,16 @@ extension XMLParser {
         let group = DOM.Group()
         group.childElements = try parseContainerChildren(e)
         return group
+    }
+    
+    func parseSwitch(_ e: XML.Element) throws -> DOM.Switch {
+        guard e.name == "switch" else {
+            throw Error.invalid
+        }
+        
+        let node = DOM.Switch()
+        node.childElements = try parseContainerChildren(e)
+        return node
     }
     
     func parseStyleAttributes(_ e: XML.Element) throws -> Attributes {

@@ -59,6 +59,10 @@
    
 	<circle cx="450" cy="75" r="20" fill="purple" clip-path="url(#cp)"/>
 	
+	<switch>
+		<circle cx="105" cy="100" r="2" fill="#FF00FF"/>
+	</switch>
+	
 	<rect x="230" y="55" width="40" height="40" fill="purple" clip-path="url(#cp2)" />	
 	
 	<text x="200" y="650" font-family="GillSans-Light" font-size="20">

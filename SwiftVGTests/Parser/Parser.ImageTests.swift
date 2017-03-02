@@ -53,6 +53,7 @@ class ParserImageTests: XCTestCase {
         XCTAssertTrue(c.next()!.element is DOM.Polygon)
         XCTAssertTrue(c.next()!.element is DOM.Group)
         XCTAssertTrue(c.next()!.element is DOM.Circle)
+        XCTAssertTrue(c.next()!.element is DOM.Switch)
         XCTAssertTrue(c.next()!.element is DOM.Rect)
         XCTAssertTrue(c.next()!.element is DOM.Text)
         XCTAssertTrue(c.next()!.element is DOM.Line)
