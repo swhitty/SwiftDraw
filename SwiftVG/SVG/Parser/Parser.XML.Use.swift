@@ -8,14 +8,10 @@
 
 extension XMLParser {
     
-    func parseUse(_ att: Attributes) throws -> DOM.Use {
-        guard let anchor = att["xlink:href"] else {
-                throw Error.invalid
-        }
-
-        let use = DOM.Use(href: try parseUrl(anchor))
-        use.x = try parseCoordinate(att["x"])
-        use.y = try parseCoordinate(att["y"])
+    func parseUse(_ att: AttributeParser) throws -> DOM.Use {
+        let use = DOM.Use(href: try att.parseUrl("xlink:href"))
+        use.x = try att.parseCoordinate("x")
+        use.y = try att.parseCoordinate("y")
 
         return use
     }

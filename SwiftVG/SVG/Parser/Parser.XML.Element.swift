@@ -8,50 +8,38 @@
 
 extension XMLParser {
     
-    func parseLine(_ att: Attributes) throws -> DOM.Line {
-        guard let x1 = try parseCoordinate(att["x1"]),
-            let y1 = try parseCoordinate(att["y1"]),
-            let x2 = try parseCoordinate(att["x2"]),
-            let y2 = try parseCoordinate(att["y2"]) else {
-            throw Error.invalid
-        }
-        
+    func parseLine(_ att: AttributeParser) throws -> DOM.Line {
+        let x1: DOM.Coordinate = try att.parseCoordinate("x1")
+        let y1: DOM.Coordinate = try att.parseCoordinate("y1")
+        let x2: DOM.Coordinate = try att.parseCoordinate("x2")
+        let y2: DOM.Coordinate = try att.parseCoordinate("y2")
         return DOM.Line(x1: x1, y1: y1, x2: x2, y2: y2)
     }
     
-    func parseCircle(_ att: Attributes) throws -> DOM.Circle {
-        guard let cx = try parseCoordinate(att["cx"]),
-              let cy = try parseCoordinate(att["cy"]),
-              let r = try parseCoordinate(att["r"]) else {
-            throw Error.invalid
-        }
-        
+    func parseCircle(_ att: AttributeParser) throws -> DOM.Circle {
+        let cx: DOM.Coordinate = try att.parseCoordinate("cx")
+        let cy: DOM.Coordinate = try att.parseCoordinate("cy")
+        let r: DOM.Coordinate = try att.parseCoordinate("r")
         return DOM.Circle(cx: cx, cy: cy, r: r)
     }
     
-    func parseEllipse(_ att: Attributes) throws -> DOM.Ellipse {
-        guard let cx = try parseCoordinate(att["cx"]),
-              let cy = try parseCoordinate(att["cy"]),
-              let rx = try parseCoordinate(att["rx"]),
-              let ry = try parseCoordinate(att["ry"]) else {
-            throw Error.invalid
-        }
-        
+    func parseEllipse(_ att: AttributeParser) throws -> DOM.Ellipse {
+        let cx: DOM.Coordinate = try att.parseCoordinate("cx")
+        let cy: DOM.Coordinate = try att.parseCoordinate("cy")
+        let rx: DOM.Coordinate = try att.parseCoordinate("rx")
+        let ry: DOM.Coordinate = try att.parseCoordinate("ry")
         return DOM.Ellipse(cx: cx, cy: cy, rx: rx, ry: ry)
     }
     
-    func parseRect(_ att: Attributes) throws -> DOM.Rect {
-        guard let x = try parseCoordinate(att["x"]),
-              let y = try parseCoordinate(att["y"]),
-              let width = try parseCoordinate(att["width"]),
-              let height = try parseCoordinate(att["height"]) else {
-            throw Error.invalid
-        }
-        
+    func parseRect(_ att: AttributeParser) throws -> DOM.Rect {
+        let x: DOM.Coordinate = try att.parseCoordinate("x")
+        let y: DOM.Coordinate = try att.parseCoordinate("y")
+        let width: DOM.Coordinate = try att.parseCoordinate("width")
+        let height: DOM.Coordinate = try att.parseCoordinate("height")
         let rect = DOM.Rect(x: x, y: y, width: width, height: height)
         
-        rect.rx = try parseCoordinate(att["rx"])
-        rect.ry = try parseCoordinate(att["ry"])
+        rect.rx = try att.parseCoordinate("rx")
+        rect.ry = try att.parseCoordinate("ry")
         
         return rect
     }
@@ -66,23 +54,14 @@ extension XMLParser {
         }
         
         return points
-        
-    }
-    func parsePolyline(_ att: Attributes) throws -> DOM.Polyline {
-        guard let points = att["points"] else {
-            throw Error.invalid
-        }
-        
-        return DOM.Polyline(points: parsePoints(points))
     }
     
-    func parsePolygon(_ att: Attributes) throws -> DOM.Polygon {
-        guard let points = att["points"] else {
-            throw Error.invalid
-        }
-        
-        let polygon = DOM.Polygon(points: parsePoints(points))
-        return polygon
+    func parsePolyline(_ att: AttributeParser) throws -> DOM.Polyline {
+        return DOM.Polyline(points: try att.parsePoints("points"))
+    }
+    
+    func parsePolygon(_ att: AttributeParser) throws -> DOM.Polygon {
+        return DOM.Polygon(points: try att.parsePoints("points"))
     }
     
     func parseGraphicsElement(_ e: XML.Element) throws -> DOM.GraphicsElement? {
@@ -197,32 +176,28 @@ extension XMLParser {
     func parsePresentationAttributes(_ att: Attributes) throws -> PresentationAttributes {
         let el = DOM.GraphicsElement()
 
-        el.opacity = try parsePercentage(att["opacity"])
-        el.display = try parseDisplayMode(att["display"])
+        el.opacity = try att.parsePercentage("opacity")
+        el.display = try att.parseDisplayMode("display")
         
-        el.stroke = try parseColor(att["stroke"])
-        el.strokeWidth = try parseFloat(att["stroke-width"])
-        el.strokeOpacity = try parsePercentage(att["stroke-opacity"])
-        el.strokeLineCap = try parseLineCap(att["stroke-linecap"])
-        el.strokeLineJoin = try parseLineJoin(att["stroke-linejoin"])
-        el.strokeDashArray = try parseDashArray(att["stroke-dasharray"])
+        el.stroke = try att.parseColor("stroke")
+        el.strokeWidth = try att.parseFloat("stroke-width")
+        el.strokeOpacity = try att.parsePercentage("stroke-opacity")
+        el.strokeLineCap = try att.parseLineCap("stroke-linecap")
+        el.strokeLineJoin = try att.parseLineJoin("stroke-linejoin")
+        el.strokeDashArray = try att.parseDashArray("stroke-dasharray")
         
-        el.fill = try parseColor(att["fill"])
-        el.fillOpacity = try parsePercentage(att["fill-opacity"])
-        el.fillRule = try parseFillRule(att["fill-rule"])
+        el.fill = try att.parseColor("fill")
+        el.fillOpacity = try att.parsePercentage("fill-opacity")
+        el.fillRule = try att.parseFillRule("fill-rule")
         
         if let val = att["transform"] {
             el.transform = try parseTransform(val)
         }
-        if let val = att["clip-path"] {
-            el.clipPath = try parseUrlSelector(val)
-        }
-        if let val = att["mask"] {
-            el.mask = try parseUrlSelector(val)
-        }
-        
+     
+        el.clipPath = try att.parseUrlSelector("clip-path")
+        el.mask = try att.parseUrlSelector("mask")
+
         return el
-        
     }
     
     

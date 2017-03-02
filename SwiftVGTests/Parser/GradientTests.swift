@@ -32,23 +32,22 @@ class GradientTests: XCTestCase {
     
     func testLinerGradientStop() {
         
-        var node = XML.Element(name: "stop", attributes: ["offset": "25.5%", "stop-color": "black"])
+        var node = ["offset": "25.5%", "stop-color": "black"]
         
-        var parsed = try? XMLParser().parseLinearGradientStop(node)
+        var parsed = try? XMLParser().parseLinearGradientStop(Attributes(node))
         XCTAssertEqual(parsed?.offset, 0.255)
         XCTAssertEqual(parsed?.color, .keyword(.black))
         XCTAssertEqual(parsed?.opacity, 1.0)
         
-        node.attributes["stop-opacity"] = "99%"
-        parsed = try? XMLParser().parseLinearGradientStop(node)
+        node["stop-opacity"] = "99%"
+        parsed = try? XMLParser().parseLinearGradientStop(Attributes(node))
         XCTAssertEqual(parsed?.opacity, 0.99)
         
         // test required properties
-        node = XML.Element(name: "stop")
-        XCTAssertThrowsError(try XMLParser().parseLinearGradientStop(node))
-        node.attributes["offset"] = "10%"
-        XCTAssertThrowsError(try XMLParser().parseLinearGradientStop(node))
-        node.attributes["stop-color"] = "black"
-        XCTAssertNotNil(try XMLParser().parseLinearGradientStop(node))
+        node = [:]
+        node["offset"] = "10%"
+        XCTAssertThrowsError(try XMLParser().parseLinearGradientStop(Attributes(node)))
+        node["stop-color"] = "black"
+        XCTAssertNotNil(try XMLParser().parseLinearGradientStop(Attributes(node)))
     }
 }

@@ -78,46 +78,69 @@ class ParserGraphicAttributeTests: XCTestCase {
         XCTAssertEqual(circle?.strokeWidth, 2)
     }
     
-    func testDisplayMode() {
-        XCTAssertNil(try XMLParser().parseDisplayMode(nil))
-        XCTAssertEqual(try XMLParser().parseDisplayMode("none"), .none)
-        XCTAssertEqual(try XMLParser().parseDisplayMode(" none "), .none)
-        
-        XCTAssertThrowsError(try XMLParser().parseDisplayMode("ds"))
+    func ParseDisplayMode(_ text: String?) throws -> DOM.DisplayMode? {
+        let att = Attributes()
+        att.element["val"] = text
+        return try att.parseDisplayMode("val")
     }
     
-    func testStrokeLineCap() {
-        XCTAssertNil(try XMLParser().parseLineCap(nil))
-        XCTAssertEqual(try XMLParser().parseLineCap("butt"), .butt)
-        XCTAssertEqual(try XMLParser().parseLineCap("round"), .round)
-        XCTAssertEqual(try XMLParser().parseLineCap("square"), .square)
-        XCTAssertEqual(try XMLParser().parseLineCap(" square "), .square)
-        
-        XCTAssertThrowsError(try XMLParser().parseLineCap("ds"))
+    func testDisplayMode() {
+        XCTAssertNil(try ParseDisplayMode(nil))
+        XCTAssertEqual(try ParseDisplayMode("none"), DOM.DisplayMode.none)
+        XCTAssertEqual(try ParseDisplayMode(" none "), DOM.DisplayMode.none)
+
+        XCTAssertThrowsError(try ParseDisplayMode("ds"))
+    }
+    
+    func ParseLineCap(_ text: String?) throws -> DOM.LineCap? {
+        let att = Attributes()
+        att.element["val"] = text
+        return try att.parseLineCap("val")
     }
 
+    func testStrokeLineCap() {
+        XCTAssertNil(try ParseLineCap(nil))
+        XCTAssertEqual(try ParseLineCap("butt"), .butt)
+        XCTAssertEqual(try ParseLineCap("round"), .round)
+        XCTAssertEqual(try ParseLineCap("square"), .square)
+        XCTAssertEqual(try ParseLineCap(" square "), .square)
+
+        XCTAssertThrowsError(try ParseLineCap("ds"))
+    }
+    
+    func ParseLineJoin(_ text: String?) throws -> DOM.LineJoin? {
+        let att = Attributes()
+        att.element["val"] = text
+        return try att.parseLineJoin("val")
+    }
+    
     func testStrokeLineJoin() {
-        XCTAssertNil(try XMLParser().parseLineJoin(nil))
-        XCTAssertEqual(try XMLParser().parseLineJoin("miter"), .miter)
-        XCTAssertEqual(try XMLParser().parseLineJoin("round"), .round)
-        XCTAssertEqual(try XMLParser().parseLineJoin("bevel"), .bevel)
-        XCTAssertEqual(try XMLParser().parseLineJoin(" bevel "), .bevel)
-        
-        XCTAssertThrowsError(try XMLParser().parseLineJoin("ds"))
+        XCTAssertNil(try ParseLineJoin(nil))
+        XCTAssertEqual(try ParseLineJoin("miter"), .miter)
+        XCTAssertEqual(try ParseLineJoin("round"), .round)
+        XCTAssertEqual(try ParseLineJoin("bevel"), .bevel)
+        XCTAssertEqual(try ParseLineJoin(" bevel "), .bevel)
+
+        XCTAssertThrowsError(try ParseLineJoin("ds"))
     }
     
+    func ParseDashArray(_ text: String?) throws -> [DOM.Float]? {
+        let att = Attributes()
+        att.element["val"] = text
+        return try att.parseDashArray("val")
+    }
+
     func testStrokeDashArray() {
-        XCTAssertNil(try XMLParser().parseDashArray(nil))
-        XCTAssertEqual(try XMLParser().parseDashArray("5 10 1 5")!, [5, 10, 1, 5])
-        XCTAssertEqual(try XMLParser().parseDashArray(" 1, 2.5, 3.5 ")!, [1, 2.5, 3.5])
-        XCTAssertThrowsError(try XMLParser().parseDashArray("ds"))
+        XCTAssertNil(try ParseDashArray(nil))
+        XCTAssertEqual(try ParseDashArray("5 10 1 5")!, [5, 10, 1, 5])
+        XCTAssertEqual(try ParseDashArray(" 1, 2.5, 3.5 ")!, [1, 2.5, 3.5])
+        XCTAssertThrowsError(try ParseDashArray("ds"))
     }
-    
 }
 
 private func AssertURLSelector(_ text: String, _ expected: String, file: StaticString = #file, line: UInt = #line) {
     let url = URL(string: expected)!
-    XCTAssertEqual(try XMLParser().parseUrlSelector(text), url, file: file, line: line)
+    XCTAssertEqual(try Attributes().doParseUrlSelector(text, for: ""), url, file: file, line: line)
 }
 
 extension SwiftVG.XMLParser {

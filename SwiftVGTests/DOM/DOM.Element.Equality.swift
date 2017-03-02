@@ -73,7 +73,7 @@ extension DOM.Polyline {
         
         var points = Array<DOM.Point>()
         
-        for index in stride(from: 0, to: points.count, by: 2) {
+        for index in stride(from: 0, to: p.count, by: 2) {
             points.append(DOM.Point(p[index], p[index + 1]))
         }
         
@@ -87,7 +87,7 @@ extension DOM.Polygon {
         
         var points = Array<DOM.Point>()
         
-        for index in stride(from: 0, to: points.count, by: 2) {
+        for index in stride(from: 0, to: p.count, by: 2) {
             points.append(DOM.Point(p[index], p[index + 1]))
         }
         

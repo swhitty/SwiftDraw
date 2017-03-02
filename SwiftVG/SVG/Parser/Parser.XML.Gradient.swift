@@ -29,29 +29,18 @@ extension XMLParser {
         let node = DOM.LinearGradient()
         
         for n in e.children where n.name == "stop" {
-            node.stops.append(try parseLinearGradientStop(n))
+            let att = try parseAttributes(n)
+            node.stops.append(try parseLinearGradientStop(att))
         }
         
         return node
     }
     
-    func parseLinearGradientStop(_ e: XML.Element) throws -> DOM.LinearGradient.Stop {
-        let att = try parseStyleAttributes(e)
-        guard e.name == "stop",
-            let offsetText = att["offset"],
-            let colorText = att["stop-color"] else {
-            throw Error.invalid
-        }
-        
-        let offset = try parsePercentage(offsetText)
-        let color = try parseColor(data: colorText)
-        
-        guard let opacityText = att["stop-opacity"] else {
-            return DOM.LinearGradient.Stop(offset: offset, color: color)
-        }
-        
-        let opacity = try parsePercentage(opacityText)
-        return DOM.LinearGradient.Stop(offset: offset, color: color, opacity: opacity)
+    func parseLinearGradientStop(_ att: AttributeParser) throws -> DOM.LinearGradient.Stop {
+        let offset: DOM.Float = try att.parsePercentage("offset")
+        let color: DOM.Color = try att.parseColor("stop-color")
+        let opacity: DOM.Float? = try att.parsePercentage("stop-opacity")
+        return DOM.LinearGradient.Stop(offset: offset, color: color, opacity: opacity ?? 1.0)
     }
     
 }

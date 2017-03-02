@@ -25,10 +25,12 @@ class TextTests: XCTestCase {
         let parsed = try? XMLParser().parseText(Attributes(node), value: "Simon")
         XCTAssertEqual(parsed, expected)
         
-        XCTAssertThrowsError(try XMLParser().parseText([:], value: "Simon"))
-        XCTAssertThrowsError(try XMLParser().parseText(["x": "1"], value: "Simon"))
-        XCTAssertThrowsError(try XMLParser().parseText(["y": "1"], value: "Simon"))
-        XCTAssertThrowsError(try XMLParser().parseText(["x": "1", "y": "1"], value: ""))
-        XCTAssertThrowsError(try XMLParser().parseText(["x": "1", "y": "1"], value: nil))
+        XCTAssertThrowsError(try XMLParser().parseText(Attributes([:]), value: "Simon"))
+        XCTAssertThrowsError(try XMLParser().parseText(Attributes(["x": "1"]), value: "Simon"))
+        XCTAssertThrowsError(try XMLParser().parseText(Attributes(["y": "1"]), value: "Simon"))
+        XCTAssertThrowsError(try XMLParser().parseText(Attributes(["x": "1", "y": "1"]), value: ""))
+        XCTAssertThrowsError(try XMLParser().parseText(Attributes(["x": "1", "y": "1"]), value: nil))
     }
 }
+
+

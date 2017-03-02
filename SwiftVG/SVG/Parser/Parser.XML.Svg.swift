@@ -14,8 +14,8 @@ extension XMLParser {
         }
         
         let att = try parseStyleAttributes(e)
-        let width = try parseLength(att["width"])
-        let height = try parseLength(att["height"])
+        let width: DOM.Length = try att.parseLength("width")
+        let height: DOM.Length = try att.parseLength("height")
         
         let svg = DOM.Svg(width: width, height: height)
         svg.childElements = try parseContainerChildren(e)

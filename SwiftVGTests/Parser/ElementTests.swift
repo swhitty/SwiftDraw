@@ -56,19 +56,22 @@ class ElementTests: XCTestCase {
         XCTAssertEqual(rect, try? XMLParser().parseRect(Attributes(node)))
     }
     
-    func testPolyline() {
+    func testPolyline() throws {
         let node: Attributes = ["points": "0,1 2 3; 4;5;6;7;8 9"]
         
-        XCTAssertEqual(DOM.Polyline(0, 1, 2, 3, 4, 5, 6, 7, 8, 9), try? XMLParser().parsePolyline(node))
+        let parsed = try? XMLParser().parsePolyline(node)
+        XCTAssertEqual(DOM.Polyline(0, 1, 2, 3, 4, 5, 6, 7, 8, 9), parsed)
     }
     
     func testPolygon() {
-        let parsed =  try? XMLParser().parsePolygon(["points": "0,1,2,3;4;5;6;7;8 9"])
+        let att: Attributes = ["points": "0, 1,2,3;4;5;6;7;8 9"]
+        let parsed =  try? XMLParser().parsePolygon(att)
         XCTAssertEqual(DOM.Polygon(0, 1, 2, 3, 4, 5, 6, 7, 8, 9), parsed)
     }
     
     func testPolygonFillRule() {
-        XCTAssertNil((try! XMLParser().parsePolygon(["points": "0,1,2,3"])).fillRule)
+        let att: Attributes = ["points": "0,1,2,3;4;5;6;7;8 9"]
+        XCTAssertNil((try! XMLParser().parsePolygon(att)).fillRule)
         
         let node = XML.Element(name: "polygon")
         node.attributes["points"] = "0,1,2,3"
