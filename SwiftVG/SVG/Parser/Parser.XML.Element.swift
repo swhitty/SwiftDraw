@@ -177,18 +177,18 @@ extension XMLParser {
         let el = DOM.GraphicsElement()
 
         el.opacity = try att.parsePercentage("opacity")
-        el.display = try att.parseDisplayMode("display")
+        el.display = try att.parseRaw("display")
         
         el.stroke = try att.parseColor("stroke")
         el.strokeWidth = try att.parseFloat("stroke-width")
         el.strokeOpacity = try att.parsePercentage("stroke-opacity")
-        el.strokeLineCap = try att.parseLineCap("stroke-linecap")
-        el.strokeLineJoin = try att.parseLineJoin("stroke-linejoin")
+        el.strokeLineCap = try att.parseRaw("stroke-linecap")
+        el.strokeLineJoin = try att.parseRaw("stroke-linejoin")
         el.strokeDashArray = try att.parseDashArray("stroke-dasharray")
         
         el.fill = try att.parseColor("fill")
         el.fillOpacity = try att.parsePercentage("fill-opacity")
-        el.fillRule = try att.parseFillRule("fill-rule")
+        el.fillRule = try att.parseRaw("fill-rule")
         
         if let val = att["transform"] {
             el.transform = try parseTransform(val)

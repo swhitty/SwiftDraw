@@ -11,41 +11,77 @@ import Foundation
 
 protocol AttributeParser {
     func parseString(_ key: String) throws -> String
-    func parseString(_ key: String) -> String?
-    
     func parseFloat(_ key: String) throws -> DOM.Float
-    func parseFloat(_ key: String) throws -> DOM.Float?
-    
     func parsePercentage(_ key: String) throws -> DOM.Float
-    func parsePercentage(_ key: String) throws -> DOM.Float?
-    
     func parseCoordinate(_ key: String) throws -> DOM.Coordinate
-    func parseCoordinate(_ key: String) throws -> DOM.Coordinate?
-    
     func parseLength(_ key: String) throws -> DOM.Length
-    func parseLength(_ key: String) throws -> DOM.Length?
-    
     func parseBool(_ key: String) throws -> DOM.Bool
-    func parseBool(_ key: String) throws -> DOM.Bool?
-    
     func parseColor(_ key: String) throws -> DOM.Color
-    func parseColor(_ key: String) throws -> DOM.Color?
+    func parseUrl(_ key: String) throws -> URL
+    // e.g. url(#someId)
+    func parseUrlSelector(_ key: String) throws -> URL
     
     func parsePoints(_ key: String) throws -> [DOM.Point]
-    func parsePoints(_ key: String) throws -> [DOM.Point]?
+    func parseDashArray(_ key: String) throws -> [DOM.Float]
     
-    // parse url wrapped in url()
-    // =url(#someId)
-    func parseUrl(_ key: String) throws -> URL
-    func parseUrl(_ key: String) throws -> URL?
-    func parseUrlSelector(_ key: String) throws -> URL?
-    func parseFillRule(_ key: String) throws -> DOM.FillRule?
-    func parseDisplayMode(_ key: String) throws -> DOM.DisplayMode?
-    func parseLineCap(_ key: String) throws -> DOM.LineCap?
-    func parseLineJoin(_ key: String) throws -> DOM.LineJoin?
-    func parseDashArray(_ key: String) throws -> [DOM.Float]?
+    //any string backed enum
+    func parseRaw<T: RawRepresentable>(_ key: String) throws -> T? where T.RawValue == String
 }
 
+extension AttributeParser {
+    
+    func parseOptional<T>(_ exp: @autoclosure () throws -> T) throws -> T? {
+        do {
+            return try exp()
+        } catch XMLParser.Error.missingAttribute(name: _) {
+            return nil
+        }
+    }
+    
+    func parseString(_ key: String) -> String? {
+        return try? parseString(key)
+    }
+    
+    func parseFloat(_ key: String) throws -> DOM.Float? {
+        return try parseOptional(try parseFloat(key))
+    }
+    
+    func parsePercentage(_ key: String) throws -> DOM.Float? {
+        return try parseOptional(try parsePercentage(key))
+    }
+    
+    func parseCoordinate(_ key: String) throws -> DOM.Coordinate? {
+        return try parseOptional(try parseCoordinate(key))
+    }
+    
+    func parseLength(_ key: String) throws -> DOM.Length? {
+        return try parseOptional(try parseLength(key))
+    }
+    
+    func parseBool(_ key: String) throws -> DOM.Bool? {
+        return try parseOptional(try parseBool(key))
+    }
+    
+    func parseColor(_ key: String) throws -> DOM.Color? {
+        return try parseOptional(try parseColor(key))
+    }
+    
+    func parseUrl(_ key: String) throws -> URL? {
+        return try parseOptional(try parseUrl(key))
+    }
+    
+    func parseUrlSelector(_ key: String) throws -> URL? {
+        return try parseOptional(try parseUrlSelector(key))
+    }
+
+    func parsePoints(_ key: String) throws -> [DOM.Point]? {
+        return try parseOptional(try parsePoints(key))
+    }
+
+    func parseDashArray(_ key: String) throws -> [DOM.Float]? {
+        return try parseOptional(try parseDashArray(key))
+    }
+}
 
 extension XMLParser {
     // Storage for merging XMLElement attibutes and style properties;
@@ -92,12 +128,8 @@ extension XMLParser.Attributes: AttributeParser {
         return try getValue(key)
     }
     
-    func parseString(_ key: String) -> String? {
-        return self[key]
-    }
-    
-    // Float
-    func doParseFloat(_ value: String, for key: String) throws -> DOM.Float {
+    func parseFloat(_ key: String) throws -> DOM.Float {
+        let value = try getValue(key)
         var scanner = Scanner(text: value)
         guard let float = try? scanner.scanFloat() else {
             throw XMLParser.Error.invalidAttribute(name: key, value: value)
@@ -105,18 +137,8 @@ extension XMLParser.Attributes: AttributeParser {
         return float
     }
     
-    func parseFloat(_ key: String) throws -> DOM.Float {
+    func parsePercentage(_ key: String) throws -> DOM.Float {
         let value = try getValue(key)
-        return try doParseFloat(value, for: key)
-    }
-    
-    func parseFloat(_ key: String) throws -> DOM.Float? {
-        guard let value = self[key] else { return nil }
-        return try doParseFloat(value, for: key)
-    }
-    
-    // Percentage
-    func doParsePercentage(_ value: String, for key: String) throws -> DOM.Float {
         var scanner = Scanner(text: value)
         guard let pc = try? scanner.scanPercentage() else {
             throw XMLParser.Error.invalidAttribute(name: key, value: value)
@@ -124,18 +146,8 @@ extension XMLParser.Attributes: AttributeParser {
         return pc
     }
     
-    func parsePercentage(_ key: String) throws -> DOM.Float {
+    func parseCoordinate(_ key: String) throws -> DOM.Coordinate {
         let value = try getValue(key)
-        return try doParsePercentage(value, for: key)
-    }
-    
-    func parsePercentage(_ key: String) throws -> DOM.Float? {
-        guard let value = self[key] else { return nil }
-        return try doParsePercentage(value, for: key)
-    }
-    
-    // Coordinate
-    func doParseCoordinate(_ value: String, for key: String) throws -> DOM.Coordinate {
         var scanner = Scanner(text: value)
         guard let coord = try? scanner.scanCoordinate() else {
             throw XMLParser.Error.invalidAttribute(name: key, value: value)
@@ -143,18 +155,8 @@ extension XMLParser.Attributes: AttributeParser {
         return coord
     }
     
-    func parseCoordinate(_ key: String) throws -> DOM.Coordinate {
+    func parseLength(_ key: String) throws -> DOM.Length {
         let value = try getValue(key)
-        return try doParseCoordinate(value, for: key)
-    }
-    
-    func parseCoordinate(_ key: String) throws -> DOM.Coordinate? {
-        guard let value = self[key] else { return nil }
-        return try doParseCoordinate(value, for: key)
-    }
-    
-    // Length
-    func doParseLength(_ value: String, for key: String) throws -> DOM.Length {
         var scanner = Scanner(text: value)
         guard let length = try? scanner.scanLength() else {
             throw XMLParser.Error.invalidAttribute(name: key, value: value)
@@ -162,18 +164,8 @@ extension XMLParser.Attributes: AttributeParser {
         return length
     }
     
-    func parseLength(_ key: String) throws -> DOM.Length {
+    func parseBool(_ key: String) throws -> DOM.Bool {
         let value = try getValue(key)
-        return try doParseLength(value, for: key)
-    }
-    
-    func parseLength(_ key: String) throws -> DOM.Length? {
-        guard let value = self[key] else { return nil }
-        return try doParseLength(value, for: key)
-    }
-    
-    // Bool
-    func doParseBool(_ value: String, for key: String) throws -> DOM.Bool {
         var scanner = Scanner(text: value)
         guard let bool = try? scanner.scanBool() else {
             throw XMLParser.Error.invalidAttribute(name: key, value: value)
@@ -181,64 +173,34 @@ extension XMLParser.Attributes: AttributeParser {
         return bool
     }
     
-    func parseBool(_ key: String) throws -> DOM.Bool {
+    func parseColor(_ key: String) throws -> DOM.Color {
         let value = try getValue(key)
-        return try doParseBool(value, for: key)
-    }
-    
-    func parseBool(_ key: String) throws -> DOM.Bool? {
-        guard let value = self[key] else { return nil }
-        return try doParseBool(value, for: key)
-    }
-    
-    //Color
-    func doParseColor(_ value: String, for key: String) throws -> DOM.Color {
         guard let color = try? XMLParser().parseColor(data: value) else {
             throw XMLParser.Error.invalidAttribute(name: key, value: value)
         }
         return color
     }
     
-    func parseColor(_ key: String) throws -> DOM.Color {
+    func parsePoints(_ key: String) throws -> [DOM.Point] {
         let value = try getValue(key)
-        return try doParseColor(value, for: key)
-    }
-    
-    func parseColor(_ key: String) throws -> DOM.Color? {
-        guard let value = self[key] else { return nil }
-        return try doParseColor(value, for: key)
-    }
-    
-    // Points
-    func doParsePoints(_ value: String, for key: String) throws -> [DOM.Point] {
         var points = Array<DOM.Point>()
         var scanner = Scanner(text: value)
         
         while !scanner.isEOF {
-
+            
             let px = try? scanner.scanCoordinate()
             _ = scanner.scan(first: ",;")
             let py = try? scanner.scanCoordinate()
             _ = scanner.scan(first: ",;")
             
             guard let x = px,
-                  let y = py else {
-                throw XMLParser.Error.invalidAttribute(name: key, value: value)
+                let y = py else {
+                    throw XMLParser.Error.invalidAttribute(name: key, value: value)
             }
             points.append(DOM.Point(x, y))
         }
-
+        
         return points
-    }
-    
-    func parsePoints(_ key: String) throws -> [DOM.Point] {
-        let value = try getValue(key)
-        return try doParsePoints(value, for: key)
-    }
-    
-    func parsePoints(_ key: String) throws -> [DOM.Point]? {
-        guard let value = self[key] else { return nil }
-        return try doParsePoints(value, for: key)
     }
     
     // URL
@@ -248,8 +210,14 @@ extension XMLParser.Attributes: AttributeParser {
         }
         return url
     }
+
+    func parseUrl(_ key: String) throws -> URL {
+        let value = try getValue(key)
+        return try doParseUrl(value, for: key)
+    }
     
-    func doParseUrlSelector(_ value: String, for key: String) throws -> URL {
+    func parseUrlSelector(_ key: String) throws -> URL {
+        let value = try getValue(key)
         var scanner = Scanner(text: value)
         guard scanner.scan("url(") != nil,
             let urlText = scanner.scan(upTo: ")") else {
@@ -261,35 +229,14 @@ extension XMLParser.Attributes: AttributeParser {
         
         guard url.characters.count > 0,
             scanner.isEOF else {
-            throw XMLParser.Error.invalidAttribute(name: key, value: value)
+                throw XMLParser.Error.invalidAttribute(name: key, value: value)
         }
- 
+        
         return try doParseUrl(url, for: key)
     }
     
-    func parseUrl(_ key: String) throws -> URL {
+    func parseDashArray(_ key: String) throws -> [DOM.Float] {
         let value = try getValue(key)
-        return try doParseUrl(value, for: key)
-    }
-    
-    func parseUrl(_ key: String) throws -> URL? {
-        guard let value = self[key] else { return nil }
-        return try doParseUrl(value, for: key)
-    }
-    
-    func parseUrlSelector(_ key: String) throws -> URL {
-        let value = try getValue(key)
-        return try doParseUrlSelector(value, for: key)
-    }
-    
-    func parseUrlSelector(_ key: String) throws -> URL? {
-        guard let value = self[key] else { return nil }
-        return try doParseUrlSelector(value, for: key)
-    }
-    
-    func parseDashArray(_ key: String) throws -> [DOM.Float]? {
-        guard let value = self[key] else { return nil }
-            
         var array = Array<DOM.Float>()
         var scanner = Scanner(text: value)
 
@@ -305,33 +252,13 @@ extension XMLParser.Attributes: AttributeParser {
         return array
     }
 
-    
-    //RawRepresentable
-    func doParseRaw<T: RawRepresentable>(_ value: String, for key: String) throws -> T where T.RawValue == String {
+    func parseRaw<T: RawRepresentable>(_ key: String) throws -> T? where T.RawValue == String {
+        guard let value = self[key] else { return nil }
         guard let obj = T(rawValue: value.trimmingCharacters(in: .whitespaces)) else {
             throw XMLParser.Error.invalidAttribute(name: key, value: value)
         }
         return obj
     }
-    
-    func parseFillRule(_ key: String) throws -> DOM.FillRule? {
-        guard let value = self[key] else { return nil }
-        return try doParseRaw(value, for: key) as DOM.FillRule
-    }
-    
-    func parseDisplayMode(_ key: String) throws -> DOM.DisplayMode? {
-        guard let value = self[key] else { return nil }
-        return try doParseRaw(value, for: key) as DOM.DisplayMode
-    }
-    
-    func parseLineCap(_ key: String) throws -> DOM.LineCap? {
-        guard let value = self[key] else { return nil }
-        return try doParseRaw(value, for: key) as DOM.LineCap
-    }
-    
-    func parseLineJoin(_ key: String) throws -> DOM.LineJoin? {
-        guard let value = self[key] else { return nil }
-        return try doParseRaw(value, for: key) as DOM.LineJoin
-    }
+
 }
 

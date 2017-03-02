@@ -81,7 +81,7 @@ class ParserGraphicAttributeTests: XCTestCase {
     func ParseDisplayMode(_ text: String?) throws -> DOM.DisplayMode? {
         let att = Attributes()
         att.element["val"] = text
-        return try att.parseDisplayMode("val")
+        return try att.parseRaw("val")
     }
     
     func testDisplayMode() {
@@ -95,7 +95,7 @@ class ParserGraphicAttributeTests: XCTestCase {
     func ParseLineCap(_ text: String?) throws -> DOM.LineCap? {
         let att = Attributes()
         att.element["val"] = text
-        return try att.parseLineCap("val")
+        return try att.parseRaw("val")
     }
 
     func testStrokeLineCap() {
@@ -111,7 +111,7 @@ class ParserGraphicAttributeTests: XCTestCase {
     func ParseLineJoin(_ text: String?) throws -> DOM.LineJoin? {
         let att = Attributes()
         att.element["val"] = text
-        return try att.parseLineJoin("val")
+        return try att.parseRaw("val")
     }
     
     func testStrokeLineJoin() {
@@ -140,7 +140,8 @@ class ParserGraphicAttributeTests: XCTestCase {
 
 private func AssertURLSelector(_ text: String, _ expected: String, file: StaticString = #file, line: UInt = #line) {
     let url = URL(string: expected)!
-    XCTAssertEqual(try Attributes().doParseUrlSelector(text, for: ""), url, file: file, line: line)
+    let att: Attributes = ["val": text]
+    XCTAssertEqual(try att.parseUrlSelector("val"), url, file: file, line: line)
 }
 
 extension SwiftVG.XMLParser {
