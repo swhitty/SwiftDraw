@@ -112,6 +112,146 @@ extension XMLParser {
             return props
         }
     }
+    
+
+    final class AttributesA: AttributeParserA {
+        
+        var parser: AttributeValueParserA
+        var options: XMLParser.Options
+        
+        var element: [String: String]
+        var style: [String: String]
+        
+        init(parser: AttributeValueParserA,
+             options: XMLParser.Options = [],
+             element: [String: String],
+             style: [String: String]) {
+            self.parser = parser
+            self.options = options
+            self.element = element
+            self.style = style
+        }
+        
+        subscript(name: String) -> String? {
+            get {
+                return style[name] ?? element[name]
+            }
+        }
+        
+        func parse<T>(_ key: String, _ exp: (String) throws -> T) throws -> T {
+            do {
+                return try parse(style[key], with: exp, for: key)
+            } catch XMLParser.Error.missingAttribute(_) {
+                return try parse(element[key], with: exp, for: key)
+            } catch let error {
+                guard options.contains(.skipInvalidAttributes) else { throw error }
+                return try parse(element[key], with: exp, for: key)
+            }
+        }
+        
+        func parse<T>(_ value: String?, with expression: (String) throws -> T, for key: String) throws -> T {
+            guard let value = style[key] else { throw XMLParser.Error.missingAttribute(name: key) }
+            return try expression(value)
+        }
+    }
+}
+
+
+extension XMLParser {
+    
+    struct ValueParser: AttributeValueParserA {
+        
+        func parseFloat(_ value: String) throws -> DOM.Float {
+            var scanner = Scanner(text: value)
+            return try scanner.scanFloat()
+        }
+        
+        func parseFloats(_ value: String) throws -> [DOM.Float] {
+            var array = Array<DOM.Float>()
+            var scanner = Scanner(text: value)
+            
+            while !scanner.isEOF {
+                let vx = try? scanner.scanFloat()
+                _ = scanner.scan(first: ",")
+                guard let v = vx else { throw XMLParser.Error.invalid }
+                array.append(v)
+            }
+            
+            return array
+        }
+        
+        
+        func parsePercentage(_ value: String) throws -> DOM.Float {
+            var scanner = Scanner(text: value)
+            return try scanner.scanPercentage()
+        }
+        
+        func parseCoordinate(_ value: String) throws -> DOM.Coordinate {
+            var scanner = Scanner(text: value)
+            return try scanner.scanCoordinate()
+        }
+        
+        func parseLength(_ value: String) throws -> DOM.Length {
+            var scanner = Scanner(text: value)
+            return try scanner.scanLength()
+        }
+        
+        func parseBool(_ value: String) throws -> DOM.Bool {
+            var scanner = Scanner(text: value)
+            return try scanner.scanBool()
+        }
+        
+        func parseColor(_ value: String) throws -> DOM.Color {
+            return try XMLParser().parseColor(data: value)
+        }
+        
+        func parseUrl(_ value: String) throws -> DOM.URL {
+            guard let url = URL(string: value) else { throw XMLParser.Error.invalid }
+            return url
+            
+        }
+        func parseUrlSelector(_ value: String) throws -> DOM.URL {
+            var scanner = Scanner(text: value)
+            guard scanner.scan("url(") != nil,
+                let urlText = scanner.scan(upTo: ")") else { throw XMLParser.Error.invalid }
+            
+            _ = scanner.scan(")")
+            
+            let url = urlText.trimmingCharacters(in: .whitespaces)
+            
+            guard url.characters.count > 0,
+                  scanner.isEOF else { throw XMLParser.Error.invalid }
+            
+            return try parseUrl(url)
+        }
+        
+        func parsePoints(_ value: String) throws -> [DOM.Point] {
+            var points = Array<DOM.Point>()
+            var scanner = Scanner(text: value)
+            
+            while !scanner.isEOF {
+                let px = try? scanner.scanCoordinate()
+                _ = scanner.scan(first: ",;")
+                let py = try? scanner.scanCoordinate()
+                _ = scanner.scan(first: ",;")
+                
+                guard let x = px,
+                      let y = py else { throw XMLParser.Error.invalid }
+                
+                points.append(DOM.Point(x, y))
+            }
+            
+            return points
+        }
+        
+        func parseRaw<T: RawRepresentable>(_ value: String) throws -> T where T.RawValue == String {
+            guard let obj = T(rawValue: value.trimmingCharacters(in: .whitespaces)) else {
+                throw XMLParser.Error.invalid
+            }
+            return obj
+        }
+    }
+    
 }
 
 

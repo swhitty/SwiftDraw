@@ -12,6 +12,7 @@ public struct DOM {
     public typealias Length = Swift.Int
     public typealias Opacity = Swift.Float
     public typealias Bool = Swift.Bool
+    public typealias URL = Foundation.URL
 }
 
 extension DOM {
