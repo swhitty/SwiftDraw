@@ -148,9 +148,9 @@ extension XMLParser {
     func parseAttributes(_ e: XML.Element) throws -> Attributes {
         guard let styleText = e.attributes["style"] else {
             return Attributes(parser: ValueParser(),
-                               options: [],
-                               element: e.attributes,
-                               style: [:])
+                              options: options,
+                              element: e.attributes,
+                              style: [:])
         }
         
         var scanner = Scanner(text: styleText)
@@ -164,9 +164,9 @@ extension XMLParser {
         var element = e.attributes
         element["style"] = nil
         return Attributes(parser: ValueParser(),
-                           options: [],
-                           element: element,
-                           style: style)
+                          options: options,
+                          element: element,
+                          style: style)
     }
     
     func parseStyleAttribute(_ scanner: inout Scanner) throws -> (String, String) {

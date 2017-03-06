@@ -13,6 +13,8 @@ struct XMLParser {
         case invalidAttribute(name: String, value: Any)
     }
     
+    var options: Options = []
+    
     struct Options: OptionSet {
         let rawValue: Int
         init(rawValue: Int) {
@@ -41,6 +43,10 @@ protocol AttributeValueParser {
 protocol AttributeParser {
     var parser: AttributeValueParser { get }
     var options: XMLParser.Options { get }
+    
+    // either parse and return T or
+    // throw Error.missingAttribute when key cannot resolve to a value
+    // throw Error.invalidAttribute when value cannot be parsed into T
     func parse<T>(_ key: String, _ exp: (String) throws -> T) throws -> T
 }
 
