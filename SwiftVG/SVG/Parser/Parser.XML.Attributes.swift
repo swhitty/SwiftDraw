@@ -116,11 +116,11 @@ extension XMLParser {
 
     final class AttributesA: AttributeParserA {
         
-        var parser: AttributeValueParserA
-        var options: XMLParser.Options
+        let parser: AttributeValueParserA
+        let options: XMLParser.Options
         
-        var element: [String: String]
-        var style: [String: String]
+        let element: [String: String]
+        let style: [String: String]
         
         init(parser: AttributeValueParserA,
              options: XMLParser.Options = [],
@@ -150,7 +150,7 @@ extension XMLParser {
         }
         
         func parse<T>(_ value: String?, with expression: (String) throws -> T, for key: String) throws -> T {
-            guard let value = style[key] else { throw XMLParser.Error.missingAttribute(name: key) }
+            guard let value = value else { throw XMLParser.Error.missingAttribute(name: key) }
             return try expression(value)
         }
     }
