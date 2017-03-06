@@ -17,7 +17,7 @@ class ElementTests: XCTestCase {
                     "x2": "50",
                     "y2": "60"]
         
-        let parsed = try? XMLParser().parseLine(Attributes(node))
+        let parsed = try? XMLParser().parseLine(node)
         XCTAssertEqual(DOM.Line(x1: 0, y1: 10, x2: 50, y2: 60), parsed)
     }
     
@@ -26,7 +26,7 @@ class ElementTests: XCTestCase {
                     "cy": "10",
                     "r": "20"]
         
-        let parsed = try? XMLParser().parseCircle(Attributes(node))
+        let parsed = try? XMLParser().parseCircle(node)
         XCTAssertEqual(DOM.Circle(cx: 0, cy: 10, r: 20), parsed)
     }
     
@@ -36,7 +36,7 @@ class ElementTests: XCTestCase {
                     "rx": "20",
                     "ry": "30"]
         
-        let parsed = try? XMLParser().parseEllipse(Attributes(node))
+        let parsed = try? XMLParser().parseEllipse(node)
         XCTAssertEqual(DOM.Ellipse(cx: 0, cy: 10, rx: 20, ry: 30), parsed)
     }
     
@@ -47,30 +47,30 @@ class ElementTests: XCTestCase {
                     "height": "30"]
         
         let rect = DOM.Rect(x: 0, y: 10, width: 20, height: 30)
-        XCTAssertEqual(rect, try? XMLParser().parseRect(Attributes(node)))
+        XCTAssertEqual(rect, try? XMLParser().parseRect(node))
         
         node["rx"] = "3"
         node["ry"] = "2"
         rect.rx = 3
         rect.ry = 2
-        XCTAssertEqual(rect, try? XMLParser().parseRect(Attributes(node)))
+        XCTAssertEqual(rect, try? XMLParser().parseRect(node))
     }
     
     func testPolyline() throws {
-        let node: Attributes = ["points": "0,1 2 3; 4;5;6;7;8 9"]
+        let node = ["points": "0,1 2 3; 4;5;6;7;8 9"]
         
         let parsed = try? XMLParser().parsePolyline(node)
         XCTAssertEqual(DOM.Polyline(0, 1, 2, 3, 4, 5, 6, 7, 8, 9), parsed)
     }
     
     func testPolygon() {
-        let att: Attributes = ["points": "0, 1,2,3;4;5;6;7;8 9"]
+        let att = ["points": "0, 1,2,3;4;5;6;7;8 9"]
         let parsed =  try? XMLParser().parsePolygon(att)
         XCTAssertEqual(DOM.Polygon(0, 1, 2, 3, 4, 5, 6, 7, 8, 9), parsed)
     }
     
     func testPolygonFillRule() {
-        let att: Attributes = ["points": "0,1,2,3;4;5;6;7;8 9"]
+        let att = ["points": "0,1,2,3;4;5;6;7;8 9"]
         XCTAssertNil((try! XMLParser().parsePolygon(att)).fillRule)
         
         let node = XML.Element(name: "polygon")

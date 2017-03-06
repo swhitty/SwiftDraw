@@ -13,13 +13,13 @@ extension XMLParser {
             throw Error.invalid
         }
         
-        let att = try parseStyleAttributes(e)
+        let att = try parseAttributes(e)
         let width: DOM.Length = try att.parseLength("width")
         let height: DOM.Length = try att.parseLength("height")
         
         let svg = DOM.Svg(width: width, height: height)
         svg.childElements = try parseContainerChildren(e)
-        svg.viewBox = try parseViewBox(att["viewBox"])
+        svg.viewBox = try parseViewBox(try att.parseString("viewBox"))
         
         svg.defs = try parseSVGDefs(e)
         
@@ -92,12 +92,10 @@ extension XMLParser {
     }
     
     func parseClipPath(_ e: XML.Element) throws -> DOM.ClipPath {
-        let att = try parseStyleAttributes(e)
+        guard e.name == "clipPath" else { throw Error.invalid }
         
-        guard e.name == "clipPath",
-              let id = att["id"] else {
-            throw Error.invalid
-        }
+        let att = try parseAttributes(e)
+        let id: String = try att.parseString("id")
         
         let children = try parseContainerChildren(e)
         return DOM.ClipPath(id: id, childElements: children)
@@ -117,13 +115,11 @@ extension XMLParser {
     }
     
     func parseMask(_ e: XML.Element) throws -> DOM.Mask {
-        let att = try parseStyleAttributes(e)
+        guard e.name == "mask" else { throw Error.invalid }
         
-        guard e.name == "mask",
-            let id = att["id"] else {
-                throw Error.invalid
-        }
-        
+        let att = try parseAttributes(e)
+        let id: String = try att.parseString("id")
+   
         let children = try parseContainerChildren(e)
         return DOM.Mask(id: id, childElements: children)
     }

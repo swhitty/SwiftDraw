@@ -14,7 +14,7 @@ class AttributeParserTests: XCTestCase {
     func testParserOrder() {
        let parser = XMLParser.ValueParser()
         
-       let att = XMLParser.AttributesA(parser: parser,
+       let att = XMLParser.Attributes(parser: parser,
                                        element: ["x": "10", "y": "20.0", "fill": "red"],
                                        style:  ["x": "d", "fill": "green"])
         
@@ -31,7 +31,7 @@ class AttributeParserTests: XCTestCase {
         XCTAssertEqual(try att.parseFloat("y"), 20)
         
         //SkipInvalidAttributes
-        let another = XMLParser.AttributesA(parser: parser,
+        let another = XMLParser.Attributes(parser: parser,
                                             options: [.skipInvalidAttributes],
                                             element: att.element,
                                             style:  att.style)
@@ -67,8 +67,8 @@ class AttributeParserTests: XCTestCase {
 
 
 //Allow Dictionary to become an attribute parser
-extension Dictionary: AttributeParserA {
-    public var parser: AttributeValueParserA { return XMLParser.ValueParser() }
+extension Dictionary: AttributeParser {
+    public var parser: AttributeValueParser { return XMLParser.ValueParser() }
     public var options: SwiftVG.XMLParser.Options { return [] }
     
     public func parse<T>(_ key: String, _ exp: (String) throws -> T) throws -> T {

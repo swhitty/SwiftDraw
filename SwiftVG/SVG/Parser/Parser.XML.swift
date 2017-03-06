@@ -23,7 +23,7 @@ struct XMLParser {
     }
 }
 
-protocol AttributeValueParserA {
+protocol AttributeValueParser {
     func parseFloat(_ value: String) throws -> DOM.Float
     func parseFloats(_ value: String) throws -> [DOM.Float]
     func parsePercentage(_ value: String) throws -> DOM.Float
@@ -38,13 +38,17 @@ protocol AttributeValueParserA {
     func parseRaw<T: RawRepresentable>(_ value: String) throws -> T where T.RawValue == String
 }
 
-protocol AttributeParserA {
-    var parser: AttributeValueParserA { get }
+protocol AttributeParser {
+    var parser: AttributeValueParser { get }
     var options: XMLParser.Options { get }
     func parse<T>(_ key: String, _ exp: (String) throws -> T) throws -> T
 }
 
-extension AttributeParserA {
+extension AttributeParser {
+    
+    func parseString(_ key: String) throws -> String {
+        return try parse(key) { $0 }
+    }
     
     func parseFloat(_ key: String) throws -> DOM.Float {
         return try parse(key) { return try parser.parseFloat($0) }
@@ -91,7 +95,7 @@ extension AttributeParserA {
     }
 }
 
-extension AttributeParserA {
+extension AttributeParser {
     
     typealias Options = XMLParser.Options
     
@@ -104,6 +108,10 @@ extension AttributeParserA {
             guard options.contains(.skipInvalidAttributes) else { throw error }
             return nil
         }
+    }
+    
+    func parseString(_ key: String) throws -> String? {
+        return try parse(key) { $0 }
     }
     
     func parseFloat(_ key: String) throws -> DOM.Float? {

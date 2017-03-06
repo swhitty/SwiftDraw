@@ -11,12 +11,6 @@ import XCTest
 
 class ParserGraphicAttributeTests: XCTestCase {
     
-    func testURLSelector() {
-        AssertURLSelector("url(#clipPath1)", "#clipPath1")
-        AssertURLSelector("url(#cp1)", "#cp1")
-        AssertURLSelector(" url( #cp1 )   ", "#cp1")
-    }
-    
     func testPresentationAttributes() throws {
         var parsed = try XMLParser().parsePresentationAttributes([:])
         XCTAssertNil(parsed.opacity)
@@ -78,93 +72,30 @@ class ParserGraphicAttributeTests: XCTestCase {
         XCTAssertEqual(circle?.strokeWidth, 2)
     }
     
-    func ParseDisplayMode(_ text: String?) throws -> DOM.DisplayMode? {
-        let att = Attributes()
-        att.element["val"] = text
-        return try att.parseRaw("val")
-    }
+
     
     func testDisplayMode() {
-        XCTAssertNil(try ParseDisplayMode(nil))
-        XCTAssertEqual(try ParseDisplayMode("none"), DOM.DisplayMode.none)
-        XCTAssertEqual(try ParseDisplayMode(" none "), DOM.DisplayMode.none)
-
-        XCTAssertThrowsError(try ParseDisplayMode("ds"))
-    }
-    
-    func ParseLineCap(_ text: String?) throws -> DOM.LineCap? {
-        let att = Attributes()
-        att.element["val"] = text
-        return try att.parseRaw("val")
+        let parser = XMLParser.ValueParser()
+        
+        XCTAssertEqual(try parser.parseRaw("none"), DOM.DisplayMode.none)
+        XCTAssertEqual(try parser.parseRaw("  none  "), DOM.DisplayMode.none)
+        XCTAssertThrowsError(try parser.parseRaw("ds") as DOM.DisplayMode )
     }
 
     func testStrokeLineCap() {
-        XCTAssertNil(try ParseLineCap(nil))
-        XCTAssertEqual(try ParseLineCap("butt"), .butt)
-        XCTAssertEqual(try ParseLineCap("round"), .round)
-        XCTAssertEqual(try ParseLineCap("square"), .square)
-        XCTAssertEqual(try ParseLineCap(" square "), .square)
-
-        XCTAssertThrowsError(try ParseLineCap("ds"))
-    }
-    
-    func ParseLineJoin(_ text: String?) throws -> DOM.LineJoin? {
-        let att = Attributes()
-        att.element["val"] = text
-        return try att.parseRaw("val")
+        let parser = XMLParser.ValueParser()
+        
+        XCTAssertEqual(try parser.parseRaw("butt"), DOM.LineCap.butt)
+        XCTAssertEqual(try parser.parseRaw("  round"), DOM.LineCap.round)
+        XCTAssertThrowsError(try parser.parseRaw("squdare") as DOM.LineCap)
     }
     
     func testStrokeLineJoin() {
-        XCTAssertNil(try ParseLineJoin(nil))
-        XCTAssertEqual(try ParseLineJoin("miter"), .miter)
-        XCTAssertEqual(try ParseLineJoin("round"), .round)
-        XCTAssertEqual(try ParseLineJoin("bevel"), .bevel)
-        XCTAssertEqual(try ParseLineJoin(" bevel "), .bevel)
-
-        XCTAssertThrowsError(try ParseLineJoin("ds"))
-    }
-    
-    func ParseDashArray(_ text: String?) throws -> [DOM.Float]? {
-        let att = Attributes()
-        att.element["val"] = text
-        return try att.parseDashArray("val")
-    }
-
-    func testStrokeDashArray() {
-        XCTAssertNil(try ParseDashArray(nil))
-        XCTAssertEqual(try ParseDashArray("5 10 1 5")!, [5, 10, 1, 5])
-        XCTAssertEqual(try ParseDashArray(" 1, 2.5, 3.5 ")!, [1, 2.5, 3.5])
-        XCTAssertThrowsError(try ParseDashArray("ds"))
+        let parser = XMLParser.ValueParser()
+        
+        XCTAssertEqual(try parser.parseRaw("miter"), DOM.LineJoin.miter)
+        XCTAssertEqual(try parser.parseRaw("  bevel"), DOM.LineJoin.bevel)
+        XCTAssertThrowsError(try parser.parseRaw("ds") as DOM.LineJoin)
     }
 }
 
-private func AssertURLSelector(_ text: String, _ expected: String, file: StaticString = #file, line: UInt = #line) {
-    let url = URL(string: expected)!
-    let att: Attributes = ["val": text]
-    XCTAssertEqual(try att.parseUrlSelector("val"), url, file: file, line: line)
-}
-
-extension SwiftVG.XMLParser {
-    func parsePresentationAttributes(_ elements: [String: String]) throws -> PresentationAttributes {
-        return try parsePresentationAttributes(Attributes(element: elements, style: [:]))
-    }
-}
-
-typealias Attributes = SwiftVG.XMLParser.Attributes
-
-extension Attributes: ExpressibleByDictionaryLiteral {
-    public typealias Key = String
-    public typealias Value = String
-
-    public convenience init(_ elements: [String: String]) {
-        self.init(element: elements, style: [:])
-    }
-    public convenience init(dictionaryLiteral elements: (String, String)...) {
-        var att = [String: String]()
-        for (key, value) in elements {
-            att[key] = value
-        }
-        self.init(element: att, style: [:])
-    }
-     
-}

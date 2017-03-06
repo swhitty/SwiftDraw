@@ -24,6 +24,8 @@ class ValueParserTests: XCTestCase {
     func testFloats() {
         XCTAssertEqual(try parser.parseFloats("10 20 30.5"), [10, 20, 30.5])
         XCTAssertEqual(try parser.parseFloats("10.0"), [10.0])
+        XCTAssertEqual(try parser.parseFloats("5 10 1 5"), [5, 10, 1, 5])
+        XCTAssertEqual(try parser.parseFloats(" 1, 2.5, 3.5 "), [1, 2.5, 3.5])
         XCTAssertEqual(try parser.parseFloats(" "), [])
         XCTAssertEqual(try parser.parseFloats(""), [])
         

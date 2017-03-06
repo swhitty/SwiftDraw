@@ -29,7 +29,7 @@ extension XMLParser {
         let node = DOM.LinearGradient()
         
         for n in e.children where n.name == "stop" {
-            let att = try parseAttributes(n)
+            let att: AttributeParser = try parseAttributes(n)
             node.stops.append(try parseLinearGradientStop(att))
         }
         

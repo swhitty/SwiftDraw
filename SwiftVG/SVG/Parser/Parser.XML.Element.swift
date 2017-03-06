@@ -68,38 +68,38 @@ extension XMLParser {
         
         let ge: DOM.GraphicsElement
         
-        let attributes = try parseAttributes(e)
+        let att = try parseAttributes(e)
    
         switch e.name {
         case "g": ge = try parseGroup(e)
-        case "line": ge = try parseLine(attributes)
-        case "circle": ge = try parseCircle(attributes)
-        case "ellipse": ge = try parseEllipse(attributes)
-        case "rect": ge = try parseRect(attributes)
-        case "polyline": ge = try parsePolyline(attributes)
-        case "polygon": ge = try parsePolygon(attributes)
-        case "path": ge = try parsePath(attributes)
-        case "text": ge = try parseText(attributes, value: e.innerText)
-        case "use": ge = try parseUse(attributes)
+        case "line": ge = try parseLine(att)
+        case "circle": ge = try parseCircle(att)
+        case "ellipse": ge = try parseEllipse(att)
+        case "rect": ge = try parseRect(att)
+        case "polyline": ge = try parsePolyline(att)
+        case "polygon": ge = try parsePolygon(att)
+        case "path": ge = try parsePath(att)
+        case "text": ge = try parseText(att, value: e.innerText)
+        case "use": ge = try parseUse(att)
         case "switch": ge = try parseSwitch(e)
         default: return nil
         }
         
         ge.id = e.attributes["id"]
         
-        let att = try parsePresentationAttributes(attributes)
+        let presentation = try parsePresentationAttributes(att)
 
-        ge.opacity = att.opacity
-        ge.display = att.display
-        ge.stroke = att.stroke
-        ge.strokeWidth = att.strokeWidth
-        ge.strokeOpacity = att.strokeOpacity
-        ge.fill = att.fill
-        ge.fillOpacity = att.fillOpacity
-        ge.fillRule = att.fillRule
-        ge.transform = att.transform
-        ge.clipPath = att.clipPath
-        ge.mask = att.mask
+        ge.opacity = presentation.opacity
+        ge.display = presentation.display
+        ge.stroke = presentation.stroke
+        ge.strokeWidth = presentation.strokeWidth
+        ge.strokeOpacity = presentation.strokeOpacity
+        ge.fill = presentation.fill
+        ge.fillOpacity = presentation.fillOpacity
+        ge.fillRule = presentation.fillRule
+        ge.transform = presentation.transform
+        ge.clipPath = presentation.clipPath
+        ge.mask = presentation.mask
         
         return ge
     }
@@ -145,26 +145,28 @@ extension XMLParser {
         return node
     }
     
-    func parseStyleAttributes(_ e: XML.Element) throws -> Attributes {
-        return try parseAttributes(e)
-    }
-    
     func parseAttributes(_ e: XML.Element) throws -> Attributes {
-        guard let style = e.attributes["style"] else {
-            return Attributes(element: e.attributes, style: [:])
+        guard let styleText = e.attributes["style"] else {
+            return Attributes(parser: ValueParser(),
+                               options: [],
+                               element: e.attributes,
+                               style: [:])
         }
         
-        var scanner = Scanner(text: style)
-        var styleProperties = [String: String]()
+        var scanner = Scanner(text: styleText)
+        var style = [String: String]()
         
         while !scanner.isEOF {
             let att = try parseStyleAttribute(&scanner)
-            styleProperties[att.0] = att.1
+            style[att.0] = att.1
         }
         
         var element = e.attributes
         element["style"] = nil
-        return Attributes(element: element, style: styleProperties)
+        return Attributes(parser: ValueParser(),
+                           options: [],
+                           element: element,
+                           style: style)
     }
     
     func parseStyleAttribute(_ scanner: inout Scanner) throws -> (String, String) {
@@ -185,7 +187,7 @@ extension XMLParser {
         return (key, value.trimmingCharacters(in: .whitespaces))
     }
     
-    func parsePresentationAttributes(_ att: Attributes) throws -> PresentationAttributes {
+    func parsePresentationAttributes(_ att: AttributeParser) throws -> PresentationAttributes {
         let el = DOM.GraphicsElement()
 
         el.opacity = try att.parsePercentage("opacity")
@@ -196,16 +198,16 @@ extension XMLParser {
         el.strokeOpacity = try att.parsePercentage("stroke-opacity")
         el.strokeLineCap = try att.parseRaw("stroke-linecap")
         el.strokeLineJoin = try att.parseRaw("stroke-linejoin")
-        el.strokeDashArray = try att.parseDashArray("stroke-dasharray")
+        el.strokeDashArray = try att.parseFloats("stroke-dasharray")
         
         el.fill = try att.parseColor("fill")
         el.fillOpacity = try att.parsePercentage("fill-opacity")
         el.fillRule = try att.parseRaw("fill-rule")
         
-        if let val = att["transform"] {
+        if let val = try? att.parseString("transform") {
             el.transform = try parseTransform(val)
         }
-     
+      
         el.clipPath = try att.parseUrlSelector("clip-path")
         el.mask = try att.parseUrlSelector("mask")
 

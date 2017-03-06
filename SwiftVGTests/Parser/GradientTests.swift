@@ -34,20 +34,20 @@ class GradientTests: XCTestCase {
         
         var node = ["offset": "25.5%", "stop-color": "black"]
         
-        var parsed = try? XMLParser().parseLinearGradientStop(Attributes(node))
+        var parsed = try? XMLParser().parseLinearGradientStop(node)
         XCTAssertEqual(parsed?.offset, 0.255)
         XCTAssertEqual(parsed?.color, .keyword(.black))
         XCTAssertEqual(parsed?.opacity, 1.0)
         
         node["stop-opacity"] = "99%"
-        parsed = try? XMLParser().parseLinearGradientStop(Attributes(node))
+        parsed = try? XMLParser().parseLinearGradientStop(node)
         XCTAssertEqual(parsed?.opacity, 0.99)
         
         // test required properties
         node = [:]
         node["offset"] = "10%"
-        XCTAssertThrowsError(try XMLParser().parseLinearGradientStop(Attributes(node)))
+        XCTAssertThrowsError(try XMLParser().parseLinearGradientStop(node))
         node["stop-color"] = "black"
-        XCTAssertNotNil(try XMLParser().parseLinearGradientStop(Attributes(node)))
+        XCTAssertNotNil(try XMLParser().parseLinearGradientStop(node))
     }
 }

@@ -22,8 +22,8 @@ extension XMLParser {
         }
         
         let element = DOM.Text(x: x, y: y, value: text)
-       
-        element.fontFamily = att.parseString("font-family")?.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        element.fontFamily = (try att.parseString("font-family"))?.trimmingCharacters(in: .whitespacesAndNewlines)
         element.fontSize = try att.parseFloat("font-size")
         
         return element

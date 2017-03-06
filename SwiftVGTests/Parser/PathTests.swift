@@ -22,7 +22,7 @@ private func AssertScanSegment(_ text: String, _ segment: DOM.Path.Segment, file
 class PathTests: XCTestCase {
     
     func testPath() {
-        let node: Attributes = ["d": "M 10 10 h 10 v 10 h -10 v -10"]
+        let node = ["d": "M 10 10 h 10 v 10 h -10 v -10"]
         let parser = XMLParser()
         
         let path = try! parser.parsePath(node)

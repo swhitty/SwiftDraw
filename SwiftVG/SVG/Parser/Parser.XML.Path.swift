@@ -8,13 +8,9 @@
 
 extension XMLParser {
     
-    func parsePath(_ att: Attributes) throws -> DOM.Path {
-        guard let d = att["d"] else {
-            throw Error.invalid
-        }
-        
+    func parsePath(_ att: AttributeParser) throws -> DOM.Path {
         let path = DOM.Path(x: 0, y: 0)
-        path.segments = try parsePathSegments(data: d)
+        path.segments = try parsePathSegments(data: try att.parseString("d"))
         return path
     }
     

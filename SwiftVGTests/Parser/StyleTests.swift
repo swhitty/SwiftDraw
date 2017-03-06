@@ -31,10 +31,12 @@ class StyleTests: XCTestCase {
         e.attributes["style"] = "fill: red; x: 20"
         
         //Style attributes should override any XML.Element attribute
-        let attributes = try XMLParser().parseStyleAttributes(e)
-        let expected = ["x": "20", "y": "5", "stroke-color": "black", "fill": "red"]
+        let att = try XMLParser().parseAttributes(e)
         
-        XCTAssertEqual(attributes.properties, expected)
+        XCTAssertEqual(try att.parseCoordinate("x"), 20.0)
+        XCTAssertEqual(try att.parseCoordinate("y"), 5.0)
+        XCTAssertEqual(try att.parseColor("stroke-color"), .keyword(.black))
+        XCTAssertEqual(try att.parseColor("fill"), .keyword(.red))
     }
 }
 
