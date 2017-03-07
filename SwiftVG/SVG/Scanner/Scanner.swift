@@ -183,9 +183,13 @@ extension Scanner {
     mutating func scanPercentage() throws -> Float {
         let start = index
         guard let text = scan(any: CharacterSet.numeric),
-              scan("%") != nil,
               let val = Double(text),
               val >= 0, val <= 100 else {
+            index = start
+            throw Error.invalid
+        }
+        
+        guard scan("%") != nil || val == 0 else {
             index = start
             throw Error.invalid
         }
