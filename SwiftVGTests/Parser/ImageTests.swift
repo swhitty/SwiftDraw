@@ -12,7 +12,7 @@ import XCTest
 @testable import SwiftVG
 
 extension CGImage {
-    static func fromPng(data: Data) -> CGImage? {
+    static func from(data: Data) -> CGImage? {
     #if os(iOS)
         return UIImage(data: data)?.cgImage
     #elseif os(macOS)
@@ -38,7 +38,7 @@ class ImageTests: XCTestCase {
         
         XCTAssertEqual(decode.mimeType, "image/png")
         
-        let cgImage = CGImage.fromPng(data: decode.data)
+        let cgImage = CGImage.from(data: decode.data)
         
         XCTAssertNotNil(cgImage)
         XCTAssertEqual(cgImage?.width, 5)
@@ -59,7 +59,7 @@ class ImageTests: XCTestCase {
         
         XCTAssertEqual(decode.mimeType, "image/png")
         
-        let cgImage = CGImage.fromPng(data: decode.data)
+        let cgImage = CGImage.from(data: decode.data)
         
         XCTAssertNotNil(cgImage)
         XCTAssertEqual(cgImage?.width, 5)
