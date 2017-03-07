@@ -41,11 +41,11 @@ extension XMLParser {
         let commands: CharacterSet = "MmLlHhVvCcSsQqTtAaZz"
         let delimiter: CharacterSet = ";,"
         
-        mutating func scanCommand() throws -> Formatter.XML.Path.Command {
+        mutating func scanCommand() throws -> XMLFormatter.Path.Command {
             let start = scanner.index
             
             guard let c = scanner.scan(first: commands),
-                let cmd = Formatter.XML.Path.Command(rawValue: c) else {
+                let cmd = XMLFormatter.Path.Command(rawValue: c) else {
                 scanner.index = start
                 throw Error.invalid
             }
@@ -65,7 +65,7 @@ extension XMLParser {
             }
         }
         
-        mutating func scanSegment(for cmd: Formatter.XML.Path.Command) throws -> DOM.Path.Segment {
+        mutating func scanSegment(for cmd: XMLFormatter.Path.Command) throws -> DOM.Path.Segment {
             
             let space = XMLParser.coordinateSpace(for: cmd)
             
@@ -186,7 +186,7 @@ extension XMLParser {
         }
     }
     
-    static func coordinateSpace(for command: Formatter.XML.Path.Command) -> DOM.Path.Segment.CoordinateSpace {
+    static func coordinateSpace(for command: XMLFormatter.Path.Command) -> DOM.Path.Segment.CoordinateSpace {
         switch command {
         case .move,
              .line,

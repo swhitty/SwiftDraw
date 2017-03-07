@@ -29,13 +29,13 @@ class DOMPathTests: XCTestCase {
         path.horizontal(x: -10, space: .relative)
         path.vertical(y: -10, space: .relative)
         
-        var formatter = Formatter.XML.Path()
+        var formatter = XMLFormatter.Path()
         formatter.coordinateFormatter.delimeter = .space
         formatter.segmentFormatter.delimeter = .space
         var s = formatter.format(path.segments)
         XCTAssertEqual("M 10 10 h 10 v 10 h -10 v -10", s)
         
-        formatter = Formatter.XML.Path()
+        formatter = XMLFormatter.Path()
         formatter.coordinateFormatter.delimeter = .comma
         formatter.segmentFormatter.delimeter = .none
         s = formatter.format(path.segments)

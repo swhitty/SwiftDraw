@@ -8,24 +8,18 @@
 
 import Foundation
 
-extension Formatter {
-    
-    // XML Formatter
-    struct XML {
+extension XMLFormatter {
         
-        var coordinateFormatter = CoordinateFormatter()
-        
-        static func attributes(for _: DOM.Element) -> [String: String] {
-            // common graphic element attributes
-            return [:]
-        }
+    static func attributes(for _: DOM.Element) -> [String: String] {
+        // common graphic element attributes
+        return [:]
     }
     
     struct CoordinateFormatter {
         var delimeter: Delimeter = .space
-        var precision: Precision = .capped(max: 5)
+        var precision: PP = .capped(max: 5)
         
-        enum Precision {
+        enum PP {
             case capped(max: Int)
             case maximum
         }

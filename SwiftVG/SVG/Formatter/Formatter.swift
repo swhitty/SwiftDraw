@@ -6,4 +6,6 @@
 //  Copyright © 2016 WhileLoop Pty Ltd. All rights reserved.
 //
 
-struct Formatter {} // namespace
+import Foundation
+
+class XMLFormatter {} // namespace

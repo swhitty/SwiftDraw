@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftVG
 
-private func AssertScanCommand(_ text: String, _ command: SwiftVG.Formatter.XML.Path.Command, file: StaticString = #file, line: UInt = #line) {
+private func AssertScanCommand(_ text: String, _ command: XMLFormatter.Path.Command, file: StaticString = #file, line: UInt = #line) {
     var scanner = XMLParser.PathScanner(data: text)
     XCTAssertEqual(try? scanner.scanCommand(), command, file: file, line: line)
 }

@@ -6,18 +6,20 @@
 //  Copyright © 2016 WhileLoop Pty Ltd. All rights reserved.
 //
 
-extension Formatter.XML {
+import Foundation
+
+extension XMLFormatter {
     
     struct Path {
         
-        var coordinateFormatter = Formatter.CoordinateFormatter() { didSet {
+        var coordinateFormatter = XMLFormatter.CoordinateFormatter() { didSet {
             segmentFormatter.coordinateFormatter = coordinateFormatter
         } }
         
         var segmentFormatter = SegmentFormatter()
         
         func format(_ path: DOM.Path) -> XML.Element {
-            var att = Formatter.XML.attributes(for: path)
+            var att = XMLFormatter.attributes(for: path)
             att["d"] = format(path.segments)
             let element = XML.Element(name: "path", attributes: att)
             return element
@@ -30,7 +32,7 @@ extension Formatter.XML {
     }
 }
 
-extension Formatter.XML.Path {
+extension XMLFormatter.Path {
     
     enum Command: Character {
         case move = "M"
@@ -58,7 +60,7 @@ extension Formatter.XML.Path {
     struct SegmentFormatter {
         
         var delimeter = Delimeter.space
-        var coordinateFormatter = Formatter.CoordinateFormatter()
+        var coordinateFormatter = XMLFormatter.CoordinateFormatter()
         
         enum Delimeter: String {
             case space = " "

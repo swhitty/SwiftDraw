@@ -28,11 +28,12 @@ protocol PresentationAttributes {
     var fillRule: DOM.FillRule?  { get set }
     
     var transform: [DOM.Transform]?  { get set }
-    var clipPath: URL?  { get set }
-    var mask: URL?  { get set }
+    var clipPath: DOM.URL?  { get set }
+    var mask: DOM.URL?  { get set }
 }
 
 extension DOM {
+    
     class Element {}
     
     class GraphicsElement: Element, PresentationAttributes {

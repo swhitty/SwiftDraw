@@ -14,7 +14,7 @@ class ParserImageTests: XCTestCase {
     
     func loadSVG(_ filename: String) -> DOM.Svg? {
         
-        let bundle = Bundle(for: TextTests.self)
+        let bundle = Bundle(for: ParserImageTests.self)
         
         guard let url = bundle.url(forResource: filename, withExtension: nil),
               let svg = try? loadSVG(url) else {
