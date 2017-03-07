@@ -6,6 +6,8 @@
 //  Copyright © 2016 WhileLoop Pty Ltd. All rights reserved.
 //
 
+import Foundation
+
 protocol ContainerElement {
     var childElements: Array<DOM.GraphicsElement> { get set }
 }

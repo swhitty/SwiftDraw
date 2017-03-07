@@ -6,6 +6,8 @@
 //  Copyright © 2016 WhileLoop Pty Ltd. All rights reserved.
 //
 
+import Foundation
+
 public struct DOM {
     public typealias Float = Swift.Float
     public typealias Coordinate = Swift.Float

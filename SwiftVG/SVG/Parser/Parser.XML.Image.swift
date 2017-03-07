@@ -9,7 +9,7 @@
 extension XMLParser {
     
     func parseImage(_ att: AttributeParser) throws -> DOM.Image {
-        let href: URL = try att.parseUrl("xlink:href")
+        let href: DOM.URL = try att.parseUrl("xlink:href")
         let width: DOM.Coordinate = try att.parseCoordinate("width")
         let height: DOM.Coordinate = try att.parseCoordinate("height")
         
