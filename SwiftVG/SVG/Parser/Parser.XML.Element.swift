@@ -32,12 +32,13 @@ extension XMLParser {
     }
     
     func parseRect(_ att: AttributeParser) throws -> DOM.Rect {
-        let x: DOM.Coordinate = try att.parseCoordinate("x")
-        let y: DOM.Coordinate = try att.parseCoordinate("y")
+ 
         let width: DOM.Coordinate = try att.parseCoordinate("width")
         let height: DOM.Coordinate = try att.parseCoordinate("height")
-        let rect = DOM.Rect(x: x, y: y, width: width, height: height)
+        let rect = DOM.Rect(width: width, height: height)
         
+        rect.x = try att.parseCoordinate("x")
+        rect.y = try att.parseCoordinate("y")
         rect.rx = try att.parseCoordinate("rx")
         rect.ry = try att.parseCoordinate("ry")
         

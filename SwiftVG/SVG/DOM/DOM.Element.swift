@@ -99,15 +99,15 @@ extension DOM {
     }
     
     class Rect: GraphicsElement {
-        var x: Coordinate
-        var y: Coordinate
+        var x: Coordinate?
+        var y: Coordinate?
         var width: Coordinate
         var height: Coordinate
         
         var rx: Coordinate?
         var ry: Coordinate?
         
-        init(x: Coordinate, y: Coordinate, width: Coordinate, height: Coordinate) {
+        init(x: Coordinate? = nil, y: Coordinate? = nil, width: Coordinate, height: Coordinate) {
             self.x = x
             self.y = y
             self.width = width
