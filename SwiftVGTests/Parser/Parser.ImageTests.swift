@@ -112,7 +112,6 @@ class ParserImageTests: XCTestCase {
     }
     
     func testImages(in folder: String, recursive: Bool = true) {
-        
         for file in svgFilenames(in: folder, recursive: recursive) {
             do {
                 _ = try loadSVG(file)
@@ -122,8 +121,6 @@ class ParserImageTests: XCTestCase {
         }
     }
     
-
-
 //    func testImages() {
 //       testImages(in: NSString(string: "~/Projects/Vector").expandingTildeInPath)
 //    }
