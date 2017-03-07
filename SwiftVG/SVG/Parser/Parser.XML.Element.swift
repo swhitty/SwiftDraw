@@ -117,8 +117,20 @@ extension XMLParser {
         var children = Array<DOM.GraphicsElement>()
         
         for n in e.children {
-            if let ge = try parseGraphicsElement(n) {
-                children.append(ge)
+            do {
+                if let ge = try parseGraphicsElement(n) {
+                    children.append(ge)
+                }
+            } catch let error as XMLParser.Error {
+                switch error {
+                case .invalidElement(_):
+                    throw error
+                default:
+                    throw Error.invalidElement(name: n.name,
+                                               error: error,
+                                               line: n.parsedLocation?.line,
+                                               column: n.parsedLocation?.column)
+                }
             }
         }
         

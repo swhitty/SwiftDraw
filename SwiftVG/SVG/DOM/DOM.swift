@@ -38,6 +38,7 @@ extension DOM {
     
     enum DisplayMode: String {
         case none
+        case inline
     }
     
     enum LineCap: String {

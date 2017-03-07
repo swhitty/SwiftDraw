@@ -14,10 +14,17 @@ extension XMLParser {
         }
         
         let att = try parseAttributes(e)
-        let width: DOM.Length = try att.parseLength("width")
-        let height: DOM.Length = try att.parseLength("height")
+        var width: DOM.Coordinate? = try att.parseCoordinate("width")
+        var height: DOM.Coordinate? = try att.parseCoordinate("height")
+        let viewBox: DOM.Svg.ViewBox? = try parseViewBox(try att.parseString("viewBox"))
         
-        let svg = DOM.Svg(width: width, height: height)
+        width = width ?? viewBox?.width
+        height = height ?? viewBox?.height
+        
+        guard let w = width else { throw XMLParser.Error.missingAttribute(name: "width") }
+        guard let h = height else { throw XMLParser.Error.missingAttribute(name: "height") }
+    
+        let svg = DOM.Svg(width: DOM.Length(w), height: DOM.Length(h))
         svg.childElements = try parseContainerChildren(e)
         svg.viewBox = try parseViewBox(try att.parseString("viewBox"))
         

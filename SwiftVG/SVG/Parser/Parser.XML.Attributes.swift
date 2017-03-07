@@ -51,7 +51,10 @@ extension XMLParser {
         
         func parse<T>(_ value: String?, with expression: (String) throws -> T, for key: String) throws -> T {
             guard let value = value else { throw XMLParser.Error.missingAttribute(name: key) }
-            return try expression(value)
+            guard let result = try? expression(value) else {
+                throw XMLParser.Error.invalidAttribute(name: key, value: value)
+            }
+            return result
         }
     }
 }

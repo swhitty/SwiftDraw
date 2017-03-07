@@ -11,6 +11,7 @@ struct XMLParser {
         case invalid
         case missingAttribute(name: String)
         case invalidAttribute(name: String, value: Any)
+        indirect case invalidElement(name: String, error: XMLParser.Error, line: Int?, column: Int?)
     }
     
     var options: Options = []
