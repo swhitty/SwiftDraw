@@ -113,7 +113,7 @@ extension XMLParser {
         }
         
         func parseUrl(_ value: String) throws -> DOM.URL {
-            guard let url = URL(string: value) else { throw XMLParser.Error.invalid }
+            guard let url = URL(maybeData: value) else { throw XMLParser.Error.invalid }
             return url
             
         }

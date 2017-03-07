@@ -12,22 +12,29 @@ import XCTest
 class URLTests: XCTestCase {
     
     func testDecodedData() {
-        let url = URL(string: "data:image/png;base64,f00d")
+        let url = URL(maybeData: "data:image/png;base64,f00d")
         XCTAssertEqual(url?.decodedData?.mimeType, "image/png")
         XCTAssertEqual(url?.decodedData?.data.base64EncodedString(), "f00d")
         
-        XCTAssertNil(URL(string: "data:;base64,f00d")?.decodedData)
-        XCTAssertNil(URL(string: "data:image/png;bas,f00d")?.decodedData)
-        XCTAssertNil(URL(string: "data:image/png;base64")?.decodedData)
-        XCTAssertNil(URL(string: "data:image/png;base64,")?.decodedData)
+        XCTAssertNil(URL(maybeData: "data:;base64,f00d")?.decodedData)
+        XCTAssertNil(URL(maybeData: "data:image/png;bas,f00d")?.decodedData)
+        XCTAssertNil(URL(maybeData: "data:image/png;base64")?.decodedData)
+        XCTAssertNil(URL(maybeData: "data:image/png;base64,")?.decodedData)
     }
     
     func testDataURL() {
-        XCTAssertTrue(URL(string: "data:image/png;base64,f00d")!.isDataURL)
-        XCTAssertTrue(URL(string: "data:f00d")!.isDataURL)
-        XCTAssertFalse(URL(string: "#identifier")!.isDataURL)
-        XCTAssertFalse(URL(string: "data")!.isDataURL)
-        XCTAssertFalse(URL(string: "www.google.com")!.isDataURL)
+        XCTAssertTrue(URL(maybeData: "data:image/png;base64,f00d")!.isDataURL)
+        XCTAssertTrue(URL(maybeData: "data:f00d")!.isDataURL)
+        XCTAssertFalse(URL(maybeData: "#identifier")!.isDataURL)
+        XCTAssertFalse(URL(maybeData: "data")!.isDataURL)
+        XCTAssertFalse(URL(maybeData: "www.google.com")!.isDataURL)
     }
+    
+    func testDecodedDataLineBreak() {
+        let url = URL(maybeData: "data:image/png;base64,8badf00d\n\t 8badf00d")
+        XCTAssertEqual(url?.decodedData?.mimeType, "image/png")
+        XCTAssertEqual(url?.decodedData?.data.base64EncodedString(), "8badf00d8badf00d")
+    }
+        
 }
 

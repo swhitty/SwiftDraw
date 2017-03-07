@@ -9,6 +9,21 @@
 import Foundation
 
 extension URL {
+    
+    init?(maybeData string: String) {
+        guard string.hasPrefix("data:") else {
+            self.init(string: string)
+            return
+        }
+        
+        var removed =  string.replacingOccurrences(of: "\t", with: "")
+        removed =  removed.replacingOccurrences(of: "\n", with: "")
+        removed =  removed.replacingOccurrences(of: " ", with: "")
+        
+        self.init(string: removed)
+    }
+    
+    
     var isDataURL: Bool {
         return scheme == "data"
     }
