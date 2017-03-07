@@ -12,17 +12,14 @@ import Foundation
 extension XMLParser {
     
     func parseText(_ att: AttributeParser, value: String?) throws -> DOM.Text {
-        
-        let x: DOM.Coordinate = try att.parseCoordinate("x")
-        let y: DOM.Coordinate = try att.parseCoordinate("y")
-        
         guard let text = value?.trimmingCharacters(in: .whitespacesAndNewlines),
               text.characters.count > 0 else {
             throw Error.missingAttribute(name: "innerText")
         }
         
-        let element = DOM.Text(x: x, y: y, value: text)
-
+        let element = DOM.Text(value: text)
+        element.x = try att.parseCoordinate("x")
+        element.y = try att.parseCoordinate("y")
         element.fontFamily = (try att.parseString("font-family"))?.trimmingCharacters(in: .whitespacesAndNewlines)
         element.fontSize = try att.parseFloat("font-size")
         

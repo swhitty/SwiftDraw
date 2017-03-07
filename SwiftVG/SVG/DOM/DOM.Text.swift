@@ -9,8 +9,8 @@
 extension DOM {
     
     final class Text: GraphicsElement {
-        var x: Coordinate
-        var y: Coordinate
+        var x: Coordinate?
+        var y: Coordinate?
         var value: String
         
         var fontFamily: String?
@@ -19,9 +19,7 @@ extension DOM {
         // var textLength: Coordinate
         // var text: [TSpan] child nodes
         
-        init(x: Coordinate, y: Coordinate, value: String) {
-            self.x = x
-            self.y = y
+        init(value: String) {
             self.value = value
         }
     }
