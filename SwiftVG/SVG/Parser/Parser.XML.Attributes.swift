@@ -86,7 +86,11 @@ extension XMLParser {
         
         func parsePercentage(_ value: String) throws -> DOM.Float {
             var scanner = Scanner(text: value)
-            return try scanner.scanPercentage()
+            guard let pc = try? scanner.scanPercentage() else {
+                //try a value between 0.0, 1.0
+                return try scanner.scanPercentageFloat()
+            }
+            return pc
         }
         
         func parseCoordinate(_ value: String) throws -> DOM.Coordinate {

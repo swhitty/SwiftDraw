@@ -168,20 +168,28 @@ extension Scanner {
         return try scan(any: CharacterSet.digits) { return DOM.Length($0) }
     }
     
+    mutating func scanPercentageFloat() throws -> Float {
+        let start = index
+        guard let text = scan(any: CharacterSet.numeric),
+            let val = Float(text),
+            val >= 0.0, val <= 1.0 else {
+                index = start
+                throw Error.invalid
+        }
+        
+        return val
+    }
+    
     mutating func scanPercentage() throws -> Float {
         let start = index
         guard let text = scan(any: CharacterSet.numeric),
-            let val = Double(text),
-            val >= 0, val <= 100 else {
+              scan("%") != nil,
+              let val = Double(text),
+              val >= 0, val <= 100 else {
             index = start
             throw Error.invalid
         }
-        
-        guard scan("%") != nil || val == 0 else {
-            index = start
-            throw Error.invalid
-        }
-        
+
         return Float(val / 100.0)
     }
 }

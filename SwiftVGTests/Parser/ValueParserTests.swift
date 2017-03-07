@@ -35,6 +35,8 @@ class ValueParserTests: XCTestCase {
     
     func testPercentage() {
         XCTAssertEqual(try parser.parsePercentage("0"), 0)
+        XCTAssertEqual(try parser.parsePercentage("1"), 1)
+        XCTAssertEqual(try parser.parsePercentage("0.45"), 0.45)
         XCTAssertEqual(try parser.parsePercentage("0.0%"), 0)
         XCTAssertEqual(try parser.parsePercentage("100%"), 1)
         XCTAssertEqual(try parser.parsePercentage("55%"), 0.55)
@@ -42,7 +44,6 @@ class ValueParserTests: XCTestCase {
         
         XCTAssertThrowsError(try parser.parsePercentage("100"))
         XCTAssertThrowsError(try parser.parsePercentage("asd"))
-        XCTAssertThrowsError(try parser.parsePercentage("0.01"))
         XCTAssertThrowsError(try parser.parsePercentage(" "))
         //XCTAssertThrowsError(try parser.parseFloat("10a"))
     }
