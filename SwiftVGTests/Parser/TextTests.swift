@@ -20,9 +20,7 @@ class TextTests: XCTestCase {
         node["font-family"] = "Futura"
         node["font-size"] = "12.5"
         
-        let expected = DOM.Text(value: "Simon")
-        expected.x = 10
-        expected.y = 25
+        let expected = DOM.Text(x: 10, y: 25, value: "Simon")
         expected.fontFamily = "Futura"
         expected.fontSize = 12.5
         

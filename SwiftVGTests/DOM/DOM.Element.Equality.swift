@@ -36,9 +36,7 @@ extension DOM {
     }
     
     static func createText() -> DOM.Text {
-        let text = DOM.Text(value: "The quick brown fox")
-        text.y = 1
-        return text
+        return DOM.Text(y: 1, value: "The quick brown fox")
     }
     
     static func createPath() -> DOM.Path {

@@ -19,7 +19,9 @@ extension DOM {
         // var textLength: Coordinate
         // var text: [TSpan] child nodes
         
-        init(value: String) {
+        init(x: Coordinate? = nil, y: Coordinate? = nil, value: String) {
+            self.x = x
+            self.y = y
             self.value = value
         }
     }
