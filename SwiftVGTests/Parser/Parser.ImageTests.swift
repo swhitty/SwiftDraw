@@ -8,6 +8,7 @@
 
 import XCTest
 @testable import SwiftVG
+import Foundation
 
 class ParserImageTests: XCTestCase {
     
@@ -16,11 +17,15 @@ class ParserImageTests: XCTestCase {
         let bundle = Bundle(for: TextTests.self)
         
         guard let url = bundle.url(forResource: filename, withExtension: nil),
-            let element = try? XML.SAXParser.parse(contentsOf: url),
-            let svg = try? XMLParser().parseSvg(element) else {
+              let svg = try? loadSVG(url) else {
             return nil
         }
         return svg
+    }
+    
+    func loadSVG(_ url: URL) throws -> DOM.Svg? {
+        let element = try XML.SAXParser.parse(contentsOf: url)
+        return try XMLParser().parseSvg(element)
     }
     
     func testShapes() {
@@ -83,6 +88,54 @@ class ParserImageTests: XCTestCase {
         
         XCTAssertEqual(counter["Path"], 9314)
         XCTAssertEqual(counter["Polygon"], 9)
+    }
+    
+    
+    func svgFilenames(in folder: String, recursive: Bool = true) -> [URL] {
+        var files = [URL]()
+        
+        let manager = FileManager()
+        guard let names = try? manager.contentsOfDirectory(atPath: folder) else { return [] }
+        
+        for name in names {
+            
+            let abs = "\(folder)/\(name)"
+            
+            if name.hasSuffix(".svg") {
+                files.append(URL(fileURLWithPath: abs))
+            } else if manager.isDirectory(atPath: abs) {
+                files.append(contentsOf: svgFilenames(in: abs, recursive: recursive))
+            }
+        }
+        
+        return files
+    }
+    
+    func testImages(in folder: String, recursive: Bool = true) {
+        
+        for file in svgFilenames(in: folder, recursive: recursive) {
+            do {
+                _ = try loadSVG(file)
+            } catch let e {
+                XCTFail("Failed to load SVG \(e)")
+            }
+        }
+    }
+    
+
+
+//    func testImages() {
+//       testImages(in: NSString(string: "~/Projects/Vector").expandingTildeInPath)
+//    }
+    
+}
+
+extension FileManager {
+    
+    func isDirectory(atPath: String) -> Bool {
+        var flag = ObjCBool(false)
+        _ = fileExists(atPath: atPath, isDirectory: &flag)
+        return flag.boolValue
     }
     
 }

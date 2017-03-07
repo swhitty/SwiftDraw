@@ -80,7 +80,9 @@ extension XMLParser {
         case "polyline": ge = try parsePolyline(att)
         case "polygon": ge = try parsePolygon(att)
         case "path": ge = try parsePath(att)
-        case "text": ge = try parseText(att, value: e.innerText)
+        case "text":
+            guard let text = try parseText(att, element: e) else { return nil }
+            ge = text
         case "use": ge = try parseUse(att)
         case "switch": ge = try parseSwitch(e)
         default: return nil
@@ -211,7 +213,15 @@ extension XMLParser {
         el.strokeOpacity = try att.parsePercentage("stroke-opacity")
         el.strokeLineCap = try att.parseRaw("stroke-linecap")
         el.strokeLineJoin = try att.parseRaw("stroke-linejoin")
-        el.strokeDashArray = try att.parseFloats("stroke-dasharray")
+        
+        //maybe handle this better
+        // att.parseDashArray?
+        if let dash = try att.parseString("stroke-dasharray") as String?,
+           dash.trimmingCharacters(in: .whitespaces) == "none" {
+            el.strokeDashArray = nil
+        } else {
+            el.strokeDashArray = try att.parseFloats("stroke-dasharray")
+        }
         
         el.fill = try att.parseColor("fill")
         el.fillOpacity = try att.parsePercentage("fill-opacity")

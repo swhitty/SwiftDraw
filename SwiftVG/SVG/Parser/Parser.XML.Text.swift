@@ -11,13 +11,17 @@ import Foundation
 
 extension XMLParser {
     
-    func parseText(_ att: AttributeParser, value: String?) throws -> DOM.Text {
-        guard let text = value?.trimmingCharacters(in: .whitespacesAndNewlines),
+    func parseText(_ att: AttributeParser, element: XML.Element) throws -> DOM.Text? {
+        guard let text = element.innerText?.trimmingCharacters(in: .whitespacesAndNewlines),
               text.characters.count > 0 else {
-            throw Error.missingAttribute(name: "innerText")
+                return nil
         }
         
-        let element = DOM.Text(value: text)
+        return try parseText(att, value: text)
+    }
+    
+    func parseText(_ att: AttributeParser, value: String) throws -> DOM.Text {
+        let element = DOM.Text(value: value)
         element.x = try att.parseCoordinate("x")
         element.y = try att.parseCoordinate("y")
         element.fontFamily = (try att.parseString("font-family"))?.trimmingCharacters(in: .whitespacesAndNewlines)

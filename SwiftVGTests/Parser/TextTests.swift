@@ -27,8 +27,10 @@ class TextTests: XCTestCase {
         let parsed = try? XMLParser().parseText(node, value: "Simon")
         XCTAssertEqual(parsed, expected)
         
-        XCTAssertThrowsError(try XMLParser().parseText(["x": "1", "y": "1"], value: ""))
-        XCTAssertThrowsError(try XMLParser().parseText(["x": "1", "y": "1"], value: nil))
+        let el = XML.Element(name: "text", attributes: [:])
+        XCTAssertNil(try XMLParser().parseText(["x": "1", "y": "1"], element: el))
+        el.innerText = "    "
+        XCTAssertNil(try XMLParser().parseText(["x": "1", "y": "1"], element: el))
     }
 }
 
