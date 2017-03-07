@@ -15,7 +15,7 @@ extension CGImage {
     static func fromPng(data: Data) -> CGImage? {
     #if os(iOS)
         return UIImage(data: data)?.cgImage
-    #elseif os(OSX)
+    #elseif os(macOS)
         guard let image = NSImage(data: data) else { return nil }
         var rect = NSRect(x: 0, y: 0, width: image.size.width, height: image.size.height)
         return image.cgImage(forProposedRect: &rect, context: nil, hints: nil)
