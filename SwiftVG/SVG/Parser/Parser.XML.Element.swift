@@ -137,7 +137,7 @@ extension XMLParser {
                                                column: n.parsedLocation?.column)
             }
         }
-
+        
         return children
     }
     
