@@ -45,7 +45,7 @@ extension DOM {
             }
         }
         
-        enum Command: Character {
+        enum Command: UnicodeScalar {
             case move = "M"
             case moveRelative = "m"
             case line = "L"
@@ -66,13 +66,6 @@ extension DOM {
             case arcRelative = "a"
             case close = "Z"
             case closeAlias = "z"
-            
-            init?(scalar: UnicodeScalar) {
-                guard let char = String(scalar).characters.first else {
-                    return nil
-                }
-                self.init(rawValue: char)
-            }
             
             var coordinateSpace: Segment.CoordinateSpace {
                 switch self {

@@ -68,7 +68,7 @@ extension XMLParser {
 
     func parseCommand(_ scanner: inout PathScanner) -> Command? {
         guard let char = scanner.scan(first: CharSet.commandSet),
-              let command = Command(scalar: char) else {
+              let command = Command(rawValue: char) else {
             return nil
         }
         return command
