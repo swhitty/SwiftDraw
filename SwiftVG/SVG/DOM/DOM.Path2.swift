@@ -26,7 +26,7 @@ extension DOM {
             case line(x1: Coordinate, y1: Coordinate,
                       x2: Coordinate, y2: Coordinate, space: CoordinateSpace)
             case horizontal(x: Coordinate, space: CoordinateSpace)
-            case veritcal(y: Coordinate, space: CoordinateSpace)
+            case vertical(y: Coordinate, space: CoordinateSpace)
             case cubic(x: Coordinate, y: Coordinate,
                       x1: Coordinate, y1: Coordinate,
                       x2: Coordinate, y2: Coordinate, space: CoordinateSpace)
@@ -34,7 +34,7 @@ extension DOM {
                              x2: Coordinate, y2: Coordinate, space: CoordinateSpace)
             case quadratic(x: Coordinate, y: Coordinate,
                           x1: Coordinate, y1: Coordinate, space: CoordinateSpace)
-            case quadraticSmooth(x: Coordinate, space: CoordinateSpace)
+            case quadraticSmooth(x: Coordinate, y: Coordinate, space: CoordinateSpace)
             case arc(x: Coordinate, y: Coordinate,
                      rx: Coordinate, ry: Coordinate,
                      rotate: Coordinate, large: Bool,
