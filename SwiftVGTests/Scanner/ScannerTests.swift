@@ -98,6 +98,20 @@ class ScannerTests: XCTestCase {
         AssertScanPercentage("24", nil)
     }
     
+    func testScanCoordinate() {
+        var scanner = Scanner(text: "10.05,12.04-49.05,30.02-10")
+        
+        XCTAssertEqual(try? scanner.scanCoordinate(), 10.05)
+        _ = scanner.scan(first: ",")
+        XCTAssertEqual(try? scanner.scanCoordinate(), 12.04)
+        _ = scanner.scan(first: ",")
+        XCTAssertEqual(try? scanner.scanCoordinate(), -49.05)
+        _ = scanner.scan(first: ",")
+        XCTAssertEqual(try? scanner.scanCoordinate(), 30.02)
+        _ = scanner.scan(first: ",")
+        XCTAssertEqual(try? scanner.scanCoordinate(), -10)
+    }
+    
 }
 
 private func AssertScanUInt8(_ text: String, _ expected: UInt8?, file: StaticString = #file, line: UInt = #line) {

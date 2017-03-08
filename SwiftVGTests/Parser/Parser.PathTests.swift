@@ -32,6 +32,7 @@ class ParserPathTests: XCTestCase {
         AssertSegmentEquals("M10,20", move(10, 20, .absolute))
         AssertSegmentEquals("M10;20", move(10, 20, .absolute))
         AssertSegmentEquals("M  10;  20    ", move(10, 20, .absolute))
+        AssertSegmentEquals("M10-20", move(10, -20, .absolute))
     }
     
     func testLine() {
@@ -40,6 +41,7 @@ class ParserPathTests: XCTestCase {
         AssertSegmentEquals("L10,20", line(10, 20, .absolute))
         AssertSegmentEquals("L10;20", line(10, 20, .absolute))
         AssertSegmentEquals("  L 10;20  ", line(10, 20, .absolute))
+        AssertSegmentEquals("L10-20  ", line(10, -20, .absolute))
     }
     
     func testHorizontal() {
@@ -127,6 +129,7 @@ class ParserPathTests: XCTestCase {
         
         XCTAssertEqual(path?.segments.count, 4)
     }
+    
 }
 
 private func AssertSegmentEquals(_ text: String, _ expected: Segment, file: StaticString = #file, line: UInt = #line) {

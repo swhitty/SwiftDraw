@@ -60,6 +60,19 @@ struct Scanner {
         return String(characters[start..<end])
     }
     
+    mutating func scan(optional prefix: CharacterSet, any charset: CharacterSet) -> String? {
+        let start = index(after: index, charset: precedingCharactersToSkip ?? CharacterSet.empty)
+        let prefixEnd = index(after: start, charset: prefix)
+        let end = index(after: prefixEnd, charset: charset)
+        
+        guard end > start else {
+            return nil
+        }
+        
+        index = end
+        return String(characters[start..<end])
+    }
+    
     mutating func scan(first charset: CharacterSet) -> Character? {
         let idx = index(after: index, charset: precedingCharactersToSkip ?? CharacterSet.empty)
         
@@ -161,7 +174,14 @@ extension Scanner {
     }
     
     mutating func scanCoordinate() throws -> DOM.Coordinate {
-        return try scan(any: CharacterSet.numeric) { return DOM.Coordinate($0) }
+        let start = index
+        guard let text = scan(optional: CharacterSet.sign,
+                                   any: CharacterSet.coordValue),
+              let val = DOM.Coordinate(text) else {
+                index = start
+                throw Error.invalid
+        }
+        return val
     }
     
     mutating func scanLength() throws -> DOM.Length {

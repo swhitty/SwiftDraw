@@ -14,6 +14,8 @@ struct CharacterSet {
     static var digits: CharacterSet = "0123456789"
     static var hexadecimal: CharacterSet = "0123456789ABCDEFabcdef"
     static var numeric: CharacterSet = "+-0123456789.Ee"
+    static var sign: CharacterSet = "+-"
+    static var coordValue: CharacterSet = "0123456789.Ee"
     
     private var storage = Set<Character>()
     
