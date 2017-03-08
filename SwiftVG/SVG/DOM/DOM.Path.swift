@@ -12,7 +12,7 @@ extension DOM {
     
     class Path: GraphicsElement {
         
-        // segments[0] is always a .move
+        // segments[0] should always be a .move
         var segments: [Segment]
         
         init(x: Coordinate, y: Coordinate) {
@@ -66,6 +66,23 @@ extension DOM {
             case arcRelative = "a"
             case close = "Z"
             case closeAlias = "z"
+            
+            var coordinateSpace: Segment.CoordinateSpace {
+                switch self {
+                case .move, .line,
+                     .horizontal, .vertical,
+                     .cubic, .cubicSmooth,
+                     .quadratic, .quadraticSmooth,
+                     .arc, .close, .closeAlias:
+                    return .absolute
+                case .moveRelative, .lineRelative,
+                     .horizontalRelative, .verticalRelative,
+                     .cubicRelative, .cubicSmoothRelative,
+                     .quadraticRelative, .quadraticSmoothRelative,
+                     .arcRelative:
+                    return .relative
+                }
+            }
         }
     }
 }

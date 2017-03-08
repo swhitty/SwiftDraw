@@ -33,6 +33,9 @@ class ParserPathTests: XCTestCase {
         AssertSegmentEquals("M10;20", move(10, 20, .absolute))
         AssertSegmentEquals("M  10;  20    ", move(10, 20, .absolute))
         AssertSegmentEquals("M10-20", move(10, -20, .absolute))
+        
+        AssertSegmentsEquals("M10-20 5 1", [move(10, -20, .absolute),
+                                            move(5, 1, .absolute)])
     }
     
     func testLine() {
@@ -42,6 +45,9 @@ class ParserPathTests: XCTestCase {
         AssertSegmentEquals("L10;20", line(10, 20, .absolute))
         AssertSegmentEquals("  L 10;20  ", line(10, 20, .absolute))
         AssertSegmentEquals("L10-20  ", line(10, -20, .absolute))
+        
+        AssertSegmentsEquals("L10-20 5 1", [line(10, -20, .absolute),
+                                            line(5, 1, .absolute)])
     }
     
     func testHorizontal() {
@@ -50,6 +56,9 @@ class ParserPathTests: XCTestCase {
         AssertSegmentEquals("H10", horizontal(10, .absolute))
         AssertSegmentEquals("H10;", horizontal(10, .absolute))
         AssertSegmentEquals("  H10 ", horizontal(10, .absolute))
+        
+        AssertSegmentsEquals("h10 5", [horizontal(10, .relative),
+                                       horizontal(5, .relative)])
     }
     
     func testVerical() {
@@ -129,12 +138,19 @@ class ParserPathTests: XCTestCase {
         
         XCTAssertEqual(path?.segments.count, 4)
     }
-    
 }
 
 private func AssertSegmentEquals(_ text: String, _ expected: Segment, file: StaticString = #file, line: UInt = #line) {
-    var scanner = Scanner(text: text)
-    let parsed = try? XMLParser().parsePathSegment(&scanner)
+    let parsed = try? XMLParser().parsePathSegments(text)
+    XCTAssertEqual(parsed?.count, 1)
+    XCTAssertEqual(parsed![0], expected, file: file, line: line)
+}
+
+private func AssertSegmentsEquals(_ text: String, _ expected: [Segment], file: StaticString = #file, line: UInt = #line) {
+    guard let parsed = try? XMLParser().parsePathSegments(text) else {
+        XCTFail("could not parse segments", file: file, line: line)
+        return
+    }
     XCTAssertEqual(parsed, expected, file: file, line: line)
 }
 

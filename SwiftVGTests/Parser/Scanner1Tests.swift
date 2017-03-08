@@ -71,10 +71,10 @@ class Scanner1Tests: XCTestCase {
         
         // -E notation
         //TODO
-//        AssertScanCoordinate("3E-3", 0.003)
-//        AssertScanCoordinate("3e-3", 0.003)
-//        AssertScanCoordinate("-3E-3", -0.003)
-//        AssertScanCoordinate("-3e-3", -0.003)
+        AssertScanCoordinate("3E-3", 0.003)
+        AssertScanCoordinate("3e-3", 0.003)
+        AssertScanCoordinate("-3E-3", -0.003)
+        AssertScanCoordinate("-3e-3", -0.003)
         
         AssertScanCoordinate(" 30", 30.0)
         AssertScanCoordinate(" 30 ", 30.0)

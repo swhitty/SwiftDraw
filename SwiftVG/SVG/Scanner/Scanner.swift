@@ -26,12 +26,15 @@ struct Scanner {
         index = characters.startIndex
     }
     
-    func index(after startIndex: Index, charset: CharacterSet) -> Index {
+    func index(after startIndex: Index, charset: CharacterSet, max: Int = Int.max) -> Index {
         var idx = startIndex
+        var count = 0
         
         while idx != characters.endIndex,
-            charset.contains(characters[idx]) {
+              count < max,
+              charset.contains(characters[idx]) {
             idx = characters.index(after: idx)
+            count += 1
         }
         
         return idx
@@ -173,7 +176,7 @@ extension Scanner {
         }
     }
     
-    mutating func scanCoordinate() throws -> DOM.Coordinate {
+    mutating func scanCoordinateA() throws -> DOM.Coordinate {
         let start = index
         guard let text = scan(optional: CharacterSet.sign,
                                    any: CharacterSet.coordValue),
@@ -183,6 +186,34 @@ extension Scanner {
         }
         return val
     }
+    
+        
+    mutating func scanCoordinate() throws -> DOM.Coordinate {
+        
+        let start = index(after: index, charset: precedingCharactersToSkip ?? CharacterSet.empty)
+        
+        var end = index(after: start, charset: CharacterSet.sign, max: 1)
+        end = index(after: end, charset: CharacterSet.digits)
+        end = index(after: end, charset: ".", max: 1)
+        end = index(after: end, charset: CharacterSet.digits)
+        let eIndex = index(after: end, charset: "eE", max: 1)
+        if eIndex > end {
+            end = index(after: eIndex, charset: CharacterSet.sign, max: 1)
+            end = index(after: end, charset: CharacterSet.digits)
+        }
+
+        guard end > start else { throw Error.invalid }
+        
+        let text = String(characters[start..<end])
+        
+        guard let val = DOM.Coordinate(text) else {
+            throw Error.invalid
+        }
+        
+        index = end
+        return val
+    }
+    
     
     mutating func scanLength() throws -> DOM.Length {
         return try scan(any: CharacterSet.digits) { return DOM.Length($0) }
