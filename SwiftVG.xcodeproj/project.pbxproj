@@ -18,11 +18,9 @@
 		D92CE60D1E67955700E0BE1B /* Parser.XML.Attributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = D92CE60C1E67955700E0BE1B /* Parser.XML.Attributes.swift */; };
 		D933D09F1E5CECF400937A59 /* ColorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D933D09E1E5CECF400937A59 /* ColorTests.swift */; };
 		D933D0A11E5CEE1700937A59 /* DOM.Color.swift in Sources */ = {isa = PBXBuildFile; fileRef = D933D0A01E5CEE1700937A59 /* DOM.Color.swift */; };
-		D933D0A31E5CFEEC00937A59 /* Parser.XML.Path.swift in Sources */ = {isa = PBXBuildFile; fileRef = D933D0A21E5CFEEC00937A59 /* Parser.XML.Path.swift */; };
 		D933D0A41E5CFF3200937A59 /* Parser.XML.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9F281EF1E1F8C140060AE7F /* Parser.XML.swift */; };
 		D933D0A61E5CFF4D00937A59 /* Parser.XML.Color.swift in Sources */ = {isa = PBXBuildFile; fileRef = D933D0A51E5CFF4D00937A59 /* Parser.XML.Color.swift */; };
 		D933D0A81E5D1F7F00937A59 /* DOM.Element.swift in Sources */ = {isa = PBXBuildFile; fileRef = D933D0A71E5D1F7F00937A59 /* DOM.Element.swift */; };
-		D933D0AA1E5E854100937A59 /* PathTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D933D0A91E5E854100937A59 /* PathTests.swift */; };
 		D933D0AC1E5E85D000937A59 /* TransformTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D933D0AB1E5E85D000937A59 /* TransformTests.swift */; };
 		D933D0AE1E5E868400937A59 /* Parser.XML.Transform.swift in Sources */ = {isa = PBXBuildFile; fileRef = D933D0AD1E5E868400937A59 /* Parser.XML.Transform.swift */; };
 		D958D9F51E020158004D811F /* Formatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = D958D9F41E020158004D811F /* Formatter.swift */; };
@@ -37,7 +35,6 @@
 		D962D2CB1E6ECFCA00B825C6 /* DOM.Image.swift in Sources */ = {isa = PBXBuildFile; fileRef = D91B1E1F1E6E4D310028EF61 /* DOM.Image.swift */; };
 		D962D2CC1E6ECFCA00B825C6 /* DOM.Switch.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9C7D61E1E67F54D00518B5C /* DOM.Switch.swift */; };
 		D962D2CD1E6ECFDA00B825C6 /* DOM.Gradient.swift in Sources */ = {isa = PBXBuildFile; fileRef = D99CC98E1E5FDB1D00E7886A /* DOM.Gradient.swift */; };
-		D962D2CE1E6ECFE200B825C6 /* DOM.Path.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9F3EBD01DFF5C22006691A1 /* DOM.Path.swift */; };
 		D962D2CF1E6ED01700B825C6 /* Parser.XML.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9F281EF1E1F8C140060AE7F /* Parser.XML.swift */; };
 		D962D2D01E6ED01700B825C6 /* Parser.XML.Attributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = D92CE60C1E67955700E0BE1B /* Parser.XML.Attributes.swift */; };
 		D962D2D11E6ED01700B825C6 /* Parser.XML.Element.swift in Sources */ = {isa = PBXBuildFile; fileRef = D99CC9981E5FF06F00E7886A /* Parser.XML.Element.swift */; };
@@ -55,8 +52,6 @@
 		D962D2E01E6ED02500B825C6 /* Scanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = D99CC98A1E5F8F1A00E7886A /* Scanner.swift */; };
 		D962D2E11E6ED02B00B825C6 /* URL.swift in Sources */ = {isa = PBXBuildFile; fileRef = D92CE6051E64E96000E0BE1B /* URL.swift */; };
 		D962D2E51E6ED20100B825C6 /* Formatter.XML.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9002B101E08B6050090BCC8 /* Formatter.XML.swift */; };
-		D962D2E61E6ED23900B825C6 /* Formatter.XML.Path.swift in Sources */ = {isa = PBXBuildFile; fileRef = D958D9F61E020184004D811F /* Formatter.XML.Path.swift */; };
-		D962D2E71E6ED2A500B825C6 /* Parser.XML.Path.swift in Sources */ = {isa = PBXBuildFile; fileRef = D933D0A21E5CFEEC00937A59 /* Parser.XML.Path.swift */; };
 		D965B57D1E18D98C003E859E /* DOM.Element.Equality.swift in Sources */ = {isa = PBXBuildFile; fileRef = D965B57C1E18D98C003E859E /* DOM.Element.Equality.swift */; };
 		D965B57F1E3C471A003E859E /* Parser.ImageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D965B57E1E3C471A003E859E /* Parser.ImageTests.swift */; };
 		D965B5821E3C48C6003E859E /* shapes.svg in Resources */ = {isa = PBXBuildFile; fileRef = D965B5811E3C48C6003E859E /* shapes.svg */; };
@@ -67,14 +62,12 @@
 		D965B58D1E4F1378003E859E /* Parser.SvgTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D965B58C1E4F1378003E859E /* Parser.SvgTests.swift */; };
 		D965B58F1E63848E003E859E /* StyleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D965B58E1E63848E003E859E /* StyleTests.swift */; };
 		D9778E451E6ED3EF00FF6EBB /* AttributeParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9C4AD1C1E6E0DEC00008312 /* AttributeParserTests.swift */; };
-		D9778E461E6ED3EF00FF6EBB /* FormatterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9F3EBD51DFF6100006691A1 /* FormatterTests.swift */; };
 		D9778E471E6ED3EF00FF6EBB /* CoordinateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9100F911E0A0EEC00190335 /* CoordinateTests.swift */; };
 		D9778E481E6ED3EF00FF6EBB /* ValueParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9C4AD1A1E6CCD8A00008312 /* ValueParserTests.swift */; };
 		D9778E491E6ED3EF00FF6EBB /* Parser.SvgTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D965B58C1E4F1378003E859E /* Parser.SvgTests.swift */; };
 		D9778E4A1E6ED3EF00FF6EBB /* ElementTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9F281ED1E1EF9380060AE7F /* ElementTests.swift */; };
 		D9778E4B1E6ED3EF00FF6EBB /* Scanner1Tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9ECF1921E2EBEC90029307E /* Scanner1Tests.swift */; };
 		D9778E4C1E6ED3EF00FF6EBB /* ColorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D933D09E1E5CECF400937A59 /* ColorTests.swift */; };
-		D9778E4D1E6ED3EF00FF6EBB /* PathTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D933D0A91E5E854100937A59 /* PathTests.swift */; };
 		D9778E4E1E6ED3EF00FF6EBB /* TransformTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D933D0AB1E5E85D000937A59 /* TransformTests.swift */; };
 		D9778E4F1E6ED3EF00FF6EBB /* GradientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D99CC9921E5FE01A00E7886A /* GradientTests.swift */; };
 		D9778E501E6ED3EF00FF6EBB /* TextTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D99CC99A1E5FF0FF00E7886A /* TextTests.swift */; };
@@ -90,10 +83,10 @@
 		D9778E5A1E6ED40000FF6EBB /* URL.swift in Sources */ = {isa = PBXBuildFile; fileRef = D92CE6081E64E99600E0BE1B /* URL.swift */; };
 		D9778E5B1E6ED66300FF6EBB /* starry.svg in Resources */ = {isa = PBXBuildFile; fileRef = D965B5851E3C5C87003E859E /* starry.svg */; };
 		D9778E5C1E6ED66300FF6EBB /* shapes.svg in Resources */ = {isa = PBXBuildFile; fileRef = D965B5811E3C48C6003E859E /* shapes.svg */; };
-		D9778E5E1E6F698500FF6EBB /* DOM.Path2.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9778E5D1E6F698500FF6EBB /* DOM.Path2.swift */; };
-		D9778E5F1E6F6B9200FF6EBB /* DOM.Path2.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9778E5D1E6F698500FF6EBB /* DOM.Path2.swift */; };
-		D9778E611E6F6C0300FF6EBB /* Parser.XML.Path2.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9778E601E6F6C0300FF6EBB /* Parser.XML.Path2.swift */; };
-		D9778E621E6F6C0300FF6EBB /* Parser.XML.Path2.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9778E601E6F6C0300FF6EBB /* Parser.XML.Path2.swift */; };
+		D9778E5E1E6F698500FF6EBB /* DOM.Path.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9778E5D1E6F698500FF6EBB /* DOM.Path.swift */; };
+		D9778E5F1E6F6B9200FF6EBB /* DOM.Path.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9778E5D1E6F698500FF6EBB /* DOM.Path.swift */; };
+		D9778E611E6F6C0300FF6EBB /* Parser.XML.Path.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9778E601E6F6C0300FF6EBB /* Parser.XML.Path.swift */; };
+		D9778E621E6F6C0300FF6EBB /* Parser.XML.Path.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9778E601E6F6C0300FF6EBB /* Parser.XML.Path.swift */; };
 		D9778E641E6F6DFA00FF6EBB /* Parser.PathTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9778E631E6F6DFA00FF6EBB /* Parser.PathTests.swift */; };
 		D9778E651E6F6DFA00FF6EBB /* Parser.PathTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9778E631E6F6DFA00FF6EBB /* Parser.PathTests.swift */; };
 		D99CC9861E5F8EE600E7886A /* CharacterSetTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D99CC9851E5F8EE600E7886A /* CharacterSetTests.swift */; };
@@ -115,14 +108,11 @@
 		D9C4AD1B1E6CCD8A00008312 /* ValueParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9C4AD1A1E6CCD8A00008312 /* ValueParserTests.swift */; };
 		D9C4AD1D1E6E0DEC00008312 /* AttributeParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9C4AD1C1E6E0DEC00008312 /* AttributeParserTests.swift */; };
 		D9C7D61F1E67F54D00518B5C /* DOM.Switch.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9C7D61E1E67F54D00518B5C /* DOM.Switch.swift */; };
-		D9D0CFCC1E027B2000B7947B /* DOM.Path.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9F3EBD01DFF5C22006691A1 /* DOM.Path.swift */; };
-		D9D0CFCD1E027B2400B7947B /* Formatter.XML.Path.swift in Sources */ = {isa = PBXBuildFile; fileRef = D958D9F61E020184004D811F /* Formatter.XML.Path.swift */; };
 		D9D0CFCE1E027B4000B7947B /* DOM.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9F3EBD21DFF5C96006691A1 /* DOM.swift */; };
 		D9ECF1931E2EBEC90029307E /* Scanner1Tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9ECF1921E2EBEC90029307E /* Scanner1Tests.swift */; };
 		D9F281EE1E1EF9380060AE7F /* ElementTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9F281ED1E1EF9380060AE7F /* ElementTests.swift */; };
 		D9F3EBBB1DFF5BA3006691A1 /* SwiftVG.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D9F3EBB11DFF5BA3006691A1 /* SwiftVG.framework */; };
 		D9F3EBC21DFF5BA3006691A1 /* SwiftVG.h in Headers */ = {isa = PBXBuildFile; fileRef = D9F3EBB41DFF5BA3006691A1 /* SwiftVG.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		D9F3EBD61DFF6100006691A1 /* FormatterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9F3EBD51DFF6100006691A1 /* FormatterTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -154,10 +144,8 @@
 		D92CE60C1E67955700E0BE1B /* Parser.XML.Attributes.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Parser.XML.Attributes.swift; sourceTree = "<group>"; };
 		D933D09E1E5CECF400937A59 /* ColorTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ColorTests.swift; sourceTree = "<group>"; };
 		D933D0A01E5CEE1700937A59 /* DOM.Color.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DOM.Color.swift; sourceTree = "<group>"; };
-		D933D0A21E5CFEEC00937A59 /* Parser.XML.Path.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Parser.XML.Path.swift; sourceTree = "<group>"; };
 		D933D0A51E5CFF4D00937A59 /* Parser.XML.Color.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Parser.XML.Color.swift; sourceTree = "<group>"; };
 		D933D0A71E5D1F7F00937A59 /* DOM.Element.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DOM.Element.swift; sourceTree = "<group>"; };
-		D933D0A91E5E854100937A59 /* PathTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PathTests.swift; sourceTree = "<group>"; };
 		D933D0AB1E5E85D000937A59 /* TransformTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TransformTests.swift; sourceTree = "<group>"; };
 		D933D0AD1E5E868400937A59 /* Parser.XML.Transform.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Parser.XML.Transform.swift; sourceTree = "<group>"; };
 		D958D9F41E020158004D811F /* Formatter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Formatter.swift; sourceTree = "<group>"; };
@@ -174,8 +162,8 @@
 		D965B58A1E4E1273003E859E /* Parser.XML.Svg.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Parser.XML.Svg.swift; sourceTree = "<group>"; };
 		D965B58C1E4F1378003E859E /* Parser.SvgTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Parser.SvgTests.swift; sourceTree = "<group>"; };
 		D965B58E1E63848E003E859E /* StyleTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StyleTests.swift; sourceTree = "<group>"; };
-		D9778E5D1E6F698500FF6EBB /* DOM.Path2.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DOM.Path2.swift; sourceTree = "<group>"; };
-		D9778E601E6F6C0300FF6EBB /* Parser.XML.Path2.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Parser.XML.Path2.swift; sourceTree = "<group>"; };
+		D9778E5D1E6F698500FF6EBB /* DOM.Path.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DOM.Path.swift; sourceTree = "<group>"; };
+		D9778E601E6F6C0300FF6EBB /* Parser.XML.Path.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Parser.XML.Path.swift; sourceTree = "<group>"; };
 		D9778E631E6F6DFA00FF6EBB /* Parser.PathTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Parser.PathTests.swift; sourceTree = "<group>"; };
 		D99CC9851E5F8EE600E7886A /* CharacterSetTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CharacterSetTests.swift; sourceTree = "<group>"; };
 		D99CC9881E5F8F0000E7886A /* CharacterSet.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CharacterSet.swift; sourceTree = "<group>"; };
@@ -204,7 +192,6 @@
 		D9F3EBB51DFF5BA3006691A1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		D9F3EBBA1DFF5BA3006691A1 /* SwiftVGTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SwiftVGTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		D9F3EBC11DFF5BA3006691A1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		D9F3EBD01DFF5C22006691A1 /* DOM.Path.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DOM.Path.swift; sourceTree = "<group>"; };
 		D9F3EBD21DFF5C96006691A1 /* DOM.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DOM.swift; sourceTree = "<group>"; };
 		D9F3EBD51DFF6100006691A1 /* FormatterTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FormatterTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -386,8 +373,7 @@
 				D9F3EBD21DFF5C96006691A1 /* DOM.swift */,
 				D933D0A71E5D1F7F00937A59 /* DOM.Element.swift */,
 				D965B5881E4E11AD003E859E /* DOM.Svg.swift */,
-				D9F3EBD01DFF5C22006691A1 /* DOM.Path.swift */,
-				D9778E5D1E6F698500FF6EBB /* DOM.Path2.swift */,
+				D9778E5D1E6F698500FF6EBB /* DOM.Path.swift */,
 				D933D0A01E5CEE1700937A59 /* DOM.Color.swift */,
 				D99CC98E1E5FDB1D00E7886A /* DOM.Gradient.swift */,
 				D99CC9941E5FEA1200E7886A /* DOM.Text.swift */,
@@ -405,8 +391,7 @@
 				D92CE60C1E67955700E0BE1B /* Parser.XML.Attributes.swift */,
 				D99CC9981E5FF06F00E7886A /* Parser.XML.Element.swift */,
 				D965B58A1E4E1273003E859E /* Parser.XML.Svg.swift */,
-				D933D0A21E5CFEEC00937A59 /* Parser.XML.Path.swift */,
-				D9778E601E6F6C0300FF6EBB /* Parser.XML.Path2.swift */,
+				D9778E601E6F6C0300FF6EBB /* Parser.XML.Path.swift */,
 				D933D0A51E5CFF4D00937A59 /* Parser.XML.Color.swift */,
 				D933D0AD1E5E868400937A59 /* Parser.XML.Transform.swift */,
 				D99CC9901E5FDCFB00E7886A /* Parser.XML.Gradient.swift */,
@@ -429,7 +414,6 @@
 				D9F281ED1E1EF9380060AE7F /* ElementTests.swift */,
 				D9ECF1921E2EBEC90029307E /* Scanner1Tests.swift */,
 				D933D09E1E5CECF400937A59 /* ColorTests.swift */,
-				D933D0A91E5E854100937A59 /* PathTests.swift */,
 				D933D0AB1E5E85D000937A59 /* TransformTests.swift */,
 				D99CC9921E5FE01A00E7886A /* GradientTests.swift */,
 				D99CC99A1E5FF0FF00E7886A /* TextTests.swift */,
@@ -634,13 +618,11 @@
 				D962D2D01E6ED01700B825C6 /* Parser.XML.Attributes.swift in Sources */,
 				D962D2DE1E6ED02000B825C6 /* XML.Parser.swift in Sources */,
 				D962D2D81E6ED01700B825C6 /* Parser.XML.Use.swift in Sources */,
-				D962D2E61E6ED23900B825C6 /* Formatter.XML.Path.swift in Sources */,
 				D962D2DD1E6ED02000B825C6 /* XML.swift in Sources */,
 				D962D2C41E6ECFCA00B825C6 /* DOM.Element.swift in Sources */,
 				D962D2D71E6ED01700B825C6 /* Parser.XML.Text.swift in Sources */,
-				D9778E5F1E6F6B9200FF6EBB /* DOM.Path2.swift in Sources */,
+				D9778E5F1E6F6B9200FF6EBB /* DOM.Path.swift in Sources */,
 				D962D2D51E6ED01700B825C6 /* Parser.XML.Transform.swift in Sources */,
-				D962D2CE1E6ECFE200B825C6 /* DOM.Path.swift in Sources */,
 				D962D2CF1E6ED01700B825C6 /* Parser.XML.swift in Sources */,
 				D962D2CD1E6ECFDA00B825C6 /* DOM.Gradient.swift in Sources */,
 				D962D2D21E6ED01700B825C6 /* Parser.XML.Svg.swift in Sources */,
@@ -648,11 +630,10 @@
 				D962D2D41E6ED01700B825C6 /* Parser.XML.Color.swift in Sources */,
 				D962D2C91E6ECFCA00B825C6 /* DOM.Text.swift in Sources */,
 				D962D2E51E6ED20100B825C6 /* Formatter.XML.swift in Sources */,
-				D962D2E71E6ED2A500B825C6 /* Parser.XML.Path.swift in Sources */,
 				D962D2D91E6ED01700B825C6 /* Parser.XML.Image.swift in Sources */,
 				D962D2CC1E6ECFCA00B825C6 /* DOM.Switch.swift in Sources */,
 				D962D2C71E6ECFCA00B825C6 /* DOM.Color.swift in Sources */,
-				D9778E621E6F6C0300FF6EBB /* Parser.XML.Path2.swift in Sources */,
+				D9778E621E6F6C0300FF6EBB /* Parser.XML.Path.swift in Sources */,
 				D962D2C31E6ECFCA00B825C6 /* DOM.swift in Sources */,
 				D962D2E01E6ED02500B825C6 /* Scanner.swift in Sources */,
 				D962D2DF1E6ED02500B825C6 /* CharacterSet.swift in Sources */,
@@ -663,13 +644,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D9778E4D1E6ED3EF00FF6EBB /* PathTests.swift in Sources */,
 				D9778E541E6ED3EF00FF6EBB /* Parser.GraphicAttributeTests.swift in Sources */,
 				D9778E4A1E6ED3EF00FF6EBB /* ElementTests.swift in Sources */,
 				D9778E5A1E6ED40000FF6EBB /* URL.swift in Sources */,
 				D9778E531E6ED3EF00FF6EBB /* StyleTests.swift in Sources */,
 				D9778E501E6ED3EF00FF6EBB /* TextTests.swift in Sources */,
-				D9778E461E6ED3EF00FF6EBB /* FormatterTests.swift in Sources */,
 				D9778E551E6ED3EF00FF6EBB /* ImageTests.swift in Sources */,
 				D9778E511E6ED3EF00FF6EBB /* UseTests.swift in Sources */,
 				D9778E651E6F6DFA00FF6EBB /* Parser.PathTests.swift in Sources */,
@@ -694,19 +673,17 @@
 			buildActionMask = 2147483647;
 			files = (
 				D99CC9911E5FDCFB00E7886A /* Parser.XML.Gradient.swift in Sources */,
-				D933D0A31E5CFEEC00937A59 /* Parser.XML.Path.swift in Sources */,
 				D933D0A61E5CFF4D00937A59 /* Parser.XML.Color.swift in Sources */,
 				D91B1E201E6E4D310028EF61 /* DOM.Image.swift in Sources */,
 				D933D0A81E5D1F7F00937A59 /* DOM.Element.swift in Sources */,
 				D91B1E221E6E4D650028EF61 /* Parser.XML.Image.swift in Sources */,
 				D9D0CFCE1E027B4000B7947B /* DOM.swift in Sources */,
-				D9D0CFCC1E027B2000B7947B /* DOM.Path.swift in Sources */,
 				D99CC9951E5FEA1200E7886A /* DOM.Text.swift in Sources */,
 				D965B5841E3C4A34003E859E /* XML.Parser.swift in Sources */,
 				D99CC9971E5FECEB00E7886A /* Parser.XML.Text.swift in Sources */,
 				D99CC9891E5F8F0000E7886A /* CharacterSet.swift in Sources */,
 				D933D0A11E5CEE1700937A59 /* DOM.Color.swift in Sources */,
-				D9778E5E1E6F698500FF6EBB /* DOM.Path2.swift in Sources */,
+				D9778E5E1E6F698500FF6EBB /* DOM.Path.swift in Sources */,
 				D933D0A41E5CFF3200937A59 /* Parser.XML.swift in Sources */,
 				D9002B111E08B6050090BCC8 /* Formatter.XML.swift in Sources */,
 				D99CC9991E5FF06F00E7886A /* Parser.XML.Element.swift in Sources */,
@@ -720,10 +697,9 @@
 				D9002B181E08B9CE0090BCC8 /* XML.swift in Sources */,
 				D99CC98F1E5FDB1D00E7886A /* DOM.Gradient.swift in Sources */,
 				D965B58B1E4E1273003E859E /* Parser.XML.Svg.swift in Sources */,
-				D9778E611E6F6C0300FF6EBB /* Parser.XML.Path2.swift in Sources */,
+				D9778E611E6F6C0300FF6EBB /* Parser.XML.Path.swift in Sources */,
 				D958D9F51E020158004D811F /* Formatter.swift in Sources */,
 				D9C1EEFE1E63C9D300C0F213 /* Parser.XML.Use.swift in Sources */,
-				D9D0CFCD1E027B2400B7947B /* Formatter.XML.Path.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -734,7 +710,6 @@
 				D99CC99E1E60366300E7886A /* DOM.ElementTests.swift in Sources */,
 				D933D0AC1E5E85D000937A59 /* TransformTests.swift in Sources */,
 				D99CC9931E5FE01A00E7886A /* GradientTests.swift in Sources */,
-				D9F3EBD61DFF6100006691A1 /* FormatterTests.swift in Sources */,
 				D965B58D1E4F1378003E859E /* Parser.SvgTests.swift in Sources */,
 				D9100F921E0A0EEC00190335 /* CoordinateTests.swift in Sources */,
 				D92CE6091E64E99600E0BE1B /* URL.swift in Sources */,
@@ -745,7 +720,6 @@
 				D9C1EEFA1E63B1B900C0F213 /* Parser.GraphicAttributeTests.swift in Sources */,
 				D99CC98D1E5FA04A00E7886A /* ScannerTests.swift in Sources */,
 				D9C1EF001E63CC2A00C0F213 /* UseTests.swift in Sources */,
-				D933D0AA1E5E854100937A59 /* PathTests.swift in Sources */,
 				D933D09F1E5CECF400937A59 /* ColorTests.swift in Sources */,
 				D9C4AD1B1E6CCD8A00008312 /* ValueParserTests.swift in Sources */,
 				D9ECF1931E2EBEC90029307E /* Scanner1Tests.swift in Sources */,

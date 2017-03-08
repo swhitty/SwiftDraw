@@ -41,8 +41,8 @@ extension DOM {
     
     static func createPath() -> DOM.Path {
         let path = DOM.Path(x: 0, y: 1)
-        path.move(x: 10, y: 10)
-        path.horizontal(x: 20)
+        path.segments.append(.move(x: 10, y: 10, space: .absolute))
+        path.segments.append(.horizontal(x: 10, space: .absolute))
         return path
     }
     

@@ -16,11 +16,19 @@ class ParserImageTests: XCTestCase {
         
         let bundle = Bundle(for: ParserImageTests.self)
         
-        guard let url = bundle.url(forResource: filename, withExtension: nil),
-              let svg = try? loadSVG(url) else {
+        guard let url = bundle.url(forResource: filename, withExtension: nil) else {
             return nil
         }
-        return svg
+        
+        do {
+            return try loadSVG(url)
+        } catch SwiftVG.XMLParser.Error.invalidElement(let e)  {
+            XCTFail("Failed to load \(filename) \(e)")
+            return nil
+        } catch {
+            XCTFail("Failed to load \(filename)")
+            return nil
+        }
     }
     
     func loadSVG(_ url: URL) throws -> DOM.Svg? {

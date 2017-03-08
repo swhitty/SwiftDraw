@@ -1,214 +1,233 @@
 //
-//  Parser.XML.Path.swift
+//  Parser.XML.Path2.swift
 //  SwiftVG
 //
-//  Created by Simon Whitty on 31/12/16.
-//  Copyright © 2016 WhileLoop Pty Ltd. All rights reserved.
+//  Created by Simon Whitty on 8/3/17.
+//  Copyright © 2017 WhileLoop Pty Ltd. All rights reserved.
 //
 
 extension XMLParser {
     
+    typealias Segment = DOM.Path.Segment
+    typealias CoordinateSpace = DOM.Path.Segment.CoordinateSpace
+    
     func parsePath(_ att: AttributeParser) throws -> DOM.Path {
         let path = DOM.Path(x: 0, y: 0)
-        path.segments = try parsePathSegments(data: try att.parseString("d"))
+        path.segments = try parsePathSegments(try att.parseString("d"))
         return path
     }
     
-    func parsePathSegments(data: String) throws -> [DOM.Path.Segment] {
+    func parsePathSegments(_ data: String) throws -> [Segment] {
         
-        var segments = Array<DOM.Path.Segment>()
+        var segments = Array<Segment>()
         
-        var scanner = PathScanner(data: data)
+        var scanner = Scanner(text: data)
         
-        while let s = try? scanner.scanSegment() {
-            segments.append(s)
+        scanner.precedingCharactersToSkip = CharacterSet.whitespacesAndNewLines
+        
+        while !scanner.isEOF {
+            do {
+               segments.append(try parsePathSegment(&scanner))
+            } catch let e {
+                throw XMLParser.Error.invalidAttribute(name: "d", value: "count: \(segments.count)")
+            }
         }
         
         return segments
     }
     
-    struct PathScanner {
-        var scanner: Scanner
+    func parsePathSegment(_ scanner: inout Scanner) throws -> Segment {
         
-        init(data: String) {
-            scanner = Scanner(text: data)
+        if let move = try parseMoveSegment(&scanner) {
+            return move
+        } else if let line = try parseLineSegment(&scanner) {
+            return line
+        } else if let horizontal = try parseHorizontalSegment(&scanner) {
+            return horizontal
+        } else if let vertical = try parseVerticalSegment(&scanner) {
+            return vertical
+        } else if let cubic = try parseCubicSegment(&scanner) {
+            return cubic
+        } else if let cubicSmooth = try parseCubicSmoothSegment(&scanner) {
+            return cubicSmooth
+        } else if let quad = try parseQuadraticSegment(&scanner) {
+            return quad
+        } else if let quadSmooth = try parseQuadraticSmoothSegment(&scanner) {
+            return quadSmooth
+        } else if let arc = try parseArcSegment(&scanner) {
+            return arc
+        } else if let close = try parseCloseSegment(&scanner) {
+            return close
         }
         
-        enum Error: Swift.Error {
-            case invalid
-        }
-        
-        let commands: CharacterSet = "MmLlHhVvCcSsQqTtAaZz"
-        let delimiter: CharacterSet = ";,"
-        
-        mutating func scanCommand() throws -> XMLFormatter.Path.Command {
-            let start = scanner.index
-            
-            guard let c = scanner.scan(first: commands),
-                let cmd = XMLFormatter.Path.Command(rawValue: c) else {
-                scanner.index = start
-                throw Error.invalid
-            }
-            
-            return cmd
-        }
-        
-        mutating func scanSegment() throws -> DOM.Path.Segment {
-            let start = scanner.index
-            let cmd = try scanCommand()
-            
-            do {
-                return try scanSegment(for: cmd)
-            } catch {
-                scanner.index = start
-                throw Error.invalid
-            }
-        }
-        
-        mutating func scanSegment(for cmd: XMLFormatter.Path.Command) throws -> DOM.Path.Segment {
-            
-            let space = XMLParser.coordinateSpace(for: cmd)
-            
-            switch cmd {
-            case .move,
-                 .moveRelative: return .move(try scanMove(), space)
-            case .line,
-                 .lineRelative: return .line(try scanLine(), space)
-            case .horizontal,
-                 .horizontalRelative: return .horizontal(try scanHorizontal(), space)
-            case .vertical,
-                 .verticalRelative: return .vertical(try scanVertical(), space)
-            case .cubic,
-                 .cubicRelative: return .cubic(try scanCubic(), space)
-            case .cubicSmooth,
-                 .cubicSmoothRelative: return .cubicSmooth(try scanCubicSmooth(), space)
-            case .quadratic,
-                 .quadraticRelative: return .quadratic(try scanQuadratic(), space)
-            case .quadraticSmooth,
-                 .quadraticSmoothRelative: return .quadraticSmooth(try scanQuadraticSmooth(), space)
-            case .arc,
-                 .arcRelative: return .arc(try scanArc(), space)
-            case .close,
-                 .closeAlias: return .close
-            }
-        }
-        
-        mutating func scanMove() throws -> DOM.Path.Move {
-            let x = try scanner.scanCoordinate()
-            _ = scanner.scan(first: delimiter)
-            let y = try scanner.scanCoordinate()
-            
-            return DOM.Path.Move(x, y)
-        }
-        
-        mutating func scanLine() throws -> DOM.Path.Line {
-            let x = try scanner.scanCoordinate()
-            _ = scanner.scan(first: delimiter)
-            let y = try scanner.scanCoordinate()
-            
-            return DOM.Path.Line(x, y)
-        }
-        
-        mutating func scanHorizontal() throws -> DOM.Path.Horizontal {
-            let x = try scanner.scanCoordinate()
-            return DOM.Path.Horizontal(x)
-        }
-        
-        mutating func scanVertical() throws -> DOM.Path.Vertical {
-            let y = try scanner.scanCoordinate()
-            return DOM.Path.Vertical(y)
-        }
-        
-        mutating func scanCubic() throws -> DOM.Path.Cubic {
-            let x = try scanner.scanCoordinate()
-            _ = scanner.scan(first: delimiter)
-            let y = try scanner.scanCoordinate()
-            _ = scanner.scan(first: delimiter)
-            let x1 = try scanner.scanCoordinate()
-            _ = scanner.scan(first: delimiter)
-            let y1 = try scanner.scanCoordinate()
-            _ = scanner.scan(first: delimiter)
-            let x2 = try scanner.scanCoordinate()
-            _ = scanner.scan(first: delimiter)
-            let y2 = try scanner.scanCoordinate()
-            
-            return DOM.Path.Cubic(x, y, x1, y1, x2, y2)
-        }
-        
-        mutating func scanCubicSmooth() throws -> DOM.Path.CubicSmooth {
-            let x = try scanner.scanCoordinate()
-            _ = scanner.scan(first: delimiter)
-            let y = try scanner.scanCoordinate()
-            _ = scanner.scan(first: delimiter)
-            let x2 = try scanner.scanCoordinate()
-            _ = scanner.scan(first: delimiter)
-            let y2 = try scanner.scanCoordinate()
-            
-            return DOM.Path.CubicSmooth(x, y, x2, y2)
-        }
-        
-        mutating func scanQuadratic() throws -> DOM.Path.Quadratic {
-            let x = try scanner.scanCoordinate()
-            _ = scanner.scan(first: delimiter)
-            let y = try scanner.scanCoordinate()
-            _ = scanner.scan(first: delimiter)
-            let x1 = try scanner.scanCoordinate()
-            _ = scanner.scan(first: delimiter)
-            let y1 = try scanner.scanCoordinate()
-            
-            return DOM.Path.Quadratic(x, y, x1, y1)
-        }
-        
-        mutating func scanQuadraticSmooth() throws -> DOM.Path.QuadraticSmooth {
-            let x = try scanner.scanCoordinate()
-            _ = scanner.scan(first: delimiter)
-            let y = try scanner.scanCoordinate()
-            
-            return DOM.Path.QuadraticSmooth(x, y)
-        }
-        
-        mutating func scanArc() throws -> DOM.Path.Arc {
-            let x = try scanner.scanCoordinate()
-            _ = scanner.scan(first: delimiter)
-            let y = try scanner.scanCoordinate()
-            _ = scanner.scan(first: delimiter)
-            let rx = try scanner.scanCoordinate()
-            _ = scanner.scan(first: delimiter)
-            let ry = try scanner.scanCoordinate()
-            _ = scanner.scan(first: delimiter)
-            let rotate = try scanner.scanCoordinate()
-            _ = scanner.scan(first: delimiter)
-            let large = try scanner.scanBool()
-            _ = scanner.scan(first: delimiter)
-            let sweep = try scanner.scanBool()
-            
-            return DOM.Path.Arc(x, y, rx, ry, rotate, large, sweep)
-        }
+        throw Error.invalid
     }
     
-    static func coordinateSpace(for command: XMLFormatter.Path.Command) -> DOM.Path.Segment.CoordinateSpace {
-        switch command {
-        case .move,
-             .line,
-             .horizontal,
-             .vertical,
-             .cubic,
-             .cubicSmooth,
-             .quadratic,
-             .quadraticSmooth,
-             .arc,
-             .close,
-             .closeAlias: return .absolute
-        case .moveRelative,
-             .lineRelative,
-             .horizontalRelative,
-             .verticalRelative,
-             .cubicRelative,
-             .cubicSmoothRelative,
-             .quadraticRelative,
-             .quadraticSmoothRelative,
-             .arcRelative: return .relative
+    func parseMoveSegment(_ scanner: inout Scanner) throws -> Segment? {
+        guard let command = scanner.scan(first: "mM") else {
+            return nil
         }
+        
+        let space: CoordinateSpace = command == "M" ? .absolute : .relative
+        
+        let x = try scanner.scanCoordinate()
+        _ = scanner.scan(first: ";,")
+        let y = try scanner.scanCoordinate()
+        _ = scanner.scan(first: ";,")
+        
+        return .move(x: x, y: y, space: space)
     }
     
+    func parseLineSegment(_ scanner: inout Scanner) throws -> Segment? {
+        guard let command = scanner.scan(first: "lL") else {
+            return nil
+        }
+        
+        let space: CoordinateSpace = command == "L" ? .absolute : .relative
+        
+        let x = try scanner.scanCoordinate()
+        _ = scanner.scan(first: ";,")
+        let y = try scanner.scanCoordinate()
+          _ = scanner.scan(first: ";,")
+        
+        return .line(x: x, y: y, space: space)
+    }
+    
+    func parseHorizontalSegment(_ scanner: inout Scanner) throws -> Segment? {
+        guard let command = scanner.scan(first: "hH") else {
+            return nil
+        }
+        
+        let space: CoordinateSpace = command == "H" ? .absolute : .relative
+        
+        let x = try scanner.scanCoordinate()
+        _ = scanner.scan(first: ";,")
+        
+        return .horizontal(x: x, space: space)
+    }
+    
+    func parseVerticalSegment(_ scanner: inout Scanner) throws -> Segment? {
+        guard let command = scanner.scan(first: "vV") else {
+            return nil
+        }
+        
+        let space: CoordinateSpace = command == "V" ? .absolute : .relative
+        
+        let y = try scanner.scanCoordinate()
+        _ = scanner.scan(first: ";,")
+        
+        return .vertical(y: y, space: space)
+    }
+    
+    func parseCubicSegment(_ scanner: inout Scanner) throws -> Segment? {
+        guard let command = scanner.scan(first: "Cc") else {
+            return nil
+        }
+        
+        let space: CoordinateSpace = command == "C" ? .absolute : .relative
+
+        let x = try scanner.scanCoordinate()
+        _ = scanner.scan(first: ";,")
+        let y = try scanner.scanCoordinate()
+        _ = scanner.scan(first: ";,")
+        let x1 = try scanner.scanCoordinate()
+        _ = scanner.scan(first: ";,")
+        let y1 = try scanner.scanCoordinate()
+        _ = scanner.scan(first: ";,")
+        let x2 = try scanner.scanCoordinate()
+        _ = scanner.scan(first: ";,")
+        let y2 = try scanner.scanCoordinate()
+        _ = scanner.scan(first: ";,")
+        
+        return .cubic(x: x, y: y, x1: x1, y1: y1, x2: x2, y2: y2, space: space)
+    }
+    
+    func parseCubicSmoothSegment(_ scanner: inout Scanner) throws -> Segment? {
+        guard let command = scanner.scan(first: "Ss") else {
+            return nil
+        }
+        
+        let space: CoordinateSpace = command == "S" ? .absolute : .relative
+        
+        let x = try scanner.scanCoordinate()
+        _ = scanner.scan(first: ";,")
+        let y = try scanner.scanCoordinate()
+        _ = scanner.scan(first: ";,")
+        let x2 = try scanner.scanCoordinate()
+        _ = scanner.scan(first: ";,")
+        let y2 = try scanner.scanCoordinate()
+        _ = scanner.scan(first: ";,")
+        
+        return .cubicSmooth(x: x, y: y, x2: x2, y2: y2, space: space)
+    }
+    
+    func parseQuadraticSegment(_ scanner: inout Scanner) throws -> Segment? {
+        guard let command = scanner.scan(first: "Qq") else {
+            return nil
+        }
+        
+        let space: CoordinateSpace = command == "Q" ? .absolute : .relative
+        
+        let x = try scanner.scanCoordinate()
+        _ = scanner.scan(first: ";,")
+        let y = try scanner.scanCoordinate()
+        _ = scanner.scan(first: ";,")
+        let x1 = try scanner.scanCoordinate()
+        _ = scanner.scan(first: ";,")
+        let y1 = try scanner.scanCoordinate()
+        _ = scanner.scan(first: ";,")
+        
+        return .quadratic(x: x, y: y, x1: x1, y1: y1, space: space)
+    }
+    
+    func parseQuadraticSmoothSegment(_ scanner: inout Scanner) throws -> Segment? {
+        guard let command = scanner.scan(first: "Tt") else {
+            return nil
+        }
+        
+        let space: CoordinateSpace = command == "T" ? .absolute : .relative
+        
+        let x = try scanner.scanCoordinate()
+        _ = scanner.scan(first: ";,")
+        let y = try scanner.scanCoordinate()
+        _ = scanner.scan(first: ";,")
+        
+        return .quadraticSmooth(x: x, y: y, space: space)
+    }
+    
+    func parseArcSegment(_ scanner: inout Scanner) throws -> Segment? {
+        guard let command = scanner.scan(first: "Aa") else {
+            return nil
+        }
+        
+        let space: CoordinateSpace = command == "A" ? .absolute : .relative
+    
+        let rx = try scanner.scanCoordinate()
+        _ = scanner.scan(first: ";,")
+        let ry = try scanner.scanCoordinate()
+        _ = scanner.scan(first: ";,")
+        let rotate = try scanner.scanCoordinate()
+        _ = scanner.scan(first: ";,")
+        let large = try scanner.scanBool()
+        _ = scanner.scan(first: ";,")
+        let sweep = try scanner.scanBool()
+        _ = scanner.scan(first: ";,")
+        let x = try scanner.scanCoordinate()
+        _ = scanner.scan(first: ";,")
+        let y = try scanner.scanCoordinate()
+        _ = scanner.scan(first: ";,")
+ 
+        return .arc(rx: rx, ry: ry, rotate: rotate,
+                    large: large, sweep: sweep,
+                    x: x, y: y, space: space)
+    }
+    
+    func parseCloseSegment(_ scanner: inout Scanner) throws -> Segment? {
+        guard let _ = scanner.scan(first: "Zz") else {
+            return nil
+        }
+        return .close
+    }
+
+
 }

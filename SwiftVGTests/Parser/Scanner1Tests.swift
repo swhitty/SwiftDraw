@@ -104,6 +104,20 @@ class Scanner1Tests: XCTestCase {
         XCTAssertEqual(try? scanner.scanCoordinate(), 20.0)
     }
     
+    func testCoordinateSequenceTight() {
+        var scanner = Scanner(text: "10.05,12.04-49.05,30.02-10")
+        
+        XCTAssertEqual(try? scanner.scanCoordinate(), 10.05)
+        _ = scanner.scan(first: ",")
+        XCTAssertEqual(try? scanner.scanCoordinate(), 12.04)
+        _ = scanner.scan(first: ",")
+        XCTAssertEqual(try? scanner.scanCoordinate(), -49.05)
+        _ = scanner.scan(first: ",")
+        XCTAssertEqual(try? scanner.scanCoordinate(), 30.02)
+        _ = scanner.scan(first: ",")
+        XCTAssertEqual(try? scanner.scanCoordinate(), -10)
+    }
+    
     func testBool() {
         AssertScanBool("0", false)
         AssertScanBool("1", true)

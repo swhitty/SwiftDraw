@@ -10,8 +10,8 @@ import XCTest
 @testable import SwiftVG
 
 private typealias Coordinate = DOM.Coordinate
-private typealias Segment = DOM.Path2.Segment
-private typealias CoordinateSpace = DOM.Path2.Segment.CoordinateSpace
+private typealias Segment = DOM.Path.Segment
+private typealias CoordinateSpace = DOM.Path.Segment.CoordinateSpace
 
 class ParserPathTests: XCTestCase {
     
@@ -35,11 +35,11 @@ class ParserPathTests: XCTestCase {
     }
     
     func testLine() {
-        AssertSegmentEquals("L 10 20 30 40", line(10, 20, 30, 40, .absolute))
-        AssertSegmentEquals("l 10 20 30 40", line(10, 20, 30, 40, .relative))
-        AssertSegmentEquals("L10,20,30,40", line(10, 20, 30, 40, .absolute))
-        AssertSegmentEquals("L10;20;30;40", line(10, 20, 30, 40, .absolute))
-        AssertSegmentEquals("  L 10;20   30; 40 ", line(10, 20, 30, 40, .absolute))
+        AssertSegmentEquals("L 10 20", line(10, 20, .absolute))
+        AssertSegmentEquals("l 10 20", line(10, 20, .relative))
+        AssertSegmentEquals("L10,20", line(10, 20, .absolute))
+        AssertSegmentEquals("L10;20", line(10, 20, .absolute))
+        AssertSegmentEquals("  L 10;20  ", line(10, 20, .absolute))
     }
     
     func testHorizontal() {
@@ -91,11 +91,11 @@ class ParserPathTests: XCTestCase {
     }
     
     func testArc() {
-        AssertSegmentEquals("A 10 20 30 40 50 1 0", arc(10, 20, 30, 40, 50, true, false, .absolute))
-        AssertSegmentEquals("a 10 20 30 40 50 1 0", arc(10, 20, 30, 40, 50, true, false, .relative))
-        AssertSegmentEquals("A10,20,30,40,50,1,0", arc(10, 20, 30, 40, 50, true, false, .absolute))
-        AssertSegmentEquals("A10;20;30;40;50;1;0", arc(10, 20, 30, 40, 50, true, false, .absolute))
-        AssertSegmentEquals("  A10; 20;  30;40 50; 1  0 ", arc(10, 20, 30, 40, 50, true, false, .absolute))
+        AssertSegmentEquals("A 10 20 30 1 0 40 50", arc(10, 20, 30, true, false, 40, 50, .absolute))
+        AssertSegmentEquals("a 10 20 30 1 0 40 50", arc(10, 20, 30, true, false, 40, 50, .relative))
+        AssertSegmentEquals("A10,20,30,1,0,40,50", arc(10, 20, 30, true, false, 40, 50, .absolute))
+        AssertSegmentEquals("A10;20;30;1;0;40;50", arc(10, 20, 30, true, false, 40, 50, .absolute))
+        AssertSegmentEquals("  A10; 20;  30; 1  0;40 50", arc(10, 20, 30, true, false, 40, 50, .absolute))
     }
     
     func testClose() {
@@ -108,7 +108,7 @@ class ParserPathTests: XCTestCase {
         let node = ["d": "M 10 10 h 10 v 10 h -10 v -10"]
         let parser = XMLParser()
         
-        let path = try! parser.parsePath2(node)
+        let path = try! parser.parsePath(node)
         
         XCTAssertEqual(path.segments.count, 5)
         
@@ -119,9 +119,17 @@ class ParserPathTests: XCTestCase {
         XCTAssertEqual(path.segments[4], .vertical(y: -10, space: .relative))
     }
     
+    func testPathLineBreak() {
+        let node = ["d": "M230 520\n  \t\t A 45 45, 0, 1, 0, 275 565 \n \t\t L 275 520 Z"]
+        let parser = XMLParser()
+
+        let path = try? parser.parsePath(node)
+        
+        XCTAssertEqual(path?.segments.count, 4)
+    }
 }
 
-private func AssertSegmentEquals(_ text: String, _ expected: DOM.Path2.Segment, file: StaticString = #file, line: UInt = #line) {
+private func AssertSegmentEquals(_ text: String, _ expected: Segment, file: StaticString = #file, line: UInt = #line) {
     var scanner = Scanner(text: text)
     let parsed = try? XMLParser().parsePathSegment(&scanner)
     XCTAssertEqual(parsed, expected, file: file, line: line)
@@ -134,9 +142,8 @@ private func move(_ x: Coordinate, _ y: Coordinate, _ space: CoordinateSpace) ->
     return .move(x: x, y: y, space: space)
 }
 
-private func line(_ x1: Coordinate, _ y1: Coordinate,
-                  _ x2: Coordinate, _ y2: Coordinate, _ space: CoordinateSpace) -> Segment {
-    return .line(x1: x1, y1: y1, x2: x2, y2: y2, space: space)
+private func line(_ x: Coordinate, _ y: Coordinate, _ space: CoordinateSpace) -> Segment {
+    return .line(x: x, y: y, space: space)
 }
 
 private func horizontal(_ x: Coordinate, _ space: CoordinateSpace) -> Segment {
@@ -167,20 +174,18 @@ private func quadraticSmooth(_ x: Coordinate, _ y: Coordinate, _ space: Coordina
     return .quadraticSmooth(x: x, y: y, space: space)
 }
 
-private func arc(_ x: Coordinate, _ y: Coordinate,
-                   _ rx: Coordinate, _ ry: Coordinate,
-                   _ rotate: Coordinate, _ large: Bool,
-                   _ sweep: Bool, _ space: CoordinateSpace) -> Segment {
-    return .arc(x: x, y: y,
-                rx: rx, ry: ry,
-                rotate: rotate, large: large,
-                sweep: sweep, space: space)
+private func arc(_ rx: Coordinate, _ ry: Coordinate, _ rotate: Coordinate,
+                 _ large: Bool, _ sweep: Bool,
+                 _ x: Coordinate, _ y: Coordinate, _ space: CoordinateSpace) -> Segment {
+    return .arc(rx: rx, ry: ry, rotate: rotate,
+                large: large, sweep: sweep,
+                x: x, y: y, space: space)
 }
 
 
 
-extension DOM.Path2.Segment: Equatable {
-    public static func ==(lhs: DOM.Path2.Segment, rhs: DOM.Path2.Segment) -> Bool {
+extension Segment: Equatable {
+    public static func ==(lhs: DOM.Path.Segment, rhs: DOM.Path.Segment) -> Bool {
         let toString: (Any) -> String = { var text = ""; dump($0, to: &text); return text }
         return toString(lhs) == toString(rhs)
     }
