@@ -74,14 +74,23 @@ class ParserImageTests: XCTestCase {
         XCTAssertNil(c.next())
     }
     
+//    func testStarryPerformance() {
+//        self.measure {
+//            guard let _ = self.loadSVG("starry.svg") else {
+//                    XCTFail("missing group")
+//                    return
+//            }
+//        }
+//    }
+    
     func testStarry() {
         guard let svg = loadSVG("starry.svg"),
             let g = svg.childElements.first as? DOM.Group,
             let g1 = g.childElements.first as? DOM.Group else {
-            XCTFail("missing group")
-            return
+                XCTFail("missing group")
+                return
         }
-        
+
         XCTAssertEqual(svg.width, 500)
         XCTAssertEqual(svg.height, 500)
         
@@ -130,7 +139,7 @@ class ParserImageTests: XCTestCase {
     }
     
 //    func testImages() {
-//       testImages(in: NSString(string: "~/Projects/Vector").expandingTildeInPath)
+//       testImages(in: NSString(string: "/Users/swhitty/Projects/Vector").expandingTildeInPath)
 //    }
     
 }
