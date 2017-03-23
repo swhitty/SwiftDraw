@@ -156,7 +156,7 @@ private func AssertSegmentsEquals(_ text: String, _ expected: [Segment], file: S
 
 
 // helpers to create Segments without labels
-// splatting pf tuple is no longer supported
+// splatting of tuple is no longer supported
 private func move(_ x: Coordinate, _ y: Coordinate, _ space: CoordinateSpace) -> Segment {
     return .move(x: x, y: y, space: space)
 }
