@@ -9,7 +9,7 @@
 import CoreGraphics
 
 extension CGPath {
-    func apply(action: @escaping (CGPathElement)->()) {
+    func applyA(action: @escaping (CGPathElement)->()) {
         var action = action
         apply(info: &action) {
             let action = $0!.bindMemory(to: ((CGPathElement)->()).self, capacity: 1).pointee
@@ -27,9 +27,9 @@ extension CGPath {
         case close
     }
     
-    func segments() -> [Segment] {
+    func segmentsA() -> [Segment] {
         var segments = [Segment]()
-        self.apply {
+        self.applyA {
             let p = $0
             switch (p.type) {
             case .moveToPoint:

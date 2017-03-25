@@ -46,7 +46,7 @@ extension Renderer.Path {
 
 extension Renderer {
     
-    func createPath(from path: DOM.Path) throws -> Path {
+    func createPath(path: DOM.Path) throws -> Path {
         let cgpath = Path()
         
         for s in path.segments {
@@ -173,7 +173,7 @@ extension Renderer {
         return createCubic(from: point, to: p, quadratic: cp1)
     }
     
-    func createCubic(from origin: CGPoint, to final: CGPoint, quadratic controlPoint: CGPoint) -> Path.Segment? {
+    func createCubic(from origin: CGPoint, to final: CGPoint, quadratic controlPoint: CGPoint) -> Path.Segment {
         //Approximate a quadratic curve using cubic curve.
         //Converting the quadratic control point into 2 cubic control points
         
@@ -237,5 +237,48 @@ private extension CGPoint {
     
     func absolute(from base: CGPoint) -> CGPoint {
         return CGPoint(x: base.x + x, y: base.y + y)
+    }
+}
+
+
+extension Renderer.Path {
+
+    convenience init(_ path: CGPath) {
+        self.init()
+        addSegments(from: path)
+    }
+
+    private func addSegments(from path: CGPath) {
+        
+        path.apply {
+            let p = $0
+            switch (p.type) {
+            case .moveToPoint:
+                self.segments.append(.move(p.points[0]))
+            case .addLineToPoint:
+                self.segments.append(.line(p.points[0]))
+            case .addQuadCurveToPoint:
+                let origin = self.last ?? CGPoint.zero
+                let final = p.points[0]
+                let cp1 = p.points[1]
+                
+                let c = Renderer().createCubic(from: origin, to: final, quadratic: cp1)
+                self.segments.append(c)
+            case .addCurveToPoint:
+                self.segments.append(.cubic(p.points[2], p.points[0], p.points[1]))
+            case .closeSubpath:
+                self.segments.append(.close)
+            }
+        }
+    }
+}
+
+private extension CGPath {
+    func apply(action: @escaping (CGPathElement)->()) {
+        var action = action
+        apply(info: &action) {
+            let action = $0!.bindMemory(to: ((CGPathElement)->()).self, capacity: 1).pointee
+            action($1.pointee)
+        }
     }
 }

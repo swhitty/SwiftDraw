@@ -59,7 +59,8 @@ extension Renderer {
     func perform(fill path: Path, in ctx: CGContext) {
         let cgPath = createCGPath(from: path)
         ctx.addPath(cgPath)
-        ctx.fillPath()
+        ctx.fillPath(using: .evenOdd)
+        //.winding
     }
     
     func createCGPath(from path: Path) -> CGPath {
@@ -112,10 +113,10 @@ extension Renderer {
             }
         }
         
-        if let path = element as? DOM.Path,
-           let p = try? createPath(from: path) {
-            commands.append(.fill(p))
-            commands.append(.stroke(p))
+        //convert the element into a path to draw
+        if let path = createPath(from: element) {
+            commands.append(.fill(path))
+            commands.append(.stroke(path))
         }
         
         if let container = element as? ContainerElement {
