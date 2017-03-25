@@ -1,14 +1,14 @@
 //
-//  CGRenderer.Path.swift
+//  Renderer.Path.swift
 //  SwiftVG
 //
-//  Created by Simon Whitty on 10/3/17.
+//  Created by Simon Whitty on 25/3/17.
 //  Copyright © 2017 WhileLoop Pty Ltd. All rights reserved.
 //
 
 import CoreGraphics
 
-extension CGRenderer {
+extension Renderer {
     class Path {
         var segments: [Segment] = []
         
@@ -21,9 +21,8 @@ extension CGRenderer {
     }
 }
 
-
-extension CGRenderer.Path {
-
+extension Renderer.Path {
+    
     var lastControl: CGPoint? {
         guard let lastSegment = segments.last else { return nil }
         switch lastSegment {
@@ -42,13 +41,11 @@ extension CGRenderer.Path {
         case .cubic(let p, _, _): return p
         case .close: return nil  //traverse segments
         }
-        
     }
-    
 }
 
-extension CGRenderer {
-
+extension Renderer {
+    
     func createPath(from path: DOM.Path) throws -> Path {
         let cgpath = Path()
         
@@ -58,7 +55,7 @@ extension CGRenderer {
                                             previous: cgpath.lastControl)
             cgpath.segments.append(segment)
         }
-
+        
         return cgpath
     }
     
@@ -84,7 +81,7 @@ extension CGRenderer {
         } else if let s = createClose(from: segment) {
             return s
         }
-    
+        
         throw Error.unsupported(segment)
     }
     
@@ -191,7 +188,7 @@ extension CGRenderer {
         
         let cp2 = CGPoint(x: cp1.x + cpX,
                           y: cp1.y)
-    
+        
         return .cubic(final, cp1, cp2)
     }
     
@@ -202,13 +199,13 @@ extension CGRenderer {
                             y: point.y - control.y)
         
         let cp1 = CGPoint(x: point.x + delta.x,
-                         y: point.y + delta.y)
+                          y: point.y + delta.y)
         
         let final = q.space == .absolute ? CGPoint(q.x, q.y) : CGPoint(q.x, q.y).absolute(from: point)
         let cpX = (final.x - point.x)*CGFloat(1.0/3.0)
         let cp2 = CGPoint(x: cp1.x + cpX,
                           y: cp1.y)
-            
+        
         return .cubic(final, cp1, cp2)
     }
     

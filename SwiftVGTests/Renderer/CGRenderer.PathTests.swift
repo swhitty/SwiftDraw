@@ -14,7 +14,7 @@ class CGRendererPathTests: XCTestCase {
     let twoThirds = CGFloat(2.0/3.0)
     
     func testMove() {
-        let r = CGRenderer()
+        let r = Renderer()
         
         var m = r.createMove(from: .move(x: 10, y: 10, space: .absolute), last: CGPoint.zero)
         XCTAssertEqual(m, move(10, 10))
@@ -29,7 +29,7 @@ class CGRendererPathTests: XCTestCase {
     }
     
     func testLine() {
-        let r = CGRenderer()
+        let r = Renderer()
         
         var l = r.createLine(from: .line(x: 10, y: 10, space: .absolute), last: CGPoint.zero)
         XCTAssertEqual(l, line(10, 10))
@@ -44,7 +44,7 @@ class CGRendererPathTests: XCTestCase {
     }
     
     func testHorizontal() {
-        let r = CGRenderer()
+        let r = Renderer()
         
         var l = r.createHorizontal(from: .horizontal(x: 10, space: .absolute), last: CGPoint.zero)
         XCTAssertEqual(l, line(10, 0))
@@ -63,7 +63,7 @@ class CGRendererPathTests: XCTestCase {
     }
     
     func testVertical() {
-        let r = CGRenderer()
+        let r = Renderer()
         
         var l = r.createVertical(from: .vertical(y: 10, space: .absolute), last: CGPoint.zero)
         XCTAssertEqual(l, line(0, 10))
@@ -82,7 +82,7 @@ class CGRendererPathTests: XCTestCase {
     }
     
     func testCubic() {
-        let r = CGRenderer()
+        let r = Renderer()
         
         var curve: DOM.Path.Segment
         curve = .cubic(x1: 0, y1: 10,
@@ -99,7 +99,7 @@ class CGRendererPathTests: XCTestCase {
     }
     
     func testCubicSmoothAbsolute() {
-        let r = CGRenderer()
+        let r = Renderer()
         
         var curve: DOM.Path.Segment
         curve = .cubicSmooth(x2:80, y2: 40, x: 100, y: 50, space: .absolute)
@@ -113,7 +113,7 @@ class CGRendererPathTests: XCTestCase {
     }
     
     func testCubicSmoothRelative() {
-        let r = CGRenderer()
+        let r = Renderer()
         
         var curve: DOM.Path.Segment
         curve = .cubicSmooth(x2:80, y2: -10, x: 100, y: 0, space: .relative)
@@ -128,7 +128,7 @@ class CGRendererPathTests: XCTestCase {
     func testQuadraticBalanced() {
         
         //balanced quad with control point centered on the curve
-        let r = CGRenderer()
+        let r = Renderer()
         var quad: DOM.Path.Segment
         quad = .quadratic(x1: 150, y1: 0,
                           x: 300, y: 50, space: .absolute)
@@ -144,7 +144,7 @@ class CGRendererPathTests: XCTestCase {
     
     func testQuadraticUnbalanced() {
         //quad with control point to the left
-        let r = CGRenderer()
+        let r = Renderer()
         var quad: DOM.Path.Segment
         quad = .quadratic(x1: 100, y1: 0,
                           x: 300, y: 50, space: .absolute)
@@ -160,7 +160,7 @@ class CGRendererPathTests: XCTestCase {
     }
 
     func testQuadraticSmoothAbsolute() {
-        let r = CGRenderer()
+        let r = Renderer()
         
         var quad: DOM.Path.Segment
         quad = .quadraticSmooth(x: 100, y: 50, space: .absolute)
@@ -170,12 +170,12 @@ class CGRendererPathTests: XCTestCase {
     }
     
     func testClose() {
-        let r = CGRenderer()
-        XCTAssertEqual(r.createClose(from: .close), CGRenderer.Path.Segment.close)
+        let r = Renderer()
+        XCTAssertEqual(r.createClose(from: .close), Renderer.Path.Segment.close)
     }
 }
 
-private typealias Segment = CGRenderer.Path.Segment
+private typealias Segment = Renderer.Path.Segment
 
 // helpers to create Segments without labels
 // splatting of tuple is no longer supported
@@ -193,8 +193,8 @@ private func cubic(_ x: CGFloat, _ y: CGFloat,
     return .cubic(CGPoint(x: x, y: y), CGPoint(x: x1, y: y1), CGPoint(x: x2, y: y2))
 }
 
-extension CGRenderer.Path.Segment: Equatable {
-    public static func ==(lhs: CGRenderer.Path.Segment, rhs: CGRenderer.Path.Segment) -> Bool {
+extension Renderer.Path.Segment: Equatable {
+    public static func ==(lhs: Renderer.Path.Segment, rhs: Renderer.Path.Segment) -> Bool {
         let toString: (Any) -> String = { var text = ""; dump($0, to: &text); return text }
         return toString(lhs) == toString(rhs)
     }

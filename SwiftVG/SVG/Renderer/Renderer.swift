@@ -1,18 +1,17 @@
 //
-//  CoreGraphicsRenderer.swift
+//  Renderer.swift
 //  SwiftVG
 //
-//  Created by Simon Whitty on 10/3/17.
+//  Created by Simon Whitty on 25/3/17.
 //  Copyright © 2017 WhileLoop Pty Ltd. All rights reserved.
 //
 
-import CoreGraphics
+import Foundation
 
-struct CGRenderer {
 
+struct Renderer {
+    
     enum Error: Swift.Error {
         case unsupported(Any)
     }
 }
-
-

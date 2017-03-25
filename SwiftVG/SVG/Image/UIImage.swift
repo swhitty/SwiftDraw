@@ -12,7 +12,7 @@ extension UIImage {
     
     class func svgNamed(_ name: String,
                         in bundle: Bundle = Bundle.main) -> UIImage? {
-        guard let svg = ImageRenderer.svgNamed(name, in: bundle) else { return nil }
+        guard let svg = ImageLoader.svgNamed(name, in: bundle) else { return nil }
         return image(from: svg)
     }
     
@@ -23,13 +23,12 @@ extension UIImage {
         f.prefersExtendedRange = false
         let r = UIGraphicsImageRenderer(size: size, format: f)
         
+        let commands = Renderer().createCommands(from: svg)
+        
         return r.image{
-            ImageRenderer().draw(svg, in: $0.cgContext)
+            Renderer().perform(commands, in: $0.cgContext)
         }
     }
-    
-    
-
 }
 
 
