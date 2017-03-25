@@ -109,9 +109,10 @@
 		D99CC9991E5FF06F00E7886A /* Parser.XML.Element.swift in Sources */ = {isa = PBXBuildFile; fileRef = D99CC9981E5FF06F00E7886A /* Parser.XML.Element.swift */; };
 		D99CC99B1E5FF0FF00E7886A /* TextTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D99CC99A1E5FF0FF00E7886A /* TextTests.swift */; };
 		D99CC99E1E60366300E7886A /* DOM.ElementTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D99CC99D1E60366300E7886A /* DOM.ElementTests.swift */; };
-		D9A843911E855672002A804B /* curves.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9A843901E855672002A804B /* curves.svg */; };
 		D9A843931E85F1C1002A804B /* quad.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9A843921E85F1C1002A804B /* quad.svg */; };
 		D9A843941E85F1C1002A804B /* quad.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9A843921E85F1C1002A804B /* quad.svg */; };
+		D9A843951E8611D6002A804B /* curves.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9A843901E855672002A804B /* curves.svg */; };
+		D9A843961E8611D7002A804B /* curves.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9A843901E855672002A804B /* curves.svg */; };
 		D9C1EEFA1E63B1B900C0F213 /* Parser.GraphicAttributeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9C1EEF91E63B1B900C0F213 /* Parser.GraphicAttributeTests.swift */; };
 		D9C1EEFC1E63C94600C0F213 /* DOM.Use.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9C1EEFB1E63C94600C0F213 /* DOM.Use.swift */; };
 		D9C1EEFE1E63C9D300C0F213 /* Parser.XML.Use.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9C1EEFD1E63C9D300C0F213 /* Parser.XML.Use.swift */; };
@@ -620,6 +621,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D9A843961E8611D7002A804B /* curves.svg in Resources */,
 				D9778E5C1E6ED66300FF6EBB /* shapes.svg in Resources */,
 				D9A843941E85F1C1002A804B /* quad.svg in Resources */,
 				D9778E5B1E6ED66300FF6EBB /* starry.svg in Resources */,
@@ -630,7 +632,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D9A843911E855672002A804B /* curves.svg in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -638,6 +639,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D9A843951E8611D6002A804B /* curves.svg in Resources */,
 				D965B5821E3C48C6003E859E /* shapes.svg in Resources */,
 				D9A843931E85F1C1002A804B /* quad.svg in Resources */,
 				D965B5871E3C5CF8003E859E /* starry.svg in Resources */,

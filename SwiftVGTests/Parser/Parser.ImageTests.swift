@@ -107,6 +107,26 @@ class ParserImageTests: XCTestCase {
         XCTAssertEqual(counter["Polygon"], 9)
     }
     
+    func testQuad() {
+        guard let svg = loadSVG("quad.svg") else {
+            XCTFail("failed to load quad.svg")
+            return
+        }
+        
+        XCTAssertEqual(svg.width, 1000)
+        XCTAssertEqual(svg.height, 500)
+    }
+    
+    func testCurves() {
+        guard let svg = loadSVG("curves.svg") else {
+            XCTFail("failed to load curves.svg")
+            return
+        }
+        
+        XCTAssertEqual(svg.width, 550)
+        XCTAssertEqual(svg.height, 350)
+    }
+    
     
     func svgFilenames(in folder: String, recursive: Bool = true) -> [URL] {
         var files = [URL]()
