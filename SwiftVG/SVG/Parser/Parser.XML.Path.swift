@@ -6,6 +6,8 @@
 //  Copyright © 2017 WhileLoop Pty Ltd. All rights reserved.
 //
 
+import Foundation
+
 extension XMLParser {
     
     typealias PathScanner = Foundation.Scanner

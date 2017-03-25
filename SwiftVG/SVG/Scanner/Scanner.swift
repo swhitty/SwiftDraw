@@ -6,6 +6,8 @@
 //  Copyright © 2016 WhileLoop Pty Ltd. All rights reserved.
 //
 
+import Foundation
+
 struct Scanner {
     typealias CharacterSet = SwiftVG.CharacterSet
     typealias Index = String.CharacterView.Index

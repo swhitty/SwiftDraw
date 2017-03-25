@@ -6,6 +6,8 @@
 //  Copyright © 2017 WhileLoop Pty Ltd. All rights reserved.
 //
 
+import CoreGraphics
+
 extension CGRenderer {
     class Path {
         var segments: [Segment] = []
