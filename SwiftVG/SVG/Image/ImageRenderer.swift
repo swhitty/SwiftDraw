@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import AppKit
+import CoreGraphics
 
 class ImageRenderer {
     
@@ -87,7 +87,10 @@ class ImageRenderer {
     func cgColor(_ color: DOM.Color) -> CGColor {
         switch(color){
         case .none:
-            return CGColor(red: 0, green: 0, blue: 0, alpha: 0)
+            return cgColor(r: 0,
+                           g: 0,
+                           b: 0,
+                           a: 0)
         case .keyword(let c):
             return cgColor(c.rgbi)
         case .rgbi(let c):
@@ -95,9 +98,10 @@ class ImageRenderer {
         case .hex(let c):
             return cgColor(c)
         case .rgbf(let r, let g, let b):
-            return CGColor(red: CGFloat(r),
-                           green: CGFloat(g),
-                           blue: CGFloat(b), alpha: 1.0)
+            return cgColor(r: CGFloat(r),
+                           g: CGFloat(g),
+                           b: CGFloat(b),
+                           a: 1.0)
         }
     }
     
@@ -105,10 +109,23 @@ class ImageRenderer {
         return cgColor(color.rgbi)
     }
     
+    func cgColor(r: CGFloat, g: CGFloat, b: CGFloat, a: CGFloat) -> CGColor {
+        #if os(iOS)
+            return CGColor(colorSpace: CGColorSpaceCreateDeviceRGB(),
+                           components: [r, g, b, a])!
+        #else
+            return CGColor(red: r,
+                           green: g,
+                           blue: b,
+                           alpha: a)
+        #endif
+    }
+    
     func cgColor(_ rgbi: (UInt8, UInt8, UInt8)) -> CGColor {
-            return CGColor(red: CGFloat(rgbi.0)/255.0,
-                           green: CGFloat(rgbi.1)/255.0,
-                           blue: CGFloat(rgbi.2)/255.0, alpha: 1.0)
+        return cgColor(r: CGFloat(rgbi.0),
+                       g: CGFloat(rgbi.1),
+                       b: CGFloat(rgbi.2),
+                       a: 1.0)
     }
     
     func cgPath(_ path: DOM.Path) -> CGPath {
