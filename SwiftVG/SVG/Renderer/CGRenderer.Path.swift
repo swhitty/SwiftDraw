@@ -27,7 +27,7 @@ extension CGRenderer.Path {
     var lastControl: CGPoint? {
         guard let lastSegment = segments.last else { return nil }
         switch lastSegment {
-        case .cubic(_, let p, _): return p
+        case .cubic(_, _, let p): return p
         default: return nil
         }
     }
@@ -39,7 +39,7 @@ extension CGRenderer.Path {
         switch lastSegment {
         case .move(let p): return p
         case .line(let p): return p
-        case .cubic(_, _, let p): return p
+        case .cubic(let p, _, _): return p
         case .close: return nil  //traverse segments
         }
         
@@ -131,9 +131,9 @@ extension CGRenderer {
     func createCubic(from segment: DOM.Path.Segment, last point: CGPoint) -> Path.Segment? {
         guard case .cubic(let c) = segment else { return nil }
         
-        let p = CGPoint(c.x, c.y)
-        let cp1 = CGPoint(c.x1, c.y1)
-        let cp2 = CGPoint(c.x2, c.y2)
+        let p = CGPoint(c.x2, c.y2)
+        let cp1 = CGPoint(c.x, c.y)
+        let cp2 = CGPoint(c.x1, c.y1)
         
         switch c.space {
         case .relative: return .cubic(p.absolute(from: point),
@@ -201,19 +201,15 @@ extension CGRenderer {
         let delta = CGPoint(x: point.x - control.x,
                             y: point.y - control.y)
         
-        let cp = CGPoint(x: point.x + delta.x,
+        let cp1 = CGPoint(x: point.x + delta.x,
                          y: point.y + delta.y)
-      
-        switch q.space {
-        case .relative:
-            return createCubic(from: point,
-                               to: CGPoint(q.x, q.y).absolute(from: point),
-                               quadratic: cp)
-        case .absolute:
-            return createCubic(from: point,
-                               to: CGPoint(q.x, q.y),
-                               quadratic: cp)
-        }
+        
+        let final = q.space == .absolute ? CGPoint(q.x, q.y) : CGPoint(q.x, q.y).absolute(from: point)
+        let cpX = (final.x - point.x)*CGFloat(1.0/3.0)
+        let cp2 = CGPoint(x: cp1.x + cpX,
+                          y: cp1.y)
+            
+        return .cubic(final, cp1, cp2)
     }
     
     func createArc(from segment: DOM.Path.Segment, last point: CGPoint) -> Path.Segment? {

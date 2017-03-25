@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:ns="http://www.w3.org/2000/svg" width="400" height="100" >
+					
+	<g fill="none">
+	
+ 	<path d="M0,50
+	 C 33.33,16.66, 100,16.66 200,50
+	 C 300,83.34, 333.33,83.34 300,50"
+	
+	 stroke="black" stroke-width="15" />
+	
+	
+	<path d="M0,50
+		 q50,-50 200,0
+		 t100,0"
+	 	 stroke="yellowgreen" stroke-width="5" />			 
+
+  	</g>
+	
+		 
+</svg>
+
+

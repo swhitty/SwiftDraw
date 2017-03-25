@@ -12,20 +12,7 @@ extension UIImage {
     
     class func svgNamed(_ name: String,
                         in bundle: Bundle = Bundle.main) -> UIImage? {
-        
-        guard let url = bundle.url(forResource: name, withExtension: nil) else {
-            return nil
-        }
-        
-        return svgUrl(url)
-    }
-    
-    class func svgUrl(_ url: URL) -> UIImage? {
-        guard let element = try? XML.SAXParser.parse(contentsOf: url),
-              let svg = try? XMLParser().parseSvg(element) else {
-                return nil
-        }
-        
+        guard let svg = ImageRenderer.svgNamed(name, in: bundle) else { return nil }
         return image(from: svg)
     }
     

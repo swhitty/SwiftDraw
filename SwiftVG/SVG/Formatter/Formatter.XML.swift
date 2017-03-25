@@ -17,9 +17,9 @@ extension XMLFormatter {
     
     struct CoordinateFormatter {
         var delimeter: Delimeter = .space
-        var precision: PP = .capped(max: 5)
+        var precision: Precision = .capped(max: 5)
         
-        enum PP {
+        enum Precision {
             case capped(max: Int)
             case maximum
         }
@@ -50,7 +50,7 @@ extension XMLFormatter {
         func format(fraction n: Double, maxDigits: Int) -> String {
             assert(n.sign == .plus)
             
-            let min = pow(Double(10), Double(-maxDigits)) - DBL_EPSILON
+            let min = pow(Double(10), Double(-maxDigits)) - Double.ulpOfOne
             
             if n < min {
                 return ""

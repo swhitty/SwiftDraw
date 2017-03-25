@@ -89,13 +89,13 @@ class CGRendererPathTests: XCTestCase {
                        x1: 20, y1: 30,
                        x2: 40, y2: 50, space: .absolute)
         var c = r.createCubic(from: curve , last: CGPoint.zero)
-        XCTAssertEqual(c, cubic(0, 10, 20, 30, 40, 50))
+        XCTAssertEqual(c, cubic(40, 50, 0, 10, 20, 30))
         
         curve = .cubic(x: 100, y: 0,
                        x1: -10, y1: 10,
                        x2: 110, y2: -10, space: .relative)
         c = r.createCubic(from: curve , last: CGPoint(x: 100, y: 100))
-        XCTAssertEqual(c, cubic(200, 100, 90, 110, 210, 90))
+        XCTAssertEqual(c, cubic(210, 90, 200, 100, 90, 110))
     }
     
     func testCubicSmoothAbsolute() {
@@ -165,8 +165,8 @@ class CGRendererPathTests: XCTestCase {
         var quad: DOM.Path.Segment
         quad = .quadraticSmooth(x: 100, y: 50, space: .absolute)
         
-        var c = r.createQuadraticSmooth(from: quad, last: CGPoint(x: 0, y: 50), previous: CGPoint(x: -50, y: 0))
-        XCTAssertEqual(c, cubic(100, 50, 50*twoThirds, 50+50*twoThirds, 100*twoThirds, 50+50*twoThirds))
+        let c = r.createQuadraticSmooth(from: quad, last: CGPoint(x: 0, y: 50), previous: CGPoint(x: -50, y: 0))
+        XCTAssertEqual(c, cubic(100, 50, 50, 100, 50+50*twoThirds, 100))
     }
     
     func testClose() {
