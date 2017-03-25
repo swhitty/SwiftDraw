@@ -8,15 +8,15 @@
 
 extension DOM {
     class Svg: GraphicsElement, ContainerElement {
-        var width: Length?
-        var height: Length?
+        var width: Length
+        var height: Length
         var viewBox: ViewBox?
         
         var childElements = [GraphicsElement]()
         
         var defs = Defs()
         
-        init(width: Length? = nil, height: Length? = nil) {
+        init(width: Length, height: Length) {
             self.width = width
             self.height = height
         }
