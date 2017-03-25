@@ -131,9 +131,9 @@ extension CGRenderer {
     func createCubic(from segment: DOM.Path.Segment, last point: CGPoint) -> Path.Segment? {
         guard case .cubic(let c) = segment else { return nil }
         
-        let p = CGPoint(c.x2, c.y2)
-        let cp1 = CGPoint(c.x, c.y)
-        let cp2 = CGPoint(c.x1, c.y1)
+        let p = CGPoint(c.x, c.y)
+        let cp1 = CGPoint(c.x1, c.y1)
+        let cp2 = CGPoint(c.x2, c.y2)
         
         switch c.space {
         case .relative: return .cubic(p.absolute(from: point),
@@ -149,10 +149,10 @@ extension CGRenderer {
         let delta = CGPoint(x: point.x - control.x,
                             y: point.y - control.y)
         
-        let p = CGPoint(c.x2, c.y2)
+        let p = CGPoint(c.x, c.y)
         let cp1 = CGPoint(x: point.x + delta.x,
                           y: point.y + delta.y)
-        let cp2 = CGPoint(c.x, c.y)
+        let cp2 = CGPoint(c.x2, c.y2)
         
         switch c.space {
         case .relative: return .cubic(p.absolute(from: point),
@@ -165,8 +165,8 @@ extension CGRenderer {
     func createQuadratic(from segment: DOM.Path.Segment, last point: CGPoint) -> Path.Segment? {
         guard case .quadratic(let q) = segment else { return nil }
         
-        var p = CGPoint(q.x1, q.y1)
-        var cp1 = CGPoint(q.x, q.y)
+        var p = CGPoint(q.x, q.y)
+        var cp1 = CGPoint(q.x1, q.y1)
         
         if q.space == .relative {
             p = p.absolute(from: point)

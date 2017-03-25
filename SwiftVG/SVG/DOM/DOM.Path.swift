@@ -26,13 +26,13 @@ extension DOM {
             case line(x: Coordinate, y: Coordinate, space: CoordinateSpace)
             case horizontal(x: Coordinate, space: CoordinateSpace)
             case vertical(y: Coordinate, space: CoordinateSpace)
-            case cubic(x: Coordinate, y: Coordinate,
-                      x1: Coordinate, y1: Coordinate,
-                      x2: Coordinate, y2: Coordinate, space: CoordinateSpace)
-            case cubicSmooth(x: Coordinate, y: Coordinate,
-                             x2: Coordinate, y2: Coordinate, space: CoordinateSpace)
-            case quadratic(x: Coordinate, y: Coordinate,
-                          x1: Coordinate, y1: Coordinate, space: CoordinateSpace)
+            case cubic(x1: Coordinate, y1: Coordinate,
+                       x2: Coordinate, y2: Coordinate,
+                       x: Coordinate, y: Coordinate, space: CoordinateSpace)
+            case cubicSmooth(x2: Coordinate, y2: Coordinate,
+                             x: Coordinate, y: Coordinate, space: CoordinateSpace)
+            case quadratic(x1: Coordinate, y1: Coordinate,
+                           x: Coordinate, y: Coordinate, space: CoordinateSpace)
             case quadraticSmooth(x: Coordinate, y: Coordinate, space: CoordinateSpace)
             case arc(rx: Coordinate, ry: Coordinate, rotate: Coordinate,
                      large: Bool, sweep: Bool,

@@ -173,20 +173,20 @@ private func vertical(_ y: Coordinate, _ space: CoordinateSpace) -> Segment {
     return .vertical(y: y, space: space)
 }
 
-private func cubic(_ x: Coordinate, _ y: Coordinate,
-                  _ x1: Coordinate, _ y1: Coordinate,
-                  _ x2: Coordinate, _ y2: Coordinate, _ space: CoordinateSpace) -> Segment {
-    return .cubic(x: x, y: y, x1: x1, y1: y1, x2: x2, y2: y2, space: space)
+private func cubic(_ x1: Coordinate, _ y1: Coordinate,
+                   _ x2: Coordinate, _ y2: Coordinate,
+                   _ x: Coordinate, _ y: Coordinate, _ space: CoordinateSpace) -> Segment {
+    return .cubic(x1: x1, y1: y1, x2: x2, y2: y2, x: x, y: y, space: space)
 }
 
-private func cubicSmooth(_ x: Coordinate, _ y: Coordinate,
-                         _ x2: Coordinate, _ y2: Coordinate, _ space: CoordinateSpace) -> Segment {
-    return .cubicSmooth(x: x, y: y, x2: x2, y2: y2, space: space)
+private func cubicSmooth(_ x2: Coordinate, _ y2: Coordinate,
+                         _ x: Coordinate, _ y: Coordinate, _ space: CoordinateSpace) -> Segment {
+    return .cubicSmooth(x2: x2, y2: y2, x: x, y: y, space: space)
 }
 
-private func quadratic(_ x: Coordinate, _ y: Coordinate,
-                         _ x1: Coordinate, _ y1: Coordinate, _ space: CoordinateSpace) -> Segment {
-    return .quadratic(x: x, y: y, x1: x1, y1: y1, space: space)
+private func quadratic(_ x1: Coordinate, _ y1: Coordinate,
+                       _ x: Coordinate, _ y: Coordinate, _ space: CoordinateSpace) -> Segment {
+    return .quadratic(x1: x1, y1: y1, x: x, y: y, space: space)
 }
 
 private func quadraticSmooth(_ x: Coordinate, _ y: Coordinate, _ space: CoordinateSpace) -> Segment {

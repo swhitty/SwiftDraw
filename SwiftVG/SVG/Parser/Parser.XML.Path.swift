@@ -109,10 +109,6 @@ extension XMLParser {
     }
     
     func parseCubicSegment(for command: Command, with scanner: inout PathScanner) throws -> Segment {
-        let x = try scanner.scanCoordinate()
-        _ = scanner.scan(first: CharSet.delimeter)
-        let y = try scanner.scanCoordinate()
-        _ = scanner.scan(first: CharSet.delimeter)
         let x1 = try scanner.scanCoordinate()
         _ = scanner.scan(first: CharSet.delimeter)
         let y1 = try scanner.scanCoordinate()
@@ -121,34 +117,38 @@ extension XMLParser {
         _ = scanner.scan(first: CharSet.delimeter)
         let y2 = try scanner.scanCoordinate()
         _ = scanner.scan(first: CharSet.delimeter)
+        let x = try scanner.scanCoordinate()
+        _ = scanner.scan(first: CharSet.delimeter)
+        let y = try scanner.scanCoordinate()
+        _ = scanner.scan(first: CharSet.delimeter)
         
-        return .cubic(x: x, y: y, x1: x1, y1: y1, x2: x2, y2: y2, space: command.coordinateSpace)
+        return .cubic(x1: x1, y1: y1, x2: x2, y2: y2, x: x, y: y, space: command.coordinateSpace)
     }
     
     func parseCubicSmoothSegment(for command: Command, with scanner: inout PathScanner) throws -> Segment {
-        let x = try scanner.scanCoordinate()
-        _ = scanner.scan(first: CharSet.delimeter)
-        let y = try scanner.scanCoordinate()
-        _ = scanner.scan(first: CharSet.delimeter)
         let x2 = try scanner.scanCoordinate()
         _ = scanner.scan(first: CharSet.delimeter)
         let y2 = try scanner.scanCoordinate()
         _ = scanner.scan(first: CharSet.delimeter)
-        
-        return .cubicSmooth(x: x, y: y, x2: x2, y2: y2, space: command.coordinateSpace)
-    }
-    
-    func parseQuadraticSegment(for command: Command, with scanner: inout PathScanner) throws -> Segment {
         let x = try scanner.scanCoordinate()
         _ = scanner.scan(first: CharSet.delimeter)
         let y = try scanner.scanCoordinate()
         _ = scanner.scan(first: CharSet.delimeter)
+        
+        return .cubicSmooth(x2: x2, y2: y2, x: x, y: y, space: command.coordinateSpace)
+    }
+    
+    func parseQuadraticSegment(for command: Command, with scanner: inout PathScanner) throws -> Segment {
         let x1 = try scanner.scanCoordinate()
         _ = scanner.scan(first: CharSet.delimeter)
         let y1 = try scanner.scanCoordinate()
         _ = scanner.scan(first: CharSet.delimeter)
+        let x = try scanner.scanCoordinate()
+        _ = scanner.scan(first: CharSet.delimeter)
+        let y = try scanner.scanCoordinate()
+        _ = scanner.scan(first: CharSet.delimeter)
         
-        return .quadratic(x: x, y: y, x1: x1, y1: y1, space: command.coordinateSpace)
+        return .quadratic(x1: x1, y1: y1, x: x, y: y, space: command.coordinateSpace)
     }
     
     func parseQuadraticSmoothSegment(for command: Command, with scanner: inout PathScanner) throws -> Segment {

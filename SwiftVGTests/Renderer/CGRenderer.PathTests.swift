@@ -85,15 +85,15 @@ class CGRendererPathTests: XCTestCase {
         let r = CGRenderer()
         
         var curve: DOM.Path.Segment
-        curve = .cubic(x: 0, y: 10,
-                       x1: 20, y1: 30,
-                       x2: 40, y2: 50, space: .absolute)
+        curve = .cubic(x1: 0, y1: 10,
+                       x2: 20, y2: 30,
+                       x: 40, y: 50, space: .absolute)
         var c = r.createCubic(from: curve , last: CGPoint.zero)
         XCTAssertEqual(c, cubic(40, 50, 0, 10, 20, 30))
         
-        curve = .cubic(x: 100, y: 0,
-                       x1: -10, y1: 10,
-                       x2: 110, y2: -10, space: .relative)
+        curve = .cubic(x1: 100, y1: 0,
+                       x2: -10, y2: 10,
+                       x: 110, y: -10, space: .relative)
         c = r.createCubic(from: curve , last: CGPoint(x: 100, y: 100))
         XCTAssertEqual(c, cubic(210, 90, 200, 100, 90, 110))
     }
@@ -102,12 +102,12 @@ class CGRendererPathTests: XCTestCase {
         let r = CGRenderer()
         
         var curve: DOM.Path.Segment
-        curve = .cubicSmooth(x:80, y: 40, x2: 100, y2: 50, space: .absolute)
+        curve = .cubicSmooth(x2:80, y2: 40, x: 100, y: 50, space: .absolute)
         var c = r.createCubicSmooth(from: curve, last: CGPoint.zero, previous: CGPoint.zero)
         XCTAssertEqual(c, cubic(100, 50, 0, 0, 80, 40))
         
         
-        curve = .cubicSmooth(x:180, y: 60, x2: 200, y2: 50, space: .absolute)
+        curve = .cubicSmooth(x2:180, y2: 60, x: 200, y: 50, space: .absolute)
         c = r.createCubicSmooth(from: curve, last: CGPoint(x: 100, y: 50), previous: CGPoint(x: 80, y: 40))
         XCTAssertEqual(c, cubic(200, 50, 120, 60, 180, 60))
     }
@@ -116,11 +116,11 @@ class CGRendererPathTests: XCTestCase {
         let r = CGRenderer()
         
         var curve: DOM.Path.Segment
-        curve = .cubicSmooth(x:80, y: -10, x2: 100, y2: 0, space: .relative)
+        curve = .cubicSmooth(x2:80, y2: -10, x: 100, y: 0, space: .relative)
         var c = r.createCubicSmooth(from: curve, last: CGPoint(x: 0, y: 50), previous: CGPoint(x: 0, y: 50))
         XCTAssertEqual(c, cubic(100, 50, 0, 50, 80, 40))
         
-        curve = .cubicSmooth(x:80, y: 10, x2: 100, y2: 0, space: .relative)
+        curve = .cubicSmooth(x2:80, y2: 10, x: 100, y: 0, space: .relative)
         c = r.createCubicSmooth(from: curve, last: CGPoint(x: 100, y: 50), previous: CGPoint(x: 80, y: 40))
         XCTAssertEqual(c, cubic(200, 50, 120, 60, 180, 60))
     }
@@ -130,14 +130,14 @@ class CGRendererPathTests: XCTestCase {
         //balanced quad with control point centered on the curve
         let r = CGRenderer()
         var quad: DOM.Path.Segment
-        quad = .quadratic(x: 150, y: 0,
-                          x1: 300, y1: 50, space: .absolute)
+        quad = .quadratic(x1: 150, y1: 0,
+                          x: 300, y: 50, space: .absolute)
         var c = r.createQuadratic(from: quad, last: CGPoint(x: 0, y: 50))
     
        XCTAssertEqual(c, cubic(300, 50, 100, 25*twoThirds, 200, 25*twoThirds))
         
-        quad = .quadratic(x: 150, y: -50,
-                          x1: 300, y1: 0, space: .relative)
+        quad = .quadratic(x1: 150, y1: -50,
+                          x: 300, y: 0, space: .relative)
         c = r.createQuadratic(from: quad, last: CGPoint(x: 0, y: 50))
         XCTAssertEqual(c, cubic(300, 50, 100, 25*twoThirds, 200, 25*twoThirds))
     }
@@ -146,15 +146,15 @@ class CGRendererPathTests: XCTestCase {
         //quad with control point to the left
         let r = CGRenderer()
         var quad: DOM.Path.Segment
-        quad = .quadratic(x: 100, y: 0,
-                          x1: 300, y1: 50, space: .absolute)
+        quad = .quadratic(x1: 100, y1: 0,
+                          x: 300, y: 50, space: .absolute)
         var c = r.createQuadratic(from: quad, last: CGPoint(x: 0, y: 50))
         
         XCTAssertEqual(c, cubic(300, 50, 100*twoThirds, 25*twoThirds, 100*twoThirds+150*twoThirds, 25*twoThirds))
         
         //quad with control point to the right
-        quad = .quadratic(x: 200, y: 0,
-                          x1: 300, y1: 50, space: .absolute)
+        quad = .quadratic(x1: 200, y1: 0,
+                          x: 300, y: 50, space: .absolute)
         c = r.createQuadratic(from: quad, last: CGPoint(x: 0, y: 50))
         XCTAssertEqual(c, cubic(300, 50, 200*twoThirds, 25*twoThirds, 200*twoThirds+150*twoThirds, 25*twoThirds))
     }

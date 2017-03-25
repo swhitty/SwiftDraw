@@ -122,9 +122,9 @@ class ImageRenderer {
     }
     
     func cgColor(_ rgbi: (UInt8, UInt8, UInt8)) -> CGColor {
-        return cgColor(r: CGFloat(rgbi.0),
-                       g: CGFloat(rgbi.1),
-                       b: CGFloat(rgbi.2),
+        return cgColor(r: CGFloat(rgbi.0)/255.0,
+                       g: CGFloat(rgbi.1)/255.0,
+                       b: CGFloat(rgbi.2)/255.0,
                        a: 1.0)
     }
     
