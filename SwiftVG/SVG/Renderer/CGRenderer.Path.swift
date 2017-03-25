@@ -21,6 +21,14 @@ extension CGRenderer {
 
 
 extension CGRenderer.Path {
+
+    var lastControl: CGPoint? {
+        guard let lastSegment = segments.last else { return nil }
+        switch lastSegment {
+        case .cubic(_, let p, _): return p
+        default: return nil
+        }
+    }
     
     var last: CGPoint? {
         
@@ -43,14 +51,16 @@ extension CGRenderer {
         let cgpath = Path()
         
         for s in path.segments {
-            let segment = try createSegment(from: s, last: cgpath.last ?? CGPoint.zero)
+            let segment = try createSegment(from: s,
+                                            last: cgpath.last ?? CGPoint.zero,
+                                            previous: cgpath.lastControl)
             cgpath.segments.append(segment)
         }
 
         return cgpath
     }
     
-    func createSegment(from segment: DOM.Path.Segment, last point: CGPoint) throws -> Path.Segment {
+    func createSegment(from segment: DOM.Path.Segment, last point: CGPoint, previous control: CGPoint?) throws -> Path.Segment {
         if let s = createMove(from: segment, last: point) {
             return s
         } else if let s = createLine(from: segment, last: point) {
@@ -61,11 +71,11 @@ extension CGRenderer {
             return s
         } else if let s = createCubic(from: segment, last: point) {
             return s
-        } else if let s = createCubicSmooth(from: segment, last: point) {
+        } else if let s = createCubicSmooth(from: segment, last: point, previous: control ?? point) {
             return s
         } else if let s = createQuadratic(from: segment, last: point) {
             return s
-        } else if let s = createQuadraticSmooth(from: segment, last: point) {
+        } else if let s = createQuadraticSmooth(from: segment, last: point, previous: control ?? point) {
             return s
         } else if let s = createArc(from: segment, last: point) {
             return s
@@ -131,35 +141,77 @@ extension CGRenderer {
         }
     }
     
-    func createCubicSmooth(from segment: DOM.Path.Segment, last point: CGPoint) -> Path.Segment? {
+    func createCubicSmooth(from segment: DOM.Path.Segment, last point: CGPoint, previous control: CGPoint) -> Path.Segment? {
         guard case .cubicSmooth(let c) = segment else { return nil }
-        return .cubic(CGPoint(c.x, c.y),
-                      CGPoint(c.x2, c.y2),
-                      point)
+        
+        let delta = CGPoint(x: point.x - control.x,
+                            y: point.y - control.y)
+        
+        let p = CGPoint(c.x2, c.y2)
+        let cp1 = CGPoint(x: point.x + delta.x,
+                          y: point.y + delta.y)
+        let cp2 = CGPoint(c.x, c.y)
+        
+        switch c.space {
+        case .relative: return .cubic(p.absolute(from: point),
+                                      cp1,
+                                      cp2.absolute(from: point))
+        case .absolute: return .cubic(p, cp1, cp2)
+        }
     }
     
     func createQuadratic(from segment: DOM.Path.Segment, last point: CGPoint) -> Path.Segment? {
         guard case .quadratic(let q) = segment else { return nil }
         
-        var p = CGPoint(q.x, q.y)
-        var cp1 = CGPoint(q.x1, q.y1)
+        var p = CGPoint(q.x1, q.y1)
+        var cp1 = CGPoint(q.x, q.y)
         
         if q.space == .relative {
             p = p.absolute(from: point)
             cp1 = cp1.absolute(from: point)
         }
-    
-        let ratio = CGFloat(2.0/3.0)
-        let p1 = CGPoint(x: (cp1.x - point.x)*ratio, y: (cp1.y - point.y)*ratio)
-        let p2 = CGPoint(x: (cp1.x - p.x)*ratio, y: (cp1.y - p.y)*ratio)
-        return .cubic(p, p1.absolute(from: point), p2.absolute(from: p))
+        
+        return createCubic(from: point, to: p, quadratic: cp1)
     }
     
-    func createQuadraticSmooth(from segment: DOM.Path.Segment, last point: CGPoint) -> Path.Segment? {
+    func createCubic(from origin: CGPoint, to final: CGPoint, quadratic controlPoint: CGPoint) -> Path.Segment? {
+        //Approximate a quadratic curve using cubic curve.
+        //Converting the quadratic control point into 2 cubic control points
+        
+        let ratio = CGFloat(2.0/3.0)
+        
+        
+        let cp1 = CGPoint(x: origin.x + (controlPoint.x - origin.x) * ratio,
+                          y: origin.y + (controlPoint.y - origin.y) * ratio)
+        
+        
+        let cpX = (final.x - origin.x)*CGFloat(1.0/3.0)
+        
+        let cp2 = CGPoint(x: cp1.x + cpX,
+                          y: cp1.y)
+    
+        return .cubic(final, cp1, cp2)
+    }
+    
+    func createQuadraticSmooth(from segment: DOM.Path.Segment, last point: CGPoint, previous control: CGPoint) -> Path.Segment? {
         guard case .quadraticSmooth(let q) = segment else { return nil }
-        return .cubic(CGPoint(q.x, q.y),
-                      CGPoint(q.x, q.y),
-                      point)
+        
+        let delta = CGPoint(x: point.x - control.x,
+                            y: point.y - control.y)
+        
+        let cp = CGPoint(x: point.x + delta.x,
+                         y: point.y + delta.y)
+      
+        switch q.space {
+        case .relative:
+            return createCubic(from: point,
+                               to: CGPoint(q.x, q.y).absolute(from: point),
+                               quadratic: cp)
+        case .absolute:
+            return createCubic(from: point,
+                               to: CGPoint(q.x, q.y),
+                               quadratic: cp)
+        }
     }
     
     func createArc(from segment: DOM.Path.Segment, last point: CGPoint) -> Path.Segment? {
