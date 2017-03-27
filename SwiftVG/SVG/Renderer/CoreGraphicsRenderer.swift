@@ -115,6 +115,16 @@ struct CoreGraphicsProvider: RendererTypeProvider {
         }
         return cgPath
     }
+    
+    func createPath(from subPaths: [Path]) -> Path {
+        let cgPath = CGMutablePath()
+        
+        for path in subPaths {
+            cgPath.addPath(path)
+        }
+        
+        return cgPath
+    }
 }
 
 
@@ -149,6 +159,9 @@ struct CoreGraphicsRenderer: Renderer {
             ctx.setStrokeColor(c)
         case .setLine(width: let w):
             ctx.setLineWidth(w)
+        case .setClip(path: let p):
+            ctx.addPath(p)
+            ctx.clip()
         case .stroke(let p):
             ctx.addPath(p)
             ctx.strokePath()

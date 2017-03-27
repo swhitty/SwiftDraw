@@ -5,18 +5,8 @@
 	 width="500" height="700" viewBox="0 0 500 700" >
 
 
-	 <rect x="0" y="0" width="75" height="50" fill="blue" stroke-width="5" fill-opacity="0.25" />	
-
-	<g fill-opacity="0.5" stroke="red" stroke-width="4">
-		<rect x="70" y="220" width="75" height="75" fill="green" fill-opacity="0.75" />	
-		<rect x="215" y="245" width="75" height="50" fill="blue" fill-opacity="0.5" />	
-		<rect x="355" y="220" width="75" height="75" fill="blue" />	
-	</g>
-	
-	<g fill-opacity="0" fill="blue" stroke="red" stroke-width="4">
-		<rect x="70" y="120" width="75" height="75" />	
-		<rect x="215" y="145" width="75" height="50" fill-opacity="0.5" />	
-		<rect x="355" y="120" width="75" height="75" />	
-	</g>
+	  <path d="M230 520
+	            A 45 45, 0, 1, 0, 275 565
+	            L 275 520 Z" fill="wheat"/>
 	
 </svg>

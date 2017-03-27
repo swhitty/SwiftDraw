@@ -20,6 +20,7 @@ protocol RendererTypeProvider {
     func createColor(from color: Builder.Color) -> Color
     func createTransform(from transform: Builder.Transform) -> Transform
     func createPath(from path: Builder.Path) -> Path
+    func createPath(from subPaths: [Path]) -> Path
     
     func createEllipse(within rect: Rect) -> Path
     func createLine(from origin: Point, to desination: Point) -> Path
@@ -45,6 +46,7 @@ enum RendererCommand<T: RendererTypeProvider> {
     case setFill(color: T.Color)
     case setStroke(color: T.Color)
     case setLine(width: T.Float)
+    case setClip(path: T.Path)
     
     case stroke(T.Path)
     case fill(T.Path)

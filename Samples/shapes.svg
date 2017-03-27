@@ -35,7 +35,7 @@
 	  
 	  <path d="M230 520
 	            A 45 45, 0, 1, 0, 275 565
-	            L 275 520 Z" fill="red"/>
+	            L 275 520 Z" fill="wheat"/>
 
 
  <polyline points="100,590 120,550"
@@ -61,6 +61,7 @@
 	
 	<switch>
 		<circle cx="105" cy="100" r="2" fill="#FF00FF"/>
+		<circle cx="125" cy="110" r="5" fill="#FF00FF"/>
 	</switch>
 	
 	<rect x="230" y="55" width="40" height="40" fill="purple" clip-path="url(#cp2)" />	

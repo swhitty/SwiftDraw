@@ -11,6 +11,8 @@ import Foundation
 class Builder {
     
     typealias Float = Swift.Float
+    
+    var defs: DOM.Svg.Defs = DOM.Svg.Defs()
   
     enum Error: Swift.Error {
         case unsupported(Any)

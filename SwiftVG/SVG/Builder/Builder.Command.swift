@@ -13,6 +13,7 @@ extension Builder {
     
     func createCommands<T: RendererTypeProvider>(for svg: DOM.Svg, with provider: T) -> [RendererCommand<T>] {
         
+        self.defs = svg.defs
         var commands = [RendererCommand<T>]()
         let flip = Transform(a: 1, b: 0, c: 0, d: -1, tx: 0, ty: Float(svg.height))
         let t = provider.createTransform(from: flip)
@@ -51,6 +52,13 @@ extension Builder {
                 let ty = provider.createFloat(from: t.ty)
                 commands.append(.translate(tx: tx, ty: ty))
             }
+        }
+        
+        //clip if required
+        if let clipId = element.clipPath?.fragment,
+           let clip = defs.clipPaths.first(where: { $0.id == clipId }) {
+            let path = createClipPath(for: clip, with: provider)
+            commands.append(.setClip(path: path))
         }
         
         //convert the element into a path to draw
@@ -134,4 +142,19 @@ extension Builder {
         
         return nil
     }
+    
+       func createClipPath<T: RendererTypeProvider>(for clip: DOM.ClipPath, with provider: T) -> T.Path {
+        
+            var paths = Array<T.Path>()
+        
+            for element in clip.childElements {
+                if let p = createPath(for: element, with: provider) {
+                    paths.append(p)
+                }
+            }
+    
+            return provider.createPath(from: paths)
+        }
+    
+    
 }
