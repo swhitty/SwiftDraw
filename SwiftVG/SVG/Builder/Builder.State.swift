@@ -9,6 +9,8 @@
 
 extension Builder {
     
+    //Tracks the state of the current DOM.GraphicsElement
+    //Elements inherit attributes from their parent
     struct DOMState: PresentationAttributes {
         var opacity: DOM.Float?
         var display: DOM.DisplayMode?
@@ -29,6 +31,9 @@ extension Builder {
         var mask: DOM.URL?
     }
     
+    //Tracks the state of the renderer to enable rudant calls to be omitted
+    //The RenderState is inherited by Elements to provide non-nil values for these attributes
+    //DOMState attributes always override the inherited RenderState
     struct RendererState: Equatable {
         var fillColor: Color
         var strokeColor: Color
@@ -79,12 +84,12 @@ extension Builder {
         
         state.fillColor = attributes.fill.map{ Color($0) } ?? state.fillColor
         if let fillOpacity = attributes.fillOpacity {
-            state.fillColor = state.fillColor.withMultiplyingAlpha(fillOpacity)
+            state.fillColor = state.fillColor.withAlpha(fillOpacity)
         }
         
         state.strokeColor = attributes.stroke.map{ Color($0) } ?? state.strokeColor
         if let strokeOpacity = attributes.strokeOpacity {
-            state.strokeColor = state.strokeColor.withMultiplyingAlpha(strokeOpacity)
+            state.strokeColor = state.strokeColor.withAlpha(strokeOpacity)
         }
         
         state.strokeWidth = attributes.strokeWidth ?? state.strokeWidth

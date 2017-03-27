@@ -335,10 +335,10 @@
 		D98971FF1E892C29008DC621 /* Builder */ = {
 			isa = PBXGroup;
 			children = (
+				D98972031E892C29008DC621 /* Builder.swift */,
 				D98972001E892C29008DC621 /* Builder.Command.swift */,
 				D98972011E892C29008DC621 /* Builder.Path.swift */,
 				D98972021E892C29008DC621 /* Builder.State.swift */,
-				D98972031E892C29008DC621 /* Builder.swift */,
 			);
 			path = Builder;
 			sourceTree = "<group>";

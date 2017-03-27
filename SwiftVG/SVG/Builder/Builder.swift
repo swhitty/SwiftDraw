@@ -31,6 +31,20 @@ class Builder {
             }
         }
         
+        func withAlpha(_ alpha: Float) -> Color {
+            guard alpha > 0.0 else { return .none }
+            
+            switch self {
+            case .none:
+                return .none
+            case .rgba(r: let r, g: let g, b: let b, a: _):
+                    return .rgba(r: r,
+                                 g: g,
+                                 b: b,
+                                 a: alpha)
+            }
+        }
+        
         func withMultiplyingAlpha(_ alpha: Float) -> Color {
             
             switch self {
