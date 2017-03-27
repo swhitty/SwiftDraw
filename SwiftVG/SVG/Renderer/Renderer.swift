@@ -6,8 +6,6 @@
 //  Copyright © 2017 WhileLoop Pty Ltd. All rights reserved.
 //
 
-import CoreGraphics
-
 protocol RendererTypeProvider {
     associatedtype Color
     associatedtype Path
