@@ -23,10 +23,11 @@ extension UIImage {
         f.prefersExtendedRange = false
         let r = UIGraphicsImageRenderer(size: size, format: f)
         
-        let commands = Renderer().createCommands(from: svg)
+        let commands = Builder().createCommands(for: svg, with: CoreGraphicsProvider())
         
         return r.image{
-            Renderer().perform(commands, in: $0.cgContext)
+            let renderer = CoreGraphicsRenderer(context: $0.cgContext)
+            renderer.perform(commands)
         }
     }
 }

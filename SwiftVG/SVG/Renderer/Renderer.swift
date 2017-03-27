@@ -6,12 +6,48 @@
 //  Copyright © 2017 WhileLoop Pty Ltd. All rights reserved.
 //
 
-import Foundation
+import CoreGraphics
 
-
-struct Renderer {
+protocol RendererTypeProvider {
+    associatedtype Color
+    associatedtype Path
+    associatedtype Transform
+    associatedtype Float
+    associatedtype Point
+    associatedtype Rect
     
-    enum Error: Swift.Error {
-        case unsupported(Any)
-    }
+    func createFloat(from float: Builder.Float) -> Float
+    func createPoint(from point: Builder.Point) -> Point
+    func createRect(from rect: Builder.Rect) -> Rect
+    func createColor(from color: Builder.Color) -> Color
+    func createTransform(from transform: Builder.Transform) -> Transform
+    func createPath(from path: Builder.Path) -> Path
+    
+    func createEllipse(within rect: Rect) -> Path
+    func createLine(from origin: Point, to desination: Point) -> Path
+    func createLine(between points: [Point]) -> Path
+    func createPolygon(between points: [Point]) -> Path
+    
+    func createRect(from rect: Rect, radii: Builder.Size) -> Path
+}
+
+protocol Renderer {
+    associatedtype Provider: RendererTypeProvider
+    
+    func perform(_ commands: [RendererCommand<Provider>])
+}
+
+enum RendererCommand<T: RendererTypeProvider> {
+    case pushState
+    case popState
+    
+    case concatenate(transform: T.Transform)
+    case translate(tx: T.Float, ty: T.Float)
+    
+    case setFill(color: T.Color)
+    case setStroke(color: T.Color)
+    case setLine(width: T.Float)
+    
+    case stroke(T.Path)
+    case fill(T.Path)
 }
