@@ -21,7 +21,7 @@
 	
 	<g fill-opacity="0" stroke="red" stroke-width="4">
 		<rect x="70" y="420" width="75" height="75" />	
-		<rect x="215" y="445" width="75" height="50" fill="blue" fill-opacity="50%" />	
+		<rect x="215" y="445" width="75" height="50" fill="blue" fill-opacity="0.5" />	
 		<rect x="355" y="420" width="75" height="75" />	
 	</g>
 	

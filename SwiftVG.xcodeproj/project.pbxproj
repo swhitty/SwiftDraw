@@ -93,14 +93,16 @@
 		D9778E651E6F6DFA00FF6EBB /* Parser.PathTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9778E631E6F6DFA00FF6EBB /* Parser.PathTests.swift */; };
 		D9778E711E7204EF00FF6EBB /* CGPath.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9778E701E7204EF00FF6EBB /* CGPath.swift */; };
 		D9778E721E7204EF00FF6EBB /* CGPath.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9778E701E7204EF00FF6EBB /* CGPath.swift */; };
-		D9882A761E87ABF300E2CCF8 /* Builder.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9882A751E87ABF300E2CCF8 /* Builder.swift */; };
-		D9882A771E87ABF300E2CCF8 /* Builder.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9882A751E87ABF300E2CCF8 /* Builder.swift */; };
-		D9882A791E87AC1B00E2CCF8 /* Builder.Path.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9882A781E87AC1B00E2CCF8 /* Builder.Path.swift */; };
-		D9882A7A1E87AC1B00E2CCF8 /* Builder.Path.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9882A781E87AC1B00E2CCF8 /* Builder.Path.swift */; };
-		D98971F71E88E1AE008DC621 /* Builder.Command.swift in Sources */ = {isa = PBXBuildFile; fileRef = D98971F61E88E1AE008DC621 /* Builder.Command.swift */; };
-		D98971F81E88EEF9008DC621 /* Builder.Command.swift in Sources */ = {isa = PBXBuildFile; fileRef = D98971F61E88E1AE008DC621 /* Builder.Command.swift */; };
 		D98971FA1E88F9B7008DC621 /* CoreGraphicsRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D98971F91E88F9B7008DC621 /* CoreGraphicsRenderer.swift */; };
 		D98971FB1E88F9B7008DC621 /* CoreGraphicsRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D98971F91E88F9B7008DC621 /* CoreGraphicsRenderer.swift */; };
+		D98972041E892C29008DC621 /* Builder.Command.swift in Sources */ = {isa = PBXBuildFile; fileRef = D98972001E892C29008DC621 /* Builder.Command.swift */; };
+		D98972051E892C29008DC621 /* Builder.Command.swift in Sources */ = {isa = PBXBuildFile; fileRef = D98972001E892C29008DC621 /* Builder.Command.swift */; };
+		D98972061E892C29008DC621 /* Builder.Path.swift in Sources */ = {isa = PBXBuildFile; fileRef = D98972011E892C29008DC621 /* Builder.Path.swift */; };
+		D98972071E892C29008DC621 /* Builder.Path.swift in Sources */ = {isa = PBXBuildFile; fileRef = D98972011E892C29008DC621 /* Builder.Path.swift */; };
+		D98972081E892C29008DC621 /* Builder.State.swift in Sources */ = {isa = PBXBuildFile; fileRef = D98972021E892C29008DC621 /* Builder.State.swift */; };
+		D98972091E892C29008DC621 /* Builder.State.swift in Sources */ = {isa = PBXBuildFile; fileRef = D98972021E892C29008DC621 /* Builder.State.swift */; };
+		D989720A1E892C29008DC621 /* Builder.swift in Sources */ = {isa = PBXBuildFile; fileRef = D98972031E892C29008DC621 /* Builder.swift */; };
+		D989720B1E892C29008DC621 /* Builder.swift in Sources */ = {isa = PBXBuildFile; fileRef = D98972031E892C29008DC621 /* Builder.swift */; };
 		D99CC9861E5F8EE600E7886A /* CharacterSetTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D99CC9851E5F8EE600E7886A /* CharacterSetTests.swift */; };
 		D99CC9891E5F8F0000E7886A /* CharacterSet.swift in Sources */ = {isa = PBXBuildFile; fileRef = D99CC9881E5F8F0000E7886A /* CharacterSet.swift */; };
 		D99CC98B1E5F8F1A00E7886A /* Scanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = D99CC98A1E5F8F1A00E7886A /* Scanner.swift */; };
@@ -189,10 +191,11 @@
 		D9778E601E6F6C0300FF6EBB /* Parser.XML.Path.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Parser.XML.Path.swift; sourceTree = "<group>"; };
 		D9778E631E6F6DFA00FF6EBB /* Parser.PathTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Parser.PathTests.swift; sourceTree = "<group>"; };
 		D9778E701E7204EF00FF6EBB /* CGPath.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CGPath.swift; sourceTree = "<group>"; };
-		D9882A751E87ABF300E2CCF8 /* Builder.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Builder.swift; sourceTree = "<group>"; };
-		D9882A781E87AC1B00E2CCF8 /* Builder.Path.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Builder.Path.swift; sourceTree = "<group>"; };
-		D98971F61E88E1AE008DC621 /* Builder.Command.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Builder.Command.swift; sourceTree = "<group>"; };
 		D98971F91E88F9B7008DC621 /* CoreGraphicsRenderer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CoreGraphicsRenderer.swift; sourceTree = "<group>"; };
+		D98972001E892C29008DC621 /* Builder.Command.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Builder.Command.swift; sourceTree = "<group>"; };
+		D98972011E892C29008DC621 /* Builder.Path.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Builder.Path.swift; sourceTree = "<group>"; };
+		D98972021E892C29008DC621 /* Builder.State.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Builder.State.swift; sourceTree = "<group>"; };
+		D98972031E892C29008DC621 /* Builder.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Builder.swift; sourceTree = "<group>"; };
 		D99CC9851E5F8EE600E7886A /* CharacterSetTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CharacterSetTests.swift; sourceTree = "<group>"; };
 		D99CC9881E5F8F0000E7886A /* CharacterSet.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CharacterSet.swift; sourceTree = "<group>"; };
 		D99CC98A1E5F8F1A00E7886A /* Scanner.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Scanner.swift; sourceTree = "<group>"; };
@@ -329,15 +332,15 @@
 			path = Renderer;
 			sourceTree = "<group>";
 		};
-		D9882A741E87ABE000E2CCF8 /* Builder */ = {
+		D98971FF1E892C29008DC621 /* Builder */ = {
 			isa = PBXGroup;
 			children = (
-				D9882A751E87ABF300E2CCF8 /* Builder.swift */,
-				D9882A781E87AC1B00E2CCF8 /* Builder.Path.swift */,
-				D98971F61E88E1AE008DC621 /* Builder.Command.swift */,
+				D98972001E892C29008DC621 /* Builder.Command.swift */,
+				D98972011E892C29008DC621 /* Builder.Path.swift */,
+				D98972021E892C29008DC621 /* Builder.State.swift */,
+				D98972031E892C29008DC621 /* Builder.swift */,
 			);
-			name = Builder;
-			path = ../../../../Desktop/Builder;
+			path = Builder;
 			sourceTree = "<group>";
 		};
 		D99CC9841E5F8ECE00E7886A /* Scanner */ = {
@@ -440,7 +443,7 @@
 				D958D9F31E02013B004D811F /* Formatter */,
 				D9F3EBCE1DFF5BF9006691A1 /* DOM */,
 				D9F3EBCF1DFF5C0D006691A1 /* Parser */,
-				D9882A741E87ABE000E2CCF8 /* Builder */,
+				D98971FF1E892C29008DC621 /* Builder */,
 				D9778E691E7203E900FF6EBB /* Renderer */,
 			);
 			path = SVG;
@@ -696,15 +699,14 @@
 				D962D2D61E6ED01700B825C6 /* Parser.XML.Gradient.swift in Sources */,
 				D962D2CB1E6ECFCA00B825C6 /* DOM.Image.swift in Sources */,
 				D962D2C51E6ECFCA00B825C6 /* DOM.Svg.swift in Sources */,
+				D98972091E892C29008DC621 /* Builder.State.swift in Sources */,
 				D962D2D11E6ED01700B825C6 /* Parser.XML.Element.swift in Sources */,
 				D962D2CA1E6ECFCA00B825C6 /* DOM.Use.swift in Sources */,
 				D962D2D01E6ED01700B825C6 /* Parser.XML.Attributes.swift in Sources */,
 				D962D2DE1E6ED02000B825C6 /* XML.Parser.swift in Sources */,
 				D962D2D81E6ED01700B825C6 /* Parser.XML.Use.swift in Sources */,
-				D98971F81E88EEF9008DC621 /* Builder.Command.swift in Sources */,
 				D98971FB1E88F9B7008DC621 /* CoreGraphicsRenderer.swift in Sources */,
 				D962D2DD1E6ED02000B825C6 /* XML.swift in Sources */,
-				D9882A7A1E87AC1B00E2CCF8 /* Builder.Path.swift in Sources */,
 				D962D2C41E6ECFCA00B825C6 /* DOM.Element.swift in Sources */,
 				D9A8439C1E861346002A804B /* NSImage.swift in Sources */,
 				D962D2D71E6ED01700B825C6 /* Parser.XML.Text.swift in Sources */,
@@ -720,9 +722,11 @@
 				D962D2C91E6ECFCA00B825C6 /* DOM.Text.swift in Sources */,
 				D962D2E51E6ED20100B825C6 /* Formatter.XML.swift in Sources */,
 				D962D2D91E6ED01700B825C6 /* Parser.XML.Image.swift in Sources */,
+				D98972071E892C29008DC621 /* Builder.Path.swift in Sources */,
+				D98972051E892C29008DC621 /* Builder.Command.swift in Sources */,
 				D962D2CC1E6ECFCA00B825C6 /* DOM.Switch.swift in Sources */,
 				D962D2C71E6ECFCA00B825C6 /* DOM.Color.swift in Sources */,
-				D9882A771E87ABF300E2CCF8 /* Builder.swift in Sources */,
+				D989720B1E892C29008DC621 /* Builder.swift in Sources */,
 				D9778E621E6F6C0300FF6EBB /* Parser.XML.Path.swift in Sources */,
 				D962D2C31E6ECFCA00B825C6 /* DOM.swift in Sources */,
 				D962D2E01E6ED02500B825C6 /* Scanner.swift in Sources */,
@@ -768,15 +772,14 @@
 				D933D0A61E5CFF4D00937A59 /* Parser.XML.Color.swift in Sources */,
 				D91B1E201E6E4D310028EF61 /* DOM.Image.swift in Sources */,
 				D933D0A81E5D1F7F00937A59 /* DOM.Element.swift in Sources */,
+				D98972081E892C29008DC621 /* Builder.State.swift in Sources */,
 				D91B1E221E6E4D650028EF61 /* Parser.XML.Image.swift in Sources */,
 				D9D0CFCE1E027B4000B7947B /* DOM.swift in Sources */,
 				D99CC9951E5FEA1200E7886A /* DOM.Text.swift in Sources */,
 				D965B5841E3C4A34003E859E /* XML.Parser.swift in Sources */,
 				D9A843991E8612BD002A804B /* UIImage.swift in Sources */,
-				D98971F71E88E1AE008DC621 /* Builder.Command.swift in Sources */,
 				D98971FA1E88F9B7008DC621 /* CoreGraphicsRenderer.swift in Sources */,
 				D99CC9971E5FECEB00E7886A /* Parser.XML.Text.swift in Sources */,
-				D9882A791E87AC1B00E2CCF8 /* Builder.Path.swift in Sources */,
 				D99CC9891E5F8F0000E7886A /* CharacterSet.swift in Sources */,
 				D933D0A11E5CEE1700937A59 /* DOM.Color.swift in Sources */,
 				D9778E5E1E6F698500FF6EBB /* DOM.Path.swift in Sources */,
@@ -792,9 +795,11 @@
 				D933D0AE1E5E868400937A59 /* Parser.XML.Transform.swift in Sources */,
 				D99CC98B1E5F8F1A00E7886A /* Scanner.swift in Sources */,
 				D965B5891E4E11AD003E859E /* DOM.Svg.swift in Sources */,
+				D98972061E892C29008DC621 /* Builder.Path.swift in Sources */,
+				D98972041E892C29008DC621 /* Builder.Command.swift in Sources */,
 				D9002B181E08B9CE0090BCC8 /* XML.swift in Sources */,
 				D99CC98F1E5FDB1D00E7886A /* DOM.Gradient.swift in Sources */,
-				D9882A761E87ABF300E2CCF8 /* Builder.swift in Sources */,
+				D989720A1E892C29008DC621 /* Builder.swift in Sources */,
 				D965B58B1E4E1273003E859E /* Parser.XML.Svg.swift in Sources */,
 				D9778E611E6F6C0300FF6EBB /* Parser.XML.Path.swift in Sources */,
 				D958D9F51E020158004D811F /* Formatter.swift in Sources */,
