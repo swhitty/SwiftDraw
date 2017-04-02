@@ -59,7 +59,8 @@ extension DOM {
         case matrix(a: Float, b: Float, c: Float, d: Float, e: Float, f: Float)
         case translate(tx: Float, ty: Float)
         case scale(sx: Float, sy: Float)
-        case rotate(angle: Float, cx: Float, cy: Float)
+        case rotate(angle: Float)
+        case rotatePoint(angle: Float, cx: Float, cy: Float)
         case skewX(angle: Float)
         case skewY(angle: Float)
     }

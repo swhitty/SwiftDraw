@@ -72,6 +72,6 @@
 	
 	<line x1="200" y1="650" x2="400" y2="650" stroke="fuchsia" stroke-width="2" />
 	
-	<use xlink:href="#star" x="0" y="0" fill="gold" stroke="orange" transform="translate(100, 300)  scale(0.5) rotate(45, 80, 80)" />
+	<use xlink:href="#star" x="0" y="0" fill="gold" stroke="orange" transform="translate(100, 300)  scale(0.5) rotate(50, 80, 80)" />
   
 </svg>

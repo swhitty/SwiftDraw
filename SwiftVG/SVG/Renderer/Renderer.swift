@@ -42,6 +42,9 @@ enum RendererCommand<T: RendererTypeProvider> {
     
     case concatenate(transform: T.Transform)
     case translate(tx: T.Float, ty: T.Float)
+    case rotate(angle: T.Float)
+    case scale(sx: T.Float, sy: T.Float)
+    
     
     case setFill(color: T.Color)
     case setStroke(color: T.Color)

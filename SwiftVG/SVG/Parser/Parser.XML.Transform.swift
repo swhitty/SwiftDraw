@@ -95,7 +95,7 @@ extension XMLParser {
         
         let sx = try scanner.scanFloat()
         if let _ = scanner.scan(")") {
-            return .scale(sx: sx, sy: 0)
+            return .scale(sx: sx, sy: sx)
         }
         
         _ = scanner.scan(",")
@@ -115,7 +115,7 @@ extension XMLParser {
         
         let angle = try scanner.scanFloat()
         if let _ = scanner.scan(")") {
-            return .rotate(angle: angle, cx: 0, cy: 0)
+            return .rotate(angle: angle)
         }
         
         _ = scanner.scan(",")
@@ -127,7 +127,7 @@ extension XMLParser {
             throw Error.invalid
         }
         
-        return .rotate(angle: angle, cx: cx, cy: cy)
+        return .rotatePoint(angle: angle, cx: cx, cy: cy)
     }
     
     func parseSkewX(_ scanner: inout Scanner) throws -> DOM.Transform? {

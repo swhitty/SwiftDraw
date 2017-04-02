@@ -46,12 +46,9 @@ extension Builder {
             commands.append(contentsOf: stateCommands)
         }
         
-        if let transform = element.transform?.first {
-            if case .translate(let t) = transform {
-                let tx = provider.createFloat(from: t.tx)
-                let ty = provider.createFloat(from: t.ty)
-                commands.append(.translate(tx: tx, ty: ty))
-            }
+        if let transforms = element.transform {
+            let cmds = createCommands(from: transforms, with: provider)
+            commands.append(contentsOf: cmds)
         }
         
         //clip if required
@@ -70,6 +67,18 @@ extension Builder {
             if newState.strokeColor != .none {
                 commands.append(.stroke(path))
             }
+        }
+        
+        //if element is <use>, then retrieve elemnt from defs
+        if let use = element as? DOM.Use,
+           let eId = use.href.fragment,
+           let e = defs.elements[eId] {
+    
+            commands.append(contentsOf: createCommands(for: e,
+                                                       with: provider,
+                                                       domState: element,
+                                                       renderState: newState))
+            
         }
         
         if let container = element as? ContainerElement {

@@ -131,46 +131,6 @@ class Builder {
             return lhs.origin == rhs.origin && lhs.size == rhs.size
         }
     }
-    
-    struct Transform: Equatable {
-        var a: Float
-        var b: Float
-        var c: Float
-        var d: Float
-        var tx: Float
-        var ty: Float
-        
-        init() {
-            self.a = 0
-            self.b = 0
-            self.c = 0
-            self.d = 0
-            self.tx = 0
-            self.ty = 0
-        }
-        
-        init(a: Float, b: Float, c: Float, d: Float, tx: Float, ty: Float) {
-            self.a = a
-            self.b = b
-            self.c = c
-            self.d = d
-            self.tx = tx
-            self.ty = ty
-        }
-        
-        static var identity: Transform {
-            return Transform(a: 1, b: 0, c: 0, d: 1, tx: 0, ty: 0)
-        }
-    
-        static func ==(lhs: Transform, rhs: Transform) -> Bool {
-            return lhs.a == rhs.a &&
-                   lhs.b == rhs.b &&
-                   lhs.c == rhs.c &&
-                   lhs.d == rhs.d &&
-                   lhs.tx == rhs.tx &&
-                   lhs.ty == rhs.ty
-        }
-    }
 }
 
 

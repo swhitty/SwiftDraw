@@ -153,6 +153,10 @@ struct CoreGraphicsRenderer: Renderer {
             ctx.concatenate(t)
         case .translate(tx: let x, ty: let y):
             ctx.translateBy(x: x, y: y)
+        case .scale(sx: let x, sy: let y):
+            ctx.scaleBy(x: x, y: y)
+        case .rotate(angle: let a):
+            ctx.rotate(by: a)
         case .setFill(color: let c):
             ctx.setFillColor(c)
         case .setStroke(color: let c):
