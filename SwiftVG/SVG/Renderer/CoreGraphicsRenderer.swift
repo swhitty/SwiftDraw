@@ -43,15 +43,8 @@ struct CoreGraphicsProvider: RendererTypeProvider {
     }
     
     private func createColor(r: CGFloat, g: CGFloat, b: CGFloat, a: CGFloat) -> CGColor {
-        #if os(iOS)
-            return CGColor(colorSpace: CGColorSpaceCreateDeviceRGB(),
-                           components: [r, g, b, a])!
-        #else
-            return CGColor(red: r,
-                           green: g,
-                           blue: b,
-                           alpha: a)
-        #endif
+        return CGColor(colorSpace: CGColorSpaceCreateDeviceRGB(),
+                       components: [r, g, b, a])!
     }
     
     func createTransform(from transform: Builder.Transform) -> Transform {

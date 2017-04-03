@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<svg xmlns="http://www.w3.org/2000/svg"
+	 xmlns:ns="http://www.w3.org/2000/svg" 
+	 xmlns:xlink="http://www.w3.org/1999/xlink" 
+	 width="400" height="400" viewBox="-0.2 0 0.2 0.2" >
+	 
+  	<polygon fill="gold" points="-0.1,0.01 -0.04,0.198 -0.190,0.078, -0.010,0.078, -0.160,0.198" fill-rule="nonzero" />
+  
+</svg>

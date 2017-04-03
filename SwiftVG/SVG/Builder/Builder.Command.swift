@@ -13,11 +13,31 @@ extension Builder {
     
     func createCommands<T: RendererTypeProvider>(for svg: DOM.Svg, with provider: T) -> [RendererCommand<T>] {
         
+        let width = Float(svg.width)
+        let height = Float(svg.height)
+        
         self.defs = svg.defs
         var commands = [RendererCommand<T>]()
-        let flip = Transform(a: 1, b: 0, c: 0, d: -1, tx: 0, ty: Float(svg.height))
+        let flip = Transform(a: 1, b: 0, c: 0, d: -1, tx: 0, ty: height)
         let t = provider.createTransform(from: flip)
         commands.append(.concatenate(transform: t))
+        
+        
+        if let viewBox = svg.viewBox {
+
+            if viewBox.width != width || viewBox.height != height {
+                let sx = provider.createFloat(from: width / viewBox.width)
+                let sy = provider.createFloat(from: height / viewBox.height)
+                commands.append(.scale(sx: sx, sy: sy))
+            }
+            
+            if viewBox.x != 0 || viewBox.y != 0 {
+                let tx = provider.createFloat(from: -viewBox.x)
+                let ty = provider.createFloat(from: -viewBox.y)
+                commands.append(.translate(tx: tx, ty: ty))
+            }
+        }
+        
         
         let state = createState(for: svg, with:  RendererState.defaultSvg)
         
