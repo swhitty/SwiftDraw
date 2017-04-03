@@ -67,7 +67,7 @@ extension XMLParser {
     
     func parseGraphicsElement(_ e: XML.Element) throws -> DOM.GraphicsElement? {
         
-        let ge: DOM.GraphicsElement
+        var ge: DOM.GraphicsElement
         
         let att = try parseAttributes(e)
    
@@ -92,21 +92,11 @@ extension XMLParser {
         ge.id = e.attributes["id"]
         
         let presentation = try parsePresentationAttributes(att)
-
-        ge.opacity = presentation.opacity
-        ge.display = presentation.display
-        ge.stroke = presentation.stroke
-        ge.strokeWidth = presentation.strokeWidth
-        ge.strokeOpacity = presentation.strokeOpacity
-        ge.fill = presentation.fill
-        ge.fillOpacity = presentation.fillOpacity
-        ge.fillRule = presentation.fillRule
-        ge.transform = presentation.transform
-        ge.clipPath = presentation.clipPath
-        ge.mask = presentation.mask
+        ge.updateAttributes(from: presentation)
         
         return ge
     }
+
     
     func parseContainerChildren(_ e: XML.Element) throws -> [DOM.GraphicsElement] {
         guard e.name == "svg" ||
@@ -238,5 +228,24 @@ extension XMLParser {
         return el
     }
     
+    
+}
+
+
+extension PresentationAttributes {
+    
+    mutating func updateAttributes(from attributes: PresentationAttributes) {
+        opacity = attributes.opacity
+        display = attributes.display
+        stroke = attributes.stroke
+        strokeWidth = attributes.strokeWidth
+        strokeOpacity = attributes.strokeOpacity
+        fill = attributes.fill
+        fillOpacity = attributes.fillOpacity
+        fillRule = attributes.fillRule
+        transform = attributes.transform
+        clipPath = attributes.clipPath
+        mask = attributes.mask
+    }
     
 }

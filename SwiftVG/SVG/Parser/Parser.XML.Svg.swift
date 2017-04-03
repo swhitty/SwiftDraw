@@ -24,11 +24,14 @@ extension XMLParser {
         guard let w = width else { throw XMLParser.Error.missingAttribute(name: "width") }
         guard let h = height else { throw XMLParser.Error.missingAttribute(name: "height") }
     
-        let svg = DOM.Svg(width: DOM.Length(w), height: DOM.Length(h))
+        var svg = DOM.Svg(width: DOM.Length(w), height: DOM.Length(h))
         svg.childElements = try parseContainerChildren(e)
         svg.viewBox = try parseViewBox(try att.parseString("viewBox"))
         
         svg.defs = try parseSVGDefs(e)
+        
+        let presentation = try parsePresentationAttributes(att)
+        svg.updateAttributes(from: presentation)
         
         return svg
     }

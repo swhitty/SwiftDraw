@@ -74,17 +74,21 @@ extension Builder {
                               tx: Float(m.e),
                               ty: Float(m.f))
             return [.concatenate(transform: provider.createTransform(from: t))]
+            
         case .translate(let t):
             let tx = provider.createFloat(from: Float(t.tx))
             let ty = provider.createFloat(from: Float(t.ty))
             return [.translate(tx: tx, ty: ty)]
+            
         case .scale(let s):
             let sx = provider.createFloat(from: Float(s.sx))
             let sy = provider.createFloat(from: Float(s.sy))
             return [.scale(sx: sx, sy: sy)]
+            
         case .rotate(let angle):
             let angle = provider.createFloat(from: Float(angle)*Float.pi/180.0)
             return [.rotate(angle: angle)]
+            
         case .rotatePoint(let r):
             let angle = provider.createFloat(from: Float(r.angle)*Float.pi/180.0)
             let tx1 = provider.createFloat(from: Float(r.cx))
@@ -94,8 +98,27 @@ extension Builder {
             return [.translate(tx: tx1, ty: ty1),
                     .rotate(angle: angle),
                     .translate(tx: tx2, ty: ty2)]
-        default:
-            return []
+            
+        case .skewX(let angle):
+            let radians = Float(angle)*Float.pi/180.0
+            let t = Transform(a: 1,
+                              b: 0,
+                              c: tan(radians),
+                              d: 1,
+                              tx: 0,
+                              ty: 0)
+            return [.concatenate(transform: provider.createTransform(from: t))]
+            
+        case .skewY(let angle):
+            let radians = Float(angle)*Float.pi/180.0
+            let t = Transform(a: 1,
+                              b: tan(radians),
+                              c: 0,
+                              d: 1,
+                              tx: 0,
+                              ty: 0)
+            return [.concatenate(transform: provider.createTransform(from: t))]
+            
         }
 
     }
