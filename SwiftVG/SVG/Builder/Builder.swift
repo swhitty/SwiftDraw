@@ -131,6 +131,12 @@ class Builder {
             return lhs.origin == rhs.origin && lhs.size == rhs.size
         }
     }
+    
+    enum BlendMode {
+        case normal
+        case copy
+        case sourceIn /* R = S*Da */
+    }
 }
 
 
@@ -163,5 +169,19 @@ extension Builder.Color {
                      g: Float(rgbi.1)/255.0,
                      b: Float(rgbi.2)/255.0,
                      a: 1.0)
+    }
+    
+    public func luminanceToAlpha() -> Builder.Color {
+        
+        let alpha: Float
+        
+        switch self {
+        case .none:
+            alpha = 0
+        case .rgba(let r, let g, let b, let a):
+            //sRGB Luminance to alpha
+            alpha = ((r*0.2126) + (g*0.7152) + (b*0.0722)) * a
+        }
+        return .rgba(r: 0, g: 0, b: 0, a: alpha)
     }
 }

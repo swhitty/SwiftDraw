@@ -15,6 +15,7 @@ struct CoreGraphicsProvider: RendererTypeProvider {
     typealias Float = CGFloat
     typealias Point = CGPoint
     typealias Rect = CGRect
+    typealias BlendMode = CGBlendMode
     
     func createFloat(from float: Builder.Float) -> Float {
         return CGFloat(float)
@@ -45,6 +46,14 @@ struct CoreGraphicsProvider: RendererTypeProvider {
     private func createColor(r: CGFloat, g: CGFloat, b: CGFloat, a: CGFloat) -> CGColor {
         return CGColor(colorSpace: CGColorSpaceCreateDeviceRGB(),
                        components: [r, g, b, a])!
+    }
+    
+    func createBlendMode(from mode: Builder.BlendMode) -> CGBlendMode {
+        switch mode {
+        case .normal: return .normal
+        case .copy: return .copy
+        case .sourceIn: return .sourceIn
+        }
     }
     
     func createTransform(from transform: Builder.Transform) -> Transform {
@@ -159,12 +168,19 @@ struct CoreGraphicsRenderer: Renderer {
         case .setClip(path: let p):
             ctx.addPath(p)
             ctx.clip()
+        case .setBlend(mode: let m):
+            ctx.setBlendMode(m)
         case .stroke(let p):
             ctx.addPath(p)
             ctx.strokePath()
+            ctx.setBlendMode(.clear)
         case .fill(let p):
             ctx.addPath(p)
             ctx.fillPath()
+        case .pushTransparencyLayer:
+            ctx.beginTransparencyLayer(auxiliaryInfo: nil)
+        case .popTransparencyLayer:
+            ctx.endTransparencyLayer()
         }
     }
 }

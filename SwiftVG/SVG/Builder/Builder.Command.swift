@@ -56,6 +56,32 @@ extension Builder {
                                                  renderState: RendererState) -> [RendererCommand<T>] {
         
         var commands = [RendererCommand<T>]()
+        
+        let didBeginMask: Bool
+        
+        //mask if required
+        if let maskId = element.mask?.fragment,
+            let mask = defs.masks.first(where: { $0.id == maskId }) {
+            
+            commands.append(.pushTransparencyLayer)
+            didBeginMask = true
+            commands.append(.setBlend(mode: provider.createBlendMode(from: .copy)))
+            
+            for child in mask.childElements {
+                if let fill = child.fill,
+                    let path = createPath(for: child, with: provider) {
+                    let color = Builder.Color(fill).luminanceToAlpha()
+                    commands.append(.setFill(color: provider.createColor(from: color)))
+                    commands.append(.fill(path))
+                }
+            }
+            
+            commands.append(.setBlend(mode: provider.createBlendMode(from: .sourceIn)))
+            
+        } else {
+            didBeginMask = false
+        }
+        
 
         let newAtrributes = createAttributes(for: element, inheriting: domState)
         let newState = createState(for: newAtrributes, with: renderState)
@@ -78,6 +104,7 @@ extension Builder {
             commands.append(.setClip(path: path))
         }
         
+
         //convert the element into a path to draw
         if let path = createPath(for: element, with: provider) {
             if newState.fillColor != .none {
@@ -88,6 +115,7 @@ extension Builder {
                 commands.append(.stroke(path))
             }
         }
+
         
         //if element is <use>, then retrieve elemnt from defs
         if let use = element as? DOM.Use,
@@ -113,6 +141,12 @@ extension Builder {
         if !stateCommands.isEmpty {
             commands.append(.popState)
         }
+        
+        if didBeginMask {
+            commands.append(.popTransparencyLayer)
+        }
+        
+    
         
         return commands
     }

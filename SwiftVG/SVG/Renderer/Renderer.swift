@@ -13,11 +13,13 @@ protocol RendererTypeProvider {
     associatedtype Float
     associatedtype Point
     associatedtype Rect
+    associatedtype BlendMode
     
     func createFloat(from float: Builder.Float) -> Float
     func createPoint(from point: Builder.Point) -> Point
     func createRect(from rect: Builder.Rect) -> Rect
     func createColor(from color: Builder.Color) -> Color
+    func createBlendMode(from mode: Builder.BlendMode) -> BlendMode
     func createTransform(from transform: Builder.Transform) -> Transform
     func createPath(from path: Builder.Path) -> Path
     func createPath(from subPaths: [Path]) -> Path
@@ -44,13 +46,16 @@ enum RendererCommand<T: RendererTypeProvider> {
     case translate(tx: T.Float, ty: T.Float)
     case rotate(angle: T.Float)
     case scale(sx: T.Float, sy: T.Float)
-    
-    
+
     case setFill(color: T.Color)
     case setStroke(color: T.Color)
     case setLine(width: T.Float)
     case setClip(path: T.Path)
+    case setBlend(mode: T.BlendMode)
     
     case stroke(T.Path)
     case fill(T.Path)
+    
+    case pushTransparencyLayer
+    case popTransparencyLayer
 }
