@@ -56,7 +56,7 @@ class ParserGraphicAttributeTests: XCTestCase {
         XCTAssertEqual(parsed.fill, .keyword(.purple))
         XCTAssertEqual(parsed.fillOpacity, 0.25)
         XCTAssertEqual(parsed.fillRule, .evenodd)
-        XCTAssertEqual(parsed.transform!, [.scale(sx: 15, sy: 0)])
+        XCTAssertEqual(parsed.transform!, [.scale(sx: 15, sy: 15)])
         XCTAssertEqual(parsed.clipPath?.fragment, "circlePath")
         XCTAssertEqual(parsed.mask?.fragment, "fancyMask")
     }

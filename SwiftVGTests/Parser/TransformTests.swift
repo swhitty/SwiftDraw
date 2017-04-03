@@ -18,24 +18,24 @@ class TransformTests: XCTestCase {
     }
     
     func testTranslate() {
-        AssertTranslateEqual("translate(5)", (5, 0))
+        AssertTranslateEqual("translate(5)", (5, 5))
         AssertTranslateEqual("translate(5, 6)", (5, 6))
         AssertTranslateEqual("translate(5  6)", (5, 6))
         AssertTranslateEqual("translate(1.3, 4.5)", (1.3, 4.5))
     }
     
     func testScale() {
-        AssertScaleEqual("scale(5)", (5, 0))
+        AssertScaleEqual("scale(5)", (5, 5))
         AssertScaleEqual("scale(5, 6)", (5, 6))
         AssertScaleEqual("scale(5  6)", (5, 6))
         AssertScaleEqual("scale(1.3, 4.5)", (1.3, 4.5))
     }
     
     func testRotate() {
-        AssertRotateEqual("rotate(5)", (5, 0, 0))
-        AssertRotateEqual("rotate(5, 6, 7)", (5, 6, 7))
-        AssertRotateEqual("rotate(5  6  7)", (5, 6, 7))
-        AssertRotateEqual("rotate(1.3, 4.5, 5.4)", (1.3, 4.5, 5.4))
+        AssertRotateEqual("rotate(5)", 5)
+        AssertRotatePointEqual("rotate(5, 6, 7)", (5, 6, 7))
+        AssertRotatePointEqual("rotate(5  6  7)", (5, 6, 7))
+        AssertRotatePointEqual("rotate(1.3, 4.5, 5.4)", (1.3, 4.5, 5.4))
     }
     
     func testSkewX() {
@@ -52,8 +52,8 @@ class TransformTests: XCTestCase {
     
     func testTransform() {
         
-        let expected = [DOM.Transform.scale(sx: 2, sy: 0),
-                        DOM.Transform.translate(tx: 4, ty: 0),
+        let expected = [DOM.Transform.scale(sx: 2, sy: 2),
+                        DOM.Transform.translate(tx: 4, ty: 4),
                         DOM.Transform.scale(sx: 5, sy: 5)]
         
         AssertTransformEqual("scale(2) translate(4) scale(5, 5) ", expected)
@@ -103,14 +103,25 @@ private func AssertScaleEqual(_ text: String, _ expected: (DOM.Float, DOM.Float)
     XCTAssertEqual(parsed, transform, file: file, line: line)
 }
 
-private func AssertRotateEqual(_ text: String, _ expected: (DOM.Float, DOM.Float, DOM.Float), file: StaticString = #file, line: UInt = #line) {
+private func AssertRotateEqual(_ text: String, _ expected: DOM.Float, file: StaticString = #file, line: UInt = #line) {
     var scanner = Scanner(text: text)
     guard let parsed = try? XMLParser().parseRotate(&scanner) else {
         XCTFail("Failed to parse rotate from \(text)", file: file, line: line)
         return
     }
     
-    let transform = DOM.Transform.rotate(angle: expected.0, cx: expected.1, cy: expected.2)
+    let transform = DOM.Transform.rotate(angle: expected)
+    XCTAssertEqual(parsed, transform, file: file, line: line)
+}
+
+private func AssertRotatePointEqual(_ text: String, _ expected: (DOM.Float, DOM.Float, DOM.Float), file: StaticString = #file, line: UInt = #line) {
+    var scanner = Scanner(text: text)
+    guard let parsed = try? XMLParser().parseRotate(&scanner) else {
+        XCTFail("Failed to parse rotate from \(text)", file: file, line: line)
+        return
+    }
+    
+    let transform = DOM.Transform.rotatePoint(angle: expected.0, cx: expected.1, cy: expected.2)
     XCTAssertEqual(parsed, transform, file: file, line: line)
 }
 

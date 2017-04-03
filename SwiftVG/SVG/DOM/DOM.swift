@@ -83,6 +83,8 @@ extension DOM.Transform: Equatable {
             return lval == rval
         case (.rotate(let lval), .rotate(let rval)):
             return lval == rval
+        case (.rotatePoint(let lval), .rotatePoint(let rval)):
+            return lval == rval
         case (.skewX(let lval), .skewX(let rval)):
             return lval == rval
         case (.skewY(let lval), .skewY(let rval)):
