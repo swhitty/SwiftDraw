@@ -1,0 +1,51 @@
+<?xml version="1.0"?>
+<svg xmlns="http://www.w3.org/2000/svg"
+	 xmlns:ns="http://www.w3.org/2000/svg" 
+	 xmlns:xlink="http://www.w3.org/1999/xlink" 
+	 width="600" height="700" viewBox="0 0 600 700" stroke-width="4" stroke="black" >
+	 
+
+  <defs>
+  
+  	<rect id="r" x="0" y="0" height="100" width="100" fill-opacity="0.2" stroke-opacity="0.2" />
+	<rect id="r1" x="0" y="0" height="100" width="100" />
+	
+  </defs>
+  
+  <g fill="#0086B2" transform="translate(50, 50)">
+  	<use xlink:href="#r" />
+  	<use xlink:href="#r1" transform="rotate(15)" />
+  </g>
+  
+  <g fill="pink" transform="translate(200, 50)">
+  	<use xlink:href="#r" />
+  	<use xlink:href="#r1" transform="skewX(15)" />
+  </g>
+  
+  <g fill="yellow" transform="translate(370, 50)">
+  	<use xlink:href="#r" />
+  	<use xlink:href="#r1" transform="skewY(15)" />
+  </g>
+  
+  <g fill="#0086B2" transform="translate(40, 250)">
+  	<use xlink:href="#r" />
+  	<use xlink:href="#r1" transform="rotate(-15)" />
+  </g>
+  
+  <g fill="pink" transform="translate(210, 250)">
+  	<use xlink:href="#r" />
+  	<use xlink:href="#r1" transform="skewX(-15)" />
+  </g>
+  
+  <g fill="yellow" transform="translate(370, 250)">
+  	<use xlink:href="#r" />
+  	<use xlink:href="#r1" transform="skewY(-15)" />
+  </g>
+  
+	<rect x="50" y="400" height="100" width="150" fill-opacity="0.2" stroke-opacity="0.2" fill="yellowgreen"/>
+	<rect x="50" y="400" height="100" width="150" fill="yellowgreen" transform="skewX(5)" />
+	
+	<rect x="275" y="400" height="100" width="150" fill-opacity="0.2" stroke-opacity="0.2" fill="gainsboro"/>
+	<rect x="275" y="400" height="100" width="150" fill="gainsboro" transform="skewY(5)"/>
+
+</svg>

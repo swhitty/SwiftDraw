@@ -18,7 +18,7 @@ class TransformTests: XCTestCase {
     }
     
     func testTranslate() {
-        AssertTranslateEqual("translate(5)", (5, 5))
+        AssertTranslateEqual("translate(5)", (5, 0))
         AssertTranslateEqual("translate(5, 6)", (5, 6))
         AssertTranslateEqual("translate(5  6)", (5, 6))
         AssertTranslateEqual("translate(1.3, 4.5)", (1.3, 4.5))
@@ -53,7 +53,7 @@ class TransformTests: XCTestCase {
     func testTransform() {
         
         let expected = [DOM.Transform.scale(sx: 2, sy: 2),
-                        DOM.Transform.translate(tx: 4, ty: 4),
+                        DOM.Transform.translate(tx: 4, ty: 0),
                         DOM.Transform.scale(sx: 5, sy: 5)]
         
         AssertTransformEqual("scale(2) translate(4) scale(5, 5) ", expected)

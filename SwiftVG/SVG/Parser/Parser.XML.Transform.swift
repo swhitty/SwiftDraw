@@ -75,7 +75,7 @@ extension XMLParser {
         
         let tx = try scanner.scanFloat()
         if let _ = scanner.scan(")") {
-            return .translate(tx: tx, ty: tx)
+            return .translate(tx: tx, ty: 0)
         }
         
         _ = scanner.scan(",")
