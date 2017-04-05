@@ -2,7 +2,7 @@
 <svg xmlns="http://www.w3.org/2000/svg"
 	 xmlns:ns="http://www.w3.org/2000/svg" 
 	 xmlns:xlink="http://www.w3.org/1999/xlink" 
-	 width="600" height="700" viewBox="0 0 600 700" >
+	 width="200" height="200" viewBox="0 0 200 200" >
 	 
 <defs>
 	<mask id="cross">
@@ -19,7 +19,7 @@
 		<circle cx="35" cy="5" r="5" fill="blue" />
 		<circle cx="5" cy="15" r="5" fill="green" />
 		<circle cx="15" cy="15" r="5" fill="pink" />
-		<circle cx="25" cy="15" r="5" fill="organge" />
+		<circle cx="25" cy="15" r="5" fill="orange" />
 		<circle cx="35" cy="15" r="5" fill="yellow" />
 		<circle cx="5" cy="25" r="5" fill="orange" />
 		<circle cx="15" cy="25" r="5" fill="#ff00ff" />

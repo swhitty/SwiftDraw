@@ -2,14 +2,12 @@
 <svg xmlns="http://www.w3.org/2000/svg"
 	 xmlns:ns="http://www.w3.org/2000/svg" 
 	 xmlns:xlink="http://www.w3.org/1999/xlink" 
-	 width="250" height="250" viewBox="0 0 50 50" >
-
-	<mask id="cross">
-		<circle cx="25" cy="25" r="25" fill="white" />
-		<rect width="4" height="30" x="23" y="10" fill="black" />
-		<rect width="30" height="4" x="10" y="23" fill="black" />
-	</mask>
-	
-	<rect width="50" height="50" x="0" y="0" fill="salmon" mask="url(#cross)"/>
+	 width="600" height="700" viewBox="0 0 600 700" >
+	 
+	<g fill-opacity="0" stroke="red" stroke-width="4">
+		<rect x="70" y="420" width="75" height="75" />	
+		<rect x="215" y="445" width="75" height="50" />	
+		<rect x="355" y="420" width="75" height="75" />	
+	</g>
 
 </svg>

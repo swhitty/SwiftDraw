@@ -91,12 +91,10 @@ struct CoreGraphicsProvider: RendererTypeProvider {
     }
     
     func createRect(from rect: Rect, radii: Builder.Size) -> Path {
-        let path = CGMutablePath()
-        path.addRoundedRect(in: rect,
-                            cornerWidth: CGFloat(radii.width),
-                            cornerHeight: CGFloat(radii.height),
-                            transform: .identity)
-        return path
+        return CGPath(roundedRect: rect,
+                      cornerWidth: CGFloat(radii.width),
+                      cornerHeight: CGFloat(radii.height),
+                      transform: nil)
     }
     
     func createPath(from path: Builder.Path) -> Path {
@@ -173,7 +171,6 @@ struct CoreGraphicsRenderer: Renderer {
         case .stroke(let p):
             ctx.addPath(p)
             ctx.strokePath()
-            ctx.setBlendMode(.clear)
         case .fill(let p):
             ctx.addPath(p)
             ctx.fillPath()

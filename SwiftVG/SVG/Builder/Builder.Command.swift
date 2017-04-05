@@ -59,11 +59,15 @@ extension Builder {
         
         let didBeginMask: Bool
         
+        let transformCommands = createCommands(from: element.transform ?? [], with: provider)
+        
         //mask if required
         if let maskId = element.mask?.fragment,
             let mask = defs.masks.first(where: { $0.id == maskId }) {
             
             commands.append(.pushTransparencyLayer)
+            commands.append(.pushState)
+            commands.append(contentsOf: transformCommands)
             didBeginMask = true
             commands.append(.setBlend(mode: provider.createBlendMode(from: .copy)))
             
@@ -76,25 +80,21 @@ extension Builder {
                 }
             }
             
+            commands.append(.popState)
             commands.append(.setBlend(mode: provider.createBlendMode(from: .sourceIn)))
-            
         } else {
             didBeginMask = false
         }
         
-
         let newAtrributes = createAttributes(for: element, inheriting: domState)
         let newState = createState(for: newAtrributes, with: renderState)
         
         let stateCommands = createCommands(for: newState, existing: renderState, with: provider)
-        if !stateCommands.isEmpty {
+        
+        if !stateCommands.isEmpty || !transformCommands.isEmpty {
             commands.append(.pushState)
             commands.append(contentsOf: stateCommands)
-        }
-        
-        if let transforms = element.transform {
-            let cmds = createCommands(from: transforms, with: provider)
-            commands.append(contentsOf: cmds)
+            commands.append(contentsOf: transformCommands)
         }
         
         //clip if required
@@ -107,6 +107,7 @@ extension Builder {
 
         //convert the element into a path to draw
         if let path = createPath(for: element, with: provider) {
+
             if newState.fillColor != .none {
                 commands.append(.fill(path))
             }
@@ -115,7 +116,6 @@ extension Builder {
                 commands.append(.stroke(path))
             }
         }
-
         
         //if element is <use>, then retrieve elemnt from defs
         if let use = element as? DOM.Use,
@@ -126,7 +126,6 @@ extension Builder {
                                                        with: provider,
                                                        domState: element,
                                                        renderState: newState))
-            
         }
         
         if let container = element as? ContainerElement {
@@ -137,16 +136,14 @@ extension Builder {
                                                            renderState: newState))
             }
         }
-        
-        if !stateCommands.isEmpty {
+    
+        if !stateCommands.isEmpty || !transformCommands.isEmpty {
             commands.append(.popState)
         }
         
         if didBeginMask {
             commands.append(.popTransparencyLayer)
         }
-        
-    
         
         return commands
     }
