@@ -66,15 +66,11 @@ struct CoreGraphicsProvider: RendererTypeProvider {
     }
     
     func createEllipse(within rect: Rect) -> Path {
-        let path = CGMutablePath()
-        path.addEllipse(in: rect)
-        return path
+        return CGPath(ellipseIn: rect, transform: nil)
     }
     
     func createLine(from origin: Point, to desination: Point) -> Path {
-        let path = CGMutablePath()
-        path.addLines(between: [origin, desination])
-        return path
+        return createLine(between: [origin, desination])
     }
     
     func createLine(between points: [Point]) -> Path {

@@ -9,7 +9,7 @@
 
 extension Builder {
     
-    class Path {
+    class Path: Equatable {
         var segments: [Segment] = []
         
         enum Segment {
@@ -17,6 +17,10 @@ extension Builder {
             case line(Point)
             case cubic(Point, Point, Point)
             case close
+        }
+        
+        static func ==(lhs: Builder.Path, rhs: Builder.Path) -> Bool {
+            return lhs.segments == rhs.segments
         }
     }
 }
@@ -57,7 +61,7 @@ extension Builder.Path {
     }
     
     var last: Point? {
-        
+
         guard let lastSegment = segments.last else { return nil }
         
         switch lastSegment {
