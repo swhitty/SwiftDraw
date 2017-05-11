@@ -22,7 +22,6 @@ extension Builder {
         let t = provider.createTransform(from: flip)
         commands.append(.concatenate(transform: t))
         
-        
         if let viewBox = svg.viewBox {
 
             if viewBox.width != width || viewBox.height != height {
@@ -38,22 +37,15 @@ extension Builder {
             }
         }
         
-        
-        let state = createState(for: svg, with:  RendererState.defaultSvg)
-        
-        commands.append(contentsOf: createCommands(for: state, existing: nil, with: provider))
-        
         commands.append(contentsOf: createCommands(for: svg as DOM.GraphicsElement,
-                                                   with: provider,
-                                                   domState: svg,
-                                                   renderState: state))
+                                                   inheriting: DOMState.defaultSvg,
+                                                   using: provider))
         return commands
     }
     
     func createCommands<T: RendererTypeProvider>(for element: DOM.GraphicsElement,
-                                                 with provider: T,
-                                                 domState: PresentationAttributes,
-                                                 renderState: RendererState) -> [RendererCommand<T>] {
+                                                 inheriting parentAttributes: PresentationAttributes,
+                                                 using provider: T) -> [RendererCommand<T>] {
         
         var commands = [RendererCommand<T>]()
         
@@ -86,14 +78,10 @@ extension Builder {
             didBeginMask = false
         }
         
-        let newAtrributes = createAttributes(for: element, inheriting: domState)
-        let newState = createState(for: newAtrributes, with: renderState)
+        let attributes = createAttributes(for: element, inheriting: parentAttributes)
         
-        let stateCommands = createCommands(for: newState, existing: renderState, with: provider)
-        
-        if !stateCommands.isEmpty || !transformCommands.isEmpty {
+        if !transformCommands.isEmpty {
             commands.append(.pushState)
-            commands.append(contentsOf: stateCommands)
             commands.append(contentsOf: transformCommands)
         }
         
@@ -103,41 +91,31 @@ extension Builder {
             let path = createClipPath(for: clip, with: provider)
             commands.append(.setClip(path: path))
         }
-        
 
-        //convert the element into a path to draw
+        //convert the element into a path to fill, then stroke if required
         if let path = createPath(for: element, with: provider) {
-
-            if newState.fillColor != .none {
-                commands.append(.fill(path))
-            }
-            
-            if newState.strokeColor != .none {
-                commands.append(.stroke(path))
-            }
+            commands.append(contentsOf: createFillCommands(for: path, with: attributes, using: provider))
+            commands.append(contentsOf: createStrokeCommands(for: path, with: attributes, using: provider))
         }
         
         //if element is <use>, then retrieve elemnt from defs
         if let use = element as? DOM.Use,
            let eId = use.href.fragment,
            let e = defs.elements[eId] {
-    
             commands.append(contentsOf: createCommands(for: e,
-                                                       with: provider,
-                                                       domState: element,
-                                                       renderState: newState))
+                                                       inheriting: attributes,
+                                                       using: provider))
         }
         
         if let container = element as? ContainerElement {
             for child in container.childElements {
                 commands.append(contentsOf: createCommands(for: child,
-                                                           with: provider,
-                                                           domState: element,
-                                                           renderState: newState))
+                                                           inheriting: attributes,
+                                                           using: provider))
             }
         }
     
-        if !stateCommands.isEmpty || !transformCommands.isEmpty {
+        if !transformCommands.isEmpty {
             commands.append(.popState)
         }
         
@@ -147,6 +125,27 @@ extension Builder {
         
         return commands
     }
+    
+    func createFillCommands<T: RendererTypeProvider>(for path: T.Path,
+                                                     with attributes: PresentationAttributes,
+                                                     using provider: T) -> [RendererCommand<T>] {
+        
+        guard let fill = attributes.fill, fill != .none else { return [] }
+        let color = provider.createColor(from: Builder.Color(fill))
+        
+        return [.setFill(color: color), .fill(path)]
+    }
+    
+    func createStrokeCommands<T: RendererTypeProvider>(for path: T.Path,
+                                                       with attributes: PresentationAttributes,
+                                                       using provider: T) -> [RendererCommand<T>] {
+        
+        guard let stroke = attributes.stroke, stroke != .none else { return [] }
+        let color = provider.createColor(from: Builder.Color(stroke))
+        
+        return [.setStroke(color: color), .stroke(path)]
+    }
+    
     
     func createPath<T: RendererTypeProvider>(for element: DOM.GraphicsElement, with provider: T) -> T.Path? {
         if let line = element as? DOM.Line {

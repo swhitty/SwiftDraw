@@ -29,6 +29,14 @@ extension Builder {
         var transform: [DOM.Transform]?
         var clipPath: DOM.URL?
         var mask: DOM.URL?
+        
+        static var defaultSvg: DOMState {
+            var state = DOMState()
+            state.fill = DOM.Color.keyword(.black)
+            state.stroke = DOM.Color.none
+            state.strokeWidth = 1.0
+            return state
+        }
     }
     
     //Tracks the state of the renderer to enable rudant calls to be omitted
@@ -70,7 +78,7 @@ extension Builder {
         state.fillOpacity = attributes.fillOpacity ?? existing.fillOpacity
         state.fillRule = attributes.fillRule ?? existing.fillRule
         
-        //i don't think these should be inherited, por
+        //i don't think these should be inherited.
         state.transform = attributes.transform
         state.clipPath = attributes.clipPath
         state.mask = attributes.mask
