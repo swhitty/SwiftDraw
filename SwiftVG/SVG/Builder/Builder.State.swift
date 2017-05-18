@@ -39,30 +39,42 @@ extension Builder {
         }
     }
     
-    //Tracks the state of the renderer to enable rudant calls to be omitted
-    //The RenderState is inherited by Elements to provide non-nil values for these attributes
-    //DOMState attributes always override the inherited RenderState
-    struct RendererState: Equatable {
-        var fillColor: Color
-        var strokeColor: Color
-        var strokeWidth: Float
+    //current state of the render tree
+    struct State {
+        var opacity: DOM.Float = 1.0
+        var display: DOM.DisplayMode = .inline
         
-        static func ==(lhs: RendererState, rhs: RendererState) -> Bool {
-            return lhs.fillColor == rhs.fillColor &&
-                   lhs.strokeColor == rhs.strokeColor &&
-                   lhs.strokeWidth == rhs.strokeWidth
-        }
+        var stroke: DOM.Color = .none
+        var strokeWidth: DOM.Float = 1.0
+        var strokeOpacity: DOM.Float = 1.0
+        var strokeLineCap: DOM.LineCap = .butt
+        var strokeLineJoin: DOM.LineJoin = .bevel
+        var strokeDashArray: [DOM.Float] = []
         
-        static var defaultSvg: RendererState {
-            return RendererState(fillColor: Color(DOM.Color.keyword(.black)),
-                                 strokeColor: .none,
-                                 strokeWidth: 1.0)
+        var fill: DOM.Color = .keyword(.black)
+        var fillOpacity: DOM.Float = 1.0
+        var fillRule: DOM.FillRule = .nonzero
+        
+        init() {
+            opacity = 1.0
+            display = .inline
+            
+            stroke = .none
+            strokeWidth = 1.0
+            strokeOpacity = 1.0
+            strokeLineCap = .butt
+            strokeLineJoin = .bevel
+            strokeDashArray = []
+            
+            fill = .keyword(.black)
+            fillOpacity = 1.0
+            fillRule = .evenodd
         }
     }
     
-    func createAttributes(for attributes: PresentationAttributes, inheriting existing: PresentationAttributes) -> PresentationAttributes {
+    func createState(for attributes: PresentationAttributes, inheriting existing: State) -> State {
         
-        var state = DOMState()
+        var state = State()
         
         state.opacity = attributes.opacity ?? existing.opacity
         state.display = attributes.display ?? existing.display
@@ -78,53 +90,6 @@ extension Builder {
         state.fillOpacity = attributes.fillOpacity ?? existing.fillOpacity
         state.fillRule = attributes.fillRule ?? existing.fillRule
         
-        //i don't think these should be inherited.
-        state.transform = attributes.transform
-        state.clipPath = attributes.clipPath
-        state.mask = attributes.mask
-        
         return state
-        
-    }
-    
-    func createState(for attributes: PresentationAttributes, with existing: RendererState) -> RendererState {
-        var state = existing
-        
-        state.fillColor = attributes.fill.map{ Color($0) } ?? state.fillColor
-        if let fillOpacity = attributes.fillOpacity {
-            state.fillColor = state.fillColor.withAlpha(fillOpacity)
-        }
-        
-        state.strokeColor = attributes.stroke.map{ Color($0) } ?? state.strokeColor
-        if let strokeOpacity = attributes.strokeOpacity {
-            state.strokeColor = state.strokeColor.withAlpha(strokeOpacity)
-        }
-        
-        state.strokeWidth = attributes.strokeWidth ?? state.strokeWidth
-
-        return state
-    }
-
-    func createCommands<T: RendererTypeProvider>(for state: RendererState, existing: RendererState? = nil, with provider: T) -> [RendererCommand<T>] {
-        var commands = [RendererCommand<T>]()
-        
-        if state.fillColor != existing?.fillColor,
-           state.fillColor != .none {
-            let fill = provider.createColor(from: state.fillColor)
-            commands.append(.setFill(color: fill))
-        }
-        
-        if state.strokeColor != existing?.strokeColor,
-           state.strokeColor != .none {
-            let stroke = provider.createColor(from: state.strokeColor)
-            commands.append(.setStroke(color: stroke))
-        }
-        
-        if state.strokeWidth != existing?.strokeWidth {
-            let stroke = provider.createFloat(from: state.strokeWidth)
-            commands.append(.setLine(width: stroke))
-        }
-        
-        return commands
     }
 }

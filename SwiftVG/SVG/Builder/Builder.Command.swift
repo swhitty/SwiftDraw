@@ -38,13 +38,13 @@ extension Builder {
         }
         
         commands.append(contentsOf: createCommands(for: svg as DOM.GraphicsElement,
-                                                   inheriting: DOMState.defaultSvg,
+                                                   inheriting: State(),
                                                    using: provider))
         return commands
     }
     
     func createCommands<T: RendererTypeProvider>(for element: DOM.GraphicsElement,
-                                                 inheriting parentAttributes: PresentationAttributes,
+                                                 inheriting parentState: State,
                                                  using provider: T) -> [RendererCommand<T>] {
         
         var commands = [RendererCommand<T>]()
@@ -78,7 +78,7 @@ extension Builder {
             didBeginMask = false
         }
         
-        let attributes = createAttributes(for: element, inheriting: parentAttributes)
+        let state = createState(for: element, inheriting: parentState)
         
         if !transformCommands.isEmpty {
             commands.append(.pushState)
@@ -94,8 +94,8 @@ extension Builder {
 
         //convert the element into a path to fill, then stroke if required
         if let path = createPath(for: element, with: provider) {
-            commands.append(contentsOf: createFillCommands(for: path, with: attributes, using: provider))
-            commands.append(contentsOf: createStrokeCommands(for: path, with: attributes, using: provider))
+            commands.append(contentsOf: createFillCommands(for: path, with: state, using: provider))
+            commands.append(contentsOf: createStrokeCommands(for: path, with: state, using: provider))
         }
         
         //if element is <use>, then retrieve elemnt from defs
@@ -103,14 +103,14 @@ extension Builder {
            let eId = use.href.fragment,
            let e = defs.elements[eId] {
             commands.append(contentsOf: createCommands(for: e,
-                                                       inheriting: attributes,
+                                                       inheriting: state,
                                                        using: provider))
         }
         
         if let container = element as? ContainerElement {
             for child in container.childElements {
                 commands.append(contentsOf: createCommands(for: child,
-                                                           inheriting: attributes,
+                                                           inheriting: state,
                                                            using: provider))
             }
         }
@@ -127,23 +127,26 @@ extension Builder {
     }
     
     func createFillCommands<T: RendererTypeProvider>(for path: T.Path,
-                                                     with attributes: PresentationAttributes,
+                                                     with state: State,
                                                      using provider: T) -> [RendererCommand<T>] {
         
-        guard let fill = attributes.fill, fill != .none else { return [] }
-        let color = provider.createColor(from: Builder.Color(fill))
+        let fill = Builder.Color(state.fill)
+        guard fill != .none else { return [] }
+        let color = provider.createColor(from: fill)
         
         return [.setFill(color: color), .fill(path)]
     }
     
     func createStrokeCommands<T: RendererTypeProvider>(for path: T.Path,
-                                                       with attributes: PresentationAttributes,
+                                                       with state: State,
                                                        using provider: T) -> [RendererCommand<T>] {
         
-        guard let stroke = attributes.stroke, stroke != .none else { return [] }
-        let color = provider.createColor(from: Builder.Color(stroke))
+        let stroke = Builder.Color(state.stroke)
+        guard stroke != .none else { return [] }
+        let color = provider.createColor(from: stroke)
+        let width = provider.createFloat(from: state.strokeWidth)
         
-        return [.setStroke(color: color), .stroke(path)]
+        return [.setLine(width: width) , .setStroke(color: color), .stroke(path)]
     }
     
     
