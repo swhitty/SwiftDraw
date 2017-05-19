@@ -130,7 +130,8 @@ extension Builder {
                                                      with state: State,
                                                      using provider: T) -> [RendererCommand<T>] {
         
-        let fill = Builder.Color(state.fill)
+        let fill = Builder.Color(state.fill).withAlpha(state.fillOpacity)
+ 
         guard fill != .none else { return [] }
         let color = provider.createColor(from: fill)
         
@@ -141,7 +142,7 @@ extension Builder {
                                                        with state: State,
                                                        using provider: T) -> [RendererCommand<T>] {
         
-        let stroke = Builder.Color(state.stroke)
+        let stroke = Builder.Color(state.stroke).withAlpha(state.strokeOpacity)
         guard stroke != .none else { return [] }
         let color = provider.createColor(from: stroke)
         let width = provider.createFloat(from: state.strokeWidth)
