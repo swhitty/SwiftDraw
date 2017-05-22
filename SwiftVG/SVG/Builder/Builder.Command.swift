@@ -44,67 +44,106 @@ extension Builder {
     }
     
     func createCommands<T: RendererTypeProvider>(for element: DOM.GraphicsElement,
-                                                 inheriting parentState: State,
-                                                 using provider: T) -> [RendererCommand<T>] {
+                        inheriting parentState: State,
+                        using provider: T) -> [RendererCommand<T>] {
+        
+        
+        
         
         var commands = [RendererCommand<T>]()
         
-        let didBeginMask: Bool
-        
-        let transformCommands = createCommands(from: element.transform ?? [], with: provider)
-        
-        //mask if required
-        if let maskId = element.mask?.fragment,
-            let mask = defs.masks.first(where: { $0.id == maskId }) {
+        //TODO: merge Use and Switch element resolution.
+        if let use = element as? DOM.Use {
             
-            commands.append(.pushTransparencyLayer)
-            commands.append(.pushState)
-            commands.append(contentsOf: transformCommands)
-            didBeginMask = true
-            commands.append(.setBlend(mode: provider.createBlendMode(from: .copy)))
+            let transformCommands = createTransformCommands(from: element.transform ?? [], using: provider)
             
-            for child in mask.childElements {
-                if let fill = child.fill,
-                    let path = createPath(for: child, with: provider) {
-                    let color = Builder.Color(fill).luminanceToAlpha()
-                    commands.append(.setFill(color: provider.createColor(from: color)))
-                    commands.append(.fill(path))
-                }
+            if !transformCommands.isEmpty {
+                commands.append(.pushState)
+                commands.append(contentsOf: transformCommands)
             }
             
-            commands.append(.popState)
-            commands.append(.setBlend(mode: provider.createBlendMode(from: .sourceIn)))
-        } else {
-            didBeginMask = false
+            let cmds = createUseCommands(for: use, inheriting: parentState, using: provider)
+            commands.append(contentsOf: cmds)
+            
+            if !transformCommands.isEmpty {
+                commands.append(.popState)
+            }
+        } else if let sw = element as? DOM.Switch {
+            
+            //TODO: handle first element that can be rendered.
+            if let el = sw.childElements.first {
+                let transformCommands = createTransformCommands(from: element.transform ?? [], using: provider)
+                
+                if !transformCommands.isEmpty {
+                    commands.append(.pushState)
+                    commands.append(contentsOf: transformCommands)
+                }
+                
+                //ensure render state is inherited from Switch element
+                let swState = createState(for: sw, inheriting: parentState)
+                let cmds = createDrawCommands(for: el, inheriting: swState, using: provider)
+                commands.append(contentsOf: cmds)
+                
+                if !transformCommands.isEmpty {
+                    commands.append(.popState)
+                }
+            }
+        }
+        else {
+            let cmds = createDrawCommands(for: element, inheriting: parentState, using: provider)
+            commands.append(contentsOf: cmds)
+    
+            
+            
         }
         
+        return commands
+    }
+        
+    func createUseCommands<T: RendererTypeProvider>(for use: DOM.Use,
+                        inheriting parentState: State,
+                        using provider: T) -> [RendererCommand<T>] {
+        
+        guard let eId = use.href.fragment,
+              let e = defs.elements[eId] else {
+                //cannot render
+            return []
+        }
+        
+        //ensure linked element inherits attributes from <use> element
+        let state = createState(for: use, inheriting: parentState)
+        return createDrawCommands(for: e, inheriting: state, using: provider)
+    }
+
+    func createDrawCommands<T: RendererTypeProvider>(for element: DOM.GraphicsElement,
+                                                     inheriting parentState: State,
+                                                     using provider: T) -> [RendererCommand<T>] {
+        
+        var commands = [RendererCommand<T>]()
+        
+        let transformCommands = createTransformCommands(from: element.transform ?? [], using: provider)
+        let clipCommands = createClipCommands(for: element, using: provider)
+        let maskCommands = createMaskCommands(for: element, using: provider)
+        
+        commands.append(contentsOf: maskCommands)
+        
+        if !transformCommands.isEmpty ||
+           !clipCommands.isEmpty {
+            commands.append(.pushState)
+        }
+        
+        commands.append(contentsOf: transformCommands)
+        commands.append(contentsOf: clipCommands)
+
+    
+        //inherit the attributes from the parent element,
+        //but override with any attributes explictly set with the current element
         let state = createState(for: element, inheriting: parentState)
         
-        if !transformCommands.isEmpty {
-            commands.append(.pushState)
-            commands.append(contentsOf: transformCommands)
-        }
-        
-        //clip if required
-        if let clipId = element.clipPath?.fragment,
-           let clip = defs.clipPaths.first(where: { $0.id == clipId }) {
-            let path = createClipPath(for: clip, with: provider)
-            commands.append(.setClip(path: path))
-        }
-
         //convert the element into a path to fill, then stroke if required
         if let path = createPath(for: element, with: provider) {
             commands.append(contentsOf: createFillCommands(for: path, with: state, using: provider))
             commands.append(contentsOf: createStrokeCommands(for: path, with: state, using: provider))
-        }
-        
-        //if element is <use>, then retrieve elemnt from defs
-        if let use = element as? DOM.Use,
-           let eId = use.href.fragment,
-           let e = defs.elements[eId] {
-            commands.append(contentsOf: createCommands(for: e,
-                                                       inheriting: state,
-                                                       using: provider))
         }
         
         if let container = element as? ContainerElement {
@@ -114,14 +153,61 @@ extension Builder {
                                                            using: provider))
             }
         }
-    
-        if !transformCommands.isEmpty {
+        
+        if !transformCommands.isEmpty ||
+            !clipCommands.isEmpty {
             commands.append(.popState)
         }
         
-        if didBeginMask {
+        if !maskCommands.isEmpty {
             commands.append(.popTransparencyLayer)
         }
+        
+        return commands
+    }
+    
+    func createClipCommands<T: RendererTypeProvider>(for element: DOM.GraphicsElement,
+                                                     using provider: T) -> [RendererCommand<T>] {
+        guard let clipId = element.clipPath?.fragment,
+              let clip = defs.clipPaths.first(where: { $0.id == clipId }) else { return [] }
+   
+        
+        var paths = Array<T.Path>()
+        for el in clip.childElements {
+            if let p = createPath(for: el, with: provider) {
+                paths.append(p)
+            }
+        }
+        let clipPath = provider.createPath(from: paths)
+        return [.setClip(path: clipPath)]
+    }
+    
+    func createMaskCommands<T: RendererTypeProvider>(for element: DOM.GraphicsElement,
+                                                     using provider: T) -> [RendererCommand<T>] {
+        
+        guard let maskId = element.mask?.fragment,
+              let mask = defs.masks.first(where: { $0.id == maskId }) else { return [] }
+        
+        var commands = [RendererCommand<T>]()
+        commands.append(.pushTransparencyLayer)
+        commands.append(.pushState)
+        if let t = element.transform {
+            //apply the same transform to mask as the original element
+            commands.append(contentsOf: createTransformCommands(from: t, using: provider))
+        }
+        commands.append(.setBlend(mode: provider.createBlendMode(from: .copy)))
+        
+        for child in mask.childElements {
+            if let fill = child.fill,
+                let path = createPath(for: child, with: provider) {
+                let color = Builder.Color(fill).luminanceToAlpha()
+                commands.append(.setFill(color: provider.createColor(from: color)))
+                commands.append(.fill(path))
+            }
+        }
+        
+        commands.append(.popState)
+        commands.append(.setBlend(mode: provider.createBlendMode(from: .sourceIn)))
         
         return commands
     }
@@ -146,8 +232,16 @@ extension Builder {
         guard stroke != .none else { return [] }
         let color = provider.createColor(from: stroke)
         let width = provider.createFloat(from: state.strokeWidth)
+        let cap = provider.createLineCap(from: state.strokeLineCap)
+        let join = provider.createLineJoin(from: state.strokeLineJoin)
+        let limit = provider.createFloat(from: state.strokeLineMiterLimit)
         
-        return [.setLine(width: width) , .setStroke(color: color), .stroke(path)]
+        return [.setLineCap(cap),
+                .setLineJoin(join),
+                .setLine(width: width),
+                .setLineMiter(limit: limit),
+                .setStroke(color: color),
+                .stroke(path)]
     }
     
     

@@ -41,21 +41,23 @@ extension Builder {
     
     //current state of the render tree
     struct State {
-        var opacity: DOM.Float = 1.0
-        var display: DOM.DisplayMode = .inline
+        var opacity: DOM.Float
+        var display: DOM.DisplayMode
         
-        var stroke: DOM.Color = .none
-        var strokeWidth: DOM.Float = 1.0
-        var strokeOpacity: DOM.Float = 1.0
-        var strokeLineCap: DOM.LineCap = .butt
-        var strokeLineJoin: DOM.LineJoin = .bevel
-        var strokeDashArray: [DOM.Float] = []
+        var stroke: DOM.Color
+        var strokeWidth: DOM.Float
+        var strokeOpacity: DOM.Float
+        var strokeLineCap: DOM.LineCap
+        var strokeLineJoin: DOM.LineJoin
+        var strokeLineMiterLimit: DOM.Float
+        var strokeDashArray: [DOM.Float]
         
-        var fill: DOM.Color = .keyword(.black)
-        var fillOpacity: DOM.Float = 1.0
-        var fillRule: DOM.FillRule = .nonzero
+        var fill: DOM.Color
+        var fillOpacity: DOM.Float
+        var fillRule: DOM.FillRule
         
         init() {
+            //default root SVG element state
             opacity = 1.0
             display = .inline
             
@@ -63,7 +65,8 @@ extension Builder {
             strokeWidth = 1.0
             strokeOpacity = 1.0
             strokeLineCap = .butt
-            strokeLineJoin = .bevel
+            strokeLineJoin = .miter
+            strokeLineMiterLimit = 4.0
             strokeDashArray = []
             
             fill = .keyword(.black)

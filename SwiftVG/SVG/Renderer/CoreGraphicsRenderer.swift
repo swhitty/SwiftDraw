@@ -16,6 +16,8 @@ struct CoreGraphicsProvider: RendererTypeProvider {
     typealias Point = CGPoint
     typealias Rect = CGRect
     typealias BlendMode = CGBlendMode
+    typealias LineCap = CGLineCap
+    typealias LineJoin = CGLineJoin
     
     func createFloat(from float: Builder.Float) -> Float {
         return CGFloat(float)
@@ -53,6 +55,22 @@ struct CoreGraphicsProvider: RendererTypeProvider {
         case .normal: return .normal
         case .copy: return .copy
         case .sourceIn: return .sourceIn
+        }
+    }
+    
+    func createLineCap(from cap: Builder.LineCap) -> CGLineCap {
+        switch cap {
+        case .butt: return .butt
+        case .round: return .round
+        case .square: return .square
+        }
+    }
+    
+    func createLineJoin(from join: Builder.LineJoin) -> CGLineJoin {
+        switch join {
+        case .bevel: return .bevel
+        case .round: return .round
+        case .miter: return .miter
         }
     }
     
@@ -138,6 +156,7 @@ struct CoreGraphicsRenderer: Renderer {
             perform(cmd)
         }
     }
+
     
     func perform(_ command: RendererCommand<Provider>) {
         switch command {
@@ -159,6 +178,12 @@ struct CoreGraphicsRenderer: Renderer {
             ctx.setStrokeColor(c)
         case .setLine(width: let w):
             ctx.setLineWidth(w)
+        case .setLineCap(let c):
+            ctx.setLineCap(c)
+        case .setLineJoin(let j):
+            ctx.setLineJoin(j)
+        case .setLineMiter(limit: let l):
+            ctx.setMiterLimit(l)
         case .setClip(path: let p):
             ctx.addPath(p)
             ctx.clip()

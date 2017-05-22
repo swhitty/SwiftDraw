@@ -14,6 +14,8 @@ protocol RendererTypeProvider {
     associatedtype Point
     associatedtype Rect
     associatedtype BlendMode
+    associatedtype LineCap
+    associatedtype LineJoin
     
     func createFloat(from float: Builder.Float) -> Float
     func createPoint(from point: Builder.Point) -> Point
@@ -23,6 +25,8 @@ protocol RendererTypeProvider {
     func createTransform(from transform: Builder.Transform) -> Transform
     func createPath(from path: Builder.Path) -> Path
     func createPath(from subPaths: [Path]) -> Path
+    func createLineCap(from cap: Builder.LineCap) -> LineCap
+    func createLineJoin(from join: Builder.LineJoin) -> LineJoin
     
     func createEllipse(within rect: Rect) -> Path
     func createLine(from origin: Point, to desination: Point) -> Path
@@ -50,6 +54,9 @@ enum RendererCommand<T: RendererTypeProvider> {
     case setFill(color: T.Color)
     case setStroke(color: T.Color)
     case setLine(width: T.Float)
+    case setLineCap(T.LineCap)
+    case setLineJoin(T.LineJoin)
+    case setLineMiter(limit: T.Float)
     case setClip(path: T.Path)
     case setBlend(mode: T.BlendMode)
     

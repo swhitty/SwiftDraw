@@ -50,8 +50,8 @@ extension Builder {
         }
     }
 
-    func createCommands<T: RendererTypeProvider>(from transforms: [DOM.Transform],
-                        with provider: T) -> [RendererCommand<T>] {
+    func createTransformCommands<T: RendererTypeProvider>(from transforms: [DOM.Transform],
+                                                          using provider: T) -> [RendererCommand<T>] {
         
         var commands = [RendererCommand<T>]()
         

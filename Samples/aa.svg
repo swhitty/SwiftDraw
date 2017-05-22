@@ -2,12 +2,18 @@
 <svg xmlns="http://www.w3.org/2000/svg"
 	 xmlns:ns="http://www.w3.org/2000/svg" 
 	 xmlns:xlink="http://www.w3.org/1999/xlink" 
-	 width="600" height="700" viewBox="0 0 600 700" >
-	 
-	<g fill-opacity="0" stroke="red" stroke-width="4">
-		<rect x="70" y="420" width="75" height="75" />	
-		<rect x="215" y="445" width="75" height="50" />	
-		<rect x="355" y="420" width="75" height="75" />	
-	</g>
+	 width="500" height="700" viewBox="0 0 500 700" >
 
+	<defs>
+	  <polygon id="star" points="100,10 40,198 190,78, 10,78, 160,198" fill-rule="nonzero" />
+	</defs>
+	
+	<clipPath id="cp">
+		<rect x="440" y="55" width="20" height="20" />	
+	</clipPath>
+   
+	<circle cx="450" cy="75" r="20" fill="purple" clip-path="url(#cp)"/>
+	
+	<use xlink:href="#star" x="0" y="0" fill="gold" stroke="orange" transform="translate(100, 300)  scale(0.5) rotate(50, 80, 80)" />
+	
 </svg>

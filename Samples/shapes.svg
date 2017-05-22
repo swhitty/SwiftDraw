@@ -59,9 +59,9 @@
    
 	<circle cx="450" cy="75" r="20" fill="purple" clip-path="url(#cp)"/>
 	
-	<switch>
+	<switch transform="scale(2)" >
 		<circle cx="105" cy="100" r="2" fill="#FF00FF"/>
-		<circle cx="125" cy="110" r="5" fill="#FF00FF"/>
+		<circle cx="125" cy="110" r="5" fill="#00FFFF"/>
 	</switch>
 	
 	<rect x="230" y="55" width="40" height="40" fill="purple" clip-path="url(#cp2)" />	

@@ -11,6 +11,8 @@ import Foundation
 class Builder {
     
     typealias Float = Swift.Float
+    typealias LineCap = DOM.LineCap
+    typealias LineJoin = DOM.LineJoin
     
     var defs: DOM.Svg.Defs = DOM.Svg.Defs()
   

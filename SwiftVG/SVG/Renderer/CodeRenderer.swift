@@ -16,6 +16,8 @@ struct CodeProvider: RendererTypeProvider {
     typealias Point = Builder.Point
     typealias Rect = Builder.Rect
     typealias BlendMode = Builder.BlendMode
+    typealias LineCap = Builder.LineCap
+    typealias LineJoin = Builder.LineJoin
     
     func createFloat(from float: Builder.Float) -> Float {
         return float
@@ -35,6 +37,14 @@ struct CodeProvider: RendererTypeProvider {
     
     func createBlendMode(from mode: Builder.BlendMode) -> BlendMode {
         return mode
+    }
+    
+    func createLineCap(from cap: Builder.LineCap) -> Builder.LineCap {
+        return cap
+    }
+    
+    func createLineJoin(from join: Builder.LineJoin) -> Builder.LineJoin {
+        return join
     }
     
     func createTransform(from transform: Builder.Transform) -> Transform {
