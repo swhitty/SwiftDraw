@@ -66,7 +66,7 @@
 	
 	<rect x="230" y="55" width="40" height="40" fill="purple" clip-path="url(#cp2)" />	
 	
-	<text x="200" y="650" font-family="GillSans-Light" font-size="20">
+	<text font-family="GillSans-Light" font-size="20" transform="translate(200, 650)" >
 		 Madeleine Whitty 😀
 	</text>
 	
