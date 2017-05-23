@@ -146,6 +146,12 @@ extension Builder {
             commands.append(contentsOf: createStrokeCommands(for: path, with: state, using: provider))
         }
         
+        //composite images
+        if let image = element as? DOM.Image {
+            let cmd = createImageCommands(for: image, using: provider)
+            commands.append(contentsOf: cmd)
+        }
+        
         if let container = element as? ContainerElement {
             for child in container.childElements {
                 commands.append(contentsOf: createCommands(for: child,
@@ -242,6 +248,15 @@ extension Builder {
                 .setLineMiter(limit: limit),
                 .setStroke(color: color),
                 .stroke(path)]
+    }
+    
+    func createImageCommands<T: RendererTypeProvider>(for element: DOM.Image,
+                                                      using provider: T) -> [RendererCommand<T>] {
+        guard let decoded = element.href.decodedData,
+              let image = Image(mimeType: decoded.mimeType, data: decoded.data),
+              let renderImage = provider.createImage(from: image) else { return  [] }
+        
+        return [.draw(image: renderImage)]
     }
     
     

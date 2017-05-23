@@ -16,6 +16,7 @@ protocol RendererTypeProvider {
     associatedtype BlendMode
     associatedtype LineCap
     associatedtype LineJoin
+    associatedtype Image
     
     func createFloat(from float: Builder.Float) -> Float
     func createPoint(from point: Builder.Point) -> Point
@@ -27,6 +28,7 @@ protocol RendererTypeProvider {
     func createPath(from subPaths: [Path]) -> Path
     func createLineCap(from cap: Builder.LineCap) -> LineCap
     func createLineJoin(from join: Builder.LineJoin) -> LineJoin
+    func createImage(from image: Builder.Image) -> Image?
     
     func createEllipse(within rect: Rect) -> Path
     func createLine(from origin: Point, to desination: Point) -> Path
@@ -62,6 +64,8 @@ enum RendererCommand<T: RendererTypeProvider> {
     
     case stroke(T.Path)
     case fill(T.Path)
+    
+    case draw(image: T.Image)
     
     case pushTransparencyLayer
     case popTransparencyLayer

@@ -7,6 +7,10 @@
 //
 
 import CoreGraphics
+import Foundation
+#if os(macOS)
+    import AppKit
+#endif
 
 struct CoreGraphicsProvider: RendererTypeProvider {
     typealias Color = CGColor
@@ -18,6 +22,7 @@ struct CoreGraphicsProvider: RendererTypeProvider {
     typealias BlendMode = CGBlendMode
     typealias LineCap = CGLineCap
     typealias LineJoin = CGLineJoin
+    typealias Image = CGImage
     
     func createFloat(from float: Builder.Float) -> Float {
         return CGFloat(float)
@@ -139,6 +144,28 @@ struct CoreGraphicsProvider: RendererTypeProvider {
         
         return cgPath
     }
+    
+    func createImage(from image: Builder.Image) -> CGImage? {
+        switch image {
+        case .jpeg(data: let d):
+            return CGImage.from(data: d)
+        case .png(data: let d):
+            return CGImage.from(data: d)
+        }
+    }
+}
+
+//TODO: replace with CG implementation
+private extension CGImage {
+    static func from(data: Data) -> CGImage? {
+        #if os(iOS)
+            return UIImage(data: data)?.cgImage
+        #elseif os(macOS)
+            guard let image = NSImage(data: data) else { return nil }
+            var rect = NSRect(x: 0, y: 0, width: image.size.width, height: image.size.height)
+            return image.cgImage(forProposedRect: &rect, context: nil, hints: nil)
+        #endif
+    }
 }
 
 
@@ -195,6 +222,9 @@ struct CoreGraphicsRenderer: Renderer {
         case .fill(let p):
             ctx.addPath(p)
             ctx.fillPath()
+        case .draw(image: let i):
+            let rect = CGRect(x: 0, y: 0, width: i.width, height: i.height)
+            ctx.draw(i, in: rect)
         case .pushTransparencyLayer:
             ctx.beginTransparencyLayer(auxiliaryInfo: nil)
         case .popTransparencyLayer:

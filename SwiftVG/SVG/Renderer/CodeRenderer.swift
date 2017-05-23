@@ -18,6 +18,7 @@ struct CodeProvider: RendererTypeProvider {
     typealias BlendMode = Builder.BlendMode
     typealias LineCap = Builder.LineCap
     typealias LineJoin = Builder.LineJoin
+    typealias Image = Builder.Image
     
     func createFloat(from float: Builder.Float) -> Float {
         return float
@@ -77,6 +78,10 @@ struct CodeProvider: RendererTypeProvider {
     
     func createPath(from subPaths: [Path]) -> Path {
         return .compound(paths: subPaths)
+    }
+    
+    func createImage(from image: Builder.Image) -> Builder.Image? {
+        return image
     }
 }
 
