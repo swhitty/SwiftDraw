@@ -382,13 +382,6 @@
 			path = DOM;
 			sourceTree = "<group>";
 		};
-		D99CC99F1E60435700E7886A /* Extensions */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			path = Extensions;
-			sourceTree = "<group>";
-		};
 		D9A843971E8612AB002A804B /* Image */ = {
 			isa = PBXGroup;
 			children = (
@@ -449,7 +442,6 @@
 			isa = PBXGroup;
 			children = (
 				D9A843971E8612AB002A804B /* Image */,
-				D99CC99F1E60435700E7886A /* Extensions */,
 				D99CC9871E5F8EF400E7886A /* Scanner */,
 				D9002B141E08B9710090BCC8 /* XML */,
 				D958D9F31E02013B004D811F /* Formatter */,

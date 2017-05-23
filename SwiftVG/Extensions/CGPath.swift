@@ -7,6 +7,8 @@
 //
 
 import CoreGraphics
+import CoreText
+import Foundation
 
 extension CGPath {
     func applyA(action: @escaping (CGPathElement)->()) {
@@ -45,5 +47,35 @@ extension CGPath {
             }
         }
         return segments
+    }
+}
+
+extension String {
+    
+    func toPath(font: CTFont) -> CGPath {
+        let attrs: [String: AnyObject] = [kCTFontAttributeName as String: font]
+        let attString = CFAttributedStringCreate(nil, self as CFString, attrs as CFDictionary)!
+        let line = CTLineCreateWithAttributedString(attString)
+        let glyphRuns = CTLineGetGlyphRuns(line)
+        
+        let path = CGMutablePath()
+        
+        for idx in 0..<CFArrayGetCount(glyphRuns) {
+            let val = CFArrayGetValueAtIndex(glyphRuns, idx)
+            let run = unsafeBitCast(val, to: CTRun.self)
+            
+            for idx in 0..<CTRunGetGlyphCount(run) {
+                let glyphRange = CFRange(location: idx, length: 1)
+                var glyph: CGGlyph = 0
+                var position: CGPoint = .zero
+                CTRunGetGlyphs(run, glyphRange, &glyph)
+                CTRunGetPositions(run, glyphRange, &position)
+                if let glyphPath = CTFontCreatePathForGlyph(font, glyph, nil) {
+                    let t = CGAffineTransform(translationX: position.x, y: position.y)
+                    path.addPath(glyphPath, transform: t)
+                }
+            }
+        }
+        return path
     }
 }

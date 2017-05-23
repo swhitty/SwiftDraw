@@ -312,7 +312,7 @@ extension Builder {
             return provider.createPath(from: path)
         } else if let text = element as? DOM.Text {
             let size = provider.createFloat(from: text.fontSize ?? 12.0)
-            let p = provider.createText(from: "asd", with: "asdf", ofSize: size)
+            let p = provider.createText(from: text.value, with: text.fontFamily ?? "Helvetica", ofSize: size)
             return p
         }
         

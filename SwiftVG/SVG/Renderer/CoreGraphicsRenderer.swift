@@ -8,6 +8,7 @@
 
 import CoreGraphics
 import Foundation
+import CoreText
 #if os(macOS)
     import AppKit
 #endif
@@ -145,10 +146,10 @@ struct CoreGraphicsProvider: RendererTypeProvider {
         return cgPath
     }
     
-    func createText(from text: String, with font: String, ofSize: Float) -> Path {
-        return CGMutablePath()
+    func createText(from text: String, with fontName: String, ofSize pt: Float) -> Path {
+        let font = CTFontCreateWithName(text as CFString, pt, nil)
+        return text.toPath(font: font)
     }
-    
     
     func createImage(from image: Builder.Image) -> CGImage? {
         switch image {
