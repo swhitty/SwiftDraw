@@ -11,16 +11,19 @@ import Foundation
 
 extension Builder {
     
-    func createCommands<T: RendererTypeProvider>(for svg: DOM.Svg, with provider: T) -> [RendererCommand<T>] {
+    func createCommands<T: RendererTypeProvider>(for svg: DOM.Svg, with provider: T, isFlipped: Bool = true) -> [RendererCommand<T>] {
         
         let width = Float(svg.width)
         let height = Float(svg.height)
         
         self.defs = svg.defs
         var commands = [RendererCommand<T>]()
-        let flip = Transform(a: 1, b: 0, c: 0, d: -1, tx: 0, ty: height)
-        let t = provider.createTransform(from: flip)
-        commands.append(.concatenate(transform: t))
+        
+        if !isFlipped {
+            let flip = Transform(a: 1, b: 0, c: 0, d: -1, tx: 0, ty: height)
+            let t = provider.createTransform(from: flip)
+            commands.append(.concatenate(transform: t))
+        }
         
         if let viewBox = svg.viewBox {
 
@@ -312,8 +315,12 @@ extension Builder {
             return provider.createPath(from: path)
         } else if let text = element as? DOM.Text {
             let size = provider.createFloat(from: text.fontSize ?? 12.0)
-            let p = provider.createText(from: text.value, with: text.fontFamily ?? "Helvetica", ofSize: size)
-            return p
+            
+            let origin = provider.createPoint(from: Builder.Point(text.x ?? 0, text.y ?? 0))
+            return provider.createText(from: text.value,
+                                       with: text.fontFamily ?? "SystemFont",
+                                       at: origin,
+                                       ofSize: size)
         }
         
         return nil
@@ -331,6 +338,4 @@ extension Builder {
     
             return provider.createPath(from: paths)
         }
-    
-    
 }

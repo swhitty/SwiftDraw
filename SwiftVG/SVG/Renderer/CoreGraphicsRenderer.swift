@@ -146,9 +146,12 @@ struct CoreGraphicsProvider: RendererTypeProvider {
         return cgPath
     }
     
-    func createText(from text: String, with fontName: String, ofSize pt: Float) -> Path {
-        let font = CTFontCreateWithName(text as CFString, pt, nil)
-        return text.toPath(font: font)
+    func createText(from text: String, with fontName: String, at origin: Point, ofSize pt: Float) -> Path? {
+        let font = CTFontCreateWithName(fontName as CFString, pt, nil)
+        guard let path = text.toPath(font: font) else { return nil }
+        
+        var transform = CGAffineTransform(translationX: origin.x, y: origin.y)
+        return path.copy(using: &transform)
     }
     
     func createImage(from image: Builder.Image) -> CGImage? {

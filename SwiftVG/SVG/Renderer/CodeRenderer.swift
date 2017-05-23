@@ -80,7 +80,7 @@ struct CodeProvider: RendererTypeProvider {
         return .compound(paths: subPaths)
     }
     
-    func createText(from text: String, with font: String, ofSize: Float) -> Path {
+    func createText(from text: String, with font: String, at origin: Point, ofSize pt: Float) -> Path? {
         return .ellipse(within: Builder.Rect(x: 0, y: 0, width: 0, height: 0))
     }
     

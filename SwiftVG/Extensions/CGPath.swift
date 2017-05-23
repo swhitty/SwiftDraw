@@ -9,6 +9,9 @@
 import CoreGraphics
 import CoreText
 import Foundation
+#if os(macOS)
+    import AppKit
+#endif
 
 extension CGPath {
     func applyA(action: @escaping (CGPathElement)->()) {
@@ -52,11 +55,19 @@ extension CGPath {
 
 extension String {
     
-    func toPath(font: CTFont) -> CGPath {
-        let attrs: [String: AnyObject] = [kCTFontAttributeName as String: font]
-        let attString = CFAttributedStringCreate(nil, self as CFString, attrs as CFDictionary)!
+    func toPath(font: CTFont) -> CGPath? {
+        //kCTFontAttributeName
+        let attributes = [NSFontAttributeName as String: font]
+        let attString = CFAttributedStringCreate(nil, self as CFString, attributes as CFDictionary)!
         let line = CTLineCreateWithAttributedString(attString)
         let glyphRuns = CTLineGetGlyphRuns(line)
+        
+        var ascent = CGFloat(0)
+        var descent = CGFloat(0)
+        var leading = CGFloat(0)
+        CTLineGetTypographicBounds(line, &ascent, &descent, &leading)
+        let baseline = ascent
+
         
         let path = CGMutablePath()
         
@@ -70,12 +81,15 @@ extension String {
                 var position: CGPoint = .zero
                 CTRunGetGlyphs(run, glyphRange, &glyph)
                 CTRunGetPositions(run, glyphRange, &position)
-                if let glyphPath = CTFontCreatePathForGlyph(font, glyph, nil) {
-                    let t = CGAffineTransform(translationX: position.x, y: position.y)
-                    path.addPath(glyphPath, transform: t)
+                var t = CGAffineTransform.identity
+                if let glyphPath = CTFontCreatePathForGlyph(font, glyph, &t) {
+                    let t = CGAffineTransform(a: 1, b: 0, c: 0, d: -1, tx: position.x, ty: baseline)
+                    let t1 = t.translatedBy(x: 0, y: baseline)
+                    path.addPath(glyphPath, transform: t1)
                 }
             }
         }
+        
         return path
     }
 }
