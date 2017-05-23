@@ -145,6 +145,11 @@ struct CoreGraphicsProvider: RendererTypeProvider {
         return cgPath
     }
     
+    func createText(from text: String, with font: String, ofSize: Float) -> Path {
+        return CGMutablePath()
+    }
+    
+    
     func createImage(from image: Builder.Image) -> CGImage? {
         switch image {
         case .jpeg(data: let d):

@@ -34,6 +34,7 @@ protocol RendererTypeProvider {
     func createLine(from origin: Point, to desination: Point) -> Path
     func createLine(between points: [Point]) -> Path
     func createPolygon(between points: [Point]) -> Path
+    func createText(from text: String, with font: String, ofSize: Float) -> Path
     
     func createRect(from rect: Rect, radii: Builder.Size) -> Path
 }
