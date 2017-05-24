@@ -1,2 +1,3 @@
-# SwiftVG
-A tool for converting svg files into CoreGraphics draw commands.
+# SwiftDraw
+
+A Swift library for parsing and drawing SVG images to CoreGraphics contexts.
