@@ -131,6 +131,12 @@
 		D9C1EEFC1E63C94600C0F213 /* DOM.Use.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9C1EEFB1E63C94600C0F213 /* DOM.Use.swift */; };
 		D9C1EEFE1E63C9D300C0F213 /* Parser.XML.Use.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9C1EEFD1E63C9D300C0F213 /* Parser.XML.Use.swift */; };
 		D9C1EF001E63CC2A00C0F213 /* UseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9C1EEFF1E63CC2A00C0F213 /* UseTests.swift */; };
+		D9C47AC21ED54FA100178D06 /* mask.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9C47ABF1ED54FA100178D06 /* mask.svg */; };
+		D9C47AC31ED54FA100178D06 /* mask.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9C47ABF1ED54FA100178D06 /* mask.svg */; };
+		D9C47AC41ED54FA100178D06 /* transform.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9C47AC01ED54FA100178D06 /* transform.svg */; };
+		D9C47AC51ED54FA100178D06 /* transform.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9C47AC01ED54FA100178D06 /* transform.svg */; };
+		D9C47AC61ED54FA100178D06 /* viewbox.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9C47AC11ED54FA100178D06 /* viewbox.svg */; };
+		D9C47AC71ED54FA100178D06 /* viewbox.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9C47AC11ED54FA100178D06 /* viewbox.svg */; };
 		D9C4AD1B1E6CCD8A00008312 /* ValueParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9C4AD1A1E6CCD8A00008312 /* ValueParserTests.swift */; };
 		D9C4AD1D1E6E0DEC00008312 /* AttributeParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9C4AD1C1E6E0DEC00008312 /* AttributeParserTests.swift */; };
 		D9C7D61F1E67F54D00518B5C /* DOM.Switch.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9C7D61E1E67F54D00518B5C /* DOM.Switch.swift */; };
@@ -223,6 +229,9 @@
 		D9C1EEFB1E63C94600C0F213 /* DOM.Use.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DOM.Use.swift; sourceTree = "<group>"; };
 		D9C1EEFD1E63C9D300C0F213 /* Parser.XML.Use.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Parser.XML.Use.swift; sourceTree = "<group>"; };
 		D9C1EEFF1E63CC2A00C0F213 /* UseTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UseTests.swift; sourceTree = "<group>"; };
+		D9C47ABF1ED54FA100178D06 /* mask.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = mask.svg; sourceTree = "<group>"; };
+		D9C47AC01ED54FA100178D06 /* transform.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = transform.svg; sourceTree = "<group>"; };
+		D9C47AC11ED54FA100178D06 /* viewbox.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = viewbox.svg; sourceTree = "<group>"; };
 		D9C4AD1A1E6CCD8A00008312 /* ValueParserTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ValueParserTests.swift; sourceTree = "<group>"; };
 		D9C4AD1C1E6E0DEC00008312 /* AttributeParserTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AttributeParserTests.swift; sourceTree = "<group>"; };
 		D9C7D61E1E67F54D00518B5C /* DOM.Switch.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DOM.Switch.swift; sourceTree = "<group>"; };
@@ -324,6 +333,9 @@
 				D9A843901E855672002A804B /* curves.svg */,
 				D965B5851E3C5C87003E859E /* starry.svg */,
 				D965B5811E3C48C6003E859E /* shapes.svg */,
+				D9C47ABF1ED54FA100178D06 /* mask.svg */,
+				D9C47AC01ED54FA100178D06 /* transform.svg */,
+				D9C47AC11ED54FA100178D06 /* viewbox.svg */,
 			);
 			path = Samples;
 			sourceTree = "<group>";
@@ -663,10 +675,13 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D9C47AC71ED54FA100178D06 /* viewbox.svg in Resources */,
 				D9A843961E8611D7002A804B /* curves.svg in Resources */,
 				D9778E5C1E6ED66300FF6EBB /* shapes.svg in Resources */,
+				D9C47AC31ED54FA100178D06 /* mask.svg in Resources */,
 				D9A843941E85F1C1002A804B /* quad.svg in Resources */,
 				D9778E5B1E6ED66300FF6EBB /* starry.svg in Resources */,
+				D9C47AC51ED54FA100178D06 /* transform.svg in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -681,10 +696,13 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D9C47AC61ED54FA100178D06 /* viewbox.svg in Resources */,
 				D9A843951E8611D6002A804B /* curves.svg in Resources */,
 				D965B5821E3C48C6003E859E /* shapes.svg in Resources */,
+				D9C47AC21ED54FA100178D06 /* mask.svg in Resources */,
 				D9A843931E85F1C1002A804B /* quad.svg in Resources */,
 				D965B5871E3C5CF8003E859E /* starry.svg in Resources */,
+				D9C47AC41ED54FA100178D06 /* transform.svg in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
