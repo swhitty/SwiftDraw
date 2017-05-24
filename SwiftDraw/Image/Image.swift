@@ -38,6 +38,14 @@ public final class Image: NSObject {
     public let size: CGSize
     let commands: [RendererCommand<CoreGraphicsProvider>]
     
+    public convenience init?(named name: String, in bundle: Bundle = Bundle.main) {
+        guard let url = bundle.url(forResource: name, withExtension: nil) else {
+            return nil
+        }
+        
+        self.init(fileURL: url)
+    }
+    
     public init?(fileURL url: URL) {
         guard let element = try? XML.SAXParser.parse(contentsOf: url),
               let svg = try? XMLParser().parseSvg(element) else {

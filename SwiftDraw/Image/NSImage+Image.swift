@@ -33,13 +33,7 @@ import AppKit
 extension NSImage {
     public class func svgNamed(_ name: String,
                                in bundle: Bundle = Bundle.main) -> NSImage? {
-        
-        guard let url = bundle.url(forResource: name, withExtension: nil),
-            let image = Image(fileURL: url) else {
-                return nil
-        }
-        
-        return image.rasterize()
+        return Image(named: name, in: bundle)?.rasterize()
     }
 }
 

@@ -5,3 +5,18 @@
 # SwiftDraw
 
 A Swift library for parsing and drawing SVG images to CoreGraphics contexts.
+
+## Usage
+
+## iOS
+
+        import SwiftDraw
+		
+		let image = UIImage.svgNamed("sample.svg")
+
+## macOS
+
+        import SwiftDraw
+		
+		let image = NSImage.svgNamed("sample.svg")
+
