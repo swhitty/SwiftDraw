@@ -34,19 +34,13 @@ import Foundation
 
 extension Builder {
     
-    func createCommands<T: RendererTypeProvider>(for svg: DOM.Svg, with provider: T, isFlipped: Bool = true) -> [RendererCommand<T>] {
+    func createCommands<T: RendererTypeProvider>(for svg: DOM.Svg, with provider: T) -> [RendererCommand<T>] {
         
         let width = Float(svg.width)
         let height = Float(svg.height)
         
         self.defs = svg.defs
         var commands = [RendererCommand<T>]()
-        
-        if !isFlipped {
-            let flip = Transform(a: 1, b: 0, c: 0, d: -1, tx: 0, ty: height)
-            let t = provider.createTransform(from: flip)
-            commands.append(.concatenate(transform: t))
-        }
         
         if let viewBox = svg.viewBox {
 

@@ -31,8 +31,7 @@
 import AppKit
 
 extension NSImage {
-    public class func svgNamed(_ name: String,
-                               in bundle: Bundle = Bundle.main) -> NSImage? {
+    public class func svgNamed(_ name: String, in bundle: Bundle = Bundle.main) -> NSImage? {
         return Image(named: name, in: bundle)?.rasterize()
     }
 }
@@ -43,15 +42,14 @@ public extension Image {
     }
     
     func rasterize(with size: CGSize) -> NSImage {
-        let image = NSImage(size: size)
-        image.lockFocus()
+        let imageSize = NSSize(width: size.width, height: size.height)
         
-        if let ctx = NSGraphicsContext.current()?.cgContext {
-            let renderer = CoreGraphicsRenderer(context: ctx)
-            renderer.perform(commands)
+        let image = NSImage(size: imageSize, flipped: true) { rect in
+            guard let ctx = NSGraphicsContext.current()?.cgContext else { return false }
+            ctx.draw(self, in: CGRect(x: 0, y: 0, width: rect.size.width, height: rect.size.height))
+            return true
         }
         
-        image.unlockFocus()
         return image
     }
 }

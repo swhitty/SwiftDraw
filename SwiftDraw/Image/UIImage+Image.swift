@@ -47,12 +47,9 @@ public extension Image {
         f.opaque = false
         f.prefersExtendedRange = false
         let r = UIGraphicsImageRenderer(size: size, format: f)
-        
-        let commands = self.commands
-        
+
         return r.image{
-            let renderer = CoreGraphicsRenderer(context: $0.cgContext)
-            renderer.perform(commands)
+            $0.cgContext.draw(self, in: CGRect(x: 0, y: 0, width: size.width, height: size.height))
         }
     }
 }

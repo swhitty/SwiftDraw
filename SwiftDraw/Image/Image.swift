@@ -57,21 +57,27 @@ public final class Image: NSObject {
         
         size = CGSize(width: svg.width, height: svg.height)
         commands = Builder().createCommands(for: svg,
-                                            with: CoreGraphicsProvider(),
-                                            isFlipped: Image.isFlipped)
+                                            with: CoreGraphicsProvider())
     }
+}
+
+public extension CGContext {
     
-    public func render(in context: CGContext) {
-        let renderer = CoreGraphicsRenderer(context: context)
-        renderer.perform(commands)
-    }
-    
-    //TODO: flip the context in the render method
-    static var isFlipped: Bool {
-        #if os(macOS)
-            return false
-        #else
-            return true
-        #endif
+    func draw(_ image: Image, in rect: CGRect? = nil)  {
+        let defaultRect = CGRect(x: 0, y: 0, width: image.size.width, height: image.size.height)
+        let renderer = CoreGraphicsRenderer(context: self)
+        
+        guard let rect = rect, rect != defaultRect else {
+            renderer.perform(image.commands)
+            return
+        }
+        
+        let sx = rect.width / image.size.width
+        let sy = rect.height / image.size.height
+        saveGState()
+        translateBy(x: rect.origin.x, y: rect.origin.y)
+        scaleBy(x: sx, y: sy)
+        renderer.perform(image.commands)
+        restoreGState()
     }
 }
