@@ -139,15 +139,20 @@ extension XMLParser {
                     children.append(ge)
                 }
             } catch XMLParser.Error.invalidElement(let e)  {
-                throw Error.invalidElement(name: e.name,
-                                           error: e.error,
-                                           line: e.line,
-                                           column: e.column)
+                guard options.contains(.skipInvalidElements) else {
+                    throw Error.invalidElement(name: e.name,
+                                               error: e.error,
+                                               line: e.line,
+                                               column: e.column)
+                }
+
             } catch let error {
-                throw Error.invalidElement(name: n.name,
-                                               error: error,
-                                               line: n.parsedLocation?.line,
-                                               column: n.parsedLocation?.column)
+                guard options.contains(.skipInvalidElements) else {
+                    throw Error.invalidElement(name: n.name,
+                                                   error: error,
+                                                   line: n.parsedLocation?.line,
+                                                   column: n.parsedLocation?.column)
+                }
             }
         }
         

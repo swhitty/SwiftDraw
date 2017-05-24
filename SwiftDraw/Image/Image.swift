@@ -47,8 +47,11 @@ public final class Image: NSObject {
     }
     
     public init?(fileURL url: URL) {
+        
+        let parser = XMLParser(options: [.skipInvalidElements])
+        
         guard let element = try? XML.SAXParser.parse(contentsOf: url),
-              let svg = try? XMLParser().parseSvg(element) else {
+              let svg = try? parser.parseSvg(element) else {
                 return nil
         }
         

@@ -46,6 +46,7 @@ struct XMLParser {
         }
 
         static let skipInvalidAttributes = Options(rawValue: 1)
+        static let skipInvalidElements = Options(rawValue: 2)
     }
 }
 
