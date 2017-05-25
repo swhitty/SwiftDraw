@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<svg xmlns="http://www.w3.org/2000/svg"
+	 xmlns:ns="http://www.w3.org/2000/svg" 
+	 xmlns:xlink="http://www.w3.org/1999/xlink" 
+	 width="600" height="700" viewBox="0 0 600 700" stroke-width="4" stroke="black" >
+	 
+
+  <defs>
+	<rect id="r1" x="0" y="0" height="100" width="100" display="none" />
+	<circle id="c1" cx="250" cy="250" r="100" stroke="blue" stroke-width="2"/>
+	<polygon id="star" points="100,10 40,198 190,78, 10,78, 160,198" fill-rule="nonzero" />
+  </defs>
+
+	<g display="none">
+		<circle cx="250" cy="250" r="110" fill="blue" style="display: inline;" />
+		<circle cx="250" cy="250" r="100" fill="salmon" />
+	</g>
+	
+	<use xlink:href="#r1" display="inline" />
+		
+	<use xlink:href="#star" fill="none" stroke="black" stroke-opacity="0.2" transform="translate(100, 300) scale(0.5) rotate(50, 80, 80)" />
+	<use xlink:href="#star" display="none" fill="gold" stroke="orange" transform="translate(100, 300) scale(0.5) rotate(50, 80, 80)" />
+	<use xlink:href="#star" fill="red" stroke="orange" transform="translate(200, 250) scale(0.3) rotate(30, 80, 80)" />
+ 
+</svg>

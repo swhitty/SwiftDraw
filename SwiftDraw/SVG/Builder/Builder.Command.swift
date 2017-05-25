@@ -139,6 +139,12 @@ extension Builder {
                                                      inheriting parentState: State,
                                                      using provider: T) -> [RendererCommand<T>] {
         
+        //inherit the attributes from the parent element,
+        //but override with any attributes explictly set with the current element
+        let state = createState(for: element, inheriting: parentState)
+        //ensure element is displayable
+        guard state.display == .inline else { return [] }
+        
         var commands = [RendererCommand<T>]()
         
         let transformCommands = createTransformCommands(from: element.transform ?? [], using: provider)
@@ -156,9 +162,7 @@ extension Builder {
         commands.append(contentsOf: clipCommands)
 
     
-        //inherit the attributes from the parent element,
-        //but override with any attributes explictly set with the current element
-        let state = createState(for: element, inheriting: parentState)
+  
         
         //convert the element into a path to fill, then stroke if required
         if let path = createPath(for: element, with: provider) {
