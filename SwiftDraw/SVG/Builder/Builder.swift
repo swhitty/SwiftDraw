@@ -36,6 +36,7 @@ class Builder {
     typealias Float = Swift.Float
     typealias LineCap = DOM.LineCap
     typealias LineJoin = DOM.LineJoin
+    typealias FillRule = DOM.FillRule
     
     var defs: DOM.Svg.Defs = DOM.Svg.Defs()
   

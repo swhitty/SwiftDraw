@@ -37,6 +37,7 @@ protocol RendererTypeProvider {
     associatedtype Point
     associatedtype Rect
     associatedtype BlendMode
+    associatedtype FillRule
     associatedtype LineCap
     associatedtype LineJoin
     associatedtype Image
@@ -49,6 +50,7 @@ protocol RendererTypeProvider {
     func createTransform(from transform: Builder.Transform) -> Transform
     func createPath(from path: Builder.Path) -> Path
     func createPath(from subPaths: [Path]) -> Path
+    func createFillRule(from rule: Builder.FillRule) -> FillRule
     func createLineCap(from cap: Builder.LineCap) -> LineCap
     func createLineJoin(from join: Builder.LineJoin) -> LineJoin
     func createImage(from image: Builder.Image) -> Image?
@@ -87,7 +89,7 @@ enum RendererCommand<T: RendererTypeProvider> {
     case setBlend(mode: T.BlendMode)
     
     case stroke(T.Path)
-    case fill(T.Path)
+    case fill(T.Path, rule: T.FillRule)
     
     case draw(image: T.Image)
     

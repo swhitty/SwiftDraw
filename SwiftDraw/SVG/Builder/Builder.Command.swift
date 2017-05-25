@@ -228,7 +228,8 @@ extension Builder {
                 let path = createPath(for: child, with: provider) {
                 let color = Builder.Color(fill).luminanceToAlpha()
                 commands.append(.setFill(color: provider.createColor(from: color)))
-                commands.append(.fill(path))
+                let rule = provider.createFillRule(from: child.fillRule ?? .nonzero)
+                commands.append(.fill(path, rule: rule))
             }
         }
         
@@ -247,7 +248,10 @@ extension Builder {
         guard fill != .none else { return [] }
         let color = provider.createColor(from: fill)
         
-        return [.setFill(color: color), .fill(path)]
+        let rule = provider.createFillRule(from: state.fillRule)
+        
+        return [.setFill(color: color),
+                .fill(path, rule: rule)]
     }
     
     func createStrokeCommands<T: RendererTypeProvider>(for path: T.Path,

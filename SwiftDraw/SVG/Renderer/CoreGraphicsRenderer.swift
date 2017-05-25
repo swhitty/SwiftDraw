@@ -46,6 +46,7 @@ struct CoreGraphicsProvider: RendererTypeProvider {
     typealias Point = CGPoint
     typealias Rect = CGRect
     typealias BlendMode = CGBlendMode
+    typealias FillRule = CGPathFillRule
     typealias LineCap = CGLineCap
     typealias LineJoin = CGLineJoin
     typealias Image = CGImage
@@ -86,6 +87,15 @@ struct CoreGraphicsProvider: RendererTypeProvider {
         case .normal: return .normal
         case .copy: return .copy
         case .sourceIn: return .sourceIn
+        }
+    }
+    
+    func createFillRule(from rule: Builder.FillRule) -> CGPathFillRule {
+        switch rule {
+        case .nonzero:
+            return .winding
+        case .evenodd:
+            return .evenOdd
         }
     }
     
@@ -253,9 +263,9 @@ struct CoreGraphicsRenderer: Renderer {
         case .stroke(let p):
             ctx.addPath(p)
             ctx.strokePath()
-        case .fill(let p):
+        case .fill(let p, let r):
             ctx.addPath(p)
-            ctx.fillPath()
+            ctx.fillPath(using: r)
         case .draw(image: let i):
             let rect = CGRect(x: 0, y: 0, width: i.width, height: i.height)
             ctx.draw(i, in: rect)
