@@ -29,6 +29,7 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 import AppKit
+import CoreGraphics
 
 extension NSImage {
     public class func svgNamed(_ name: String, in bundle: Bundle = Bundle.main) -> NSImage? {
@@ -51,5 +52,72 @@ public extension Image {
         }
         
         return image
+    }
+    
+    func createBitmap(size: CGSize? = nil, scale: CGFloat = 1, isOpaque: Bool = false) -> NSBitmapImageRep? {
+        
+        let defaultScale = NSScreen.main()?.backingScaleFactor ?? 1.0
+        let renderScale = scale == 0 ? defaultScale : scale
+        let renderSize = size ?? self.size
+        
+        let width = Int(ceil(renderSize.width * renderScale))
+        let height = Int(ceil(renderSize.height * renderScale))
+        
+        return NSBitmapImageRep(bitmapDataPlanes: nil,
+                                pixelsWide: max(width, 0),
+                                pixelsHigh: max(height, 0),
+                                bitsPerSample: 8,
+                                samplesPerPixel: isOpaque ? 3 : 4,
+                                hasAlpha: !isOpaque,
+                                isPlanar: false,
+                                colorSpaceName: NSDeviceRGBColorSpace,
+                                bytesPerRow: 0,
+                                bitsPerPixel: 32)
+    }
+    
+    func pngData(size: CGSize? = nil, scale: CGFloat = 1) -> Data? {
+        guard let bitmap = createBitmap(size: size, scale: scale, isOpaque: false),
+              let ctx = NSGraphicsContext(bitmapImageRep: bitmap)?.cgContext else { return nil }
+        
+        let rect = CGRect(x: 0, y: 0, width: CGFloat(bitmap.pixelsWide), height: CGFloat(bitmap.pixelsHigh))
+        let flip = CGAffineTransform(a: 1, b: 0, c: 0, d: -1, tx: 0, ty: rect.size.height)
+        ctx.concatenate(flip)
+        ctx.draw(self, in: rect)
+        
+        return bitmap.representation(using: .PNG, properties: [:])
+    }
+    
+    func jpegData(size: CGSize? = nil, scale: CGFloat = 1, compressionQuality quality: CGFloat = 1) -> Data? {
+        guard let bitmap = createBitmap(size: size, scale: scale, isOpaque: true),
+              let ctx = NSGraphicsContext(bitmapImageRep: bitmap)?.cgContext else { return nil }
+        
+        let rect = CGRect(x: 0, y: 0, width: CGFloat(bitmap.pixelsWide), height: CGFloat(bitmap.pixelsHigh))
+        
+        let flip = CGAffineTransform(a: 1, b: 0, c: 0, d: -1, tx: 0, ty: rect.size.height)
+        ctx.concatenate(flip)
+        ctx.setFillColor(.white)
+        ctx.fill(rect)
+        ctx.draw(self, in: rect)
+        
+        return bitmap.representation(using: .JPEG, properties: [NSImageCompressionFactor: quality])
+    }
+    
+    func pdfData(size: CGSize? = nil) -> Data? {
+        let renderSize = size ?? self.size
+        let data = NSMutableData()
+        guard let consumer = CGDataConsumer(data: data as CFMutableData) else { return nil }
+        
+        var mediaBox = CGRect(x: 0.0, y: 0.0, width: renderSize.width, height: renderSize.height)
+        
+        guard let ctx = CGContext(consumer: consumer, mediaBox: &mediaBox, nil) else { return nil }
+        
+        ctx.beginPage(mediaBox: &mediaBox)
+        let flip = CGAffineTransform(a: 1, b: 0, c: 0, d: -1, tx: 0, ty: mediaBox.size.height)
+        ctx.concatenate(flip)
+        ctx.draw(self, in: mediaBox)
+        ctx.endPage()
+        ctx.closePDF()
+        
+        return data as Data
     }
 }

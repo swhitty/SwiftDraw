@@ -32,7 +32,6 @@
 import CoreGraphics
 import Foundation
 
-
 @objc(SVGImage)
 public final class Image: NSObject {
     public let size: CGSize
