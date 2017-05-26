@@ -12,12 +12,12 @@ A Swift library for parsing and drawing SVG images to CoreGraphics contexts.
 
 ```swift
 import SwiftDraw
-let image = UIImage.svgNamed("sample.svg")
+let image = UIImage(svgNamed: "sample.svg")
 ```
 
 ## macOS
 
 ```swift
 import SwiftDraw
-let image = NSImage.svgNamed("sample.svg")
+let image = NSImage(svgNamed: "sample.svg")
 ```

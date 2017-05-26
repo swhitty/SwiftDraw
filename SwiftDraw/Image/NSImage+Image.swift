@@ -31,9 +31,15 @@
 import AppKit
 import CoreGraphics
 
-extension NSImage {
-    public class func svgNamed(_ name: String, in bundle: Bundle = Bundle.main) -> NSImage? {
-        return Image(named: name, in: bundle)?.rasterize()
+public extension NSImage {
+    convenience init?(svgNamed name: String, in bundle: Bundle = Bundle.main) {
+        guard let image = Image(named: name, in: bundle) else { return nil }
+ 
+        self.init(size: image.size, flipped: true) { rect in
+            guard let ctx = NSGraphicsContext.current()?.cgContext else { return false }
+            ctx.draw(image, in: CGRect(x: 0, y: 0, width: rect.size.width, height: rect.size.height))
+            return true
+        }
     }
 }
 

@@ -30,10 +30,14 @@
 //
 import UIKit
 
-extension UIImage {
-    public class func svgNamed(_ name: String,
-                               in bundle: Bundle = Bundle.main) -> UIImage? {
-        return Image(named: name, in: bundle)?.rasterize()
+public extension UIImage {
+    convenience init?(svgNamed name: String, in bundle: Bundle = Bundle.main) {
+        guard let image = Image(named: name, in: bundle),
+              let cgImage = image.rasterize().cgImage else {
+                return nil
+        }
+        
+        self.init(cgImage: cgImage)
     }
 }
 
