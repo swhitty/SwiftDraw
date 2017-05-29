@@ -73,10 +73,10 @@ extension Builder {
         }
     }
 
-    func createTransformCommands<T: RendererTypeProvider>(from transforms: [DOM.Transform],
-                                                          using provider: T) -> [RendererCommand<T>] {
+    func createTransformCommands<P: RendererTypeProvider>(from transforms: [DOM.Transform],
+                                                          using provider: P) -> [RendererCommand<P.Types>] {
         
-        var commands = [RendererCommand<T>]()
+        var commands = [RendererCommand<P.Types>]()
         
         for t in transforms {
             commands.append(contentsOf: createCommand(for: t, with: provider))
@@ -85,8 +85,8 @@ extension Builder {
         return commands
     }
     
-    func createCommand<T: RendererTypeProvider>(for transform: DOM.Transform,
-                        with provider: T) -> [RendererCommand<T>] {
+    func createCommand<P: RendererTypeProvider>(for transform: DOM.Transform,
+                        with provider: P) -> [RendererCommand<P.Types>] {
         
         switch transform {
         case .matrix(let m):

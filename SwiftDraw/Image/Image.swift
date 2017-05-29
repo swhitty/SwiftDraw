@@ -35,7 +35,7 @@ import Foundation
 @objc(SVGImage)
 public final class Image: NSObject {
     public let size: CGSize
-    let commands: [RendererCommand<CoreGraphicsProvider>]
+    let commands: [RendererCommand<CGTypes>]
     
     public convenience init?(named name: String, in bundle: Bundle = Bundle.main) {
         guard let url = bundle.url(forResource: name, withExtension: nil) else {
@@ -56,7 +56,7 @@ public final class Image: NSObject {
         
         size = CGSize(width: svg.width, height: svg.height)
         commands = Builder().createCommands(for: svg,
-                                            with: CoreGraphicsProvider())
+                                            with: CGProvider())
     }
 }
 
@@ -64,7 +64,7 @@ public extension CGContext {
     
     func draw(_ image: Image, in rect: CGRect? = nil)  {
         let defaultRect = CGRect(x: 0, y: 0, width: image.size.width, height: image.size.height)
-        let renderer = CoreGraphicsRenderer(context: self)
+        let renderer = CGRenderer(context: self)
         
         guard let rect = rect, rect != defaultRect else {
             renderer.perform(image.commands)

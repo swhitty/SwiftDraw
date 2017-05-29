@@ -38,7 +38,7 @@ import CoreText
     import UIKit
 #endif
 
-struct CoreGraphicsProvider: RendererTypeProvider {
+struct CGTypes: RendererTypes {
     typealias Color = CGColor
     typealias Path = CGPath
     typealias Transform = CGAffineTransform
@@ -50,8 +50,12 @@ struct CoreGraphicsProvider: RendererTypeProvider {
     typealias LineCap = CGLineCap
     typealias LineJoin = CGLineJoin
     typealias Image = CGImage
+}
+
+struct CGProvider: RendererTypeProvider {
+    typealias Types = CGTypes
     
-    func createFloat(from float: Builder.Float) -> Float {
+    func createFloat(from float: Builder.Float) -> CGFloat {
         return CGFloat(float)
     }
     
@@ -67,7 +71,7 @@ struct CoreGraphicsProvider: RendererTypeProvider {
                       height: CGFloat(rect.height))
     }
     
-    func createColor(from color: Builder.Color) -> Color {
+    func createColor(from color: Builder.Color) -> CGColor {
         switch color {
         case .none: return createColor(r: 0, g: 0, b: 0, a: 0)
         case .rgba(let c): return createColor(r: CGFloat(c.r),
@@ -115,7 +119,7 @@ struct CoreGraphicsProvider: RendererTypeProvider {
         }
     }
     
-    func createTransform(from transform: Builder.Transform) -> Transform {
+    func createTransform(from transform: Builder.Transform) -> CGAffineTransform {
         return CGAffineTransform(a: CGFloat(transform.a),
                                  b: CGFloat(transform.b),
                                  c: CGFloat(transform.c),
@@ -124,35 +128,35 @@ struct CoreGraphicsProvider: RendererTypeProvider {
                                  ty: CGFloat(transform.ty))
     }
     
-    func createEllipse(within rect: Rect) -> Path {
+    func createEllipse(within rect: CGRect) -> CGPath {
         return CGPath(ellipseIn: rect, transform: nil)
     }
     
-    func createLine(from origin: Point, to desination: Point) -> Path {
+    func createLine(from origin: CGPoint, to desination: CGPoint) -> CGPath {
         return createLine(between: [origin, desination])
     }
     
-    func createLine(between points: [Point]) -> Path {
+    func createLine(between points: [CGPoint]) -> CGPath {
         let path = CGMutablePath()
         path.addLines(between: points)
         return path
     }
     
-    func createPolygon(between points: [Point]) -> Path {
+    func createPolygon(between points: [CGPoint]) -> CGPath {
         let path = CGMutablePath()
         path.addLines(between: points)
         path.closeSubpath()
         return path
     }
     
-    func createRect(from rect: Rect, radii: Builder.Size) -> Path {
+    func createRect(from rect: CGRect, radii: Builder.Size) -> CGPath {
         return CGPath(roundedRect: rect,
                       cornerWidth: CGFloat(radii.width),
                       cornerHeight: CGFloat(radii.height),
                       transform: nil)
     }
     
-    func createPath(from path: Builder.Path) -> Path {
+    func createPath(from path: Builder.Path) -> CGPath {
         let cgPath = CGMutablePath()
         for s in path.segments {
             switch s {
@@ -171,7 +175,7 @@ struct CoreGraphicsProvider: RendererTypeProvider {
         return cgPath
     }
     
-    func createPath(from subPaths: [Path]) -> Path {
+    func createPath(from subPaths: [CGPath]) -> CGPath {
         let cgPath = CGMutablePath()
         
         for path in subPaths {
@@ -181,7 +185,7 @@ struct CoreGraphicsProvider: RendererTypeProvider {
         return cgPath
     }
     
-    func createText(from text: String, with fontName: String, at origin: Point, ofSize pt: Float) -> Path? {
+    func createText(from text: String, with fontName: String, at origin: CGPoint, ofSize pt: CGFloat) -> CGPath? {
         let font = CTFontCreateWithName(fontName as CFString, pt, nil)
         guard let path = text.toPath(font: font) else { return nil }
         
@@ -213,8 +217,8 @@ private extension CGImage {
 }
 
 
-struct CoreGraphicsRenderer: Renderer {
-    typealias Provider = CoreGraphicsProvider
+struct CGRenderer: Renderer {
+    typealias Types = CGTypes
     
     let ctx: CGContext
     
@@ -222,58 +226,84 @@ struct CoreGraphicsRenderer: Renderer {
         self.ctx = context
     }
     
-    func perform(_ commands: [RendererCommand<Provider>]) {
-        for cmd in commands {
-            perform(cmd)
-        }
+    func pushState() {
+        ctx.saveGState()
     }
-
     
-    func perform(_ command: RendererCommand<Provider>) {
-        switch command {
-        case .pushState:
-            ctx.saveGState()
-        case .popState:
-            ctx.restoreGState()
-        case .concatenate(transform: let t):
-            ctx.concatenate(t)
-        case .translate(tx: let x, ty: let y):
-            ctx.translateBy(x: x, y: y)
-        case .scale(sx: let x, sy: let y):
-            ctx.scaleBy(x: x, y: y)
-        case .rotate(angle: let a):
-            ctx.rotate(by: a)
-        case .setFill(color: let c):
-            ctx.setFillColor(c)
-        case .setStroke(color: let c):
-            ctx.setStrokeColor(c)
-        case .setLine(width: let w):
-            ctx.setLineWidth(w)
-        case .setLineCap(let c):
-            ctx.setLineCap(c)
-        case .setLineJoin(let j):
-            ctx.setLineJoin(j)
-        case .setLineMiter(limit: let l):
-            ctx.setMiterLimit(l)
-        case .setClip(path: let p):
-            ctx.addPath(p)
-            ctx.clip()
-        case .setBlend(mode: let m):
-            ctx.setBlendMode(m)
-        case .stroke(let p):
-            ctx.addPath(p)
-            ctx.strokePath()
-        case .fill(let p, let r):
-            ctx.addPath(p)
-            ctx.fillPath(using: r)
-        case .draw(image: let i):
-            let rect = CGRect(x: 0, y: 0, width: i.width, height: i.height)
-            ctx.draw(i, in: rect)
-        case .pushTransparencyLayer:
-            ctx.beginTransparencyLayer(auxiliaryInfo: nil)
-        case .popTransparencyLayer:
-            ctx.endTransparencyLayer()
-        }
+    func popState() {
+        ctx.restoreGState()
+    }
+    
+    func pushTransparencyLayer() {
+        ctx.beginTransparencyLayer(auxiliaryInfo: nil)
+    }
+    
+    func popTransparencyLayer() {
+        ctx.endTransparencyLayer()
+    }
+    
+    func concatenate(transform: Types.Transform) {
+        ctx.concatenate(transform)
+    }
+    
+    func translate(tx: Types.Float, ty: Types.Float) {
+        ctx.translateBy(x: tx, y: ty)
+    }
+    
+    func rotate(angle: Types.Float) {
+        ctx.rotate(by: angle)
+    }
+    
+    func scale(sx: Types.Float, sy: Types.Float) {
+        ctx.scaleBy(x: sx, y: sy)
+    }
+    
+    func setFill(color: Types.Color) {
+        ctx.setFillColor(color)
+    }
+    
+    func setStroke(color: Types.Color) {
+        ctx.setStrokeColor(color)
+    }
+    
+    func setLine(width: Types.Float) {
+        ctx.setLineWidth(width)
+    }
+    
+    func setLine(cap: Types.LineCap) {
+        ctx.setLineCap(cap)
+    }
+    
+    func setLine(join: Types.LineJoin) {
+        ctx.setLineJoin(join)
+    }
+    
+    func setLine(miterLimit: Types.Float) {
+        ctx.setMiterLimit(miterLimit)
+    }
+    
+    func setClip(path: Types.Path) {
+        ctx.addPath(path)
+        ctx.clip()
+    }
+    
+    func setBlend(mode: Types.BlendMode) {
+        ctx.setBlendMode(mode)
+    }
+    
+    func stroke(path: Types.Path) {
+        ctx.addPath(path)
+        ctx.strokePath()
+    }
+    
+    func fill(path: Types.Path, rule: Types.FillRule) {
+        ctx.addPath(path)
+        ctx.fillPath(using: rule)
+    }
+    
+    func draw(image: Types.Image) {
+        let rect = CGRect(x: 0, y: 0, width: image.width, height: image.height)
+        ctx.draw(image, in: rect)
     }
 }
 

@@ -34,13 +34,13 @@ import Foundation
 
 extension Builder {
     
-    func createCommands<T: RendererTypeProvider>(for svg: DOM.Svg, with provider: T) -> [RendererCommand<T>] {
+    func createCommands<P: RendererTypeProvider>(for svg: DOM.Svg, with provider: P) -> [RendererCommand<P.Types>] {
         
         let width = Float(svg.width)
         let height = Float(svg.height)
         
         self.defs = svg.defs
-        var commands = [RendererCommand<T>]()
+        var commands = [RendererCommand<P.Types>]()
         
         if let viewBox = svg.viewBox {
 
@@ -63,14 +63,14 @@ extension Builder {
         return commands
     }
     
-    func createCommands<T: RendererTypeProvider>(for element: DOM.GraphicsElement,
+    func createCommands<P: RendererTypeProvider>(for element: DOM.GraphicsElement,
                         inheriting parentState: State,
-                        using provider: T) -> [RendererCommand<T>] {
+                        using provider: P) -> [RendererCommand<P.Types>] {
         
         
         
         
-        var commands = [RendererCommand<T>]()
+        var commands = [RendererCommand<P.Types>]()
         
         //TODO: merge Use and Switch element resolution.
         if let use = element as? DOM.Use {
@@ -120,9 +120,9 @@ extension Builder {
         return commands
     }
         
-    func createUseCommands<T: RendererTypeProvider>(for use: DOM.Use,
+    func createUseCommands<P: RendererTypeProvider>(for use: DOM.Use,
                         inheriting parentState: State,
-                        using provider: T) -> [RendererCommand<T>] {
+                        using provider: P) -> [RendererCommand<P.Types>] {
         
         guard let eId = use.href.fragment,
               let e = defs.elements[eId] else {
@@ -135,9 +135,9 @@ extension Builder {
         return createDrawCommands(for: e, inheriting: state, using: provider)
     }
 
-    func createDrawCommands<T: RendererTypeProvider>(for element: DOM.GraphicsElement,
+    func createDrawCommands<P: RendererTypeProvider>(for element: DOM.GraphicsElement,
                                                      inheriting parentState: State,
-                                                     using provider: T) -> [RendererCommand<T>] {
+                                                     using provider: P) -> [RendererCommand<P.Types>] {
         
         //inherit the attributes from the parent element,
         //but override with any attributes explictly set with the current element
@@ -145,7 +145,7 @@ extension Builder {
         //ensure element is displayable
         guard state.display == .inline else { return [] }
         
-        var commands = [RendererCommand<T>]()
+        var commands = [RendererCommand<P.Types>]()
         
         let transformCommands = createTransformCommands(from: element.transform ?? [], using: provider)
         let clipCommands = createClipCommands(for: element, using: provider)
@@ -196,13 +196,13 @@ extension Builder {
         return commands
     }
     
-    func createClipCommands<T: RendererTypeProvider>(for element: DOM.GraphicsElement,
-                                                     using provider: T) -> [RendererCommand<T>] {
+    func createClipCommands<P: RendererTypeProvider>(for element: DOM.GraphicsElement,
+                                                     using provider: P) -> [RendererCommand<P.Types>] {
         guard let clipId = element.clipPath?.fragment,
               let clip = defs.clipPaths.first(where: { $0.id == clipId }) else { return [] }
    
         
-        var paths = Array<T.Path>()
+        var paths = Array<P.Types.Path>()
         for el in clip.childElements {
             if let p = createPath(for: el, with: provider) {
                 paths.append(p)
@@ -212,13 +212,13 @@ extension Builder {
         return [.setClip(path: clipPath)]
     }
     
-    func createMaskCommands<T: RendererTypeProvider>(for element: DOM.GraphicsElement,
-                                                     using provider: T) -> [RendererCommand<T>] {
+    func createMaskCommands<P: RendererTypeProvider>(for element: DOM.GraphicsElement,
+                                                     using provider: P) -> [RendererCommand<P.Types>] {
         
         guard let maskId = element.mask?.fragment,
               let mask = defs.masks.first(where: { $0.id == maskId }) else { return [] }
         
-        var commands = [RendererCommand<T>]()
+        var commands = [RendererCommand<P.Types>]()
         commands.append(.pushTransparencyLayer)
         commands.append(.pushState)
         if let t = element.transform {
@@ -243,9 +243,9 @@ extension Builder {
         return commands
     }
     
-    func createFillCommands<T: RendererTypeProvider>(for path: T.Path,
+    func createFillCommands<P: RendererTypeProvider>(for path: P.Types.Path,
                                                      with state: State,
-                                                     using provider: T) -> [RendererCommand<T>] {
+                                                     using provider: P) -> [RendererCommand<P.Types>] {
         
         let fill = Builder.Color(state.fill).withAlpha(state.fillOpacity)
  
@@ -258,9 +258,9 @@ extension Builder {
                 .fill(path, rule: rule)]
     }
     
-    func createStrokeCommands<T: RendererTypeProvider>(for path: T.Path,
+    func createStrokeCommands<P: RendererTypeProvider>(for path: P.Types.Path,
                                                        with state: State,
-                                                       using provider: T) -> [RendererCommand<T>] {
+                                                       using provider: P) -> [RendererCommand<P.Types>] {
         
         let stroke = Builder.Color(state.stroke).withAlpha(state.strokeOpacity)
         guard stroke != .none else { return [] }
@@ -278,8 +278,8 @@ extension Builder {
                 .stroke(path)]
     }
     
-    func createImageCommands<T: RendererTypeProvider>(for element: DOM.Image,
-                                                      using provider: T) -> [RendererCommand<T>] {
+    func createImageCommands<P: RendererTypeProvider>(for element: DOM.Image,
+                                                      using provider: P) -> [RendererCommand<P.Types>] {
         guard let decoded = element.href.decodedData,
               let image = Image(mimeType: decoded.mimeType, data: decoded.data),
               let renderImage = provider.createImage(from: image) else { return  [] }
@@ -288,7 +288,7 @@ extension Builder {
     }
     
     
-    func createPath<T: RendererTypeProvider>(for element: DOM.GraphicsElement, with provider: T) -> T.Path? {
+    func createPath<P: RendererTypeProvider>(for element: DOM.GraphicsElement, with provider: P) -> P.Types.Path? {
         if let line = element as? DOM.Line {
             let start = provider.createPoint(from: Point(line.x1, line.y1))
             let end = provider.createPoint(from: Point(line.x2, line.y2))
@@ -351,9 +351,9 @@ extension Builder {
         return nil
     }
     
-       func createClipPath<T: RendererTypeProvider>(for clip: DOM.ClipPath, with provider: T) -> T.Path {
+       func createClipPath<P: RendererTypeProvider>(for clip: DOM.ClipPath, with provider: P) -> P.Types.Path {
         
-            var paths = Array<T.Path>()
+            var paths = Array<P.Types.Path>()
         
             for element in clip.childElements {
                 if let p = createPath(for: element, with: provider) {
