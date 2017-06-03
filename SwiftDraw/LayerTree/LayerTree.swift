@@ -113,35 +113,4 @@ struct LayerTree {
             return lhs.origin == rhs.origin && lhs.size == rhs.size
         }
     }
-    
-    enum Image: Equatable {
-        case jpeg(data: Data)
-        case png(data: Data)
-        
-        init?(mimeType: String, data: Data) {
-            guard data.count > 0 else { return nil }
-            
-            switch mimeType {
-            case "image/png":
-                self = .png(data: data)
-            case "image/jpeg":
-                self = .jpeg(data: data)
-            case "image/jpg":
-                self = .jpeg(data: data)
-            default:
-                return nil
-            }
-        }
-        
-        static func ==(lhs: Image, rhs: Image) -> Bool {
-            switch (lhs, rhs) {
-            case (.jpeg(let ldata), .jpeg(let rdata)):
-                return ldata == rdata
-            case (.png(let ldata), .png(let rdata)):
-                return ldata == rdata
-            default:
-                return false
-            }
-        }
-    }
 }

@@ -110,6 +110,10 @@
 		D978A44D1EE2897200727106 /* LayerTree.Path.swift in Sources */ = {isa = PBXBuildFile; fileRef = D978A44B1EE2897200727106 /* LayerTree.Path.swift */; };
 		D978A44F1EE28A4000727106 /* LayerTree.PathTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D978A44E1EE28A4000727106 /* LayerTree.PathTests.swift */; };
 		D978A4501EE28A4000727106 /* LayerTree.PathTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D978A44E1EE28A4000727106 /* LayerTree.PathTests.swift */; };
+		D978A4521EE290E300727106 /* LayerTree.Shape.swift in Sources */ = {isa = PBXBuildFile; fileRef = D978A4511EE290E300727106 /* LayerTree.Shape.swift */; };
+		D978A4531EE290E300727106 /* LayerTree.Shape.swift in Sources */ = {isa = PBXBuildFile; fileRef = D978A4511EE290E300727106 /* LayerTree.Shape.swift */; };
+		D978A4551EE292F300727106 /* LayerTree.ShapeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D978A4541EE292F300727106 /* LayerTree.ShapeTests.swift */; };
+		D978A4561EE292F300727106 /* LayerTree.ShapeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D978A4541EE292F300727106 /* LayerTree.ShapeTests.swift */; };
 		D97CBC421ED503D7006B4A69 /* Image.swift in Sources */ = {isa = PBXBuildFile; fileRef = D97CBC411ED503D7006B4A69 /* Image.swift */; };
 		D97CBC431ED50465006B4A69 /* Image.swift in Sources */ = {isa = PBXBuildFile; fileRef = D97CBC411ED503D7006B4A69 /* Image.swift */; };
 		D97CBC451ED506D1006B4A69 /* UIImage+Image.swift in Sources */ = {isa = PBXBuildFile; fileRef = D97CBC441ED506D1006B4A69 /* UIImage+Image.swift */; };
@@ -225,6 +229,8 @@
 		D978A4491EE287D200727106 /* LayerTree.TransformTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LayerTree.TransformTests.swift; sourceTree = "<group>"; };
 		D978A44B1EE2897200727106 /* LayerTree.Path.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LayerTree.Path.swift; sourceTree = "<group>"; };
 		D978A44E1EE28A4000727106 /* LayerTree.PathTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LayerTree.PathTests.swift; sourceTree = "<group>"; };
+		D978A4511EE290E300727106 /* LayerTree.Shape.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LayerTree.Shape.swift; sourceTree = "<group>"; };
+		D978A4541EE292F300727106 /* LayerTree.ShapeTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LayerTree.ShapeTests.swift; sourceTree = "<group>"; };
 		D97CBC411ED503D7006B4A69 /* Image.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Image.swift; sourceTree = "<group>"; };
 		D97CBC441ED506D1006B4A69 /* UIImage+Image.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "UIImage+Image.swift"; sourceTree = "<group>"; };
 		D97CBC461ED506DB006B4A69 /* NSImage+Image.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "NSImage+Image.swift"; sourceTree = "<group>"; };
@@ -381,6 +387,7 @@
 				D978A4461EE286AE00727106 /* LayerTree.Color.swift */,
 				D978A4431EE2869700727106 /* LayerTree.Transform.swift */,
 				D978A44B1EE2897200727106 /* LayerTree.Path.swift */,
+				D978A4511EE290E300727106 /* LayerTree.Shape.swift */,
 			);
 			path = LayerTree;
 			sourceTree = "<group>";
@@ -392,6 +399,7 @@
 				D978A4401EE27FD100727106 /* LayerTree.GeometryTests.swift */,
 				D978A4491EE287D200727106 /* LayerTree.TransformTests.swift */,
 				D978A44E1EE28A4000727106 /* LayerTree.PathTests.swift */,
+				D978A4541EE292F300727106 /* LayerTree.ShapeTests.swift */,
 			);
 			path = LayerTree;
 			sourceTree = "<group>";
@@ -775,6 +783,7 @@
 				D962D2DD1E6ED02000B825C6 /* XML.swift in Sources */,
 				D978A44D1EE2897200727106 /* LayerTree.Path.swift in Sources */,
 				D97CBC431ED50465006B4A69 /* Image.swift in Sources */,
+				D978A4531EE290E300727106 /* LayerTree.Shape.swift in Sources */,
 				D962D2C41E6ECFCA00B825C6 /* DOM.Element.swift in Sources */,
 				D962D2D71E6ED01700B825C6 /* Parser.XML.Text.swift in Sources */,
 				D9B118DD1E865164006AFDBD /* Renderer.swift in Sources */,
@@ -809,6 +818,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D978A4561EE292F300727106 /* LayerTree.ShapeTests.swift in Sources */,
 				D9778E541E6ED3EF00FF6EBB /* Parser.GraphicAttributeTests.swift in Sources */,
 				D9778E4A1E6ED3EF00FF6EBB /* ElementTests.swift in Sources */,
 				D9778E5A1E6ED40000FF6EBB /* URL.swift in Sources */,
@@ -856,6 +866,7 @@
 				D99CC9971E5FECEB00E7886A /* Parser.XML.Text.swift in Sources */,
 				D978A44C1EE2897200727106 /* LayerTree.Path.swift in Sources */,
 				D97CBC421ED503D7006B4A69 /* Image.swift in Sources */,
+				D978A4521EE290E300727106 /* LayerTree.Shape.swift in Sources */,
 				D99CC9891E5F8F0000E7886A /* CharacterSet.swift in Sources */,
 				D933D0A11E5CEE1700937A59 /* DOM.Color.swift in Sources */,
 				D9778E5E1E6F698500FF6EBB /* DOM.Path.swift in Sources */,
@@ -907,6 +918,7 @@
 				D99CC98D1E5FA04A00E7886A /* ScannerTests.swift in Sources */,
 				D9C1EF001E63CC2A00C0F213 /* UseTests.swift in Sources */,
 				D933D09F1E5CECF400937A59 /* ColorTests.swift in Sources */,
+				D978A4551EE292F300727106 /* LayerTree.ShapeTests.swift in Sources */,
 				D9C4AD1B1E6CCD8A00008312 /* ValueParserTests.swift in Sources */,
 				D9ECF1931E2EBEC90029307E /* Scanner1Tests.swift in Sources */,
 				D978A4411EE27FD100727106 /* LayerTree.GeometryTests.swift in Sources */,
