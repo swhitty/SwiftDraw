@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<svg xmlns="http://www.w3.org/2000/svg"
+	 xmlns:ns="http://www.w3.org/2000/svg" 
+	 xmlns:xlink="http://www.w3.org/1999/xlink" 
+	 width="600" height="600" viewBox="0 0 600 700" stroke-width="4" stroke="black" >
+	 
+  <defs>
+    <polygon id="star" points="100,10 40,198 190,78, 10,78, 160,198" fill-rule="nonzero" />
+	<rect id="r1" x="250" y="20" height="100" width="100" />
+	<circle id="c1" cx="100" cy="320" r="50" />
+	<line id="l1" x1="250" y1="320" x2="500" y2="400" />
+	<path id="p1" d="M 0,90 q 50 50 100 0 q 50 -50 100 0 t 100 0 t 100 0 t 100 0" fill="none" transform="translate(0,400)"/>
+  </defs>
+  
+	<use xlink:href="#star" fill="grey"/>
+	<use xlink:href="#star" x="50" y="50" fill="blue"/>
+
+	<use xlink:href="#r1" fill="grey" />
+	<use xlink:href="#r1" x="50" y="75" fill="blue"/>
+	
+	<use xlink:href="#c1" fill="grey" />
+	<use xlink:href="#c1" x="50" y="50" fill="blue"/>
+	
+	<use xlink:href="#l1" stroke="grey" />
+	<use xlink:href="#l1" x="50" y="50" stroke="blue"/>
+	
+	<use xlink:href="#p1" stroke="grey" />
+	<use xlink:href="#p1" x="50" y="50" stroke="blue"/>
+
+</svg>
