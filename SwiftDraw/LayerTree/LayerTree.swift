@@ -40,54 +40,6 @@ struct LayerTree {
         case unsupported(Any)
     }
     
-    enum Color: Equatable {
-        case none
-        case rgba(r: Float, g: Float, b: Float, a: Float)
-        
-        static func ==(lhs: Color, rhs: Color) -> Bool {
-            switch (lhs, rhs) {
-            case (.none, .none):
-                return true
-            case (.rgba(let lVal), .rgba(let rVal)):
-                return lVal == rVal
-            default:
-                return false
-            }
-        }
-        
-        func withAlpha(_ alpha: Float) -> Color {
-            guard alpha > 0.0 else { return .none }
-            
-            switch self {
-            case .none:
-                return .none
-            case .rgba(r: let r, g: let g, b: let b, a: _):
-                return .rgba(r: r,
-                             g: g,
-                             b: b,
-                             a: alpha)
-            }
-        }
-        
-        func withMultiplyingAlpha(_ alpha: Float) -> Color {
-            
-            switch self {
-            case .none:
-                return .none
-            case .rgba(r: let r, g: let g, b: let b, a: let a):
-                let newAlpha = a * alpha
-                if newAlpha > 0 {
-                    return .rgba(r: r,
-                                 g: g,
-                                 b: b,
-                                 a: newAlpha)
-                } else {
-                    return .none
-                }
-            }
-        }
-    }
-    
     struct Point: Equatable {
         var x: Float
         var y: Float
@@ -193,51 +145,3 @@ struct LayerTree {
         }
     }
 }
-
-
-extension LayerTree.Color {
-    
-    init(_ color: DOM.Color) {
-        self =  LayerTree.Color.create(from: color)
-    }
-    
-    static func create(from color: DOM.Color) -> LayerTree.Color {
-        switch(color){
-        case .none:
-            return .none
-        case .keyword(let c):
-            return LayerTree.Color(c.rgbi)
-        case .rgbi(let c):
-            return LayerTree.Color(c)
-        case .hex(let c):
-            return LayerTree.Color(c)
-        case .rgbf(let c):
-            return .rgba(r: Float(c.0),
-                         g: Float(c.1),
-                         b: Float(c.2),
-                         a: 1.0)
-        }
-    }
-    
-    init(_ rgbi: (UInt8, UInt8, UInt8)) {
-        self = .rgba(r: Float(rgbi.0)/255.0,
-                     g: Float(rgbi.1)/255.0,
-                     b: Float(rgbi.2)/255.0,
-                     a: 1.0)
-    }
-    
-    public func luminanceToAlpha() -> LayerTree.Color {
-        
-        let alpha: Float
-        
-        switch self {
-        case .none:
-            alpha = 0
-        case .rgba(let r, let g, let b, let a):
-            //sRGB Luminance to alpha
-            alpha = ((r*0.2126) + (g*0.7152) + (b*0.0722)) * a
-        }
-        return LayerTree.Color.rgba(r: 0, g: 0, b: 0, a: 1.0).withAlpha(alpha)
-    }
-}
-
