@@ -35,6 +35,9 @@ extension LayerTree {
         case none
         case rgba(r: Float, g: Float, b: Float, a: Float)
         
+        static var white: Color { return Color.rgba(r: 1, g: 1, b: 1, a: 1) }
+        static var black: Color { return Color.rgba(r: 0, g: 0, b: 0, a: 1) }
+        
         static func ==(lhs: Color, rhs: Color) -> Bool {
             switch (lhs, rhs) {
             case (.none, .none):
