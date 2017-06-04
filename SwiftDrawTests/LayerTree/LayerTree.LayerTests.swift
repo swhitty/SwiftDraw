@@ -144,4 +144,46 @@ class LayerTreeLayerTests: XCTestCase {
         XCTAssertNotEqual(c2, c4)
         XCTAssertNotEqual(c3, c4)
     }
+    
+    func testLayerEquality() {
+        let l1 = Layer()
+        let l2 = Layer()
+        
+        XCTAssertEqual(l1, l2)
+        
+        let shape = Layer.Contents.shape(.line(between: [.zero]), .normal, .normal)
+        let text = Layer.Contents.text("Madeleine", .zero, .normal)
+        let path = LayerTree.Path()
+        path.segments = [.move(to: .zero), .line(to: Point(10, 20)), .line(to: Point(0, 20)), .close]
+            
+        l1.contents = [shape]
+        XCTAssertNotEqual(l1, l2)
+        l2.contents = [shape]
+        XCTAssertEqual(l1, l2)
+        
+        l1.contents = [shape, text]
+        XCTAssertNotEqual(l1, l2)
+        l2.contents = [shape, text]
+        XCTAssertEqual(l1, l2)
+        
+        l1.transform = .identity
+        XCTAssertNotEqual(l1, l2)
+        l2.transform = .identity
+        XCTAssertEqual(l1, l2)
+        
+        l1.clip = [path]
+        XCTAssertNotEqual(l1, l2)
+        l2.clip = [path]
+        XCTAssertEqual(l1, l2)
+        
+        l1.opacity = 0.5
+        XCTAssertNotEqual(l1, l2)
+        l2.opacity = 0.5
+        XCTAssertEqual(l1, l2)
+        
+        l1.mask = Layer()
+        XCTAssertNotEqual(l1, l2)
+        l2.mask = Layer()
+        XCTAssertEqual(l1, l2)
+    }
 }
