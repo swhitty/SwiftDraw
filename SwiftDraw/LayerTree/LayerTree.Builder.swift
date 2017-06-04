@@ -55,6 +55,8 @@ extension LayerTree {
                 let origin = Point(rect.x ?? 0, rect.y ?? 0)
                 return .rect(within: Rect(x: origin.x, y: origin.y, width: rect.width, height: rect.height),
                              radii: radii)
+            } else if let polyline = element as? DOM.Polyline {
+                return .line(between: polyline.points.map{ Point($0.x, $0.y) })
             }
             
             return nil;

@@ -112,4 +112,12 @@ class LayerTreeShapeTests: XCTestCase {
         XCTAssertEqual(another, .rect(within: Rect(x: 10, y: 20, width: 30, height: 40),
                                       radii: Size(2, 4)))
     }
+    
+    func testPolylineBuilder() {
+        let line = DOM.Polyline(10,20,30,40,50,60)
+        let shape = LayerTree.Builder.createShape(from: line)
+        
+        XCTAssertEqual(shape, .line(between: [Point(10, 20), Point(30, 40), Point(50, 60)]))
+    }
+    
 }
