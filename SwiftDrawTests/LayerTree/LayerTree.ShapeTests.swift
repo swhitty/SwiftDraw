@@ -77,4 +77,11 @@ class LayerTreeShapeTests: XCTestCase {
         
         XCTAssertNotEqual(s4, s5)
     }
+    
+    func testLineBuilder() {
+        let line = DOM.Line(x1: 10, y1: 20, x2: 30, y2: 40)
+        let shape = LayerTree.Builder.createShape(from: line)
+        
+        XCTAssertEqual(shape, .line(between: [Point(10, 20), Point(30, 40)]))
+    }
 }
