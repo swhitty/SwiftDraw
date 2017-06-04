@@ -26,7 +26,6 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-
 extension LayerTree {
     class Layer: Equatable {
         var contents: [Contents] = []
@@ -38,6 +37,7 @@ extension LayerTree {
         enum Contents: Equatable {
             case shape(Shape, StrokeAttributes, FillAttributes)
             case image(Image)
+            case text(String, Point, TextAttributes)
             case layer(Layer)
             
             static func ==(lhs: Contents, rhs: Contents) -> Bool {
@@ -46,6 +46,8 @@ extension LayerTree {
                     return lval.0 == rval.0 && lval.1 == rval.1 && lval.2 == rval.2
                 case (.image(let lval), .image(let rval)):
                     return lval == rval
+                case (.text(let lval), .text(let rval)):
+                    return lval.0 == rval.0 && lval.1 == rval.1 && lval.2 == rval.2
                 case (.layer(let lval), .layer(let rval)):
                     return lval == rval
                 default:
@@ -98,6 +100,22 @@ extension LayerTree {
         
         static var normal: FillAttributes {
             return FillAttributes(color: .black, rule: .evenodd)
+        }
+    }
+    
+    struct TextAttributes: Equatable {
+        var color: Color
+        var fontName: String
+        var size: Float
+        
+        static var normal: TextAttributes {
+            return TextAttributes(color: .black, fontName: "Helvetica", size: 12.0)
+        }
+        
+        static func ==(lhs: TextAttributes, rhs: TextAttributes) -> Bool {
+            return lhs.color == rhs.color &&
+                   lhs.fontName == rhs.fontName &&
+                   lhs.size == rhs.size
         }
     }
 }

@@ -36,6 +36,7 @@ class LayerTreeLayerTests: XCTestCase {
     
     typealias StrokeAttributes = LayerTree.StrokeAttributes
     typealias FillAttributes = LayerTree.FillAttributes
+    typealias TextAttributes = LayerTree.TextAttributes
     typealias Layer = LayerTree.Layer
     typealias Contents = LayerTree.Layer.Contents
     
@@ -66,6 +67,23 @@ class LayerTreeLayerTests: XCTestCase {
         XCTAssertEqual(a2, FillAttributes(color: .white, rule: .nonzero))
         
         XCTAssertNotEqual(a1, a2)
+    }
+    
+    func testTextAttributesEquality() {
+        let a1 = TextAttributes(color: .black, fontName: "Futura", size: 24.0)
+        let a2 = TextAttributes(color: .white, fontName: "Helvetica", size: 24.0)
+        let a3 = TextAttributes(color: .black, fontName: "Futura", size: 10.0)
+        
+        XCTAssertEqual(a1, a1)
+        XCTAssertEqual(a1, TextAttributes(color: .black, fontName: "Futura", size: 24.0))
+        XCTAssertEqual(a2, a2)
+        XCTAssertEqual(a2, TextAttributes(color: .white, fontName: "Helvetica", size: 24.0))
+        XCTAssertEqual(a3, a3)
+        XCTAssertEqual(a3, TextAttributes(color: .black, fontName: "Futura", size: 10.0))
+        
+        XCTAssertNotEqual(a1, a2)
+        XCTAssertNotEqual(a1, a3)
+        XCTAssertNotEqual(a2, a3)
     }
     
     func testContentsShapeEquality() {
