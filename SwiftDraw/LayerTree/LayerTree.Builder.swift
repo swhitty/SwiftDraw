@@ -33,6 +33,19 @@ extension LayerTree {
     
     struct Builder {
         
+        static func createContents(from element: DOM.GraphicsElement) -> Layer.Contents? {
+            if let shape = createShape(from: element) {
+                return .shape(shape, .normal, .normal)
+            } else if let text = element as? DOM.Text {
+                let point = Point(text.x ?? 0, text.y ?? 0)
+                var att = TextAttributes.normal
+                att.fontName = text.fontFamily ?? att.fontName
+                att.size = text.fontSize ?? att.size
+                return .text(text.value, point, att)
+            }
+            return nil
+        }
+        
         static func createShape(from element: DOM.GraphicsElement) -> Shape? {
             if let line = element as? DOM.Line {
                 let from = Point(line.x1, line.y1)

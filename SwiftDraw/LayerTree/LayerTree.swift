@@ -113,4 +113,10 @@ struct LayerTree {
             return lhs.origin == rhs.origin && lhs.size == rhs.size
         }
     }
+    
+    enum BlendMode {
+        case normal
+        case copy
+        case sourceIn /* R = S*Da */
+    }
 }
