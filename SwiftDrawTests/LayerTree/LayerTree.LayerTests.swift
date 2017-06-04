@@ -39,6 +39,7 @@ class LayerTreeLayerTests: XCTestCase {
     typealias TextAttributes = LayerTree.TextAttributes
     typealias Layer = LayerTree.Layer
     typealias Contents = LayerTree.Layer.Contents
+    typealias Point = LayerTree.Point
     
     func testStrokeAttributesEquality() {
         let a1 = StrokeAttributes(color: .black, width: 1.0, cap: .butt, join: .bevel, miterLimit: 1.0)
@@ -107,6 +108,35 @@ class LayerTreeLayerTests: XCTestCase {
         XCTAssertEqual(c4, c4)
         XCTAssertEqual(c4, .shape(.line(between: [.zero]), .normal, FillAttributes(color: .white, rule: .evenodd)))
         
+        XCTAssertNotEqual(c1, c2)
+        XCTAssertNotEqual(c1, c3)
+        XCTAssertNotEqual(c1, c4)
+        XCTAssertNotEqual(c2, c3)
+        XCTAssertNotEqual(c2, c4)
+        XCTAssertNotEqual(c3, c4)
+    }
+    
+    func testContentsTextEquality() {
+        let c1 = Contents.text("Charlie", .zero, .normal)
+        let c2 = Contents.text("Ida", .zero, .normal)
+        let c3 = Contents.text("Charlie", Point(10, 20), .normal)
+        
+        var att = TextAttributes.normal
+        att.color = .rgba(r: 1.0, g: 0, b: 0, a: 1.0)
+        let c4 = Contents.text("Charlie", .zero, att)
+        
+        XCTAssertEqual(c1, c1)
+        XCTAssertEqual(c1, .text("Charlie", .zero, .normal))
+        
+        XCTAssertEqual(c2, c2)
+        XCTAssertEqual(c2, .text("Ida", .zero, .normal))
+        
+        XCTAssertEqual(c3, c3)
+        XCTAssertEqual(c3, .text("Charlie", Point(10, 20), .normal))
+        
+        XCTAssertEqual(c4, c4)
+        XCTAssertEqual(c4, .text("Charlie", .zero, att))
+
         XCTAssertNotEqual(c1, c2)
         XCTAssertNotEqual(c1, c3)
         XCTAssertNotEqual(c1, c4)
