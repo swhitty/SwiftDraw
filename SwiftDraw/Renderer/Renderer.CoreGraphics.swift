@@ -39,12 +39,13 @@ import CoreText
 #endif
 
 struct CGTypes: RendererTypes {
+    typealias Float = CGFloat
+    typealias Point = CGPoint
+    typealias Size = CGSize
+    typealias Rect = CGRect
     typealias Color = CGColor
     typealias Path = CGPath
     typealias Transform = CGAffineTransform
-    typealias Float = CGFloat
-    typealias Point = CGPoint
-    typealias Rect = CGRect
     typealias BlendMode = CGBlendMode
     typealias FillRule = CGPathFillRule
     typealias LineCap = CGLineCap
@@ -61,6 +62,10 @@ struct CGProvider: RendererTypeProvider {
     
     func createPoint(from point: LayerTree.Point) -> CGPoint {
         return CGPoint(x: CGFloat(point.x), y: CGFloat(point.y))
+    }
+    
+    func createSize(from size: LayerTree.Size) -> CGSize {
+     return CGSize(width: CGFloat(size.width), height: CGFloat(size.height))
     }
     
     func createRect(from rect: LayerTree.Rect) -> CGRect {

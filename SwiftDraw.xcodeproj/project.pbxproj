@@ -14,8 +14,8 @@
 		D911E4271EE4128000A86AAD /* Renderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D911E4251EE4128000A86AAD /* Renderer.swift */; };
 		D911E4291EE4148B00A86AAD /* Renderer.CoreGraphics.swift in Sources */ = {isa = PBXBuildFile; fileRef = D911E4281EE4148B00A86AAD /* Renderer.CoreGraphics.swift */; };
 		D911E42A1EE4148B00A86AAD /* Renderer.CoreGraphics.swift in Sources */ = {isa = PBXBuildFile; fileRef = D911E4281EE4148B00A86AAD /* Renderer.CoreGraphics.swift */; };
-		D911E42C1EE4150F00A86AAD /* Renderer.CoreGraphicsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D911E42B1EE4150F00A86AAD /* Renderer.CoreGraphicsTests.swift */; };
-		D911E42D1EE4150F00A86AAD /* Renderer.CoreGraphicsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D911E42B1EE4150F00A86AAD /* Renderer.CoreGraphicsTests.swift */; };
+		D911E42C1EE4150F00A86AAD /* Renderer.CoreGraphicsTypesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D911E42B1EE4150F00A86AAD /* Renderer.CoreGraphicsTypesTests.swift */; };
+		D911E42D1EE4150F00A86AAD /* Renderer.CoreGraphicsTypesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D911E42B1EE4150F00A86AAD /* Renderer.CoreGraphicsTypesTests.swift */; };
 		D91B1E201E6E4D310028EF61 /* DOM.Image.swift in Sources */ = {isa = PBXBuildFile; fileRef = D91B1E1F1E6E4D310028EF61 /* DOM.Image.swift */; };
 		D91B1E221E6E4D650028EF61 /* Parser.XML.Image.swift in Sources */ = {isa = PBXBuildFile; fileRef = D91B1E211E6E4D650028EF61 /* Parser.XML.Image.swift */; };
 		D91B1E241E6E4EAC0028EF61 /* ImageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D91B1E231E6E4EAC0028EF61 /* ImageTests.swift */; };
@@ -191,7 +191,7 @@
 		D9100F911E0A0EEC00190335 /* CoordinateTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CoordinateTests.swift; sourceTree = "<group>"; };
 		D911E4251EE4128000A86AAD /* Renderer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Renderer.swift; sourceTree = "<group>"; };
 		D911E4281EE4148B00A86AAD /* Renderer.CoreGraphics.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Renderer.CoreGraphics.swift; sourceTree = "<group>"; };
-		D911E42B1EE4150F00A86AAD /* Renderer.CoreGraphicsTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Renderer.CoreGraphicsTests.swift; sourceTree = "<group>"; };
+		D911E42B1EE4150F00A86AAD /* Renderer.CoreGraphicsTypesTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Renderer.CoreGraphicsTypesTests.swift; sourceTree = "<group>"; };
 		D91B1E1F1E6E4D310028EF61 /* DOM.Image.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DOM.Image.swift; sourceTree = "<group>"; };
 		D91B1E211E6E4D650028EF61 /* Parser.XML.Image.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Parser.XML.Image.swift; sourceTree = "<group>"; };
 		D91B1E231E6E4EAC0028EF61 /* ImageTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ImageTests.swift; sourceTree = "<group>"; };
@@ -344,7 +344,7 @@
 			isa = PBXGroup;
 			children = (
 				D921C7A71E774F47008AA023 /* CGRenderer.PathTests.swift */,
-				D911E42B1EE4150F00A86AAD /* Renderer.CoreGraphicsTests.swift */,
+				D911E42B1EE4150F00A86AAD /* Renderer.CoreGraphicsTypesTests.swift */,
 			);
 			path = Renderer;
 			sourceTree = "<group>";
@@ -867,7 +867,7 @@
 				D9778E451E6ED3EF00FF6EBB /* AttributeParserTests.swift in Sources */,
 				D978A4421EE27FD100727106 /* LayerTree.GeometryTests.swift in Sources */,
 				D9778E4E1E6ED3EF00FF6EBB /* TransformTests.swift in Sources */,
-				D911E42D1EE4150F00A86AAD /* Renderer.CoreGraphicsTests.swift in Sources */,
+				D911E42D1EE4150F00A86AAD /* Renderer.CoreGraphicsTypesTests.swift in Sources */,
 				D9778E521E6ED3EF00FF6EBB /* Parser.ImageTests.swift in Sources */,
 				D978A4651EE2D5C700727106 /* LayerTree.LayerTests.swift in Sources */,
 				D9778E581E6ED3FC00FF6EBB /* DOM.Element.Equality.swift in Sources */,
@@ -944,7 +944,7 @@
 				D965B57D1E18D98C003E859E /* DOM.Element.Equality.swift in Sources */,
 				D9C1EEFA1E63B1B900C0F213 /* Parser.GraphicAttributeTests.swift in Sources */,
 				D99CC98D1E5FA04A00E7886A /* ScannerTests.swift in Sources */,
-				D911E42C1EE4150F00A86AAD /* Renderer.CoreGraphicsTests.swift in Sources */,
+				D911E42C1EE4150F00A86AAD /* Renderer.CoreGraphicsTypesTests.swift in Sources */,
 				D9C1EF001E63CC2A00C0F213 /* UseTests.swift in Sources */,
 				D933D09F1E5CECF400937A59 /* ColorTests.swift in Sources */,
 				D978A4551EE292F300727106 /* LayerTree.ShapeTests.swift in Sources */,

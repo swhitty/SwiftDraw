@@ -9,12 +9,13 @@
 import Foundation
 
 protocol RendererTypes {
+    associatedtype Float
+    associatedtype Point
+    associatedtype Size
+    associatedtype Rect
     associatedtype Color
     associatedtype Path
     associatedtype Transform
-    associatedtype Float
-    associatedtype Point
-    associatedtype Rect
     associatedtype BlendMode
     associatedtype FillRule
     associatedtype LineCap
@@ -27,6 +28,7 @@ protocol RendererTypeProvider {
     
     func createFloat(from float: LayerTree.Float) -> Types.Float
     func createPoint(from point: LayerTree.Point) -> Types.Point
+    func createSize(from size: LayerTree.Size) -> Types.Size
     func createRect(from rect: LayerTree.Rect) -> Types.Rect
     func createColor(from color: LayerTree.Color) -> Types.Color
     func createBlendMode(from mode: LayerTree.BlendMode) -> Types.BlendMode
