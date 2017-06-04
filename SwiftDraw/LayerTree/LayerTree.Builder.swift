@@ -44,6 +44,12 @@ extension LayerTree {
                                 width: circle.r * 2,
                                 height: circle.r * 2)
                 return .ellipse(within: rect)
+            } else if let ellipse = element as? DOM.Ellipse {
+                let rect = Rect(x: ellipse.cx - ellipse.rx,
+                                y: ellipse.cy - ellipse.ry,
+                                width: ellipse.rx * 2,
+                                height: ellipse.ry * 2)
+                return .ellipse(within: rect)
             }
             
             return nil;
