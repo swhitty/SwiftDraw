@@ -57,6 +57,11 @@ extension LayerTree {
                              radii: radii)
             } else if let polyline = element as? DOM.Polyline {
                 return .line(between: polyline.points.map{ Point($0.x, $0.y) })
+            } else if let polygon = element as? DOM.Polygon {
+                return .polygon(between: polygon.points.map{ Point($0.x, $0.y) })
+            } else if let domPath = element as? DOM.Path,
+                      let path = try? Builder.createPath(from: domPath) {
+                return .path(path)
             }
             
             return nil;

@@ -29,6 +29,8 @@
 		D933D0AE1E5E868400937A59 /* Parser.XML.Transform.swift in Sources */ = {isa = PBXBuildFile; fileRef = D933D0AD1E5E868400937A59 /* Parser.XML.Transform.swift */; };
 		D949F3E61EE3A62A006700C5 /* LayerTree.Builder.swift in Sources */ = {isa = PBXBuildFile; fileRef = D949F3E51EE3A62A006700C5 /* LayerTree.Builder.swift */; };
 		D949F3E71EE3A62A006700C5 /* LayerTree.Builder.swift in Sources */ = {isa = PBXBuildFile; fileRef = D949F3E51EE3A62A006700C5 /* LayerTree.Builder.swift */; };
+		D949F3EC1EE3CD34006700C5 /* LayerTree.Builder.Path.swift in Sources */ = {isa = PBXBuildFile; fileRef = D949F3EB1EE3CD34006700C5 /* LayerTree.Builder.Path.swift */; };
+		D949F3ED1EE3CD34006700C5 /* LayerTree.Builder.Path.swift in Sources */ = {isa = PBXBuildFile; fileRef = D949F3EB1EE3CD34006700C5 /* LayerTree.Builder.Path.swift */; };
 		D958D9F51E020158004D811F /* Formatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = D958D9F41E020158004D811F /* Formatter.swift */; };
 		D962D2761E6ECD5C00B825C6 /* SwiftDraw.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D962D26D1E6ECD5C00B825C6 /* SwiftDraw.framework */; };
 		D962D2A21E6ECE2000B825C6 /* SwiftDraw-macOS.h in Headers */ = {isa = PBXBuildFile; fileRef = D962D2A11E6ECE2000B825C6 /* SwiftDraw-macOS.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -212,6 +214,7 @@
 		D933D0AB1E5E85D000937A59 /* TransformTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TransformTests.swift; sourceTree = "<group>"; };
 		D933D0AD1E5E868400937A59 /* Parser.XML.Transform.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Parser.XML.Transform.swift; sourceTree = "<group>"; };
 		D949F3E51EE3A62A006700C5 /* LayerTree.Builder.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LayerTree.Builder.swift; sourceTree = "<group>"; };
+		D949F3EB1EE3CD34006700C5 /* LayerTree.Builder.Path.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LayerTree.Builder.Path.swift; sourceTree = "<group>"; };
 		D958D9F41E020158004D811F /* Formatter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Formatter.swift; sourceTree = "<group>"; };
 		D958D9F61E020184004D811F /* Formatter.XML.Path.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Formatter.XML.Path.swift; sourceTree = "<group>"; };
 		D962D26D1E6ECD5C00B825C6 /* SwiftDraw.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SwiftDraw.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -406,6 +409,7 @@
 				D978A4511EE290E300727106 /* LayerTree.Shape.swift */,
 				D978A45A1EE2CBC000727106 /* LayerTree.Image.swift */,
 				D949F3E51EE3A62A006700C5 /* LayerTree.Builder.swift */,
+				D949F3EB1EE3CD34006700C5 /* LayerTree.Builder.Path.swift */,
 			);
 			path = LayerTree;
 			sourceTree = "<group>";
@@ -833,6 +837,7 @@
 				D978A45C1EE2CBC000727106 /* LayerTree.Image.swift in Sources */,
 				D962D2C31E6ECFCA00B825C6 /* DOM.swift in Sources */,
 				D962D2E01E6ED02500B825C6 /* Scanner.swift in Sources */,
+				D949F3ED1EE3CD34006700C5 /* LayerTree.Builder.Path.swift in Sources */,
 				D962D2DF1E6ED02500B825C6 /* CharacterSet.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -921,6 +926,7 @@
 				D978A45B1EE2CBC000727106 /* LayerTree.Image.swift in Sources */,
 				D9778E611E6F6C0300FF6EBB /* Parser.XML.Path.swift in Sources */,
 				D958D9F51E020158004D811F /* Formatter.swift in Sources */,
+				D949F3EC1EE3CD34006700C5 /* LayerTree.Builder.Path.swift in Sources */,
 				D9C1EEFE1E63C9D300C0F213 /* Parser.XML.Use.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
