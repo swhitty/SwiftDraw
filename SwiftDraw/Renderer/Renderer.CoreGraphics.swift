@@ -214,3 +214,92 @@ private extension CGImage {
     }
 }
 
+struct CGRenderer: Renderer {
+    typealias Types = CGTypes
+    
+    let ctx: CGContext
+    
+    init(context: CGContext) {
+        self.ctx = context
+    }
+    
+    func pushState() {
+        ctx.saveGState()
+    }
+    
+    func popState() {
+        ctx.restoreGState()
+    }
+    
+    func pushTransparencyLayer() {
+        ctx.beginTransparencyLayer(auxiliaryInfo: nil)
+    }
+    
+    func popTransparencyLayer() {
+        ctx.endTransparencyLayer()
+    }
+    
+    func concatenate(transform: CGAffineTransform) {
+        ctx.concatenate(transform)
+    }
+    
+    func translate(tx: CGFloat, ty: CGFloat) {
+        ctx.translateBy(x: tx, y: ty)
+    }
+    
+    func rotate(angle: CGFloat) {
+        ctx.rotate(by: angle)
+    }
+    
+    func scale(sx: CGFloat, sy: CGFloat) {
+        ctx.scaleBy(x: sx, y: sy)
+    }
+    
+    func setFill(color: CGColor) {
+        ctx.setFillColor(color)
+    }
+    
+    func setStroke(color: CGColor) {
+        ctx.setStrokeColor(color)
+    }
+    
+    func setLine(width: CGFloat) {
+        ctx.setLineWidth(width)
+    }
+    
+    func setLine(cap: CGLineCap) {
+        ctx.setLineCap(cap)
+    }
+    
+    func setLine(join: CGLineJoin) {
+        ctx.setLineJoin(join)
+    }
+    
+    func setLine(miterLimit: CGFloat) {
+        ctx.setMiterLimit(miterLimit)
+    }
+    
+    func setClip(path: CGPath) {
+        ctx.addPath(path)
+        ctx.clip()
+    }
+    
+    func setBlend(mode: CGBlendMode) {
+        ctx.setBlendMode(mode)
+    }
+    
+    func stroke(path: CGPath) {
+        ctx.addPath(path)
+        ctx.strokePath()
+    }
+    
+    func fill(path: CGPath, rule: CGPathFillRule) {
+        ctx.addPath(path)
+        ctx.fillPath(using: rule)
+    }
+    
+    func draw(image: CGImage) {
+        let rect = CGRect(x: 0, y: 0, width: image.width, height: image.height)
+        ctx.draw(image, in: rect)
+    }
+}
