@@ -34,11 +34,16 @@ extension LayerTree {
     struct Builder {
         
         static func createShape(from element: DOM.GraphicsElement) -> Shape? {
-            
             if let line = element as? DOM.Line {
                 let from = Point(line.x1, line.y1)
                 let to = Point(line.x2, line.y2)
                 return .line(between: [from, to])
+            } else if let circle = element as? DOM.Circle {
+                let rect = Rect(x: circle.cx - circle.r,
+                                y: circle.cy - circle.r,
+                                width: circle.r * 2,
+                                height: circle.r * 2)
+                return .ellipse(within: rect)
             }
             
             return nil;

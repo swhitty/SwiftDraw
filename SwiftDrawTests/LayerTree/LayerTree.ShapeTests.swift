@@ -84,4 +84,11 @@ class LayerTreeShapeTests: XCTestCase {
         
         XCTAssertEqual(shape, .line(between: [Point(10, 20), Point(30, 40)]))
     }
+    
+    func testCircleBuilder() {
+        let cicle = DOM.Circle(cx: 50, cy: 50, r: 25)
+        let shape = LayerTree.Builder.createShape(from: cicle)
+        
+        XCTAssertEqual(shape, .ellipse(within: Rect(x: 25, y: 25, width: 50, height: 50)))
+    }
 }
