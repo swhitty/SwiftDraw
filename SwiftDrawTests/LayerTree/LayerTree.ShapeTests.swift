@@ -99,5 +99,17 @@ class LayerTreeShapeTests: XCTestCase {
         XCTAssertEqual(shape, .ellipse(within: Rect(x: 25, y: 25, width: 50, height: 100)))
     }
     
-
+    func testRectBuilder() {
+        let rect = DOM.Rect(x: 10, y: 20, width: 30, height: 40)
+        let shape = LayerTree.Builder.createShape(from: rect)
+        XCTAssertEqual(shape, .rect(within: Rect(x: 10, y: 20, width: 30, height: 40),
+                                    radii: .zero))
+        
+        //add corner radii
+        rect.rx = 2
+        rect.ry = 4
+        let another = LayerTree.Builder.createShape(from: rect)
+        XCTAssertEqual(another, .rect(within: Rect(x: 10, y: 20, width: 30, height: 40),
+                                      radii: Size(2, 4)))
+    }
 }

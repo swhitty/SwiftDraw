@@ -50,6 +50,11 @@ extension LayerTree {
                                 width: ellipse.rx * 2,
                                 height: ellipse.ry * 2)
                 return .ellipse(within: rect)
+            } else if let rect = element as? DOM.Rect {
+                let radii = Size(rect.rx ?? 0, rect.ry ?? 0)
+                let origin = Point(rect.x ?? 0, rect.y ?? 0)
+                return .rect(within: Rect(x: origin.x, y: origin.y, width: rect.width, height: rect.height),
+                             radii: radii)
             }
             
             return nil;
