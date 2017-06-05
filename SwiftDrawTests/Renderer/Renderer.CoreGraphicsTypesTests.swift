@@ -27,6 +27,7 @@
 //
 
 import XCTest
+import CoreGraphics
 @testable import SwiftDraw
 
 class RendererCoreGraphicsTypesTests: XCTestCase {

@@ -29,9 +29,15 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
+// Convert a DOM.Svg into a layer tree
+
 extension LayerTree {
     
     struct Builder {
+        
+        static func createLayer(from element: DOM.Svg) -> Layer {
+            return Layer()
+        }
         
         static func createContents(from element: DOM.GraphicsElement) -> Layer.Contents? {
             if let shape = createShape(from: element) {

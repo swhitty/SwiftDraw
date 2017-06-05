@@ -35,7 +35,7 @@ protocol RendererTypeProvider {
     func createTransform(from transform: LayerTree.Transform) -> Types.Transform
     func createPath(from shape: LayerTree.Shape) -> Types.Path
     func createPath(from subPaths: [Types.Path]) -> Types.Path
-    func createPath(from text: String, with font: String, at origin: Types.Point, ofSize pt: Types.Float) -> Types.Path?
+    func createPath(from text: String, at origin: LayerTree.Point, with attributes: LayerTree.TextAttributes) -> Types.Path?
     func createFillRule(from rule: LayerTree.FillRule) -> Types.FillRule
     func createLineCap(from cap: LayerTree.LineCap) -> Types.LineCap
     func createLineJoin(from join: LayerTree.LineJoin) -> Types.LineJoin
@@ -62,6 +62,7 @@ protocol Renderer {
     func setLine(join: Types.LineJoin)
     func setLine(miterLimit: Types.Float)
     func setClip(path: Types.Path)
+    func setAlpha(_ alpha: Types.Float)
     func setBlend(mode: Types.BlendMode)
     
     func stroke(path: Types.Path)
@@ -98,6 +99,8 @@ extension Renderer {
             setLine(miterLimit: l)
         case .setClip(path: let p):
             setClip(path: p)
+        case .setAlpha(let a):
+            setAlpha(a)
         case .setBlend(mode: let m):
             setBlend(mode: m)
         case .stroke(let p):
@@ -136,6 +139,7 @@ enum RendererCommand<Types: RendererTypes> {
     case setLineJoin(Types.LineJoin)
     case setLineMiter(limit: Types.Float)
     case setClip(path: Types.Path)
+    case setAlpha(Types.Float)
     case setBlend(mode: Types.BlendMode)
     
     case stroke(Types.Path)

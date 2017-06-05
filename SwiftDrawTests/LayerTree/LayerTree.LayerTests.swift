@@ -40,6 +40,7 @@ class LayerTreeLayerTests: XCTestCase {
     typealias Layer = LayerTree.Layer
     typealias Contents = LayerTree.Layer.Contents
     typealias Point = LayerTree.Point
+    typealias Transform = LayerTree.Transform
     
     func testStrokeAttributesEquality() {
         let a1 = StrokeAttributes(color: .black, width: 1.0, cap: .butt, join: .bevel, miterLimit: 1.0)
@@ -166,14 +167,14 @@ class LayerTreeLayerTests: XCTestCase {
         l2.contents = [shape, text]
         XCTAssertEqual(l1, l2)
         
-        l1.transform = .identity
+        l1.transform = Transform(a: 10, b: 20, c: 30, d: 40, tx: 50, ty: 60)
         XCTAssertNotEqual(l1, l2)
-        l2.transform = .identity
+        l2.transform = Transform(a: 10, b: 20, c: 30, d: 40, tx: 50, ty: 60)
         XCTAssertEqual(l1, l2)
         
-        l1.clip = [path]
+        l1.clip = [.path(path)]
         XCTAssertNotEqual(l1, l2)
-        l2.clip = [path]
+        l2.clip = [.path(path)]
         XCTAssertEqual(l1, l2)
         
         l1.opacity = 0.5

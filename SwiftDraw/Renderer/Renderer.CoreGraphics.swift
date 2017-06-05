@@ -158,11 +158,13 @@ struct CGProvider: RendererTypeProvider {
         return cgPath
     }
     
-    func createPath(from text: String, with fontName: String, at origin: CGPoint, ofSize pt: CGFloat) -> CGPath? {
-        let font = CTFontCreateWithName(fontName as CFString, pt, nil)
+    func createPath(from text: String, at origin: LayerTree.Point, with attributes: LayerTree.TextAttributes) -> Types.Path? {
+        let font = CTFontCreateWithName(attributes.fontName as CFString,
+                                        createFloat(from: attributes.size),
+                                        nil)
         guard let path = text.toPath(font: font) else { return nil }
         
-        var transform = CGAffineTransform(translationX: origin.x, y: origin.y)
+        var transform = CGAffineTransform(translationX: createFloat(from: origin.x), y: createFloat(from: origin.y))
         return path.copy(using: &transform)
     }
 
@@ -282,6 +284,10 @@ struct CGRenderer: Renderer {
     func setClip(path: CGPath) {
         ctx.addPath(path)
         ctx.clip()
+    }
+    
+    func setAlpha(_ alpha: CGFloat) {
+        ctx.setAlpha(alpha)
     }
     
     func setBlend(mode: CGBlendMode) {

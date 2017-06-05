@@ -35,6 +35,9 @@ import Foundation
 @objc(SVGImage)
 public final class Image: NSObject {
     public let size: CGSize
+    
+    //An Image is simply an array of CoreGraphics draw commands
+    //see: Renderer.swift
     let commands: [RendererCommand<CGTypes>]
     
     public convenience init?(named name: String, in bundle: Bundle = Bundle.main) {
@@ -55,10 +58,16 @@ public final class Image: NSObject {
         }
         
         size = CGSize(width: svg.width, height: svg.height)
-        commands = []
-// TODO: Restore commands derived from LayerTree
-//        commands = Builder().createCommands(for: svg,
-//                                            with: CGProvider())
+        
+        //To create the draw commands;
+        // - XML is parsed into DOM.Svg
+        // - DOM.Svg is converted into a LayerTree
+        // - LayerTree is converted into RenderCommands
+        // - RenderCommands are performed by Renderer (drawn to CGContext)
+        
+        let generator = LayerTree.CommandGenerator(provider: CGProvider())
+        let layer = LayerTree.Builder.createLayer(from: svg)
+        commands = generator.renderCommands(for: layer)
     }
 }
 

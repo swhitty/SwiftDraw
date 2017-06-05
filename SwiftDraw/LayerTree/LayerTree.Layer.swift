@@ -29,9 +29,9 @@
 extension LayerTree {
     class Layer: Equatable {
         var contents: [Contents] = []
-        var opacity: Float?
-        var transform: Transform?
-        var clip: [Path] = []
+        var opacity: Float = 1.0
+        var transform: Transform = .identity
+        var clip: [Shape] = []
         var mask: Layer?
         
         enum Contents: Equatable {
