@@ -39,7 +39,7 @@ import Foundation
 #endif
 
 extension CGPath {
-    func applyA(action: @escaping (CGPathElement)->()) {
+    func doApply(action: @escaping (CGPathElement)->()) {
         var action = action
         apply(info: &action) {
             let action = $0!.bindMemory(to: ((CGPathElement)->()).self, capacity: 1).pointee
@@ -49,17 +49,32 @@ extension CGPath {
 }
 
 extension CGPath {
-    enum Segment {
+    enum Segment: Equatable {
         case move(CGPoint)
         case line(CGPoint)
         case quad(CGPoint, CGPoint)
         case cubic(CGPoint, CGPoint, CGPoint)
         case close
+        
+        static func ==(lhs: Segment, rhs: Segment) -> Bool {
+            switch (lhs, rhs) {
+            case (.move(let lval), .move(let rval)):
+                return lval == rval
+            case (.line(let lval), .line(let rval)):
+                return lval == rval
+            case (.quad(let lval), .quad(let rval)):
+                return lval.0 == rval.0 && lval.1 == rval.1
+            case (.cubic(let lval), .cubic(let rval)):
+                return lval.0 == rval.0 && lval.1 == rval.1 && lval.2 == rval.2
+            default:
+                return false
+            }
+        }
     }
     
-    func segmentsA() -> [Segment] {
+    func segments() -> [Segment] {
         var segments = [Segment]()
-        self.applyA {
+        self.doApply {
             let p = $0
             switch (p.type) {
             case .moveToPoint:

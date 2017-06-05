@@ -32,6 +32,9 @@ import XCTest
 class RendererCoreGraphicsTypesTests: XCTestCase {
     
     typealias Float = LayerTree.Float
+    typealias Point = LayerTree.Point
+    typealias Rect = LayerTree.Rect
+    typealias Size = LayerTree.Size
     
     func testFloat() {
         XCTAssertEqual(CGProvider().createFloat(from: Float(10)), 10.0)
@@ -99,10 +102,70 @@ class RendererCoreGraphicsTypesTests: XCTestCase {
         XCTAssertEqual(CGProvider().createLineJoin(from: .bevel), .bevel)
     }
     
+    func testShapeLine() {
+        let path = CGProvider().createPath(from: .line(between: [.zero, Point(10, 20), Point(30, 40)]))
+        let segments: [CGPath.Segment] = [.move(CGPoint(0, 0)), .line(CGPoint(10, 20)), .line(CGPoint(30, 40))]
+        XCTAssertEqual(path.segments(), segments)
+    }
+    
+    func testShapeRect() {
+        let path = CGProvider().createPath(from: .rect(within: Rect(x: 10, y: 20, width: 30, height: 40),
+                                                       radii: Size(2, 4)))
+        
+        let expected = CGPath(roundedRect: CGRect(x:10, y: 20, width: 30, height: 40),
+                              cornerWidth: 2.0,
+                              cornerHeight: 4.0,
+                              transform: nil)
+        
+        XCTAssertEqual(path, expected)
+    }
+    
+    func testShapeEllipse() {
+        let path = CGProvider().createPath(from: .ellipse(within: Rect(x: 10, y: 20, width: 30, height: 40)))
+        let expected = CGPath(ellipseIn: CGRect(x:10, y: 20, width: 30, height: 40), transform: nil)
+        XCTAssertEqual(path, expected)
+    }
+    
+    func testShapePolygon() {
+        let path = CGProvider().createPath(from: .polygon(between: [.zero, Point(0, 20), Point(20, 20), Point(20, 0)]))
+        let expected = CGMutablePath()
+        expected.move(to: CGPoint(x: 0, y: 0))
+        expected.addLine(to: CGPoint(x: 0, y: 20))
+        expected.addLine(to: CGPoint(x: 20, y: 20))
+        expected.addLine(to: CGPoint(x: 20, y: 0))
+        expected.closeSubpath()
+        XCTAssertEqual(path, expected)
+    }
+    
+    func testShapePath() {
+        let model = LayerTree.Path()
+        model.segments.append(.move(to: Point(0, 0)))
+        model.segments.append(.line(to: Point(100, 100)))
+        model.segments.append(.cubic(to: Point(100, 0), control1: Point(50, 75), control2: Point(150, 25)))
+        model.segments.append(.close)
+        
+        let expected = CGMutablePath()
+        expected.move(to: CGPoint(x: 0, y: 0))
+        expected.addLine(to: CGPoint(x: 100, y: 100))
+        expected.addCurve(to: CGPoint(x: 100, y: 0), control1: CGPoint(x: 50, y: 75), control2: CGPoint(x: 150, y: 25))
+        expected.closeSubpath()
+        
+        let path = CGProvider().createPath(from: .path(model))
+        XCTAssertEqual(path, expected)
+    }
+
 //TODO: verify these within type provider
-//    func createPath(from shape: LayerTree.Shape) -> CGPath
-//    func createPath(from subPaths: [CGPath]) -> CGPath
-//    func createPath(from text: String, with font: String, at origin: Types.Point, ofSize pt: Types.Float) -> CGPath?
+//    func createPath(from subPaths: [expected]) -> expected
+//    func createPath(from text: String, with font: String, at origin: Types.Point, ofSize pt: Types.Float) -> expected?
 //    func createImage(from image: LayerTree.Image) -> CGImage?
     
+}
+
+private extension CGPoint {
+    init(_ x: CGFloat, _ y: CGFloat) {
+        self.init(x: x, y: y)
+    }
+    init(_ x: Int, _ y: Int) {
+        self.init(x: x, y: y)
+    }
 }

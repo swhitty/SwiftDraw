@@ -49,6 +49,11 @@ struct LayerTree {
             self.y = y
         }
         
+        init(_ x: Int, _ y: Int) {
+            self.x = Float(x)
+            self.y = Float(y)
+        }
+        
         static var zero: Point {
             return Point(0, 0)
         }
@@ -67,6 +72,11 @@ struct LayerTree {
             self.height = height
         }
         
+        init(_ width: Int, _ height: Int) {
+            self.width = Float(width)
+            self.height = Float(height)
+        }
+        
         static var zero: Size {
             return Size(0, 0)
         }
@@ -81,6 +91,11 @@ struct LayerTree {
         var size: Size
         
         init(x: Float, y: Float, width: Float, height: Float) {
+            self.origin = Point(x, y)
+            self.size = Size(width, height)
+        }
+        
+        init(x: Int, y: Int, width: Int, height: Int) {
             self.origin = Point(x, y)
             self.size = Size(width, height)
         }
