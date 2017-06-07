@@ -31,23 +31,74 @@
 
 // Convert a DOM.Svg into a layer tree
 
+import Darwin
+
 extension LayerTree {
     
     struct Builder {
         
         static func createLayer(from element: DOM.Svg) -> Layer {
-            return Layer()
+            let l = Layer()
+    
+            if let viewBox = element.viewBox {
+                l.transform = createTransform(for: viewBox,
+                                              width: element.width,
+                                              height: element.height)
+            }
+            
+            l.contents = createContents(for: element.childElements, inheriting: State())
+            
+            return l
         }
         
-        static func createContents(from element: DOM.GraphicsElement) -> Layer.Contents? {
+        static func createLayer(from group: DOM.Group, inheriting state: State) -> Layer {
+            let l = Layer()
+            
+            if let transform = group.transform?.first {
+                l.transform = createTransform(for: transform)
+            }
+            
+            l.contents = createContents(for: group.childElements, inheriting: state)
+            
+      
+           
+            return l
+        }
+        
+        static func createTransform(for viewBox: DOM.Svg.ViewBox, width: DOM.Length, height: DOM.Length) -> LayerTree.Transform {
+            
+            let sx = LayerTree.Float(width) / viewBox.width
+            let sy = LayerTree.Float(height) / viewBox.height
+            return LayerTree.Transform(a: sx, b: 0.0, c: 0.0, d: sy, tx: -viewBox.x * sx, ty: -viewBox.y * sy)
+        }
+        
+        
+        static func createContents(for elements: [DOM.GraphicsElement], inheriting state: State) -> [Layer.Contents] {
+            var contents = Array<Layer.Contents>()
+            for element in elements {
+                
+                let elementState = createState(for: element, inheriting: state)
+                
+                if let c = createContents(from: element, with: elementState) {
+                    contents.append(c)
+                }
+            }
+            return contents
+        }
+        
+        static func createContents(from element: DOM.GraphicsElement, with state: State) -> Layer.Contents? {
             if let shape = createShape(from: element) {
-                return .shape(shape, .normal, .normal)
+                let stroke = createStrokeAttributes(with: state)
+                let fill = createFillAttributes(with: state)
+                return .shape(shape, stroke, fill)
             } else if let text = element as? DOM.Text {
                 let point = Point(text.x ?? 0, text.y ?? 0)
-                var att = TextAttributes.normal
+                var att = createTextAttributes(with: state)
                 att.fontName = text.fontFamily ?? att.fontName
                 att.size = text.fontSize ?? att.size
                 return .text(text.value, point, att)
+            } else if let group = element as? DOM.Group {
+                return .layer(createLayer(from: group, inheriting: state))
             }
             return nil
         }
@@ -85,5 +136,154 @@ extension LayerTree {
             
             return nil;
         }
+    }
+}
+
+
+extension LayerTree.Builder {
+
+    static func createStrokeAttributes(with state: State) -> LayerTree.StrokeAttributes {
+        let stroke: LayerTree.Color
+        
+        if state.strokeWidth > 0.0 {
+            stroke = LayerTree.Color.create(from: state.stroke).withAlpha(state.strokeOpacity)
+        } else {
+            stroke = .none
+        }
+
+        return LayerTree.StrokeAttributes(color: stroke,
+                                          width: state.strokeWidth,
+                                          cap: state.strokeLineCap,
+                                          join: state.strokeLineJoin,
+                                          miterLimit: state.strokeLineMiterLimit)
+    }
+    
+    static func createFillAttributes(with state: State) -> LayerTree.FillAttributes {
+        let fill = LayerTree.Color.create(from: state.fill).withAlpha(state.fillOpacity)
+        return LayerTree.FillAttributes(color: fill, rule: state.fillRule)
+    }
+    
+    static func createTextAttributes(with state: State) -> LayerTree.TextAttributes {
+        return .normal
+    }
+    
+    //current state of the render tree, updated as builder traverses child nodes
+    struct State {
+        var opacity: DOM.Float
+        var display: DOM.DisplayMode
+        
+        var stroke: DOM.Color
+        var strokeWidth: DOM.Float
+        var strokeOpacity: DOM.Float
+        var strokeLineCap: DOM.LineCap
+        var strokeLineJoin: DOM.LineJoin
+        var strokeLineMiterLimit: DOM.Float
+        var strokeDashArray: [DOM.Float]
+        
+        var fill: DOM.Color
+        var fillOpacity: DOM.Float
+        var fillRule: DOM.FillRule
+        
+        init() {
+            //default root SVG element state
+            opacity = 1.0
+            display = .inline
+            
+            stroke = .none
+            strokeWidth = 1.0
+            strokeOpacity = 1.0
+            strokeLineCap = .butt
+            strokeLineJoin = .miter
+            strokeLineMiterLimit = 4.0
+            strokeDashArray = []
+            
+            fill = .keyword(.black)
+            fillOpacity = 1.0
+            fillRule = .evenodd
+        }
+    }
+    
+    static func createState(for attributes: PresentationAttributes, inheriting existing: State) -> State {
+        var state = State()
+        
+        state.opacity = attributes.opacity ?? existing.opacity
+        state.display = attributes.display ?? existing.display
+        
+        state.stroke = attributes.stroke ?? existing.stroke
+        state.strokeWidth = attributes.strokeWidth ?? existing.strokeWidth
+        state.strokeOpacity = attributes.strokeOpacity ?? existing.strokeOpacity
+        state.strokeLineCap = attributes.strokeLineCap ?? existing.strokeLineCap
+        state.strokeLineJoin = attributes.strokeLineJoin ?? existing.strokeLineJoin
+        state.strokeDashArray = attributes.strokeDashArray ?? existing.strokeDashArray
+        
+        state.fill = attributes.fill ?? existing.fill
+        state.fillOpacity = attributes.fillOpacity ?? existing.fillOpacity
+        state.fillRule = attributes.fillRule ?? existing.fillRule
+        
+        return state
+    }
+}
+
+extension LayerTree.Builder {
+    
+    static func createTransform(for dom: DOM.Transform) -> LayerTree.Transform {
+        switch dom {
+        case .matrix(let m):
+            return  LayerTree.Transform(a: Float(m.a),
+                                        b: Float(m.b),
+                                        c: Float(m.c),
+                                        d: Float(m.d),
+                                        tx: Float(m.e),
+                                        ty: Float(m.f))
+        case .translate(let t):
+            return  LayerTree.Transform(a: 1,
+                                        b: 0,
+                                        c: 0,
+                                        d: 1,
+                                        tx: Float(t.tx),
+                                        ty: Float(t.ty))
+        case .scale(let s):
+            return  LayerTree.Transform(a: Float(s.sx),
+                                        b: 0,
+                                        c: 0,
+                                        d: Float(s.sy),
+                                        tx: 0,
+                                        ty: 0)
+        case .rotate(let angle):
+            let radians = Float(angle)*Float.pi/180.0
+            return  LayerTree.Transform(a: 1,
+                                        b: 0,
+                                        c: tan(radians),
+                                        d: 1,
+                                        tx: 0,
+                                        ty: 0)
+            
+        case .rotatePoint(let r):
+            let radians = Float(r.angle)*Float.pi/180.0
+            return  LayerTree.Transform(a: 1,
+                                        b: 0,
+                                        c: tan(radians),
+                                        d: 1,
+                                        tx: 0,
+                                        ty: 0)
+            
+        case .skewX(let angle):
+            let radians = Float(angle)*Float.pi/180.0
+            return  LayerTree.Transform(a: 1,
+                                        b: 0,
+                                        c: tan(radians),
+                                        d: 1,
+                                        tx: 0,
+                                        ty: 0)
+        case .skewY(let angle):
+            let radians = Float(angle)*Float.pi/180.0
+            return  LayerTree.Transform(a: 1,
+                                        b: tan(radians),
+                                        c: 0,
+                                        d: 1,
+                                        tx: 0,
+                                        ty: 0)
+        }
+        
     }
 }
