@@ -31,37 +31,32 @@
 
 // Convert a DOM.Svg into a layer tree
 
-import Darwin
-
 extension LayerTree {
     
     struct Builder {
         
         static func createLayer(from element: DOM.Svg) -> Layer {
-            let l = Layer()
+            let l = createLayer(from: element, with: State())
     
             if let viewBox = element.viewBox {
                 l.transform = createTransform(for: viewBox,
                                               width: element.width,
                                               height: element.height)
+            } else {
+                l.transform = .identity
             }
-            
-            l.contents = createContents(for: element.childElements, inheriting: State())
-            
+     
             return l
         }
         
-        static func createLayer(from group: DOM.Group, inheriting state: State) -> Layer {
+        static func createLayer(from element: DOM.GraphicsElement, with children: [DOM.GraphicsElement], inheriting state: State) -> Layer {
             let l = Layer()
             
-            if let transform = group.transform?.first {
-                l.transform = createTransform(for: transform)
-            }
+            let newState = createState(for: element, inheriting: state)
             
-            l.contents = createContents(for: group.childElements, inheriting: state)
+            l.transform = createTransform(concatenating: element.transform ?? [])
+            l.contents = createLayers(for: children, inheriting: newState).map{ .layer($0) }
             
-      
-           
             return l
         }
         
@@ -73,17 +68,23 @@ extension LayerTree {
         }
         
         
-        static func createContents(for elements: [DOM.GraphicsElement], inheriting state: State) -> [Layer.Contents] {
-            var contents = Array<Layer.Contents>()
+        static func createLayers(for elements: [DOM.GraphicsElement], inheriting state: State) -> [Layer] {
+            var layers = Array<Layer>()
             for element in elements {
-                
-                let elementState = createState(for: element, inheriting: state)
-                
-                if let c = createContents(from: element, with: elementState) {
-                    contents.append(c)
-                }
+                layers.append(createLayer(from: element, with: state))
             }
-            return contents
+            return layers
+        }
+        
+        static func createLayer(from element: DOM.GraphicsElement, with state: State) -> Layer {
+            let l = Layer()
+            
+            let newState = createState(for: element, inheriting: state)
+            
+            l.transform = createTransform(concatenating: element.transform ?? [])
+            l.contents = createContents(from: element, with: newState).map{ [$0] } ?? []
+            
+            return l
         }
         
         static func createContents(from element: DOM.GraphicsElement, with state: State) -> Layer.Contents? {
@@ -97,8 +98,8 @@ extension LayerTree {
                 att.fontName = text.fontFamily ?? att.fontName
                 att.size = text.fontSize ?? att.size
                 return .text(text.value, point, att)
-            } else if let group = element as? DOM.Group {
-                return .layer(createLayer(from: group, inheriting: state))
+            } else if let container = element as? ContainerElement {
+                return .layer(createLayer(from: element, with: container.childElements, inheriting: state))
             }
             return nil
         }
@@ -225,7 +226,6 @@ extension LayerTree.Builder {
 }
 
 extension LayerTree.Builder {
-    
     static func createTransform(for dom: DOM.Transform) -> LayerTree.Transform {
         switch dom {
         case .matrix(let m):
@@ -236,54 +236,33 @@ extension LayerTree.Builder {
                                         tx: Float(m.e),
                                         ty: Float(m.f))
         case .translate(let t):
-            return  LayerTree.Transform(a: 1,
-                                        b: 0,
-                                        c: 0,
-                                        d: 1,
-                                        tx: Float(t.tx),
+            
+            return  LayerTree.Transform(tx: Float(t.tx),
                                         ty: Float(t.ty))
         case .scale(let s):
-            return  LayerTree.Transform(a: Float(s.sx),
-                                        b: 0,
-                                        c: 0,
-                                        d: Float(s.sy),
-                                        tx: 0,
-                                        ty: 0)
+            return  LayerTree.Transform(sx: Float(s.sx),
+                                        sy: Float(s.sy))
         case .rotate(let angle):
             let radians = Float(angle)*Float.pi/180.0
-            return  LayerTree.Transform(a: 1,
-                                        b: 0,
-                                        c: tan(radians),
-                                        d: 1,
-                                        tx: 0,
-                                        ty: 0)
+            return  LayerTree.Transform(rotate: radians)
             
         case .rotatePoint(let r):
             let radians = Float(r.angle)*Float.pi/180.0
-            return  LayerTree.Transform(a: 1,
-                                        b: 0,
-                                        c: tan(radians),
-                                        d: 1,
-                                        tx: 0,
-                                        ty: 0)
+            let point  = LayerTree.Point(r.cx, r.cy)
+            return LayerTree.Transform(rotate: radians,
+                                       around: point)
             
         case .skewX(let angle):
             let radians = Float(angle)*Float.pi/180.0
-            return  LayerTree.Transform(a: 1,
-                                        b: 0,
-                                        c: tan(radians),
-                                        d: 1,
-                                        tx: 0,
-                                        ty: 0)
+            return LayerTree.Transform(skewX: radians)
         case .skewY(let angle):
             let radians = Float(angle)*Float.pi/180.0
-            return  LayerTree.Transform(a: 1,
-                                        b: tan(radians),
-                                        c: 0,
-                                        d: 1,
-                                        tx: 0,
-                                        ty: 0)
+            return LayerTree.Transform(skewY: radians)
         }
-        
     }
+    
+    static func createTransform(concatenating transforms: [DOM.Transform]) -> LayerTree.Transform {
+        return transforms.reduce(LayerTree.Transform.identity){ $0.0.concatenated(createTransform(for: $0.1)) }
+    }
+
 }

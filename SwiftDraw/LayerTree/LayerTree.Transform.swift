@@ -29,6 +29,9 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
+import Darwin
+
+
 extension LayerTree {
     struct Transform: Equatable {
         var a: Float
@@ -63,5 +66,46 @@ extension LayerTree {
                 lhs.tx == rhs.tx &&
                 lhs.ty == rhs.ty
         }
+        
+        func concatenated(_ other: Transform) -> Transform {
+            let (t, m) = (self, other)
+            return Transform(a: (t.a * m.a) + (t.b * m.c),
+                             b: (t.a * m.b) + (t.b * m.d),
+                             c: (t.c * m.a) + (t.d * m.c),
+                             d: (t.c * m.b) + (t.d * m.d),
+                             tx: (t.tx * m.a) + (t.ty * m.c) + m.tx,
+                             ty: (t.tx * m.b) + (t.ty * m.d) + m.ty)
+        }
+    }
+}
+
+extension LayerTree.Transform {
+    init(tx: Float, ty: Float) {
+        self.init(a: 0, b: 0, c: 0, d: 0, tx: tx, ty: ty)
+    }
+    
+    init(sx: Float, sy: Float) {
+        self.init(a: sx, b: 0, c: 0, d: sy, tx: 0, ty: 0)
+    }
+    
+    init(rotate radians: Float) {
+        let sine = sin(radians)
+        let cosine = cos(radians)
+        self.init(a: cosine, b: sine, c: -sine, d: cosine, tx: 0, ty: 0)
+    }
+    
+    init(rotate radians: Float, around point: LayerTree.Point) {
+        let t1 = LayerTree.Transform(tx: point.x, ty: point.y)
+        let r = LayerTree.Transform(rotate: radians)
+        let t2 = LayerTree.Transform(tx: -point.x, ty: -point.y)
+        self = t1.concatenated(r).concatenated(t2)
+    }
+
+    init(skewX radians: Float) {
+        self.init(a: 1, b: 0, c: tan(radians), d: 1, tx: 0, ty: 0)
+    }
+    
+    init(skewY radians: Float) {
+        self.init(a: 1, b: tan(radians), c: 0, d: 1, tx: 0, ty: 0)
     }
 }
