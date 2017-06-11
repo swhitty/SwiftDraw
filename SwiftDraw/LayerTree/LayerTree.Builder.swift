@@ -35,13 +35,19 @@ extension LayerTree {
     
     struct Builder {
         
-        static func createLayer(from element: DOM.Svg) -> Layer {
-            let l = createLayer(from: element, with: State())
+        let svg: DOM.Svg
+        
+        init(svg: DOM.Svg) {
+            self.svg = svg
+        }
+        
+        func createLayer() -> Layer {
+            let l = createLayer(from: svg, with: State())
     
-            if let viewBox = element.viewBox {
-                l.transform = createTransform(for: viewBox,
-                                              width: element.width,
-                                              height: element.height)
+            if let viewBox = svg.viewBox {
+                l.transform = Builder.createTransform(for: viewBox,
+                                                      width: svg.width,
+                                                      height: svg.height)
             } else {
                 l.transform = .identity
             }
@@ -49,12 +55,12 @@ extension LayerTree {
             return l
         }
         
-        static func createLayer(from element: DOM.GraphicsElement, with children: [DOM.GraphicsElement], inheriting state: State) -> Layer {
+        func createLayer(from element: DOM.GraphicsElement, with children: [DOM.GraphicsElement], inheriting state: State) -> Layer {
             let l = Layer()
             
-            let newState = createState(for: element, inheriting: state)
+            let newState = Builder.createState(for: element, inheriting: state)
             
-            l.transform = createTransform(concatenating: element.transform ?? [])
+            l.transform = Builder.createTransform(concatenating: element.transform ?? [])
             l.contents = createLayers(for: children, inheriting: newState).map{ .layer($0) }
             
             return l
@@ -68,7 +74,7 @@ extension LayerTree {
         }
         
         
-        static func createLayers(for elements: [DOM.GraphicsElement], inheriting state: State) -> [Layer] {
+        func createLayers(for elements: [DOM.GraphicsElement], inheriting state: State) -> [Layer] {
             var layers = Array<Layer>()
             for element in elements {
                 layers.append(createLayer(from: element, with: state))
@@ -76,28 +82,39 @@ extension LayerTree {
             return layers
         }
         
-        static func createLayer(from element: DOM.GraphicsElement, with state: State) -> Layer {
+        func createLayer(from element: DOM.GraphicsElement, with state: State) -> Layer {
             let l = Layer()
             
-            let newState = createState(for: element, inheriting: state)
+            let newState = Builder.createState(for: element, inheriting: state)
             
-            l.transform = createTransform(concatenating: element.transform ?? [])
+            l.transform = Builder.createTransform(concatenating: element.transform ?? [])
             l.contents = createContents(from: element, with: newState).map{ [$0] } ?? []
             
             return l
         }
         
-        static func createContents(from element: DOM.GraphicsElement, with state: State) -> Layer.Contents? {
-            if let shape = createShape(from: element) {
-                let stroke = createStrokeAttributes(with: state)
-                let fill = createFillAttributes(with: state)
+        func createContents(from element: DOM.GraphicsElement, with state: State) -> Layer.Contents? {
+            if let shape = Builder.createShape(from: element) {
+                let stroke = Builder.createStrokeAttributes(with: state)
+                let fill = Builder.createFillAttributes(with: state)
                 return .shape(shape, stroke, fill)
+                
             } else if let text = element as? DOM.Text {
                 let point = Point(text.x ?? 0, text.y ?? 0)
-                var att = createTextAttributes(with: state)
+                var att = Builder.createTextAttributes(with: state)
                 att.fontName = text.fontFamily ?? att.fontName
                 att.size = text.fontSize ?? att.size
                 return .text(text.value, point, att)
+                
+            } else if let use = element as? DOM.Use,
+                      let eId = use.href.fragment,
+                      let e = svg.defs.elements[eId] {
+                return .layer(createLayer(from: e, with: state))
+                
+            } else if let sw = element as? DOM.Switch,
+                      let e = sw.childElements.first {
+                return .layer(createLayer(from: e, with: state))
+                
             } else if let container = element as? ContainerElement {
                 return .layer(createLayer(from: element, with: container.childElements, inheriting: state))
             }
