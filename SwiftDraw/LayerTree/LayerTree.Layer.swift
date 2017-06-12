@@ -169,6 +169,10 @@ extension LayerTree.Layer {
             desc +=  mask.customDescription(indent: indent, title: "Mask")
         }
         
+        if opacity != 1.0 {
+            desc += "\(whitepace)Opacity: \(opacity)\n"
+        }
+        
         self.contents.forEach{
             desc += $0.customDescription(indent: indent + 3) + "\n"
         }

@@ -92,6 +92,7 @@ extension LayerTree {
             l.transform = Builder.createTransforms(from: element.transform ?? [])
             l.clip = createClipShapes(for: element)
             l.mask = createMaskLayer(for: element)
+            l.opacity = state.opacity
             
             if let contents = createContents(from: element, with: state) {
                 l.appendContents(contents)
@@ -270,7 +271,7 @@ extension LayerTree.Builder {
     static func createState(for attributes: PresentationAttributes, inheriting existing: State) -> State {
         var state = State()
         
-        state.opacity = attributes.opacity ?? existing.opacity
+        state.opacity = attributes.opacity ?? 1.0
         state.display = attributes.display ?? existing.display
         
         state.stroke = attributes.stroke ?? existing.stroke
