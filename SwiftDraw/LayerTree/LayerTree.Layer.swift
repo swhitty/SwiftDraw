@@ -154,15 +154,19 @@ extension LayerTree.Layer {
         return customDescription(indent: 0)
     }
     
-    func customDescription(indent: Int) -> String {
+    func customDescription(indent: Int, title: String = "Layer") -> String {
         
         let whitepace = String(repeating: " ", count: indent)
         
-        var desc = "\(whitepace)Layer\n"
+        var desc = "\(whitepace)\(title):\n"
         
         if !transform.isEmpty {
             let allTransforms = transform.map{ $0.customDescription}.joined(separator: ", ")
             desc += "\(whitepace)Transform: \(allTransforms)\n"
+        }
+        
+        if let mask = mask {
+            desc +=  mask.customDescription(indent: indent, title: "Mask")
         }
         
         self.contents.forEach{
@@ -191,8 +195,7 @@ extension LayerTree.Layer.Contents {
         case .text(let text, _, _):
             desc += "Text: \(text)"
         case .layer(let l):
-            desc += "Layer:\n"
-            desc += l.customDescription(indent: indent + 3)
+            desc += l.customDescription(indent: indent)
         }
         
         return desc

@@ -89,9 +89,9 @@ extension LayerTree {
             
             guard state.display == .inline else { return l }
 
-        
             l.transform = Builder.createTransforms(from: element.transform ?? [])
             l.clip = createClipShapes(for: element)
+            l.mask = createMaskLayer(for: element)
             
             if let contents = createContents(from: element, with: state) {
                 l.appendContents(contents)
@@ -142,7 +142,21 @@ extension LayerTree {
             
             return clip.childElements.flatMap{ Builder.createShape(from: $0) }
         }
-        
+
+        func createMaskLayer(for element: DOM.GraphicsElement) -> Layer? {
+            guard let maskId = element.mask?.fragment,
+                  let mask = svg.defs.masks.first(where: { $0.id == maskId }) else { return nil }
+            
+            let l = Layer()
+            
+            mask.childElements.forEach {
+                let contents = Layer.Contents.layer(createLayer(from: $0, inheriting: State()))
+                l.appendContents(contents)
+            }
+            
+            return l
+        }
+
         static func createShape(from element: DOM.GraphicsElement) -> Shape? {
             if let line = element as? DOM.Line {
                 let from = Point(line.x1, line.y1)

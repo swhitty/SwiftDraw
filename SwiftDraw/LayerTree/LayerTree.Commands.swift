@@ -27,6 +27,7 @@ extension LayerTree {
             let opacityCommands = renderCommands(forOpacity: layer.opacity)
             let transformCommands = renderCommands(forTransforms: layer.transform)
             let clipCommands = renderCommands(forClip: layer.clip)
+            let maskCommands = renderCommands(forMask: layer.mask)
             
             //TODO: handle layer.mask
             // render to transparanency layer then composite contents on top.
@@ -35,51 +36,62 @@ extension LayerTree {
             
             if !opacityCommands.isEmpty ||
                !transformCommands.isEmpty ||
-               !clipCommands.isEmpty {
+               !clipCommands.isEmpty ||
+               !maskCommands.isEmpty {
                 commands.append(.pushState)
             }
-
+            
             commands.append(contentsOf: transformCommands)
+            commands.append(contentsOf: maskCommands)
             commands.append(contentsOf: opacityCommands)
             commands.append(contentsOf: clipCommands)
-            
+  
+
             //render all of the layer contents
             for contents in layer.contents {
                 commands.append(contentsOf: renderCommands(for: contents))
             }
             
-            if !opacityCommands.isEmpty {
+            //clean up state
+            if !maskCommands.isEmpty {
                 commands.append(.popTransparencyLayer)
             }
             
+            if !opacityCommands.isEmpty {
+                commands.append(.popTransparencyLayer)
+            }
+
             if !opacityCommands.isEmpty ||
                !transformCommands.isEmpty ||
                !clipCommands.isEmpty {
                 commands.append(.popState)
             }
             
+        
+            
             return commands
         }
         
-        func renderCommands(for contents: Layer.Contents) -> [RendererCommand<P.Types>] {
+        func renderCommands(for contents: Layer.Contents, colorConverter: ColorConverter = DefaultColorConverter()) -> [RendererCommand<P.Types>] {
             switch contents {
             case .shape(let shape, let stroke, let fill):
-                return renderCommands(for: shape, stroke: stroke, fill: fill)
+                return renderCommands(for: shape, stroke: stroke, fill: fill, colorConverter: colorConverter)
             case .image(let image):
                 return renderCommands(for: image)
             case .text(let text, let point, let att):
-                return renderCommands(for: text, at: point, attributes: att)
+                return renderCommands(for: text, at: point, attributes: att, colorConverter: colorConverter)
             case .layer(let layer):
                 return renderCommands(for: layer)
             }
         }
         
-        func renderCommands(for shape: Shape, stroke: StrokeAttributes, fill: FillAttributes) -> [RendererCommand<P.Types>] {
+        func renderCommands(for shape: Shape, stroke: StrokeAttributes, fill: FillAttributes, colorConverter: ColorConverter = DefaultColorConverter()) -> [RendererCommand<P.Types>] {
             var commands = [RendererCommand<P.Types>]()
             let path = provider.createPath(from: shape)
             
             if fill.color != .none {
-                let color = provider.createColor(from: fill.color)
+                let converted = colorConverter.createColor(from: fill.color)
+                let color = provider.createColor(from: converted)
                 let rule = provider.createFillRule(from: fill.rule)
                 commands.append(.setFill(color: color))
                 commands.append(.fill(path, rule: rule))
@@ -87,7 +99,8 @@ extension LayerTree {
             
             if stroke.color != .none,
                stroke.width > 0.0 {
-                let color = provider.createColor(from: stroke.color)
+                let converted = colorConverter.createColor(from: stroke.color)
+                let color = provider.createColor(from: converted)
                 let width = provider.createFloat(from: stroke.width)
                 let cap = provider.createLineCap(from: stroke.cap)
                 let join = provider.createLineJoin(from: stroke.join)
@@ -109,10 +122,11 @@ extension LayerTree {
             return [.draw(image: renderImage)]
         }
         
-        func renderCommands(for text: String, at point: Point, attributes: TextAttributes) -> [RendererCommand<P.Types>] {
+        func renderCommands(for text: String, at point: Point, attributes: TextAttributes, colorConverter: ColorConverter = DefaultColorConverter()) -> [RendererCommand<P.Types>] {
             guard let path = provider.createPath(from: text, at: point, with: attributes) else { return [] }
             
-            let color = provider.createColor(from: attributes.color)
+            let converted = colorConverter.createColor(from: attributes.color)
+            let color = provider.createColor(from: converted)
             let rule = provider.createFillRule(from: .nonzero)
             
             return [.setFill(color: color),
@@ -156,6 +170,23 @@ extension LayerTree {
             let clipPath = provider.createPath(from: paths)
             
             return [.setClip(path: clipPath)]
+        }
+        
+        func renderCommands(forMask layer: Layer?) -> [RendererCommand<P.Types>] {
+            guard let layer = layer else { return [] }
+            
+            let modeCopy = provider.createBlendMode(from: .copy)
+            let modeSourceIn = provider.createBlendMode(from: .sourceIn)
+            
+            var commands = [RendererCommand<P.Types>]()
+            commands.append(.pushTransparencyLayer)
+            commands.append(.setBlend(mode: modeCopy))
+           
+            let drawMask = layer.contents.flatMap{ renderCommands(for: $0, colorConverter: LuminanceColorConverter()) }
+            commands.append(contentsOf: drawMask)
+            
+            commands.append(.setBlend(mode: modeSourceIn))
+            return commands
         }
     }
     

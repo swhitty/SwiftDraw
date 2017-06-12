@@ -127,3 +127,19 @@ extension LayerTree.Color {
     }
 }
 
+protocol ColorConverter {
+    func createColor(from color: LayerTree.Color) -> LayerTree.Color
+}
+
+struct DefaultColorConverter: ColorConverter {
+    func createColor(from color: LayerTree.Color) -> LayerTree.Color {
+        return color
+    }
+}
+
+struct LuminanceColorConverter: ColorConverter {
+    func createColor(from color: LayerTree.Color) -> LayerTree.Color {
+        return color.luminanceToAlpha()
+    }
+}
+
