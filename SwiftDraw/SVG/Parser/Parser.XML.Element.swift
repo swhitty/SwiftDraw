@@ -268,6 +268,9 @@ extension PresentationAttributes {
         stroke = attributes.stroke
         strokeWidth = attributes.strokeWidth
         strokeOpacity = attributes.strokeOpacity
+        strokeLineCap = attributes.strokeLineCap
+        strokeLineJoin = attributes.strokeLineJoin
+        strokeDashArray = attributes.strokeDashArray
         fill = attributes.fill
         fillOpacity = attributes.fillOpacity
         fillRule = attributes.fillRule
