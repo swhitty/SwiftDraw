@@ -126,7 +126,16 @@ extension LayerTree {
             } else if let use = element as? DOM.Use,
                 let eId = use.href.fragment,
                 let e = svg.defs.elements[eId] {
-                return .layer(createLayer(from: e, inheriting: state))
+                
+                let l = createLayer(from: e, inheriting: state)
+                let x = use.x ?? 0.0
+                let y = use.y ?? 0.0
+                
+                if x != 0 || y != 0 {
+                    l.transform.insert(.translate(tx: x, ty: y), at: 0)
+                }
+                
+                return .layer(l)
                 
             } else if let sw = element as? DOM.Switch,
                 let e = sw.childElements.first {
