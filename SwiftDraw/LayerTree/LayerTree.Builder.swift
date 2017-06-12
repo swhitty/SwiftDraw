@@ -89,6 +89,7 @@ extension LayerTree {
             let state = Builder.createState(for: element, inheriting: previousState)
             
             l.transform = Builder.createTransforms(from: element.transform ?? [])
+            l.clip = createClipShapes(for: element)
             
             if let contents = createContents(from: element, with: state) {
                 l.appendContents(contents)
@@ -131,6 +132,13 @@ extension LayerTree {
             }
      
             return nil
+        }
+        
+        func createClipShapes(for element: DOM.GraphicsElement) -> [Shape] {
+            guard let clipId = element.clipPath?.fragment,
+                  let clip = svg.defs.clipPaths.first(where: { $0.id == clipId }) else { return [] }
+            
+            return clip.childElements.flatMap{ Builder.createShape(from: $0) }
         }
         
         static func createShape(from element: DOM.GraphicsElement) -> Shape? {
