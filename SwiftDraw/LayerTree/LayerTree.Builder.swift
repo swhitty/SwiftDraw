@@ -139,6 +139,7 @@ extension LayerTree {
                 
             } else if let sw = element as? DOM.Switch,
                 let e = sw.childElements.first {
+                //TODO: select first element that creates non empty Layer
                 return .layer(createLayer(from: e, inheriting: state))
             }
      
