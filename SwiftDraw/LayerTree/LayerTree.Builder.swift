@@ -89,13 +89,15 @@ extension LayerTree {
             let state = Builder.createState(for: element, inheriting: previousState)
             
             l.transform = Builder.createTransforms(from: element.transform ?? [])
-            l.contents = []
             
             if let contents = createContents(from: element, with: state) {
-                l.contents = [contents]
+                l.appendContents(contents)
             }
             else if let container = element as? ContainerElement {
-                l.contents = container.childElements.map{ .layer(createLayer(from: $0, inheriting: state)) }
+                container.childElements.forEach{
+                    let contents = Layer.Contents.layer(createLayer(from: $0, inheriting: state))
+                    l.appendContents(contents)
+                }
             }
 
             return l

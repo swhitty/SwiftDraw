@@ -56,6 +56,33 @@ extension LayerTree {
             }
         }
         
+        func appendContents(_ contents: Contents) {
+            switch contents {
+            case .layer(let l):
+                guard l.contents.isEmpty == false else { return }
+                
+                //if layer is simple, we can ignore all other properties
+                if let simple = l.simpleContents {
+                    self.contents.append(simple)
+                } else {
+                    self.contents.append(.layer(l))
+                }
+            default:
+                self.contents.append(contents)
+            }
+        }
+        
+        var simpleContents: Contents? {
+            guard self.contents.count == 1,
+                  let first = self.contents.first,
+                  opacity == 1.0,
+                  transform == [],
+                  clip == [],
+                  mask == nil else { return nil }
+            
+            return first
+        }
+        
         static func ==(lhs: Layer, rhs: Layer) -> Bool {
             return lhs.contents == rhs.contents &&
                    lhs.opacity == rhs.opacity &&
