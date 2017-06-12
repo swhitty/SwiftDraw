@@ -33,107 +33,113 @@ import Darwin
 
 
 extension LayerTree {
-    struct Transform: Equatable {
-        var a: Float
-        var b: Float
-        var c: Float
-        var d: Float
-        var tx: Float
-        var ty: Float
+    
+    enum Transform: Equatable {
+        case matrix(Matrix)
+        case scale(sx: Float, sy: Float)
+        case translate(tx: Float, ty: Float)
+        case rotate(radians: Float)
         
-        init() {
-            self.init(a: 0, b: 0, c: 0, d: 0, tx: 0, ty: 0)
+        static var identity: Transform  {
+            let m = Matrix(a: 1, b: 0, c: 0, d: 1, tx: 0, ty: 0)
+            return .matrix(m)
         }
         
-        init(a: Float, b: Float, c: Float, d: Float, tx: Float, ty: Float) {
-            self.a = a
-            self.b = b
-            self.c = c
-            self.d = d
-            self.tx = tx
-            self.ty = ty
+        static func skewX(angle radians: Float) -> Transform  {
+            let m = Matrix(a: 1, b: 0, c: tan(radians), d: 1, tx: 0, ty: 0)
+            return .matrix(m)
         }
         
-        static var identity: Transform {
-            return Transform(a: 1, b: 0, c: 0, d: 1, tx: 0, ty: 0)
+        static func skewY(angle radians: Float) -> Transform  {
+            let m = Matrix(a: 1, b: tan(radians), c: 0, d: 1, tx: 0, ty: 0)
+            return .matrix(m)
+        }
+        
+        struct Matrix: Equatable {
+            var a: Float
+            var b: Float
+            var c: Float
+            var d: Float
+            var tx: Float
+            var ty: Float
+            
+            static func ==(lhs: Matrix, rhs: Matrix) -> Bool {
+                return lhs.a == rhs.a &&
+                    lhs.b == rhs.b &&
+                    lhs.c == rhs.c &&
+                    lhs.d == rhs.d &&
+                    lhs.tx == rhs.tx &&
+                    lhs.ty == rhs.ty
+            }
         }
         
         static func ==(lhs: Transform, rhs: Transform) -> Bool {
-            return lhs.a == rhs.a &&
-                lhs.b == rhs.b &&
-                lhs.c == rhs.c &&
-                lhs.d == rhs.d &&
-                lhs.tx == rhs.tx &&
-                lhs.ty == rhs.ty
-        }
-        
-        func concatenated(_ other: Transform) -> Transform {
-            let (t, m) = (self, other)
-            return Transform(a: (t.a * m.a) + (t.b * m.c),
-                             b: (t.a * m.b) + (t.b * m.d),
-                             c: (t.c * m.a) + (t.d * m.c),
-                             d: (t.c * m.b) + (t.d * m.d),
-                             tx: (t.tx * m.a) + (t.ty * m.c) + m.tx,
-                             ty: (t.tx * m.b) + (t.ty * m.d) + m.ty)
+            switch (lhs, rhs) {
+            case (.matrix(let lVal), .matrix(let rVal)):
+                return lVal == rVal
+            case (.scale(let lVal), .scale(let rVal)):
+                return lVal == rVal
+            case (.translate(let lVal), .translate(let rVal)):
+                return lVal == rVal
+            case (.rotate(let lVal), .rotate(let rVal)):
+                return lVal == rVal
+            default:
+                return false
+            }
         }
     }
+    
 }
 
 extension LayerTree.Transform {
-    init(tx: Float, ty: Float) {
-        self.init(a: 1, b: 0, c: 0, d: 1, tx: tx, ty: ty)
-    }
-    
-    init(sx: Float, sy: Float) {
-        self.init(a: sx, b: 0, c: 0, d: sy, tx: 0, ty: 0)
-    }
-    
-    init(rotate radians: Float) {
-        let sine = sin(radians)
-        let cosine = cos(radians)
-        self.init(a: cosine, b: sine, c: -sine, d: cosine, tx: 0, ty: 0)
-    }
-    
-    init(rotate radians: Float, around point: LayerTree.Point) {
-        let t1 = LayerTree.Transform(tx: point.x, ty: point.y)
-        let r = LayerTree.Transform(rotate: radians)
-        let t2 = LayerTree.Transform(tx: -point.x, ty: -point.y)
-        self = t1.concatenated(r).concatenated(t2)
-    }
-
-    init(skewX radians: Float) {
-        self.init(a: 1, b: 0, c: tan(radians), d: 1, tx: 0, ty: 0)
-    }
-    
-    init(skewY radians: Float) {
-        self.init(a: 1, b: tan(radians), c: 0, d: 1, tx: 0, ty: 0)
+    func toMatrix() -> Matrix {
+        switch self {
+        case .matrix(let m):
+            return m
+        case .scale(let sx, let sy):
+            return Matrix(a: sx, b: 0, c: 0, d: sy, tx: 0, ty: 0)
+        case .translate(let tx, let ty):
+            return Matrix(a: 1, b: 0, c: 0, d: 1, tx: tx, ty: ty)
+        case .rotate(let radians):
+            let sine = sin(radians)
+            let cosine = cos(radians)
+            return Matrix(a: cosine, b: sine, c: -sine, d: cosine, tx: 0, ty: 0)
+        }
     }
 }
 
+extension LayerTree.Transform.Matrix {
+    func concatenated(_ other: LayerTree.Transform.Matrix) -> LayerTree.Transform.Matrix {
+        let (t, m) = (self, other)
+        return LayerTree.Transform.Matrix(a: (t.a * m.a) + (t.b * m.c),
+                                          b: (t.a * m.b) + (t.b * m.d),
+                                          c: (t.c * m.a) + (t.d * m.c),
+                                          d: (t.c * m.b) + (t.d * m.d),
+                                          tx: (t.tx * m.a) + (t.ty * m.c) + m.tx,
+                                          ty: (t.tx * m.b) + (t.ty * m.d) + m.ty)
+    }
+    
+    var customDescription: String {
+        return "matrix(\(a),\(b),\(c),\(d),\(tx),\(ty))"
+    }
+}
 
 extension LayerTree.Transform {
     var customDescription: String {
-        //try and recreate the transform matrix to see if it matches any common operations
-        let translate = LayerTree.Transform(tx: tx, ty: ty)
-        let scale = LayerTree.Transform(sx: a, sy: d)
-        let rotate = LayerTree.Transform(rotate: asin(b))
-        let skewX = LayerTree.Transform(skewX: atan(c))
-        let skewY = LayerTree.Transform(skewY: atan(b))
-
+        
         if self == .identity {
             return "identity"
-        } else if self == translate {
-            return "translate(\(tx),\(ty))"
-        } else if self == scale {
-            return "scale(\(a),\(d))"
-        } else if self == rotate {
-            return "rotate(\(asin(b)))"
-        } else if self == skewX {
-            return "skewX(\(atan(c)))"
-        } else if self == skewY {
-            return "skewY(\(atan(b)))"
-        } else {
-            return "matrix(\(a),\(b),\(c),\(d),\(tx),\(ty))"
+        }
+
+        switch self {
+        case .matrix(let m):
+            return m.customDescription
+        case .scale(let sx, let sy):
+            return "scale(\(sx), \(sy))"
+        case .translate(let tx, let ty):
+             return "translate(\(tx), \(ty))"
+        case .rotate(let angle):
+            return "rotate(\(angle)"
         }
     }
 }

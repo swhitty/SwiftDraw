@@ -78,9 +78,7 @@ public extension CGContext {
     func draw(_ image: Image, in rect: CGRect? = nil)  {
         let defaultRect = CGRect(x: 0, y: 0, width: image.size.width, height: image.size.height)
         let renderer = CGRenderer(context: self)
-        
-        print(self.ctm)
-        
+
         guard let rect = rect, rect != defaultRect else {
             renderer.perform(image.commands)
             return

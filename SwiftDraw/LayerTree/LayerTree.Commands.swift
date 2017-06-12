@@ -127,9 +127,26 @@ extension LayerTree {
         }
         
         func renderCommands(forTransforms transforms: [Transform]) -> [RendererCommand<P.Types>] {
-            guard transforms != [.identity] else { return [] }
-            
-            return transforms.map{ .concatenate(transform: provider.createTransform(from: $0)) }
+            return transforms.map{ renderCommand(forTransform: $0) }
+        }
+        
+        func renderCommand(forTransform transform: Transform) -> RendererCommand<P.Types> {
+            switch transform {
+            case .matrix(let m):
+                let t = provider.createTransform(from: m)
+                return .concatenate(transform: t)
+            case .translate(let t):
+                let tx = provider.createFloat(from: t.tx)
+                let ty = provider.createFloat(from: t.ty)
+                return .translate(tx: tx, ty: ty)
+            case .scale(let s):
+                let sx = provider.createFloat(from: s.sx)
+                let sy = provider.createFloat(from: s.sy)
+                return .scale(sx: sx, sy: sy)
+            case .rotate(let r):
+                let radians = provider.createFloat(from: r)
+                return .rotate(angle: radians)
+            }
         }
         
         func renderCommands(forClip shapes: [Shape]) -> [RendererCommand<P.Types>] {

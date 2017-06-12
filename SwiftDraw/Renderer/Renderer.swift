@@ -32,7 +32,7 @@ protocol RendererTypeProvider {
     func createRect(from rect: LayerTree.Rect) -> Types.Rect
     func createColor(from color: LayerTree.Color) -> Types.Color
     func createBlendMode(from mode: LayerTree.BlendMode) -> Types.BlendMode
-    func createTransform(from transform: LayerTree.Transform) -> Types.Transform
+    func createTransform(from transform: LayerTree.Transform.Matrix) -> Types.Transform
     func createPath(from shape: LayerTree.Shape) -> Types.Path
     func createPath(from subPaths: [Types.Path]) -> Types.Path
     func createPath(from text: String, at origin: LayerTree.Point, with attributes: LayerTree.TextAttributes) -> Types.Path?

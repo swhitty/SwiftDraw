@@ -97,7 +97,7 @@ struct CGProvider: RendererTypeProvider {
         case .sourceIn: return .sourceIn
         }
     }
-    func createTransform(from transform: LayerTree.Transform) -> CGAffineTransform {
+    func createTransform(from transform: LayerTree.Transform.Matrix) -> CGAffineTransform {
         return CGAffineTransform(a: CGFloat(transform.a),
                                  b: CGFloat(transform.b),
                                  c: CGFloat(transform.c),

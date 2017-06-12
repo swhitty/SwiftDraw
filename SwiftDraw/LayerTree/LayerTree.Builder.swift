@@ -45,9 +45,9 @@ extension LayerTree {
             let l = createLayer(from: svg, inheriting: State())
     
             if let viewBox = svg.viewBox {
-                l.transform = [Builder.createTransform(for: viewBox,
-                                                       width: svg.width,
-                                                       height: svg.height)]
+                l.transform = Builder.createTransform(for: viewBox,
+                                                      width: svg.width,
+                                                      height: svg.height)
             } else {
                 l.transform = []
             }
@@ -66,13 +66,14 @@ extension LayerTree {
 //            return l
 //        }
 //        
-        static func createTransform(for viewBox: DOM.Svg.ViewBox, width: DOM.Length, height: DOM.Length) -> LayerTree.Transform {
+        static func createTransform(for viewBox: DOM.Svg.ViewBox, width: DOM.Length, height: DOM.Length) -> [LayerTree.Transform] {
             
             let sx = LayerTree.Float(width) / viewBox.width
             let sy = LayerTree.Float(height) / viewBox.height
-            return LayerTree.Transform(a: sx, b: 0.0, c: 0.0, d: sy, tx: -viewBox.x * sx, ty: -viewBox.y * sy)
+            
+            return [.scale(sx: sx, sy: sy),
+                    .translate(tx: -viewBox.x, ty: -viewBox.y)]
         }
-        
         
         func createLayers(for elements: [DOM.GraphicsElement], inheriting state: State) -> [Layer] {
             var layers = Array<Layer>()
@@ -112,6 +113,10 @@ extension LayerTree {
                 att.fontName = text.fontFamily ?? att.fontName
                 att.size = text.fontSize ?? att.size
                 return .text(text.value, point, att)
+            } else if let image = element as? DOM.Image,
+                      let decoded = image.href.decodedData,
+                      let i = Image(mimeType: decoded.mimeType, data: decoded.data) {
+                return .image(i)
                 
             } else if let use = element as? DOM.Use,
                 let eId = use.href.fragment,
@@ -248,46 +253,44 @@ extension LayerTree.Builder {
 }
 
 extension LayerTree.Builder {
-    static func createTransform(for dom: DOM.Transform) -> LayerTree.Transform {
+    static func createTransform(for dom: DOM.Transform) -> [LayerTree.Transform] {
         switch dom {
         case .matrix(let m):
-            return  LayerTree.Transform(a: Float(m.a),
-                                        b: Float(m.b),
-                                        c: Float(m.c),
-                                        d: Float(m.d),
-                                        tx: Float(m.e),
-                                        ty: Float(m.f))
-        case .translate(let t):
+            let matrix = LayerTree.Transform.Matrix(a: Float(m.a),
+                                                    b: Float(m.b),
+                                                    c: Float(m.c),
+                                                    d: Float(m.d),
+                                                    tx: Float(m.e),
+                                                    ty: Float(m.f))
+            return [.matrix(matrix)]
             
-            return  LayerTree.Transform(tx: Float(t.tx),
-                                        ty: Float(t.ty))
+        case .translate(let t):
+            return [.translate(tx: Float(t.tx), ty: Float(t.ty))]
+            
         case .scale(let s):
-            return  LayerTree.Transform(sx: Float(s.sx),
-                                        sy: Float(s.sy))
+            return [.scale(sx: Float(s.sx), sy: Float(s.sy))]
+            
         case .rotate(let angle):
             let radians = Float(angle)*Float.pi/180.0
-            return  LayerTree.Transform(rotate: radians)
+            return [.rotate(radians: radians)]
             
         case .rotatePoint(let r):
             let radians = Float(r.angle)*Float.pi/180.0
-            let point  = LayerTree.Point(r.cx, r.cy)
-            return LayerTree.Transform(rotate: radians,
-                                       around: point)
+            let t1 = LayerTree.Transform.translate(tx: r.cx, ty: r.cy)
+            let t2 = LayerTree.Transform.rotate(radians: radians)
+            let t3 = LayerTree.Transform.translate(tx: -r.cx, ty: -r.cy)
+            return [t1, t2, t3]
             
         case .skewX(let angle):
             let radians = Float(angle)*Float.pi/180.0
-            return LayerTree.Transform(skewX: radians)
+            return [.skewX(angle: radians)]
         case .skewY(let angle):
             let radians = Float(angle)*Float.pi/180.0
-            return LayerTree.Transform(skewY: radians)
+            return [.skewY(angle: radians)]
         }
     }
     
-    static func createTransform(concatenating transforms: [DOM.Transform]) -> LayerTree.Transform {
-        return transforms.reduce(LayerTree.Transform.identity){ $0.0.concatenated(createTransform(for: $0.1)) }
-    }
-    
     static func createTransforms(from transforms: [DOM.Transform]) -> [LayerTree.Transform] {
-        return transforms.map{ createTransform(for: $0) }
+        return transforms.flatMap{ createTransform(for: $0) }
     }
 }
