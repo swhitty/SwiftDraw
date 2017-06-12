@@ -75,9 +75,9 @@ class RendererCoreGraphicsTypesTests: XCTestCase {
     }
     
     func testTransform() {
-        let t1 = LayerTree.Transform(a: 10, b: 20, c: 30, d: 40, tx: 50, ty: 60)
+        let m = LayerTree.Transform.Matrix(a: 10, b: 20, c: 30, d: 40, tx: 50, ty: 60)
         let expected = CGAffineTransform(a: 10, b: 20, c: 30, d: 40, tx: 50, ty: 60)
-        XCTAssertEqual(CGProvider().createTransform(from: t1), expected)
+        XCTAssertEqual(CGProvider().createTransform(from: m), expected)
     }
     
     func testBlendMode() {

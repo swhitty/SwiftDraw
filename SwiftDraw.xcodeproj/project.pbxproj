@@ -31,6 +31,7 @@
 		D933D0A81E5D1F7F00937A59 /* DOM.Element.swift in Sources */ = {isa = PBXBuildFile; fileRef = D933D0A71E5D1F7F00937A59 /* DOM.Element.swift */; };
 		D933D0AC1E5E85D000937A59 /* TransformTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D933D0AB1E5E85D000937A59 /* TransformTests.swift */; };
 		D933D0AE1E5E868400937A59 /* Parser.XML.Transform.swift in Sources */ = {isa = PBXBuildFile; fileRef = D933D0AD1E5E868400937A59 /* Parser.XML.Transform.swift */; };
+		D93F02DE1EEEC7E200AA27C5 /* LayerTree.TransformTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D978A4491EE287D200727106 /* LayerTree.TransformTests.swift */; };
 		D949F3E61EE3A62A006700C5 /* LayerTree.Builder.swift in Sources */ = {isa = PBXBuildFile; fileRef = D949F3E51EE3A62A006700C5 /* LayerTree.Builder.swift */; };
 		D949F3E71EE3A62A006700C5 /* LayerTree.Builder.swift in Sources */ = {isa = PBXBuildFile; fileRef = D949F3E51EE3A62A006700C5 /* LayerTree.Builder.swift */; };
 		D949F3EC1EE3CD34006700C5 /* LayerTree.Builder.Path.swift in Sources */ = {isa = PBXBuildFile; fileRef = D949F3EB1EE3CD34006700C5 /* LayerTree.Builder.Path.swift */; };
@@ -848,6 +849,7 @@
 				D978A43F1EE2730500727106 /* LayerTree.ColorTests.swift in Sources */,
 				D9778E481E6ED3EF00FF6EBB /* ValueParserTests.swift in Sources */,
 				D9778E561E6ED3F500FF6EBB /* CharacterSetTests.swift in Sources */,
+				D93F02DE1EEEC7E200AA27C5 /* LayerTree.TransformTests.swift in Sources */,
 				D9778E571E6ED3F500FF6EBB /* ScannerTests.swift in Sources */,
 				D9778E591E6ED3FC00FF6EBB /* DOM.ElementTests.swift in Sources */,
 				D9778E4B1E6ED3EF00FF6EBB /* Scanner1Tests.swift in Sources */,

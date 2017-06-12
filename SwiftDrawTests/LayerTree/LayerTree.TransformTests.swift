@@ -31,16 +31,18 @@ import XCTest
 
 class LayerTreeTransformTests: XCTestCase {
     
+    typealias Matrix = LayerTree.Transform.Matrix
+    
     func testTransformEquality() {
-        let t1 = LayerTree.Transform(a: 0, b: 1, c: 2, d: 3, tx: 4, ty: 5)
-        let t2 = LayerTree.Transform(a: 5, b: 4, c: 3, d: 2, tx: 1, ty: 0)
-        let t3 = LayerTree.Transform.identity
+        let t1 = Matrix(a: 0, b: 1, c: 2, d: 3, tx: 4, ty: 5)
+        let t2 = Matrix(a: 5, b: 4, c: 3, d: 2, tx: 1, ty: 0)
+        let t3 = LayerTree.Transform.identity.toMatrix()
         
-        XCTAssertEqual(t1, LayerTree.Transform(a: 0, b: 1, c: 2, d: 3, tx: 4, ty: 5))
+        XCTAssertEqual(t1, Matrix(a: 0, b: 1, c: 2, d: 3, tx: 4, ty: 5))
         XCTAssertEqual(t1, t1)
-        XCTAssertEqual(t2, LayerTree.Transform(a: 5, b: 4, c: 3, d: 2, tx: 1, ty: 0))
+        XCTAssertEqual(t2, Matrix(a: 5, b: 4, c: 3, d: 2, tx: 1, ty: 0))
         XCTAssertEqual(t2, t2)
-        XCTAssertEqual(t3, .identity)
+        XCTAssertEqual(t3, Matrix(a: 1, b: 0, c: 0, d: 1, tx: 0, ty: 0))
         XCTAssertEqual(t3, t3)
         
         XCTAssertNotEqual(t1, t2)
