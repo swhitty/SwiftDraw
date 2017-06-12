@@ -84,10 +84,12 @@ extension LayerTree {
         }
         
         func createLayer(from element: DOM.GraphicsElement, inheriting previousState: State) -> Layer {
+            let state = Builder.createState(for: element, inheriting: previousState)
             let l = Layer()
             
-            let state = Builder.createState(for: element, inheriting: previousState)
-            
+            guard state.display == .inline else { return l }
+
+        
             l.transform = Builder.createTransforms(from: element.transform ?? [])
             l.clip = createClipShapes(for: element)
             
