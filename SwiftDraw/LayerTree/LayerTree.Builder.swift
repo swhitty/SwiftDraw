@@ -42,30 +42,30 @@ extension LayerTree {
         }
         
         func createLayer() -> Layer {
-            let l = createLayer(from: svg, with: State())
+            let l = createLayer(from: svg, inheriting: State())
     
             if let viewBox = svg.viewBox {
-                l.transform = Builder.createTransform(for: viewBox,
-                                                      width: svg.width,
-                                                      height: svg.height)
+                l.transform = [Builder.createTransform(for: viewBox,
+                                                       width: svg.width,
+                                                       height: svg.height)]
             } else {
-                l.transform = .identity
+                l.transform = []
             }
      
             return l
         }
         
-        func createLayer(from element: DOM.GraphicsElement, with children: [DOM.GraphicsElement], inheriting state: State) -> Layer {
-            let l = Layer()
-            
-            let newState = Builder.createState(for: element, inheriting: state)
-            
-            l.transform = Builder.createTransform(concatenating: element.transform ?? [])
-            l.contents = createLayers(for: children, inheriting: newState).map{ .layer($0) }
-            
-            return l
-        }
-        
+//        func createLayer(from element: DOM.GraphicsElement, with children: [DOM.GraphicsElement], inheriting state: State) -> Layer {
+//            let l = Layer()
+//            
+//            let newState = Builder.createState(for: element, inheriting: state)
+//            
+//            l.transform = Builder.createTransform(concatenating: element.transform ?? [])
+//            l.contents = createLayers(for: children, inheriting: newState).map{ .layer($0) }
+//            
+//            return l
+//        }
+//        
         static func createTransform(for viewBox: DOM.Svg.ViewBox, width: DOM.Length, height: DOM.Length) -> LayerTree.Transform {
             
             let sx = LayerTree.Float(width) / viewBox.width
@@ -77,19 +77,26 @@ extension LayerTree {
         func createLayers(for elements: [DOM.GraphicsElement], inheriting state: State) -> [Layer] {
             var layers = Array<Layer>()
             for element in elements {
-                layers.append(createLayer(from: element, with: state))
+                layers.append(createLayer(from: element, inheriting: state))
             }
             return layers
         }
         
-        func createLayer(from element: DOM.GraphicsElement, with state: State) -> Layer {
+        func createLayer(from element: DOM.GraphicsElement, inheriting previousState: State) -> Layer {
             let l = Layer()
             
-            let newState = Builder.createState(for: element, inheriting: state)
+            let state = Builder.createState(for: element, inheriting: previousState)
             
-            l.transform = Builder.createTransform(concatenating: element.transform ?? [])
-            l.contents = createContents(from: element, with: newState).map{ [$0] } ?? []
+            l.transform = Builder.createTransforms(from: element.transform ?? [])
+            l.contents = []
             
+            if let contents = createContents(from: element, with: state) {
+                l.contents = [contents]
+            }
+            else if let container = element as? ContainerElement {
+                l.contents = container.childElements.map{ .layer(createLayer(from: $0, inheriting: state)) }
+            }
+
             return l
         }
         
@@ -107,17 +114,15 @@ extension LayerTree {
                 return .text(text.value, point, att)
                 
             } else if let use = element as? DOM.Use,
-                      let eId = use.href.fragment,
-                      let e = svg.defs.elements[eId] {
-                return .layer(createLayer(from: e, with: state))
+                let eId = use.href.fragment,
+                let e = svg.defs.elements[eId] {
+                return .layer(createLayer(from: e, inheriting: state))
                 
             } else if let sw = element as? DOM.Switch,
-                      let e = sw.childElements.first {
-                return .layer(createLayer(from: e, with: state))
-                
-            } else if let container = element as? ContainerElement {
-                return .layer(createLayer(from: element, with: container.childElements, inheriting: state))
+                let e = sw.childElements.first {
+                return .layer(createLayer(from: e, inheriting: state))
             }
+     
             return nil
         }
         
@@ -281,5 +286,8 @@ extension LayerTree.Builder {
     static func createTransform(concatenating transforms: [DOM.Transform]) -> LayerTree.Transform {
         return transforms.reduce(LayerTree.Transform.identity){ $0.0.concatenated(createTransform(for: $0.1)) }
     }
-
+    
+    static func createTransforms(from transforms: [DOM.Transform]) -> [LayerTree.Transform] {
+        return transforms.map{ createTransform(for: $0) }
+    }
 }

@@ -25,7 +25,7 @@ extension LayerTree {
             guard layer.opacity > 0.0 else { return [] }
             
             let opacityCommands = renderCommands(forOpacity: layer.opacity)
-            let transformCommands = renderCommands(forTransform: layer.transform)
+            let transformCommands = renderCommands(forTransforms: layer.transform)
             let clipCommands = renderCommands(forClip: layer.clip)
             
             //TODO: handle layer.mask
@@ -126,10 +126,10 @@ extension LayerTree {
                     .pushTransparencyLayer]
         }
         
-        func renderCommands(forTransform transform: Transform) -> [RendererCommand<P.Types>] {
-            guard transform != .identity else { return [] }
+        func renderCommands(forTransforms transforms: [Transform]) -> [RendererCommand<P.Types>] {
+            guard transforms != [.identity] else { return [] }
             
-            return [.concatenate(transform: provider.createTransform(from: transform))]
+            return transforms.map{ .concatenate(transform: provider.createTransform(from: $0)) }
         }
         
         func renderCommands(forClip shapes: [Shape]) -> [RendererCommand<P.Types>] {

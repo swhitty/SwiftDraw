@@ -30,7 +30,7 @@ extension LayerTree {
     class Layer: Equatable {
         var contents: [Contents] = []
         var opacity: Float = 1.0
-        var transform: Transform = .identity
+        var transform: [Transform] = []
         var clip: [Shape] = []
         var mask: Layer?
         
@@ -119,3 +119,61 @@ extension LayerTree {
         }
     }
 }
+
+
+extension LayerTree.Layer {
+    
+    public var customDescription: String {
+        return customDescription(indent: 0)
+    }
+    
+    func customDescription(indent: Int) -> String {
+        
+        let whitepace = String(repeating: " ", count: indent)
+        
+        var desc = "\(whitepace)Layer\n"
+        
+        if !transform.isEmpty {
+            let allTransforms = transform.map{ $0.customDescription}.joined(separator: ", ")
+            desc += "\(whitepace)Transform: \(allTransforms)\n"
+        }
+        
+        self.contents.forEach{
+            desc += $0.customDescription(indent: indent + 3) + "\n"
+        }
+        
+        return desc
+    }
+    
+}
+
+extension LayerTree.Layer.Contents {
+    public var customDescription: String {
+        return customDescription(indent: 0)
+    }
+    
+    func customDescription(indent: Int) -> String {
+        
+        var desc = String(repeating: " ", count: indent)
+        
+        switch self {
+        case .shape(let s, _, _):
+            desc += "Shape: \(s.customDescription)"
+        case .image(_):
+            desc += "Image"
+        case .text(let text, _, _):
+            desc += "Text: \(text)"
+        case .layer(let l):
+            desc += "Layer:\n"
+            desc += l.customDescription(indent: indent + 3)
+        }
+        
+        return desc
+    }
+}
+
+
+
+
+
+

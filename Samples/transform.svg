@@ -22,7 +22,7 @@
   	<use xlink:href="#r1" transform="skewX(15)" />
   </g>
   
-  <g fill="yellow" transform="translate(370, 50)">
+  <g fill="yellow" transform="matrix(1, 0, 0, 1, 370, 50)">
   	<use xlink:href="#r" />
   	<use xlink:href="#r1" transform="skewY(15)" />
   </g>

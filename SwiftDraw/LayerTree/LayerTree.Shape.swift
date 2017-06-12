@@ -55,3 +55,16 @@ extension LayerTree {
         }
     }
 }
+
+extension LayerTree.Shape {
+    var customDescription: String {
+        switch self {
+        case .line: return "Line"
+        case .rect: return "Rect"
+        case .ellipse: return "Ellipse"
+        case .polygon: return "Polygon"
+        case .path: return "Path"
+        }
+    }
+}
+

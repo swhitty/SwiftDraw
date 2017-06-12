@@ -81,7 +81,7 @@ extension LayerTree {
 
 extension LayerTree.Transform {
     init(tx: Float, ty: Float) {
-        self.init(a: 0, b: 0, c: 0, d: 0, tx: tx, ty: ty)
+        self.init(a: 1, b: 0, c: 0, d: 1, tx: tx, ty: ty)
     }
     
     init(sx: Float, sy: Float) {
@@ -107,5 +107,33 @@ extension LayerTree.Transform {
     
     init(skewY radians: Float) {
         self.init(a: 1, b: tan(radians), c: 0, d: 1, tx: 0, ty: 0)
+    }
+}
+
+
+extension LayerTree.Transform {
+    var customDescription: String {
+        //try and recreate the transform matrix to see if it matches any common operations
+        let translate = LayerTree.Transform(tx: tx, ty: ty)
+        let scale = LayerTree.Transform(sx: a, sy: d)
+        let rotate = LayerTree.Transform(rotate: asin(b))
+        let skewX = LayerTree.Transform(skewX: atan(c))
+        let skewY = LayerTree.Transform(skewY: atan(b))
+
+        if self == .identity {
+            return "identity"
+        } else if self == translate {
+            return "translate(\(tx),\(ty))"
+        } else if self == scale {
+            return "scale(\(a),\(d))"
+        } else if self == rotate {
+            return "rotate(\(asin(b)))"
+        } else if self == skewX {
+            return "skewX(\(atan(c)))"
+        } else if self == skewY {
+            return "skewY(\(atan(b)))"
+        } else {
+            return "matrix(\(a),\(b),\(c),\(d),\(tx),\(ty))"
+        }
     }
 }
