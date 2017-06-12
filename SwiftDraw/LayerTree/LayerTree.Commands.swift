@@ -63,11 +63,10 @@ extension LayerTree {
 
             if !opacityCommands.isEmpty ||
                !transformCommands.isEmpty ||
-               !clipCommands.isEmpty {
+               !clipCommands.isEmpty ||
+               !maskCommands.isEmpty {
                 commands.append(.popState)
             }
-            
-        
             
             return commands
         }

@@ -2,17 +2,47 @@
 <svg xmlns="http://www.w3.org/2000/svg"
 	 xmlns:ns="http://www.w3.org/2000/svg" 
 	 xmlns:xlink="http://www.w3.org/1999/xlink" 
-	 width="400" height="400" viewBox="0 0 400 400" stroke-width="4" stroke="black" >
+	 width="200" height="200" viewBox="0 0 200 200" >
+	 
+<defs>
+	<mask id="cross">
+		<circle cx="25" cy="25" r="25" fill="white" />
+		<rect width="4" height="30" x="23" y="10" fill="black" />
+		<rect width="30" height="4" x="10" y="23" fill="black" />
+	</mask>
+	
+	<mask id="dot">
+		<rect width="50" height="50" x="-5" y="-5" fill="blue" />
+		<circle cx="5" cy="5" r="5" fill="white" />
+		<circle cx="15" cy="5" r="5" fill="black" />
+		<circle cx="25" cy="5" r="5" fill="red" />
+		<circle cx="35" cy="5" r="5" fill="blue" />
+		<circle cx="5" cy="15" r="5" fill="green" />
+		<circle cx="15" cy="15" r="5" fill="pink" />
+		<circle cx="25" cy="15" r="5" fill="orange" />
+		<circle cx="35" cy="15" r="5" fill="yellow" />
+		<circle cx="5" cy="25" r="5" fill="orange" />
+		<circle cx="15" cy="25" r="5" fill="#ff00ff" />
+		<circle cx="25" cy="25" r="5" fill="#808080" />
+		<circle cx="35" cy="25" r="5" fill="#ffff00" />
+		<circle cx="5" cy="35" r="5" fill="#00ffff" />
+		<circle cx="15" cy="35" r="5" fill="#ff5555" />
+		<circle cx="25" cy="35" r="5" fill="#55ff55" />
+		<circle cx="35" cy="35" r="5" fill="#ff55ff" />
+	</mask>
+</defs>
 
-	<defs>
-	  <polygon id="star" points="100,10 40,198 190,78, 10,78, 160,198" fill-rule="nonzero" />
-	  <image id="dot" width="6" height="6" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg==" />
-	</defs>
+<g transform="translate(60, 60)">
+<rect width="60" height="60" x="-5" y="-5" fill="magenta" />
+<rect width="100" height="100" x="0" y="0" fill="yellow" mask="url(#cross)"/>
+</g>
 
-  
-	<use xlink:href="#star" x="0" y="0" fill="gold" stroke="orange" transforma="translate(100, 300)  scale(0.5) rotate(50, 80, 80)" />
- 
- 
-	 <use xlink:href="#star" x="0" y="0" fill="gold" stroke="orange" transform="translate(100, 300)  scale(0.5) rotate(-20, 80, 80)" />
-  
+<g transform="translate(5, 60)">
+<rect width="50" height="50" x="-5" y="-5" fill="yellow" />
+<rect width="50" height="50" x="-5" y="-5" fill="blue" mask="url(#dot)"/>
+</g>
+
+
+
+
 </svg>
