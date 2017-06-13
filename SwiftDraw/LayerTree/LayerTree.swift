@@ -132,6 +132,10 @@ struct LayerTree {
             return Rect(x: 0, y: 0, width: 0, height: 0)
         }
         
+        var hashValue: Int {
+            return (21 &* origin.hashValue) &+ (31 &* size.hashValue)
+        }
+        
         static func ==(lhs: Rect, rhs: Rect) -> Bool {
             return lhs.origin == rhs.origin && lhs.size == rhs.size
         }
