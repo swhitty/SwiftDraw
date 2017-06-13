@@ -50,6 +50,12 @@ class LayerTreeColorTests: XCTestCase {
         XCTAssertNotEqual(someColor, anotherColor)
     }
     
+    func testHashValue() {
+        XCTAssertNotEqual(noColor.hashValue, someColor.hashValue)
+        XCTAssertNotEqual(noColor.hashValue, anotherColor.hashValue)
+        XCTAssertNotEqual(someColor.hashValue, anotherColor.hashValue)
+    }
+    
     func testStaticColors() {
         XCTAssertEqual(Color.black, .rgba(r: 0, g: 0, b: 0, a: 1.0))
         XCTAssertEqual(Color.white, .rgba(r: 1, g: 1, b: 1, a: 1.0))
