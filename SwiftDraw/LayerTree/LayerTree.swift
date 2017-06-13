@@ -40,7 +40,7 @@ struct LayerTree {
         case unsupported(Any)
     }
     
-    struct Point: Equatable {
+    struct Point: Hashable {
         var x: Float
         var y: Float
         
@@ -56,6 +56,10 @@ struct LayerTree {
         
         static var zero: Point {
             return Point(0, 0)
+        }
+        
+        var hashValue: Int {
+            return (21 &* x.hashValue) &+ (31 &* y.hashValue)
         }
         
         static func ==(lhs: Point, rhs: Point) -> Bool {
