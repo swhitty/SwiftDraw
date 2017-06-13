@@ -78,6 +78,16 @@ class LayerTreeGeometryTests: XCTestCase {
         XCTAssertNotEqual(s2, s3)
     }
     
+    func testSizeHashValue() {
+        let s1 = LayerTree.Size(10.0, 20.0)
+        let s2 = LayerTree.Size(20.0, 10.0)
+        let s3 = LayerTree.Size(0.0, 0.0)
+        
+        XCTAssertNotEqual(s1.hashValue, s2.hashValue)
+        XCTAssertNotEqual(s1.hashValue, s3.hashValue)
+        XCTAssertNotEqual(s2.hashValue, s3.hashValue)
+    }
+    
     func testRectEquality() {
         let r1 = LayerTree.Rect(x: 10.0, y: 20.0, width: 30.0, height: 40.0)
         let r2 = LayerTree.Rect(x: 40.0, y: 30.0, width: 20.0, height: 10.0)

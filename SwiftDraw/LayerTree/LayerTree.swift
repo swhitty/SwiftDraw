@@ -67,7 +67,7 @@ struct LayerTree {
         }
     }
     
-    struct Size: Equatable {
+    struct Size: Hashable {
         var width: Float
         var height: Float
         
@@ -83,6 +83,10 @@ struct LayerTree {
         
         static var zero: Size {
             return Size(0, 0)
+        }
+        
+        var hashValue: Int {
+            return (21 &* width.hashValue) &+ (31 &* height.hashValue)
         }
         
         static func ==(lhs: Size, rhs: Size) -> Bool {
