@@ -92,6 +92,42 @@ class LayerTreePathTests: XCTestCase {
         XCTAssertNotEqual(cubic2, close)
     }
     
+    func testSegmentHashValue() {
+        let move1 = LayerTree.Path.Segment.move(to: .zero)
+        let move2 = LayerTree.Path.Segment.move(to: Point(10, 20))
+        let line1 = LayerTree.Path.Segment.line(to: .zero)
+        let line2 = LayerTree.Path.Segment.line(to: Point(10, 20))
+        let cubic1 = LayerTree.Path.Segment.cubic(to: .zero,
+                                                  control1: Point(10, 20),
+                                                  control2: Point(30, 40))
+        let cubic2 = LayerTree.Path.Segment.cubic(to: Point(40, 30),
+                                                  control1: Point(20, 10),
+                                                  control2: .zero)
+        let close = LayerTree.Path.Segment.close
+        
+        XCTAssertNotEqual(move1.hashValue, move2.hashValue)
+        XCTAssertNotEqual(move1.hashValue, line1.hashValue)
+        XCTAssertNotEqual(move1.hashValue, line2.hashValue)
+        XCTAssertNotEqual(move1.hashValue, cubic1.hashValue)
+        XCTAssertNotEqual(move1.hashValue, cubic2.hashValue)
+        XCTAssertNotEqual(move1.hashValue, close.hashValue)
+        XCTAssertNotEqual(move2.hashValue, line1.hashValue)
+        XCTAssertNotEqual(move2.hashValue, line2.hashValue)
+        XCTAssertNotEqual(move2.hashValue, cubic1.hashValue)
+        XCTAssertNotEqual(move2.hashValue, cubic2.hashValue)
+        XCTAssertNotEqual(move2.hashValue, close.hashValue)
+        XCTAssertNotEqual(line1.hashValue, line2.hashValue)
+        XCTAssertNotEqual(line1.hashValue, cubic1.hashValue)
+        XCTAssertNotEqual(line1.hashValue, cubic2.hashValue)
+        XCTAssertNotEqual(line1.hashValue, close.hashValue)
+        XCTAssertNotEqual(line2.hashValue, cubic1.hashValue)
+        XCTAssertNotEqual(line2.hashValue, cubic2.hashValue)
+        XCTAssertNotEqual(line2.hashValue, close.hashValue)
+        XCTAssertNotEqual(cubic1.hashValue, cubic2.hashValue)
+        XCTAssertNotEqual(cubic1.hashValue, close.hashValue)
+        XCTAssertNotEqual(cubic2.hashValue, close.hashValue)
+    }
+    
     func testPathEquality() {
         
         let p1 = LayerTree.Path()
