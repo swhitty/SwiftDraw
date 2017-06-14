@@ -148,6 +148,16 @@ class LayerTreePathTests: XCTestCase {
         XCTAssertNotEqual(p2, p3)
     }
     
+    func testPathHashValue() {
+        let p1 = LayerTree.Path()
+        let p2 = LayerTree.Path([.move(to: .zero), .line(to: Point(100,100)), .close])
+        let p3 = LayerTree.Path([.move(to: .zero), .close])
+        
+        XCTAssertNotEqual(p1.hashValue, p2.hashValue)
+        XCTAssertNotEqual(p1.hashValue, p3.hashValue)
+        XCTAssertNotEqual(p2.hashValue, p3.hashValue)
+    }
+    
     func testMove() {
 
         var m = LayerTree.Builder.createMove(from: .move(x: 10, y: 10, space: .absolute), last: .zero)
