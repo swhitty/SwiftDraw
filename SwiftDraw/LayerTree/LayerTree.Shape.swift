@@ -30,12 +30,27 @@
 //
 
 extension LayerTree {
-    enum Shape: Equatable {
+    enum Shape: Hashable {
         case line(between: [Point])
         case rect(within: Rect, radii: Size)
         case ellipse(within: Rect)
         case polygon(between: [Point])
         case path(Path)
+        
+        var hashValue: Int {
+            switch self {
+            case .line(let points):
+                return points.reduce(11){ $0 &+ $1.hashValue }
+            case .rect(let rect, let radii):
+                return 21 &+ rect.hashValue &+ radii.hashValue
+            case .ellipse(let rect):
+                return 31 &+ rect.hashValue
+            case .polygon(let points):
+                return points.reduce(41){ $0 &+ $1.hashValue }
+            case .path(let path):
+                return 51 &+ path.hashValue
+            }
+        }
         
         static func ==(lhs: Shape, rhs: Shape) -> Bool {
             switch (lhs, rhs) {

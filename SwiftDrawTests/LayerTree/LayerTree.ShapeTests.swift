@@ -35,33 +35,38 @@ class LayerTreeShapeTests: XCTestCase {
     typealias Rect = LayerTree.Rect
     typealias Size = LayerTree.Size
     typealias Path = LayerTree.Path
+    typealias Shape = LayerTree.Shape
     
     func testShapeEquality() {
-        let s1 = LayerTree.Shape.line(between: [.zero, Point(100, 200)])
-        let s2 = LayerTree.Shape.rect(within: .zero, radii: Size(10, 20))
-        let s3 = LayerTree.Shape.ellipse(within: .zero)
-        let s4 = LayerTree.Shape.polygon(between: [.zero, Point(10, 20)])
-        let s5 = LayerTree.Shape.path(Path())
+        let s1 = Shape.line(between: [.zero, Point(100, 200)])
+        let s2 = Shape.rect(within: .zero, radii: Size(10, 20))
+        let s3 = Shape.ellipse(within: .zero)
+        let s4 = Shape.polygon(between: [.zero, Point(10, 20)])
+        let s5 = Shape.path(Path())
         
         XCTAssertEqual(s1, s1)
         XCTAssertEqual(s1, .line(between: [.zero, Point(100, 200)]))
         XCTAssertNotEqual(s1, .line(between: []))
+        XCTAssertNotEqual(s1.hashValue, Shape.line(between: []).hashValue)
         
         XCTAssertEqual(s2, s2)
         XCTAssertEqual(s2, .rect(within: .zero, radii: Size(10, 20)))
         XCTAssertNotEqual(s2, .rect(within: .zero, radii: .zero))
+        XCTAssertNotEqual(s2.hashValue, Shape.rect(within: .zero, radii: .zero).hashValue)
         
         XCTAssertEqual(s3, s3)
         XCTAssertEqual(s3, .ellipse(within: .zero))
         XCTAssertNotEqual(s3, .ellipse(within: Rect(x: 0, y: 0, width: 10, height: 20)))
+        XCTAssertNotEqual(s3.hashValue, Shape.ellipse(within: Rect(x: 0, y: 0, width: 10, height: 20)).hashValue)
         
         XCTAssertEqual(s4, s4)
         XCTAssertEqual(s4, .polygon(between: [.zero, Point(10, 20)]))
         XCTAssertNotEqual(s4, .polygon(between: []))
+        XCTAssertNotEqual(s4.hashValue, Shape.polygon(between: []).hashValue)
         
         XCTAssertEqual(s5, s5)
         XCTAssertEqual(s5, .path(Path()))
-        XCTAssertNotEqual(s5, .path(Path([.close])))
+        XCTAssertNotEqual(s5.hashValue, Shape.path(Path([.close])).hashValue)
         
         XCTAssertNotEqual(s1, s2)
         XCTAssertNotEqual(s1, s3)
