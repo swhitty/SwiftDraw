@@ -86,8 +86,22 @@ struct LayerTreeProvider: RendererTypeProvider {
 final class CodeRenderer: Renderer {
     typealias Types = LayerTreeTypes
     
-    func pushState() {}
-    func popState() {}
+    var state: Stack<State>
+    var colors: Defs<LayerTree.Color>
+    
+    init() {
+        state = Stack(root: State())
+        colors = Defs<LayerTree.Color>(prefix: "c")
+    }
+    
+    func pushState() {
+        state.push(state.top)
+    }
+    
+    func popState() {
+        state.pop()
+    }
+    
     func pushTransparencyLayer() {}
     func popTransparencyLayer() {}
     
@@ -96,7 +110,19 @@ final class CodeRenderer: Renderer {
     func rotate(angle: LayerTree.Float) {}
     func scale(sx: LayerTree.Float, sy: LayerTree.Float) {}
     
-    func setFill(color: LayerTree.Color) {}
+    func setFill(color: LayerTree.Color) {
+        guard color != state.top.fillColor else { return }
+        state.top.fillColor = color
+        
+        let def = colors.define(color)
+        
+        if !def.isExisting {
+             print("let \(def.identifier) = Color()")
+        }
+        
+        print("ctx.setFillColor(\(def.identifier))")
+    }
+    
     func setStroke(color: LayerTree.Color) {}
     func setLine(width: LayerTree.Float) {}
     func setLine(cap: LayerTree.LineCap) {}
@@ -109,4 +135,51 @@ final class CodeRenderer: Renderer {
     func stroke(path: LayerTree.Shape) {}
     func fill(path: LayerTree.Shape, rule: LayerTree.FillRule) {}
     func draw(image: LayerTree.Image) {}
+}
+
+extension CodeRenderer {
+
+    struct State {
+        var alpha: LayerTree.Float?
+        var fillColor: LayerTree.Color?
+        var strokeColor: LayerTree.Color?
+        var lineWidth: LayerTree.Float?
+        var lineCap: LayerTree.LineCap?
+        var lineJoin: LayerTree.LineJoin?
+        var lineMiterLimit: LayerTree.Float?
+        var blendMode: LayerTree.BlendMode?
+        var clipPath: LayerTree.Shape?
+        var path: LayerTree.Shape?
+    }
+}
+
+extension CodeRenderer {
+    
+    struct Defs<Element: Hashable> {
+        private(set) var storage: [Element: Int]
+        private(set) var prefix: String
+        
+        init(prefix: String) {
+            self.prefix = prefix
+            self.storage = [Element: Int]()
+        }
+        
+        func identifier(for index: Int) -> String {
+            guard index > 0 else {
+                return prefix
+            }
+            
+            return "\(prefix)\(index)"
+        }
+        
+        mutating func define(_ element: Element) -> (identifier: String, isExisting: Bool) {
+            guard let existingId = storage[element] else {
+                let newId = storage.count
+                storage[element] = newId
+                return (identifier: identifier(for: newId), isExisting: false)
+            }
+            
+            return (identifier: identifier(for: existingId), isExisting: true)
+        }
+    }
 }
