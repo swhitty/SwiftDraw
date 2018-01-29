@@ -708,10 +708,12 @@
 				TargetAttributes = {
 					D962D26C1E6ECD5C00B825C6 = {
 						CreatedOnToolsVersion = 8.2.1;
+						LastSwiftMigration = 0930;
 						ProvisioningStyle = Automatic;
 					};
 					D962D2741E6ECD5C00B825C6 = {
 						CreatedOnToolsVersion = 8.2.1;
+						LastSwiftMigration = 0930;
 						ProvisioningStyle = Automatic;
 					};
 					D9F3EBB01DFF5BA3006691A1 = {
@@ -1004,7 +1006,8 @@
 				PRODUCT_NAME = SwiftDraw;
 				SDKROOT = macosx;
 				SKIP_INSTALL = YES;
-				SWIFT_VERSION = 3.0;
+				SWIFT_SWIFT3_OBJC_INFERENCE = On;
+				SWIFT_VERSION = 4.0;
 			};
 			name = Debug;
 		};
@@ -1027,7 +1030,8 @@
 				PRODUCT_NAME = SwiftDraw;
 				SDKROOT = macosx;
 				SKIP_INSTALL = YES;
-				SWIFT_VERSION = 3.0;
+				SWIFT_SWIFT3_OBJC_INFERENCE = On;
+				SWIFT_VERSION = 4.0;
 			};
 			name = Release;
 		};
@@ -1044,7 +1048,8 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "com.whileloop.SwiftDraw-macOSTests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
-				SWIFT_VERSION = 3.0;
+				SWIFT_SWIFT3_OBJC_INFERENCE = On;
+				SWIFT_VERSION = 4.0;
 			};
 			name = Debug;
 		};
@@ -1061,7 +1066,8 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "com.whileloop.SwiftDraw-macOSTests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
-				SWIFT_VERSION = 3.0;
+				SWIFT_SWIFT3_OBJC_INFERENCE = On;
+				SWIFT_VERSION = 4.0;
 			};
 			name = Release;
 		};

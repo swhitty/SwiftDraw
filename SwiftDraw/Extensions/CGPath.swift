@@ -97,6 +97,7 @@ extension String {
     
     func toPath(font: CTFont) -> CGPath? {
         //kCTFontAttributeName
+        
         let attributes = [NSFontAttributeName as String: font]
         let attString = CFAttributedStringCreate(nil, self as CFString, attributes as CFDictionary)!
         let line = CTLineCreateWithAttributedString(attString)

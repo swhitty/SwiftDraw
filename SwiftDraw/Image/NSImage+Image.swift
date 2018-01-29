@@ -36,7 +36,7 @@ public extension NSImage {
         guard let image = Image(named: name, in: bundle) else { return nil }
  
         self.init(size: image.size, flipped: true) { rect in
-            guard let ctx = NSGraphicsContext.current()?.cgContext else { return false }
+            guard let ctx = NSGraphicsContext.current?.cgContext else { return false }
             ctx.draw(image, in: CGRect(x: 0, y: 0, width: rect.size.width, height: rect.size.height))
             return true
         }
@@ -52,7 +52,7 @@ public extension Image {
         let imageSize = NSSize(width: size.width, height: size.height)
         
         let image = NSImage(size: imageSize, flipped: true) { rect in
-            guard let ctx = NSGraphicsContext.current()?.cgContext else { return false }
+            guard let ctx = NSGraphicsContext.current?.cgContext else { return false }
             ctx.draw(self, in: CGRect(x: 0, y: 0, width: rect.size.width, height: rect.size.height))
             return true
         }
@@ -62,7 +62,7 @@ public extension Image {
     
     func createBitmap(size: CGSize? = nil, scale: CGFloat = 1, isOpaque: Bool = false) -> NSBitmapImageRep? {
         
-        let defaultScale = NSScreen.main()?.backingScaleFactor ?? 1.0
+        let defaultScale = NSScreen.main?.backingScaleFactor ?? 1.0
         let renderScale = scale == 0 ? defaultScale : scale
         let renderSize = size ?? self.size
         
@@ -76,7 +76,7 @@ public extension Image {
                                 samplesPerPixel: isOpaque ? 3 : 4,
                                 hasAlpha: !isOpaque,
                                 isPlanar: false,
-                                colorSpaceName: NSDeviceRGBColorSpace,
+                                colorSpaceName: NSColorSpaceName.deviceRGB,
                                 bytesPerRow: 0,
                                 bitsPerPixel: 32)
     }
@@ -90,7 +90,7 @@ public extension Image {
         ctx.concatenate(flip)
         ctx.draw(self, in: rect)
         
-        return bitmap.representation(using: .PNG, properties: [:])
+        return bitmap.representation(using: .png, properties: [:])
     }
     
     func jpegData(size: CGSize? = nil, scale: CGFloat = 1, compressionQuality quality: CGFloat = 1) -> Data? {
@@ -105,7 +105,7 @@ public extension Image {
         ctx.fill(rect)
         ctx.draw(self, in: rect)
         
-        return bitmap.representation(using: .JPEG, properties: [NSImageCompressionFactor: quality])
+        return bitmap.representation(using: .jpeg, properties: [NSBitmapImageRep.PropertyKey.compressionFactor: quality])
     }
     
     func pdfData(size: CGSize? = nil) -> Data? {
