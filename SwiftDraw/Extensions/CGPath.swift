@@ -55,21 +55,6 @@ extension CGPath {
         case quad(CGPoint, CGPoint)
         case cubic(CGPoint, CGPoint, CGPoint)
         case close
-        
-        static func ==(lhs: Segment, rhs: Segment) -> Bool {
-            switch (lhs, rhs) {
-            case (.move(let lval), .move(let rval)):
-                return lval == rval
-            case (.line(let lval), .line(let rval)):
-                return lval == rval
-            case (.quad(let lval), .quad(let rval)):
-                return lval.0 == rval.0 && lval.1 == rval.1
-            case (.cubic(let lval), .cubic(let rval)):
-                return lval.0 == rval.0 && lval.1 == rval.1 && lval.2 == rval.2
-            default:
-                return false
-            }
-        }
     }
     
     func segments() -> [Segment] {
@@ -97,8 +82,8 @@ extension String {
     
     func toPath(font: CTFont) -> CGPath? {
         //kCTFontAttributeName
-        
-        let attributes = [NSFontAttributeName as String: font]
+
+        let attributes = [kCTFontAttributeName: font]
         let attString = CFAttributedStringCreate(nil, self as CFString, attributes as CFDictionary)!
         let line = CTLineCreateWithAttributedString(attString)
         let glyphRuns = CTLineGetGlyphRuns(line)

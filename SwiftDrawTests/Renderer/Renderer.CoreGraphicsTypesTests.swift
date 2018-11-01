@@ -128,14 +128,19 @@ class RendererCoreGraphicsTypesTests: XCTestCase {
     }
     
     func testShapePolygon() {
-        let path = CGProvider().createPath(from: .polygon(between: [.zero, Point(0, 20), Point(20, 20), Point(20, 0)]))
+        let path = CGProvider().createPath(from: .polygon(between:
+            [.zero,
+             Point(0, 20),
+             Point(20, 20),
+             Point(20, 0)]))
         let expected = CGMutablePath()
         expected.move(to: CGPoint(x: 0, y: 0))
         expected.addLine(to: CGPoint(x: 0, y: 20))
         expected.addLine(to: CGPoint(x: 20, y: 20))
         expected.addLine(to: CGPoint(x: 20, y: 0))
         expected.closeSubpath()
-        XCTAssertEqual(path, expected)
+
+        XCTAssertEqual(path.segments(), expected.segments())
     }
     
     func testShapePath() {
