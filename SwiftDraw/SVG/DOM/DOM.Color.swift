@@ -31,7 +31,7 @@
 
 extension DOM {
     
-    enum Color {
+    enum Color: Equatable {
         case none
         case keyword(Keyword)
         case rgbi(UInt8, UInt8, UInt8)
@@ -187,25 +187,6 @@ extension DOM {
             case whitesmoke
             case yellow
             case yellowgreen
-        }
-    }
-}
-
-extension DOM.Color: Equatable {
-    static func ==(lhs: DOM.Color, rhs: DOM.Color) -> Bool {
-        switch (lhs, rhs) {
-        case (.none, .none):
-            return true
-        case (.keyword(let lVal), .keyword(let rVal)):
-            return lVal == rVal
-        case (.rgbi(let lVal), .rgbi(let rVal)):
-            return lVal == rVal
-        case (.rgbf(let lVal), .rgbf(let rVal)):
-            return lVal == rVal
-        case (.hex(let lVal), .hex(let rVal)):
-            return lVal == rVal
-        default:
-            return false
         }
     }
 }

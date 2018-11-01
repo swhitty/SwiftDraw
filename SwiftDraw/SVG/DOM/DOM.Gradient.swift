@@ -39,7 +39,7 @@ extension DOM {
             self.stops = []
         }
         
-        struct Stop {
+        struct Stop: Equatable {
             var offset: Float
             var color: Color
             var opacity: Float
@@ -56,13 +56,5 @@ extension DOM {
 extension DOM.LinearGradient: Equatable {
     static func ==(lhs: DOM.LinearGradient, rhs: DOM.LinearGradient) -> Bool {
         return lhs.stops == rhs.stops
-    }
-}
-
-extension DOM.LinearGradient.Stop: Equatable {
-    static func ==(lhs: DOM.LinearGradient.Stop, rhs: DOM.LinearGradient.Stop) -> Bool {
-        return lhs.offset == rhs.offset &&
-            lhs.color == rhs.color &&
-            lhs.opacity == rhs.opacity
     }
 }

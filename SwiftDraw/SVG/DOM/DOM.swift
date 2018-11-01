@@ -41,7 +41,7 @@ public struct DOM {
 }
 
 extension DOM {
-    struct Point {
+    struct Point: Equatable {
         var x: Coordinate
         var y: Coordinate
         
@@ -78,7 +78,7 @@ extension DOM {
         case bevel
     }
     
-    enum Transform {
+    enum Transform: Equatable {
         case matrix(a: Float, b: Float, c: Float, d: Float, e: Float, f: Float)
         case translate(tx: Float, ty: Float)
         case scale(sx: Float, sy: Float)
@@ -86,34 +86,5 @@ extension DOM {
         case rotatePoint(angle: Float, cx: Float, cy: Float)
         case skewX(angle: Float)
         case skewY(angle: Float)
-    }
-}
-
-extension DOM.Point: Equatable {
-    static func ==(lhs: DOM.Point, rhs: DOM.Point) -> Bool {
-        return lhs.x == rhs.x && lhs.y == rhs.y
-    }
-}
-
-extension DOM.Transform: Equatable {
-    static func ==(lhs: DOM.Transform, rhs: DOM.Transform) -> Bool {
-        switch (lhs, rhs) {
-        case (.matrix(let lval), .matrix(let rval)):
-            return lval == rval
-        case (.translate(let lval), .translate(let rval)):
-            return lval == rval
-        case (.scale(let lval), .scale(let rval)):
-            return lval == rval
-        case (.rotate(let lval), .rotate(let rval)):
-            return lval == rval
-        case (.rotatePoint(let lval), .rotatePoint(let rval)):
-            return lval == rval
-        case (.skewX(let lval), .skewX(let rval)):
-            return lval == rval
-        case (.skewY(let lval), .skewY(let rval)):
-            return lval == rval
-        default:
-            return false
-        }
     }
 }
