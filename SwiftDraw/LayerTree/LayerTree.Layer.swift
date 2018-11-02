@@ -27,7 +27,7 @@
 //
 
 extension LayerTree {
-    class Layer: Equatable {
+    final class Layer: Equatable {
         var contents: [Contents] = []
         var opacity: Float = 1.0
         var transform: [Transform] = []
@@ -39,21 +39,6 @@ extension LayerTree {
             case image(Image)
             case text(String, Point, TextAttributes)
             case layer(Layer)
-            
-            static func ==(lhs: Contents, rhs: Contents) -> Bool {
-                switch (lhs, rhs) {
-                case (.shape(let lval), .shape(let rval)):
-                    return lval.0 == rval.0 && lval.1 == rval.1 && lval.2 == rval.2
-                case (.image(let lval), .image(let rval)):
-                    return lval == rval
-                case (.text(let lval), .text(let rval)):
-                    return lval.0 == rval.0 && lval.1 == rval.1 && lval.2 == rval.2
-                case (.layer(let lval), .layer(let rval)):
-                    return lval == rval
-                default:
-                    return false
-                }
-            }
         }
         
         func appendContents(_ contents: Contents) {
@@ -99,14 +84,6 @@ extension LayerTree {
         var join: LineJoin
         var miterLimit: Float
         
-        static func ==(lhs: StrokeAttributes, rhs: StrokeAttributes) -> Bool {
-            return lhs.color == rhs.color &&
-                   lhs.width == rhs.width &&
-                   lhs.cap == rhs.cap &&
-                   lhs.join == rhs.join &&
-                   lhs.miterLimit == rhs.miterLimit
-        }
-        
         static var normal: StrokeAttributes {
             return StrokeAttributes(color: .black,
                                     width: 1.0,
@@ -120,11 +97,6 @@ extension LayerTree {
         var color: Color
         var rule: FillRule
         
-        static func ==(lhs: FillAttributes, rhs: FillAttributes) -> Bool {
-            return lhs.color == rhs.color &&
-                   lhs.rule == rhs.rule
-        }
-        
         static var normal: FillAttributes {
             return FillAttributes(color: .black, rule: .evenodd)
         }
@@ -137,12 +109,6 @@ extension LayerTree {
         
         static var normal: TextAttributes {
             return TextAttributes(color: .black, fontName: "Helvetica", size: 12.0)
-        }
-        
-        static func ==(lhs: TextAttributes, rhs: TextAttributes) -> Bool {
-            return lhs.color == rhs.color &&
-                   lhs.fontName == rhs.fontName &&
-                   lhs.size == rhs.size
         }
     }
 }

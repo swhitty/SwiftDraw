@@ -50,16 +50,5 @@ extension LayerTree {
                 return nil
             }
         }
-        
-        static func ==(lhs: Image, rhs: Image) -> Bool {
-            switch (lhs, rhs) {
-            case (.jpeg(let ldata), .jpeg(let rdata)):
-                return ldata == rdata
-            case (.png(let ldata), .png(let rdata)):
-                return ldata == rdata
-            default:
-                return false
-            }
-        }
     }
 }

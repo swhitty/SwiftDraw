@@ -62,33 +62,8 @@ extension LayerTree {
             var d: Float
             var tx: Float
             var ty: Float
-            
-            static func ==(lhs: Matrix, rhs: Matrix) -> Bool {
-                return lhs.a == rhs.a &&
-                    lhs.b == rhs.b &&
-                    lhs.c == rhs.c &&
-                    lhs.d == rhs.d &&
-                    lhs.tx == rhs.tx &&
-                    lhs.ty == rhs.ty
-            }
-        }
-        
-        static func ==(lhs: Transform, rhs: Transform) -> Bool {
-            switch (lhs, rhs) {
-            case (.matrix(let lVal), .matrix(let rVal)):
-                return lVal == rVal
-            case (.scale(let lVal), .scale(let rVal)):
-                return lVal == rVal
-            case (.translate(let lVal), .translate(let rVal)):
-                return lVal == rVal
-            case (.rotate(let lVal), .rotate(let rVal)):
-                return lVal == rVal
-            default:
-                return false
-            }
         }
     }
-    
 }
 
 extension LayerTree.Transform {

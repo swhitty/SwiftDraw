@@ -38,29 +38,6 @@ extension LayerTree {
         
         static var white: Color { return Color.rgba(r: 1, g: 1, b: 1, a: 1) }
         static var black: Color { return Color.rgba(r: 0, g: 0, b: 0, a: 1) }
-        
-        var hashValue: Int {
-            switch self {
-            case .none:
-                return 1
-            case .rgba(let r, let g, let b, let a):
-                return (21 &* r.hashValue) &+
-                       (31 &* g.hashValue) &+
-                       (41 &* b.hashValue) &+
-                       (51 &* a.hashValue)
-            }
-        }
-        
-        static func ==(lhs: Color, rhs: Color) -> Bool {
-            switch (lhs, rhs) {
-            case (.none, .none):
-                return true
-            case (.rgba(let lVal), .rgba(let rVal)):
-                return lVal == rVal
-            default:
-                return false
-            }
-        }
     }
 }
 

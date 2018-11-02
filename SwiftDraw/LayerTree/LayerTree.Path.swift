@@ -30,57 +30,26 @@
 //
 
 extension LayerTree {
-    class Path: Hashable {
+    final class Path: Hashable {
         var segments: [Segment]
         
         init(_ segments: [Segment] = []) {
             self.segments = segments
         }
         
-        enum Segment {
+        enum Segment: Hashable {
             case move(to: Point)
             case line(to: Point)
             case cubic(to: Point, control1: Point, control2: Point)
             case close
         }
-        
-        var hashValue: Int {
-            return segments.reduce(1) { $0 &+ $1.hashValue }
+
+        func hash(into hasher: inout Hasher) {
+            hasher.combine(self.segments)
         }
+
         static func ==(lhs: LayerTree.Path, rhs: LayerTree.Path) -> Bool {
             return lhs.segments == rhs.segments
-        }
-    }
-}
-
-extension LayerTree.Path.Segment: Hashable {
-    var hashValue: Int {
-        switch self {
-        case .move(let p):
-            return 11 &+ p.hashValue
-        case .line(let p):
-            return 21 &+ p.hashValue
-        case .cubic(let p, let cp1, let cp2):
-            return 31 &+ (21 &* p.hashValue) &+
-                         (31 &* cp1.hashValue) &+
-                         (41 &* cp2.hashValue)
-        case .close:
-            return 1
-        }
-    }
-    
-    static func ==(lhs: LayerTree.Path.Segment, rhs: LayerTree.Path.Segment) -> Bool {
-        switch (lhs, rhs) {
-        case (.move(let lVal), .move(let rVal)):
-            return lVal == rVal
-        case (.line(let lVal), .line(let rVal)):
-            return lVal == rVal
-        case (.cubic(let lVal), .cubic(let rVal)):
-            return lVal == rVal
-        case (.close, .close):
-            return true
-        default:
-            return false
         }
     }
 }

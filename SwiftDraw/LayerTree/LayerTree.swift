@@ -57,14 +57,6 @@ struct LayerTree {
         static var zero: Point {
             return Point(0, 0)
         }
-        
-        var hashValue: Int {
-            return (21 &* x.hashValue) &+ (31 &* y.hashValue)
-        }
-        
-        static func ==(lhs: Point, rhs: Point) -> Bool {
-            return lhs.x == rhs.x && lhs.y == rhs.y
-        }
     }
     
     struct Size: Hashable {
@@ -84,17 +76,9 @@ struct LayerTree {
         static var zero: Size {
             return Size(0, 0)
         }
-        
-        var hashValue: Int {
-            return (21 &* width.hashValue) &+ (31 &* height.hashValue)
-        }
-        
-        static func ==(lhs: Size, rhs: Size) -> Bool {
-            return lhs.width == rhs.width && lhs.height == rhs.height
-        }
     }
     
-    struct Rect: Equatable {
+    struct Rect: Hashable {
         var origin: Point
         var size: Size
         
@@ -130,14 +114,6 @@ struct LayerTree {
         
         static var zero: Rect {
             return Rect(x: 0, y: 0, width: 0, height: 0)
-        }
-        
-        var hashValue: Int {
-            return (21 &* origin.hashValue) &+ (31 &* size.hashValue)
-        }
-        
-        static func ==(lhs: Rect, rhs: Rect) -> Bool {
-            return lhs.origin == rhs.origin && lhs.size == rhs.size
         }
     }
     
