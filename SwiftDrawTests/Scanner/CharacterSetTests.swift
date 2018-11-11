@@ -32,6 +32,8 @@
 import XCTest
 @testable import SwiftDraw
 
+private typealias CharacterSet = SwiftDraw.CharacterSet
+
 class CharacterSetTests: XCTestCase {
     
     func testLiteral() {

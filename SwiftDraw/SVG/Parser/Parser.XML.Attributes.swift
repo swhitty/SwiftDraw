@@ -88,13 +88,13 @@ extension XMLParser {
     struct ValueParser: AttributeValueParser {
         
         func parseFloat(_ value: String) throws -> DOM.Float {
-            var scanner = Scanner(text: value)
+            var scanner = SlowScanner(text: value)
             return try scanner.scanFloat()
         }
         
         func parseFloats(_ value: String) throws -> [DOM.Float] {
             var array = Array<DOM.Float>()
-            var scanner = Scanner(text: value)
+            var scanner = SlowScanner(text: value)
             
             while !scanner.isEOF {
                 let vx = try? scanner.scanFloat()
@@ -108,7 +108,7 @@ extension XMLParser {
         
         
         func parsePercentage(_ value: String) throws -> DOM.Float {
-            var scanner = Scanner(text: value)
+            var scanner = SlowScanner(text: value)
             guard let pc = try? scanner.scanPercentage() else {
                 //try a value between 0.0, 1.0
                 return try scanner.scanPercentageFloat()
@@ -117,17 +117,17 @@ extension XMLParser {
         }
         
         func parseCoordinate(_ value: String) throws -> DOM.Coordinate {
-            var scanner = Scanner(text: value)
+            var scanner = SlowScanner(text: value)
             return try scanner.scanCoordinate()
         }
         
         func parseLength(_ value: String) throws -> DOM.Length {
-            var scanner = Scanner(text: value)
+            var scanner = SlowScanner(text: value)
             return try scanner.scanLength()
         }
         
         func parseBool(_ value: String) throws -> DOM.Bool {
-            var scanner = Scanner(text: value)
+            var scanner = SlowScanner(text: value)
             return try scanner.scanBool()
         }
         
@@ -141,7 +141,7 @@ extension XMLParser {
             
         }
         func parseUrlSelector(_ value: String) throws -> DOM.URL {
-            var scanner = Scanner(text: value)
+            var scanner = SlowScanner(text: value)
             guard scanner.scan("url(") != nil,
                 let urlText = scanner.scan(upTo: ")") else { throw XMLParser.Error.invalid }
             
@@ -157,7 +157,7 @@ extension XMLParser {
         
         func parsePoints(_ value: String) throws -> [DOM.Point] {
             var points = Array<DOM.Point>()
-            var scanner = Scanner(text: value)
+            var scanner = SlowScanner(text: value)
             
             while !scanner.isEOF {
                 let px = try? scanner.scanCoordinate()

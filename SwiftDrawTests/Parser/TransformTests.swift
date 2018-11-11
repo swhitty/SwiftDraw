@@ -32,6 +32,9 @@
 import XCTest
 @testable import SwiftDraw
 
+private typealias CharacterSet = SwiftDraw.CharacterSet
+private typealias Scanner = SwiftDraw.SlowScanner
+
 class TransformTests: XCTestCase {
     
     func testMatrix() {

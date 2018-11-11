@@ -63,7 +63,7 @@ extension XMLParser {
     }
     
     func parseColorRGB(data: String) throws -> DOM.Color? {
-        var scanner = Scanner(text: data)
+        var scanner = SlowScanner(text: data)
         guard scanner.scan("rgb(") != nil else { return nil }
         
         if let c = try? parseColorRGBf(data: data) {
@@ -74,7 +74,7 @@ extension XMLParser {
     }
     
     func parseColorRGBi(data: String) throws -> DOM.Color {
-        var scanner = Scanner(text: data)
+        var scanner = SlowScanner(text: data)
         guard scanner.scan("rgb(") != nil else { throw Error.invalid }
         let r = try scanner.scanUInt8()
         _ = scanner.scan(",")
@@ -86,7 +86,7 @@ extension XMLParser {
     }
     
     func parseColorRGBf(data: String) throws -> DOM.Color {
-        var scanner = Scanner(text: data)
+        var scanner = SlowScanner(text: data)
         guard scanner.scan("rgb(") != nil else { throw Error.invalid }
         let r = try scanner.scanPercentage()
         _ = scanner.scan(",")
@@ -106,7 +106,7 @@ extension XMLParser {
     }
     
     func parseColorHex(data: String) throws -> DOM.Color? {
-        var scanner = Scanner(text: data)
+        var scanner = SlowScanner(text: data)
         guard scanner.scan("#") != nil else { return nil }
         
         guard let code = scanner.scan(any: CharacterSet.hexadecimal),

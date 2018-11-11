@@ -70,7 +70,7 @@ extension XMLParser {
     
     func parsePoints(_ text: String) -> [DOM.Point] {
         var points = Array<DOM.Point>()
-        var scanner = Scanner(text: text)
+        var scanner = SlowScanner(text: text)
         
         while let x = try? scanner.scanCoordinate(),
             let y = try? scanner.scanCoordinate() {
@@ -187,7 +187,7 @@ extension XMLParser {
                               style: [:])
         }
         
-        var scanner = Scanner(text: styleText)
+        var scanner = SlowScanner(text: styleText)
         var style = [String: String]()
         
         while !scanner.isEOF {
@@ -203,7 +203,7 @@ extension XMLParser {
                           style: style)
     }
     
-    func parseStyleAttribute(_ scanner: inout Scanner) throws -> (String, String) {
+    func parseStyleAttribute(_ scanner: inout SlowScanner) throws -> (String, String) {
         guard let key = scanner.scan(upTo: " \t:") else {
             throw Error.invalid
         }

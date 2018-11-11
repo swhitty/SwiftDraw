@@ -32,13 +32,16 @@
 import XCTest
 @testable import SwiftDraw
 
+private typealias CharacterSet = SwiftDraw.CharacterSet
+private typealias Scanner = SwiftDraw.SlowScanner
+
 private func AssertScanCoordinate(_ text: String, _ coordinate: DOM.Coordinate, file: StaticString = #file, line: UInt = #line) {
     var scanner = Scanner(text: text)
     XCTAssertEqual(try? scanner.scanCoordinate(), coordinate, file: file, line: line)
 }
 
 private func AssertScanBool(_ text: String, _ bool: DOM.Bool, file: StaticString = #file, line: UInt = #line) {
-    var scanner = SwiftDraw.Scanner(text: text)
+    var scanner = SwiftDraw.SlowScanner(text: text)
     XCTAssertEqual(try? scanner.scanBool(), bool, file: file, line: line)
 }
 

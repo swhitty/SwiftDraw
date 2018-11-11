@@ -31,10 +31,10 @@
 
 import Foundation
 
-struct Scanner {
+struct SlowScanner {
     typealias CharacterSet = SwiftDraw.CharacterSet
-    typealias Index = String.CharacterView.Index
-    
+    typealias Index = String.Index
+
     let characters: String.CharacterView
     var index: Index
     
@@ -163,7 +163,7 @@ struct Scanner {
     }
 }
 
-extension Scanner {
+extension SlowScanner {
     
     enum Error: Swift.Error {
         case invalid
@@ -278,42 +278,4 @@ struct CharSet {
     static var commandSet = Foundation.CharacterSet(charactersIn: "MmLlHhVvCcSsQqTtAaZz")
     static var delimeter = Foundation.CharacterSet(charactersIn: ",;")
     static var boolInt = Foundation.CharacterSet(charactersIn: "10")
-}
-
-extension Foundation.Scanner {
-
-    convenience init(text: String) {
-        self.init(string: text)
-    }
-    
-    var isEOF: Bool { return isAtEnd }
-    
-    func scan(first set: Foundation.CharacterSet) -> UnicodeScalar? {
-        var val: NSString?
-        let start = scanLocation
-        guard scanCharacters(from: set, into: &val),
-              let string = val,
-              string.length > 0 else {
-            
-            scanLocation = start
-            return nil
-        }
-        
-        return UnicodeScalar(string.character(at: 0))
-    }
-    
-    func scanBool() throws -> DOM.Bool {
-        guard let scalar = scan(first: CharSet.boolInt) else {
-            throw XMLParser.Error.invalid
-        }
-        return scalar == UnicodeScalar("1") ? true : false
-    }
-    
-    func scanCoordinate() throws -> DOM.Coordinate {
-        var val: Double = 0
-        guard scanDouble(&val) else { throw XMLParser.Error.invalid }
-        return DOM.Coordinate(val)
-    }
-    
-    
 }

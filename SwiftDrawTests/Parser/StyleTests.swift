@@ -69,7 +69,7 @@ private func AssertAttributeEqual(_ text: String, _ expected: (String, String), 
 
 extension SwiftDraw.XMLParser {
     func parseStyleAttribute(_ text: String) throws -> (String, String) {
-        var scanner = Scanner(text: text)
+        var scanner = SlowScanner(text: text)
         return try XMLParser().parseStyleAttribute(&scanner)
     }
 }
