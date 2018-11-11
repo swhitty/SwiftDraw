@@ -36,8 +36,6 @@
 		D949F3E71EE3A62A006700C5 /* LayerTree.Builder.swift in Sources */ = {isa = PBXBuildFile; fileRef = D949F3E51EE3A62A006700C5 /* LayerTree.Builder.swift */; };
 		D949F3EC1EE3CD34006700C5 /* LayerTree.Builder.Path.swift in Sources */ = {isa = PBXBuildFile; fileRef = D949F3EB1EE3CD34006700C5 /* LayerTree.Builder.Path.swift */; };
 		D949F3ED1EE3CD34006700C5 /* LayerTree.Builder.Path.swift in Sources */ = {isa = PBXBuildFile; fileRef = D949F3EB1EE3CD34006700C5 /* LayerTree.Builder.Path.swift */; };
-		D95019E7218C3B8200B6E20E /* Scanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = D95019E6218C3B8200B6E20E /* Scanner.swift */; };
-		D95019E8218C3BC800B6E20E /* Scanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = D95019E6218C3B8200B6E20E /* Scanner.swift */; };
 		D958D9F51E020158004D811F /* Formatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = D958D9F41E020158004D811F /* Formatter.swift */; };
 		D962D2761E6ECD5C00B825C6 /* SwiftDraw.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D962D26D1E6ECD5C00B825C6 /* SwiftDraw.framework */; };
 		D962D2A21E6ECE2000B825C6 /* SwiftDraw-macOS.h in Headers */ = {isa = PBXBuildFile; fileRef = D962D2A11E6ECE2000B825C6 /* SwiftDraw-macOS.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -80,6 +78,8 @@
 		D96F46DA1EF1610500E726EF /* Renderer.Code.swift in Sources */ = {isa = PBXBuildFile; fileRef = D96F46D81EF1610500E726EF /* Renderer.Code.swift */; };
 		D971509A2198DD8400244CE6 /* ScannerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D97150992198DD8400244CE6 /* ScannerTests.swift */; };
 		D971509B2198DD8400244CE6 /* ScannerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D97150992198DD8400244CE6 /* ScannerTests.swift */; };
+		D971509D2198E0E700244CE6 /* XML.Parser.Scanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = D971509C2198E0E700244CE6 /* XML.Parser.Scanner.swift */; };
+		D971509E2198E0E700244CE6 /* XML.Parser.Scanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = D971509C2198E0E700244CE6 /* XML.Parser.Scanner.swift */; };
 		D9778E451E6ED3EF00FF6EBB /* AttributeParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9C4AD1C1E6E0DEC00008312 /* AttributeParserTests.swift */; };
 		D9778E471E6ED3EF00FF6EBB /* CoordinateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9100F911E0A0EEC00190335 /* CoordinateTests.swift */; };
 		D9778E481E6ED3EF00FF6EBB /* ValueParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9C4AD1A1E6CCD8A00008312 /* ValueParserTests.swift */; };
@@ -198,7 +198,7 @@
 
 /* Begin PBXFileReference section */
 		D9002B101E08B6050090BCC8 /* Formatter.XML.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Formatter.XML.swift; sourceTree = "<group>"; };
-		D9002B171E08B9CE0090BCC8 /* XML.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = XML.swift; sourceTree = "<group>"; };
+		D9002B171E08B9CE0090BCC8 /* XML.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = XML.swift; path = ../XML/XML.swift; sourceTree = "<group>"; };
 		D909F7741EE574B100343970 /* LayerTree.Commands.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LayerTree.Commands.swift; sourceTree = "<group>"; };
 		D9100F911E0A0EEC00190335 /* CoordinateTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CoordinateTests.swift; sourceTree = "<group>"; };
 		D911E4251EE4128000A86AAD /* Renderer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Renderer.swift; sourceTree = "<group>"; };
@@ -219,7 +219,6 @@
 		D933D0AD1E5E868400937A59 /* Parser.XML.Transform.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Parser.XML.Transform.swift; sourceTree = "<group>"; };
 		D949F3E51EE3A62A006700C5 /* LayerTree.Builder.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LayerTree.Builder.swift; sourceTree = "<group>"; };
 		D949F3EB1EE3CD34006700C5 /* LayerTree.Builder.Path.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LayerTree.Builder.Path.swift; sourceTree = "<group>"; };
-		D95019E6218C3B8200B6E20E /* Scanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Scanner.swift; sourceTree = "<group>"; };
 		D958D9F41E020158004D811F /* Formatter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Formatter.swift; sourceTree = "<group>"; };
 		D958D9F61E020184004D811F /* Formatter.XML.Path.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Formatter.XML.Path.swift; sourceTree = "<group>"; };
 		D962D26D1E6ECD5C00B825C6 /* SwiftDraw.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SwiftDraw.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -228,7 +227,7 @@
 		D965B57C1E18D98C003E859E /* DOM.Element.Equality.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DOM.Element.Equality.swift; sourceTree = "<group>"; };
 		D965B57E1E3C471A003E859E /* Parser.ImageTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Parser.ImageTests.swift; sourceTree = "<group>"; };
 		D965B5811E3C48C6003E859E /* shapes.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = shapes.svg; sourceTree = "<group>"; };
-		D965B5831E3C4A34003E859E /* XML.Parser.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = XML.Parser.swift; sourceTree = "<group>"; };
+		D965B5831E3C4A34003E859E /* XML.Parser.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = XML.Parser.swift; path = ../XML/XML.Parser.swift; sourceTree = "<group>"; };
 		D965B5851E3C5C87003E859E /* starry.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = starry.svg; sourceTree = "<group>"; };
 		D965B5881E4E11AD003E859E /* DOM.Svg.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DOM.Svg.swift; sourceTree = "<group>"; };
 		D965B58A1E4E1273003E859E /* Parser.XML.Svg.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Parser.XML.Svg.swift; sourceTree = "<group>"; };
@@ -236,6 +235,7 @@
 		D965B58E1E63848E003E859E /* StyleTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StyleTests.swift; sourceTree = "<group>"; };
 		D96F46D81EF1610500E726EF /* Renderer.Code.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Renderer.Code.swift; sourceTree = "<group>"; };
 		D97150992198DD8400244CE6 /* ScannerTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ScannerTests.swift; sourceTree = "<group>"; };
+		D971509C2198E0E700244CE6 /* XML.Parser.Scanner.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = XML.Parser.Scanner.swift; path = SwiftDraw/SVG/XML/XML.Parser.Scanner.swift; sourceTree = SOURCE_ROOT; };
 		D9778E5D1E6F698500FF6EBB /* DOM.Path.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DOM.Path.swift; sourceTree = "<group>"; };
 		D9778E601E6F6C0300FF6EBB /* Parser.XML.Path.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Parser.XML.Path.swift; sourceTree = "<group>"; };
 		D9778E631E6F6DFA00FF6EBB /* Parser.PathTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Parser.PathTests.swift; sourceTree = "<group>"; };
@@ -333,6 +333,7 @@
 			children = (
 				D9002B171E08B9CE0090BCC8 /* XML.swift */,
 				D965B5831E3C4A34003E859E /* XML.Parser.swift */,
+				D971509C2198E0E700244CE6 /* XML.Parser.Scanner.swift */,
 			);
 			name = XML;
 			path = XMLNode;
@@ -453,7 +454,6 @@
 			children = (
 				D99CC9881E5F8F0000E7886A /* CharacterSet.swift */,
 				D99CC98A1E5F8F1A00E7886A /* SlowScanner.swift */,
-				D95019E6218C3B8200B6E20E /* Scanner.swift */,
 			);
 			path = Scanner;
 			sourceTree = "<group>";
@@ -823,7 +823,6 @@
 				D9778E5F1E6F6B9200FF6EBB /* DOM.Path.swift in Sources */,
 				D962D2D51E6ED01700B825C6 /* Parser.XML.Transform.swift in Sources */,
 				D962D2CF1E6ED01700B825C6 /* Parser.XML.swift in Sources */,
-				D95019E8218C3BC800B6E20E /* Scanner.swift in Sources */,
 				D962D2CD1E6ECFDA00B825C6 /* DOM.Gradient.swift in Sources */,
 				D949F3E71EE3A62A006700C5 /* LayerTree.Builder.swift in Sources */,
 				D962D2D21E6ED01700B825C6 /* Parser.XML.Svg.swift in Sources */,
@@ -836,6 +835,7 @@
 				D909F7761EE574B100343970 /* LayerTree.Commands.swift in Sources */,
 				D962D2E51E6ED20100B825C6 /* Formatter.XML.swift in Sources */,
 				D962D2D91E6ED01700B825C6 /* Parser.XML.Image.swift in Sources */,
+				D971509E2198E0E700244CE6 /* XML.Parser.Scanner.swift in Sources */,
 				D97CBC481ED508F2006B4A69 /* NSImage+Image.swift in Sources */,
 				D962D2CC1E6ECFCA00B825C6 /* DOM.Switch.swift in Sources */,
 				D962D2C71E6ECFCA00B825C6 /* DOM.Color.swift in Sources */,
@@ -913,7 +913,6 @@
 				D9778E5E1E6F698500FF6EBB /* DOM.Path.swift in Sources */,
 				D933D0A41E5CFF3200937A59 /* Parser.XML.swift in Sources */,
 				D9002B111E08B6050090BCC8 /* Formatter.XML.swift in Sources */,
-				D95019E7218C3B8200B6E20E /* Scanner.swift in Sources */,
 				D99CC9991E5FF06F00E7886A /* Parser.XML.Element.swift in Sources */,
 				D949F3E61EE3A62A006700C5 /* LayerTree.Builder.swift in Sources */,
 				D9C7D61F1E67F54D00518B5C /* DOM.Switch.swift in Sources */,
@@ -926,6 +925,7 @@
 				D909F7751EE574B100343970 /* LayerTree.Commands.swift in Sources */,
 				D933D0AE1E5E868400937A59 /* Parser.XML.Transform.swift in Sources */,
 				D99CC98B1E5F8F1A00E7886A /* SlowScanner.swift in Sources */,
+				D971509D2198E0E700244CE6 /* XML.Parser.Scanner.swift in Sources */,
 				D965B5891E4E11AD003E859E /* DOM.Svg.swift in Sources */,
 				D9002B181E08B9CE0090BCC8 /* XML.swift in Sources */,
 				D99CC98F1E5FDB1D00E7886A /* DOM.Gradient.swift in Sources */,
