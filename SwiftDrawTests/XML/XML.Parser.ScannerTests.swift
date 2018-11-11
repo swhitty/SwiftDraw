@@ -137,16 +137,16 @@ class ScannerTests: XCTestCase {
 }
 
 private func AssertScanUInt8(_ text: String, _ expected: UInt8?, file: StaticString = #file, line: UInt = #line) {
-    var scanner = SlowScanner(text: text)
+    var scanner = XMLParser.Scanner(text: text)
     XCTAssertEqual(try? scanner.scanUInt8(), expected, file: file, line: line)
 }
 
 private func AssertScanBool(_ text: String, _ expected: Bool?, file: StaticString = #file, line: UInt = #line) {
-    var scanner = SlowScanner(text: text)
+    var scanner = XMLParser.Scanner(text: text)
     XCTAssertEqual(try? scanner.scanBool(), expected, file: file, line: line)
 }
 
 private func AssertScanPercentage(_ text: String, _ expected: Float?, file: StaticString = #file, line: UInt = #line) {
-    var scanner = SlowScanner(text: text)
+    var scanner = XMLParser.Scanner(text: text)
     XCTAssertEqual(try? scanner.scanPercentage(), expected, file: file, line: line)
 }
