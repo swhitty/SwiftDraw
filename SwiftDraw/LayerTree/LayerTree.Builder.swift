@@ -29,15 +29,15 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-// Convert a DOM.Svg into a layer tree
+// Convert a DOM.SVG into a layer tree
 
 extension LayerTree {
     
     struct Builder {
         
-        let svg: DOM.Svg
+        let svg: DOM.SVG
         
-        init(svg: DOM.Svg) {
+        init(svg: DOM.SVG) {
             self.svg = svg
         }
         
@@ -66,7 +66,7 @@ extension LayerTree {
 //            return l
 //        }
 //        
-        static func createTransform(for viewBox: DOM.Svg.ViewBox, width: DOM.Length, height: DOM.Length) -> [LayerTree.Transform] {
+        static func createTransform(for viewBox: DOM.SVG.ViewBox, width: DOM.Length, height: DOM.Length) -> [LayerTree.Transform] {
             
             let sx = LayerTree.Float(width) / viewBox.width
             let sy = LayerTree.Float(height) / viewBox.height

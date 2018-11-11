@@ -53,15 +53,15 @@ public final class Image: NSObject {
         let parser = XMLParser(options: [.skipInvalidElements])
         
         guard let element = try? XML.SAXParser.parse(contentsOf: url),
-              let svg = try? parser.parseSvg(element) else {
+              let svg = try? parser.parseSVG(element) else {
                 return nil
         }
         
         size = CGSize(width: svg.width, height: svg.height)
         
         //To create the draw commands;
-        // - XML is parsed into DOM.Svg
-        // - DOM.Svg is converted into a LayerTree
+        // - XML is parsed into DOM.SVG
+        // - DOM.SVG is converted into a LayerTree
         // - LayerTree is converted into RenderCommands
         // - RenderCommands are performed by Renderer (drawn to CGContext)
         

@@ -1,5 +1,5 @@
 //
-//  Parser.XML.Svg.swift
+//  Parser.XML.SVG.swift
 //  SwiftDraw
 //
 //  Created by Simon Whitty on 31/12/16.
@@ -31,7 +31,7 @@
 
 extension XMLParser {
     
-    func parseSvg(_ e: XML.Element) throws -> DOM.Svg {
+    func parseSVG(_ e: XML.Element) throws -> DOM.SVG {
         guard e.name == "svg" else {
             throw Error.invalid
         }
@@ -39,7 +39,7 @@ extension XMLParser {
         let att = try parseAttributes(e)
         var width: DOM.Coordinate? = try att.parseCoordinate("width")
         var height: DOM.Coordinate? = try att.parseCoordinate("height")
-        let viewBox: DOM.Svg.ViewBox? = try parseViewBox(try att.parseString("viewBox"))
+        let viewBox: DOM.SVG.ViewBox? = try parseViewBox(try att.parseString("viewBox"))
         
         width = width ?? viewBox?.width
         height = height ?? viewBox?.height
@@ -47,7 +47,7 @@ extension XMLParser {
         guard let w = width else { throw XMLParser.Error.missingAttribute(name: "width") }
         guard let h = height else { throw XMLParser.Error.missingAttribute(name: "height") }
     
-        var svg = DOM.Svg(width: DOM.Length(w), height: DOM.Length(h))
+        var svg = DOM.SVG(width: DOM.Length(w), height: DOM.Length(h))
         svg.childElements = try parseContainerChildren(e)
         svg.viewBox = try parseViewBox(try att.parseString("viewBox"))
         
@@ -59,7 +59,7 @@ extension XMLParser {
         return svg
     }
     
-    func parseViewBox(_ data: String?) throws -> DOM.Svg.ViewBox? {
+    func parseViewBox(_ data: String?) throws -> DOM.SVG.ViewBox? {
         guard let data = data else { return nil }
         var scanner = SlowScanner(text: data)
         
@@ -72,14 +72,14 @@ extension XMLParser {
             throw Error.invalid
         }
         
-        return DOM.Svg.ViewBox(x: x, y: y, width: width, height: height)
+        return DOM.SVG.ViewBox(x: x, y: y, width: width, height: height)
     }
     
     
     // search all nodes within document for any defs
     // not just the <defs> node
-    func parseSVGDefs(_ e: XML.Element) throws -> DOM.Svg.Defs {
-        var defs = DOM.Svg.Defs()
+    func parseSVGDefs(_ e: XML.Element) throws -> DOM.SVG.Defs {
+        var defs = DOM.SVG.Defs()
         defs.clipPaths = try parseClipPaths(e)
         defs.masks = try parseMasks(e)
         defs.linearGradients = try parseLinearGradients(e)

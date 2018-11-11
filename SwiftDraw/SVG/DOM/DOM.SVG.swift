@@ -1,5 +1,5 @@
 //
-//  DOM.Svg.swift
+//  DOM.SVG.swift
 //  SwiftDraw
 //
 //  Created by Simon Whitty on 11/2/17.
@@ -30,7 +30,7 @@
 //
 
 extension DOM {
-    class Svg: GraphicsElement, ContainerElement {
+    class SVG: GraphicsElement, ContainerElement {
         var width: Length
         var height: Length
         var viewBox: ViewBox?

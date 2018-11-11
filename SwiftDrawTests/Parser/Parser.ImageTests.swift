@@ -35,7 +35,7 @@ import Foundation
 
 class ParserImageTests: XCTestCase {
     
-    func loadSVG(_ filename: String) -> DOM.Svg? {
+    func loadSVG(_ filename: String) -> DOM.SVG? {
         
         let bundle = Bundle(for: ParserImageTests.self)
         
@@ -54,9 +54,9 @@ class ParserImageTests: XCTestCase {
         }
     }
     
-    func loadSVG(_ url: URL) throws -> DOM.Svg? {
+    func loadSVG(_ url: URL) throws -> DOM.SVG? {
         let element = try XML.SAXParser.parse(contentsOf: url)
-        return try XMLParser().parseSvg(element)
+        return try XMLParser().parseSVG(element)
     }
     
     func testShapes() {

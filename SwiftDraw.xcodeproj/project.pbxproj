@@ -41,7 +41,7 @@
 		D962D2A21E6ECE2000B825C6 /* SwiftDraw-macOS.h in Headers */ = {isa = PBXBuildFile; fileRef = D962D2A11E6ECE2000B825C6 /* SwiftDraw-macOS.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		D962D2C31E6ECFCA00B825C6 /* DOM.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9F3EBD21DFF5C96006691A1 /* DOM.swift */; };
 		D962D2C41E6ECFCA00B825C6 /* DOM.Element.swift in Sources */ = {isa = PBXBuildFile; fileRef = D933D0A71E5D1F7F00937A59 /* DOM.Element.swift */; };
-		D962D2C51E6ECFCA00B825C6 /* DOM.Svg.swift in Sources */ = {isa = PBXBuildFile; fileRef = D965B5881E4E11AD003E859E /* DOM.Svg.swift */; };
+		D962D2C51E6ECFCA00B825C6 /* DOM.SVG.swift in Sources */ = {isa = PBXBuildFile; fileRef = D965B5881E4E11AD003E859E /* DOM.SVG.swift */; };
 		D962D2C71E6ECFCA00B825C6 /* DOM.Color.swift in Sources */ = {isa = PBXBuildFile; fileRef = D933D0A01E5CEE1700937A59 /* DOM.Color.swift */; };
 		D962D2C91E6ECFCA00B825C6 /* DOM.Text.swift in Sources */ = {isa = PBXBuildFile; fileRef = D99CC9941E5FEA1200E7886A /* DOM.Text.swift */; };
 		D962D2CA1E6ECFCA00B825C6 /* DOM.Use.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9C1EEFB1E63C94600C0F213 /* DOM.Use.swift */; };
@@ -51,7 +51,7 @@
 		D962D2CF1E6ED01700B825C6 /* Parser.XML.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9F281EF1E1F8C140060AE7F /* Parser.XML.swift */; };
 		D962D2D01E6ED01700B825C6 /* Parser.XML.Attributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = D92CE60C1E67955700E0BE1B /* Parser.XML.Attributes.swift */; };
 		D962D2D11E6ED01700B825C6 /* Parser.XML.Element.swift in Sources */ = {isa = PBXBuildFile; fileRef = D99CC9981E5FF06F00E7886A /* Parser.XML.Element.swift */; };
-		D962D2D21E6ED01700B825C6 /* Parser.XML.Svg.swift in Sources */ = {isa = PBXBuildFile; fileRef = D965B58A1E4E1273003E859E /* Parser.XML.Svg.swift */; };
+		D962D2D21E6ED01700B825C6 /* Parser.XML.SVG.swift in Sources */ = {isa = PBXBuildFile; fileRef = D965B58A1E4E1273003E859E /* Parser.XML.SVG.swift */; };
 		D962D2D41E6ED01700B825C6 /* Parser.XML.Color.swift in Sources */ = {isa = PBXBuildFile; fileRef = D933D0A51E5CFF4D00937A59 /* Parser.XML.Color.swift */; };
 		D962D2D51E6ED01700B825C6 /* Parser.XML.Transform.swift in Sources */ = {isa = PBXBuildFile; fileRef = D933D0AD1E5E868400937A59 /* Parser.XML.Transform.swift */; };
 		D962D2D61E6ED01700B825C6 /* Parser.XML.Gradient.swift in Sources */ = {isa = PBXBuildFile; fileRef = D99CC9901E5FDCFB00E7886A /* Parser.XML.Gradient.swift */; };
@@ -70,9 +70,9 @@
 		D965B5821E3C48C6003E859E /* shapes.svg in Resources */ = {isa = PBXBuildFile; fileRef = D965B5811E3C48C6003E859E /* shapes.svg */; };
 		D965B5841E3C4A34003E859E /* XML.Parser.swift in Sources */ = {isa = PBXBuildFile; fileRef = D965B5831E3C4A34003E859E /* XML.Parser.swift */; };
 		D965B5871E3C5CF8003E859E /* starry.svg in Resources */ = {isa = PBXBuildFile; fileRef = D965B5851E3C5C87003E859E /* starry.svg */; };
-		D965B5891E4E11AD003E859E /* DOM.Svg.swift in Sources */ = {isa = PBXBuildFile; fileRef = D965B5881E4E11AD003E859E /* DOM.Svg.swift */; };
-		D965B58B1E4E1273003E859E /* Parser.XML.Svg.swift in Sources */ = {isa = PBXBuildFile; fileRef = D965B58A1E4E1273003E859E /* Parser.XML.Svg.swift */; };
-		D965B58D1E4F1378003E859E /* Parser.SvgTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D965B58C1E4F1378003E859E /* Parser.SvgTests.swift */; };
+		D965B5891E4E11AD003E859E /* DOM.SVG.swift in Sources */ = {isa = PBXBuildFile; fileRef = D965B5881E4E11AD003E859E /* DOM.SVG.swift */; };
+		D965B58B1E4E1273003E859E /* Parser.XML.SVG.swift in Sources */ = {isa = PBXBuildFile; fileRef = D965B58A1E4E1273003E859E /* Parser.XML.SVG.swift */; };
+		D965B58D1E4F1378003E859E /* Parser.SVGTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D965B58C1E4F1378003E859E /* Parser.SVGTests.swift */; };
 		D965B58F1E63848E003E859E /* StyleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D965B58E1E63848E003E859E /* StyleTests.swift */; };
 		D96F46D91EF1610500E726EF /* Renderer.Code.swift in Sources */ = {isa = PBXBuildFile; fileRef = D96F46D81EF1610500E726EF /* Renderer.Code.swift */; };
 		D96F46DA1EF1610500E726EF /* Renderer.Code.swift in Sources */ = {isa = PBXBuildFile; fileRef = D96F46D81EF1610500E726EF /* Renderer.Code.swift */; };
@@ -83,7 +83,7 @@
 		D9778E451E6ED3EF00FF6EBB /* AttributeParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9C4AD1C1E6E0DEC00008312 /* AttributeParserTests.swift */; };
 		D9778E471E6ED3EF00FF6EBB /* CoordinateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9100F911E0A0EEC00190335 /* CoordinateTests.swift */; };
 		D9778E481E6ED3EF00FF6EBB /* ValueParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9C4AD1A1E6CCD8A00008312 /* ValueParserTests.swift */; };
-		D9778E491E6ED3EF00FF6EBB /* Parser.SvgTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D965B58C1E4F1378003E859E /* Parser.SvgTests.swift */; };
+		D9778E491E6ED3EF00FF6EBB /* Parser.SVGTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D965B58C1E4F1378003E859E /* Parser.SVGTests.swift */; };
 		D9778E4A1E6ED3EF00FF6EBB /* ElementTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9F281ED1E1EF9380060AE7F /* ElementTests.swift */; };
 		D9778E4B1E6ED3EF00FF6EBB /* Scanner1Tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9ECF1921E2EBEC90029307E /* Scanner1Tests.swift */; };
 		D9778E4C1E6ED3EF00FF6EBB /* ColorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D933D09E1E5CECF400937A59 /* ColorTests.swift */; };
@@ -229,9 +229,9 @@
 		D965B5811E3C48C6003E859E /* shapes.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = shapes.svg; sourceTree = "<group>"; };
 		D965B5831E3C4A34003E859E /* XML.Parser.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = XML.Parser.swift; path = ../XML/XML.Parser.swift; sourceTree = "<group>"; };
 		D965B5851E3C5C87003E859E /* starry.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = starry.svg; sourceTree = "<group>"; };
-		D965B5881E4E11AD003E859E /* DOM.Svg.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DOM.Svg.swift; sourceTree = "<group>"; };
-		D965B58A1E4E1273003E859E /* Parser.XML.Svg.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Parser.XML.Svg.swift; sourceTree = "<group>"; };
-		D965B58C1E4F1378003E859E /* Parser.SvgTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Parser.SvgTests.swift; sourceTree = "<group>"; };
+		D965B5881E4E11AD003E859E /* DOM.SVG.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DOM.SVG.swift; sourceTree = "<group>"; };
+		D965B58A1E4E1273003E859E /* Parser.XML.SVG.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Parser.XML.SVG.swift; sourceTree = "<group>"; };
+		D965B58C1E4F1378003E859E /* Parser.SVGTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Parser.SVGTests.swift; sourceTree = "<group>"; };
 		D965B58E1E63848E003E859E /* StyleTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StyleTests.swift; sourceTree = "<group>"; };
 		D96F46D81EF1610500E726EF /* Renderer.Code.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Renderer.Code.swift; sourceTree = "<group>"; };
 		D97150992198DD8400244CE6 /* ScannerTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ScannerTests.swift; sourceTree = "<group>"; };
@@ -552,7 +552,7 @@
 			children = (
 				D9F3EBD21DFF5C96006691A1 /* DOM.swift */,
 				D933D0A71E5D1F7F00937A59 /* DOM.Element.swift */,
-				D965B5881E4E11AD003E859E /* DOM.Svg.swift */,
+				D965B5881E4E11AD003E859E /* DOM.SVG.swift */,
 				D9778E5D1E6F698500FF6EBB /* DOM.Path.swift */,
 				D933D0A01E5CEE1700937A59 /* DOM.Color.swift */,
 				D99CC98E1E5FDB1D00E7886A /* DOM.Gradient.swift */,
@@ -570,7 +570,7 @@
 				D9F281EF1E1F8C140060AE7F /* Parser.XML.swift */,
 				D92CE60C1E67955700E0BE1B /* Parser.XML.Attributes.swift */,
 				D99CC9981E5FF06F00E7886A /* Parser.XML.Element.swift */,
-				D965B58A1E4E1273003E859E /* Parser.XML.Svg.swift */,
+				D965B58A1E4E1273003E859E /* Parser.XML.SVG.swift */,
 				D9778E601E6F6C0300FF6EBB /* Parser.XML.Path.swift */,
 				D933D0A51E5CFF4D00937A59 /* Parser.XML.Color.swift */,
 				D933D0AD1E5E868400937A59 /* Parser.XML.Transform.swift */,
@@ -589,7 +589,7 @@
 				D9F3EBD51DFF6100006691A1 /* FormatterTests.swift */,
 				D9100F911E0A0EEC00190335 /* CoordinateTests.swift */,
 				D9C4AD1A1E6CCD8A00008312 /* ValueParserTests.swift */,
-				D965B58C1E4F1378003E859E /* Parser.SvgTests.swift */,
+				D965B58C1E4F1378003E859E /* Parser.SVGTests.swift */,
 				D9778E631E6F6DFA00FF6EBB /* Parser.PathTests.swift */,
 				D9F281ED1E1EF9380060AE7F /* ElementTests.swift */,
 				D9ECF1921E2EBEC90029307E /* Scanner1Tests.swift */,
@@ -805,7 +805,7 @@
 				D9ED5E301EF1FCC200C49744 /* Stack.swift in Sources */,
 				D962D2D61E6ED01700B825C6 /* Parser.XML.Gradient.swift in Sources */,
 				D962D2CB1E6ECFCA00B825C6 /* DOM.Image.swift in Sources */,
-				D962D2C51E6ECFCA00B825C6 /* DOM.Svg.swift in Sources */,
+				D962D2C51E6ECFCA00B825C6 /* DOM.SVG.swift in Sources */,
 				D962D2D11E6ED01700B825C6 /* Parser.XML.Element.swift in Sources */,
 				D962D2CA1E6ECFCA00B825C6 /* DOM.Use.swift in Sources */,
 				D978A43B1EE271CC00727106 /* LayerTree.swift in Sources */,
@@ -825,7 +825,7 @@
 				D962D2CF1E6ED01700B825C6 /* Parser.XML.swift in Sources */,
 				D962D2CD1E6ECFDA00B825C6 /* DOM.Gradient.swift in Sources */,
 				D949F3E71EE3A62A006700C5 /* LayerTree.Builder.swift in Sources */,
-				D962D2D21E6ED01700B825C6 /* Parser.XML.Svg.swift in Sources */,
+				D962D2D21E6ED01700B825C6 /* Parser.XML.SVG.swift in Sources */,
 				D962D2E11E6ED02B00B825C6 /* URL.swift in Sources */,
 				D911E42A1EE4148B00A86AAD /* Renderer.CoreGraphics.swift in Sources */,
 				D9778E721E7204EF00FF6EBB /* CGPath.swift in Sources */,
@@ -882,7 +882,7 @@
 				D9778E521E6ED3EF00FF6EBB /* Parser.ImageTests.swift in Sources */,
 				D978A4651EE2D5C700727106 /* LayerTree.LayerTests.swift in Sources */,
 				D9778E581E6ED3FC00FF6EBB /* DOM.Element.Equality.swift in Sources */,
-				D9778E491E6ED3EF00FF6EBB /* Parser.SvgTests.swift in Sources */,
+				D9778E491E6ED3EF00FF6EBB /* Parser.SVGTests.swift in Sources */,
 				D9778E4F1E6ED3EF00FF6EBB /* GradientTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -926,11 +926,11 @@
 				D933D0AE1E5E868400937A59 /* Parser.XML.Transform.swift in Sources */,
 				D99CC98B1E5F8F1A00E7886A /* SlowScanner.swift in Sources */,
 				D971509D2198E0E700244CE6 /* XML.Parser.Scanner.swift in Sources */,
-				D965B5891E4E11AD003E859E /* DOM.Svg.swift in Sources */,
+				D965B5891E4E11AD003E859E /* DOM.SVG.swift in Sources */,
 				D9002B181E08B9CE0090BCC8 /* XML.swift in Sources */,
 				D99CC98F1E5FDB1D00E7886A /* DOM.Gradient.swift in Sources */,
 				D978A4441EE2869700727106 /* LayerTree.Transform.swift in Sources */,
-				D965B58B1E4E1273003E859E /* Parser.XML.Svg.swift in Sources */,
+				D965B58B1E4E1273003E859E /* Parser.XML.SVG.swift in Sources */,
 				D978A45B1EE2CBC000727106 /* LayerTree.Image.swift in Sources */,
 				D9778E611E6F6C0300FF6EBB /* Parser.XML.Path.swift in Sources */,
 				D958D9F51E020158004D811F /* Formatter.swift in Sources */,
@@ -947,7 +947,7 @@
 				D99CC99E1E60366300E7886A /* DOM.ElementTests.swift in Sources */,
 				D933D0AC1E5E85D000937A59 /* TransformTests.swift in Sources */,
 				D99CC9931E5FE01A00E7886A /* GradientTests.swift in Sources */,
-				D965B58D1E4F1378003E859E /* Parser.SvgTests.swift in Sources */,
+				D965B58D1E4F1378003E859E /* Parser.SVGTests.swift in Sources */,
 				D9100F921E0A0EEC00190335 /* CoordinateTests.swift in Sources */,
 				D978A44F1EE28A4000727106 /* LayerTree.PathTests.swift in Sources */,
 				D971509A2198DD8400244CE6 /* ScannerTests.swift in Sources */,

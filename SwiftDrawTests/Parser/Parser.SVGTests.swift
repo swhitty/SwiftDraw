@@ -1,5 +1,5 @@
 //
-//  Parser.SvgTests.swift
+//  Parser.SVGTests.swift
 //  SwiftDraw
 //
 //  Created by Simon Whitty on 3/2/17.
@@ -33,21 +33,21 @@
 import XCTest
 @testable import SwiftDraw
 
-class SvgTests: XCTestCase {
+class SVGTests: XCTestCase {
     
-    func testSvg() throws {
+    func testSVG() throws {
         let node = XML.Element(name: "svg", attributes: ["width": "100", "height": "200"])
         let parser = XMLParser()
         
-        var parsed = try parser.parseSvg(node)
-        let expected = DOM.Svg(width: 100, height: 200)
+        var parsed = try parser.parseSVG(node)
+        let expected = DOM.SVG(width: 100, height: 200)
         XCTAssertEqual(parsed, expected)
         
-        expected.viewBox = DOM.Svg.ViewBox(x: 10, y: 20, width: 100, height: 200)
+        expected.viewBox = DOM.SVG.ViewBox(x: 10, y: 20, width: 100, height: 200)
         XCTAssertNotEqual(parsed, expected)
         
         node.attributes["viewBox"] = "10 20 100 200"
-        parsed = try parser.parseSvg(node)
+        parsed = try parser.parseSVG(node)
         XCTAssertEqual(parsed, expected)
         
         expected.fill = .keyword(.red)
