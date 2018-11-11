@@ -76,10 +76,10 @@
 		D965B58F1E63848E003E859E /* StyleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D965B58E1E63848E003E859E /* StyleTests.swift */; };
 		D96F46D91EF1610500E726EF /* Renderer.Code.swift in Sources */ = {isa = PBXBuildFile; fileRef = D96F46D81EF1610500E726EF /* Renderer.Code.swift */; };
 		D96F46DA1EF1610500E726EF /* Renderer.Code.swift in Sources */ = {isa = PBXBuildFile; fileRef = D96F46D81EF1610500E726EF /* Renderer.Code.swift */; };
-		D971509A2198DD8400244CE6 /* ScannerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D97150992198DD8400244CE6 /* ScannerTests.swift */; };
-		D971509B2198DD8400244CE6 /* ScannerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D97150992198DD8400244CE6 /* ScannerTests.swift */; };
 		D971509D2198E0E700244CE6 /* XML.Parser.Scanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = D971509C2198E0E700244CE6 /* XML.Parser.Scanner.swift */; };
 		D971509E2198E0E700244CE6 /* XML.Parser.Scanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = D971509C2198E0E700244CE6 /* XML.Parser.Scanner.swift */; };
+		D97150A12198E25A00244CE6 /* XML.Parser.ScannerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D97150A02198E25A00244CE6 /* XML.Parser.ScannerTests.swift */; };
+		D97150A22198E25A00244CE6 /* XML.Parser.ScannerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D97150A02198E25A00244CE6 /* XML.Parser.ScannerTests.swift */; };
 		D9778E451E6ED3EF00FF6EBB /* AttributeParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9C4AD1C1E6E0DEC00008312 /* AttributeParserTests.swift */; };
 		D9778E471E6ED3EF00FF6EBB /* CoordinateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9100F911E0A0EEC00190335 /* CoordinateTests.swift */; };
 		D9778E481E6ED3EF00FF6EBB /* ValueParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9C4AD1A1E6CCD8A00008312 /* ValueParserTests.swift */; };
@@ -234,8 +234,8 @@
 		D965B58C1E4F1378003E859E /* Parser.SVGTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Parser.SVGTests.swift; sourceTree = "<group>"; };
 		D965B58E1E63848E003E859E /* StyleTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StyleTests.swift; sourceTree = "<group>"; };
 		D96F46D81EF1610500E726EF /* Renderer.Code.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Renderer.Code.swift; sourceTree = "<group>"; };
-		D97150992198DD8400244CE6 /* ScannerTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ScannerTests.swift; sourceTree = "<group>"; };
 		D971509C2198E0E700244CE6 /* XML.Parser.Scanner.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = XML.Parser.Scanner.swift; path = SwiftDraw/SVG/XML/XML.Parser.Scanner.swift; sourceTree = SOURCE_ROOT; };
+		D97150A02198E25A00244CE6 /* XML.Parser.ScannerTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = XML.Parser.ScannerTests.swift; sourceTree = "<group>"; };
 		D9778E5D1E6F698500FF6EBB /* DOM.Path.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DOM.Path.swift; sourceTree = "<group>"; };
 		D9778E601E6F6C0300FF6EBB /* Parser.XML.Path.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Parser.XML.Path.swift; sourceTree = "<group>"; };
 		D9778E631E6F6DFA00FF6EBB /* Parser.PathTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Parser.PathTests.swift; sourceTree = "<group>"; };
@@ -399,6 +399,14 @@
 			path = Samples;
 			sourceTree = "<group>";
 		};
+		D971509F2198E25A00244CE6 /* XML */ = {
+			isa = PBXGroup;
+			children = (
+				D97150A02198E25A00244CE6 /* XML.Parser.ScannerTests.swift */,
+			);
+			path = XML;
+			sourceTree = "<group>";
+		};
 		D978A4381EE271BE00727106 /* LayerTree */ = {
 			isa = PBXGroup;
 			children = (
@@ -443,7 +451,6 @@
 			isa = PBXGroup;
 			children = (
 				D99CC9851E5F8EE600E7886A /* CharacterSetTests.swift */,
-				D97150992198DD8400244CE6 /* ScannerTests.swift */,
 				D99CC98C1E5FA04A00E7886A /* SlowScannerTests.swift */,
 			);
 			path = Scanner;
@@ -530,6 +537,7 @@
 				D9F3EBD41DFF60F2006691A1 /* Parser */,
 				D978A43C1EE272EF00727106 /* LayerTree */,
 				D921C7A61E774F2B008AA023 /* Renderer */,
+				D971509F2198E25A00244CE6 /* XML */,
 				D9F3EBC11DFF5BA3006691A1 /* Info.plist */,
 			);
 			path = SwiftDrawTests;
@@ -860,7 +868,6 @@
 				D9778E5A1E6ED40000FF6EBB /* URL.swift in Sources */,
 				D9778E531E6ED3EF00FF6EBB /* StyleTests.swift in Sources */,
 				D9778E501E6ED3EF00FF6EBB /* TextTests.swift in Sources */,
-				D971509B2198DD8400244CE6 /* ScannerTests.swift in Sources */,
 				D9778E551E6ED3EF00FF6EBB /* ImageTests.swift in Sources */,
 				D978A4501EE28A4000727106 /* LayerTree.PathTests.swift in Sources */,
 				D9778E511E6ED3EF00FF6EBB /* UseTests.swift in Sources */,
@@ -876,6 +883,7 @@
 				D978A45F1EE2CC4400727106 /* LayerTree.ImageTests.swift in Sources */,
 				D9778E4C1E6ED3EF00FF6EBB /* ColorTests.swift in Sources */,
 				D9ED5E341EF1FCFE00C49744 /* StackTests.swift in Sources */,
+				D97150A22198E25A00244CE6 /* XML.Parser.ScannerTests.swift in Sources */,
 				D9778E451E6ED3EF00FF6EBB /* AttributeParserTests.swift in Sources */,
 				D9778E4E1E6ED3EF00FF6EBB /* TransformTests.swift in Sources */,
 				D911E42D1EE4150F00A86AAD /* Renderer.CoreGraphicsTypesTests.swift in Sources */,
@@ -950,7 +958,6 @@
 				D965B58D1E4F1378003E859E /* Parser.SVGTests.swift in Sources */,
 				D9100F921E0A0EEC00190335 /* CoordinateTests.swift in Sources */,
 				D978A44F1EE28A4000727106 /* LayerTree.PathTests.swift in Sources */,
-				D971509A2198DD8400244CE6 /* ScannerTests.swift in Sources */,
 				D92CE6091E64E99600E0BE1B /* URL.swift in Sources */,
 				D91B1E241E6E4EAC0028EF61 /* ImageTests.swift in Sources */,
 				D9C4AD1D1E6E0DEC00008312 /* AttributeParserTests.swift in Sources */,
@@ -966,6 +973,7 @@
 				D978A4551EE292F300727106 /* LayerTree.ShapeTests.swift in Sources */,
 				D9C4AD1B1E6CCD8A00008312 /* ValueParserTests.swift in Sources */,
 				D9ED5E331EF1FCFE00C49744 /* StackTests.swift in Sources */,
+				D97150A12198E25A00244CE6 /* XML.Parser.ScannerTests.swift in Sources */,
 				D9ECF1931E2EBEC90029307E /* Scanner1Tests.swift in Sources */,
 				D978A4641EE2D5C700727106 /* LayerTree.LayerTests.swift in Sources */,
 				D99CC99B1E5FF0FF00E7886A /* TextTests.swift in Sources */,

@@ -33,14 +33,13 @@ import XCTest
 @testable import SwiftDraw
 
 private typealias CharacterSet = SwiftDraw.CharacterSet
-private typealias Scanner = SwiftDraw.SlowScanner
 
 class ScannerTests: XCTestCase {
     
     private let emoji: CharacterSet = "🤠🌞💎🐶\u{1f1e6}\u{1f1fa}"
     
     func testScanCharsetHex() {
-        var scanner = Scanner(text: "  \t   8badf00d  \t  \t  007")
+        var scanner = SlowScanner(text: "  \t   8badf00d  \t  \t  007")
         
         XCTAssertEqual(scanner.scan(any: CharacterSet.hexadecimal), "8badf00d")
         XCTAssertEqual(scanner.scan(any: CharacterSet.hexadecimal), "007")
@@ -48,7 +47,7 @@ class ScannerTests: XCTestCase {
     }
     
     func testScanCharsetEmoji() {
-        var scanner = Scanner(text: "  \t   8badf00d  \t🐶  \t🌞🇦🇺  007")
+        var scanner = SlowScanner(text: "  \t   8badf00d  \t🐶  \t🌞🇦🇺  007")
         
         XCTAssertNil(scanner.scan(any: emoji))
         XCTAssertEqual(scanner.scan(any: CharacterSet.hexadecimal), "8badf00d")
@@ -61,7 +60,7 @@ class ScannerTests: XCTestCase {
     }
     
     func testScanString() {
-        var scanner = Scanner(text: "  \t The quick brown fox")
+        var scanner = SlowScanner(text: "  \t The quick brown fox")
         
         XCTAssertNil(scanner.scan("fox"))
         XCTAssertEqual(scanner.scan("The"), "The")
@@ -72,7 +71,7 @@ class ScannerTests: XCTestCase {
     }
     
     func testScanCharacter() {
-        var scanner = Scanner(text: "  \t The fox 8badf00d ")
+        var scanner = SlowScanner(text: "  \t The fox 8badf00d ")
         
         XCTAssertNil(scanner.scan(first: "qfxh"))
         XCTAssertEqual(scanner.scan(first: "fxT"), "T")
@@ -122,7 +121,7 @@ class ScannerTests: XCTestCase {
     }
     
     func testScanCoordinate() {
-        var scanner = Scanner(text: "10.05,12.04-49.05,30.02-10")
+        var scanner = SlowScanner(text: "10.05,12.04-49.05,30.02-10")
         
         XCTAssertEqual(try? scanner.scanCoordinate(), 10.05)
         _ = scanner.scan(first: ",")
@@ -138,16 +137,16 @@ class ScannerTests: XCTestCase {
 }
 
 private func AssertScanUInt8(_ text: String, _ expected: UInt8?, file: StaticString = #file, line: UInt = #line) {
-    var scanner = Scanner(text: text)
+    var scanner = SlowScanner(text: text)
     XCTAssertEqual(try? scanner.scanUInt8(), expected, file: file, line: line)
 }
 
 private func AssertScanBool(_ text: String, _ expected: Bool?, file: StaticString = #file, line: UInt = #line) {
-    var scanner = Scanner(text: text)
+    var scanner = SlowScanner(text: text)
     XCTAssertEqual(try? scanner.scanBool(), expected, file: file, line: line)
 }
 
 private func AssertScanPercentage(_ text: String, _ expected: Float?, file: StaticString = #file, line: UInt = #line) {
-    var scanner = Scanner(text: text)
+    var scanner = SlowScanner(text: text)
     XCTAssertEqual(try? scanner.scanPercentage(), expected, file: file, line: line)
 }
