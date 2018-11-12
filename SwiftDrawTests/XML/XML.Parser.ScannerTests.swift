@@ -67,36 +67,35 @@ class ScannerTests: XCTestCase {
     }
     
     func testScanString() {
-        var scanner = SlowScanner(text: "  \t The quick brown fox")
-        
-        XCTAssertNil(scanner.scan("fox"))
-        XCTAssertEqual(scanner.scan("The"), "The")
-        XCTAssertNil(scanner.scan("quick fox"))
-        XCTAssertEqual(scanner.scan("quick brown"), "quick brown")
-        XCTAssertEqual(scanner.scan("fox"), "fox")
-        XCTAssertNil(scanner.scan("fox"))
+        var scanner =  XMLParser.Scanner(text: "  \t The quick brown fox")
+
+        XCTAssertThrowsError(try scanner.scanString("fox"))
+        XCTAssertNoThrow(try scanner.scanString("The"))
+        XCTAssertThrowsError(try scanner.scanString("quick fox"))
+        XCTAssertNoThrow(try scanner.scanString("quick brown"))
+        XCTAssertNoThrow(try scanner.scanString("fox"))
+        XCTAssertThrowsError(try scanner.scanString("fox"))
     }
-    
+
     func testScanCharacter() {
-        var scanner = SlowScanner(text: "  \t The fox 8badf00d ")
-        
-        XCTAssertNil(scanner.scan(first: "qfxh"))
-        XCTAssertEqual(scanner.scan(first: "fxT"), "T")
-        XCTAssertNil(scanner.scan(first: "fxT"))
-        XCTAssertEqual(scanner.scan(first: "qfxh"), "h")
-        XCTAssertEqual(scanner.scan("e fox"), "e fox")
-        XCTAssertNil(scanner.scan(first: "fxT"))
-        XCTAssertEqual(scanner.scan(first: CharacterSet.hexadecimal), "8")
-        XCTAssertEqual(scanner.scan(first: CharacterSet.hexadecimal), "b")
-        XCTAssertEqual(scanner.scan(first: CharacterSet.hexadecimal), "a")
-        XCTAssertEqual(scanner.scan(first: CharacterSet.hexadecimal), "d")
-        XCTAssertEqual(scanner.scan(first: CharacterSet.hexadecimal), "f")
-        XCTAssertEqual(scanner.scan(first: CharacterSet.hexadecimal), "0")
-        XCTAssertEqual(scanner.scan(first: CharacterSet.hexadecimal), "0")
-        XCTAssertEqual(scanner.scan(first: CharacterSet.hexadecimal), "d")
-        XCTAssertNil(scanner.scan(first: CharacterSet.hexadecimal))
+        var scanner = XMLParser.Scanner(text: "  \t The fox 8badf00d ")
+        let hexadecimalSet: Foundation.CharacterSet = "0123456789ABCDEFabcdef"
+
+        XCTAssertThrowsError(_ = try scanner.scanCharacter(matchingAny: "qfxh"))
+        XCTAssertEqual(try scanner.scanCharacter(matchingAny: "fxT"), "T")
+        XCTAssertThrowsError(_ = try scanner.scanCharacter(matchingAny: "fxT"))
+        XCTAssertEqual(try scanner.scanCharacter(matchingAny: "qfxh"), "h")
+        XCTAssertNoThrow(try scanner.scanString("e fox"))
+        XCTAssertEqual(try scanner.scanCharacter(matchingAny: hexadecimalSet), "8")
+        XCTAssertEqual(try scanner.scanCharacter(matchingAny: hexadecimalSet), "b")
+        XCTAssertEqual(try scanner.scanCharacter(matchingAny: hexadecimalSet), "a")
+        XCTAssertEqual(try scanner.scanCharacter(matchingAny: hexadecimalSet), "d")
+        XCTAssertEqual(try scanner.scanCharacter(matchingAny: hexadecimalSet), "f")
+        XCTAssertEqual(try scanner.scanCharacter(matchingAny: hexadecimalSet), "0")
+        XCTAssertEqual(try scanner.scanCharacter(matchingAny: hexadecimalSet), "0")
+        XCTAssertEqual(try scanner.scanCharacter(matchingAny: hexadecimalSet), "d")
     }
-    
+
     func testScanUInt8() {
         AssertScanUInt8("0", 0)
         AssertScanUInt8("124", 124)
@@ -214,4 +213,13 @@ private func AssertScanPercentage(_ text: String, _ expected: Float?, file: Stat
 private func AssertScanPercentageFloat(_ text: String, _ expected: Float?, file: StaticString = #file, line: UInt = #line) {
     var scanner = XMLParser.Scanner(text: text)
     XCTAssertEqual(try? scanner.scanPercentageFloat(), expected, file: file, line: line)
+}
+
+
+extension Foundation.CharacterSet: ExpressibleByStringLiteral {
+
+    public init(stringLiteral value: String) {
+        self.init(charactersIn: value)
+    }
+
 }

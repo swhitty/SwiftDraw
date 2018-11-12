@@ -41,9 +41,19 @@ extension XMLParser {
         init(text: String) {
             self.scanner = Foundation.Scanner(text: text)
             self.scanLocation = self.scanner.scanLocation
+            self.charactersToBeSkipped = Foundation.CharacterSet.whitespacesAndNewlines
         }
 
         var isEOF: Bool { return scanner.isAtEnd }
+
+        var charactersToBeSkipped: Foundation.CharacterSet? {
+            get {
+                return scanner.charactersToBeSkipped
+            }
+            set {
+                scanner.charactersToBeSkipped = newValue
+            }
+        }
 
         mutating func scanString(_ token: String) throws {
             _ = try self.scanString(matchingAny: [token])
@@ -51,11 +61,25 @@ extension XMLParser {
 
         mutating func scanString(matchingAny tokens: Set<String>) throws -> String {
             scanner.scanLocation = scanLocation
-            guard  let match = tokens.first(where: { scanner.scanString($0, into: nil) }) else {
+            guard let match = tokens.first(where: { scanner.scanString($0, into: nil) }) else {
                 throw Error.invalid
             }
             scanLocation = scanner.scanLocation
             return match
+        }
+
+        mutating func scanCharacter(matchingAny characters: Foundation.CharacterSet) throws -> Character {
+            scanner.scanLocation = scanLocation
+            var result: NSString?
+            guard
+                scanner.scanCharacters(from: characters, into: &result),
+                let match = result.map({ $0 as String }),
+                match.isEmpty == false else {
+                    throw Error.invalid
+            }
+
+            scanLocation = scanner.scanLocation - (match.count - 1)
+            return match[match.startIndex]
         }
 
         mutating func scanUInt8() throws -> UInt8 {
@@ -145,22 +169,6 @@ extension Scanner {
     }
 
     var isEOF: Bool { return isAtEnd }
-
-    func scanFloat() throws -> Float {
-        var val: Float = 0
-        guard self.scanFloat(&val) else {
-            throw Error.invalid
-        }
-        return val
-    }
-
-    func scanDouble() throws -> Double {
-        var val: Double = 0
-        guard self.scanDouble(&val) else {
-            throw Error.invalid
-        }
-        return val
-    }
 
     func scanBool() throws -> Bool {
         let boolString = try self.scanString(matchingAny: ["true", "TRUE", "false", "FALSE", "0", "1"])
