@@ -37,7 +37,14 @@ private typealias CharacterSet = SwiftDraw.CharacterSet
 class ScannerTests: XCTestCase {
     
     private let emoji: CharacterSet = "🤠🌞💎🐶\u{1f1e6}\u{1f1fa}"
-    
+
+    func testIsEOF() throws {
+        var scanner = XMLParser.Scanner(text: "Hi")
+        XCTAssertFalse(scanner.isEOF)
+        try scanner.scanString("Hi")
+        XCTAssertTrue(scanner.isEOF)
+    }
+
     func testScanCharsetHex() {
         var scanner = SlowScanner(text: "  \t   8badf00d  \t  \t  007")
         
@@ -97,6 +104,30 @@ class ScannerTests: XCTestCase {
         AssertScanUInt8("-29", nil)
         AssertScanUInt8("ab24", nil)
     }
+
+    func testScanFloat() {
+        AssertScanFloat("0", 0)
+        AssertScanFloat("124", 124)
+        AssertScanFloat(" 045", 45)
+        AssertScanFloat("-29", -29)
+        AssertScanFloat("ab24", nil)
+    }
+
+    func testScanDouble() {
+        AssertScanDouble("0", 0)
+        AssertScanDouble("124", 124)
+        AssertScanDouble(" 045", 45)
+        AssertScanDouble("-29", -29)
+        AssertScanDouble("ab24", nil)
+    }
+
+    func testScanLength() {
+        AssertScanLength("0", 0)
+        AssertScanLength("124", 124)
+        AssertScanLength(" 045", 45)
+        AssertScanLength("-29", -29)
+        AssertScanLength("ab24", nil)
+    }
     
     func testScanBool() {
         AssertScanBool("0", false)
@@ -104,10 +135,24 @@ class ScannerTests: XCTestCase {
         AssertScanBool("true", true)
         AssertScanBool("false", false)
         AssertScanBool("false", false)
-        AssertScanUInt8("-29", nil)
-        AssertScanUInt8("ab24", nil)
+
+        var scanner = XMLParser.Scanner(text: "-29")
+        XCTAssertThrowsError(try scanner.scanBool())
+        XCTAssertEqual(scanner.scanLocation, 0)
     }
-    
+
+    func testScanPercentageFloat() {
+        AssertScanPercentageFloat("0", 0)
+        AssertScanPercentageFloat("0.5", 0.5)
+        AssertScanPercentageFloat("0.75", 0.75)
+        AssertScanPercentageFloat("1.0", 1.0)
+        AssertScanPercentageFloat("-0.5", nil)
+        AssertScanPercentageFloat("1.5", nil)
+        AssertScanPercentageFloat("as", nil)
+        AssertScanPercentageFloat("29", nil)
+        AssertScanPercentageFloat("24", nil)
+    }
+
     func testScanPercentage() {
         AssertScanPercentage("0", 0)
         AssertScanPercentage("0%", 0)
@@ -141,6 +186,21 @@ private func AssertScanUInt8(_ text: String, _ expected: UInt8?, file: StaticStr
     XCTAssertEqual(try? scanner.scanUInt8(), expected, file: file, line: line)
 }
 
+private func AssertScanFloat(_ text: String, _ expected: Float?, file: StaticString = #file, line: UInt = #line) {
+    var scanner = XMLParser.Scanner(text: text)
+    XCTAssertEqual(try? scanner.scanFloat(), expected, file: file, line: line)
+}
+
+private func AssertScanDouble(_ text: String, _ expected: Double?, file: StaticString = #file, line: UInt = #line) {
+    var scanner = XMLParser.Scanner(text: text)
+    XCTAssertEqual(try? scanner.scanDouble(), expected, file: file, line: line)
+}
+
+private func AssertScanLength(_ text: String, _ expected: DOM.Length?, file: StaticString = #file, line: UInt = #line) {
+    var scanner = XMLParser.Scanner(text: text)
+    XCTAssertEqual(try? scanner.scanLength(), expected, file: file, line: line)
+}
+
 private func AssertScanBool(_ text: String, _ expected: Bool?, file: StaticString = #file, line: UInt = #line) {
     var scanner = XMLParser.Scanner(text: text)
     XCTAssertEqual(try? scanner.scanBool(), expected, file: file, line: line)
@@ -149,4 +209,9 @@ private func AssertScanBool(_ text: String, _ expected: Bool?, file: StaticStrin
 private func AssertScanPercentage(_ text: String, _ expected: Float?, file: StaticString = #file, line: UInt = #line) {
     var scanner = XMLParser.Scanner(text: text)
     XCTAssertEqual(try? scanner.scanPercentage(), expected, file: file, line: line)
+}
+
+private func AssertScanPercentageFloat(_ text: String, _ expected: Float?, file: StaticString = #file, line: UInt = #line) {
+    var scanner = XMLParser.Scanner(text: text)
+    XCTAssertEqual(try? scanner.scanPercentageFloat(), expected, file: file, line: line)
 }

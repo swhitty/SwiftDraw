@@ -45,6 +45,10 @@ extension XMLParser {
 
         var isEOF: Bool { return scanner.isAtEnd }
 
+        mutating func scanString(_ token: String) throws {
+            _ = try self.scanString(matchingAny: [token])
+        }
+
         mutating func scanString(matchingAny tokens: Set<String>) throws -> String {
             scanner.scanLocation = scanLocation
             guard  let match = tokens.first(where: { scanner.scanString($0, into: nil) }) else {
@@ -142,19 +146,6 @@ extension Scanner {
 
     var isEOF: Bool { return isAtEnd }
 
-    func scanUInt8() throws -> UInt8 {
-        var longVal: UInt64 = 0
-        let location = scanLocation
-        guard self.scanUnsignedLongLong(&longVal) else {
-            throw Error.invalid
-        }
-        guard let val = UInt8(exactly: longVal) else {
-            scanLocation = location
-            throw Error.invalid
-        }
-        return val
-    }
-
     func scanFloat() throws -> Float {
         var val: Float = 0
         guard self.scanFloat(&val) else {
@@ -166,19 +157,6 @@ extension Scanner {
     func scanDouble() throws -> Double {
         var val: Double = 0
         guard self.scanDouble(&val) else {
-            throw Error.invalid
-        }
-        return val
-    }
-
-    func scanLength() throws -> DOM.Length {
-        var int64: Int64 = 0
-        let location = scanLocation
-        guard self.scanInt64(&int64) else {
-            throw Error.invalid
-        }
-        guard let val = DOM.Length(exactly: int64) else {
-            scanLocation = location
             throw Error.invalid
         }
         return val
@@ -196,31 +174,7 @@ extension Scanner {
         }
     }
 
-    func scanPercentageFloat() throws -> Float {
-        let location = scanLocation
-        let val = try scanFloat()
-        guard val >= 0.0, val <= 1.0 else {
-            scanLocation = location
-            throw Error.invalid
-        }
-        return val
-    }
-
-    func scanPercentage() throws -> Float {
-        let location = scanLocation
-        let val = try scanDouble()
-        guard val >= 0, val <= 100 else {
-            scanLocation = location
-            throw Error.invalid
-        }
-        guard scanString("%", into: nil) || val == 0 else {
-            scanLocation = location
-            throw Error.invalid
-        }
-        return Float(val / 100.0)
-    }
-
-    func scanString(matchingAny tokens: [String]) throws -> String {
+    private func scanString(matchingAny tokens: [String]) throws -> String {
         guard let match = tokens.first(where: { self.scanString($0, into: nil) }) else {
             throw Error.invalid
         }
@@ -235,8 +189,6 @@ extension Scanner {
         self.init(string: text)
     }
 
-
-
     func scan(first set: Foundation.CharacterSet) -> UnicodeScalar? {
         var val: NSString?
         let start = scanLocation
@@ -250,13 +202,6 @@ extension Scanner {
 
         return UnicodeScalar(string.character(at: 0))
     }
-
-//    func scanBool() throws -> DOM.Bool {
-//        guard let scalar = scan(first: CharSet.boolInt) else {
-//            throw XMLParser.Error.invalid
-//        }
-//        return scalar == UnicodeScalar("1") ? true : false
-//    }
 
     func scanCoordinate() throws -> DOM.Coordinate {
         var val: Double = 0
