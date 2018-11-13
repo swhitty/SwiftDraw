@@ -177,7 +177,6 @@ class ScannerTests: XCTestCase {
         _ = scanner.scan(first: ",")
         XCTAssertEqual(try? scanner.scanCoordinate(), -10)
     }
-    
 }
 
 private func AssertScanUInt8(_ text: String, _ expected: UInt8?, file: StaticString = #file, line: UInt = #line) {
