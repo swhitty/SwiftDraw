@@ -59,11 +59,10 @@ extension URL {
                 return nil
         }
         
-        let mime = txt.substring(with: schemeRange.upperBound..<mimeRange.lowerBound)
-        let base64 = txt.substring(with: encodingRange.upperBound..<txt.endIndex)
+        let mime = String(txt[schemeRange.upperBound..<mimeRange.lowerBound])
+        let base64 = String(txt[encodingRange.upperBound..<txt.endIndex])
         
-        guard mime.characters.count > 0,
-              base64.characters.count > 0,
+        guard !mime.isEmpty, !base64.isEmpty,
               let data = Data(base64Encoded: base64) else {
             return nil
         }
