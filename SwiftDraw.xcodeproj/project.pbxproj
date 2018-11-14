@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		D9002B111E08B6050090BCC8 /* Formatter.XML.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9002B101E08B6050090BCC8 /* Formatter.XML.swift */; };
 		D90DB39A219CCB9E00D374D2 /* Renderer.CoreGraphicsTypesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB397219CCB9E00D374D2 /* Renderer.CoreGraphicsTypesTests.swift */; };
 		D90DB39B219CCB9E00D374D2 /* Renderer.CoreGraphicsTypesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB397219CCB9E00D374D2 /* Renderer.CoreGraphicsTypesTests.swift */; };
 		D90DB3A0219CCBBD00D374D2 /* Renderer.CoreGraphics.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB39D219CCBBD00D374D2 /* Renderer.CoreGraphics.swift */; };
@@ -156,11 +155,12 @@
 		D90DB492219CD2C300D374D2 /* Parser.SVGTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB473219CD2C200D374D2 /* Parser.SVGTests.swift */; };
 		D90DB493219CD2C300D374D2 /* ElementTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB474219CD2C200D374D2 /* ElementTests.swift */; };
 		D90DB494219CD2C300D374D2 /* ElementTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB474219CD2C200D374D2 /* ElementTests.swift */; };
-		D958D9F51E020158004D811F /* Formatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = D958D9F41E020158004D811F /* Formatter.swift */; };
+		D90DB498219CD32600D374D2 /* Formatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB496219CD32600D374D2 /* Formatter.swift */; };
+		D90DB499219CD32600D374D2 /* Formatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB496219CD32600D374D2 /* Formatter.swift */; };
+		D90DB49A219CD32600D374D2 /* Formatter.XML.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB497219CD32600D374D2 /* Formatter.XML.swift */; };
+		D90DB49B219CD32600D374D2 /* Formatter.XML.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB497219CD32600D374D2 /* Formatter.XML.swift */; };
 		D962D2761E6ECD5C00B825C6 /* SwiftDraw.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D962D26D1E6ECD5C00B825C6 /* SwiftDraw.framework */; };
 		D962D2A21E6ECE2000B825C6 /* SwiftDraw-macOS.h in Headers */ = {isa = PBXBuildFile; fileRef = D962D2A11E6ECE2000B825C6 /* SwiftDraw-macOS.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		D962D2DA1E6ED01C00B825C6 /* Formatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = D958D9F41E020158004D811F /* Formatter.swift */; };
-		D962D2E51E6ED20100B825C6 /* Formatter.XML.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9002B101E08B6050090BCC8 /* Formatter.XML.swift */; };
 		D965B5821E3C48C6003E859E /* shapes.svg in Resources */ = {isa = PBXBuildFile; fileRef = D965B5811E3C48C6003E859E /* shapes.svg */; };
 		D965B5871E3C5CF8003E859E /* starry.svg in Resources */ = {isa = PBXBuildFile; fileRef = D965B5851E3C5C87003E859E /* starry.svg */; };
 		D9778E5B1E6ED66300FF6EBB /* starry.svg in Resources */ = {isa = PBXBuildFile; fileRef = D965B5851E3C5C87003E859E /* starry.svg */; };
@@ -197,7 +197,6 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		D9002B101E08B6050090BCC8 /* Formatter.XML.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Formatter.XML.swift; sourceTree = "<group>"; };
 		D90DB396219CCB9E00D374D2 /* CGRenderer.PathTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CGRenderer.PathTests.swift; sourceTree = "<group>"; };
 		D90DB397219CCB9E00D374D2 /* Renderer.CoreGraphicsTypesTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Renderer.CoreGraphicsTypesTests.swift; sourceTree = "<group>"; };
 		D90DB39D219CCBBD00D374D2 /* Renderer.CoreGraphics.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Renderer.CoreGraphics.swift; sourceTree = "<group>"; };
@@ -274,7 +273,8 @@
 		D90DB472219CD2C200D374D2 /* ImageTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ImageTests.swift; sourceTree = "<group>"; };
 		D90DB473219CD2C200D374D2 /* Parser.SVGTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Parser.SVGTests.swift; sourceTree = "<group>"; };
 		D90DB474219CD2C200D374D2 /* ElementTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ElementTests.swift; sourceTree = "<group>"; };
-		D958D9F41E020158004D811F /* Formatter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Formatter.swift; sourceTree = "<group>"; };
+		D90DB496219CD32600D374D2 /* Formatter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Formatter.swift; sourceTree = "<group>"; };
+		D90DB497219CD32600D374D2 /* Formatter.XML.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Formatter.XML.swift; sourceTree = "<group>"; };
 		D962D26D1E6ECD5C00B825C6 /* SwiftDraw.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SwiftDraw.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		D962D2751E6ECD5C00B825C6 /* SwiftDraw-macOSTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "SwiftDraw-macOSTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		D962D2A11E6ECE2000B825C6 /* SwiftDraw-macOS.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "SwiftDraw-macOS.h"; sourceTree = "<group>"; };
@@ -418,15 +418,16 @@
 			name = Utilities;
 			sourceTree = "<group>";
 		};
-		D90DB3FF219CD04E00D374D2 /* SVG2 */ = {
+		D90DB3FF219CD04E00D374D2 /* SVG */ = {
 			isa = PBXGroup;
 			children = (
-				D90DB442219CD26500D374D2 /* Parser */,
 				D90DB41C219CD1B800D374D2 /* DOM */,
+				D90DB495219CD31700D374D2 /* Formatter */,
+				D90DB442219CD26500D374D2 /* Parser */,
 				D90DB40A219CD09D00D374D2 /* Scanner */,
 				D90DB400219CD05600D374D2 /* XML */,
 			);
-			name = SVG2;
+			name = SVG;
 			sourceTree = "<group>";
 		};
 		D90DB400219CD05600D374D2 /* XML */ = {
@@ -532,13 +533,24 @@
 			name = Parser;
 			sourceTree = "<group>";
 		};
-		D958D9F31E02013B004D811F /* Formatter */ = {
+		D90DB495219CD31700D374D2 /* Formatter */ = {
 			isa = PBXGroup;
 			children = (
-				D958D9F41E020158004D811F /* Formatter.swift */,
-				D9002B101E08B6050090BCC8 /* Formatter.XML.swift */,
+				D90DB496219CD32600D374D2 /* Formatter.swift */,
+				D90DB497219CD32600D374D2 /* Formatter.XML.swift */,
 			);
-			path = Formatter;
+			name = Formatter;
+			sourceTree = "<group>";
+		};
+		D90DB49C219CD37C00D374D2 /* SVG */ = {
+			isa = PBXGroup;
+			children = (
+				D90DB43B219CD1E000D374D2 /* DOM */,
+				D90DB464219CD2A300D374D2 /* Parser */,
+				D90DB415219CD17D00D374D2 /* Scanner */,
+				D90DB411219CD0C200D374D2 /* XML */,
+			);
+			name = SVG;
 			sourceTree = "<group>";
 		};
 		D965B5801E3C4879003E859E /* Samples */ = {
@@ -579,16 +591,15 @@
 		D9F3EBB31DFF5BA3006691A1 /* SwiftDraw */ = {
 			isa = PBXGroup;
 			children = (
-				D90DB3FF219CD04E00D374D2 /* SVG2 */,
-				D90DB3F6219CCF5C00D374D2 /* Utilities */,
+				D9F3EBB41DFF5BA3006691A1 /* SwiftDraw.h */,
+				D962D2A11E6ECE2000B825C6 /* SwiftDraw-macOS.h */,
+				D9F3EBB51DFF5BA3006691A1 /* Info.plist */,
 				D90DB3EA219CCECF00D374D2 /* Extensions */,
 				D90DB3DD219CCDFB00D374D2 /* Image */,
 				D90DB3A3219CCC2100D374D2 /* LayerTree */,
 				D90DB39C219CCBAF00D374D2 /* Renderer */,
-				D9F3EBCD1DFF5BE1006691A1 /* SVG */,
-				D9F3EBB41DFF5BA3006691A1 /* SwiftDraw.h */,
-				D962D2A11E6ECE2000B825C6 /* SwiftDraw-macOS.h */,
-				D9F3EBB51DFF5BA3006691A1 /* Info.plist */,
+				D90DB3FF219CD04E00D374D2 /* SVG */,
+				D90DB3F6219CCF5C00D374D2 /* Utilities */,
 			);
 			path = SwiftDraw;
 			sourceTree = "<group>";
@@ -596,25 +607,14 @@
 		D9F3EBBE1DFF5BA3006691A1 /* SwiftDrawTests */ = {
 			isa = PBXGroup;
 			children = (
-				D90DB464219CD2A300D374D2 /* Parser */,
-				D90DB43B219CD1E000D374D2 /* DOM */,
-				D90DB415219CD17D00D374D2 /* Scanner */,
-				D90DB411219CD0C200D374D2 /* XML */,
-				D90DB3FB219CCF8300D374D2 /* Utilities */,
 				D90DB3F2219CCF1A00D374D2 /* Extensions */,
 				D90DB3C5219CCC7200D374D2 /* LayerTree */,
 				D90DB32D219CCB7300D374D2 /* Renderer */,
+				D90DB49C219CD37C00D374D2 /* SVG */,
+				D90DB3FB219CCF8300D374D2 /* Utilities */,
 				D9F3EBC11DFF5BA3006691A1 /* Info.plist */,
 			);
 			path = SwiftDrawTests;
-			sourceTree = "<group>";
-		};
-		D9F3EBCD1DFF5BE1006691A1 /* SVG */ = {
-			isa = PBXGroup;
-			children = (
-				D958D9F31E02013B004D811F /* Formatter */,
-			);
-			path = SVG;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -815,7 +815,6 @@
 				D90DB463219CD27800D374D2 /* Parser.XML.Use.swift in Sources */,
 				D90DB42A219CD1C600D374D2 /* DOM.swift in Sources */,
 				D90DB430219CD1C600D374D2 /* DOM.Element.swift in Sources */,
-				D962D2DA1E6ED01C00B825C6 /* Formatter.swift in Sources */,
 				D90DB436219CD1C600D374D2 /* DOM.SVG.swift in Sources */,
 				D90DB409219CD06800D374D2 /* XML.Parser.Scanner.swift in Sources */,
 				D90DB432219CD1C600D374D2 /* DOM.Text.swift in Sources */,
@@ -825,6 +824,7 @@
 				D90DB3AF219CCC4100D374D2 /* LayerTree.Shape.swift in Sources */,
 				D90DB42E219CD1C600D374D2 /* DOM.Use.swift in Sources */,
 				D90DB410219CD0A900D374D2 /* CharacterSet.swift in Sources */,
+				D90DB499219CD32600D374D2 /* Formatter.swift in Sources */,
 				D90DB428219CD1C600D374D2 /* DOM.Gradient.swift in Sources */,
 				D90DB438219CD1C600D374D2 /* DOM.Image.swift in Sources */,
 				D90DB3D9219CCCBE00D374D2 /* LayerTree.Builder.swift in Sources */,
@@ -836,12 +836,12 @@
 				D90DB45B219CD27800D374D2 /* Parser.XML.Transform.swift in Sources */,
 				D90DB45D219CD27800D374D2 /* Parser.XML.Element.swift in Sources */,
 				D90DB434219CD1C600D374D2 /* DOM.Path.swift in Sources */,
-				D962D2E51E6ED20100B825C6 /* Formatter.XML.swift in Sources */,
 				D90DB405219CD06800D374D2 /* XML.Parser.swift in Sources */,
 				D90DB43A219CD1C600D374D2 /* DOM.Color.swift in Sources */,
 				D90DB3C1219CCC4100D374D2 /* LayerTree.Commands.swift in Sources */,
 				D90DB3C3219CCC4800D374D2 /* Renderer.Code.swift in Sources */,
 				D90DB3EE219CCEDE00D374D2 /* CGPath+Segment.swift in Sources */,
+				D90DB49B219CD32600D374D2 /* Formatter.XML.swift in Sources */,
 				D90DB3B5219CCC4100D374D2 /* LayerTree.swift in Sources */,
 				D90DB455219CD27800D374D2 /* Parser.XML.Gradient.swift in Sources */,
 				D90DB42C219CD1C600D374D2 /* DOM.Switch.swift in Sources */,
@@ -914,7 +914,7 @@
 				D90DB3F8219CCF6A00D374D2 /* Stack.swift in Sources */,
 				D90DB3A2219CCBBD00D374D2 /* Renderer.Code.swift in Sources */,
 				D90DB42D219CD1C600D374D2 /* DOM.Use.swift in Sources */,
-				D9002B111E08B6050090BCC8 /* Formatter.XML.swift in Sources */,
+				D90DB498219CD32600D374D2 /* Formatter.swift in Sources */,
 				D90DB40F219CD0A900D374D2 /* CharacterSet.swift in Sources */,
 				D90DB3E3219CCE0E00D374D2 /* UIImage+Image.swift in Sources */,
 				D90DB427219CD1C600D374D2 /* DOM.Gradient.swift in Sources */,
@@ -931,6 +931,7 @@
 				D90DB3ED219CCEDE00D374D2 /* CGPath+Segment.swift in Sources */,
 				D90DB3B2219CCC4100D374D2 /* LayerTree.Path.swift in Sources */,
 				D90DB439219CD1C600D374D2 /* DOM.Color.swift in Sources */,
+				D90DB49A219CD32600D374D2 /* Formatter.XML.swift in Sources */,
 				D90DB3E5219CCE0E00D374D2 /* Image.swift in Sources */,
 				D90DB406219CD06800D374D2 /* XML.swift in Sources */,
 				D90DB454219CD27800D374D2 /* Parser.XML.Gradient.swift in Sources */,
@@ -943,7 +944,6 @@
 				D90DB3DB219CCCDB00D374D2 /* LayerTree.Builder.Path.swift in Sources */,
 				D90DB3B8219CCC4100D374D2 /* LayerTree.Layer.swift in Sources */,
 				D90DB3BE219CCC4100D374D2 /* LayerTree.Image.swift in Sources */,
-				D958D9F51E020158004D811F /* Formatter.swift in Sources */,
 				D90DB3A1219CCBBD00D374D2 /* Renderer.swift in Sources */,
 				D90DB44E219CD27800D374D2 /* Parser.XML.swift in Sources */,
 				D90DB452219CD27800D374D2 /* Parser.XML.Path.swift in Sources */,
