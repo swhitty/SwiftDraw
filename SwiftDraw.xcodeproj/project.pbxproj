@@ -290,7 +290,6 @@
 		D9F3EBBA1DFF5BA3006691A1 /* SwiftDrawTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SwiftDrawTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		D9F3EBC11DFF5BA3006691A1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		D9F3EBD21DFF5C96006691A1 /* DOM.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DOM.swift; sourceTree = "<group>"; };
-		D9F3EBD51DFF6100006691A1 /* FormatterTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FormatterTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -592,7 +591,6 @@
 			isa = PBXGroup;
 			children = (
 				D9C4AD1C1E6E0DEC00008312 /* AttributeParserTests.swift */,
-				D9F3EBD51DFF6100006691A1 /* FormatterTests.swift */,
 				D9100F911E0A0EEC00190335 /* CoordinateTests.swift */,
 				D9C4AD1A1E6CCD8A00008312 /* ValueParserTests.swift */,
 				D965B58C1E4F1378003E859E /* Parser.SVGTests.swift */,
