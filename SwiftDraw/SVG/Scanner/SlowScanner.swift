@@ -273,9 +273,3 @@ extension SlowScanner {
         return Float(val / 100.0)
     }
 }
-
-struct CharSet {
-    static var commandSet = Foundation.CharacterSet(charactersIn: "MmLlHhVvCcSsQqTtAaZz")
-    static var delimeter = Foundation.CharacterSet(charactersIn: ",;")
-    static var boolInt = Foundation.CharacterSet(charactersIn: "10")
-}

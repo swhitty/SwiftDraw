@@ -29,6 +29,8 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
+import Foundation
+
 struct CharacterSet {
     
     static var empty = CharacterSet()
@@ -76,3 +78,10 @@ extension CharacterSet: ExpressibleByStringLiteral {
         insert(value)
     }
 }
+
+struct CharSet {
+    static var commandSet = Foundation.CharacterSet(charactersIn: "MmLlHhVvCcSsQqTtAaZz")
+    static var delimeter = Foundation.CharacterSet(charactersIn: ",;")
+    static var boolInt = Foundation.CharacterSet(charactersIn: "10")
+}
+
