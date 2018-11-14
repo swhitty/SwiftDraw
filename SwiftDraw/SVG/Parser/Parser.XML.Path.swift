@@ -49,7 +49,7 @@ extension XMLParser {
         
         var segments = Array<Segment>()
         
-        var scanner = PathScanner(text: data)
+        var scanner = PathScanner(string: data)
         
         scanner.charactersToBeSkipped = Foundation.CharacterSet.whitespacesAndNewlines
         
@@ -61,7 +61,7 @@ extension XMLParser {
             }
             guard let command = lastCommand else { throw Error.invalid }
             segments.append(try parsePathSegment(for: command, with: &scanner))
-        } while !scanner.isEOF
+        } while !scanner.isAtEnd
         
         return segments
     }
