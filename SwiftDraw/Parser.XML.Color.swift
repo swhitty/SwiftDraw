@@ -63,8 +63,8 @@ extension XMLParser {
     }
     
     private func parseColorRGB(data: String) throws -> DOM.Color? {
-        var scanner = SlowScanner(text: data)
-        guard scanner.scan("rgb(") != nil else { return nil }
+        var scanner = XMLParser.Scanner(text: data)
+        guard scanner.scanStringIfPossible("rgb(") else { return nil }
         
         if let c = try? parseColorRGBf(data: data) {
             return c
@@ -74,26 +74,29 @@ extension XMLParser {
     }
     
     private func parseColorRGBi(data: String) throws -> DOM.Color {
-        var scanner = SlowScanner(text: data)
-        guard scanner.scan("rgb(") != nil else { throw Error.invalid }
+        var scanner = XMLParser.Scanner(text: data)
+        try scanner.scanString("rgb(")
+
         let r = try scanner.scanUInt8()
-        _ = scanner.scan(",")
+        scanner.scanStringIfPossible(",")
         let g = try scanner.scanUInt8()
-        _ = scanner.scan(",")
+        scanner.scanStringIfPossible(",")
         let b = try scanner.scanUInt8()
-        guard scanner.scan(")") != nil else { throw Error.invalid }
+        try scanner.scanString(")")
         return .rgbi(r, g, b)
     }
     
     private func parseColorRGBf(data: String) throws -> DOM.Color {
-        var scanner = SlowScanner(text: data)
-        guard scanner.scan("rgb(") != nil else { throw Error.invalid }
+        var scanner = XMLParser.Scanner(text: data)
+        try scanner.scanString("rgb(")
+
         let r = try scanner.scanPercentage()
-        _ = scanner.scan(",")
+        scanner.scanStringIfPossible(",")
         let g = try scanner.scanPercentage()
-        _ = scanner.scan(",")
+        scanner.scanStringIfPossible(",")
         let b = try scanner.scanPercentage()
-        guard scanner.scan(")") != nil else { throw Error.invalid }
+        try scanner.scanString(")")
+
         return .rgbf(r, g, b)
     }
     
@@ -106,10 +109,11 @@ extension XMLParser {
     }
     
     private func parseColorHex(data: String) throws -> DOM.Color? {
-        var scanner = SlowScanner(text: data)
-        guard scanner.scan("#") != nil else { return nil }
-        
-        guard let code = scanner.scan(any: CharacterSet.hexadecimal),
+        var scanner = XMLParser.Scanner(text: data)
+        guard scanner.scanStringIfPossible("#") else { return nil }
+        let hexadecimal = Foundation.CharacterSet(charactersIn: "0123456789ABCDEFabcdef")
+        let code = try scanner.scanString(matchingAny: hexadecimal)
+        guard
             let paddedCode = padHex(code),
             let hex = UInt32(hex: paddedCode) else {
             throw Error.invalid
