@@ -89,7 +89,6 @@ extension XMLParser {
     }
     
     func parseGraphicsElement(_ e: XML.Element) throws -> DOM.GraphicsElement? {
-        
         var ge: DOM.GraphicsElement
         
         let att = try parseAttributes(e)
@@ -120,7 +119,6 @@ extension XMLParser {
         return ge
     }
 
-    
     func parseContainerChildren(_ e: XML.Element) throws -> [DOM.GraphicsElement] {
         guard e.name == "svg" ||
               e.name == "clipPath" ||
