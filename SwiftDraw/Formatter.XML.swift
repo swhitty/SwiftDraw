@@ -80,7 +80,7 @@ extension XMLFormatter {
             } else {
                 let s = String(format: "%.\(maxDigits)g", n)
                 let idx = s.index(s.startIndex, offsetBy: 1)
-                return s.substring(from: idx)
+                return String(s[idx..<s.endIndex])
             }
         }
         

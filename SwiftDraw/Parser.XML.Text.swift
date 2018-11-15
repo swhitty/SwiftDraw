@@ -34,8 +34,9 @@ import Foundation
 extension XMLParser {
     
     func parseText(_ att: AttributeParser, element: XML.Element) throws -> DOM.Text? {
-        guard let text = element.innerText?.trimmingCharacters(in: .whitespacesAndNewlines),
-              text.characters.count > 0 else {
+        guard
+            let text = element.innerText?.trimmingCharacters(in: .whitespacesAndNewlines),
+            !text.isEmpty else {
                 return nil
         }
         

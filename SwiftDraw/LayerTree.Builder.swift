@@ -151,7 +151,7 @@ extension LayerTree {
             guard let clipId = element.clipPath?.fragment,
                   let clip = svg.defs.clipPaths.first(where: { $0.id == clipId }) else { return [] }
             
-            return clip.childElements.flatMap{ Builder.createShape(from: $0) }
+            return clip.childElements.compactMap{ Builder.createShape(from: $0) }
         }
 
         func createMaskLayer(for element: DOM.GraphicsElement) -> Layer? {
