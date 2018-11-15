@@ -61,7 +61,7 @@ extension XMLParser {
     
     func parseViewBox(_ data: String?) throws -> DOM.SVG.ViewBox? {
         guard let data = data else { return nil }
-        var scanner = SlowScanner(text: data)
+        var scanner = XMLParser.Scanner(text: data)
         
         let x = try scanner.scanCoordinate()
         let y = try scanner.scanCoordinate()
