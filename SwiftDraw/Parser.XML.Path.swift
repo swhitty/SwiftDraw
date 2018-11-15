@@ -92,7 +92,7 @@ extension XMLParser {
     }
 
     func parseCommand(_ scanner: inout PathScanner) -> Command? {
-        guard let char = scanner.scan(first: CharSet.commandSet),
+        guard let char = scanner.scan(first: .commands),
               let command = Command(rawValue: char) else {
             return nil
         }
@@ -101,106 +101,111 @@ extension XMLParser {
     
     func parseMoveSegment(for command: Command, with scanner: inout PathScanner) throws -> Segment {
         let x = try scanner.scanCoordinate()
-        _ = scanner.scan(first: CharSet.delimeter)
+        _ = scanner.scan(first: .delimeter)
         let y = try scanner.scanCoordinate()
-        _ = scanner.scan(first: CharSet.delimeter)
+        _ = scanner.scan(first: .delimeter)
         
         return .move(x: x, y: y, space: command.coordinateSpace)
     }
     
     func parseLineSegment(for command: Command, with scanner: inout PathScanner) throws -> Segment {
         let x = try scanner.scanCoordinate()
-        _ = scanner.scan(first: CharSet.delimeter)
+        _ = scanner.scan(first: .delimeter)
         let y = try scanner.scanCoordinate()
-          _ = scanner.scan(first: CharSet.delimeter)
+          _ = scanner.scan(first: .delimeter)
         
         return .line(x: x, y: y, space: command.coordinateSpace)
     }
     
     func parseHorizontalSegment(for command: Command, with scanner: inout PathScanner) throws -> Segment {
         let x = try scanner.scanCoordinate()
-        _ = scanner.scan(first: CharSet.delimeter)
+        _ = scanner.scan(first: .delimeter)
         
         return .horizontal(x: x, space: command.coordinateSpace)
     }
     
     func parseVerticalSegment(for command: Command, with scanner: inout PathScanner) throws -> Segment {
         let y = try scanner.scanCoordinate()
-        _ = scanner.scan(first: CharSet.delimeter)
+        _ = scanner.scan(first: .delimeter)
         
         return .vertical(y: y, space: command.coordinateSpace)
     }
     
     func parseCubicSegment(for command: Command, with scanner: inout PathScanner) throws -> Segment {
         let x1 = try scanner.scanCoordinate()
-        _ = scanner.scan(first: CharSet.delimeter)
+        _ = scanner.scan(first: .delimeter)
         let y1 = try scanner.scanCoordinate()
-        _ = scanner.scan(first: CharSet.delimeter)
+        _ = scanner.scan(first: .delimeter)
         let x2 = try scanner.scanCoordinate()
-        _ = scanner.scan(first: CharSet.delimeter)
+        _ = scanner.scan(first: .delimeter)
         let y2 = try scanner.scanCoordinate()
-        _ = scanner.scan(first: CharSet.delimeter)
+        _ = scanner.scan(first: .delimeter)
         let x = try scanner.scanCoordinate()
-        _ = scanner.scan(first: CharSet.delimeter)
+        _ = scanner.scan(first: .delimeter)
         let y = try scanner.scanCoordinate()
-        _ = scanner.scan(first: CharSet.delimeter)
+        _ = scanner.scan(first: .delimeter)
         
         return .cubic(x1: x1, y1: y1, x2: x2, y2: y2, x: x, y: y, space: command.coordinateSpace)
     }
     
     func parseCubicSmoothSegment(for command: Command, with scanner: inout PathScanner) throws -> Segment {
         let x2 = try scanner.scanCoordinate()
-        _ = scanner.scan(first: CharSet.delimeter)
+        _ = scanner.scan(first: .delimeter)
         let y2 = try scanner.scanCoordinate()
-        _ = scanner.scan(first: CharSet.delimeter)
+        _ = scanner.scan(first: .delimeter)
         let x = try scanner.scanCoordinate()
-        _ = scanner.scan(first: CharSet.delimeter)
+        _ = scanner.scan(first: .delimeter)
         let y = try scanner.scanCoordinate()
-        _ = scanner.scan(first: CharSet.delimeter)
+        _ = scanner.scan(first: .delimeter)
         
         return .cubicSmooth(x2: x2, y2: y2, x: x, y: y, space: command.coordinateSpace)
     }
     
     func parseQuadraticSegment(for command: Command, with scanner: inout PathScanner) throws -> Segment {
         let x1 = try scanner.scanCoordinate()
-        _ = scanner.scan(first: CharSet.delimeter)
+        _ = scanner.scan(first: .delimeter)
         let y1 = try scanner.scanCoordinate()
-        _ = scanner.scan(first: CharSet.delimeter)
+        _ = scanner.scan(first: .delimeter)
         let x = try scanner.scanCoordinate()
-        _ = scanner.scan(first: CharSet.delimeter)
+        _ = scanner.scan(first: .delimeter)
         let y = try scanner.scanCoordinate()
-        _ = scanner.scan(first: CharSet.delimeter)
+        _ = scanner.scan(first: .delimeter)
         
         return .quadratic(x1: x1, y1: y1, x: x, y: y, space: command.coordinateSpace)
     }
     
     func parseQuadraticSmoothSegment(for command: Command, with scanner: inout PathScanner) throws -> Segment {
         let x = try scanner.scanCoordinate()
-        _ = scanner.scan(first: CharSet.delimeter)
+        _ = scanner.scan(first: .delimeter)
         let y = try scanner.scanCoordinate()
-        _ = scanner.scan(first: CharSet.delimeter)
+        _ = scanner.scan(first: .delimeter)
         
         return .quadraticSmooth(x: x, y: y, space: command.coordinateSpace)
     }
 
     func parseArcSegment(for command: Command, with scanner: inout PathScanner) throws -> Segment {
         let rx = try scanner.scanCoordinate()
-        _ = scanner.scan(first: CharSet.delimeter)
+        _ = scanner.scan(first: .delimeter)
         let ry = try scanner.scanCoordinate()
-        _ = scanner.scan(first: CharSet.delimeter)
+        _ = scanner.scan(first: .delimeter)
         let rotate = try scanner.scanCoordinate()
-        _ = scanner.scan(first: CharSet.delimeter)
+        _ = scanner.scan(first: .delimeter)
         let large = try scanner.scanBool()
-        _ = scanner.scan(first: CharSet.delimeter)
+        _ = scanner.scan(first: .delimeter)
         let sweep = try scanner.scanBool()
-        _ = scanner.scan(first: CharSet.delimeter)
+        _ = scanner.scan(first: .delimeter)
         let x = try scanner.scanCoordinate()
-        _ = scanner.scan(first: CharSet.delimeter)
+        _ = scanner.scan(first: .delimeter)
         let y = try scanner.scanCoordinate()
-        _ = scanner.scan(first: CharSet.delimeter)
+        _ = scanner.scan(first: .delimeter)
  
         return .arc(rx: rx, ry: ry, rotate: rotate,
                     large: large, sweep: sweep,
                     x: x, y: y, space: command.coordinateSpace)
     }
+}
+
+private extension CharacterSet {
+    static let delimeter = CharacterSet(charactersIn: ",;")
+    static let commands = CharacterSet(charactersIn: "MmLlHhVvCcSsQqTtAaZz")
 }

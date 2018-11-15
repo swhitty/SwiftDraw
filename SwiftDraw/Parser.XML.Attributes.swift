@@ -158,7 +158,7 @@ extension XMLParser {
         func parsePoints(_ value: String) throws -> [DOM.Point] {
             var points = Array<DOM.Point>()
             var scanner = XMLParser.Scanner(text: value)
-            let delimeter = Foundation.CharacterSet(charactersIn: ",;")
+            let delimeter = CharacterSet(charactersIn: ",;")
             
             while !scanner.isEOF {
                 let px = try? scanner.scanCoordinate()
