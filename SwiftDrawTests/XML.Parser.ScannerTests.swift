@@ -164,18 +164,18 @@ class ScannerTests: XCTestCase {
         AssertScanPercentage("24", nil)
     }
     
-    func testScanCoordinate() {
-        var scanner = SlowScanner(text: "10.05,12.04-49.05,30.02-10")
-        
-        XCTAssertEqual(try? scanner.scanCoordinate(), 10.05)
-        _ = scanner.scan(first: ",")
-        XCTAssertEqual(try? scanner.scanCoordinate(), 12.04)
-        _ = scanner.scan(first: ",")
-        XCTAssertEqual(try? scanner.scanCoordinate(), -49.05)
-        _ = scanner.scan(first: ",")
-        XCTAssertEqual(try? scanner.scanCoordinate(), 30.02)
-        _ = scanner.scan(first: ",")
-        XCTAssertEqual(try? scanner.scanCoordinate(), -10)
+    func testScanCoordinate() throws {
+        var scanner = XMLParser.Scanner(text: "10.05,12.04-49.05,30.02-10")
+
+        XCTAssertEqual(try scanner.scanCoordinate(), 10.05)
+        _ = try? scanner.scanString(",")
+        XCTAssertEqual(try scanner.scanCoordinate(), 12.04)
+        _ = try? scanner.scanString(",")
+        XCTAssertEqual(try scanner.scanCoordinate(), -49.05)
+        _ = try? scanner.scanString(",")
+        XCTAssertEqual(try scanner.scanCoordinate(), 30.02)
+        _ = try? scanner.scanString(",")
+        XCTAssertEqual(try scanner.scanCoordinate(), -10)
     }
 }
 

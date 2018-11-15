@@ -138,6 +138,10 @@ extension XMLParser {
             }
         }
 
+        mutating func scanCoordinate() throws -> DOM.Coordinate {
+            return DOM.Coordinate(try scanDouble())
+        }
+
         mutating func scanPercentageFloat() throws -> Float {
             scanner.scanLocation = scanLocation
             let val = try scanFloat()
