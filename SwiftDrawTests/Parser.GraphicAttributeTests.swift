@@ -85,10 +85,10 @@ class ParserGraphicAttributeTests: XCTestCase {
         XCTAssertEqual(parsed.mask?.fragment, "fancyMask")
     }
     
-    func testCircle() {
-        let el = XML.Element("circle",style: "clip-path: url(#cp1); cx:10;cy:10;r:10; fill:black; stroke-width:2")
+    func testCircle() throws {
+        let el = XML.Element("circle", style: "clip-path: url(#cp1); cx:10;cy:10;r:10; fill:black; stroke-width:2")
         
-        let parsed = try? XMLParser().parseGraphicsElement(el)
+        let parsed = try XMLParser().parseGraphicsElement(el)
         let circle = parsed as? DOM.Circle
         XCTAssertNotNil(circle)
         XCTAssertEqual(circle?.clipPath?.fragment, "cp1")

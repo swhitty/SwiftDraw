@@ -69,7 +69,7 @@ extension XMLParser {
     
     func parsePoints(_ text: String) -> [DOM.Point] {
         var points = Array<DOM.Point>()
-        var scanner = SlowScanner(text: text)
+        var scanner = XMLParser.Scanner(text: text)
         
         while let x = try? scanner.scanCoordinate(),
             let y = try? scanner.scanCoordinate() {
@@ -194,7 +194,7 @@ extension XMLParser {
     }
 
     func parseStyleAttributes(_ data: String) throws -> [String: String] {
-        var scanner = SlowScanner(text: data)
+        var scanner = XMLParser.Scanner(text: data)
         var style = [String: String]()
 
         while !scanner.isEOF {
@@ -204,22 +204,14 @@ extension XMLParser {
         return style
     }
 
-    private func parseStyleAttribute(_ scanner: inout SlowScanner) throws -> (String, String) {
-        guard let key = scanner.scan(upTo: " \t:") else {
-            throw Error.invalid
-        }
-        _ = scanner.scan(":")
+    private func parseStyleAttribute(_ scanner: inout  XMLParser.Scanner) throws -> (String, String) {
+        let key = try scanner.scanString(upTo: ":")
+        _ = try? scanner.scanString(":")
+        let value = try scanner.scanString(upTo: ";")
+        _ = try? scanner.scanString(";")
         
-        if let value = scanner.scan(upTo: ";") {
-            _ = scanner.scan(";")
-            return (key, value.trimmingCharacters(in: .whitespaces))
-        }
-        
-        guard let value = scanner.scanToEOF() else {
-            throw Error.invalid
-        }
-        
-        return (key, value.trimmingCharacters(in: .whitespaces))
+        return (key.trimmingCharacters(in: .whitespaces),
+                value.trimmingCharacters(in: .whitespaces))
     }
     
     func parsePresentationAttributes(_ att: AttributeParser) throws -> PresentationAttributes {
