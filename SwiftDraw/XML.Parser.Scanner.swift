@@ -82,6 +82,19 @@ extension XMLParser {
             return match
         }
 
+        mutating func scanString(upTo token: String) throws -> String {
+            scanner.scanLocation = scanLocation
+            var result: NSString?
+            guard
+                scanner.scanUpTo(token, into: &result),
+                let match = result.map({ $0 as String }) else {
+                throw Error.invalid
+            }
+
+            scanLocation = scanner.scanLocation
+            return match
+        }
+
         mutating func scanCharacter(matchingAny characters: Foundation.CharacterSet) throws -> Character {
             let match = try scanString(matchingAny: characters)
             scanLocation = scanner.scanLocation - (match.count - 1)
@@ -125,7 +138,8 @@ extension XMLParser {
             var int64: Int64 = 0
             guard
                 scanner.scanInt64(&int64),
-                let val = DOM.Length(exactly: int64) else {
+                let val = DOM.Length(exactly: int64),
+                val >= 0 else {
                     throw Error.invalid
             }
             scanLocation = scanner.scanLocation

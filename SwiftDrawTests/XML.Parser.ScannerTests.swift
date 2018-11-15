@@ -119,7 +119,7 @@ class ScannerTests: XCTestCase {
         AssertScanLength("0", 0)
         AssertScanLength("124", 124)
         AssertScanLength(" 045", 45)
-        AssertScanLength("-29", -29)
+        AssertScanLength("-29", nil)
         AssertScanLength("ab24", nil)
     }
     

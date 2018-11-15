@@ -88,7 +88,7 @@ extension XMLParser {
     struct ValueParser: AttributeValueParser {
         
         func parseFloat(_ value: String) throws -> DOM.Float {
-            var scanner = SlowScanner(text: value)
+            var scanner = XMLParser.Scanner(text: value)
             return try scanner.scanFloat()
         }
         
@@ -117,17 +117,17 @@ extension XMLParser {
         }
         
         func parseCoordinate(_ value: String) throws -> DOM.Coordinate {
-            var scanner = SlowScanner(text: value)
+            var scanner = XMLParser.Scanner(text: value)
             return try scanner.scanCoordinate()
         }
         
         func parseLength(_ value: String) throws -> DOM.Length {
-            var scanner = SlowScanner(text: value)
+            var scanner = XMLParser.Scanner(text: value)
             return try scanner.scanLength()
         }
         
         func parseBool(_ value: String) throws -> DOM.Bool {
-            var scanner = SlowScanner(text: value)
+            var scanner = XMLParser.Scanner(text: value)
             return try scanner.scanBool()
         }
         
@@ -141,16 +141,17 @@ extension XMLParser {
             
         }
         func parseUrlSelector(_ value: String) throws -> DOM.URL {
-            var scanner = SlowScanner(text: value)
-            guard scanner.scan("url(") != nil,
-                let urlText = scanner.scan(upTo: ")") else { throw XMLParser.Error.invalid }
-            
-            _ = scanner.scan(")")
-            
+            var scanner = XMLParser.Scanner(text: value)
+
+            try scanner.scanString("url(")
+            let urlText = try scanner.scanString(upTo: ")")
+            _ = try? scanner.scanString(")")
+
             let url = urlText.trimmingCharacters(in: .whitespaces)
             
-            guard url.characters.count > 0,
-                  scanner.isEOF else { throw XMLParser.Error.invalid }
+            guard !url.isEmpty,  scanner.isEOF else {
+                throw XMLParser.Error.invalid
+            }
             
             return try parseUrl(url)
         }
