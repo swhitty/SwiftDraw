@@ -32,11 +32,7 @@
 import XCTest
 @testable import SwiftDraw
 
-private typealias CharacterSet = SwiftDraw.CharacterSet
-
 class ScannerTests: XCTestCase {
-    
-    private let emoji: CharacterSet = "🤠🌞💎🐶\u{1f1e6}\u{1f1fa}"
 
     func testIsEOF() throws {
         var scanner = XMLParser.Scanner(text: "Hi")
@@ -46,26 +42,26 @@ class ScannerTests: XCTestCase {
     }
 
     func testScanCharsetHex() {
-        var scanner = SlowScanner(text: "  \t   8badf00d  \t  \t  007")
-        
-        XCTAssertEqual(scanner.scan(any: CharacterSet.hexadecimal), "8badf00d")
-        XCTAssertEqual(scanner.scan(any: CharacterSet.hexadecimal), "007")
-        XCTAssertNil(scanner.scan(any: CharacterSet.hexadecimal))
+        var scanner = XMLParser.Scanner(text: "  \t   8badf00d  \t  \t  007")
+        XCTAssertEqual(try scanner.scanString(matchingAny: .hexadecimal), "8badf00d")
+        XCTAssertEqual(try scanner.scanString(matchingAny: .hexadecimal), "007")
+        XCTAssertThrowsError(try scanner.scanString(matchingAny: .hexadecimal))
     }
-    
+
     func testScanCharsetEmoji() {
-        var scanner = SlowScanner(text: "  \t   8badf00d  \t🐶  \t🌞🇦🇺  007")
-        
-        XCTAssertNil(scanner.scan(any: emoji))
-        XCTAssertEqual(scanner.scan(any: CharacterSet.hexadecimal), "8badf00d")
-        XCTAssertNil(scanner.scan(any: CharacterSet.hexadecimal))
-        XCTAssertEqual(scanner.scan(any: emoji), "🐶")
-        XCTAssertNil(scanner.scan(any: CharacterSet.hexadecimal))
-        XCTAssertEqual(scanner.scan(any: emoji), "🌞🇦🇺")
-        XCTAssertNil(scanner.scan(any: emoji))
-        XCTAssertEqual(scanner.scan(any: CharacterSet.hexadecimal), "007")
+        var scanner =  XMLParser.Scanner(text: "  \t   8badf00d  \t🐶  \t🌞🇦🇺  007")
+        let emoji: Foundation.CharacterSet = "🤠🌞💎🐶\u{1f1e6}\u{1f1fa}"
+
+        XCTAssertThrowsError(try scanner.scanString(matchingAny: emoji))
+        XCTAssertEqual(try scanner.scanString(matchingAny: .hexadecimal), "8badf00d")
+        XCTAssertThrowsError(try scanner.scanString(matchingAny: .hexadecimal))
+        XCTAssertEqual(try scanner.scanString(matchingAny: emoji), "🐶")
+        XCTAssertThrowsError(try scanner.scanString(matchingAny: .hexadecimal))
+        XCTAssertEqual(try scanner.scanString(matchingAny: emoji), "🌞🇦🇺")
+        XCTAssertThrowsError(try scanner.scanString(matchingAny: emoji))
+        XCTAssertEqual(try scanner.scanString(matchingAny: .hexadecimal), "007")
     }
-    
+
     func testScanString() {
         var scanner =  XMLParser.Scanner(text: "  \t The quick brown fox")
 
@@ -79,21 +75,20 @@ class ScannerTests: XCTestCase {
 
     func testScanCharacter() {
         var scanner = XMLParser.Scanner(text: "  \t The fox 8badf00d ")
-        let hexadecimalSet: Foundation.CharacterSet = "0123456789ABCDEFabcdef"
 
         XCTAssertThrowsError(_ = try scanner.scanCharacter(matchingAny: "qfxh"))
         XCTAssertEqual(try scanner.scanCharacter(matchingAny: "fxT"), "T")
         XCTAssertThrowsError(_ = try scanner.scanCharacter(matchingAny: "fxT"))
         XCTAssertEqual(try scanner.scanCharacter(matchingAny: "qfxh"), "h")
         XCTAssertNoThrow(try scanner.scanString("e fox"))
-        XCTAssertEqual(try scanner.scanCharacter(matchingAny: hexadecimalSet), "8")
-        XCTAssertEqual(try scanner.scanCharacter(matchingAny: hexadecimalSet), "b")
-        XCTAssertEqual(try scanner.scanCharacter(matchingAny: hexadecimalSet), "a")
-        XCTAssertEqual(try scanner.scanCharacter(matchingAny: hexadecimalSet), "d")
-        XCTAssertEqual(try scanner.scanCharacter(matchingAny: hexadecimalSet), "f")
-        XCTAssertEqual(try scanner.scanCharacter(matchingAny: hexadecimalSet), "0")
-        XCTAssertEqual(try scanner.scanCharacter(matchingAny: hexadecimalSet), "0")
-        XCTAssertEqual(try scanner.scanCharacter(matchingAny: hexadecimalSet), "d")
+        XCTAssertEqual(try scanner.scanCharacter(matchingAny: .hexadecimal), "8")
+        XCTAssertEqual(try scanner.scanCharacter(matchingAny: .hexadecimal), "b")
+        XCTAssertEqual(try scanner.scanCharacter(matchingAny: .hexadecimal), "a")
+        XCTAssertEqual(try scanner.scanCharacter(matchingAny: .hexadecimal), "d")
+        XCTAssertEqual(try scanner.scanCharacter(matchingAny: .hexadecimal), "f")
+        XCTAssertEqual(try scanner.scanCharacter(matchingAny: .hexadecimal), "0")
+        XCTAssertEqual(try scanner.scanCharacter(matchingAny: .hexadecimal), "0")
+        XCTAssertEqual(try scanner.scanCharacter(matchingAny: .hexadecimal), "d")
     }
 
     func testScanUInt8() {
@@ -216,6 +211,8 @@ private func AssertScanPercentageFloat(_ text: String, _ expected: Float?, file:
 
 
 extension Foundation.CharacterSet: ExpressibleByStringLiteral {
+
+    static let hexadecimal: Foundation.CharacterSet = "0123456789ABCDEFabcdef"
 
     public init(stringLiteral value: String) {
         self.init(charactersIn: value)

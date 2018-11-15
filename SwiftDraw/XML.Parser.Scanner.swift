@@ -68,7 +68,7 @@ extension XMLParser {
             return match
         }
 
-        mutating func scanCharacter(matchingAny characters: Foundation.CharacterSet) throws -> Character {
+        mutating func scanString(matchingAny characters: Foundation.CharacterSet) throws -> String {
             scanner.scanLocation = scanLocation
             var result: NSString?
             guard
@@ -78,6 +78,12 @@ extension XMLParser {
                     throw Error.invalid
             }
 
+            scanLocation = scanner.scanLocation
+            return match
+        }
+
+        mutating func scanCharacter(matchingAny characters: Foundation.CharacterSet) throws -> Character {
+            let match = try scanString(matchingAny: characters)
             scanLocation = scanner.scanLocation - (match.count - 1)
             return match[match.startIndex]
         }
