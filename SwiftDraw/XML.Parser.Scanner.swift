@@ -55,8 +55,14 @@ extension XMLParser {
             }
         }
 
-        mutating func scanString(_ token: String) throws {
-            _ = try self.scanString(matchingAny: [token])
+        @discardableResult
+        mutating func scanString(_ token: String) throws -> Bool {
+            return try self.scanString(matchingAny: [token]) == token
+        }
+
+        @discardableResult
+        mutating func scanStringIfPossible(_ token: String) -> Bool {
+            return (try? self.scanString(token)) == true
         }
 
         mutating func scanString(matchingAny tokens: Set<String>) throws -> String {

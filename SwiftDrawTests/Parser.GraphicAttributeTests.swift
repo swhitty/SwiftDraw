@@ -96,8 +96,6 @@ class ParserGraphicAttributeTests: XCTestCase {
         XCTAssertEqual(circle?.strokeWidth, 2)
     }
     
-
-    
     func testDisplayMode() {
         let parser = XMLParser.ValueParser()
         

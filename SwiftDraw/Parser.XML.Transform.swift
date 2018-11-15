@@ -33,7 +33,7 @@ extension XMLParser {
     
     func parseTransform(_ data: String) throws -> [DOM.Transform] {
         
-        var scanner = SlowScanner(text: data)
+        var scanner = XMLParser.Scanner(text: data)
         var transforms = Array<DOM.Transform>()
         
         while let transform = try parseTransform(&scanner) {
@@ -48,7 +48,7 @@ extension XMLParser {
         return transforms
     }
     
-    private func parseTransform(_ scanner: inout SlowScanner) throws -> DOM.Transform? {
+    private func parseTransform(_ scanner: inout XMLParser.Scanner) throws -> DOM.Transform? {
         
         if let t = try parseMatrix(&scanner) {
             return t
@@ -66,116 +66,97 @@ extension XMLParser {
         return nil
     }
     
-    private func parseMatrix(_ scanner: inout SlowScanner) throws -> DOM.Transform? {
-        
-        guard scanner.scan("matrix(") != nil else {
+    private func parseMatrix(_ scanner: inout XMLParser.Scanner) throws -> DOM.Transform? {
+        guard (try? scanner.scanString("matrix(")) == true else {
             return nil
         }
-        
+
         let a = try scanner.scanFloat()
-        _ = scanner.scan(",")
+        _ = try? scanner.scanString(",")
         let b = try scanner.scanFloat()
-        _ = scanner.scan(",")
+        _ = try? scanner.scanString(",")
         let c = try scanner.scanFloat()
-        _ = scanner.scan(",")
+        _ = try? scanner.scanString(",")
         let d = try scanner.scanFloat()
-        _ = scanner.scan(",")
+        _ = try? scanner.scanString(",")
         let e = try scanner.scanFloat()
-        _ = scanner.scan(",")
+        _ = try? scanner.scanString(",")
         let f = try scanner.scanFloat()
-        
-        guard scanner.scan(")") != nil else {
-            throw Error.invalid
-        }
-        
+        _ = try scanner.scanString(")")
+
         return .matrix(a: a, b: b, c: c, d: d, e: e, f: f)
     }
     
-    private func parseTranslate(_ scanner: inout SlowScanner) throws -> DOM.Transform? {
-        guard scanner.scan("translate(") != nil else {
+    private func parseTranslate(_ scanner: inout XMLParser.Scanner) throws -> DOM.Transform? {
+        guard (try? scanner.scanString("translate(")) == true else {
             return nil
         }
-        
+
         let tx = try scanner.scanFloat()
-        if let _ = scanner.scan(")") {
+        if scanner.scanStringIfPossible(")") {
             return .translate(tx: tx, ty: 0)
         }
-        
-        _ = scanner.scan(",")
+
+        scanner.scanStringIfPossible(",")
         let ty = try scanner.scanFloat()
-        
-        guard scanner.scan(")") != nil else {
-            throw Error.invalid
-        }
-        
+        try scanner.scanString(")")
+
         return .translate(tx: tx, ty: ty)
     }
     
-    private func parseScale(_ scanner: inout SlowScanner) throws -> DOM.Transform? {
-        guard scanner.scan("scale(") != nil else {
+    private func parseScale(_ scanner: inout XMLParser.Scanner) throws -> DOM.Transform? {
+        guard (try? scanner.scanString("scale(")) == true else {
             return nil
         }
         
         let sx = try scanner.scanFloat()
-        if let _ = scanner.scan(")") {
+        if scanner.scanStringIfPossible(")") {
             return .scale(sx: sx, sy: sx)
         }
-        
-        _ = scanner.scan(",")
+
+        scanner.scanStringIfPossible(",")
         let sy = try scanner.scanFloat()
-        
-        guard scanner.scan(")") != nil else {
-            throw Error.invalid
-        }
-        
+        try scanner.scanString(")")
+
         return .scale(sx: sx, sy: sy)
     }
     
-    private func parseRotate(_ scanner: inout SlowScanner) throws -> DOM.Transform? {
-        guard scanner.scan("rotate(") != nil else {
+    private func parseRotate(_ scanner: inout XMLParser.Scanner) throws -> DOM.Transform? {
+        guard (try? scanner.scanString("rotate(")) == true else {
             return nil
         }
-        
+
         let angle = try scanner.scanFloat()
-        if let _ = scanner.scan(")") {
+        if scanner.scanStringIfPossible(")") {
             return .rotate(angle: angle)
         }
-        
-        _ = scanner.scan(",")
+
+        scanner.scanStringIfPossible(",")
         let cx = try scanner.scanFloat()
-        _ = scanner.scan(",")
+        scanner.scanStringIfPossible(",")
         let cy = try scanner.scanFloat()
-        
-        guard scanner.scan(")") != nil else {
-            throw Error.invalid
-        }
-        
+        try scanner.scanString(")")
+
         return .rotatePoint(angle: angle, cx: cx, cy: cy)
     }
     
-    private func parseSkewX(_ scanner: inout SlowScanner) throws -> DOM.Transform? {
-        guard scanner.scan("skewX(") != nil else {
+    private func parseSkewX(_ scanner: inout XMLParser.Scanner) throws -> DOM.Transform? {
+        guard (try? scanner.scanString("skewX(")) == true else {
             return nil
         }
-        
+
         let angle = try scanner.scanFloat()
-        
-        guard scanner.scan(")") != nil else {
-            throw Error.invalid
-        }
+        _ = try scanner.scanString(")")
         return .skewX(angle: angle)
     }
     
-    private func parseSkewY(_ scanner: inout SlowScanner) throws -> DOM.Transform? {
-        guard scanner.scan("skewY(") != nil else {
+    private func parseSkewY(_ scanner: inout XMLParser.Scanner) throws -> DOM.Transform? {
+        guard (try? scanner.scanString("skewY(")) == true else {
             return nil
         }
         
         let angle = try scanner.scanFloat()
-        
-        guard scanner.scan(")") != nil else {
-            throw Error.invalid
-        }
+        _ = try scanner.scanString(")")
         return .skewY(angle: angle)
     }
 }
