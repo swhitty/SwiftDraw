@@ -94,13 +94,12 @@ extension XMLParser {
         
         func parseFloats(_ value: String) throws -> [DOM.Float] {
             var array = Array<DOM.Float>()
-            var scanner = SlowScanner(text: value)
+            var scanner = XMLParser.Scanner(text: value)
             
             while !scanner.isEOF {
-                let vx = try? scanner.scanFloat()
-                _ = scanner.scan(first: ",")
-                guard let v = vx else { throw XMLParser.Error.invalid }
-                array.append(v)
+                let vx = try scanner.scanFloat()
+                scanner.scanStringIfPossible(",")
+                array.append(vx)
             }
             
             return array
@@ -108,7 +107,7 @@ extension XMLParser {
         
         
         func parsePercentage(_ value: String) throws -> DOM.Float {
-            var scanner = SlowScanner(text: value)
+            var scanner = XMLParser.Scanner(text: value)
             guard let pc = try? scanner.scanPercentage() else {
                 //try a value between 0.0, 1.0
                 return try scanner.scanPercentageFloat()

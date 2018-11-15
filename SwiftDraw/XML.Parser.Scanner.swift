@@ -179,12 +179,18 @@ extension XMLParser {
         }
 
         mutating func scanPercentage() throws -> Float {
+            let initialLocation = scanLocation
             scanner.scanLocation = scanLocation
-            let val = try scanDouble()
+
+            let numeric = Foundation.CharacterSet(charactersIn: "+-0123456789.Ee")
+            let numericString = try scanString(matchingAny: numeric)
+
             guard
+                let val = Double(numericString),
                 val >= 0, val <= 100,
                 scanner.scanString("%", into: nil) || val == 0 else {
-                throw Error.invalid
+                    scanLocation = initialLocation
+                    throw Error.invalid
             }
             scanLocation = scanner.scanLocation
             return Float(val / 100.0)
