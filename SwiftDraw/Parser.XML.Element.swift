@@ -186,15 +186,8 @@ extension XMLParser {
                               element: e.attributes,
                               style: [:])
         }
-        
-        var scanner = SlowScanner(text: styleText)
-        var style = [String: String]()
-        
-        while !scanner.isEOF {
-            let att = try parseStyleAttribute(&scanner)
-            style[att.0] = att.1
-        }
-        
+
+        let style = try parseStyleAttributes(styleText)
         var element = e.attributes
         element["style"] = nil
         return Attributes(parser: ValueParser(),
@@ -202,8 +195,19 @@ extension XMLParser {
                           element: element,
                           style: style)
     }
-    
-    func parseStyleAttribute(_ scanner: inout SlowScanner) throws -> (String, String) {
+
+    func parseStyleAttributes(_ data: String) throws -> [String: String] {
+        var scanner = SlowScanner(text: data)
+        var style = [String: String]()
+
+        while !scanner.isEOF {
+            let att = try parseStyleAttribute(&scanner)
+            style[att.0] = att.1
+        }
+        return style
+    }
+
+    private func parseStyleAttribute(_ scanner: inout SlowScanner) throws -> (String, String) {
         guard let key = scanner.scan(upTo: " \t:") else {
             throw Error.invalid
         }

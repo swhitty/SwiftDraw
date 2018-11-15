@@ -32,7 +32,7 @@ import Foundation
 
 extension XMLParser {
     
-    func parseColor(data: String) throws -> DOM.Color {
+    func parseColor(_ data: String) throws -> DOM.Color {
         
         if let c = try parseColorRGB(data: data) {
             return c
@@ -47,14 +47,14 @@ extension XMLParser {
         throw Error.invalid
     }
     
-    func parseColorNone(data: String) -> DOM.Color? {
+    private func parseColorNone(data: String) -> DOM.Color? {
         if data.trimmingCharacters(in: .whitespaces) == "none" {
             return DOM.Color.none // .none resolves to Optional.none
         }
         return nil
     }
     
-    func parseColorKeyword(data: String) -> DOM.Color? {
+    private func parseColorKeyword(data: String) -> DOM.Color? {
         let raw = data.trimmingCharacters(in: .whitespaces)
         guard let keyword = DOM.Color.Keyword(rawValue: raw) else {
             return nil
@@ -62,7 +62,7 @@ extension XMLParser {
         return .keyword(keyword)
     }
     
-    func parseColorRGB(data: String) throws -> DOM.Color? {
+    private func parseColorRGB(data: String) throws -> DOM.Color? {
         var scanner = SlowScanner(text: data)
         guard scanner.scan("rgb(") != nil else { return nil }
         
@@ -73,7 +73,7 @@ extension XMLParser {
         return try parseColorRGBi(data: data)
     }
     
-    func parseColorRGBi(data: String) throws -> DOM.Color {
+    private func parseColorRGBi(data: String) throws -> DOM.Color {
         var scanner = SlowScanner(text: data)
         guard scanner.scan("rgb(") != nil else { throw Error.invalid }
         let r = try scanner.scanUInt8()
@@ -85,7 +85,7 @@ extension XMLParser {
         return .rgbi(r, g, b)
     }
     
-    func parseColorRGBf(data: String) throws -> DOM.Color {
+    private func parseColorRGBf(data: String) throws -> DOM.Color {
         var scanner = SlowScanner(text: data)
         guard scanner.scan("rgb(") != nil else { throw Error.invalid }
         let r = try scanner.scanPercentage()
@@ -105,7 +105,7 @@ extension XMLParser {
         return "\(chars[0])0\(chars[1])0\(chars[2])0)"
     }
     
-    func parseColorHex(data: String) throws -> DOM.Color? {
+    private func parseColorHex(data: String) throws -> DOM.Color? {
         var scanner = SlowScanner(text: data)
         guard scanner.scan("#") != nil else { return nil }
         
@@ -123,7 +123,7 @@ extension XMLParser {
     }
 }
 
-extension UInt32 {
+private extension UInt32 {
     init?(hex: String) {
         var val: UInt32 = 0
         guard Foundation.Scanner(string: hex).scanHexInt32(&val) else {

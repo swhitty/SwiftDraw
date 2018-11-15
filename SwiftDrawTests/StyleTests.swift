@@ -35,15 +35,17 @@ import XCTest
 class StyleTests: XCTestCase {
     
     func testStyle() {
-        AssertAttributeEqual("selector: hi;", ("selector", "hi"))
-        AssertAttributeEqual("selector: hi", ("selector", "hi"))
-        AssertAttributeEqual("selector: hi ", ("selector", "hi"))
-        AssertAttributeEqual(" trans-form : rotate(4)", ("trans-form", "rotate(4)"))
-        
-        XCTAssertThrowsError(try XMLParser().parseStyleAttribute("selector"))
-      // TODO  XCTAssertThrowsError(try XMLParser().parseStyleAttribute("selector:: hi"))
-      // TODO  XCTAssertThrowsError(try XMLParser().parseStyleAttribute("sele ctor: hi"))
-        XCTAssertThrowsError(try XMLParser().parseStyleAttribute(": hmm"))
+        XCTAssertEqual(try XMLParser().parseStyleAttributes("selector: hi;"),
+                       ["selector": "hi"])
+        XCTAssertEqual(try XMLParser().parseStyleAttributes("selector: hi"),
+                       ["selector": "hi"])
+        XCTAssertEqual(try XMLParser().parseStyleAttributes("selector: hi "),
+                       ["selector": "hi"])
+        XCTAssertEqual(try XMLParser().parseStyleAttributes(" trans-form : rotate(4)"),
+                       ["trans-form": "rotate(4)"])
+
+        XCTAssertThrowsError(try XMLParser().parseStyleAttributes("selector"))
+        XCTAssertThrowsError(try XMLParser().parseStyleAttributes(": hmm"))
     }
     
     func testStyles() throws {
@@ -62,15 +64,3 @@ class StyleTests: XCTestCase {
         XCTAssertEqual(try att.parseColor("fill"), .keyword(.red))
     }
 }
-
-private func AssertAttributeEqual(_ text: String, _ expected: (String, String), file: StaticString = #file, line: UInt = #line) {
-    XCTAssertTrue(try XMLParser().parseStyleAttribute(text) == expected, file: file, line: line)
-}
-
-extension SwiftDraw.XMLParser {
-    func parseStyleAttribute(_ text: String) throws -> (String, String) {
-        var scanner = SlowScanner(text: text)
-        return try XMLParser().parseStyleAttribute(&scanner)
-    }
-}
-

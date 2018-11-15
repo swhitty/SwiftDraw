@@ -132,7 +132,7 @@ extension XMLParser {
         }
         
         func parseColor(_ value: String) throws -> DOM.Color {
-            return try XMLParser().parseColor(data: value)
+            return try XMLParser().parseColor(value)
         }
         
         func parseUrl(_ value: String) throws -> DOM.URL {
