@@ -48,7 +48,7 @@ extension XMLParser {
         return transforms
     }
     
-    func parseTransform(_ scanner: inout SlowScanner) throws -> DOM.Transform? {
+    private func parseTransform(_ scanner: inout SlowScanner) throws -> DOM.Transform? {
         
         if let t = try parseMatrix(&scanner) {
             return t
@@ -66,7 +66,7 @@ extension XMLParser {
         return nil
     }
     
-    func parseMatrix(_ scanner: inout SlowScanner) throws -> DOM.Transform? {
+    private func parseMatrix(_ scanner: inout SlowScanner) throws -> DOM.Transform? {
         
         guard scanner.scan("matrix(") != nil else {
             return nil
@@ -91,7 +91,7 @@ extension XMLParser {
         return .matrix(a: a, b: b, c: c, d: d, e: e, f: f)
     }
     
-    func parseTranslate(_ scanner: inout SlowScanner) throws -> DOM.Transform? {
+    private func parseTranslate(_ scanner: inout SlowScanner) throws -> DOM.Transform? {
         guard scanner.scan("translate(") != nil else {
             return nil
         }
@@ -111,7 +111,7 @@ extension XMLParser {
         return .translate(tx: tx, ty: ty)
     }
     
-    func parseScale(_ scanner: inout SlowScanner) throws -> DOM.Transform? {
+    private func parseScale(_ scanner: inout SlowScanner) throws -> DOM.Transform? {
         guard scanner.scan("scale(") != nil else {
             return nil
         }
@@ -131,7 +131,7 @@ extension XMLParser {
         return .scale(sx: sx, sy: sy)
     }
     
-    func parseRotate(_ scanner: inout SlowScanner) throws -> DOM.Transform? {
+    private func parseRotate(_ scanner: inout SlowScanner) throws -> DOM.Transform? {
         guard scanner.scan("rotate(") != nil else {
             return nil
         }
@@ -153,7 +153,7 @@ extension XMLParser {
         return .rotatePoint(angle: angle, cx: cx, cy: cy)
     }
     
-    func parseSkewX(_ scanner: inout SlowScanner) throws -> DOM.Transform? {
+    private func parseSkewX(_ scanner: inout SlowScanner) throws -> DOM.Transform? {
         guard scanner.scan("skewX(") != nil else {
             return nil
         }
@@ -166,7 +166,7 @@ extension XMLParser {
         return .skewX(angle: angle)
     }
     
-    func parseSkewY(_ scanner: inout SlowScanner) throws -> DOM.Transform? {
+    private func parseSkewY(_ scanner: inout SlowScanner) throws -> DOM.Transform? {
         guard scanner.scan("skewY(") != nil else {
             return nil
         }
