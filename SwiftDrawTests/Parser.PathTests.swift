@@ -37,18 +37,7 @@ private typealias Segment = DOM.Path.Segment
 private typealias CoordinateSpace = DOM.Path.Segment.CoordinateSpace
 
 class ParserPathTests: XCTestCase {
-    
-    func testEquality() {
-        XCTAssertEqual(Segment.move(x: 10, y: 20, space: .relative),
-                       move(10, 20, .relative))
 
-        XCTAssertNotEqual(Segment.move(x: 20, y: 20, space: .absolute),
-                          move(10, 20, .absolute))
-        
-        XCTAssertNotEqual(Segment.move(x: 10, y: 20, space: .relative),
-                          move(10, 20, .absolute))
-    }
-    
     func testMove() {
         AssertSegmentEquals("M 10 20", move(10, 20, .absolute))
         AssertSegmentEquals("m 10 20", move(10, 20, .relative))
