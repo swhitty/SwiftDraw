@@ -1,5 +1,5 @@
 //
-//  ScannerTests.swift
+//  Bundle+Extensions.swift
 //  SwiftDraw
 //
 //  Created by Simon Whitty on 19/11/18.
@@ -29,21 +29,24 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-import XCTest
-@testable import SwiftDraw
 
-final class ImageTests: XCTestCase {
+import Foundation
 
-    func testValidSVGLoads() {
-        XCTAssertNotNil(Image(named: "shapes.svg", in: .test))
+extension Bundle {
+
+    static var test: Bundle {
+        return Bundle(for: ImageTests.self)
     }
 
-    func testInvalidSVGReturnsNil() {
-        XCTAssertNil(Image(named: "invalid.svg", in: .test))
+    func url(forResource named: String) throws -> URL {
+        guard let url = self.url(forResource: named, withExtension: nil) else {
+            throw Error.invalid
+        }
+        return url
     }
 
-    func testMissingSVGReturnsNil() {
-        XCTAssertNil(Image(named: "missing.svg", in: .test))
+    private enum Error: Swift.Error {
+        case invalid
     }
 
 }
