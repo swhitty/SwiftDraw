@@ -32,7 +32,7 @@
 import XCTest
 @testable import SwiftDraw
 
-class StyleTests: XCTestCase {
+final class StyleTests: XCTestCase {
     
     func testStyle() {
         XCTAssertEqual(try XMLParser().parseStyleAttributes("selector: hi;"),

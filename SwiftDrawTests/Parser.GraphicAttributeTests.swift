@@ -33,7 +33,7 @@
 import XCTest
 @testable import SwiftDraw
 
-class ParserGraphicAttributeTests: XCTestCase {
+final class ParserGraphicAttributeTests: XCTestCase {
     
     func testPresentationAttributes() throws {
         var parsed = try XMLParser().parsePresentationAttributes([:])

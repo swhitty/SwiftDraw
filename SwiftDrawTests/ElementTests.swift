@@ -32,7 +32,7 @@
 import XCTest
 @testable import SwiftDraw
 
-class ElementTests: XCTestCase {
+final class ElementTests: XCTestCase {
     
     func testLine() {
         let node = ["x1": "0",

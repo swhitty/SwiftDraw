@@ -29,7 +29,7 @@
 import XCTest
 @testable import SwiftDraw
 
-class LayerTreePathTests: XCTestCase {
+final class LayerTreePathTests: XCTestCase {
 
     typealias Float = LayerTree.Float
     typealias Point = LayerTree.Point

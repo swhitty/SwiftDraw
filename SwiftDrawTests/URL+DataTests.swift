@@ -32,7 +32,7 @@
 import XCTest
 @testable import SwiftDraw
 
-class URLTests: XCTestCase {
+final class URLTests: XCTestCase {
     
     func testDecodedData() {
         let url = URL(maybeData: "data:image/png;base64,f00d")

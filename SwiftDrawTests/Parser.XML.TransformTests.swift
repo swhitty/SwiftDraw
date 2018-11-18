@@ -32,7 +32,7 @@
 import XCTest
 @testable import SwiftDraw
 
-class ParserTransformTests: XCTestCase {
+final class ParserTransformTests: XCTestCase {
     
     func testMatrix() {
         XCTAssertEqual(try XMLParser().parseTransform("matrix(0 1 2 3 4 5)"),

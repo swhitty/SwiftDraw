@@ -32,7 +32,7 @@
 import XCTest
 @testable import SwiftDraw
 
-class ScannerTests: XCTestCase {
+final class ScannerTests: XCTestCase {
 
     func testIsEOF() throws {
         var scanner = XMLParser.Scanner(text: "Hi")

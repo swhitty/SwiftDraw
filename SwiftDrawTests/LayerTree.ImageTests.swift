@@ -29,7 +29,7 @@
 import XCTest
 @testable import SwiftDraw
 
-class LayerTreeImageTests: XCTestCase {
+final class LayerTreeImageTests: XCTestCase {
 
     let someData = Data(base64Encoded: "8badf00d")!
     let moreData = Data(base64Encoded: "f00d")!

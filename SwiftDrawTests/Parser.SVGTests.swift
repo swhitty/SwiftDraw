@@ -33,7 +33,7 @@
 import XCTest
 @testable import SwiftDraw
 
-class SVGTests: XCTestCase {
+final class SVGTests: XCTestCase {
     
     func testSVG() throws {
         let node = XML.Element(name: "svg", attributes: ["width": "100", "height": "200"])

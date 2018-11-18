@@ -32,7 +32,7 @@
 import XCTest
 @testable import SwiftDraw
 
-class DOMElementTests: XCTestCase {
+final class DOMElementTests: XCTestCase {
     
     func testLine() {
         let element = DOM.createLine()

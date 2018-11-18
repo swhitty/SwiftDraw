@@ -32,7 +32,7 @@
 import XCTest
 @testable import SwiftDraw
 
-class GradientTests: XCTestCase {
+final class GradientTests: XCTestCase {
     
     func testLinerGradient() {
         let node = XML.Element(name: "linearGradient")

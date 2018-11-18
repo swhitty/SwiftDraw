@@ -89,8 +89,8 @@
 		D90DB438219CD1C600D374D2 /* DOM.Image.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB425219CD1C500D374D2 /* DOM.Image.swift */; };
 		D90DB439219CD1C600D374D2 /* DOM.Color.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB426219CD1C500D374D2 /* DOM.Color.swift */; };
 		D90DB43A219CD1C600D374D2 /* DOM.Color.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB426219CD1C500D374D2 /* DOM.Color.swift */; };
-		D90DB43E219CD1EC00D374D2 /* DOM.Element.Equality.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB43C219CD1EC00D374D2 /* DOM.Element.Equality.swift */; };
-		D90DB43F219CD1EC00D374D2 /* DOM.Element.Equality.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB43C219CD1EC00D374D2 /* DOM.Element.Equality.swift */; };
+		D90DB43E219CD1EC00D374D2 /* DOM+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB43C219CD1EC00D374D2 /* DOM+Extensions.swift */; };
+		D90DB43F219CD1EC00D374D2 /* DOM+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB43C219CD1EC00D374D2 /* DOM+Extensions.swift */; };
 		D90DB440219CD1EC00D374D2 /* DOM.ElementTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB43D219CD1EC00D374D2 /* DOM.ElementTests.swift */; };
 		D90DB441219CD1EC00D374D2 /* DOM.ElementTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB43D219CD1EC00D374D2 /* DOM.ElementTests.swift */; };
 		D90DB44E219CD27800D374D2 /* Parser.XML.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB443219CD27700D374D2 /* Parser.XML.swift */; };
@@ -133,14 +133,14 @@
 		D90DB484219CD2C300D374D2 /* UseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB46C219CD2C200D374D2 /* UseTests.swift */; };
 		D90DB485219CD2C300D374D2 /* StyleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB46D219CD2C200D374D2 /* StyleTests.swift */; };
 		D90DB486219CD2C300D374D2 /* StyleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB46D219CD2C200D374D2 /* StyleTests.swift */; };
-		D90DB487219CD2C300D374D2 /* Parser.ImageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB46E219CD2C200D374D2 /* Parser.ImageTests.swift */; };
-		D90DB488219CD2C300D374D2 /* Parser.ImageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB46E219CD2C200D374D2 /* Parser.ImageTests.swift */; };
+		D90DB487219CD2C300D374D2 /* ParserSVGImageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB46E219CD2C200D374D2 /* ParserSVGImageTests.swift */; };
+		D90DB488219CD2C300D374D2 /* ParserSVGImageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB46E219CD2C200D374D2 /* ParserSVGImageTests.swift */; };
 		D90DB489219CD2C300D374D2 /* Parser.XML.TransformTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB46F219CD2C200D374D2 /* Parser.XML.TransformTests.swift */; };
 		D90DB48A219CD2C300D374D2 /* Parser.XML.TransformTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB46F219CD2C200D374D2 /* Parser.XML.TransformTests.swift */; };
 		D90DB48D219CD2C300D374D2 /* Parser.GraphicAttributeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB471219CD2C200D374D2 /* Parser.GraphicAttributeTests.swift */; };
 		D90DB48E219CD2C300D374D2 /* Parser.GraphicAttributeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB471219CD2C200D374D2 /* Parser.GraphicAttributeTests.swift */; };
-		D90DB48F219CD2C300D374D2 /* ImageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB472219CD2C200D374D2 /* ImageTests.swift */; };
-		D90DB490219CD2C300D374D2 /* ImageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB472219CD2C200D374D2 /* ImageTests.swift */; };
+		D90DB48F219CD2C300D374D2 /* Parser.XML.ImageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB472219CD2C200D374D2 /* Parser.XML.ImageTests.swift */; };
+		D90DB490219CD2C300D374D2 /* Parser.XML.ImageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB472219CD2C200D374D2 /* Parser.XML.ImageTests.swift */; };
 		D90DB491219CD2C300D374D2 /* Parser.SVGTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB473219CD2C200D374D2 /* Parser.SVGTests.swift */; };
 		D90DB492219CD2C300D374D2 /* Parser.SVGTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB473219CD2C200D374D2 /* Parser.SVGTests.swift */; };
 		D90DB493219CD2C300D374D2 /* ElementTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB474219CD2C200D374D2 /* ElementTests.swift */; };
@@ -167,6 +167,8 @@
 		D9C47AC71ED54FA100178D06 /* viewbox.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9C47AC11ED54FA100178D06 /* viewbox.svg */; };
 		D9F3AD5A219E9DF400BAFA55 /* XML.SAXParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9F3AD59219E9DF400BAFA55 /* XML.SAXParserTests.swift */; };
 		D9F3AD5B219E9DF400BAFA55 /* XML.SAXParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9F3AD59219E9DF400BAFA55 /* XML.SAXParserTests.swift */; };
+		D9F3AD5E21A218CF00BAFA55 /* ImageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9F3AD5D21A218CF00BAFA55 /* ImageTests.swift */; };
+		D9F3AD5F21A218CF00BAFA55 /* ImageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9F3AD5D21A218CF00BAFA55 /* ImageTests.swift */; };
 		D9F3EBBB1DFF5BA3006691A1 /* SwiftDraw.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D9F3EBB11DFF5BA3006691A1 /* SwiftDraw.framework */; };
 		D9F3EBC21DFF5BA3006691A1 /* SwiftDraw.h in Headers */ = {isa = PBXBuildFile; fileRef = D9F3EBB41DFF5BA3006691A1 /* SwiftDraw.h */; settings = {ATTRIBUTES = (Public, ); }; };
 /* End PBXBuildFile section */
@@ -232,7 +234,7 @@
 		D90DB424219CD1C500D374D2 /* DOM.SVG.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DOM.SVG.swift; sourceTree = "<group>"; };
 		D90DB425219CD1C500D374D2 /* DOM.Image.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DOM.Image.swift; sourceTree = "<group>"; };
 		D90DB426219CD1C500D374D2 /* DOM.Color.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DOM.Color.swift; sourceTree = "<group>"; };
-		D90DB43C219CD1EC00D374D2 /* DOM.Element.Equality.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DOM.Element.Equality.swift; sourceTree = "<group>"; };
+		D90DB43C219CD1EC00D374D2 /* DOM+Extensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "DOM+Extensions.swift"; sourceTree = "<group>"; };
 		D90DB43D219CD1EC00D374D2 /* DOM.ElementTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DOM.ElementTests.swift; sourceTree = "<group>"; };
 		D90DB443219CD27700D374D2 /* Parser.XML.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Parser.XML.swift; sourceTree = "<group>"; };
 		D90DB444219CD27700D374D2 /* Parser.XML.Color.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Parser.XML.Color.swift; sourceTree = "<group>"; };
@@ -254,10 +256,10 @@
 		D90DB46B219CD2C200D374D2 /* Parser.PathTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Parser.PathTests.swift; sourceTree = "<group>"; };
 		D90DB46C219CD2C200D374D2 /* UseTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UseTests.swift; sourceTree = "<group>"; };
 		D90DB46D219CD2C200D374D2 /* StyleTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StyleTests.swift; sourceTree = "<group>"; };
-		D90DB46E219CD2C200D374D2 /* Parser.ImageTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Parser.ImageTests.swift; sourceTree = "<group>"; };
+		D90DB46E219CD2C200D374D2 /* ParserSVGImageTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ParserSVGImageTests.swift; sourceTree = "<group>"; };
 		D90DB46F219CD2C200D374D2 /* Parser.XML.TransformTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Parser.XML.TransformTests.swift; sourceTree = "<group>"; };
 		D90DB471219CD2C200D374D2 /* Parser.GraphicAttributeTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Parser.GraphicAttributeTests.swift; sourceTree = "<group>"; };
-		D90DB472219CD2C200D374D2 /* ImageTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ImageTests.swift; sourceTree = "<group>"; };
+		D90DB472219CD2C200D374D2 /* Parser.XML.ImageTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Parser.XML.ImageTests.swift; sourceTree = "<group>"; };
 		D90DB473219CD2C200D374D2 /* Parser.SVGTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Parser.SVGTests.swift; sourceTree = "<group>"; };
 		D90DB474219CD2C200D374D2 /* ElementTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ElementTests.swift; sourceTree = "<group>"; };
 		D90DB496219CD32600D374D2 /* Formatter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Formatter.swift; sourceTree = "<group>"; };
@@ -273,6 +275,7 @@
 		D9C47AC01ED54FA100178D06 /* transform.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = transform.svg; sourceTree = "<group>"; };
 		D9C47AC11ED54FA100178D06 /* viewbox.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = viewbox.svg; sourceTree = "<group>"; };
 		D9F3AD59219E9DF400BAFA55 /* XML.SAXParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = XML.SAXParserTests.swift; sourceTree = "<group>"; };
+		D9F3AD5D21A218CF00BAFA55 /* ImageTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageTests.swift; sourceTree = "<group>"; };
 		D9F3EBB11DFF5BA3006691A1 /* SwiftDraw.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SwiftDraw.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		D9F3EBB41DFF5BA3006691A1 /* SwiftDraw.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SwiftDraw.h; sourceTree = "<group>"; };
 		D9F3EBB51DFF5BA3006691A1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -456,7 +459,7 @@
 		D90DB43B219CD1E000D374D2 /* DOM */ = {
 			isa = PBXGroup;
 			children = (
-				D90DB43C219CD1EC00D374D2 /* DOM.Element.Equality.swift */,
+				D90DB43C219CD1EC00D374D2 /* DOM+Extensions.swift */,
 				D90DB43D219CD1EC00D374D2 /* DOM.ElementTests.swift */,
 			);
 			name = DOM;
@@ -487,14 +490,14 @@
 				D90DB465219CD2C100D374D2 /* CoordinateTests.swift */,
 				D90DB474219CD2C200D374D2 /* ElementTests.swift */,
 				D90DB468219CD2C100D374D2 /* GradientTests.swift */,
-				D90DB472219CD2C200D374D2 /* ImageTests.swift */,
+				D90DB46E219CD2C200D374D2 /* ParserSVGImageTests.swift */,
 				D90DB471219CD2C200D374D2 /* Parser.GraphicAttributeTests.swift */,
-				D90DB46E219CD2C200D374D2 /* Parser.ImageTests.swift */,
 				D90DB46B219CD2C200D374D2 /* Parser.PathTests.swift */,
 				D90DB473219CD2C200D374D2 /* Parser.SVGTests.swift */,
 				D90DB46D219CD2C200D374D2 /* StyleTests.swift */,
 				D90DB467219CD2C100D374D2 /* TextTests.swift */,
 				D90DB46A219CD2C100D374D2 /* Parser.XML.ColorTests.swift */,
+				D90DB472219CD2C200D374D2 /* Parser.XML.ImageTests.swift */,
 				D90DB46F219CD2C200D374D2 /* Parser.XML.TransformTests.swift */,
 				D90DB46C219CD2C200D374D2 /* UseTests.swift */,
 				D90DB466219CD2C100D374D2 /* ValueParserTests.swift */,
@@ -533,6 +536,14 @@
 				D9C47AC11ED54FA100178D06 /* viewbox.svg */,
 			);
 			path = Samples;
+			sourceTree = "<group>";
+		};
+		D9F3AD5C21A2172800BAFA55 /* Image */ = {
+			isa = PBXGroup;
+			children = (
+				D9F3AD5D21A218CF00BAFA55 /* ImageTests.swift */,
+			);
+			name = Image;
 			sourceTree = "<group>";
 		};
 		D9F3EBA71DFF5BA3006691A1 = {
@@ -576,6 +587,7 @@
 			isa = PBXGroup;
 			children = (
 				D90DB3F2219CCF1A00D374D2 /* Extensions */,
+				D9F3AD5C21A2172800BAFA55 /* Image */,
 				D90DB3C5219CCC7200D374D2 /* LayerTree */,
 				D90DB32D219CCB7300D374D2 /* Renderer */,
 				D90DB49C219CD37C00D374D2 /* SVG */,
@@ -833,9 +845,9 @@
 			files = (
 				D90DB494219CD2C300D374D2 /* ElementTests.swift in Sources */,
 				D90DB441219CD1EC00D374D2 /* DOM.ElementTests.swift in Sources */,
-				D90DB43F219CD1EC00D374D2 /* DOM.Element.Equality.swift in Sources */,
-				D90DB488219CD2C300D374D2 /* Parser.ImageTests.swift in Sources */,
-				D90DB490219CD2C300D374D2 /* ImageTests.swift in Sources */,
+				D90DB43F219CD1EC00D374D2 /* DOM+Extensions.swift in Sources */,
+				D90DB488219CD2C300D374D2 /* ParserSVGImageTests.swift in Sources */,
+				D90DB490219CD2C300D374D2 /* Parser.XML.ImageTests.swift in Sources */,
 				D90DB482219CD2C300D374D2 /* Parser.PathTests.swift in Sources */,
 				D90DB3F5219CCF2700D374D2 /* URL+DataTests.swift in Sources */,
 				D90DB3D6219CCC8A00D374D2 /* LayerTree.ShapeTests.swift in Sources */,
@@ -856,6 +868,7 @@
 				D90DB3D4219CCC8A00D374D2 /* LayerTree.LayerTests.swift in Sources */,
 				D90DB476219CD2C300D374D2 /* CoordinateTests.swift in Sources */,
 				D90DB48E219CD2C300D374D2 /* Parser.GraphicAttributeTests.swift in Sources */,
+				D9F3AD5F21A218CF00BAFA55 /* ImageTests.swift in Sources */,
 				D90DB480219CD2C300D374D2 /* Parser.XML.ColorTests.swift in Sources */,
 				D90DB478219CD2C300D374D2 /* ValueParserTests.swift in Sources */,
 				D90DB3D5219CCC8A00D374D2 /* LayerTree.PathTests.swift in Sources */,
@@ -919,9 +932,9 @@
 			files = (
 				D90DB493219CD2C300D374D2 /* ElementTests.swift in Sources */,
 				D90DB440219CD1EC00D374D2 /* DOM.ElementTests.swift in Sources */,
-				D90DB43E219CD1EC00D374D2 /* DOM.Element.Equality.swift in Sources */,
-				D90DB487219CD2C300D374D2 /* Parser.ImageTests.swift in Sources */,
-				D90DB48F219CD2C300D374D2 /* ImageTests.swift in Sources */,
+				D90DB43E219CD1EC00D374D2 /* DOM+Extensions.swift in Sources */,
+				D90DB487219CD2C300D374D2 /* ParserSVGImageTests.swift in Sources */,
+				D90DB48F219CD2C300D374D2 /* Parser.XML.ImageTests.swift in Sources */,
 				D90DB481219CD2C300D374D2 /* Parser.PathTests.swift in Sources */,
 				D90DB3D0219CCC8100D374D2 /* LayerTree.LayerTests.swift in Sources */,
 				D90DB3D1219CCC8100D374D2 /* LayerTree.ShapeTests.swift in Sources */,
@@ -942,6 +955,7 @@
 				D90DB3CC219CCC8100D374D2 /* LayerTree.ColorTests.swift in Sources */,
 				D90DB475219CD2C300D374D2 /* CoordinateTests.swift in Sources */,
 				D90DB48D219CD2C300D374D2 /* Parser.GraphicAttributeTests.swift in Sources */,
+				D9F3AD5E21A218CF00BAFA55 /* ImageTests.swift in Sources */,
 				D90DB47F219CD2C300D374D2 /* Parser.XML.ColorTests.swift in Sources */,
 				D90DB477219CD2C300D374D2 /* ValueParserTests.swift in Sources */,
 				D90DB3CF219CCC8100D374D2 /* LayerTree.PathTests.swift in Sources */,

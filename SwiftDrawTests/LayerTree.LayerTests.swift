@@ -32,7 +32,7 @@
 import XCTest
 @testable import SwiftDraw
 
-class LayerTreeLayerTests: XCTestCase {
+final class LayerTreeLayerTests: XCTestCase {
     
     typealias StrokeAttributes = LayerTree.StrokeAttributes
     typealias FillAttributes = LayerTree.FillAttributes

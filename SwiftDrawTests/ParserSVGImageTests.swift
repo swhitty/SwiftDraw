@@ -33,11 +33,11 @@ import XCTest
 @testable import SwiftDraw
 import Foundation
 
-class ParserImageTests: XCTestCase {
+final class ParserSVGImageTests: XCTestCase {
     
     func loadSVG(_ filename: String) -> DOM.SVG? {
         
-        let bundle = Bundle(for: ParserImageTests.self)
+        let bundle = Bundle(for: ParserSVGImageTests.self)
         
         guard let url = bundle.url(forResource: filename, withExtension: nil) else {
             return nil

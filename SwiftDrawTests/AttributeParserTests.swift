@@ -32,7 +32,7 @@
 import XCTest
 @testable import SwiftDraw
 
-class AttributeParserTests: XCTestCase {
+final class AttributeParserTests: XCTestCase {
     
     func testParserOrder() {
        let parser = XMLParser.ValueParser()

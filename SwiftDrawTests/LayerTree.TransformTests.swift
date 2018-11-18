@@ -29,7 +29,7 @@
 import XCTest
 @testable import SwiftDraw
 
-class LayerTreeTransformTests: XCTestCase {
+final class LayerTreeTransformTests: XCTestCase {
     
     typealias Transform = LayerTree.Transform
     typealias Matrix = LayerTree.Transform.Matrix

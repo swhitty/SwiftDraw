@@ -32,7 +32,7 @@
 import XCTest
 @testable import SwiftDraw
 
-class CoordinateTests: XCTestCase {
+final class CoordinateTests: XCTestCase {
     
     func testPrecisionMax() {
         var f = XMLFormatter.CoordinateFormatter()

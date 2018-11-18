@@ -30,7 +30,7 @@ import XCTest
 import CoreGraphics
 @testable import SwiftDraw
 
-class RendererCoreGraphicsTypesTests: XCTestCase {
+final class RendererCoreGraphicsTypesTests: XCTestCase {
     
     typealias Float = LayerTree.Float
     typealias Point = LayerTree.Point

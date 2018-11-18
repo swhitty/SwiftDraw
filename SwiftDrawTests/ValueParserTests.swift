@@ -33,7 +33,7 @@
 import XCTest
 @testable import SwiftDraw
 
-class ValueParserTests: XCTestCase {
+final class ValueParserTests: XCTestCase {
     
     var parser = XMLParser.ValueParser()
 

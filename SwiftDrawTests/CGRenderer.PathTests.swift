@@ -32,7 +32,7 @@
 import XCTest
 @testable import SwiftDraw
 
-class CGRendererPathTests: XCTestCase {
+final class CGRendererPathTests: XCTestCase {
     
     typealias Point = Builder.Point
     

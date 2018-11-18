@@ -32,7 +32,7 @@
 import XCTest
 @testable import SwiftDraw
 
-class LayerTreeColorTests: XCTestCase {
+final class LayerTreeColorTests: XCTestCase {
     
     typealias Color = LayerTree.Color
     

@@ -32,7 +32,7 @@
 import XCTest
 @testable import SwiftDraw
 
-class StackTests: XCTestCase {
+final class StackTests: XCTestCase {
     
     func testInit() {
         let stack = Stack<Int>(root: 10)

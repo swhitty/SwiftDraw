@@ -32,7 +32,7 @@
 import XCTest
 @testable import SwiftDraw
 
-class TextTests: XCTestCase {
+final class TextTests: XCTestCase {
     
     func testText() {
         XCTAssertEqual(try XMLParser().parseText([:], value: "Simon").value, "Simon")

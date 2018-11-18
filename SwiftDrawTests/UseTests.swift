@@ -32,7 +32,7 @@
 import XCTest
 @testable import SwiftDraw
 
-class UseTests: XCTestCase {
+final class UseTests: XCTestCase {
     
     func testUse() throws {
         var node = ["xlink:href": "#line2", "href": "#line1"]

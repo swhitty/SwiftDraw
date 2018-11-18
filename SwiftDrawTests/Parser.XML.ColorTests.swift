@@ -32,7 +32,7 @@
 import XCTest
 @testable import SwiftDraw
 
-class ParserColorTests: XCTestCase {
+final class ParserColorTests: XCTestCase {
     
     func testColorNone() {
         XCTAssertEqual(try XMLParser().parseColor("none"), .none)

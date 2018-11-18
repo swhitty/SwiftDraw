@@ -29,7 +29,7 @@
 import XCTest
 @testable import SwiftDraw
 
-class LayerTreeShapeTests: XCTestCase {
+final class LayerTreeShapeTests: XCTestCase {
     
     typealias Point = LayerTree.Point
     typealias Rect = LayerTree.Rect
