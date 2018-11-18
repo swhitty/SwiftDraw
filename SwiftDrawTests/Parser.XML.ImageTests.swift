@@ -47,7 +47,7 @@ extension CGImage {
     }
 }
 
-class ImageTests: XCTestCase {
+final class ParserXMLImageTests: XCTestCase {
     
     func testImage() throws {
         var node = ["xlink:href": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg=="]
