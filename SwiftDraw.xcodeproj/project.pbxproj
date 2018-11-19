@@ -173,6 +173,8 @@
 		D9F3AD6221A21B7800BAFA55 /* Bundle+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9F3AD6021A21B7800BAFA55 /* Bundle+Extensions.swift */; };
 		D9F3AD6421A21CD200BAFA55 /* invalid.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9F3AD6321A21CD100BAFA55 /* invalid.svg */; };
 		D9F3AD6521A21CD200BAFA55 /* invalid.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9F3AD6321A21CD100BAFA55 /* invalid.svg */; };
+		D9F3AD6721A2A73F00BAFA55 /* lines.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9F3AD6621A2A73F00BAFA55 /* lines.svg */; };
+		D9F3AD6821A2A73F00BAFA55 /* lines.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9F3AD6621A2A73F00BAFA55 /* lines.svg */; };
 		D9F3EBBB1DFF5BA3006691A1 /* SwiftDraw.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D9F3EBB11DFF5BA3006691A1 /* SwiftDraw.framework */; };
 		D9F3EBC21DFF5BA3006691A1 /* SwiftDraw.h in Headers */ = {isa = PBXBuildFile; fileRef = D9F3EBB41DFF5BA3006691A1 /* SwiftDraw.h */; settings = {ATTRIBUTES = (Public, ); }; };
 /* End PBXBuildFile section */
@@ -282,6 +284,7 @@
 		D9F3AD5D21A218CF00BAFA55 /* ImageTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageTests.swift; sourceTree = "<group>"; };
 		D9F3AD6021A21B7800BAFA55 /* Bundle+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Bundle+Extensions.swift"; sourceTree = "<group>"; };
 		D9F3AD6321A21CD100BAFA55 /* invalid.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = invalid.svg; sourceTree = "<group>"; };
+		D9F3AD6621A2A73F00BAFA55 /* lines.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = lines.svg; sourceTree = "<group>"; };
 		D9F3EBB11DFF5BA3006691A1 /* SwiftDraw.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SwiftDraw.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		D9F3EBB41DFF5BA3006691A1 /* SwiftDraw.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SwiftDraw.h; sourceTree = "<group>"; };
 		D9F3EBB51DFF5BA3006691A1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -534,6 +537,7 @@
 		D965B5801E3C4879003E859E /* Samples */ = {
 			isa = PBXGroup;
 			children = (
+				D9F3AD6621A2A73F00BAFA55 /* lines.svg */,
 				D9A843921E85F1C1002A804B /* quad.svg */,
 				D9A843901E855672002A804B /* curves.svg */,
 				D965B5851E3C5C87003E859E /* starry.svg */,
@@ -764,6 +768,7 @@
 			files = (
 				D9F3AD6521A21CD200BAFA55 /* invalid.svg in Resources */,
 				D9C47AC71ED54FA100178D06 /* viewbox.svg in Resources */,
+				D9F3AD6821A2A73F00BAFA55 /* lines.svg in Resources */,
 				D9A843961E8611D7002A804B /* curves.svg in Resources */,
 				D9778E5C1E6ED66300FF6EBB /* shapes.svg in Resources */,
 				D9C47AC31ED54FA100178D06 /* mask.svg in Resources */,
@@ -786,6 +791,7 @@
 			files = (
 				D9F3AD6421A21CD200BAFA55 /* invalid.svg in Resources */,
 				D9C47AC61ED54FA100178D06 /* viewbox.svg in Resources */,
+				D9F3AD6721A2A73F00BAFA55 /* lines.svg in Resources */,
 				D9A843951E8611D6002A804B /* curves.svg in Resources */,
 				D965B5821E3C48C6003E859E /* shapes.svg in Resources */,
 				D9C47AC21ED54FA100178D06 /* mask.svg in Resources */,

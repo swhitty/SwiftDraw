@@ -35,7 +35,7 @@ import XCTest
 final class ImageTests: XCTestCase {
 
     func testValidSVGLoads() {
-        XCTAssertNotNil(Image(named: "shapes.svg", in: .test))
+        XCTAssertNotNil(Image(named: "lines.svg", in: .test))
     }
 
     func testInvalidSVGReturnsNil() {
@@ -44,6 +44,21 @@ final class ImageTests: XCTestCase {
 
     func testMissingSVGReturnsNil() {
         XCTAssertNil(Image(named: "missing.svg", in: .test))
+    }
+
+    func testImageRasterizes() {
+        let image = Image(named: "lines.svg", in: .test)!
+        let rendered = image.rasterize()
+        XCTAssertEqual(rendered.size, image.size)
+        XCTAssertNotNil(image.pngData())
+    }
+
+    func testImageRasterizeAndScales() {
+        let image = Image(named: "lines.svg", in: .test)!
+        let doubleSize = CGSize(width: 200, height: 200)
+        let rendered = image.rasterize(with: doubleSize)
+        XCTAssertEqual(rendered.size, doubleSize)
+        XCTAssertNotNil(image.pngData(size: doubleSize))
     }
 
 }

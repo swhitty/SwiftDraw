@@ -56,4 +56,14 @@ public extension Image {
             $0.cgContext.draw(self, in: CGRect(x: 0, y: 0, width: size.width, height: size.height))
         }
     }
+
+    func pngData(size: CGSize? = nil, scale: CGFloat = 1) -> Data? {
+        let pngSize = size ?? self.size
+        return UIImagePNGRepresentation(rasterize(size: pngSize))
+    }
+
+    func jpegData(size: CGSize? = nil, scale: CGFloat = 1, compressionQuality quality: CGFloat = 1) -> Data? {
+        let jpgSize = size ?? self.size
+        return UIImageJPEGRepresentation(rasterize(size: jpegSize), compressionQuality: quality)
+    }
 }
