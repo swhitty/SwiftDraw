@@ -32,12 +32,7 @@
 import Foundation
 
 extension XMLFormatter {
-        
-    static func attributes(for _: DOM.Element) -> [String: String] {
-        // common graphic element attributes
-        return [:]
-    }
-    
+
     struct CoordinateFormatter {
         var delimeter: Delimeter = .space
         var precision: Precision = .capped(max: 5)
@@ -64,24 +59,19 @@ extension XMLFormatter {
                 return String(describing: c)
             }
         }
-        
-        func format(integer n: Double, maxDigits _: Int) -> String {
-            assert(n.sign == .plus)
-            return String(format: "%d", Int(n))
-        }
-        
+
         func format(fraction n: Double, maxDigits: Int) -> String {
             assert(n.sign == .plus)
             
             let min = pow(Double(10), Double(-maxDigits)) - Double.ulpOfOne
             
-            if n < min {
+            guard n >= min else {
                 return ""
-            } else {
-                let s = String(format: "%.\(maxDigits)g", n)
-                let idx = s.index(s.startIndex, offsetBy: 1)
-                return String(s[idx..<s.endIndex])
             }
+
+            let s = String(format: "%.\(maxDigits)g", n)
+            let idx = s.index(s.startIndex, offsetBy: 1)
+            return String(s[idx..<s.endIndex])
         }
         
         func format(_ c: Double, capped: Int) -> String {
