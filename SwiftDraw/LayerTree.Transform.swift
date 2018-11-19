@@ -93,28 +93,4 @@ extension LayerTree.Transform.Matrix {
                                           tx: (t.tx * m.a) + (t.ty * m.c) + m.tx,
                                           ty: (t.tx * m.b) + (t.ty * m.d) + m.ty)
     }
-    
-    var customDescription: String {
-        return "matrix(\(a),\(b),\(c),\(d),\(tx),\(ty))"
-    }
-}
-
-extension LayerTree.Transform {
-    var customDescription: String {
-        
-        if self == .identity {
-            return "identity"
-        }
-
-        switch self {
-        case .matrix(let m):
-            return m.customDescription
-        case .scale(let sx, let sy):
-            return "scale(\(sx), \(sy))"
-        case .translate(let tx, let ty):
-             return "translate(\(tx), \(ty))"
-        case .rotate(let angle):
-            return "rotate(\(angle)"
-        }
-    }
 }

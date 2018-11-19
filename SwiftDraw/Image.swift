@@ -67,7 +67,6 @@ public final class Image: NSObject {
         
         let layer = LayerTree.Builder(svg: svg).createLayer()
         let generator = LayerTree.CommandGenerator(provider: CGProvider())
-        //print(layer.customDescription)
         commands = generator.renderCommands(for: layer)
         
         
