@@ -59,11 +59,11 @@ public extension Image {
 
     func pngData(size: CGSize? = nil, scale: CGFloat = 1) -> Data? {
         let pngSize = size ?? self.size
-        return UIImagePNGRepresentation(rasterize(size: pngSize))
+        return rasterize(with: pngSize).pngData()
     }
 
     func jpegData(size: CGSize? = nil, scale: CGFloat = 1, compressionQuality quality: CGFloat = 1) -> Data? {
         let jpgSize = size ?? self.size
-        return UIImageJPEGRepresentation(rasterize(size: jpegSize), compressionQuality: quality)
+        return rasterize(with: jpgSize).jpegData(compressionQuality: quality)
     }
 }

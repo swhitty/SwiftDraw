@@ -51,6 +51,7 @@ final class ImageTests: XCTestCase {
         let rendered = image.rasterize()
         XCTAssertEqual(rendered.size, image.size)
         XCTAssertNotNil(image.pngData())
+        XCTAssertNotNil(image.jpegData())
     }
 
     func testImageRasterizeAndScales() {
@@ -59,6 +60,7 @@ final class ImageTests: XCTestCase {
         let rendered = image.rasterize(with: doubleSize)
         XCTAssertEqual(rendered.size, doubleSize)
         XCTAssertNotNil(image.pngData(size: doubleSize))
+        XCTAssertNotNil(image.jpegData(size: doubleSize))
     }
 
 }
