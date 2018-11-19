@@ -49,11 +49,6 @@ extension DOM {
             self.x = x
             self.y = y
         }
-        
-        init(_ point: (Coordinate, Coordinate)) {
-            self.x = point.0
-            self.y = point.1
-        }
     }
     
     enum FillRule: String {
