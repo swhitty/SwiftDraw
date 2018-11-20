@@ -53,6 +53,21 @@ final class SVGTests: XCTestCase {
         expected.fill = .keyword(.red)
         XCTAssertNotEqual(parsed, expected)
     }
+
+    func testParseSVGInvalidNode() {
+        let node = XML.Element(name: "svg2", attributes: ["width": "100", "height": "200"])
+        XCTAssertThrowsError(try XMLParser().parseSVG(node))
+    }
+
+    func testParseSVGMissingHeightInvalidNode() {
+        let node = XML.Element(name: "svg", attributes: ["width": "100"])
+        XCTAssertThrowsError(try XMLParser().parseSVG(node))
+    }
+
+    func testParseSVGMissingWidthInvalidNode() {
+        let node = XML.Element(name: "svg", attributes: ["height": "100"])
+        XCTAssertThrowsError(try XMLParser().parseSVG(node))
+    }
     
     func testViewBox() {
         let parsed = (try? XMLParser().parseViewBox(" 10\t20  300.0  5e2")!)!
