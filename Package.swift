@@ -24,7 +24,7 @@ let package = Package(
             name: "SwiftDraw",
             dependencies: [],
 			path: "SwiftDraw",
-			exclude: ["UIImage+Image.swift", "NSImage+Image.swift"]),
+			exclude: ["UIImage+Image.swift"]),
         .testTarget(
             name: "SwiftDrawTests",
             dependencies: ["SwiftDraw"],

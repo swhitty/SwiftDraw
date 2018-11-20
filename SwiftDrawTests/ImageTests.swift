@@ -47,7 +47,7 @@ final class ImageTests: XCTestCase {
     }
 
     func testImageRasterizes() {
-        let image = Image(named: "lines.svg", in: .test)!
+        let image = Image.makeLines()
         let rendered = image.rasterize()
         XCTAssertEqual(rendered.size, image.size)
         XCTAssertNotNil(image.pngData())
@@ -55,7 +55,7 @@ final class ImageTests: XCTestCase {
     }
 
     func testImageRasterizeAndScales() {
-        let image = Image(named: "lines.svg", in: .test)!
+        let image = Image.makeLines()
         let doubleSize = CGSize(width: 200, height: 200)
         let rendered = image.rasterize(with: doubleSize)
         XCTAssertEqual(rendered.size, doubleSize)
@@ -63,4 +63,14 @@ final class ImageTests: XCTestCase {
         XCTAssertNotNil(image.jpegData(size: doubleSize))
     }
 
+}
+
+private extension Image {
+
+    static func makeLines() -> Image {
+        let svg = DOM.SVG(width: 100, height: 100)
+        svg.childElements.append(DOM.Line(x1: 0, y1: 0, x2: 100, y2: 100))
+        svg.childElements.append(DOM.Line(x1: 100, y1: 0, x2: 0, y2: 100))
+        return Image(svg: svg)
+    }
 }

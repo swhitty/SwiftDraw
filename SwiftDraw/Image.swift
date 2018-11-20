@@ -47,32 +47,29 @@ public final class Image: NSObject {
         
         self.init(fileURL: url)
     }
-    
-    public init?(fileURL url: URL) {
-        
-        let parser = XMLParser(options: [.skipInvalidElements])
-        
-        guard let element = try? XML.SAXParser.parse(contentsOf: url),
-              let svg = try? parser.parseSVG(element) else {
-                return nil
-        }
-        
+
+    init(svg: DOM.SVG) {
         size = CGSize(width: svg.width, height: svg.height)
-        
+
         //To create the draw commands;
         // - XML is parsed into DOM.SVG
         // - DOM.SVG is converted into a LayerTree
         // - LayerTree is converted into RenderCommands
         // - RenderCommands are performed by Renderer (drawn to CGContext)
-        
+
         let layer = LayerTree.Builder(svg: svg).createLayer()
         let generator = LayerTree.CommandGenerator(provider: CGProvider())
         commands = generator.renderCommands(for: layer)
-        
-        
-        let codeGenerator = LayerTree.CommandGenerator(provider: LayerTreeProvider())
-        let codeCommands = codeGenerator.renderCommands(for: layer)
-        CodeRenderer().perform(codeCommands)
+    }
+    
+    public convenience init?(fileURL url: URL) {
+        let parser = XMLParser(options: [.skipInvalidElements])
+        guard let element = try? XML.SAXParser.parse(contentsOf: url),
+              let svg = try? parser.parseSVG(element) else {
+                return nil
+        }
+
+        self.init(svg: svg)
     }
 }
 
