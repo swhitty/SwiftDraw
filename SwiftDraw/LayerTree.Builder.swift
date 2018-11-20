@@ -105,35 +105,13 @@ extension LayerTree {
         
         func makeContents(from element: DOM.GraphicsElement, with state: State) -> Layer.Contents? {
             if let shape = Builder.makeShape(from: element) {
-                let stroke = Builder.createStrokeAttributes(with: state)
-                let fill = Builder.createFillAttributes(with: state)
-                return .shape(shape, stroke, fill)
-                
+                return Builder.makeShapeContents(from: shape, with: state)
             } else if let text = element as? DOM.Text {
-                let point = Point(text.x ?? 0, text.y ?? 0)
-                var att = Builder.createTextAttributes(with: state)
-                att.fontName = text.fontFamily ?? att.fontName
-                att.size = text.fontSize ?? att.size
-                return .text(text.value, point, att)
-            } else if let image = element as? DOM.Image,
-                      let decoded = image.href.decodedData,
-                      let i = Image(mimeType: decoded.mimeType, data: decoded.data) {
-                return .image(i)
-                
-            } else if let use = element as? DOM.Use,
-                let eId = use.href.fragment,
-                let e = svg.defs.elements[eId] {
-                
-                let l = createLayer(from: e, inheriting: state)
-                let x = use.x ?? 0.0
-                let y = use.y ?? 0.0
-                
-                if x != 0 || y != 0 {
-                    l.transform.insert(.translate(tx: x, ty: y), at: 0)
-                }
-                
-                return .layer(l)
-                
+                return Builder.makeTextContents(from: text, with: state)
+            } else if let image = element as? DOM.Image {
+                return Builder.makeImageContents(from: image)
+            } else if let use = element as? DOM.Use {
+                return makeUseLayerContents(from: use, with: state)
             } else if let sw = element as? DOM.Switch,
                 let e = sw.childElements.first {
                 //TODO: select first element that creates non empty Layer
@@ -190,7 +168,7 @@ extension LayerTree.Builder {
         return LayerTree.FillAttributes(color: fill, rule: state.fillRule)
     }
     
-    static func createTextAttributes(with state: State) -> LayerTree.TextAttributes {
+    static func makeTextAttributes(with state: State) -> LayerTree.TextAttributes {
         return .normal
     }
     
