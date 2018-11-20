@@ -76,11 +76,7 @@ extension LayerTree {
         }
         
         func createLayers(for elements: [DOM.GraphicsElement], inheriting state: State) -> [Layer] {
-            var layers = Array<Layer>()
-            for element in elements {
-                layers.append(createLayer(from: element, inheriting: state))
-            }
-            return layers
+            return elements.map { createLayer(from: $0, inheriting: state) }
         }
         
         func createLayer(from element: DOM.GraphicsElement, inheriting previousState: State) -> Layer {
@@ -159,12 +155,12 @@ extension LayerTree {
                   let mask = svg.defs.masks.first(where: { $0.id == maskId }) else { return nil }
             
             let l = Layer()
-            
+
             mask.childElements.forEach {
                 let contents = Layer.Contents.layer(createLayer(from: $0, inheriting: State()))
                 l.appendContents(contents)
             }
-            
+
             return l
         }
 
@@ -188,7 +184,10 @@ extension LayerTree {
             } else if let rect = element as? DOM.Rect {
                 let radii = Size(rect.rx ?? 0, rect.ry ?? 0)
                 let origin = Point(rect.x ?? 0, rect.y ?? 0)
-                return .rect(within: Rect(x: origin.x, y: origin.y, width: rect.width, height: rect.height),
+                return .rect(within: Rect(x: origin.x,
+                                          y: origin.y,
+                                          width: rect.width,
+                                          height: rect.height),
                              radii: radii)
             } else if let polyline = element as? DOM.Polyline {
                 return .line(between: polyline.points.map{ Point($0.x, $0.y) })
