@@ -90,7 +90,7 @@ extension LayerTree {
             l.mask = createMaskLayer(for: element)
             l.opacity = state.opacity
             
-            if let contents = createContents(from: element, with: state) {
+            if let contents = makeContents(from: element, with: state) {
                 l.appendContents(contents)
             }
             else if let container = element as? ContainerElement {
@@ -103,7 +103,7 @@ extension LayerTree {
             return l
         }
         
-        func createContents(from element: DOM.GraphicsElement, with state: State) -> Layer.Contents? {
+        func makeContents(from element: DOM.GraphicsElement, with state: State) -> Layer.Contents? {
             if let shape = Builder.makeShape(from: element) {
                 let stroke = Builder.createStrokeAttributes(with: state)
                 let fill = Builder.createFillAttributes(with: state)
