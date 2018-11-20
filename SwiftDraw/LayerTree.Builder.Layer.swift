@@ -66,11 +66,11 @@ extension LayerTree.Builder {
         return .text(text.value, point, att)
     }
 
-    static func makeImageContents(from image: DOM.Image) -> LayerTree.Layer.Contents? {
+    static func makeImageContents(from image: DOM.Image) throws -> LayerTree.Layer.Contents {
         guard
             let decoded = image.href.decodedData,
             let im = LayerTree.Image(mimeType: decoded.mimeType, data: decoded.data) else {
-            return nil
+            throw LayerTree.Error.invalid("Cannot decode image")
         }
         return .image(im)
     }

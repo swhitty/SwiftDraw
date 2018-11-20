@@ -38,6 +38,7 @@ struct LayerTree {
     
     enum Error: Swift.Error {
         case unsupported(Any)
+        case invalid(String)
     }
     
     struct Point: Hashable {

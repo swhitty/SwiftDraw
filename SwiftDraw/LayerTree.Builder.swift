@@ -109,7 +109,7 @@ extension LayerTree {
             } else if let text = element as? DOM.Text {
                 return Builder.makeTextContents(from: text, with: state)
             } else if let image = element as? DOM.Image {
-                return Builder.makeImageContents(from: image)
+                return try? Builder.makeImageContents(from: image)
             } else if let use = element as? DOM.Use {
                 return makeUseLayerContents(from: use, with: state)
             } else if let sw = element as? DOM.Switch,
