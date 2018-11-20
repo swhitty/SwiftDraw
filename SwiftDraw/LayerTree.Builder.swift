@@ -104,7 +104,7 @@ extension LayerTree {
         }
         
         func createContents(from element: DOM.GraphicsElement, with state: State) -> Layer.Contents? {
-            if let shape = Builder.createShape(from: element) {
+            if let shape = Builder.makeShape(from: element) {
                 let stroke = Builder.createStrokeAttributes(with: state)
                 let fill = Builder.createFillAttributes(with: state)
                 return .shape(shape, stroke, fill)
@@ -147,7 +147,7 @@ extension LayerTree {
             guard let clipId = element.clipPath?.fragment,
                   let clip = svg.defs.clipPaths.first(where: { $0.id == clipId }) else { return [] }
             
-            return clip.childElements.compactMap{ Builder.createShape(from: $0) }
+            return clip.childElements.compactMap{ Builder.makeShape(from: $0) }
         }
 
         func createMaskLayer(for element: DOM.GraphicsElement) -> Layer? {
@@ -162,30 +162,6 @@ extension LayerTree {
             }
 
             return l
-        }
-
-        static func createShape(from element: DOM.GraphicsElement) -> Shape? {
-            if let line = element as? DOM.Line {
-                let from = Point(line.x1, line.y1)
-                let to = Point(line.x2, line.y2)
-                return .line(between: [from, to])
-            } else if let circle = element as? DOM.Circle {
-                return .ellipse(within: makeRect(from: circle))
-            } else if let ellipse = element as? DOM.Ellipse {
-                return .ellipse(within: makeRect(from: ellipse))
-            } else if let rect = element as? DOM.Rect {
-                let radii = Size(rect.rx ?? 0, rect.ry ?? 0)
-                return .rect(within: makeRect(from: rect), radii: radii)
-            } else if let polyline = element as? DOM.Polyline {
-                return .line(between: polyline.points.map{ Point($0.x, $0.y) })
-            } else if let polygon = element as? DOM.Polygon {
-                return .polygon(between: polygon.points.map{ Point($0.x, $0.y) })
-            } else if let domPath = element as? DOM.Path,
-                      let path = try? Builder.createPath(from: domPath) {
-                return .path(path)
-            }
-            
-            return nil;
         }
     }
 }
