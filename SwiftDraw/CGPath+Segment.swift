@@ -77,7 +77,7 @@ extension CGPath {
         return segments
     }
 }
-
+//
 extension String {
     
     func toPath(font: CTFont) -> CGPath? {

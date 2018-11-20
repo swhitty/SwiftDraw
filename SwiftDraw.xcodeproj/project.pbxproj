@@ -149,6 +149,8 @@
 		D90DB499219CD32600D374D2 /* Formatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB496219CD32600D374D2 /* Formatter.swift */; };
 		D90DB49A219CD32600D374D2 /* Formatter.XML.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB497219CD32600D374D2 /* Formatter.XML.swift */; };
 		D90DB49B219CD32600D374D2 /* Formatter.XML.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB497219CD32600D374D2 /* Formatter.XML.swift */; };
+		D925CC5E21A3E02C00C8897B /* CGPath+ExtensionsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D925CC5D21A3E02C00C8897B /* CGPath+ExtensionsTests.swift */; };
+		D925CC5F21A3E02C00C8897B /* CGPath+ExtensionsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D925CC5D21A3E02C00C8897B /* CGPath+ExtensionsTests.swift */; };
 		D962D2761E6ECD5C00B825C6 /* SwiftDraw.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D962D26D1E6ECD5C00B825C6 /* SwiftDraw.framework */; };
 		D962D2A21E6ECE2000B825C6 /* SwiftDraw-macOS.h in Headers */ = {isa = PBXBuildFile; fileRef = D962D2A11E6ECE2000B825C6 /* SwiftDraw-macOS.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		D965B5821E3C48C6003E859E /* shapes.svg in Resources */ = {isa = PBXBuildFile; fileRef = D965B5811E3C48C6003E859E /* shapes.svg */; };
@@ -270,6 +272,7 @@
 		D90DB474219CD2C200D374D2 /* ElementTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ElementTests.swift; sourceTree = "<group>"; };
 		D90DB496219CD32600D374D2 /* Formatter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Formatter.swift; sourceTree = "<group>"; };
 		D90DB497219CD32600D374D2 /* Formatter.XML.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Formatter.XML.swift; sourceTree = "<group>"; };
+		D925CC5D21A3E02C00C8897B /* CGPath+ExtensionsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CGPath+ExtensionsTests.swift"; sourceTree = "<group>"; };
 		D962D26D1E6ECD5C00B825C6 /* SwiftDraw.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SwiftDraw.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		D962D2751E6ECD5C00B825C6 /* SwiftDraw-macOSTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "SwiftDraw-macOSTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		D962D2A11E6ECE2000B825C6 /* SwiftDraw-macOS.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "SwiftDraw-macOS.h"; sourceTree = "<group>"; };
@@ -398,6 +401,7 @@
 			isa = PBXGroup;
 			children = (
 				D90DB3F3219CCF2700D374D2 /* URL+DataTests.swift */,
+				D925CC5D21A3E02C00C8897B /* CGPath+ExtensionsTests.swift */,
 			);
 			name = Extensions;
 			sourceTree = "<group>";
@@ -868,6 +872,7 @@
 				D90DB3F5219CCF2700D374D2 /* URL+DataTests.swift in Sources */,
 				D90DB3D6219CCC8A00D374D2 /* LayerTree.ShapeTests.swift in Sources */,
 				D90DB39B219CCB9E00D374D2 /* Renderer.CoreGraphicsTypesTests.swift in Sources */,
+				D925CC5F21A3E02C00C8897B /* CGPath+ExtensionsTests.swift in Sources */,
 				D90DB48A219CD2C300D374D2 /* Parser.XML.TransformTests.swift in Sources */,
 				D90DB3D3219CCC8A00D374D2 /* LayerTree.ImageTests.swift in Sources */,
 				D90DB3D7219CCC8A00D374D2 /* LayerTree.TransformTests.swift in Sources */,
@@ -956,6 +961,7 @@
 				D90DB3D0219CCC8100D374D2 /* LayerTree.LayerTests.swift in Sources */,
 				D90DB3D1219CCC8100D374D2 /* LayerTree.ShapeTests.swift in Sources */,
 				D90DB3CE219CCC8100D374D2 /* LayerTree.ImageTests.swift in Sources */,
+				D925CC5E21A3E02C00C8897B /* CGPath+ExtensionsTests.swift in Sources */,
 				D90DB489219CD2C300D374D2 /* Parser.XML.TransformTests.swift in Sources */,
 				D90DB3F4219CCF2700D374D2 /* URL+DataTests.swift in Sources */,
 				D90DB3CD219CCC8100D374D2 /* LayerTree.TransformTests.swift in Sources */,
