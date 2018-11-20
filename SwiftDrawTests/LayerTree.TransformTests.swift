@@ -66,6 +66,38 @@ final class LayerTreeTransformTests: XCTestCase {
         XCTAssertEqual(concatenated, Transform.identity.toMatrix())
     }
 
+    func testDOMMakesLayerTreeTranslate() {
+        let translate = DOM.Transform.translate(tx: 10, ty: 20)
+        let transform = LayerTree.Builder.createTransform(for: translate)
+
+        XCTAssertEqual(transform, [.translate(tx: 10, ty: 20)])
+    }
+
+    func testDOMMakesScaleTransform() {
+        let scale = DOM.Transform.scale(sx: 10, sy: 20)
+        let transform = LayerTree.Builder.createTransform(for: scale)
+
+        XCTAssertEqual(transform, [.scale(sx: 10, sy: 20)])
+    }
+
+    func testDOMMakesRotateTransform() {
+        let rotate = DOM.Transform.rotate(angle: 10)
+        let transform = LayerTree.Builder.createTransform(for: rotate)
+
+        let radians = 10*Float.pi/180.0
+        XCTAssertEqual(transform, [.rotate(radians: radians)])
+    }
+
+    func testDOMMakesRotatePointTransform() {
+        let rotate = DOM.Transform.rotatePoint(angle: 10, cx: 20, cy: 30)
+        let transform = LayerTree.Builder.createTransform(for: rotate)
+
+        let radians = 10*Float.pi/180.0
+        XCTAssertEqual(transform, [.translate(tx: 20, ty: 30),
+                                   .rotate(radians: radians),
+                                   .translate(tx: -20, ty: -30)])
+    }
+
 //    func testMatrixEquality() {
 //        let m1 = Matrix(a: 0, b: 1, c: 2, d: 3, tx: 4, ty: 5)
 //        let m2 = Matrix(a: 5, b: 4, c: 3, d: 2, tx: 1, ty: 0)
