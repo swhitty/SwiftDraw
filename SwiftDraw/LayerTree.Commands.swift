@@ -10,7 +10,6 @@ import Foundation
 
 // Convert a LayerTree into RenderCommands
 
-
 extension LayerTree {
     
     final class CommandGenerator<P: RendererTypeProvider>{

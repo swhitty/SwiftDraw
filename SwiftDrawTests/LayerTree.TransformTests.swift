@@ -98,44 +98,36 @@ final class LayerTreeTransformTests: XCTestCase {
                                    .translate(tx: -20, ty: -30)])
     }
 
-//    func testMatrixEquality() {
-//        let m1 = Matrix(a: 0, b: 1, c: 2, d: 3, tx: 4, ty: 5)
-//        let m2 = Matrix(a: 5, b: 4, c: 3, d: 2, tx: 1, ty: 0)
-//        let m3 = Transform.identity.toMatrix()
-//        
-//        XCTAssertEqual(m1, Matrix(a: 0, b: 1, c: 2, d: 3, tx: 4, ty: 5))
-//        XCTAssertEqual(m1, m1)
-//        XCTAssertEqual(m2, Matrix(a: 5, b: 4, c: 3, d: 2, tx: 1, ty: 0))
-//        XCTAssertEqual(m2, m2)
-//        XCTAssertEqual(m3, Matrix(a: 1, b: 0, c: 0, d: 1, tx: 0, ty: 0))
-//        XCTAssertEqual(m3, m3)
-//        
-//        XCTAssertNotEqual(m1, m2)
-//        XCTAssertNotEqual(m1, m3)
-//        XCTAssertNotEqual(m2, m3)
-//    }
-//    
-//    func testTransfromEquality() {
-//        let m1 = Matrix(a: 0, b: 1, c: 2, d: 3, tx: 4, ty: 5)
-//        let t1 = Transform.matrix(m1)
-//        let t2 = Transform.translate(tx: 1, ty: 2)
-//        let t3 = Transform.scale(sx: 3, sy: 4)
-//        let t4 = Transform.rotate(radians: Float.pi/2)
-//        
-//        XCTAssertEqual(t1, .matrix(m1))
-//        XCTAssertEqual(t1, t1)
-//        XCTAssertEqual(t2, .translate(tx: 1, ty: 2))
-//        XCTAssertEqual(t2, t2)
-//        XCTAssertEqual(t3, .scale(sx: 3, sy: 4))
-//        XCTAssertEqual(t3, t3)
-//        XCTAssertEqual(t4, .rotate(radians: Float.pi/2))
-//        XCTAssertEqual(t4, t4)
-//        
-//        XCTAssertNotEqual(t1, t2)
-//        XCTAssertNotEqual(t1, t3)
-//        XCTAssertNotEqual(t1, t4)
-//        XCTAssertNotEqual(t2, t3)
-//        XCTAssertNotEqual(t2, t4)
-//        XCTAssertNotEqual(t3, t4)
-//    }
+    func testDOMMakesSkewXTransform() {
+        let skew = DOM.Transform.skewX(angle: 10)
+        let transform = LayerTree.Builder.createTransform(for: skew)
+
+        let radians = 10*Float.pi/180.0
+        XCTAssertEqual(transform, [.skewX(angle: radians)])
+    }
+
+    func testDOMMakesSkewYTransform() {
+        let skew = DOM.Transform.skewY(angle: 10)
+        let transform = LayerTree.Builder.createTransform(for: skew)
+
+        let radians = 10*Float.pi/180.0
+        XCTAssertEqual(transform, [.skewY(angle: radians)])
+    }
+
+    func testDOMMakesMatrixTransform() {
+        let matrix = DOM.Transform.matrix(a: 10, b: 20, c: 30, d: 40, e: 50, f: 60)
+        let transform = LayerTree.Builder.createTransform(for: matrix)
+
+        let expected = Matrix(a: 10, b: 20, c: 30, d: 40, tx: 50, ty: 60)
+        XCTAssertEqual(transform, [.matrix(expected)])
+    }
+
+    func testDOMMakesMultipleTransforms() {
+        let translate = DOM.Transform.translate(tx: 10, ty: 20)
+        let scale = DOM.Transform.scale(sx: 10, sy: 20)
+        let transform = LayerTree.Builder.createTransforms(from: [translate, scale])
+
+        XCTAssertEqual(transform, [.translate(tx: 10, ty: 20),
+                                   .scale(sx: 10, sy: 20)])
+    }
 }
