@@ -116,6 +116,20 @@ final class LayerTreeColorTests: XCTestCase {
         XCTAssertEqual(green.luminanceToAlpha(), black.withAlpha(0.7152))
         XCTAssertEqual(blue.luminanceToAlpha(), black.withAlpha(0.0722))
     }
+
+    func testLuminanceConverter() {
+        let white = Color.white
+        let black = Color.black
+        let red = Color.rgba(r: 1.0, g: 0.0, b: 0.0, a: 1.0)
+        let green = Color.rgba(r: 0.0, g: 1.0, b: 0.0, a: 1.0)
+        let blue = Color.rgba(r: 0.0, g: 0.0, b: 1.0, a: 1.0)
+
+        let converter = LuminanceColorConverter()
+        XCTAssertEqual(converter.createColor(from: white), black.withAlpha(1.0))
+        XCTAssertEqual(converter.createColor(from: red), black.withAlpha(0.2126))
+        XCTAssertEqual(converter.createColor(from: green), black.withAlpha(0.7152))
+        XCTAssertEqual(converter.createColor(from: blue), black.withAlpha(0.0722))
+    }
     
     func testFromDOM() {
         // DOM.Color converts correctly
