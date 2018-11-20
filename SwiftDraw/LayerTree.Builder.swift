@@ -170,25 +170,12 @@ extension LayerTree {
                 let to = Point(line.x2, line.y2)
                 return .line(between: [from, to])
             } else if let circle = element as? DOM.Circle {
-                let rect = Rect(x: circle.cx - circle.r,
-                                y: circle.cy - circle.r,
-                                width: circle.r * 2,
-                                height: circle.r * 2)
-                return .ellipse(within: rect)
+                return .ellipse(within: makeRect(from: circle))
             } else if let ellipse = element as? DOM.Ellipse {
-                let rect = Rect(x: ellipse.cx - ellipse.rx,
-                                y: ellipse.cy - ellipse.ry,
-                                width: ellipse.rx * 2,
-                                height: ellipse.ry * 2)
-                return .ellipse(within: rect)
+                return .ellipse(within: makeRect(from: ellipse))
             } else if let rect = element as? DOM.Rect {
                 let radii = Size(rect.rx ?? 0, rect.ry ?? 0)
-                let origin = Point(rect.x ?? 0, rect.y ?? 0)
-                return .rect(within: Rect(x: origin.x,
-                                          y: origin.y,
-                                          width: rect.width,
-                                          height: rect.height),
-                             radii: radii)
+                return .rect(within: makeRect(from: rect), radii: radii)
             } else if let polyline = element as? DOM.Polyline {
                 return .line(between: polyline.points.map{ Point($0.x, $0.y) })
             } else if let polygon = element as? DOM.Polygon {
