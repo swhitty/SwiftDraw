@@ -178,7 +178,21 @@ final class LayerTreePathTests: XCTestCase {
     func testClose() {
         XCTAssertEqual(LayerTree.Builder.createClose(from: .close), Segment.close)
     }
-    
+
+    func testDOMQuadraticSmooth() throws {
+        let domSegment = DOM.Path.Segment.quadraticSmooth(x: 10.0, y: 10.0, space: .relative)
+        let segment = try LayerTree.Builder.createSegment(from: domSegment, last: .init(10, 10), previous: nil)
+
+        XCTAssertEqual(segment, .cubic(to: .init(20.0, 20.0), control1: .init(10, 10), control2: .init(13.333334, 10)))
+    }
+
+    func testDOMCubicSmooth() throws {
+        let domSegment = DOM.Path.Segment.cubicSmooth(x2: 10, y2: 10, x: 10, y: 10, space: .relative)
+        let segment = try LayerTree.Builder.createSegment(from: domSegment, last: .init(10, 10), previous: nil)
+
+        XCTAssertEqual(segment, .cubic(to: .init(20.0, 20.0), control1: .init(10, 10), control2: .init(20.0, 20.0)))
+    }
+
     // helpers to create Segments without labels
     // splatting of tuple is no longer supported
     private func move(_ x: Float, _ y: Float) -> Path.Segment {
