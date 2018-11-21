@@ -68,8 +68,8 @@ extension XMLParser {
                 return try parse(element[key], with: exp, for: key)
             } catch let error {
                 guard options.contains(.skipInvalidAttributes) else { throw error }
-                return try parse(element[key], with: exp, for: key)
             }
+            return try parse(element[key], with: exp, for: key)
         }
         
         func parse<T>(_ value: String?, with expression: (String) throws -> T, for key: String) throws -> T {
