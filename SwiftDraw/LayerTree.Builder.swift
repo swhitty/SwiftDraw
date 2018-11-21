@@ -72,10 +72,6 @@ extension LayerTree {
             return transform
         }
         
-        func makeLayers(for elements: [DOM.GraphicsElement], inheriting state: State) -> [Layer] {
-            return elements.map { makeLayer(from: $0, inheriting: state) }
-        }
-        
         func makeLayer(from element: DOM.GraphicsElement, inheriting previousState: State) -> Layer {
             let state = Builder.createState(for: element, inheriting: previousState)
             let l = Layer()
