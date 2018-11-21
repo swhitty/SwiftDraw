@@ -54,16 +54,35 @@ final class LayerTreeBuilderLayerTests: XCTestCase {
         XCTAssertThrowsError(try LayerTree.Builder.makeImageContents(from: invalid))
     }
 
-    func testMakeLayerFromDOM() {
+    func testMakeUseContentsThrows() {
+        let builder = LayerTree.Builder(svg: DOM.SVG(width: 10, height: 10))
+        let use = DOM.Use(href: URL(string: "#circle")!)
+        XCTAssertThrowsError(try builder.makeUseLayerContents(from: use, with: .init()))
+    }
+
+    func testMakeUseContentsFromDOM() throws {
         let circle = DOM.Circle(cx: 5, cy: 5, r: 5)
         let svg = DOM.SVG(width: 10, height: 10)
         svg.defs.elements["circle"] = circle
         let builder = LayerTree.Builder(svg: svg)
 
         let use = DOM.Use(href: URL(string: "#circle")!)
-        let contents = builder.makeUseLayerContents(from: use, with: .init())!
-
+        var contents = try builder.makeUseLayerContents(from: use, with: .init())
         guard case .layer(let l) = contents else { XCTFail(); return }
         XCTAssertEqual(l.contents.count, 1)
+        XCTAssertEqual(l.transform, [])
+
+        use.x = 10
+        contents = try builder.makeUseLayerContents(from: use, with: .init())
+        guard case .layer(let l1) = contents else { XCTFail(); return }
+        XCTAssertEqual(l1.contents.count, 1)
+        XCTAssertEqual(l1.transform, [.translate(tx: 10, ty: 0)])
+
+        use.x = nil
+        use.y = 20
+        contents = try builder.makeUseLayerContents(from: use, with: .init())
+        guard case .layer(let l2) = contents else { XCTFail(); return }
+        XCTAssertEqual(l2.contents.count, 1)
+        XCTAssertEqual(l2.transform, [.translate(tx: 0, ty: 20)])
     }
 }

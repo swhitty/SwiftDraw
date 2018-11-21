@@ -111,7 +111,7 @@ extension LayerTree {
             } else if let image = element as? DOM.Image {
                 return try? Builder.makeImageContents(from: image)
             } else if let use = element as? DOM.Use {
-                return makeUseLayerContents(from: use, with: state)
+                return try? makeUseLayerContents(from: use, with: state)
             } else if let sw = element as? DOM.Switch,
                 let e = sw.childElements.first {
                 //TODO: select first element that creates non empty Layer
