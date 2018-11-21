@@ -42,7 +42,7 @@ extension LayerTree {
         }
         
         func makeLayer() -> Layer {
-            let l = createLayer(from: svg, inheriting: State())
+            let l = makeLayer(from: svg, inheriting: State())
             l.transform = Builder.makeTransform(for: svg.viewBox,
                                                 width: svg.width,
                                                 height: svg.height)
@@ -72,11 +72,11 @@ extension LayerTree {
             return transform
         }
         
-        func createLayers(for elements: [DOM.GraphicsElement], inheriting state: State) -> [Layer] {
-            return elements.map { createLayer(from: $0, inheriting: state) }
+        func makeLayers(for elements: [DOM.GraphicsElement], inheriting state: State) -> [Layer] {
+            return elements.map { makeLayer(from: $0, inheriting: state) }
         }
         
-        func createLayer(from element: DOM.GraphicsElement, inheriting previousState: State) -> Layer {
+        func makeLayer(from element: DOM.GraphicsElement, inheriting previousState: State) -> Layer {
             let state = Builder.createState(for: element, inheriting: previousState)
             let l = Layer()
             
@@ -92,7 +92,7 @@ extension LayerTree {
             }
             else if let container = element as? ContainerElement {
                 container.childElements.forEach{
-                    let contents = Layer.Contents.layer(createLayer(from: $0, inheriting: state))
+                    let contents = Layer.Contents.layer(makeLayer(from: $0, inheriting: state))
                     l.appendContents(contents)
                 }
             }
@@ -112,7 +112,7 @@ extension LayerTree {
             } else if let sw = element as? DOM.Switch,
                 let e = sw.childElements.first {
                 //TODO: select first element that creates non empty Layer
-                return .layer(createLayer(from: e, inheriting: state))
+                return .layer(makeLayer(from: e, inheriting: state))
             }
      
             return nil
@@ -132,7 +132,7 @@ extension LayerTree {
             let l = Layer()
 
             mask.childElements.forEach {
-                let contents = Layer.Contents.layer(createLayer(from: $0, inheriting: State()))
+                let contents = Layer.Contents.layer(makeLayer(from: $0, inheriting: State()))
                 l.appendContents(contents)
             }
 

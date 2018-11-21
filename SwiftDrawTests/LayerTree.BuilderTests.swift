@@ -62,4 +62,28 @@ final class LayerTreeBuilderTests: XCTestCase {
 
         XCTAssertEqual(layer?.contents.count, 2)
     }
+
+    func testDOMClipMakesShape() {
+        let circle = DOM.Circle(cx: 5, cy: 5, r: 5)
+        let svg = DOM.SVG(width: 10, height: 10)
+        svg.defs.clipPaths.append(DOM.ClipPath(id: "clip1", childElements: [circle]))
+        let builder = LayerTree.Builder(svg: svg)
+
+        let element = DOM.GraphicsElement()
+        element.clipPath = URL(string: "#clip1")
+
+        let shapes = builder.createClipShapes(for: element)
+        XCTAssertEqual(shapes, [.ellipse(within: LayerTree.Rect(x: 0, y: 0, width: 10, height: 10))])
+    }
+
+    func testDOMGroupMakesChildContents() {
+        let builder = LayerTree.Builder(svg: DOM.SVG(width: 10, height: 10))
+
+        let group = DOM.Group()
+        group.childElements = [DOM.Circle(cx: 0, cy: 0, r: 5),
+                               DOM.Line(x1: 0, y1: 0, x2: 10, y2: 10)]
+
+        let layer = builder.makeLayer(from: group, inheriting: .init())
+        XCTAssertEqual(layer.contents.count, 2)
+    }
 }
