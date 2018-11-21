@@ -33,15 +33,10 @@ import XCTest
 @testable import SwiftDraw
 
 final class LayerTreeLayerTests: XCTestCase {
-    
-    typealias StrokeAttributes = LayerTree.StrokeAttributes
-    typealias FillAttributes = LayerTree.FillAttributes
-    typealias TextAttributes = LayerTree.TextAttributes
-    typealias Layer = LayerTree.Layer
-    typealias Contents = LayerTree.Layer.Contents
-    typealias Point = LayerTree.Point
-    typealias Transform = LayerTree.Transform
-    typealias Matrix = LayerTree.Transform.Matrix
+
+    private typealias TextAttributes = LayerTree.TextAttributes
+    private typealias Contents = LayerTree.Layer.Contents
+    private typealias Point = LayerTree.Point
 
     func testContentsTextEquality() {
         let c1 = Contents.text("Charlie", .zero, .normal)
