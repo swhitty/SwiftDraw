@@ -34,9 +34,29 @@ import XCTest
 
 final class LayerTreeLayerTests: XCTestCase {
 
-    private typealias TextAttributes = LayerTree.TextAttributes
+    private typealias Layer = LayerTree.Layer
     private typealias Contents = LayerTree.Layer.Contents
+    private typealias TextAttributes = LayerTree.TextAttributes
     private typealias Point = LayerTree.Point
+
+    func testLayersWithSimpleContentsAreAppendedWithoutLayer() {
+        let parent = LayerTree.Layer()
+        let simple = LayerTree.Layer()
+        simple.appendContents(.mockImage)
+
+        parent.appendContents(.layer(simple))
+        XCTAssertEqual(parent.contents, [.mockImage])
+    }
+
+    func testLayersWithComplexContentsAreAppendedWithoutLayer() {
+        let parent = LayerTree.Layer()
+        let complex = LayerTree.Layer()
+        complex.appendContents(.mockImage)
+        complex.opacity = 0.5
+
+        parent.appendContents(.layer(complex))
+        XCTAssertEqual(parent.contents, [.layer(complex)])
+    }
 
     func testContentsTextEquality() {
         let c1 = Contents.text("Charlie", .zero, .normal)
@@ -66,4 +86,13 @@ final class LayerTreeLayerTests: XCTestCase {
         XCTAssertNotEqual(c2, c4)
         XCTAssertNotEqual(c3, c4)
     }
+}
+
+private extension LayerTree.Layer.Contents {
+
+    static var mockImage: LayerTree.Layer.Contents {
+        let image = LayerTree.Image(mimeType: "image/png", data: Data(base64Encoded: "f00d")!)!
+        return .image(image)
+    }
+
 }
