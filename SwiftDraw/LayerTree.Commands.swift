@@ -180,7 +180,9 @@ extension LayerTree {
             commands.append(.pushTransparencyLayer)
             commands.append(.setBlend(mode: modeCopy))
            
-            let drawMask = layer.contents.flatMap{ renderCommands(for: $0, colorConverter: LuminanceColorConverter()) }
+            let drawMask = layer.contents.flatMap{
+                renderCommands(for: $0, colorConverter: LuminanceColorConverter())
+            }
             commands.append(contentsOf: drawMask)
             
             commands.append(.setBlend(mode: modeSourceIn))
