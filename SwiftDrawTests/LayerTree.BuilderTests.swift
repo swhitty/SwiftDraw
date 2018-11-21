@@ -34,6 +34,19 @@ import XCTest
 
 final class LayerTreeBuilderTests: XCTestCase {
 
+    func testMakeViewBoxTransform() {
+        var transform = LayerTree.Builder.makeTransform(for: nil, width: 100, height: 200)
+        XCTAssertEqual(transform, [])
+
+        let viewbox = DOM.SVG.ViewBox(x: 0, y: 0, width: 200, height: 200)
+        transform = LayerTree.Builder.makeTransform(for: viewbox, width: 100, height: 100)
+        XCTAssertEqual(transform, [.scale(sx: 0.5, sy: 0.5)])
+
+        let viewbox1 = DOM.SVG.ViewBox(x: 10, y: -10, width: 100, height: 100)
+        transform = LayerTree.Builder.makeTransform(for: viewbox1, width: 100, height: 100)
+        XCTAssertEqual(transform, [.translate(tx: -10, ty: 10)])
+    }
+
     func testDOMMaskMakesLayer() {
         let circle = DOM.Circle(cx: 5, cy: 5, r: 5)
         let line = DOM.Line(x1: 0, y1: 0, x2: 10, y2: 0)

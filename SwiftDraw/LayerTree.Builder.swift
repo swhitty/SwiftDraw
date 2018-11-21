@@ -41,38 +41,35 @@ extension LayerTree {
             self.svg = svg
         }
         
-        func createLayer() -> Layer {
+        func makeLayer() -> Layer {
             let l = createLayer(from: svg, inheriting: State())
-    
-            if let viewBox = svg.viewBox {
-                l.transform = Builder.createTransform(for: viewBox,
-                                                      width: svg.width,
-                                                      height: svg.height)
-            } else {
-                l.transform = []
-            }
-     
+            l.transform = Builder.makeTransform(for: svg.viewBox,
+                                                width: svg.width,
+                                                height: svg.height)
             return l
         }
-        
-//        func createLayer(from element: DOM.GraphicsElement, with children: [DOM.GraphicsElement], inheriting state: State) -> Layer {
-//            let l = Layer()
-//            
-//            let newState = Builder.createState(for: element, inheriting: state)
-//            
-//            l.transform = Builder.createTransform(concatenating: element.transform ?? [])
-//            l.contents = createLayers(for: children, inheriting: newState).map{ .layer($0) }
-//            
-//            return l
-//        }
-//        
-        static func createTransform(for viewBox: DOM.SVG.ViewBox, width: DOM.Length, height: DOM.Length) -> [LayerTree.Transform] {
+
+        static func makeTransform(for viewBox: DOM.SVG.ViewBox?, width: DOM.Length, height: DOM.Length) -> [LayerTree.Transform] {
+            guard let viewBox = viewBox else {
+                return []
+            }
             
             let sx = LayerTree.Float(width) / viewBox.width
             let sy = LayerTree.Float(height) / viewBox.height
-            
-            return [.scale(sx: sx, sy: sy),
-                    .translate(tx: -viewBox.x, ty: -viewBox.y)]
+            let scale = LayerTree.Transform.scale(sx: sx, sy: sy)
+            let translate = LayerTree.Transform.translate(tx: -viewBox.x, ty: -viewBox.y)
+
+            var transform = [LayerTree.Transform]()
+
+            if scale != .scale(sx: 1, sy: 1) {
+                transform.append(scale)
+            }
+
+            if translate != .translate(tx: 0, ty: 0) {
+                transform.append(translate)
+            }
+
+            return transform
         }
         
         func createLayers(for elements: [DOM.GraphicsElement], inheriting state: State) -> [Layer] {
