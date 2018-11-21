@@ -83,23 +83,11 @@ extension LayerTree {
         var cap: LineCap
         var join: LineJoin
         var miterLimit: Float
-        
-        static var normal: StrokeAttributes {
-            return StrokeAttributes(color: .black,
-                                    width: 1.0,
-                                    cap: .butt,
-                                    join: .bevel,
-                                    miterLimit: 4.0)
-        }
     }
 
     struct FillAttributes: Equatable {
         var color: Color
         var rule: FillRule
-        
-        static var normal: FillAttributes {
-            return FillAttributes(color: .black, rule: .evenodd)
-        }
     }
     
     struct TextAttributes: Equatable {
