@@ -34,7 +34,27 @@ import XCTest
 
 final class LayerTreeBuilderLayerTests: XCTestCase {
 
-    func testMakeLayerFromUse() {
+    func testMakeTextContentsFromDOM() {
+        let text = DOM.Text(value: "Hello")
+        let contents = LayerTree.Builder.makeTextContents(from: text, with: .init())
+        
+        guard case .text(let t) = contents else { XCTFail(); return }
+        XCTAssertEqual(t.0, "Hello")
+    }
+
+    func testMakeImageContentsFromDOM() throws {
+        let image = DOM.Image(href: URL(maybeData: "data:image/png;base64,f00d")!,
+                              width: 50,
+                              height: 50)
+
+        let contents = try LayerTree.Builder.makeImageContents(from: image)
+        XCTAssertEqual(contents, .image(.png(data: Data(base64Encoded: "f00d")!)))
+
+        let invalid = DOM.Image(href: URL(string: "aa")!, width: 10, height: 20)
+        XCTAssertThrowsError(try LayerTree.Builder.makeImageContents(from: invalid))
+    }
+
+    func testMakeLayerFromDOM() {
         let circle = DOM.Circle(cx: 5, cy: 5, r: 5)
         let svg = DOM.SVG(width: 10, height: 10)
         svg.defs.elements["circle"] = circle
