@@ -137,8 +137,8 @@ extension AttributeParser {
             return nil
         }  catch let error {
             guard options.contains(.skipInvalidAttributes) else { throw error }
-            return nil
         }
+        return nil
     }
     
     func parseString(_ key: String) throws -> String? {
