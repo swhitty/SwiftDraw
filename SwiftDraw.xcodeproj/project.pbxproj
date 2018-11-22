@@ -185,7 +185,6 @@
 		D9C47AC51ED54FA100178D06 /* transform.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9C47AC01ED54FA100178D06 /* transform.svg */; };
 		D9C47AC61ED54FA100178D06 /* viewbox.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9C47AC11ED54FA100178D06 /* viewbox.svg */; };
 		D9C47AC71ED54FA100178D06 /* viewbox.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9C47AC11ED54FA100178D06 /* viewbox.svg */; };
-		D9CFB5D121A73E84000D2875 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9CFB5D021A73E84000D2875 /* main.swift */; };
 		D9F3AD5A219E9DF400BAFA55 /* XML.SAXParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9F3AD59219E9DF400BAFA55 /* XML.SAXParserTests.swift */; };
 		D9F3AD5B219E9DF400BAFA55 /* XML.SAXParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9F3AD59219E9DF400BAFA55 /* XML.SAXParserTests.swift */; };
 		D9F3AD5E21A218CF00BAFA55 /* ImageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9F3AD5D21A218CF00BAFA55 /* ImageTests.swift */; };
@@ -975,7 +974,6 @@
 				D90DB42D219CD1C600D374D2 /* DOM.Use.swift in Sources */,
 				D90DB498219CD32600D374D2 /* Formatter.swift in Sources */,
 				D90DB3E3219CCE0E00D374D2 /* UIImage+Image.swift in Sources */,
-				D9CFB5D121A73E84000D2875 /* main.swift in Sources */,
 				D90DB427219CD1C600D374D2 /* DOM.Gradient.swift in Sources */,
 				D90DB437219CD1C600D374D2 /* DOM.Image.swift in Sources */,
 				D90DB45E219CD27800D374D2 /* Parser.XML.SVG.swift in Sources */,
