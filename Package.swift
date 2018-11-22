@@ -1,6 +1,6 @@
 // swift-tools-version:4.2
 // The swift-tools-version declares the minimum version of Swift required to build this package.
-// - SR-631: requires swift 4.2-dev toolchain to build.
+// - SR-631: requires swift 5.0-dev toolchain to build.
 // % export TOOLCHAINS=swift
 
 import PackageDescription
