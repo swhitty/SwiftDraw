@@ -14,10 +14,7 @@ let package = Package(
             name: "SwiftDraw",
             targets: ["SwiftDraw"]),
     ],
-    dependencies: [
-        // Dependencies declare other packages that this package depends on.
-        // .package(url: /* package url */, from: "1.0.0"),
-    ],
+    dependencies: [],
     targets: [
         .target(
             name: "SwiftDraw",
