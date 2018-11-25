@@ -185,6 +185,9 @@
 		D9C47AC51ED54FA100178D06 /* transform.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9C47AC01ED54FA100178D06 /* transform.svg */; };
 		D9C47AC61ED54FA100178D06 /* viewbox.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9C47AC11ED54FA100178D06 /* viewbox.svg */; };
 		D9C47AC71ED54FA100178D06 /* viewbox.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9C47AC11ED54FA100178D06 /* viewbox.svg */; };
+		D9ECAF9821AADA00006A5328 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9CFB5D021A73E84000D2875 /* main.swift */; };
+		D9ECAF9921AADA02006A5328 /* CommandLine.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9CFB5CF21A73E0F000D2875 /* CommandLine.swift */; };
+		D9ECAF9B21AADA1E006A5328 /* SwiftDraw.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D962D26D1E6ECD5C00B825C6 /* SwiftDraw.framework */; };
 		D9F3AD5A219E9DF400BAFA55 /* XML.SAXParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9F3AD59219E9DF400BAFA55 /* XML.SAXParserTests.swift */; };
 		D9F3AD5B219E9DF400BAFA55 /* XML.SAXParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9F3AD59219E9DF400BAFA55 /* XML.SAXParserTests.swift */; };
 		D9F3AD5E21A218CF00BAFA55 /* ImageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9F3AD5D21A218CF00BAFA55 /* ImageTests.swift */; };
@@ -215,6 +218,18 @@
 			remoteInfo = SwiftDraw;
 		};
 /* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		D9ECAF8F21AAAF92006A5328 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		D90DB396219CCB9E00D374D2 /* CGRenderer.PathTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CGRenderer.PathTests.swift; sourceTree = "<group>"; };
@@ -313,6 +328,7 @@
 		D9C47AC11ED54FA100178D06 /* viewbox.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = viewbox.svg; sourceTree = "<group>"; };
 		D9CFB5CF21A73E0F000D2875 /* CommandLine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandLine.swift; sourceTree = "<group>"; };
 		D9CFB5D021A73E84000D2875 /* main.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		D9ECAF9121AAAF92006A5328 /* CommandLine */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = CommandLine; sourceTree = BUILT_PRODUCTS_DIR; };
 		D9F3AD59219E9DF400BAFA55 /* XML.SAXParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = XML.SAXParserTests.swift; sourceTree = "<group>"; };
 		D9F3AD5D21A218CF00BAFA55 /* ImageTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageTests.swift; sourceTree = "<group>"; };
 		D9F3AD6021A21B7800BAFA55 /* Bundle+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Bundle+Extensions.swift"; sourceTree = "<group>"; };
@@ -338,6 +354,14 @@
 			buildActionMask = 2147483647;
 			files = (
 				D962D2761E6ECD5C00B825C6 /* SwiftDraw.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D9ECAF8E21AAAF92006A5328 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D9ECAF9B21AADA1E006A5328 /* SwiftDraw.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -601,6 +625,13 @@
 			path = CommandLine;
 			sourceTree = "<group>";
 		};
+		D9ECAF9A21AADA1E006A5328 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		D9F3AD5C21A2172800BAFA55 /* Image */ = {
 			isa = PBXGroup;
 			children = (
@@ -619,6 +650,7 @@
 				D9F3EBB31DFF5BA3006691A1 /* SwiftDraw */,
 				D9F3EBBE1DFF5BA3006691A1 /* SwiftDrawTests */,
 				D9F3EBB21DFF5BA3006691A1 /* Products */,
+				D9ECAF9A21AADA1E006A5328 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -629,6 +661,7 @@
 				D9F3EBBA1DFF5BA3006691A1 /* SwiftDrawTests.xctest */,
 				D962D26D1E6ECD5C00B825C6 /* SwiftDraw.framework */,
 				D962D2751E6ECD5C00B825C6 /* SwiftDraw-macOSTests.xctest */,
+				D9ECAF9121AAAF92006A5328 /* CommandLine */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -721,6 +754,23 @@
 			productReference = D962D2751E6ECD5C00B825C6 /* SwiftDraw-macOSTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
+		D9ECAF9021AAAF92006A5328 /* CommandLine */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D9ECAF9721AAAF93006A5328 /* Build configuration list for PBXNativeTarget "CommandLine" */;
+			buildPhases = (
+				D9ECAF8D21AAAF92006A5328 /* Sources */,
+				D9ECAF8E21AAAF92006A5328 /* Frameworks */,
+				D9ECAF8F21AAAF92006A5328 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = CommandLine;
+			productName = CommandLine;
+			productReference = D9ECAF9121AAAF92006A5328 /* CommandLine */;
+			productType = "com.apple.product-type.tool";
+		};
 		D9F3EBB01DFF5BA3006691A1 /* SwiftDraw */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = D9F3EBC51DFF5BA3006691A1 /* Build configuration list for PBXNativeTarget "SwiftDraw" */;
@@ -763,7 +813,7 @@
 		D9F3EBA81DFF5BA3006691A1 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastSwiftUpdateCheck = 0820;
+				LastSwiftUpdateCheck = 1010;
 				LastUpgradeCheck = 1010;
 				ORGANIZATIONNAME = "WhileLoop Pty Ltd";
 				TargetAttributes = {
@@ -775,6 +825,11 @@
 					D962D2741E6ECD5C00B825C6 = {
 						CreatedOnToolsVersion = 8.2.1;
 						LastSwiftMigration = 0930;
+						ProvisioningStyle = Automatic;
+					};
+					D9ECAF9021AAAF92006A5328 = {
+						CreatedOnToolsVersion = 10.1;
+						DevelopmentTeam = C8TWBM2E6Q;
 						ProvisioningStyle = Automatic;
 					};
 					D9F3EBB01DFF5BA3006691A1 = {
@@ -804,6 +859,7 @@
 				D9F3EBB91DFF5BA3006691A1 /* SwiftDrawTests */,
 				D962D26C1E6ECD5C00B825C6 /* SwiftDraw-macOS */,
 				D962D2741E6ECD5C00B825C6 /* SwiftDraw-macOSTests */,
+				D9ECAF9021AAAF92006A5328 /* CommandLine */,
 			);
 		};
 /* End PBXProject section */
@@ -953,6 +1009,15 @@
 				D90DB480219CD2C300D374D2 /* Parser.XML.ColorTests.swift in Sources */,
 				D90DB478219CD2C300D374D2 /* ValueParserTests.swift in Sources */,
 				D90DB3D5219CCC8A00D374D2 /* LayerTree.PathTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D9ECAF8D21AAAF92006A5328 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D9ECAF9821AADA00006A5328 /* main.swift in Sources */,
+				D9ECAF9921AADA02006A5328 /* CommandLine.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1143,6 +1208,51 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "com.whileloop.SwiftDraw-macOSTests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		D9ECAF9521AAAF93006A5328 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_IDENTITY = "Mac Developer";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = C8TWBM2E6Q;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				LD_RUNPATH_SEARCH_PATHS = "@executable_path $(TOOLCHAIN_DIR)/usr/lib/swift/macosx";
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_FORCE_DYNAMIC_LINK_STDLIB = YES;
+				SWIFT_FORCE_STATIC_LINK_STDLIB = NO;
+				SWIFT_VERSION = 4.2;
+			};
+			name = Debug;
+		};
+		D9ECAF9621AAAF93006A5328 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_IDENTITY = "Mac Developer";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = C8TWBM2E6Q;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				LD_RUNPATH_SEARCH_PATHS = "@executable_path $(TOOLCHAIN_DIR)/usr/lib/swift/macosx";
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_FORCE_DYNAMIC_LINK_STDLIB = YES;
+				SWIFT_FORCE_STATIC_LINK_STDLIB = NO;
+				SWIFT_VERSION = 4.2;
 			};
 			name = Release;
 		};
@@ -1341,6 +1451,15 @@
 			buildConfigurations = (
 				D962D2801E6ECD5C00B825C6 /* Debug */,
 				D962D2811E6ECD5C00B825C6 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D9ECAF9721AAAF93006A5328 /* Build configuration list for PBXNativeTarget "CommandLine" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D9ECAF9521AAAF93006A5328 /* Debug */,
+				D9ECAF9621AAAF93006A5328 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

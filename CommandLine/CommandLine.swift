@@ -30,9 +30,7 @@
 //
 
 import Foundation
-#if SWIFT_PACKAGE
-    import SwiftDraw
-#endif
+import SwiftDraw
 
 struct CommandLine {
 
