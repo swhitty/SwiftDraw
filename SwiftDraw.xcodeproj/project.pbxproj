@@ -149,6 +149,10 @@
 		D90DB499219CD32600D374D2 /* Formatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB496219CD32600D374D2 /* Formatter.swift */; };
 		D90DB49A219CD32600D374D2 /* Formatter.XML.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB497219CD32600D374D2 /* Formatter.XML.swift */; };
 		D90DB49B219CD32600D374D2 /* Formatter.XML.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB497219CD32600D374D2 /* Formatter.XML.swift */; };
+		D913F18C21AC157B00B76B06 /* RendererTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D913F18B21AC157A00B76B06 /* RendererTests.swift */; };
+		D913F18D21AC157B00B76B06 /* RendererTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D913F18B21AC157A00B76B06 /* RendererTests.swift */; };
+		D913F18F21AC15B000B76B06 /* MockRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D913F18E21AC15B000B76B06 /* MockRenderer.swift */; };
+		D913F19021AC15B000B76B06 /* MockRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D913F18E21AC15B000B76B06 /* MockRenderer.swift */; };
 		D925CC5E21A3E02C00C8897B /* CGPath+ExtensionsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D925CC5D21A3E02C00C8897B /* CGPath+ExtensionsTests.swift */; };
 		D925CC5F21A3E02C00C8897B /* CGPath+ExtensionsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D925CC5D21A3E02C00C8897B /* CGPath+ExtensionsTests.swift */; };
 		D925CC6121A49C9C00C8897B /* LayerTree.Builder.Shape.swift in Sources */ = {isa = PBXBuildFile; fileRef = D925CC6021A49C9C00C8897B /* LayerTree.Builder.Shape.swift */; };
@@ -282,6 +286,8 @@
 		D90DB474219CD2C200D374D2 /* ElementTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ElementTests.swift; sourceTree = "<group>"; };
 		D90DB496219CD32600D374D2 /* Formatter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Formatter.swift; sourceTree = "<group>"; };
 		D90DB497219CD32600D374D2 /* Formatter.XML.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Formatter.XML.swift; sourceTree = "<group>"; };
+		D913F18B21AC157A00B76B06 /* RendererTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RendererTests.swift; sourceTree = "<group>"; };
+		D913F18E21AC15B000B76B06 /* MockRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockRenderer.swift; sourceTree = "<group>"; };
 		D925CC5D21A3E02C00C8897B /* CGPath+ExtensionsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CGPath+ExtensionsTests.swift"; sourceTree = "<group>"; };
 		D925CC6021A49C9C00C8897B /* LayerTree.Builder.Shape.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LayerTree.Builder.Shape.swift; sourceTree = "<group>"; };
 		D925CC6321A4A0AE00C8897B /* LayerTree.Builder.ShapeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LayerTree.Builder.ShapeTests.swift; sourceTree = "<group>"; };
@@ -349,6 +355,8 @@
 			children = (
 				D90DB396219CCB9E00D374D2 /* CGRenderer.PathTests.swift */,
 				D90DB397219CCB9E00D374D2 /* Renderer.CoreGraphicsTypesTests.swift */,
+				D913F18B21AC157A00B76B06 /* RendererTests.swift */,
+				D913F18E21AC15B000B76B06 /* MockRenderer.swift */,
 			);
 			name = Renderer;
 			sourceTree = "<group>";
@@ -903,6 +911,8 @@
 				D925CC6E21A4BD1A00C8897B /* LayerTree.Builder.LayerTests.swift in Sources */,
 				D90DB414219CD0CE00D374D2 /* XML.Parser.ScannerTests.swift in Sources */,
 				D90DB47A219CD2C300D374D2 /* TextTests.swift in Sources */,
+				D913F19021AC15B000B76B06 /* MockRenderer.swift in Sources */,
+				D913F18D21AC157B00B76B06 /* RendererTests.swift in Sources */,
 				D90DB47C219CD2C300D374D2 /* GradientTests.swift in Sources */,
 				D90DB3D2219CCC8A00D374D2 /* LayerTree.ColorTests.swift in Sources */,
 				D90DB484219CD2C300D374D2 /* UseTests.swift in Sources */,
@@ -997,6 +1007,8 @@
 				D925CC6D21A4BD1A00C8897B /* LayerTree.Builder.LayerTests.swift in Sources */,
 				D90DB3FD219CCF9200D374D2 /* StackTests.swift in Sources */,
 				D90DB479219CD2C300D374D2 /* TextTests.swift in Sources */,
+				D913F18F21AC15B000B76B06 /* MockRenderer.swift in Sources */,
+				D913F18C21AC157B00B76B06 /* RendererTests.swift in Sources */,
 				D90DB47B219CD2C300D374D2 /* GradientTests.swift in Sources */,
 				D90DB413219CD0CE00D374D2 /* XML.Parser.ScannerTests.swift in Sources */,
 				D90DB483219CD2C300D374D2 /* UseTests.swift in Sources */,

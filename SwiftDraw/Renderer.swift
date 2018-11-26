@@ -99,6 +99,10 @@ extension Renderer {
             pushState()
         case .popState:
             popState()
+        case .pushTransparencyLayer:
+            pushTransparencyLayer()
+        case .popTransparencyLayer:
+            popTransparencyLayer()
         case .concatenate(transform: let t):
             concatenate(transform: t)
         case .translate(tx: let x, ty: let y):
@@ -131,10 +135,6 @@ extension Renderer {
             fill(path: p, rule: r)
         case .draw(image: let i):
             draw(image: i)
-        case .pushTransparencyLayer:
-            pushTransparencyLayer()
-        case .popTransparencyLayer:
-            popTransparencyLayer()
         }
     }
     
