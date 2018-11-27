@@ -93,3 +93,25 @@ public extension CGContext {
         restoreGState()
     }
 }
+
+public extension Image {
+
+    func pdfData(size: CGSize? = nil) -> Data? {
+        let renderSize = size ?? self.size
+        let data = NSMutableData()
+        guard let consumer = CGDataConsumer(data: data as CFMutableData) else { return nil }
+
+        var mediaBox = CGRect(x: 0.0, y: 0.0, width: renderSize.width, height: renderSize.height)
+
+        guard let ctx = CGContext(consumer: consumer, mediaBox: &mediaBox, nil) else { return nil }
+
+        ctx.beginPage(mediaBox: &mediaBox)
+        let flip = CGAffineTransform(a: 1, b: 0, c: 0, d: -1, tx: 0, ty: mediaBox.size.height)
+        ctx.concatenate(flip)
+        ctx.draw(self, in: mediaBox)
+        ctx.endPage()
+        ctx.closePDF()
+
+        return data as Data
+    }
+}
