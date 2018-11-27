@@ -86,4 +86,25 @@ final class LayerTreeBuilderTests: XCTestCase {
         let layer = builder.makeLayer(from: group, inheriting: .init())
         XCTAssertEqual(layer.contents.count, 2)
     }
+
+    func testStrokeAttributes() {
+        var state = LayerTree.Builder.State()
+        state.stroke = .rgbf(1.0, 0.0, 0.0)
+        state.strokeOpacity = 0.5
+        state.strokeWidth = 5.0
+        state.strokeLineCap = .square
+        state.strokeLineJoin = .round
+        state.strokeLineMiterLimit = 10.0
+
+        let att = LayerTree.Builder.createStrokeAttributes(with: state)
+        XCTAssertEqual(att.color, .rgba(r: 1.0, g: 0, b: 0, a: 0.5))
+        XCTAssertEqual(att.width, 5.0)
+        XCTAssertEqual(att.cap, .square)
+        XCTAssertEqual(att.join, .round)
+        XCTAssertEqual(att.miterLimit, 10.0)
+
+        state.strokeWidth = 0
+        let att2 = LayerTree.Builder.createStrokeAttributes(with: state)
+        XCTAssertEqual(att2.color, .none)
+    }
 }
