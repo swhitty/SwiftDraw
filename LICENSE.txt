@@ -1,6 +1,4 @@
-SwiftDraw
-
-(C) 2018 Simon Whitty
+Copyright (c) 2018 Simon hitty
 
 This software is provided 'as-is', without any express or implied
 warranty.  In no event will the authors be held liable for any damages
