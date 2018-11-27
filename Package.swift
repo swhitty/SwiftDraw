@@ -27,6 +27,11 @@ let package = Package(
             name: "SwiftDrawTests",
             dependencies: ["SwiftDraw"],
             path: "SwiftDrawTests",
-			exclude: ["CGRenderer.PathTests.swift", "ParserSVGImageTests.swift"])
+			exclude: [
+				"CGRenderer.PathTests.swift",
+				"ParserSVGImageTests.swift",
+				"UIImage+ImageTests.swift",
+				"NSImage+ImageTests.swift"
+			])
     ]
 )
