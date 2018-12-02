@@ -67,18 +67,6 @@ extension XMLParser {
         return rect
     }
     
-    func parsePoints(_ text: String) -> [DOM.Point] {
-        var points = Array<DOM.Point>()
-        var scanner = XMLParser.Scanner(text: text)
-        
-        while let x = try? scanner.scanCoordinate(),
-            let y = try? scanner.scanCoordinate() {
-            points.append(DOM.Point(x, y))
-        }
-        
-        return points
-    }
-    
     func parsePolyline(_ att: AttributeParser) throws -> DOM.Polyline {
         return DOM.Polyline(points: try att.parsePoints("points"))
     }
