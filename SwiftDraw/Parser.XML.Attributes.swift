@@ -55,12 +55,6 @@ extension XMLParser {
             self.style = style
         }
         
-        subscript(name: String) -> String? {
-            get {
-                return style[name] ?? element[name]
-            }
-        }
-        
         func parse<T>(_ key: String, _ exp: (String) throws -> T) throws -> T {
             do {
                 return try parse(style[key], with: exp, for: key)

@@ -123,8 +123,8 @@
 		D90DB47A219CD2C300D374D2 /* TextTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB467219CD2C100D374D2 /* TextTests.swift */; };
 		D90DB47B219CD2C300D374D2 /* GradientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB468219CD2C100D374D2 /* GradientTests.swift */; };
 		D90DB47C219CD2C300D374D2 /* GradientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB468219CD2C100D374D2 /* GradientTests.swift */; };
-		D90DB47D219CD2C300D374D2 /* AttributeParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB469219CD2C100D374D2 /* AttributeParserTests.swift */; };
-		D90DB47E219CD2C300D374D2 /* AttributeParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB469219CD2C100D374D2 /* AttributeParserTests.swift */; };
+		D90DB47D219CD2C300D374D2 /* Parser.AttributesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB469219CD2C100D374D2 /* Parser.AttributesTests.swift */; };
+		D90DB47E219CD2C300D374D2 /* Parser.AttributesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB469219CD2C100D374D2 /* Parser.AttributesTests.swift */; };
 		D90DB47F219CD2C300D374D2 /* Parser.XML.ColorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB46A219CD2C100D374D2 /* Parser.XML.ColorTests.swift */; };
 		D90DB480219CD2C300D374D2 /* Parser.XML.ColorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB46A219CD2C100D374D2 /* Parser.XML.ColorTests.swift */; };
 		D90DB481219CD2C300D374D2 /* Parser.PathTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB46B219CD2C200D374D2 /* Parser.PathTests.swift */; };
@@ -277,7 +277,7 @@
 		D90DB466219CD2C100D374D2 /* ValueParserTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ValueParserTests.swift; sourceTree = "<group>"; };
 		D90DB467219CD2C100D374D2 /* TextTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TextTests.swift; sourceTree = "<group>"; };
 		D90DB468219CD2C100D374D2 /* GradientTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GradientTests.swift; sourceTree = "<group>"; };
-		D90DB469219CD2C100D374D2 /* AttributeParserTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AttributeParserTests.swift; sourceTree = "<group>"; };
+		D90DB469219CD2C100D374D2 /* Parser.AttributesTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Parser.AttributesTests.swift; sourceTree = "<group>"; };
 		D90DB46A219CD2C100D374D2 /* Parser.XML.ColorTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Parser.XML.ColorTests.swift; sourceTree = "<group>"; };
 		D90DB46B219CD2C200D374D2 /* Parser.PathTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Parser.PathTests.swift; sourceTree = "<group>"; };
 		D90DB46C219CD2C200D374D2 /* UseTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UseTests.swift; sourceTree = "<group>"; };
@@ -536,11 +536,11 @@
 		D90DB464219CD2A300D374D2 /* Parser */ = {
 			isa = PBXGroup;
 			children = (
-				D90DB469219CD2C100D374D2 /* AttributeParserTests.swift */,
 				D90DB465219CD2C100D374D2 /* CoordinateTests.swift */,
 				D90DB474219CD2C200D374D2 /* ElementTests.swift */,
 				D90DB468219CD2C100D374D2 /* GradientTests.swift */,
 				D90DB46E219CD2C200D374D2 /* ParserSVGImageTests.swift */,
+				D90DB469219CD2C100D374D2 /* Parser.AttributesTests.swift */,
 				D90DB471219CD2C200D374D2 /* Parser.GraphicAttributeTests.swift */,
 				D90DB46B219CD2C200D374D2 /* Parser.PathTests.swift */,
 				D90DB473219CD2C200D374D2 /* Parser.SVGTests.swift */,
@@ -929,7 +929,7 @@
 				D90DB3D2219CCC8A00D374D2 /* LayerTree.ColorTests.swift in Sources */,
 				D90DB484219CD2C300D374D2 /* UseTests.swift in Sources */,
 				D9F3AD5B219E9DF400BAFA55 /* XML.SAXParserTests.swift in Sources */,
-				D90DB47E219CD2C300D374D2 /* AttributeParserTests.swift in Sources */,
+				D90DB47E219CD2C300D374D2 /* Parser.AttributesTests.swift in Sources */,
 				D925CC6521A4A0AE00C8897B /* LayerTree.Builder.ShapeTests.swift in Sources */,
 				D90DB492219CD2C300D374D2 /* Parser.SVGTests.swift in Sources */,
 				D9F3AD6221A21B7800BAFA55 /* Bundle+Extensions.swift in Sources */,
@@ -1027,7 +1027,7 @@
 				D90DB483219CD2C300D374D2 /* UseTests.swift in Sources */,
 				D9F3AD5A219E9DF400BAFA55 /* XML.SAXParserTests.swift in Sources */,
 				D93BAB9621AD56FC005ADFBE /* UIImage+ImageTests.swift in Sources */,
-				D90DB47D219CD2C300D374D2 /* AttributeParserTests.swift in Sources */,
+				D90DB47D219CD2C300D374D2 /* Parser.AttributesTests.swift in Sources */,
 				D925CC6421A4A0AE00C8897B /* LayerTree.Builder.ShapeTests.swift in Sources */,
 				D90DB491219CD2C300D374D2 /* Parser.SVGTests.swift in Sources */,
 				D9F3AD6121A21B7800BAFA55 /* Bundle+Extensions.swift in Sources */,
