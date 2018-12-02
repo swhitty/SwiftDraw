@@ -204,8 +204,6 @@ extension Scanner {
         case invalid
     }
 
-    var isEOF: Bool { return isAtEnd }
-
     func scanBool() throws -> Bool {
         let boolString = try self.scanString(matchingAny: ["true", "TRUE", "false", "FALSE", "0", "1"])
         switch boolString {
