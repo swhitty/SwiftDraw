@@ -35,8 +35,6 @@ import Foundation
 import SwiftDraw
 import CoreGraphics
 
-// failed to demangle witness for associated type 'LineCap' in conformance 'SwiftDraw.CGTypes: RendererTypes' from mangled name 'So9CGLineCapV'
-// Abort trap: 6
+// SR-9397: Failed to demangle witness for associated type (CF_ENUM)
 let _ = [CGLineCap.butt, CGLineJoin.bevel, CGBlendMode.sourceIn] as [Any]
-
 exit(CommandLine().run().rawValue)
