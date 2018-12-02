@@ -86,6 +86,71 @@ final class AttributeParserTests: XCTestCase {
         //missing returns optional
         XCTAssertNil(try att.parseFloat("other") as DOM.Float?)
     }
+
+    func testParseString() {
+        let att = ["x": "20", "some": "random"]
+        XCTAssertEqual(try att.parseString("x"), "20")
+        XCTAssertThrowsError(try att.parseString("missing"))
+    }
+
+    func testParseFloat() {
+        let att = ["x": "20", "some": "random"]
+        XCTAssertEqual(try att.parseFloat("x"), 20.0)
+        XCTAssertNil(try att.parseFloat("missing"))
+        XCTAssertThrowsError(try att.parseFloat("some"))
+    }
+
+    func testParseFloats() {
+        let att = ["x": "20 30 40", "some": "random"]
+        XCTAssertEqual(try att.parseFloats("x"), [20.0, 30.0, 40.0])
+        XCTAssertThrowsError(try att.parseFloats("some"))
+    }
+
+    func testParsePoints() {
+        let att = ["x": "20 30 40 50", "some": "random"]
+        XCTAssertEqual(try att.parsePoints("x"), [DOM.Point(20, 30), DOM.Point(40, 50)])
+        XCTAssertNil(try att.parsePoints("missing"))
+        XCTAssertThrowsError(try att.parsePoints("some"))
+    }
+
+    func testParseLength() {
+        let att = ["x": "20", "y": "aa"]
+        XCTAssertEqual(try att.parseLength("x"), 20)
+        XCTAssertNil(try att.parseLength("missing"))
+        XCTAssertThrowsError(try att.parseLength("y"))
+    }
+
+    func testParseBool() {
+        let att = ["x": "true", "y": "5"]
+        XCTAssertEqual(try att.parseBool("x"), true)
+        XCTAssertNil(try att.parseBool("missing"))
+        XCTAssertThrowsError(try att.parseBool("y"))
+    }
+
+    func testParseURL() {
+        let att = ["clip": "http://www.test.com", "mask": "20 twenty"]
+        XCTAssertEqual(try att.parseUrl("clip"), URL(string: "http://www.test.com"))
+        XCTAssertNil(try att.parseUrl("missing"))
+        XCTAssertThrowsError(try att.parseUrl("mask"))
+    }
+
+    func testParseURLSelector() {
+        let att = ["clip": "url(#shape)", "mask": "aa"]
+        XCTAssertEqual(try att.parseUrlSelector("clip"), URL(string: "#shape"))
+        XCTAssertNil(try att.parseUrlSelector("missing"))
+        XCTAssertThrowsError(try att.parseUrlSelector("mask"))
+    }
+//
+//    func parseString(_ key: String) throws -> String {
+//        return try parse(key) { $0 }
+//    }
+//
+//    func parseFloat(_ key: String) throws -> DOM.Float {
+//        return try parse(key) { return try parser.parseFloat($0) }
+//    }
+//
+//    func parseFloats(_ key: String) throws -> [DOM.Float] {
+
 }
 
 
