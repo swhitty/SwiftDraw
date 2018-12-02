@@ -41,19 +41,10 @@ extension XMLParser {
         init(text: String) {
             self.scanner = Foundation.Scanner(text: text)
             self.scanLocation = self.scanner.scanLocation
-            self.charactersToBeSkipped = Foundation.CharacterSet.whitespacesAndNewlines
+            self.scanner.charactersToBeSkipped = Foundation.CharacterSet.whitespacesAndNewlines
         }
 
         var isEOF: Bool { return scanner.isAtEnd }
-
-        var charactersToBeSkipped: Foundation.CharacterSet? {
-            get {
-                return scanner.charactersToBeSkipped
-            }
-            set {
-                scanner.charactersToBeSkipped = newValue
-            }
-        }
 
         @discardableResult
         mutating func scanString(_ token: String) throws -> Bool {
