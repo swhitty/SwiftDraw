@@ -105,7 +105,7 @@ extension XMLParser {
         let chars = data.unicodeScalars.map({ $0 })
         guard chars.count == 3 else { return data }
         
-        return "\(chars[0])0\(chars[1])0\(chars[2])0)"
+        return "\(chars[0])0\(chars[1])0\(chars[2])0"
     }
     
     private func parseColorHex(data: String) throws -> DOM.Color? {
@@ -115,7 +115,7 @@ extension XMLParser {
         let code = try scanner.scanString(matchingAny: hexadecimal)
         guard
             let paddedCode = padHex(code),
-            let hex = UInt32(hex: paddedCode) else {
+            let hex = Int(paddedCode, radix: 16) else {
             throw Error.invalid
         }
         
@@ -124,15 +124,5 @@ extension XMLParser {
         let b = UInt8(hex & 0xff)
         
         return .hex(r, g, b)
-    }
-}
-
-private extension UInt32 {
-    init?(hex: String) {
-        var val: UInt32 = 0
-        guard Foundation.Scanner(string: hex).scanHexInt32(&val) else {
-            return nil
-        }
-        self = val
     }
 }
