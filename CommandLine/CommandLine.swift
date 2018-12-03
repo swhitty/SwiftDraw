@@ -82,20 +82,25 @@ usage: swiftdraw <file.svg> [--format png | pdf | jpeg] [--output filename] [...
         return data
     }
 
+    static func parseURL(file: String, directory: URL) throws -> URL {
+        guard #available(macOS 10.11, *) else {
+            throw Error.invalid
+        }
+
+        return URL(fileURLWithPath: file, relativeTo: directory).standardizedFileURL
+    }
+
     func parseConfiguration(from args: [String]) throws -> Configuration {
-        guard args.count >= 3 else {
+        guard
+            args.count >= 3,
+            let format = Format(rawValue: args[2]) else {
             throw Error.invalid
         }
 
-        let url = directory.appendingPathComponent(args[1])
+        let source = try CommandLine.parseURL(file: args[1], directory: directory)
+        let result = source.newURL(for: format)
 
-        guard let format = Format(rawValue: args[2])else {
-            throw Error.invalid
-        }
-
-        print(url.newURL(for: format))
-
-        return Configuration(inputSVG: url, output: url, format: format)
+        return Configuration(inputSVG: source, output: result, format: format)
     }
 }
 
@@ -134,7 +139,7 @@ extension URL {
 
     func newURL(for format: CommandLine.Format) -> URL {
         let newFilename = "\(lastPathComponentName).\(format.pathExtension)"
-        return deletingLastPathComponent().appendingPathComponent(newFilename)
+        return deletingLastPathComponent().appendingPathComponent(newFilename).standardizedFileURL
     }
 }
 
