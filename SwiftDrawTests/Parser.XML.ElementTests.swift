@@ -1,5 +1,5 @@
 //
-//  ElementTests.swift
+//  Parser.XML.ElementTests.swift
 //  SwiftDraw
 //
 //  Created by Simon Whitty on 31/12/16.
@@ -32,7 +32,7 @@
 import XCTest
 @testable import SwiftDraw
 
-final class ElementTests: XCTestCase {
+final class XMLParserElementTests: XCTestCase {
     
     func testLine() {
         let node = ["x1": "0",
@@ -107,5 +107,49 @@ final class ElementTests: XCTestCase {
         
         node.attributes["fill-rule"] = "asdf"
         XCTAssertThrowsError(try XMLParser().parseGraphicsElement(node)!.fillRule)
+    }
+
+    func testElementParserSkipsErrors() {
+        let error = XMLParser.parseError(for: XMLParser.Error.invalid,
+                                         parsing: XML.Element(name: "polygon"),
+                                         with: [.skipInvalidElements])
+
+        XCTAssertNil(error)
+    }
+
+    func testElementParserErrorsPreserveLineNumbers() {
+        let invalidElement = XMLParser.Error.invalidElement(name: "polygon",
+                                                            error: XMLParser.Error.invalid,
+                                                            line: 100,
+                                                            column: 50)
+
+        let parseError = XMLParser.parseError(for: invalidElement,
+                                         parsing: XML.Element(name: "polygon"),
+                                         with: [])
+
+        switch parseError! {
+        case .invalidElement(let val):
+            XCTAssertEqual(val.line, 100)
+            XCTAssertEqual(val.column, 50)
+        default:
+            XCTFail("not forwarderd")
+        }
+    }
+
+    func testElementParserErrorsPreserveLineNumbersFromElement() {
+        let element = XML.Element(name: "polygon")
+        element.parsedLocation = (line: 100, column: 50)
+
+        let parseError = XMLParser.parseError(for: XMLParser.Error.invalid,
+                                              parsing: element,
+                                              with: [])
+
+        switch parseError! {
+        case .invalidElement(let val):
+            XCTAssertEqual(val.line, 100)
+            XCTAssertEqual(val.column, 50)
+        default:
+            XCTFail("not forwarderd")
+        }
     }
 }

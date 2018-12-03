@@ -134,7 +134,6 @@
 		D90DB485219CD2C300D374D2 /* StyleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB46D219CD2C200D374D2 /* StyleTests.swift */; };
 		D90DB486219CD2C300D374D2 /* StyleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB46D219CD2C200D374D2 /* StyleTests.swift */; };
 		D90DB487219CD2C300D374D2 /* ParserSVGImageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB46E219CD2C200D374D2 /* ParserSVGImageTests.swift */; };
-		D90DB488219CD2C300D374D2 /* ParserSVGImageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB46E219CD2C200D374D2 /* ParserSVGImageTests.swift */; };
 		D90DB489219CD2C300D374D2 /* Parser.XML.TransformTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB46F219CD2C200D374D2 /* Parser.XML.TransformTests.swift */; };
 		D90DB48A219CD2C300D374D2 /* Parser.XML.TransformTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB46F219CD2C200D374D2 /* Parser.XML.TransformTests.swift */; };
 		D90DB48D219CD2C300D374D2 /* Parser.GraphicAttributeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB471219CD2C200D374D2 /* Parser.GraphicAttributeTests.swift */; };
@@ -143,8 +142,8 @@
 		D90DB490219CD2C300D374D2 /* Parser.XML.ImageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB472219CD2C200D374D2 /* Parser.XML.ImageTests.swift */; };
 		D90DB491219CD2C300D374D2 /* Parser.SVGTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB473219CD2C200D374D2 /* Parser.SVGTests.swift */; };
 		D90DB492219CD2C300D374D2 /* Parser.SVGTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB473219CD2C200D374D2 /* Parser.SVGTests.swift */; };
-		D90DB493219CD2C300D374D2 /* ElementTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB474219CD2C200D374D2 /* ElementTests.swift */; };
-		D90DB494219CD2C300D374D2 /* ElementTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB474219CD2C200D374D2 /* ElementTests.swift */; };
+		D90DB493219CD2C300D374D2 /* Parser.XML.ElementTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB474219CD2C200D374D2 /* Parser.XML.ElementTests.swift */; };
+		D90DB494219CD2C300D374D2 /* Parser.XML.ElementTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB474219CD2C200D374D2 /* Parser.XML.ElementTests.swift */; };
 		D90DB498219CD32600D374D2 /* Formatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB496219CD32600D374D2 /* Formatter.swift */; };
 		D90DB499219CD32600D374D2 /* Formatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB496219CD32600D374D2 /* Formatter.swift */; };
 		D90DB49A219CD32600D374D2 /* Formatter.XML.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB497219CD32600D374D2 /* Formatter.XML.swift */; };
@@ -287,7 +286,7 @@
 		D90DB471219CD2C200D374D2 /* Parser.GraphicAttributeTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Parser.GraphicAttributeTests.swift; sourceTree = "<group>"; };
 		D90DB472219CD2C200D374D2 /* Parser.XML.ImageTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Parser.XML.ImageTests.swift; sourceTree = "<group>"; };
 		D90DB473219CD2C200D374D2 /* Parser.SVGTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Parser.SVGTests.swift; sourceTree = "<group>"; };
-		D90DB474219CD2C200D374D2 /* ElementTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ElementTests.swift; sourceTree = "<group>"; };
+		D90DB474219CD2C200D374D2 /* Parser.XML.ElementTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Parser.XML.ElementTests.swift; sourceTree = "<group>"; };
 		D90DB496219CD32600D374D2 /* Formatter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Formatter.swift; sourceTree = "<group>"; };
 		D90DB497219CD32600D374D2 /* Formatter.XML.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Formatter.XML.swift; sourceTree = "<group>"; };
 		D913F18B21AC157A00B76B06 /* RendererTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RendererTests.swift; sourceTree = "<group>"; };
@@ -537,7 +536,6 @@
 			isa = PBXGroup;
 			children = (
 				D90DB465219CD2C100D374D2 /* CoordinateTests.swift */,
-				D90DB474219CD2C200D374D2 /* ElementTests.swift */,
 				D90DB468219CD2C100D374D2 /* GradientTests.swift */,
 				D90DB46E219CD2C200D374D2 /* ParserSVGImageTests.swift */,
 				D90DB469219CD2C100D374D2 /* Parser.AttributesTests.swift */,
@@ -547,6 +545,7 @@
 				D90DB46D219CD2C200D374D2 /* StyleTests.swift */,
 				D90DB467219CD2C100D374D2 /* TextTests.swift */,
 				D90DB46A219CD2C100D374D2 /* Parser.XML.ColorTests.swift */,
+				D90DB474219CD2C200D374D2 /* Parser.XML.ElementTests.swift */,
 				D90DB472219CD2C200D374D2 /* Parser.XML.ImageTests.swift */,
 				D90DB46F219CD2C200D374D2 /* Parser.XML.TransformTests.swift */,
 				D90DB46C219CD2C200D374D2 /* UseTests.swift */,
@@ -903,10 +902,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D90DB494219CD2C300D374D2 /* ElementTests.swift in Sources */,
+				D90DB494219CD2C300D374D2 /* Parser.XML.ElementTests.swift in Sources */,
 				D90DB441219CD1EC00D374D2 /* DOM.ElementTests.swift in Sources */,
 				D90DB43F219CD1EC00D374D2 /* DOM+Extensions.swift in Sources */,
-				D90DB488219CD2C300D374D2 /* ParserSVGImageTests.swift in Sources */,
 				D90DB490219CD2C300D374D2 /* Parser.XML.ImageTests.swift in Sources */,
 				D90DB482219CD2C300D374D2 /* Parser.PathTests.swift in Sources */,
 				D93BAB9421AD5517005ADFBE /* NSImage+ImageTests.swift in Sources */,
@@ -1001,7 +999,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D90DB493219CD2C300D374D2 /* ElementTests.swift in Sources */,
+				D90DB493219CD2C300D374D2 /* Parser.XML.ElementTests.swift in Sources */,
 				D90DB440219CD1EC00D374D2 /* DOM.ElementTests.swift in Sources */,
 				D90DB43E219CD1EC00D374D2 /* DOM+Extensions.swift in Sources */,
 				D90DB487219CD2C300D374D2 /* ParserSVGImageTests.swift in Sources */,

@@ -123,25 +123,33 @@ extension XMLParser {
                 if let ge = try parseGraphicsElement(n) {
                     children.append(ge)
                 }
-            } catch XMLParser.Error.invalidElement(let e)  {
-                guard options.contains(.skipInvalidElements) else {
-                    throw Error.invalidElement(name: e.name,
-                                               error: e.error,
-                                               line: e.line,
-                                               column: e.column)
-                }
-
             } catch let error {
-                guard options.contains(.skipInvalidElements) else {
-                    throw Error.invalidElement(name: n.name,
-                                                   error: error,
-                                                   line: n.parsedLocation?.line,
-                                                   column: n.parsedLocation?.column)
+                if let parseError = XMLParser.parseError(for: error, parsing: n, with: options) {
+                    throw parseError
                 }
             }
         }
         
         return children
+    }
+
+    static func parseError(for error: Swift.Error, parsing element: XML.Element, with options: Options) -> XMLParser.Error? {
+        guard options.contains(.skipInvalidElements) == false else {
+            return nil
+        }
+
+        switch error {
+        case XMLParser.Error.invalidElement(let v):
+            return .invalidElement(name: v.name,
+                                   error: v.error,
+                                   line: v.line,
+                                   column: v.column)
+        default:
+            return .invalidElement(name: element.name,
+                                   error: error,
+                                   line: element.parsedLocation?.line,
+                                   column: element.parsedLocation?.column)
+        }
     }
     
     func parseGroup(_ e: XML.Element) throws -> DOM.Group {
