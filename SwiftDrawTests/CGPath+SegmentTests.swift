@@ -1,5 +1,5 @@
 //
-//  URL.swift
+//  CGPath+SegmentTests.swift
 //  SwiftDraw
 //
 //  Created by Simon Whitty on 20/11/18.
@@ -32,7 +32,7 @@
 import XCTest
 @testable import SwiftDraw
 
-final class CGPathExtenionTests: XCTestCase {
+final class CGPathSegmentTests: XCTestCase {
 
     func testString() {
         let font = CTFontCreateWithName("Helvetica" as CFString, 10.0, nil)
@@ -46,4 +46,5 @@ final class CGPathExtenionTests: XCTestCase {
         guard case .line(_) = segments[3] else { XCTFail("expected line"); return }
         XCTAssertEqual(segments[4], .close)
     }
+    
 }

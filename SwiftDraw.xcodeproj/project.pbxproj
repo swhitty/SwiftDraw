@@ -153,8 +153,8 @@
 		D913F18D21AC157B00B76B06 /* RendererTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D913F18B21AC157A00B76B06 /* RendererTests.swift */; };
 		D913F18F21AC15B000B76B06 /* MockRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D913F18E21AC15B000B76B06 /* MockRenderer.swift */; };
 		D913F19021AC15B000B76B06 /* MockRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D913F18E21AC15B000B76B06 /* MockRenderer.swift */; };
-		D925CC5E21A3E02C00C8897B /* CGPath+ExtensionsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D925CC5D21A3E02C00C8897B /* CGPath+ExtensionsTests.swift */; };
-		D925CC5F21A3E02C00C8897B /* CGPath+ExtensionsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D925CC5D21A3E02C00C8897B /* CGPath+ExtensionsTests.swift */; };
+		D925CC5E21A3E02C00C8897B /* CGPath+SegmentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D925CC5D21A3E02C00C8897B /* CGPath+SegmentTests.swift */; };
+		D925CC5F21A3E02C00C8897B /* CGPath+SegmentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D925CC5D21A3E02C00C8897B /* CGPath+SegmentTests.swift */; };
 		D925CC6121A49C9C00C8897B /* LayerTree.Builder.Shape.swift in Sources */ = {isa = PBXBuildFile; fileRef = D925CC6021A49C9C00C8897B /* LayerTree.Builder.Shape.swift */; };
 		D925CC6221A49C9C00C8897B /* LayerTree.Builder.Shape.swift in Sources */ = {isa = PBXBuildFile; fileRef = D925CC6021A49C9C00C8897B /* LayerTree.Builder.Shape.swift */; };
 		D925CC6421A4A0AE00C8897B /* LayerTree.Builder.ShapeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D925CC6321A4A0AE00C8897B /* LayerTree.Builder.ShapeTests.swift */; };
@@ -292,7 +292,7 @@
 		D90DB497219CD32600D374D2 /* Formatter.XML.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Formatter.XML.swift; sourceTree = "<group>"; };
 		D913F18B21AC157A00B76B06 /* RendererTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RendererTests.swift; sourceTree = "<group>"; };
 		D913F18E21AC15B000B76B06 /* MockRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockRenderer.swift; sourceTree = "<group>"; };
-		D925CC5D21A3E02C00C8897B /* CGPath+ExtensionsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CGPath+ExtensionsTests.swift"; sourceTree = "<group>"; };
+		D925CC5D21A3E02C00C8897B /* CGPath+SegmentTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CGPath+SegmentTests.swift"; sourceTree = "<group>"; };
 		D925CC6021A49C9C00C8897B /* LayerTree.Builder.Shape.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LayerTree.Builder.Shape.swift; sourceTree = "<group>"; };
 		D925CC6321A4A0AE00C8897B /* LayerTree.Builder.ShapeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LayerTree.Builder.ShapeTests.swift; sourceTree = "<group>"; };
 		D925CC6621A4A2F800C8897B /* LayerTree.BuilderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LayerTree.BuilderTests.swift; sourceTree = "<group>"; };
@@ -437,7 +437,7 @@
 			isa = PBXGroup;
 			children = (
 				D90DB3F3219CCF2700D374D2 /* URL+DataTests.swift */,
-				D925CC5D21A3E02C00C8897B /* CGPath+ExtensionsTests.swift */,
+				D925CC5D21A3E02C00C8897B /* CGPath+SegmentTests.swift */,
 			);
 			name = Extensions;
 			sourceTree = "<group>";
@@ -914,7 +914,7 @@
 				D90DB3D6219CCC8A00D374D2 /* LayerTree.ShapeTests.swift in Sources */,
 				D925CC6821A4A2F800C8897B /* LayerTree.BuilderTests.swift in Sources */,
 				D90DB39B219CCB9E00D374D2 /* Renderer.CoreGraphicsTypesTests.swift in Sources */,
-				D925CC5F21A3E02C00C8897B /* CGPath+ExtensionsTests.swift in Sources */,
+				D925CC5F21A3E02C00C8897B /* CGPath+SegmentTests.swift in Sources */,
 				D90DB48A219CD2C300D374D2 /* Parser.XML.TransformTests.swift in Sources */,
 				D90DB3D3219CCC8A00D374D2 /* LayerTree.ImageTests.swift in Sources */,
 				D90DB3D7219CCC8A00D374D2 /* LayerTree.TransformTests.swift in Sources */,
@@ -1011,7 +1011,7 @@
 				D90DB3D1219CCC8100D374D2 /* LayerTree.ShapeTests.swift in Sources */,
 				D925CC6721A4A2F800C8897B /* LayerTree.BuilderTests.swift in Sources */,
 				D90DB3CE219CCC8100D374D2 /* LayerTree.ImageTests.swift in Sources */,
-				D925CC5E21A3E02C00C8897B /* CGPath+ExtensionsTests.swift in Sources */,
+				D925CC5E21A3E02C00C8897B /* CGPath+SegmentTests.swift in Sources */,
 				D90DB489219CD2C300D374D2 /* Parser.XML.TransformTests.swift in Sources */,
 				D90DB3F4219CCF2700D374D2 /* URL+DataTests.swift in Sources */,
 				D90DB3CD219CCC8100D374D2 /* LayerTree.TransformTests.swift in Sources */,
