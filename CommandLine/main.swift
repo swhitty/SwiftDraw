@@ -36,5 +36,5 @@ import SwiftDraw
 import CoreGraphics
 
 // SR-9397: Failed to demangle witness for associated type (CF_ENUM)
-let _ = [CGLineCap.butt, CGLineJoin.bevel, CGBlendMode.sourceIn] as [Any]
+let _ = [CGLineCap.self, CGLineJoin.self, CGBlendMode.self] as [Any]
 exit(CommandLine().run().rawValue)
