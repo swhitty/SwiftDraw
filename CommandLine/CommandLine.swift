@@ -47,13 +47,20 @@ struct CommandLine {
             return .error
         }
 
-        guard let data = try? process(with: config) else {
+        guard
+            let data = try? process(with: config) else {
             print("Failure")
             printHelp()
             return .error
         }
 
-        print("Data: \(data.count)")
+        do {
+            try data.write(to: config.output)
+            print("Created: \(data.count) \(config.output)")
+        } catch _ {
+            print("Failure: \(data.count) \(config.output)")
+        }
+
         return .ok
     }
 
@@ -75,11 +82,22 @@ usage: swiftdraw <file.svg> [--format png | pdf | jpeg] [--output filename] [...
     func process(with config: Configuration) throws -> Data {
         guard
             let svg = SwiftDraw.Image(fileURL: config.inputSVG),
-            let data = svg.pngData() else {
+            let data = CommandLine.processImage(svg, with: config) else {
             throw Error.invalid
         }
 
         return data
+    }
+
+    static func processImage(_ image: SwiftDraw.Image, with config: Configuration) -> Data? {
+        switch config.format {
+        case .jpeg:
+            return image.jpegData()
+        case .pdf:
+            return image.pdfData()
+        case .png:
+            return image.pngData()
+        }
     }
 
     static func parseURL(file: String, directory: URL) throws -> URL {
@@ -113,8 +131,9 @@ extension CommandLine {
     }
 
     enum Format: String {
-        case png
         case jpeg
+        case pdf
+        case png
     }
 
     enum Error: Swift.Error {
@@ -147,10 +166,12 @@ private extension CommandLine.Format {
 
     var pathExtension: String {
         switch self {
-        case .png:
-            return "png"
         case .jpeg:
             return "jpg"
+        case .pdf:
+            return "pdf"
+        case .png:
+            return "png"
         }
     }
 }

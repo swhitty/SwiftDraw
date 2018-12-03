@@ -65,3 +65,9 @@ fastlane/report.xml
 fastlane/Preview.html
 fastlane/screenshots
 fastlane/test_output
+
+# Samples Folder
+Samples/*.pdf
+Samples/*.png
+Samples/*.jpg
+Samples/*.jpeg
