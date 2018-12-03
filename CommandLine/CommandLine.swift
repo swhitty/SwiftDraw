@@ -42,17 +42,34 @@ struct CommandLine {
 
     func run(with args: [String] = Swift.CommandLine.arguments) -> ExitCode {
         guard let config = try? parseConfiguration(from: args) else {
-            print("Invalid Syntax. Expects: swiftdraw <filename> format")
+            print("Invalid Syntax.")
+            printHelp()
             return .error
         }
 
         guard let data = try? process(with: config) else {
-            print("Process failed \(config)")
+            print("Failure")
+            printHelp()
             return .error
         }
 
         print("Data: \(data.count)")
         return .ok
+    }
+
+    func printHelp() {
+        print("")
+        print("""
+swiftdraw, version 0.2
+copyright (c) 2018 Simon Whitty
+
+usage: swiftdraw <file.svg> [--format png | pdf | jpeg] [--output filename] [...]
+
+<file> svg file to be processed
+
+--format    format to output image with. png | pdf | jpeg
+--output    filename to output image to.  Optional.
+""")
     }
 
     func process(with config: Configuration) throws -> Data {
@@ -76,7 +93,9 @@ struct CommandLine {
             throw Error.invalid
         }
 
-        return Configuration(inputSVG: url, format: format)
+        print(url.newURL(for: format))
+
+        return Configuration(inputSVG: url, output: url, format: format)
     }
 }
 
@@ -84,6 +103,7 @@ extension CommandLine {
 
     struct Configuration {
         var inputSVG: URL
+        var output: URL
         var format: Format
     }
 
@@ -100,5 +120,32 @@ extension CommandLine {
     enum ExitCode: Int32 {
         case ok = 0 // EX_OK
         case error = 70 // EX_SOFTWARE
+    }
+}
+
+extension URL {
+
+    var lastPathComponentName: String {
+        let filename = lastPathComponent
+        let extensionOffset = pathExtension.isEmpty ? 0 : -pathExtension.count - 1
+        let index = filename.index(filename.endIndex, offsetBy: extensionOffset)
+        return String(filename[..<index])
+    }
+
+    func newURL(for format: CommandLine.Format) -> URL {
+        let newFilename = "\(lastPathComponentName).\(format.pathExtension)"
+        return deletingLastPathComponent().appendingPathComponent(newFilename)
+    }
+}
+
+private extension CommandLine.Format {
+
+    var pathExtension: String {
+        switch self {
+        case .png:
+            return "png"
+        case .jpeg:
+            return "jpg"
+        }
     }
 }
