@@ -94,23 +94,19 @@ struct LayerTree {
         }
         
         var x: Float {
-            get { return origin.x }
-            set { origin.x = newValue }
+            return origin.x
         }
         
         var y: Float {
-            get { return origin.y }
-            set { origin.y = newValue }
+            return origin.y
         }
         
         var width: Float {
-            get { return size.width }
-            set { size.width = newValue }
+            return size.width
         }
         
         var height: Float {
-            get { return size.height }
-            set { size.height = newValue }
+            return size.height
         }
         
         static var zero: Rect {
