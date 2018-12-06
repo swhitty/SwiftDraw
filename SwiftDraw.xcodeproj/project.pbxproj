@@ -178,6 +178,9 @@
 		D9A843941E85F1C1002A804B /* quad.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9A843921E85F1C1002A804B /* quad.svg */; };
 		D9A843951E8611D6002A804B /* curves.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9A843901E855672002A804B /* curves.svg */; };
 		D9A843961E8611D7002A804B /* curves.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9A843901E855672002A804B /* curves.svg */; };
+		D9BA810021B9C5E5005159E7 /* CommandLine.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9BA80FF21B9C5E5005159E7 /* CommandLine.swift */; };
+		D9BA810221B9C624005159E7 /* CommandLine.Arguments.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9BA810121B9C624005159E7 /* CommandLine.Arguments.swift */; };
+		D9BA810521B9C665005159E7 /* CommandLine.ArgumentsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9BA810421B9C665005159E7 /* CommandLine.ArgumentsTests.swift */; };
 		D9C47AC21ED54FA100178D06 /* mask.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9C47ABF1ED54FA100178D06 /* mask.svg */; };
 		D9C47AC31ED54FA100178D06 /* mask.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9C47ABF1ED54FA100178D06 /* mask.svg */; };
 		D9C47AC41ED54FA100178D06 /* transform.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9C47AC01ED54FA100178D06 /* transform.svg */; };
@@ -322,6 +325,9 @@
 		D965B5851E3C5C87003E859E /* starry.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = starry.svg; sourceTree = "<group>"; };
 		D9A843901E855672002A804B /* curves.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = curves.svg; sourceTree = "<group>"; };
 		D9A843921E85F1C1002A804B /* quad.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = quad.svg; sourceTree = "<group>"; };
+		D9BA80FF21B9C5E5005159E7 /* CommandLine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandLine.swift; sourceTree = "<group>"; };
+		D9BA810121B9C624005159E7 /* CommandLine.Arguments.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandLine.Arguments.swift; sourceTree = "<group>"; };
+		D9BA810421B9C665005159E7 /* CommandLine.ArgumentsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandLine.ArgumentsTests.swift; sourceTree = "<group>"; };
 		D9C47ABF1ED54FA100178D06 /* mask.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = mask.svg; sourceTree = "<group>"; };
 		D9C47AC01ED54FA100178D06 /* transform.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = transform.svg; sourceTree = "<group>"; };
 		D9C47AC11ED54FA100178D06 /* viewbox.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = viewbox.svg; sourceTree = "<group>"; };
@@ -615,6 +621,23 @@
 			path = Samples;
 			sourceTree = "<group>";
 		};
+		D9BA80FE21B9C5C1005159E7 /* CommandLine */ = {
+			isa = PBXGroup;
+			children = (
+				D9BA80FF21B9C5E5005159E7 /* CommandLine.swift */,
+				D9BA810121B9C624005159E7 /* CommandLine.Arguments.swift */,
+			);
+			name = CommandLine;
+			sourceTree = "<group>";
+		};
+		D9BA810321B9C645005159E7 /* CommandLine */ = {
+			isa = PBXGroup;
+			children = (
+				D9BA810421B9C665005159E7 /* CommandLine.ArgumentsTests.swift */,
+			);
+			name = CommandLine;
+			sourceTree = "<group>";
+		};
 		D9CFB5CE21A73E0F000D2875 /* CommandLine */ = {
 			isa = PBXGroup;
 			children = (
@@ -671,6 +694,7 @@
 				D9F3EBB41DFF5BA3006691A1 /* SwiftDraw.h */,
 				D962D2A11E6ECE2000B825C6 /* SwiftDraw-macOS.h */,
 				D9F3EBB51DFF5BA3006691A1 /* Info.plist */,
+				D9BA80FE21B9C5C1005159E7 /* CommandLine */,
 				D90DB3EA219CCECF00D374D2 /* Extensions */,
 				D90DB3DD219CCDFB00D374D2 /* Image */,
 				D90DB3A3219CCC2100D374D2 /* LayerTree */,
@@ -684,6 +708,7 @@
 		D9F3EBBE1DFF5BA3006691A1 /* SwiftDrawTests */ = {
 			isa = PBXGroup;
 			children = (
+				D9BA810321B9C645005159E7 /* CommandLine */,
 				D90DB3F2219CCF1A00D374D2 /* Extensions */,
 				D9F3AD5C21A2172800BAFA55 /* Image */,
 				D90DB3C5219CCC7200D374D2 /* LayerTree */,
@@ -950,8 +975,10 @@
 				D90DB3B5219CCC4100D374D2 /* LayerTree.swift in Sources */,
 				D90DB455219CD27800D374D2 /* Parser.XML.Gradient.swift in Sources */,
 				D90DB42C219CD1C600D374D2 /* DOM.Switch.swift in Sources */,
+				D9BA810221B9C624005159E7 /* CommandLine.Arguments.swift in Sources */,
 				D90DB451219CD27800D374D2 /* Parser.XML.Color.swift in Sources */,
 				D90DB3B9219CCC4100D374D2 /* LayerTree.Layer.swift in Sources */,
+				D9BA810021B9C5E5005159E7 /* CommandLine.swift in Sources */,
 				D90DB461219CD27800D374D2 /* Parser.XML.Image.swift in Sources */,
 				D90DB459219CD27800D374D2 /* Parser.XML.Text.swift in Sources */,
 				D90DB3E6219CCE0E00D374D2 /* Image.swift in Sources */,
@@ -1002,6 +1029,7 @@
 				D90DB486219CD2C300D374D2 /* StyleTests.swift in Sources */,
 				D90DB3D4219CCC8A00D374D2 /* LayerTree.LayerTests.swift in Sources */,
 				D90DB476219CD2C300D374D2 /* CoordinateTests.swift in Sources */,
+				D9BA810521B9C665005159E7 /* CommandLine.ArgumentsTests.swift in Sources */,
 				D90DB48E219CD2C300D374D2 /* Parser.GraphicAttributeTests.swift in Sources */,
 				D9F3AD5F21A218CF00BAFA55 /* ImageTests.swift in Sources */,
 				D90DB480219CD2C300D374D2 /* Parser.XML.ColorTests.swift in Sources */,
