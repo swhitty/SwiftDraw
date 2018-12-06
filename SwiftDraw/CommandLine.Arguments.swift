@@ -50,7 +50,7 @@ extension CommandLine {
         var args = args
         var modifiers = [Modifier: String]()
         while let pair = args.takePair() {
-            if let modifier = Modifier.parse(from: pair.0) {
+            if let modifier = Modifier.parse(from: pair.0), modifiers.keys.contains(modifier) == false  {
                 modifiers[modifier] = pair.1
             } else {
                 throw Error.invalid

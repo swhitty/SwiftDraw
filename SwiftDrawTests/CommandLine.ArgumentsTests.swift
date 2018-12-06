@@ -44,6 +44,11 @@ final class CommandLineArgumentsTests: XCTestCase {
         XCTAssertThrowsError(try CommandLine.parseModifiers(from: ["--format", "png", "--output"]))
     }
 
+    func testParseModifiersThrowsForDuplicateModifiers() {
+        XCTAssertThrowsError(try CommandLine.parseModifiers(from: ["--format", "png", "--format", "jpg"]))
+        XCTAssertThrowsError(try CommandLine.parseModifiers(from:  ["--format", "png", "--output", "more", "--output", "evenmore"]))
+    }
+
     func testParseModifiersThrowsForUnknownModifiers() {
         XCTAssertThrowsError(try CommandLine.parseModifiers(from: ["--unknown", "png"]))
         XCTAssertThrowsError(try CommandLine.parseModifiers(from: ["--format", "png", "--unknown", "more"]))
