@@ -29,12 +29,7 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-
 import Darwin.POSIX
-import Foundation
 import SwiftDraw
-import CoreGraphics
 
-// SR-9397: Failed to demangle witness for associated type (CF_ENUM)
-let _ = [CGLineCap.self, CGLineJoin.self, CGBlendMode.self] as [Any]
 exit(CommandLine.run().rawValue)
