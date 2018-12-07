@@ -181,6 +181,8 @@
 		D9BA810021B9C5E5005159E7 /* CommandLine.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9BA80FF21B9C5E5005159E7 /* CommandLine.swift */; };
 		D9BA810221B9C624005159E7 /* CommandLine.Arguments.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9BA810121B9C624005159E7 /* CommandLine.Arguments.swift */; };
 		D9BA810521B9C665005159E7 /* CommandLine.ArgumentsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9BA810421B9C665005159E7 /* CommandLine.ArgumentsTests.swift */; };
+		D9BA810721BA577B005159E7 /* CommandLine.Configuration.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9BA810621BA577B005159E7 /* CommandLine.Configuration.swift */; };
+		D9BA810921BA94A4005159E7 /* CommandLine.ConfigurationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9BA810821BA94A4005159E7 /* CommandLine.ConfigurationTests.swift */; };
 		D9C47AC21ED54FA100178D06 /* mask.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9C47ABF1ED54FA100178D06 /* mask.svg */; };
 		D9C47AC31ED54FA100178D06 /* mask.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9C47ABF1ED54FA100178D06 /* mask.svg */; };
 		D9C47AC41ED54FA100178D06 /* transform.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9C47AC01ED54FA100178D06 /* transform.svg */; };
@@ -328,6 +330,8 @@
 		D9BA80FF21B9C5E5005159E7 /* CommandLine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandLine.swift; sourceTree = "<group>"; };
 		D9BA810121B9C624005159E7 /* CommandLine.Arguments.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandLine.Arguments.swift; sourceTree = "<group>"; };
 		D9BA810421B9C665005159E7 /* CommandLine.ArgumentsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandLine.ArgumentsTests.swift; sourceTree = "<group>"; };
+		D9BA810621BA577B005159E7 /* CommandLine.Configuration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandLine.Configuration.swift; sourceTree = "<group>"; };
+		D9BA810821BA94A4005159E7 /* CommandLine.ConfigurationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandLine.ConfigurationTests.swift; sourceTree = "<group>"; };
 		D9C47ABF1ED54FA100178D06 /* mask.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = mask.svg; sourceTree = "<group>"; };
 		D9C47AC01ED54FA100178D06 /* transform.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = transform.svg; sourceTree = "<group>"; };
 		D9C47AC11ED54FA100178D06 /* viewbox.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = viewbox.svg; sourceTree = "<group>"; };
@@ -626,6 +630,7 @@
 			children = (
 				D9BA80FF21B9C5E5005159E7 /* CommandLine.swift */,
 				D9BA810121B9C624005159E7 /* CommandLine.Arguments.swift */,
+				D9BA810621BA577B005159E7 /* CommandLine.Configuration.swift */,
 			);
 			name = CommandLine;
 			sourceTree = "<group>";
@@ -634,6 +639,7 @@
 			isa = PBXGroup;
 			children = (
 				D9BA810421B9C665005159E7 /* CommandLine.ArgumentsTests.swift */,
+				D9BA810821BA94A4005159E7 /* CommandLine.ConfigurationTests.swift */,
 			);
 			name = CommandLine;
 			sourceTree = "<group>";
@@ -967,6 +973,7 @@
 				D90DB45D219CD27800D374D2 /* Parser.XML.Element.swift in Sources */,
 				D90DB434219CD1C600D374D2 /* DOM.Path.swift in Sources */,
 				D90DB405219CD06800D374D2 /* XML.SAXParser.swift in Sources */,
+				D9BA810721BA577B005159E7 /* CommandLine.Configuration.swift in Sources */,
 				D90DB43A219CD1C600D374D2 /* DOM.Color.swift in Sources */,
 				D90DB3C1219CCC4100D374D2 /* LayerTree.Commands.swift in Sources */,
 				D90DB3C3219CCC4800D374D2 /* Renderer.LayerTree.swift in Sources */,
@@ -1007,6 +1014,7 @@
 				D90DB3D6219CCC8A00D374D2 /* LayerTree.ShapeTests.swift in Sources */,
 				D925CC6821A4A2F800C8897B /* LayerTree.BuilderTests.swift in Sources */,
 				D90DB39B219CCB9E00D374D2 /* Renderer.CoreGraphicsTypesTests.swift in Sources */,
+				D9BA810921BA94A4005159E7 /* CommandLine.ConfigurationTests.swift in Sources */,
 				D925CC5F21A3E02C00C8897B /* CGPath+SegmentTests.swift in Sources */,
 				D90DB48A219CD2C300D374D2 /* Parser.XML.TransformTests.swift in Sources */,
 				D90DB3D3219CCC8A00D374D2 /* LayerTree.ImageTests.swift in Sources */,
