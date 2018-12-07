@@ -22,3 +22,7 @@ let image = UIImage(svgNamed: "sample.svg")
 import SwiftDraw
 let image = NSImage(svgNamed: "sample.svg")
 ```
+
+### Command line tool
+
+`% swiftdraw ./sample.svg --format pdf`
