@@ -84,15 +84,14 @@ extension SwiftDraw.CommandLine {
     static func printHelp() {
         print("")
         print("""
-swiftdraw, version 0.2
+swiftdraw, version 0.3
 copyright (c) 2018 Simon Whitty
 
-usage: swiftdraw <file.svg> [--format png | pdf | jpeg] [--output filename] [...]
+usage: swiftdraw <file.svg> [--format png | pdf | jpeg]
 
 <file> svg file to be processed
 
 --format    format to output image with. png | pdf | jpeg
---output    filename to output image to.  Optional.
 """)
     }
 }
