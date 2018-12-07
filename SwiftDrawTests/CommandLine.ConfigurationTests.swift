@@ -34,8 +34,50 @@ import XCTest
 
 final class CommandLineConfigurationTests: XCTestCase {
 
-    func testParseConfiguration() throws {
+    func testParseFileURL() throws {
+        let url = try CommandLine.parseFileURL(file: "file", within: URL(directory: "/test"))
+        XCTAssertEqual(url, URL(fileURLWithPath: "/test/file"))
 
-        
+        let url1 = try CommandLine.parseFileURL(file: "file", within: URL(directory: "/test/subfolder"))
+        XCTAssertEqual(url1, URL(fileURLWithPath: "/test/subfolder/file"))
+
+        let url2 = try CommandLine.parseFileURL(file: "../file", within: URL(directory: "/test/subfolder"))
+        XCTAssertEqual(url2, URL(fileURLWithPath: "/test/file"))
+    }
+
+    func testNewURLForFormat() throws {
+        let svg = URL(fileURLWithPath: "/test/file.svg")
+        XCTAssertEqual(svg.newURL(for: .jpeg), URL(fileURLWithPath: "/test/file.jpg"))
+        XCTAssertEqual(svg.newURL(for: .png), URL(fileURLWithPath: "/test/file.png"))
+        XCTAssertEqual(svg.newURL(for: .pdf), URL(fileURLWithPath: "/test/file.pdf"))
+
+        let svgExtension = URL(fileURLWithPath: "/test/file")
+        XCTAssertEqual(svgExtension.newURL(for: .jpeg), URL(fileURLWithPath: "/test/file.jpg"))
+    }
+
+    func testParseConfiguration() throws {
+        let config = try CommandLine.parseConfiguration(from: ["swiftdraw", "file.svg", "--format", "pdf"],
+                                                        baseDirectory: URL(directory: "/"))
+
+        XCTAssertEqual(config.input, URL(fileURLWithPath: "/file.svg"))
+        XCTAssertEqual(config.output, URL(fileURLWithPath: "/file.pdf"))
+        XCTAssertEqual(config.format, .pdf)
+    }
+
+    func testParseConfigurationThrows() {
+        XCTAssertThrowsError(try CommandLine.parseConfiguration(from: [],
+                                                                baseDirectory: URL(directory: "/")))
+        XCTAssertThrowsError(try CommandLine.parseConfiguration(from: ["swiftdraw", "file.svg"],
+                                                                baseDirectory: URL(directory: "/")))
+        XCTAssertThrowsError(try CommandLine.parseConfiguration(from: ["swiftdraw", "file.svg", "--format", "unknown"],
+                                                                baseDirectory: URL(directory: "/")))
+
+    }
+}
+
+private extension URL {
+
+    init(directory: String) {
+        self.init(fileURLWithPath: directory, isDirectory: true)
     }
 }

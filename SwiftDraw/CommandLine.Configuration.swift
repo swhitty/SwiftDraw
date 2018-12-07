@@ -33,24 +33,24 @@ import Foundation
 
 extension CommandLine {
 
-    struct Configuration {
-        var input: URL
-        var output: URL
-        var format: Format
+    public struct Configuration {
+        public var input: URL
+        public var output: URL
+        public var format: Format
     }
 
-    enum Format: String {
+    public enum Format: String {
         case jpeg
         case pdf
         case png
     }
 
-    static func parseConfiguration(from args: [String], baseDirectory: URL) throws -> Configuration {
+    public static func parseConfiguration(from args: [String], baseDirectory: URL) throws -> Configuration {
         guard args.count > 2 else {
             throw Error.invalid
         }
 
-        let source = try CommandLine.parseSource(file: args[1], baseDirectory: baseDirectory)
+        let source = try CommandLine.parseFileURL(file: args[1], within: baseDirectory)
         let modifiers = try CommandLine.parseModifiers(from: Array(args.dropFirst(2)))
         guard
             let formatString = modifiers[.format],
@@ -62,16 +62,12 @@ extension CommandLine {
         return Configuration(input: source, output: result, format: format)
     }
 
-    static func parseSource(file: String, baseDirectory: URL) throws -> URL {
-        return try CommandLine.parseURL(file: file, baseDirectory: baseDirectory)
-    }
-
-    static func parseURL(file: String, baseDirectory: URL) throws -> URL {
+    static func parseFileURL(file: String, within directory: URL) throws -> URL {
         guard #available(macOS 10.11, *) else {
             throw Error.invalid
         }
 
-        return URL(fileURLWithPath: file, relativeTo: baseDirectory).standardizedFileURL
+        return URL(fileURLWithPath: file, relativeTo: directory).standardizedFileURL
     }
 }
 

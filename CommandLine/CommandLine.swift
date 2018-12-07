@@ -32,16 +32,12 @@
 import Foundation
 import SwiftDraw
 
-struct CommandLine {
+extension SwiftDraw.CommandLine {
 
-    var directory: URL
-
-    init(directory: URL = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)) {
-        self.directory = directory
-    }
-
-    func run(with args: [String] = Swift.CommandLine.arguments) -> ExitCode {
-        guard let config = try? parseConfiguration(from: args) else {
+    static func run(with args: [String] = Swift.CommandLine.arguments,
+                    baseDirectory: URL = .currentDirectory) -> ExitCode {
+        
+        guard let config = try? parseConfiguration(from: args, baseDirectory: baseDirectory) else {
             print("Invalid Syntax.")
             printHelp()
             return .error
@@ -56,34 +52,19 @@ struct CommandLine {
 
         do {
             try data.write(to: config.output)
-            print("Created: \(data.count) \(config.output)")
+            print("Created: \(config.output.path)")
         } catch _ {
-            print("Failure: \(data.count) \(config.output)")
+            print("Failure: \(config.output.path)")
         }
 
         return .ok
     }
 
-    func printHelp() {
-        print("")
-        print("""
-swiftdraw, version 0.2
-copyright (c) 2018 Simon Whitty
-
-usage: swiftdraw <file.svg> [--format png | pdf | jpeg] [--output filename] [...]
-
-<file> svg file to be processed
-
---format    format to output image with. png | pdf | jpeg
---output    filename to output image to.  Optional.
-""")
-    }
-
-    func process(with config: Configuration) throws -> Data {
+    static func process(with config: Configuration) throws -> Data {
         guard
-            let svg = SwiftDraw.Image(fileURL: config.inputSVG),
+            let svg = SwiftDraw.Image(fileURL: config.input),
             let data = CommandLine.processImage(svg, with: config) else {
-            throw Error.invalid
+                throw Error.invalid
         }
 
         return data
@@ -100,45 +81,23 @@ usage: swiftdraw <file.svg> [--format png | pdf | jpeg] [--output filename] [...
         }
     }
 
-    static func parseURL(file: String, directory: URL) throws -> URL {
-        guard #available(macOS 10.11, *) else {
-            throw Error.invalid
-        }
+    static func printHelp() {
+        print("")
+        print("""
+swiftdraw, version 0.2
+copyright (c) 2018 Simon Whitty
 
-        return URL(fileURLWithPath: file, relativeTo: directory).standardizedFileURL
-    }
+usage: swiftdraw <file.svg> [--format png | pdf | jpeg] [--output filename] [...]
 
-    func parseConfiguration(from args: [String]) throws -> Configuration {
-        guard
-            args.count >= 3,
-            let format = Format(rawValue: args[2]) else {
-            throw Error.invalid
-        }
+<file> svg file to be processed
 
-        let source = try CommandLine.parseURL(file: args[1], directory: directory)
-        let result = source.newURL(for: format)
-
-        return Configuration(inputSVG: source, output: result, format: format)
+--format    format to output image with. png | pdf | jpeg
+--output    filename to output image to.  Optional.
+""")
     }
 }
 
-extension CommandLine {
-
-    struct Configuration {
-        var inputSVG: URL
-        var output: URL
-        var format: Format
-    }
-
-    enum Format: String {
-        case jpeg
-        case pdf
-        case png
-    }
-
-    enum Error: Swift.Error {
-        case invalid
-    }
+extension SwiftDraw.CommandLine {
 
     // Represents the exit codes to the command line. See `man sysexits` for more information.
     enum ExitCode: Int32 {
@@ -147,31 +106,9 @@ extension CommandLine {
     }
 }
 
-extension URL {
+private extension URL {
 
-    var lastPathComponentName: String {
-        let filename = lastPathComponent
-        let extensionOffset = pathExtension.isEmpty ? 0 : -pathExtension.count - 1
-        let index = filename.index(filename.endIndex, offsetBy: extensionOffset)
-        return String(filename[..<index])
-    }
-
-    func newURL(for format: CommandLine.Format) -> URL {
-        let newFilename = "\(lastPathComponentName).\(format.pathExtension)"
-        return deletingLastPathComponent().appendingPathComponent(newFilename).standardizedFileURL
-    }
-}
-
-private extension CommandLine.Format {
-
-    var pathExtension: String {
-        switch self {
-        case .jpeg:
-            return "jpg"
-        case .pdf:
-            return "pdf"
-        case .png:
-            return "png"
-        }
+    static var currentDirectory: URL {
+        return URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
     }
 }

@@ -31,6 +31,6 @@
 
 import Foundation
 
-struct CommandLine {
+public struct CommandLine {
 
 }

@@ -64,7 +64,7 @@ extension CommandLine {
         return modifiers
     }
 
-    enum Error: Swift.Error {
+    public enum Error: Swift.Error {
         case invalid
     }
 }

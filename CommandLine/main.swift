@@ -37,4 +37,4 @@ import CoreGraphics
 
 // SR-9397: Failed to demangle witness for associated type (CF_ENUM)
 let _ = [CGLineCap.self, CGLineJoin.self, CGBlendMode.self] as [Any]
-exit(CommandLine().run().rawValue)
+exit(CommandLine.run().rawValue)
