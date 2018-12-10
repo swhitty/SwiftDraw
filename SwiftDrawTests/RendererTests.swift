@@ -84,14 +84,6 @@ final class RendererTests: XCTestCase {
     }
 }
 
-
-private extension LayerTree.Path {
-
-    static var mock: LayerTree.Path {
-        return LayerTree.Path()
-    }
-}
-
 private extension LayerTree.Shape {
 
     static var mock: LayerTree.Shape {
@@ -99,6 +91,12 @@ private extension LayerTree.Shape {
     }
 }
 
+private extension Array where Element == LayerTree.Shape {
+
+    static var mock: [LayerTree.Shape] {
+        return [.mock]
+    }
+}
 
 private extension LayerTree.Image {
 

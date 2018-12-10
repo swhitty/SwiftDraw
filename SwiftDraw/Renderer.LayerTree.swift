@@ -36,7 +36,7 @@ struct LayerTreeTypes: RendererTypes {
     typealias Size = LayerTree.Size
     typealias Rect = LayerTree.Rect
     typealias Color = LayerTree.Color
-    typealias Path = LayerTree.Shape
+    typealias Path = [LayerTree.Shape]
     typealias Transform = LayerTree.Transform
     typealias BlendMode = LayerTree.BlendMode
     typealias FillRule = LayerTree.FillRule
@@ -46,6 +46,7 @@ struct LayerTreeTypes: RendererTypes {
 }
 
 struct LayerTreeProvider: RendererTypeProvider {
+
     typealias Types = LayerTreeTypes
     
     func createFloat(from float: LayerTree.Float) -> LayerTree.Float {
@@ -76,16 +77,16 @@ struct LayerTreeProvider: RendererTypeProvider {
         return .matrix(transform)
     }
     
-    func createPath(from shape: LayerTree.Shape) -> LayerTree.Shape {
-        return shape
+    func createPath(from shape: LayerTree.Shape) -> [LayerTree.Shape] {
+        return [shape]
     }
     
-    func createPath(from subPaths: [LayerTree.Shape]) -> LayerTree.Shape {
-        return subPaths.first ?? .path(LayerTree.Path())
+    func createPath(from subPaths: [[LayerTree.Shape]]) -> [LayerTree.Shape] {
+        return subPaths.flatMap { $0 }
     }
     
-    func createPath(from text: String, at origin: LayerTree.Point, with attributes: LayerTree.TextAttributes) -> LayerTree.Shape? {
-        return .path(LayerTree.Path())
+    func createPath(from text: String, at origin: LayerTree.Point, with attributes: LayerTree.TextAttributes) -> [LayerTree.Shape]? {
+        return nil
     }
     
     func createFillRule(from rule: LayerTree.FillRule) -> LayerTree.FillRule {

@@ -94,7 +94,7 @@ final class MockRenderer: Renderer {
         operations.append("setLineMiterLimit")
     }
 
-    func setClip(path: LayerTree.Shape) {
+    func setClip(path: [LayerTree.Shape]) {
         operations.append("setClip")
     }
 
@@ -106,11 +106,11 @@ final class MockRenderer: Renderer {
         operations.append("setBlendMode")
     }
 
-    func stroke(path: LayerTree.Shape) {
+    func stroke(path: [LayerTree.Shape]) {
         operations.append("strokePath")
     }
 
-    func fill(path: LayerTree.Shape, rule: LayerTree.FillRule) {
+    func fill(path: [LayerTree.Shape], rule: LayerTree.FillRule) {
         operations.append("fillPath")
     }
 
