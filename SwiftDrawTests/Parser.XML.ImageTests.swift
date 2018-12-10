@@ -1,5 +1,5 @@
 //
-//  ImageTests.swift
+//  Parser.XML.ImageTests.swift
 //  SwiftDraw
 //
 //  Created by Simon Whitty on 3/3/17.

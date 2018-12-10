@@ -174,6 +174,8 @@
 		D965B5871E3C5CF8003E859E /* starry.svg in Resources */ = {isa = PBXBuildFile; fileRef = D965B5851E3C5C87003E859E /* starry.svg */; };
 		D9778E5B1E6ED66300FF6EBB /* starry.svg in Resources */ = {isa = PBXBuildFile; fileRef = D965B5851E3C5C87003E859E /* starry.svg */; };
 		D9778E5C1E6ED66300FF6EBB /* shapes.svg in Resources */ = {isa = PBXBuildFile; fileRef = D965B5811E3C48C6003E859E /* shapes.svg */; };
+		D97AD81A21BE40A700F7DD10 /* Parser.XML.GradientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D97AD81921BE40A700F7DD10 /* Parser.XML.GradientTests.swift */; };
+		D97AD81B21BE40A700F7DD10 /* Parser.XML.GradientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D97AD81921BE40A700F7DD10 /* Parser.XML.GradientTests.swift */; };
 		D9A843931E85F1C1002A804B /* quad.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9A843921E85F1C1002A804B /* quad.svg */; };
 		D9A843941E85F1C1002A804B /* quad.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9A843921E85F1C1002A804B /* quad.svg */; };
 		D9A843951E8611D6002A804B /* curves.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9A843901E855672002A804B /* curves.svg */; };
@@ -325,6 +327,7 @@
 		D962D2A11E6ECE2000B825C6 /* SwiftDraw-macOS.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "SwiftDraw-macOS.h"; sourceTree = "<group>"; };
 		D965B5811E3C48C6003E859E /* shapes.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = shapes.svg; sourceTree = "<group>"; };
 		D965B5851E3C5C87003E859E /* starry.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = starry.svg; sourceTree = "<group>"; };
+		D97AD81921BE40A700F7DD10 /* Parser.XML.GradientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Parser.XML.GradientTests.swift; sourceTree = "<group>"; };
 		D9A843901E855672002A804B /* curves.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = curves.svg; sourceTree = "<group>"; };
 		D9A843921E85F1C1002A804B /* quad.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = quad.svg; sourceTree = "<group>"; };
 		D9BA80FF21B9C5E5005159E7 /* CommandLine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandLine.swift; sourceTree = "<group>"; };
@@ -582,6 +585,7 @@
 				D90DB467219CD2C100D374D2 /* TextTests.swift */,
 				D90DB46A219CD2C100D374D2 /* Parser.XML.ColorTests.swift */,
 				D90DB474219CD2C200D374D2 /* Parser.XML.ElementTests.swift */,
+				D97AD81921BE40A700F7DD10 /* Parser.XML.GradientTests.swift */,
 				D90DB472219CD2C200D374D2 /* Parser.XML.ImageTests.swift */,
 				D90DB46F219CD2C200D374D2 /* Parser.XML.TransformTests.swift */,
 				D90DB46C219CD2C200D374D2 /* UseTests.swift */,
@@ -1008,6 +1012,7 @@
 				D90DB441219CD1EC00D374D2 /* DOM.ElementTests.swift in Sources */,
 				D90DB43F219CD1EC00D374D2 /* DOM+Extensions.swift in Sources */,
 				D90DB490219CD2C300D374D2 /* Parser.XML.ImageTests.swift in Sources */,
+				D97AD81B21BE40A700F7DD10 /* Parser.XML.GradientTests.swift in Sources */,
 				D90DB482219CD2C300D374D2 /* Parser.PathTests.swift in Sources */,
 				D93BAB9421AD5517005ADFBE /* NSImage+ImageTests.swift in Sources */,
 				D90DB3F5219CCF2700D374D2 /* URL+DataTests.swift in Sources */,
@@ -1146,6 +1151,7 @@
 				D90DB3CC219CCC8100D374D2 /* LayerTree.ColorTests.swift in Sources */,
 				D90DB475219CD2C300D374D2 /* CoordinateTests.swift in Sources */,
 				D90DB48D219CD2C300D374D2 /* Parser.GraphicAttributeTests.swift in Sources */,
+				D97AD81A21BE40A700F7DD10 /* Parser.XML.GradientTests.swift in Sources */,
 				D9F3AD5E21A218CF00BAFA55 /* ImageTests.swift in Sources */,
 				D90DB47F219CD2C300D374D2 /* Parser.XML.ColorTests.swift in Sources */,
 				D90DB477219CD2C300D374D2 /* ValueParserTests.swift in Sources */,

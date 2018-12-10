@@ -1,5 +1,5 @@
 //
-//  ColorTests.swift
+//  Parser.XML.ColorTests.swift
 //  SwiftDraw
 //
 //  Created by Simon Whitty on 31/12/16.
