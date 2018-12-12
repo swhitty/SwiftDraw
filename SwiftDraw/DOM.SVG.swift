@@ -30,7 +30,7 @@
 //
 
 extension DOM {
-    class SVG: GraphicsElement, ContainerElement {
+    final class SVG: GraphicsElement, ContainerElement {
         var width: Length
         var height: Length
         var viewBox: ViewBox?

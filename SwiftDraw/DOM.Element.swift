@@ -81,7 +81,7 @@ extension DOM {
         var mask: URL?
     }
     
-    class Line: GraphicsElement {
+    final class Line: GraphicsElement {
         var x1: Coordinate
         var y1: Coordinate
         var x2: Coordinate
@@ -96,7 +96,7 @@ extension DOM {
         }
     }
     
-    class Circle: GraphicsElement {
+    final class Circle: GraphicsElement {
         var cx: Coordinate
         var cy: Coordinate
         var r: Coordinate
@@ -109,7 +109,7 @@ extension DOM {
         }
     }
     
-    class Ellipse: GraphicsElement {
+    final class Ellipse: GraphicsElement {
         var cx: Coordinate
         var cy: Coordinate
         var rx: Coordinate
@@ -124,7 +124,7 @@ extension DOM {
         }
     }
     
-    class Rect: GraphicsElement {
+    final class Rect: GraphicsElement {
         var x: Coordinate?
         var y: Coordinate?
         var width: Coordinate
@@ -142,7 +142,7 @@ extension DOM {
         }
     }
     
-    class Polyline: GraphicsElement {
+    final class Polyline: GraphicsElement {
         var points: [Point]
         
         init(points: [Point]) {
@@ -151,7 +151,7 @@ extension DOM {
         }
     }
     
-    class Polygon: GraphicsElement {
+    final class Polygon: GraphicsElement {
         var points: [Point]
         
         init(points: [Point]) {
@@ -160,7 +160,7 @@ extension DOM {
         }
     }
     
-    class Group: GraphicsElement, ContainerElement {
+    final class Group: GraphicsElement, ContainerElement {
         var childElements = [GraphicsElement]()
     }
 }

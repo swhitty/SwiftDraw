@@ -30,4 +30,4 @@
 //
 import Foundation
 
-class XMLFormatter {} // namespace
+final class XMLFormatter {} // namespace
