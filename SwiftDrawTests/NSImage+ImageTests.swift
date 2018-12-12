@@ -43,4 +43,31 @@ final class NSImageTests: XCTestCase {
         let image = NSImage(svgNamed: "missing.svg", in: .test)
         XCTAssertNil(image)
     }
+
+    func testNSImageDraws() {
+        let canvas = NSImage(size: CGSize(width: 100, height: 100))
+
+        canvas.lockFocus()
+        NSImage(svgNamed: "lines.svg", in: .test)?.draw(in: NSRect(x: 0, y: 0, width: 100, height: 100))
+        canvas.unlockFocus()
+    }
+
+    func testImageDraws() {
+        let canvas = NSImage(size: CGSize(width: 100, height: 100))
+
+        let lines = Image.makeLines().rasterize(with: CGSize(width: 100, height: 100))
+        canvas.lockFocus()
+        lines.draw(in: NSRect(x: 0, y: 0, width: 100, height: 100))
+        canvas.unlockFocus()
+    }
+}
+
+private extension Image {
+
+    static func makeLines() -> Image {
+        let svg = DOM.SVG(width: 100, height: 100)
+        svg.childElements.append(DOM.Line(x1: 0, y1: 0, x2: 100, y2: 100))
+        svg.childElements.append(DOM.Line(x1: 100, y1: 0, x2: 0, y2: 100))
+        return Image(svg: svg)
+    }
 }
