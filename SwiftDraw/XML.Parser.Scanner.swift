@@ -1,5 +1,5 @@
 //
-//  Scanner.swift
+//  XML.Parser.Scanner.swift
 //  SwiftDraw
 //
 //  Created by Simon Whitty on 2/11/18.

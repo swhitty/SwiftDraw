@@ -1,5 +1,5 @@
 //
-//  XML.Parser.swift
+//  XML.SAXParser.swift
 //  SwiftDraw
 //
 //  Created by Simon Whitty on 28/1/17.

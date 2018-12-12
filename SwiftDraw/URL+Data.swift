@@ -1,5 +1,5 @@
 //
-//  URL.swift
+//  URL+Data.swift
 //  SwiftDraw
 //
 //  Created by Simon Whitty on 28/2/17.

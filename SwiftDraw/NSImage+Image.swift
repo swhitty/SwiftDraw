@@ -1,5 +1,5 @@
 //
-//  Image+NSImage.swift
+//  NSImage+Image.swift
 //  SwiftDraw
 //
 //  Created by Simon Whitty on 24/5/17.

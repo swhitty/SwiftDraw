@@ -33,6 +33,12 @@ import XCTest
 @testable import SwiftDraw
 
 final class AttributeParserTests: XCTestCase {
+
+//    func testParser() {
+//        let parser = XMLParser.Att
+//        let att = ["x": "20"]
+//        XCTAssertThrowsError(try att.parse("x", { _ in throw XMLParser.Error.invalid }))
+//    }
     
     func testParserOrder() {
        let parser = XMLParser.ValueParser()

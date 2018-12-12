@@ -1,5 +1,5 @@
 //
-//  CGPath.swift
+//  CGPath+Segment.swift
 //  SwiftDraw
 //
 //  Created by Simon Whitty on 10/3/17.
