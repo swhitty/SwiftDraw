@@ -111,6 +111,7 @@ final class AttributeParserTests: XCTestCase {
         XCTAssertEqual(try att.parsePoints("x"), [DOM.Point(20, 30), DOM.Point(40, 50)])
         XCTAssertNil(try att.parsePoints("missing"))
         XCTAssertThrowsError(try att.parsePoints("some"))
+        XCTAssertThrowsError(try att.parsePoints("some") as [DOM.Point]?)
     }
 
     func testParseLength() {
@@ -118,6 +119,7 @@ final class AttributeParserTests: XCTestCase {
         XCTAssertEqual(try att.parseLength("x"), 20)
         XCTAssertNil(try att.parseLength("missing"))
         XCTAssertThrowsError(try att.parseLength("y"))
+        XCTAssertThrowsError(try att.parseLength("y") as DOM.Length?)
     }
 
     func testParseBool() {
@@ -125,6 +127,7 @@ final class AttributeParserTests: XCTestCase {
         XCTAssertEqual(try att.parseBool("x"), true)
         XCTAssertNil(try att.parseBool("missing"))
         XCTAssertThrowsError(try att.parseBool("y"))
+        XCTAssertThrowsError(try att.parseBool("y") as Bool?)
     }
 
     func testParseURL() {
