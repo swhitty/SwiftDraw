@@ -87,7 +87,7 @@ extension XMLParser {
         }
         
         func parseFloats(_ value: String) throws -> [DOM.Float] {
-            var array = Array<DOM.Float>()
+            var array = [DOM.Float]()
             var scanner = XMLParser.Scanner(text: value)
             
             while !scanner.isEOF {
@@ -150,7 +150,7 @@ extension XMLParser {
         }
         
         func parsePoints(_ value: String) throws -> [DOM.Point] {
-            var points = Array<DOM.Point>()
+            var points = [DOM.Point]()
             var scanner = XMLParser.Scanner(text: value)
             let delimeter = CharacterSet(charactersIn: ",;")
             

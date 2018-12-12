@@ -34,7 +34,7 @@ extension XMLParser {
     func parseTransform(_ data: String) throws -> [DOM.Transform] {
         
         var scanner = XMLParser.Scanner(text: data)
-        var transforms = Array<DOM.Transform>()
+        var transforms = [DOM.Transform]()
         
         while let transform = try parseTransform(&scanner) {
             transforms.append(transform)

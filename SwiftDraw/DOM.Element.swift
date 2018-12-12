@@ -32,7 +32,7 @@
 import Foundation
 
 protocol ContainerElement {
-    var childElements: Array<DOM.GraphicsElement> { get set }
+    var childElements: [DOM.GraphicsElement] { get set }
 }
 
 protocol PresentationAttributes {

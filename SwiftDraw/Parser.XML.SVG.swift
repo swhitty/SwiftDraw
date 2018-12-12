@@ -112,7 +112,7 @@ extension XMLParser {
     
 
     func parseClipPaths(_ e: XML.Element) throws -> [DOM.ClipPath] {
-        var clipPaths = Array<DOM.ClipPath>()
+        var clipPaths = [DOM.ClipPath]()
         
         for n in e.children {
             if n.name == "clipPath" {
@@ -135,7 +135,7 @@ extension XMLParser {
     }
     
     func parseMasks(_ e: XML.Element) throws -> [DOM.Mask] {
-        var masks = Array<DOM.Mask>()
+        var masks = [DOM.Mask]()
         
         for n in e.children {
             if n.name == "mask" {

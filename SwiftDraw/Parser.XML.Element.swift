@@ -116,7 +116,7 @@ extension XMLParser {
             throw Error.invalid
         }
         
-        var children = Array<DOM.GraphicsElement>()
+        var children = [DOM.GraphicsElement]()
         
         for n in e.children {
             do {

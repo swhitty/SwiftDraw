@@ -32,7 +32,7 @@
 extension XMLParser {
     
     func parseLinearGradients(_ e: XML.Element) throws -> [DOM.LinearGradient] {
-        var gradients = Array<DOM.LinearGradient>()
+        var gradients = [DOM.LinearGradient]()
         
         for n in e.children {
             if n.name == "linearGradient" {

@@ -31,6 +31,6 @@
 
 extension DOM {
     final class Switch: GraphicsElement, ContainerElement {
-        var childElements = Array<DOM.GraphicsElement>()
+        var childElements = [DOM.GraphicsElement]()
     }
 }
