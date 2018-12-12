@@ -37,7 +37,21 @@ import XCTest
 
 final class ParserXMLGradientTests: XCTestCase {
 
-    func testParseGradient() throws {
-        
+    func testParseGradients() throws {
+        let child = XML.Element(name: "child")
+        child.children = [XML.Element.makeMockGradient(), XML.Element.makeMockGradient()]
+
+        let parent = XML.Element(name: "parent")
+        parent.children = [XML.Element.makeMockGradient(), child]
+
+        XCTAssertEqual(try XMLParser().parseLinearGradients(child).count, 2)
+        XCTAssertEqual(try XMLParser().parseLinearGradients(parent).count, 3)
+    }
+}
+
+private extension XML.Element {
+
+    static func makeMockGradient() -> XML.Element {
+        return XML.Element(name: "linearGradient")
     }
 }
