@@ -160,9 +160,32 @@ final class RendererCoreGraphicsTypesTests: XCTestCase {
         XCTAssertEqual(path, expected)
     }
 
+    func testTextPath() {
+        XCTAssertNotNil(CGProvider().createPath(from: "Hi", at: .zero, with: .normal))
+    }
+
+    func testSubpath() {
+        let p1 = CGMutablePath()
+        p1.move(to: CGPoint(x: 0, y: 0))
+        p1.addLine(to: CGPoint(x: 100, y: 100))
+        p1.closeSubpath()
+
+        let p2 = CGMutablePath()
+        p2.move(to: CGPoint(x: 100, y: 0))
+        p2.addLine(to: CGPoint(x: 200, y: 200))
+        p2.closeSubpath()
+
+        let segments = CGProvider().createPath(from: [p1, p2]).segments()
+        XCTAssertEqual(segments, [.move(CGPoint(x: 0, y: 0)),
+                                  .line(CGPoint(x: 100, y: 100)),
+                                  .close,
+                                  .move(CGPoint(x: 100, y: 0)),
+                                  .line(CGPoint(x: 200, y: 200)),
+                                  .close])
+    }
+
 //TODO: verify these within type provider
-//    func createPath(from subPaths: [expected]) -> expected
-//    func createPath(from text: String, with font: String, at origin: Types.Point, ofSize pt: Types.Float) -> expected?
+
 //    func createImage(from image: LayerTree.Image) -> CGImage?
     
 }
