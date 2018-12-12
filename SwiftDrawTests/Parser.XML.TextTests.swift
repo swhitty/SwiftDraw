@@ -1,5 +1,5 @@
 //
-//  TextTests.swift
+//  Parser.XML.TextTests
 //  SwiftDraw
 //
 //  Created by Simon Whitty on 31/12/16.
@@ -32,9 +32,9 @@
 import XCTest
 @testable import SwiftDraw
 
-final class TextTests: XCTestCase {
+final class ParserXMLTextTests: XCTestCase {
     
-    func testText() {
+    func testParseText() {
         XCTAssertEqual(try XMLParser().parseText([:], value: "Simon").value, "Simon")
         
         var node = ["x": "10", "y": "25"]
@@ -49,7 +49,17 @@ final class TextTests: XCTestCase {
         
         let parsed = try? XMLParser().parseText(node, value: "Simon")
         XCTAssertEqual(parsed, expected)
-        
+    }
+
+    func testTextNodeParses() throws {
+        let el = XML.Element(name: "text", attributes: [:])
+        el.innerText = "Simon"
+
+        let node = try XMLParser().parseText(["x": "1", "y": "1"], element: el)
+        XCTAssertEqual(node?.value, "Simon")
+    }
+
+    func testEmptyTextNodeReturnsNil() {
         let el = XML.Element(name: "text", attributes: [:])
         XCTAssertNil(try XMLParser().parseText(["x": "1", "y": "1"], element: el))
         el.innerText = "    "
