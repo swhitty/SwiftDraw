@@ -83,7 +83,10 @@ extension LayerTree {
             }
         }
         
-        func renderCommands(for shape: Shape, stroke: StrokeAttributes, fill: FillAttributes, colorConverter: ColorConverter = DefaultColorConverter()) -> [RendererCommand<P.Types>] {
+        func renderCommands(for shape: Shape,
+                            stroke: StrokeAttributes,
+                            fill: FillAttributes,
+                            colorConverter: ColorConverter = DefaultColorConverter()) -> [RendererCommand<P.Types>] {
             var commands = [RendererCommand<P.Types>]()
             let path = provider.createPath(from: shape)
             
