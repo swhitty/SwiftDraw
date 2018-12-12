@@ -30,9 +30,9 @@
 //
 
 struct XML {
-    class Element {
+    final class Element {
         
-        var name: String
+        let name: String
         var attributes: [String: String]
         var children = [Element]()
         var innerText: String?
