@@ -142,7 +142,7 @@ extension XMLParser {
 
             let url = urlText.trimmingCharacters(in: .whitespaces)
             
-            guard !url.isEmpty,  scanner.isEOF else {
+            guard !url.isEmpty, scanner.isEOF else {
                 throw XMLParser.Error.invalid
             }
             

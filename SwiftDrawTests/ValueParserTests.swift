@@ -130,6 +130,8 @@ final class ValueParserTests: XCTestCase {
     func testUrlSelector() {
         XCTAssertEqual(try parser.parseUrlSelector("url(#testingId)").fragment, "testingId")
         XCTAssertEqual(try parser.parseUrlSelector("url(http://www.google.com)").host, "www.google.com")
+
+        XCTAssertThrowsError(try parser.parseUrlSelector("url(#testingId) other"))
     }
     
     func testPoints() {
