@@ -1,5 +1,5 @@
 //
-//  Parser.PathTests.swift
+//  Parser.XML.PathTests.swift
 //  SwiftDraw
 //
 //  Created by Simon Whitty on 8/3/17.
@@ -36,8 +36,26 @@ private typealias Coordinate = DOM.Coordinate
 private typealias Segment = DOM.Path.Segment
 private typealias CoordinateSpace = DOM.Path.Segment.CoordinateSpace
 
-final class ParserPathTests: XCTestCase {
-    
+final class ParserXMLPathTests: XCTestCase {
+
+    func testScanBool() {
+        let scanner = XMLParser.PathScanner(string: "true FALSE 0 1")
+
+        XCTAssertTrue(try scanner.scanBool())
+        XCTAssertFalse(try scanner.scanBool())
+        XCTAssertFalse(try scanner.scanBool())
+        XCTAssertTrue(try scanner.scanBool())
+        XCTAssertThrowsError(try scanner.scanBool())
+    }
+
+    func testScanCoordinate() {
+        let scanner = XMLParser.PathScanner(string: "10 20.0")
+
+        XCTAssertEqual(try scanner.scanCoordinate(), 10.0)
+        XCTAssertEqual(try scanner.scanCoordinate(), 20.0)
+        XCTAssertThrowsError(try scanner.scanCoordinate())
+    }
+
     func testEquality() {
         XCTAssertEqual(Segment.move(x: 10, y: 20, space: .relative),
                        move(10, 20, .relative))

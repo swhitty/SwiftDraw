@@ -39,7 +39,7 @@ extension XMLParser {
         var scanLocation: Int
 
         init(text: String) {
-            self.scanner = Foundation.Scanner(text: text)
+            self.scanner = Foundation.Scanner(string: text)
             self.scanLocation = self.scanner.scanLocation
             self.scanner.charactersToBeSkipped = Foundation.CharacterSet.whitespacesAndNewlines
         }
@@ -59,6 +59,16 @@ extension XMLParser {
         mutating func scanString(matchingAny tokens: Set<String>) throws -> String {
             scanner.scanLocation = scanLocation
             guard let match = tokens.first(where: { scanner.scanString($0, into: nil) }) else {
+                throw Error.invalid
+            }
+            scanLocation = scanner.scanLocation
+            return match
+        }
+
+        mutating func scanCase<T: RawRepresentable & CaseIterable>(from type: T.Type) throws -> T where T.RawValue == String {
+            scanner.scanLocation = scanLocation
+
+            guard let match = type.allCases.first(where: { scanner.scanString($0.rawValue, into: nil) }) else {
                 throw Error.invalid
             }
             scanLocation = scanner.scanLocation
@@ -144,15 +154,7 @@ extension XMLParser {
         }
 
         mutating func scanBool() throws -> Bool {
-            let boolString = try self.scanString(matchingAny: ["true", "TRUE", "false", "FALSE", "0", "1"])
-            switch boolString {
-            case "true", "TRUE", "1":
-                return true
-            case "false", "FALSE", "0":
-                return false
-            default:
-                throw Error.invalid
-            }
+            return try self.scanCase(from: Boolean.self).boolValue
         }
 
         mutating func scanCoordinate() throws -> DOM.Coordinate {
@@ -189,6 +191,24 @@ extension XMLParser {
     }
 }
 
+private enum Boolean: String, CaseIterable {
+    case `true`
+    case `false`
+    case upperFalse = "FALSE"
+    case upperTrue = "TRUE"
+    case zero = "0"
+    case one = "1"
+
+    var boolValue: Bool {
+        switch self {
+        case .true, .upperTrue, .one:
+            return true
+        case .false, .upperFalse, .zero:
+            return false
+        }
+    }
+}
+
 extension Scanner {
 
     enum Error: Swift.Error {
@@ -196,30 +216,11 @@ extension Scanner {
     }
 
     func scanBool() throws -> Bool {
-        let boolString = try self.scanString(matchingAny: ["true", "TRUE", "false", "FALSE", "0", "1"])
-        switch boolString {
-        case "true", "TRUE", "1":
-            return true
-        case "false", "FALSE", "0":
-            return false
-        default:
-            throw Error.invalid
-        }
-    }
-
-    private func scanString(matchingAny tokens: [String]) throws -> String {
-        guard let match = tokens.first(where: { self.scanString($0, into: nil) }) else {
+        guard let match = Boolean.allCases.first(where: { self.scanString($0.rawValue, into: nil) }) else {
             throw Error.invalid
         }
 
-        return match
-    }
-}
-
-extension Scanner {
-
-    convenience init(text: String) {
-        self.init(string: text)
+        return match.boolValue
     }
 
     func scan(first set: Foundation.CharacterSet) -> UnicodeScalar? {
@@ -242,3 +243,4 @@ extension Scanner {
         return DOM.Coordinate(val)
     }
 }
+

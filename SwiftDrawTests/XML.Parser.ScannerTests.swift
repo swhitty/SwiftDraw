@@ -73,6 +73,13 @@ final class ScannerTests: XCTestCase {
         XCTAssertThrowsError(try scanner.scanString("fox"))
     }
 
+    func testScanCase() {
+        var scanner = XMLParser.Scanner(text: "NOT OK")
+        XCTAssertEqual(try scanner.scanCase(from: Token.self), .nok)
+        XCTAssertEqual(try scanner.scanCase(from: Token.self), .ok)
+        XCTAssertThrowsError(try scanner.scanCase(from: Token.self))
+    }
+
     func testScanCharacter() {
         var scanner = XMLParser.Scanner(text: "  \t The fox 8badf00d ")
 
@@ -218,4 +225,9 @@ extension Foundation.CharacterSet: ExpressibleByStringLiteral {
         self.init(charactersIn: value)
     }
 
+}
+
+enum Token: String, CaseIterable {
+    case ok = "OK"
+    case nok = "NOT"
 }

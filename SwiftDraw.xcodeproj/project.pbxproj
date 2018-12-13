@@ -127,8 +127,8 @@
 		D90DB47E219CD2C300D374D2 /* Parser.AttributesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB469219CD2C100D374D2 /* Parser.AttributesTests.swift */; };
 		D90DB47F219CD2C300D374D2 /* Parser.XML.ColorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB46A219CD2C100D374D2 /* Parser.XML.ColorTests.swift */; };
 		D90DB480219CD2C300D374D2 /* Parser.XML.ColorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB46A219CD2C100D374D2 /* Parser.XML.ColorTests.swift */; };
-		D90DB481219CD2C300D374D2 /* Parser.PathTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB46B219CD2C200D374D2 /* Parser.PathTests.swift */; };
-		D90DB482219CD2C300D374D2 /* Parser.PathTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB46B219CD2C200D374D2 /* Parser.PathTests.swift */; };
+		D90DB481219CD2C300D374D2 /* Parser.XML.PathTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB46B219CD2C200D374D2 /* Parser.XML.PathTests.swift */; };
+		D90DB482219CD2C300D374D2 /* Parser.XML.PathTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB46B219CD2C200D374D2 /* Parser.XML.PathTests.swift */; };
 		D90DB483219CD2C300D374D2 /* UseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB46C219CD2C200D374D2 /* UseTests.swift */; };
 		D90DB484219CD2C300D374D2 /* UseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB46C219CD2C200D374D2 /* UseTests.swift */; };
 		D90DB485219CD2C300D374D2 /* StyleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB46D219CD2C200D374D2 /* StyleTests.swift */; };
@@ -300,7 +300,7 @@
 		D90DB468219CD2C100D374D2 /* GradientTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GradientTests.swift; sourceTree = "<group>"; };
 		D90DB469219CD2C100D374D2 /* Parser.AttributesTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Parser.AttributesTests.swift; sourceTree = "<group>"; };
 		D90DB46A219CD2C100D374D2 /* Parser.XML.ColorTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Parser.XML.ColorTests.swift; sourceTree = "<group>"; };
-		D90DB46B219CD2C200D374D2 /* Parser.PathTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Parser.PathTests.swift; sourceTree = "<group>"; };
+		D90DB46B219CD2C200D374D2 /* Parser.XML.PathTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Parser.XML.PathTests.swift; sourceTree = "<group>"; };
 		D90DB46C219CD2C200D374D2 /* UseTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UseTests.swift; sourceTree = "<group>"; };
 		D90DB46D219CD2C200D374D2 /* StyleTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StyleTests.swift; sourceTree = "<group>"; };
 		D90DB46E219CD2C200D374D2 /* ParserSVGImageTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ParserSVGImageTests.swift; sourceTree = "<group>"; };
@@ -579,13 +579,13 @@
 				D90DB46E219CD2C200D374D2 /* ParserSVGImageTests.swift */,
 				D90DB469219CD2C100D374D2 /* Parser.AttributesTests.swift */,
 				D90DB471219CD2C200D374D2 /* Parser.GraphicAttributeTests.swift */,
-				D90DB46B219CD2C200D374D2 /* Parser.PathTests.swift */,
 				D90DB473219CD2C200D374D2 /* Parser.SVGTests.swift */,
 				D90DB46D219CD2C200D374D2 /* StyleTests.swift */,
 				D90DB46A219CD2C100D374D2 /* Parser.XML.ColorTests.swift */,
 				D90DB474219CD2C200D374D2 /* Parser.XML.ElementTests.swift */,
 				D97AD81921BE40A700F7DD10 /* Parser.XML.GradientTests.swift */,
 				D90DB472219CD2C200D374D2 /* Parser.XML.ImageTests.swift */,
+				D90DB46B219CD2C200D374D2 /* Parser.XML.PathTests.swift */,
 				D90DB467219CD2C100D374D2 /* Parser.XML.TextTests.swift */,
 				D90DB46F219CD2C200D374D2 /* Parser.XML.TransformTests.swift */,
 				D90DB46C219CD2C200D374D2 /* UseTests.swift */,
@@ -1013,7 +1013,7 @@
 				D90DB43F219CD1EC00D374D2 /* DOM+Extensions.swift in Sources */,
 				D90DB490219CD2C300D374D2 /* Parser.XML.ImageTests.swift in Sources */,
 				D97AD81B21BE40A700F7DD10 /* Parser.XML.GradientTests.swift in Sources */,
-				D90DB482219CD2C300D374D2 /* Parser.PathTests.swift in Sources */,
+				D90DB482219CD2C300D374D2 /* Parser.XML.PathTests.swift in Sources */,
 				D93BAB9421AD5517005ADFBE /* NSImage+ImageTests.swift in Sources */,
 				D90DB3F5219CCF2700D374D2 /* URL+DataTests.swift in Sources */,
 				D90DB3D6219CCC8A00D374D2 /* LayerTree.ShapeTests.swift in Sources */,
@@ -1122,7 +1122,7 @@
 				D90DB43E219CD1EC00D374D2 /* DOM+Extensions.swift in Sources */,
 				D90DB487219CD2C300D374D2 /* ParserSVGImageTests.swift in Sources */,
 				D90DB48F219CD2C300D374D2 /* Parser.XML.ImageTests.swift in Sources */,
-				D90DB481219CD2C300D374D2 /* Parser.PathTests.swift in Sources */,
+				D90DB481219CD2C300D374D2 /* Parser.XML.PathTests.swift in Sources */,
 				D90DB3D0219CCC8100D374D2 /* LayerTree.LayerTests.swift in Sources */,
 				D90DB3D1219CCC8100D374D2 /* LayerTree.ShapeTests.swift in Sources */,
 				D925CC6721A4A2F800C8897B /* LayerTree.BuilderTests.swift in Sources */,
