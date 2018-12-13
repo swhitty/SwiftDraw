@@ -45,29 +45,59 @@ final class NSImageTests: XCTestCase {
     }
 
     func testNSImageDraws() {
-        let canvas = NSImage(size: CGSize(width: 100, height: 100))
+        let canvas = NSBitmapImageRep(pixelsWide: 2, pixelsHigh: 2)
 
         canvas.lockFocus()
-        NSImage(svgNamed: "lines.svg", in: .test)?.draw(in: NSRect(x: 0, y: 0, width: 100, height: 100))
+        NSImage(svgNamed: "lines.svg", in: .test)?.draw(in: NSRect(x: 0, y: 0, width: 2, height: 2))
         canvas.unlockFocus()
     }
 
     func testImageDraws() {
-        let canvas = NSImage(size: CGSize(width: 100, height: 100))
+        let canvas = NSBitmapImageRep(pixelsWide: 2, pixelsHigh: 2)
+        let image = Image.makeQuad().rasterize(with: CGSize(width: 2, height: 2))
 
-        let lines = Image.makeLines().rasterize(with: CGSize(width: 100, height: 100))
         canvas.lockFocus()
-        lines.draw(in: NSRect(x: 0, y: 0, width: 100, height: 100))
+        image.draw(in: NSRect(x: 0, y: 0, width: 2, height: 2))
         canvas.unlockFocus()
+
+        XCTAssertEqual(canvas.colorAt(x: 0, y: 0), NSColor(deviceRed: 1.0, green: 0, blue: 0, alpha: 1.0))
+        XCTAssertEqual(canvas.colorAt(x: 1, y: 1), NSColor(deviceRed: 0.0, green: 0, blue: 1.0, alpha: 1.0))
     }
 }
 
 private extension Image {
 
-    static func makeLines() -> Image {
-        let svg = DOM.SVG(width: 100, height: 100)
-        svg.childElements.append(DOM.Line(x1: 0, y1: 0, x2: 100, y2: 100))
-        svg.childElements.append(DOM.Line(x1: 100, y1: 0, x2: 0, y2: 100))
+    static func makeQuad() -> Image {
+        let svg = DOM.SVG(width: 2, height: 2)
+        svg.childElements.append(DOM.Rect(x: 0, y: 0, width: 1, height: 1))
+        svg.childElements.append(DOM.Rect(x: 1, y: 1, width: 1, height: 1))
+        svg.childElements[0].fill = DOM.Color.rgbi(255, 0, 0)
+        svg.childElements[1].fill = DOM.Color.rgbi(0, 0, 255)
         return Image(svg: svg)
+    }
+}
+
+private extension NSBitmapImageRep {
+
+    convenience init(pixelsWide width: Int, pixelsHigh height: Int) {
+        self.init(bitmapDataPlanes: nil,
+                   pixelsWide: width,
+                   pixelsHigh: height,
+                   bitsPerSample: 8,
+                   samplesPerPixel: 4,
+                   hasAlpha: true,
+                   isPlanar: false,
+                   colorSpaceName: NSColorSpaceName.deviceRGB,
+                   bytesPerRow: 0,
+                   bitsPerPixel: 32)!
+    }
+
+    func lockFocus() {
+        NSGraphicsContext.saveGraphicsState()
+        NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: self)
+    }
+
+    func unlockFocus() {
+        NSGraphicsContext.restoreGraphicsState()
     }
 }
