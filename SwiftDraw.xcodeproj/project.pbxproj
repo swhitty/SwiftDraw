@@ -26,8 +26,8 @@
 		D90DB3BD219CCC4100D374D2 /* LayerTree.Color.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB3AB219CCC4000D374D2 /* LayerTree.Color.swift */; };
 		D90DB3BE219CCC4100D374D2 /* LayerTree.Image.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB3AC219CCC4000D374D2 /* LayerTree.Image.swift */; };
 		D90DB3BF219CCC4100D374D2 /* LayerTree.Image.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB3AC219CCC4000D374D2 /* LayerTree.Image.swift */; };
-		D90DB3C0219CCC4100D374D2 /* LayerTree.Commands.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB3AD219CCC4100D374D2 /* LayerTree.Commands.swift */; };
-		D90DB3C1219CCC4100D374D2 /* LayerTree.Commands.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB3AD219CCC4100D374D2 /* LayerTree.Commands.swift */; };
+		D90DB3C0219CCC4100D374D2 /* LayerTree.CommandGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB3AD219CCC4100D374D2 /* LayerTree.CommandGenerator.swift */; };
+		D90DB3C1219CCC4100D374D2 /* LayerTree.CommandGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB3AD219CCC4100D374D2 /* LayerTree.CommandGenerator.swift */; };
 		D90DB3C2219CCC4500D374D2 /* Renderer.CoreGraphics.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB39D219CCBBD00D374D2 /* Renderer.CoreGraphics.swift */; };
 		D90DB3C3219CCC4800D374D2 /* Renderer.LayerTree.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB39F219CCBBD00D374D2 /* Renderer.LayerTree.swift */; };
 		D90DB3C4219CCC4A00D374D2 /* Renderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB39E219CCBBD00D374D2 /* Renderer.swift */; };
@@ -172,6 +172,8 @@
 		D962D2A21E6ECE2000B825C6 /* SwiftDraw-macOS.h in Headers */ = {isa = PBXBuildFile; fileRef = D962D2A11E6ECE2000B825C6 /* SwiftDraw-macOS.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		D965B5821E3C48C6003E859E /* shapes.svg in Resources */ = {isa = PBXBuildFile; fileRef = D965B5811E3C48C6003E859E /* shapes.svg */; };
 		D965B5871E3C5CF8003E859E /* starry.svg in Resources */ = {isa = PBXBuildFile; fileRef = D965B5851E3C5C87003E859E /* starry.svg */; };
+		D96E22FB21C2690D00CCD17E /* LayerTree.CommandGeneratorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D96E22FA21C2690D00CCD17E /* LayerTree.CommandGeneratorTests.swift */; };
+		D96E22FC21C2690D00CCD17E /* LayerTree.CommandGeneratorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D96E22FA21C2690D00CCD17E /* LayerTree.CommandGeneratorTests.swift */; };
 		D9778E5B1E6ED66300FF6EBB /* starry.svg in Resources */ = {isa = PBXBuildFile; fileRef = D965B5851E3C5C87003E859E /* starry.svg */; };
 		D9778E5C1E6ED66300FF6EBB /* shapes.svg in Resources */ = {isa = PBXBuildFile; fileRef = D965B5811E3C48C6003E859E /* shapes.svg */; };
 		D97AD81A21BE40A700F7DD10 /* Parser.XML.GradientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D97AD81921BE40A700F7DD10 /* Parser.XML.GradientTests.swift */; };
@@ -252,7 +254,7 @@
 		D90DB3AA219CCC4000D374D2 /* LayerTree.AB.Builder.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LayerTree.AB.Builder.swift; sourceTree = "<group>"; };
 		D90DB3AB219CCC4000D374D2 /* LayerTree.Color.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LayerTree.Color.swift; sourceTree = "<group>"; };
 		D90DB3AC219CCC4000D374D2 /* LayerTree.Image.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LayerTree.Image.swift; sourceTree = "<group>"; };
-		D90DB3AD219CCC4100D374D2 /* LayerTree.Commands.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LayerTree.Commands.swift; sourceTree = "<group>"; };
+		D90DB3AD219CCC4100D374D2 /* LayerTree.CommandGenerator.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LayerTree.CommandGenerator.swift; sourceTree = "<group>"; };
 		D90DB3C6219CCC8100D374D2 /* LayerTree.ColorTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LayerTree.ColorTests.swift; sourceTree = "<group>"; };
 		D90DB3C7219CCC8100D374D2 /* LayerTree.TransformTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LayerTree.TransformTests.swift; sourceTree = "<group>"; };
 		D90DB3C8219CCC8100D374D2 /* LayerTree.ImageTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LayerTree.ImageTests.swift; sourceTree = "<group>"; };
@@ -327,6 +329,7 @@
 		D962D2A11E6ECE2000B825C6 /* SwiftDraw-macOS.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "SwiftDraw-macOS.h"; sourceTree = "<group>"; };
 		D965B5811E3C48C6003E859E /* shapes.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = shapes.svg; sourceTree = "<group>"; };
 		D965B5851E3C5C87003E859E /* starry.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = starry.svg; sourceTree = "<group>"; };
+		D96E22FA21C2690D00CCD17E /* LayerTree.CommandGeneratorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LayerTree.CommandGeneratorTests.swift; sourceTree = "<group>"; };
 		D97AD81921BE40A700F7DD10 /* Parser.XML.GradientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Parser.XML.GradientTests.swift; sourceTree = "<group>"; };
 		D9A843901E855672002A804B /* curves.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = curves.svg; sourceTree = "<group>"; };
 		D9A843921E85F1C1002A804B /* quad.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = quad.svg; sourceTree = "<group>"; };
@@ -426,7 +429,7 @@
 				D925CC6021A49C9C00C8897B /* LayerTree.Builder.Shape.swift */,
 				D90DB3AA219CCC4000D374D2 /* LayerTree.AB.Builder.swift */,
 				D90DB3AB219CCC4000D374D2 /* LayerTree.Color.swift */,
-				D90DB3AD219CCC4100D374D2 /* LayerTree.Commands.swift */,
+				D90DB3AD219CCC4100D374D2 /* LayerTree.CommandGenerator.swift */,
 				D90DB3AC219CCC4000D374D2 /* LayerTree.Image.swift */,
 				D90DB3A9219CCC4000D374D2 /* LayerTree.Layer.swift */,
 				D90DB3A6219CCC4000D374D2 /* LayerTree.A.Path.swift */,
@@ -443,6 +446,7 @@
 				D925CC6C21A4BD1A00C8897B /* LayerTree.Builder.LayerTests.swift */,
 				D925CC6321A4A0AE00C8897B /* LayerTree.Builder.ShapeTests.swift */,
 				D90DB3C6219CCC8100D374D2 /* LayerTree.ColorTests.swift */,
+				D96E22FA21C2690D00CCD17E /* LayerTree.CommandGeneratorTests.swift */,
 				D90DB3C8219CCC8100D374D2 /* LayerTree.ImageTests.swift */,
 				D90DB3CA219CCC8100D374D2 /* LayerTree.LayerTests.swift */,
 				D90DB3C9219CCC8100D374D2 /* LayerTree.PathTests.swift */,
@@ -979,7 +983,7 @@
 				D90DB405219CD06800D374D2 /* XML.SAXParser.swift in Sources */,
 				D9BA810721BA577B005159E7 /* CommandLine.Configuration.swift in Sources */,
 				D90DB43A219CD1C600D374D2 /* DOM.Color.swift in Sources */,
-				D90DB3C1219CCC4100D374D2 /* LayerTree.Commands.swift in Sources */,
+				D90DB3C1219CCC4100D374D2 /* LayerTree.CommandGenerator.swift in Sources */,
 				D90DB3C3219CCC4800D374D2 /* Renderer.LayerTree.swift in Sources */,
 				D90DB3EE219CCEDE00D374D2 /* CGPath+Segment.swift in Sources */,
 				D90DB49B219CD32600D374D2 /* Formatter.XML.swift in Sources */,
@@ -1035,6 +1039,7 @@
 				D90DB3D2219CCC8A00D374D2 /* LayerTree.ColorTests.swift in Sources */,
 				D90DB484219CD2C300D374D2 /* UseTests.swift in Sources */,
 				D9F3AD5B219E9DF400BAFA55 /* XML.SAXParserTests.swift in Sources */,
+				D96E22FC21C2690D00CCD17E /* LayerTree.CommandGeneratorTests.swift in Sources */,
 				D90DB47E219CD2C300D374D2 /* Parser.AttributesTests.swift in Sources */,
 				D925CC6521A4A0AE00C8897B /* LayerTree.Builder.ShapeTests.swift in Sources */,
 				D90DB492219CD2C300D374D2 /* Parser.SVGTests.swift in Sources */,
@@ -1072,7 +1077,7 @@
 				D90DB3AE219CCC4100D374D2 /* LayerTree.Shape.swift in Sources */,
 				D90DB431219CD1C600D374D2 /* DOM.Text.swift in Sources */,
 				D90DB408219CD06800D374D2 /* XML.Parser.Scanner.swift in Sources */,
-				D90DB3C0219CCC4100D374D2 /* LayerTree.Commands.swift in Sources */,
+				D90DB3C0219CCC4100D374D2 /* LayerTree.CommandGenerator.swift in Sources */,
 				D90DB3F8219CCF6A00D374D2 /* Stack.swift in Sources */,
 				D90DB3A2219CCBBD00D374D2 /* Renderer.LayerTree.swift in Sources */,
 				D90DB42D219CD1C600D374D2 /* DOM.Use.swift in Sources */,
@@ -1129,6 +1134,7 @@
 				D90DB3CE219CCC8100D374D2 /* LayerTree.ImageTests.swift in Sources */,
 				D925CC5E21A3E02C00C8897B /* CGPath+SegmentTests.swift in Sources */,
 				D90DB489219CD2C300D374D2 /* Parser.XML.TransformTests.swift in Sources */,
+				D96E22FB21C2690D00CCD17E /* LayerTree.CommandGeneratorTests.swift in Sources */,
 				D90DB3F4219CCF2700D374D2 /* URL+DataTests.swift in Sources */,
 				D90DB3CD219CCC8100D374D2 /* LayerTree.TransformTests.swift in Sources */,
 				D90DB39A219CCB9E00D374D2 /* Renderer.CoreGraphicsTypesTests.swift in Sources */,
