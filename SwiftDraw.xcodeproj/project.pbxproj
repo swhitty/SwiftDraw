@@ -152,6 +152,8 @@
 		D913F18D21AC157B00B76B06 /* RendererTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D913F18B21AC157A00B76B06 /* RendererTests.swift */; };
 		D913F18F21AC15B000B76B06 /* MockRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D913F18E21AC15B000B76B06 /* MockRenderer.swift */; };
 		D913F19021AC15B000B76B06 /* MockRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D913F18E21AC15B000B76B06 /* MockRenderer.swift */; };
+		D91B1CB021C8546200C94644 /* NSBitmapImageRep+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = D91B1CAF21C8546200C94644 /* NSBitmapImageRep+Extensions.swift */; };
+		D91B1CB221C854E300C94644 /* CGRendererTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D91B1CB121C854E300C94644 /* CGRendererTests.swift */; };
 		D925CC5E21A3E02C00C8897B /* CGPath+SegmentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D925CC5D21A3E02C00C8897B /* CGPath+SegmentTests.swift */; };
 		D925CC5F21A3E02C00C8897B /* CGPath+SegmentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D925CC5D21A3E02C00C8897B /* CGPath+SegmentTests.swift */; };
 		D925CC6121A49C9C00C8897B /* LayerTree.Builder.Shape.swift in Sources */ = {isa = PBXBuildFile; fileRef = D925CC6021A49C9C00C8897B /* LayerTree.Builder.Shape.swift */; };
@@ -315,6 +317,8 @@
 		D90DB497219CD32600D374D2 /* Formatter.XML.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Formatter.XML.swift; sourceTree = "<group>"; };
 		D913F18B21AC157A00B76B06 /* RendererTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RendererTests.swift; sourceTree = "<group>"; };
 		D913F18E21AC15B000B76B06 /* MockRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockRenderer.swift; sourceTree = "<group>"; };
+		D91B1CAF21C8546200C94644 /* NSBitmapImageRep+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NSBitmapImageRep+Extensions.swift"; sourceTree = "<group>"; };
+		D91B1CB121C854E300C94644 /* CGRendererTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CGRendererTests.swift; sourceTree = "<group>"; };
 		D925CC5D21A3E02C00C8897B /* CGPath+SegmentTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CGPath+SegmentTests.swift"; sourceTree = "<group>"; };
 		D925CC6021A49C9C00C8897B /* LayerTree.Builder.Shape.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LayerTree.Builder.Shape.swift; sourceTree = "<group>"; };
 		D925CC6321A4A0AE00C8897B /* LayerTree.Builder.ShapeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LayerTree.Builder.ShapeTests.swift; sourceTree = "<group>"; };
@@ -406,6 +410,7 @@
 				D93BAB8F21AD21E4005ADFBE /* Renderer.LayerTreeProviderTests.swift */,
 				D913F18B21AC157A00B76B06 /* RendererTests.swift */,
 				D913F18E21AC15B000B76B06 /* MockRenderer.swift */,
+				D91B1CB121C854E300C94644 /* CGRendererTests.swift */,
 			);
 			name = Renderer;
 			sourceTree = "<group>";
@@ -497,6 +502,7 @@
 			children = (
 				D90DB3FC219CCF9200D374D2 /* StackTests.swift */,
 				D9F3AD6021A21B7800BAFA55 /* Bundle+Extensions.swift */,
+				D91B1CAF21C8546200C94644 /* NSBitmapImageRep+Extensions.swift */,
 			);
 			name = Utilities;
 			sourceTree = "<group>";
@@ -1017,6 +1023,7 @@
 				D90DB43F219CD1EC00D374D2 /* DOM+Extensions.swift in Sources */,
 				D90DB490219CD2C300D374D2 /* Parser.XML.ImageTests.swift in Sources */,
 				D97AD81B21BE40A700F7DD10 /* Parser.XML.GradientTests.swift in Sources */,
+				D91B1CB021C8546200C94644 /* NSBitmapImageRep+Extensions.swift in Sources */,
 				D90DB482219CD2C300D374D2 /* Parser.XML.PathTests.swift in Sources */,
 				D93BAB9421AD5517005ADFBE /* NSImage+ImageTests.swift in Sources */,
 				D90DB3F5219CCF2700D374D2 /* URL+DataTests.swift in Sources */,
@@ -1031,6 +1038,7 @@
 				D90DB3FE219CCF9200D374D2 /* StackTests.swift in Sources */,
 				D925CC6E21A4BD1A00C8897B /* LayerTree.Builder.LayerTests.swift in Sources */,
 				D90DB414219CD0CE00D374D2 /* XML.Parser.ScannerTests.swift in Sources */,
+				D91B1CB221C854E300C94644 /* CGRendererTests.swift in Sources */,
 				D90DB47A219CD2C300D374D2 /* Parser.XML.TextTests.swift in Sources */,
 				D913F19021AC15B000B76B06 /* MockRenderer.swift in Sources */,
 				D93BAB9121AD21E4005ADFBE /* Renderer.LayerTreeProviderTests.swift in Sources */,
