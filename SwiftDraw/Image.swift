@@ -29,8 +29,9 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-import CoreGraphics
 import Foundation
+
+#if canImport(CoreGraphics)
 
 @objc(SVGImage)
 public final class Image: NSObject {
@@ -39,14 +40,6 @@ public final class Image: NSObject {
     //An Image is simply an array of CoreGraphics draw commands
     //see: Renderer.swift
     let commands: [RendererCommand<CGTypes>]
-    
-    public convenience init?(named name: String, in bundle: Bundle = Bundle.main) {
-        guard let url = bundle.url(forResource: name, withExtension: nil) else {
-            return nil
-        }
-        
-        self.init(fileURL: url)
-    }
 
     init(svg: DOM.SVG) {
         size = CGSize(width: svg.width, height: svg.height)
@@ -56,62 +49,51 @@ public final class Image: NSObject {
         // - DOM.SVG is converted into a LayerTree
         // - LayerTree is converted into RenderCommands
         // - RenderCommands are performed by Renderer (drawn to CGContext)
-
         let layer = LayerTree.Builder(svg: svg).makeLayer()
         let generator = LayerTree.CommandGenerator(provider: CGProvider())
         commands = generator.renderCommands(for: layer)
     }
-    
-    public convenience init?(fileURL url: URL) {
+}
+#else
+
+public final class Image: NSObject {
+    public let size: CGSize
+
+    init(svg: DOM.SVG) {
+        size = CGSize(width: svg.width, height: svg.height)
+    }
+
+    public func pngData(size: CGSize? = nil, scale: CGFloat = 1) -> Data? {
+        return nil
+    }
+
+    public func jpegData(size: CGSize? = nil, scale: CGFloat = 1, compressionQuality quality: CGFloat = 1) -> Data? {
+        return nil
+    }
+
+    public func pdfData(size: CGSize? = nil) -> Data? {
+        return nil
+    }
+}
+#endif
+
+public extension Image {
+
+    convenience init?(fileURL url: URL) {
         let parser = XMLParser(options: [.skipInvalidElements])
         guard let element = try? XML.SAXParser.parse(contentsOf: url),
-              let svg = try? parser.parseSVG(element) else {
+            let svg = try? parser.parseSVG(element) else {
                 return nil
         }
 
         self.init(svg: svg)
     }
-}
 
-public extension CGContext {
-    
-    func draw(_ image: Image, in rect: CGRect? = nil)  {
-        let defaultRect = CGRect(x: 0, y: 0, width: image.size.width, height: image.size.height)
-        let renderer = CGRenderer(context: self)
-
-        guard let rect = rect, rect != defaultRect else {
-            renderer.perform(image.commands)
-            return
+    convenience init?(named name: String, in bundle: Bundle = Bundle.main) {
+        guard let url = bundle.url(forResource: name, withExtension: nil) else {
+            return nil
         }
-        
-        let sx = rect.width / image.size.width
-        let sy = rect.height / image.size.height
-        saveGState()
-        translateBy(x: rect.origin.x, y: rect.origin.y)
-        scaleBy(x: sx, y: sy)
-        renderer.perform(image.commands)
-        restoreGState()
-    }
-}
 
-public extension Image {
-
-    func pdfData(size: CGSize? = nil) -> Data? {
-        let renderSize = size ?? self.size
-        let data = NSMutableData()
-        guard let consumer = CGDataConsumer(data: data as CFMutableData) else { return nil }
-
-        var mediaBox = CGRect(x: 0.0, y: 0.0, width: renderSize.width, height: renderSize.height)
-
-        guard let ctx = CGContext(consumer: consumer, mediaBox: &mediaBox, nil) else { return nil }
-
-        ctx.beginPage(mediaBox: &mediaBox)
-        let flip = CGAffineTransform(a: 1, b: 0, c: 0, d: -1, tx: 0, ty: mediaBox.size.height)
-        ctx.concatenate(flip)
-        ctx.draw(self, in: mediaBox)
-        ctx.endPage()
-        ctx.closePDF()
-
-        return data as Data
+        self.init(fileURL: url)
     }
 }

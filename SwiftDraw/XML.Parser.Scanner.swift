@@ -244,3 +244,18 @@ extension Scanner {
     }
 }
 
+
+#if os(Linux)
+
+private extension Foundation.Scanner {
+
+    func scanUpTo(_ string: String, into result: inout NSString?) -> Bool {
+        return false
+    }
+
+    func scanCharacters(from set: CharacterSet, into result: inout NSString?) -> Bool {
+        return false
+    }
+}
+
+#endif

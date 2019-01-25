@@ -29,7 +29,12 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
+#if canImport(Darwin)
 import Darwin.POSIX
+#else
+import Glibc
+#endif
+
 import SwiftDraw
 
 exit(CommandLine.run().rawValue)

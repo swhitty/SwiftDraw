@@ -35,7 +35,7 @@ import Foundation
 extension Bundle {
 
     static var test: Bundle {
-        return Bundle(for: ImageTests.self)
+        return Bundle(for: Marker.self)
     }
 
     func url(forResource named: String) throws -> URL {
@@ -49,4 +49,5 @@ extension Bundle {
         case invalid
     }
 
+    private class Marker { }
 }

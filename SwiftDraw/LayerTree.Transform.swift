@@ -29,8 +29,11 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
+#if canImport(Darwin)
 import Darwin
-
+#else
+import Glibc
+#endif
 
 extension LayerTree {
     
