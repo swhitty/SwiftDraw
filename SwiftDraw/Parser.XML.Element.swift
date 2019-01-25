@@ -248,7 +248,6 @@ extension XMLParser {
     
 }
 
-
 extension PresentationAttributes {
     
     mutating func updateAttributes(from attributes: PresentationAttributes) {
