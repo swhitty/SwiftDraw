@@ -12,3 +12,12 @@ jobs:
     - stage: test
       name: Swift PM
       script: swift package clean; swift test
+    - stage: test
+      name: Swift Linux Build
+      language: ruby
+      os: linux
+      dist: trusty
+      services: docker
+      script:
+          - docker pull swift
+          - docker run -it --mount src="$(pwd)",target=/swift_source,type=bind swift /bin/sh -c "cd swift_source; swift package clean; swift build"
