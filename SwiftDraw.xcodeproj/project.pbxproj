@@ -154,6 +154,7 @@
 		D913F19021AC15B000B76B06 /* MockRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D913F18E21AC15B000B76B06 /* MockRenderer.swift */; };
 		D91B1CB021C8546200C94644 /* NSBitmapImageRep+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = D91B1CAF21C8546200C94644 /* NSBitmapImageRep+Extensions.swift */; };
 		D91B1CB221C854E300C94644 /* CGRendererTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D91B1CB121C854E300C94644 /* CGRendererTests.swift */; };
+		D923F11E21FBC09500FEA273 /* Image+CoreGraphics.swift in Sources */ = {isa = PBXBuildFile; fileRef = D928197821FBB9D200F5D060 /* Image+CoreGraphics.swift */; };
 		D925CC5E21A3E02C00C8897B /* CGPath+SegmentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D925CC5D21A3E02C00C8897B /* CGPath+SegmentTests.swift */; };
 		D925CC5F21A3E02C00C8897B /* CGPath+SegmentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D925CC5D21A3E02C00C8897B /* CGPath+SegmentTests.swift */; };
 		D925CC6121A49C9C00C8897B /* LayerTree.Builder.Shape.swift in Sources */ = {isa = PBXBuildFile; fileRef = D925CC6021A49C9C00C8897B /* LayerTree.Builder.Shape.swift */; };
@@ -988,6 +989,7 @@
 				D90DB3C4219CCC4A00D374D2 /* Renderer.swift in Sources */,
 				D90DB45B219CD27800D374D2 /* Parser.XML.Transform.swift in Sources */,
 				D90DB45D219CD27800D374D2 /* Parser.XML.Element.swift in Sources */,
+				D923F11E21FBC09500FEA273 /* Image+CoreGraphics.swift in Sources */,
 				D90DB434219CD1C600D374D2 /* DOM.Path.swift in Sources */,
 				D90DB405219CD06800D374D2 /* XML.SAXParser.swift in Sources */,
 				D9BA810721BA577B005159E7 /* CommandLine.Configuration.swift in Sources */,
