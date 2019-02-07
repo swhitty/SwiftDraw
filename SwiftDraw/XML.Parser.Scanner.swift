@@ -234,6 +234,10 @@ extension Scanner {
                 return nil
         }
 
+        if string.length > 1 {
+            scanLocation -= (string.length - 1)
+        }
+
         return UnicodeScalar(string.character(at: 0))
     }
 

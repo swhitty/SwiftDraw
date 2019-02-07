@@ -179,6 +179,22 @@ final class ParserXMLPathTests: XCTestCase {
         
         XCTAssertEqual(path?.segments.count, 4)
     }
+
+    func testPathLong() throws {
+
+        let node = ["d": "m10,2h-30v-40zm50,60"]
+        let parser = XMLParser()
+
+        let path = try! parser.parsePath(node)
+
+        XCTAssertEqual(path.segments.count, 5)
+
+        XCTAssertEqual(path.segments[0], .move(x: 10, y: 2.0, space: .relative))
+        XCTAssertEqual(path.segments[1], .horizontal(x: -30, space: .relative))
+        XCTAssertEqual(path.segments[2], .vertical(y: -40, space: .relative))
+        XCTAssertEqual(path.segments[3], .close)
+        XCTAssertEqual(path.segments[4], .move(x: 50, y: 60, space: .relative))
+    }
 }
 
 private func AssertSegmentEquals(_ text: String, _ expected: Segment, file: StaticString = #file, line: UInt = #line) {
