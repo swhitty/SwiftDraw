@@ -25,4 +25,4 @@ let image = NSImage(svgNamed: "sample.svg")
 
 ### Command line tool
 
-`% swiftdraw sample.svg --format pdf`
+`$ swiftdraw sample.svg --format pdf`
