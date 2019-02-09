@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="400" height="300">
+	
+ 	<rect width="400" height="300" fill="snow" />
+ 
+  <path d="m 20 20 a 50 50 0 0 1 50 50 h -50 z" fill="dodgerblue" />
+	
+	<path d="m 20 20 C 47.6 20 70 42.40 70 70 h -50 z" fill="none" stroke="black" stroke-width="2" />
+	
+	<path d="m 90 20 a 50 50 0 0 0 50 50  h -50 z" fill="mediumaquamarine" />
+	
+	<path d="m 90 20 C 90 47.6 112.4 70 140 70 h -50 z" fill="none" stroke="black" stroke-width="2" />
+	
+	<path d="m 210 20 a 50 50 0 1 0 50 50 h -50 z" fill="pink" />
+	
+	<path d="m 210 20 C 182.4 20 160 42.4 160 70 C 160 97.6 182.4 120 210 120 C 237.6 120 260 97.6 260 70 h -50 z" fill="none" stroke="black" stroke-width="2" />
+	
+	<path d="m 280 70 a 50 50 0 1 1 50 50  h -50 z" fill="khaki" />
+	
+	<path d="m 280 70 C 280 42.4 302.4 20 330 20 C 357.6 20 380 42.4 380 70 C 380 97.6 357.6 120 330 120 h -50 z" fill="none" stroke="black" stroke-width="2" />
+	
+	<path d="m 20 220 h 40 a 20 35 0 0 1 35 0 h 40 a 20 35 0 1 1 35 0 h 40 a 20 35 0 1 0 35 0 h 40 a 20 35 0 0 0 35 0 h 40" fill="none" stroke="black" stroke-width="8" />
+	
+	<path d="M 20 220 h40
+	C 63.52 208.86 70.22 201.94 77.5 201.94 C 84.78 201.94 91.48 208.86 95 220 h 40
+	C 130.35 205.28 132.34 186.84 139.74 176.11 C 147.14 165.37 157.86 165.37 165.26 176.11 C 172.66 186.84 174.65 205.28 170 220 h 40
+	C 205.35 234.72 207.34 253.16 214.74 263.89 C 222.14 274.63 232.86 274.63 240.26 263.89 C 247.66 253.16 249.65 234.72 245 220 h 40
+	C 288.52 231.14 295.22 238.06 302.5 238.06 C 309.78 238.06 316.48 231.14 320 220 h40" fill="none" stroke="pink" stroke-width="2" />
+	
+</svg>

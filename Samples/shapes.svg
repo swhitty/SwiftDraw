@@ -34,11 +34,8 @@
 	<path d="M 0,90 q 50 50 100 0 q 50 -50 100 0 t 100 0 t 100 0 t 100 0" stroke="blue"
 	  stroke-width="5" fill="none" />
 	  
-	  <path d="M230 520
-	            A 45 45, 0, 1, 0, 275 565
-	            L 275 520 Z" fill="wheat"/>
-
-
+	<path d="m 340 650 a 50 50 0 1 1 50 50  h -50 z" fill="khaki" stroke="black" transform="scale(0.75) rotate(145, 340, 700 )" />
+		
  <polyline points="100,590 120,550"
   style="fill:none;stroke:black;stroke-width:3" stroke="red" stroke-width="5" />
   
