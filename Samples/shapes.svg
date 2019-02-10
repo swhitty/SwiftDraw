@@ -28,6 +28,8 @@
 	
 	<line x1="0" y1="0" x2="250" y2="250" stroke="fuchsia" stroke-width="2" />
 	
+	<path d="M 400 350 h 50 v 50 h -50 z m 10 10 v 30 h 30 v -30 z" stroke="black" fill="mediumaquamarine" />
+	
 	<path d="M0,0 l20,30 l20,-30 l20,30 l20,-30 l20,30 l20,-30 l20,30 l20,-30 l20,30 l20,-30 l10,15 L500,15" fill-opacity="0" stroke="red" stroke-width="2"/>
 	
 	

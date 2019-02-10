@@ -235,14 +235,41 @@ extension LayerTree.Path {
     }
     
     var last: LayerTree.Point? {
-        
-        guard let lastSegment = segments.last else { return nil }
-        
-        switch lastSegment {
+        guard let last = segments.last?.last else {
+            return lastStart
+        }
+
+        return last
+    }
+
+    var lastStart: LayerTree.Point? {
+        let rev = segments.reversed()
+        guard
+            let closeIdx = rev.index(where: { $0.isClose }),
+            closeIdx != rev.startIndex else {
+                return segments.first?.last
+        }
+
+        let point = rev.index(before: closeIdx)
+        return rev[point].last
+    }
+}
+
+private extension LayerTree.Path.Segment {
+
+    var isClose: Bool {
+        guard case .close = self else {
+            return false
+        }
+        return true
+    }
+
+    var last: LayerTree.Point? {
+        switch self {
         case .move(to: let p): return p
         case .line(let p): return p
         case .cubic(let p, _, _): return p
-        case .close: return nil  //traverse segments?
+        case .close: return nil
         }
     }
 }
