@@ -243,7 +243,7 @@ extension LayerTree.Path {
     }
 
     var lastStart: LayerTree.Point? {
-        let rev = segments.reversed()
+        let rev = segments.reversed().dropFirst()
         guard
             let closeIdx = rev.index(where: { $0.isClose }),
             closeIdx != rev.startIndex else {
