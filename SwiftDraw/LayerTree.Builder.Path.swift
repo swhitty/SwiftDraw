@@ -201,8 +201,15 @@ extension LayerTree.Builder {
     }
     
     static func createArc(from segment: DOM.Path.Segment, last point: Point) -> Path.Segment? {
-        //guard case .arc(let a) = segment else { return nil }
-        return nil;
+        guard case .arc(let a) = segment else { return nil }
+
+        //arc is currently unsupported so we simply create a line to the destination without any arc.
+        let p = Point(a.x, a.y)
+
+        switch a.space {
+        case .relative: return .line(to: p.absolute(from: point))
+        case .absolute: return .line(to: p)
+        }
     }
     
     static func createClose(from segment: DOM.Path.Segment) -> Path.Segment? {
