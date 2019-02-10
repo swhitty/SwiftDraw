@@ -84,6 +84,7 @@ final class ParserSVGImageTests: XCTestCase {
         XCTAssertTrue(c.next()!.element is DOM.Path)
         XCTAssertTrue(c.next()!.element is DOM.Path)
         XCTAssertTrue(c.next()!.element is DOM.Path)
+        XCTAssertTrue(c.next()!.element is DOM.Path)
         XCTAssertTrue(c.next()!.element is DOM.Polyline)
         XCTAssertTrue(c.next()!.element is DOM.Polyline)
         XCTAssertTrue(c.next()!.element is DOM.Polygon)
