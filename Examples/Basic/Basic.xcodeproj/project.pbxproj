@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		D918D26D22122A7300097C9A /* arc2.svg in Resources */ = {isa = PBXBuildFile; fileRef = D918D26C22122A7300097C9A /* arc2.svg */; };
+		D956E1B122103A0C00C5ADA2 /* identity.svg in Resources */ = {isa = PBXBuildFile; fileRef = D956E1B022103A0C00C5ADA2 /* identity.svg */; };
 		D9618466220FDD1100C59D9B /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9618465220FDD1100C59D9B /* AppDelegate.swift */; };
 		D9618468220FDD1100C59D9B /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9618467220FDD1100C59D9B /* ViewController.swift */; };
 		D961846D220FDD1200C59D9B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D961846C220FDD1200C59D9B /* Assets.xcassets */; };
@@ -43,6 +45,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		D918D26C22122A7300097C9A /* arc2.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = arc2.svg; sourceTree = "<group>"; };
+		D956E1B022103A0C00C5ADA2 /* identity.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = identity.svg; sourceTree = "<group>"; };
 		D9618462220FDD1100C59D9B /* Basic.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Basic.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D9618465220FDD1100C59D9B /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		D9618467220FDD1100C59D9B /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -117,11 +121,13 @@
 				D9ACD786220FDDE0009717CF /* transform.svg */,
 				D9ACD787220FDDE0009717CF /* aa.svg */,
 				D9ACD788220FDDE0009717CF /* curves.svg */,
+				D956E1B022103A0C00C5ADA2 /* identity.svg */,
 				D9ACD789220FDDE0009717CF /* shapes.svg */,
 				D9ACD78A220FDDE0009717CF /* lines.svg */,
 				D9ACD78B220FDDE0009717CF /* starry.svg */,
 				D9ACD78C220FDDE0009717CF /* mask.svg */,
 				D9ACD78D220FDDE0009717CF /* arc.svg */,
+				D918D26C22122A7300097C9A /* arc2.svg */,
 				D9ACD78E220FDDE0009717CF /* quad.svg */,
 				D9ACD78F220FDDE0009717CF /* display.svg */,
 				D9ACD790220FDDE0009717CF /* invalid.svg */,
@@ -207,9 +213,11 @@
 				D9ACD793220FDDE0009717CF /* viewbox.svg in Resources */,
 				D9618470220FDD1200C59D9B /* LaunchScreen.storyboard in Resources */,
 				D9ACD798220FDDE0009717CF /* lines.svg in Resources */,
+				D918D26D22122A7300097C9A /* arc2.svg in Resources */,
 				D9ACD79B220FDDE0009717CF /* arc.svg in Resources */,
 				D961846D220FDD1200C59D9B /* Assets.xcassets in Resources */,
 				D9ACD79D220FDDE0009717CF /* display.svg in Resources */,
+				D956E1B122103A0C00C5ADA2 /* identity.svg in Resources */,
 				D9ACD792220FDDE0009717CF /* path.svg in Resources */,
 				D9ACD79A220FDDE0009717CF /* mask.svg in Resources */,
 				D9ACD794220FDDE0009717CF /* transform.svg in Resources */,

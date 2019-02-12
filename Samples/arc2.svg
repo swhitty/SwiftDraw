@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="360" height="660">
+	 
+
+ 	<rect width="600" height="660" fill="snow" />
+ 
+	<circle cx="120" cy="70" r="50" fill="none" stroke="darkgray" />
+	<circle cx="70" cy="120" r="50" fill="none" stroke="darkgray" />
+	<path d="M 70 70 a 50 50 0 0 1 50 50 v -50 z" stroke="black" stroke-width="2" fill="blue" fill-opacity="0.4" />
+	<circle cx="70" cy="70" r="5" fill="yellow" stroke="black" stroke-width="2" />
+	
+	<g transform="translate(170)">
+	<circle cx="120" cy="70" r="50" fill="none" stroke="darkgray" />
+	<circle cx="70" cy="120" r="50" fill="none" stroke="darkgray" />
+	<path d="M 70 70 a 50 50 0 0 0 50 50 v -50 z" stroke="black" stroke-width="2" fill="orange" fill-opacity="0.5" />
+	<circle cx="70" cy="70" r="5" fill="yellow" stroke="black" stroke-width="2" />
+	</g>
+	
+	<g transform="translate(0, 170)">
+	<circle cx="120" cy="70" r="50" fill="none" stroke="darkgray" />
+	<circle cx="70" cy="120" r="50" fill="none" stroke="darkgray" />
+	<path d="M 70 70 a 50 50 0 1 1 50 50 v -50 z" stroke="black" stroke-width="2" fill="green" fill-opacity="0.5" />
+	<circle cx="70" cy="70" r="5" fill="yellow" stroke="black" stroke-width="2" />
+	</g>
+	
+	<g transform="translate(170, 170)">
+	<circle cx="120" cy="70" r="50" fill="none" stroke="darkgray" />
+	<circle cx="70" cy="120" r="50" fill="none" stroke="darkgray" />
+	<path d="M 70 70 a 50 50 0 1 0 50 50 v -50 z" stroke="black" stroke-width="2" fill="red" fill-opacity="0.4" />
+	<circle cx="70" cy="70" r="5" fill="yellow" stroke="black" stroke-width="2" />
+	</g>
+	
+	<g transform="translate(-30, 350)">
+	<circle cx="120" cy="70" r="50" fill="none" stroke="darkgray" />
+	<circle cx="110" cy="80" r="50" fill="none" stroke="darkgray" />
+	<path d="M 79 40 A 50 50 0 1 0 151 108 z" stroke="black" stroke-width="2" fill="blue" fill-opacity="0.4" />
+	<circle cx="79" cy="40" r="5" fill="yellow" stroke="black" stroke-width="2" />
+	</g>
+	
+	<g transform="translate(140, 350)">
+	<circle cx="120" cy="70" r="50" fill="none" stroke="darkgray" />
+	<circle cx="110" cy="80" r="50" fill="none" stroke="darkgray" />
+	<path d="M 79 40 A 50 50 0 0 0 151 108 z" stroke="black" stroke-width="2" fill="orange" fill-opacity="0.4" />
+	<circle cx="79" cy="40" r="5" fill="yellow" stroke="black" stroke-width="2" />
+	</g>
+	
+	<g transform="translate(-30, 490)">
+	<circle cx="120" cy="70" r="50" fill="none" stroke="darkgray" />
+	<circle cx="110" cy="80" r="50" fill="none" stroke="darkgray" />
+	<path d="M 79 40 A 50 50 0 1 1 151 108 z" stroke="black" stroke-width="2" fill="green" fill-opacity="0.4" />
+	<circle cx="79" cy="40" r="5" fill="yellow" stroke="black" stroke-width="2" />
+	</g>
+	
+	<g transform="translate(140, 490)">
+	<circle cx="120" cy="70" r="50" fill="none" stroke="darkgray" />
+	<circle cx="110" cy="80" r="50" fill="none" stroke="darkgray" />
+	<path d="M 79 40 A 50 50 0 0 1 151 108 z" stroke="black" stroke-width="2" fill="red" fill-opacity="0.4" />
+	<circle cx="79" cy="40" r="5" fill="yellow" stroke="black" stroke-width="2" />
+	</g>
+	
+</svg>

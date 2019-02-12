@@ -182,10 +182,12 @@
 		D9778E5C1E6ED66300FF6EBB /* shapes.svg in Resources */ = {isa = PBXBuildFile; fileRef = D965B5811E3C48C6003E859E /* shapes.svg */; };
 		D97AD81A21BE40A700F7DD10 /* Parser.XML.GradientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D97AD81921BE40A700F7DD10 /* Parser.XML.GradientTests.swift */; };
 		D97AD81B21BE40A700F7DD10 /* Parser.XML.GradientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D97AD81921BE40A700F7DD10 /* Parser.XML.GradientTests.swift */; };
+		D97C36582212194F006D28D2 /* LayerTree.Builder.Path.Arc.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9ACD7A4220FDF79009717CF /* LayerTree.Builder.Path.Arc.swift */; };
 		D9A843931E85F1C1002A804B /* quad.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9A843921E85F1C1002A804B /* quad.svg */; };
 		D9A843941E85F1C1002A804B /* quad.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9A843921E85F1C1002A804B /* quad.svg */; };
 		D9A843951E8611D6002A804B /* curves.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9A843901E855672002A804B /* curves.svg */; };
 		D9A843961E8611D7002A804B /* curves.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9A843901E855672002A804B /* curves.svg */; };
+		D9ACD7A5220FDF79009717CF /* LayerTree.Builder.Path.Arc.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9ACD7A4220FDF79009717CF /* LayerTree.Builder.Path.Arc.swift */; };
 		D9BA810021B9C5E5005159E7 /* CommandLine.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9BA80FF21B9C5E5005159E7 /* CommandLine.swift */; };
 		D9BA810221B9C624005159E7 /* CommandLine.Arguments.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9BA810121B9C624005159E7 /* CommandLine.Arguments.swift */; };
 		D9BA810521B9C665005159E7 /* CommandLine.ArgumentsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9BA810421B9C665005159E7 /* CommandLine.ArgumentsTests.swift */; };
@@ -340,6 +342,7 @@
 		D97AD81921BE40A700F7DD10 /* Parser.XML.GradientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Parser.XML.GradientTests.swift; sourceTree = "<group>"; };
 		D9A843901E855672002A804B /* curves.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = curves.svg; sourceTree = "<group>"; };
 		D9A843921E85F1C1002A804B /* quad.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = quad.svg; sourceTree = "<group>"; };
+		D9ACD7A4220FDF79009717CF /* LayerTree.Builder.Path.Arc.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LayerTree.Builder.Path.Arc.swift; sourceTree = "<group>"; };
 		D9BA80FF21B9C5E5005159E7 /* CommandLine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandLine.swift; sourceTree = "<group>"; };
 		D9BA810121B9C624005159E7 /* CommandLine.Arguments.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandLine.Arguments.swift; sourceTree = "<group>"; };
 		D9BA810421B9C665005159E7 /* CommandLine.ArgumentsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandLine.ArgumentsTests.swift; sourceTree = "<group>"; };
@@ -434,6 +437,7 @@
 				D90DB3A7219CCC4000D374D2 /* LayerTree.swift */,
 				D925CC6921A4B7E700C8897B /* LayerTree.Builder.Layer.swift */,
 				D90DB3A8219CCC4000D374D2 /* LayerTree.Builder.Path.swift */,
+				D9ACD7A4220FDF79009717CF /* LayerTree.Builder.Path.Arc.swift */,
 				D925CC6021A49C9C00C8897B /* LayerTree.Builder.Shape.swift */,
 				D90DB3AA219CCC4000D374D2 /* LayerTree.AB.Builder.swift */,
 				D90DB3AB219CCC4000D374D2 /* LayerTree.Color.swift */,
@@ -1014,6 +1018,7 @@
 				D90DB3DA219CCCDA00D374D2 /* LayerTree.Builder.Path.swift in Sources */,
 				D90DB3C2219CCC4500D374D2 /* Renderer.CoreGraphics.swift in Sources */,
 				D90DB3B1219CCC4100D374D2 /* LayerTree.Transform.swift in Sources */,
+				D97C36582212194F006D28D2 /* LayerTree.Builder.Path.Arc.swift in Sources */,
 				D90DB44F219CD27800D374D2 /* Parser.XML.swift in Sources */,
 				D90DB453219CD27800D374D2 /* Parser.XML.Path.swift in Sources */,
 				D90DB457219CD27800D374D2 /* Parser.XML.Attributes.swift in Sources */,
@@ -1091,6 +1096,7 @@
 				D90DB3AE219CCC4100D374D2 /* LayerTree.Shape.swift in Sources */,
 				D90DB431219CD1C600D374D2 /* DOM.Text.swift in Sources */,
 				D90DB408219CD06800D374D2 /* XML.Parser.Scanner.swift in Sources */,
+				D9ACD7A5220FDF79009717CF /* LayerTree.Builder.Path.Arc.swift in Sources */,
 				D90DB3C0219CCC4100D374D2 /* LayerTree.CommandGenerator.swift in Sources */,
 				D90DB3F8219CCF6A00D374D2 /* Stack.swift in Sources */,
 				D90DB3A2219CCBBD00D374D2 /* Renderer.LayerTree.swift in Sources */,

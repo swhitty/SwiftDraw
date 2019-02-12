@@ -42,16 +42,16 @@ extension LayerTree.Builder {
         let path = Path()
         
         for s in element.segments {
-            let segment = try createSegment(from: s,
+            let segments = try makeSegments(from: s,
                                             last: path.location ?? Point.zero,
                                             previous: path.lastControl)
-            path.segments.append(segment)
+            path.segments.append(contentsOf: segments)
         }
         
         return path
     }
     
-    static func createSegment(from segment: DOM.Path.Segment, last point: Point, previous control: Point?) throws -> Path.Segment {
+    static func makeSegment(from segment: DOM.Path.Segment, last point: Point, previous control: Point?) -> Path.Segment? {
         if let s = createMove(from: segment, last: point) {
             return s
         } else if let s = createLine(from: segment, last: point) {
@@ -68,12 +68,20 @@ extension LayerTree.Builder {
             return s
         } else if let s = createQuadraticSmooth(from: segment, last: point, previous: control ?? point) {
             return s
-        } else if let s = createArc(from: segment, last: point) {
-            return s
         } else if let s = createClose(from: segment) {
             return s
         }
         
+        return nil
+    }
+
+    static func makeSegments(from segment: DOM.Path.Segment, last point: Point, previous control: Point?) throws -> [Path.Segment] {
+        if let s = createArc(from: segment, last: point) {
+            return s
+        } else if let s = makeSegment(from: segment, last: point, previous: control) {
+            return [s]
+        }
+
         throw LayerTree.Error.unsupported(segment)
     }
     
@@ -173,10 +181,9 @@ extension LayerTree.Builder {
         
         let cp1 = Point(origin.x + (controlPoint.x - origin.x) * ratio,
                         origin.y + (controlPoint.y - origin.y) * ratio)
-        
-        
+
         let cpX = (final.x - origin.x)*Float(1.0/3.0)
-        
+
         let cp2 = Point(cp1.x + cpX,
                         cp1.y)
         
@@ -200,16 +207,23 @@ extension LayerTree.Builder {
         return .cubic(to: final, control1: cp1, control2: cp2)
     }
     
-    static func createArc(from segment: DOM.Path.Segment, last point: Point) -> Path.Segment? {
+    static func createArc(from segment: DOM.Path.Segment, last point: Point) -> [Path.Segment]? {
         guard case .arc(let a) = segment else { return nil }
 
-        //arc is currently unsupported so we simply create a line to the destination without any arc.
-        let p = Point(a.x, a.y)
+        let p: Point
 
         switch a.space {
-        case .relative: return .line(to: p.absolute(from: point))
-        case .absolute: return .line(to: p)
+        case .relative: p = Point(a.x, a.y).absolute(from: point)
+        case .absolute: p = Point(a.x, a.y)
         }
+
+        let curves = makeCubic(from: point, to: p,
+                               large: a.large, sweep: a.sweep,
+                               rx: LayerTree.Float(a.rx),
+                               ry: LayerTree.Float(a.ry),
+                               rotation: LayerTree.Float(a.rotate))
+
+        return curves.map { .cubic(to: $0.p, control1: $0.cp1, control2: $0.cp2) }
     }
     
     static func createClose(from segment: DOM.Path.Segment) -> Path.Segment? {
