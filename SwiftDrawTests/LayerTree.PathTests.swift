@@ -38,6 +38,24 @@ final class LayerTreePathTests: XCTestCase {
     
     let twoThirds = Float(2.0/3.0)
 
+
+    func testLocation() {
+        let path = Path()
+        XCTAssertNil(path.location)
+
+        path.segments.append(move(110, 90))
+        XCTAssertEqual(path.location, Point(110, 90))
+
+        path.segments.append(line(200, 200))
+        XCTAssertEqual(path.location, Point(200, 200))
+
+        path.segments.append(.cubic(to: Point(300, 300), control1: Point(200, 200), control2: Point(250, 250)))
+        XCTAssertEqual(path.location, Point(300, 300))
+
+        path.segments.append(.close)
+        XCTAssertEqual(path.location, Point(110, 90))
+    }
+
     func testMove() {
 
         var m = LayerTree.Builder.createMove(from: .move(x: 10, y: 10, space: .absolute), last: .zero)

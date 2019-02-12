@@ -43,7 +43,7 @@ extension LayerTree.Builder {
         
         for s in element.segments {
             let segment = try createSegment(from: s,
-                                            last: path.last ?? Point.zero,
+                                            last: path.location ?? Point.zero,
                                             previous: path.lastControl)
             path.segments.append(segment)
         }
@@ -222,54 +222,5 @@ extension LayerTree.Builder {
 extension LayerTree.Point {
     func absolute(from base: LayerTree.Point) -> LayerTree.Point {
         return LayerTree.Point(base.x + x, base.y + y)
-    }
-}
-
-extension LayerTree.Path {
-    var lastControl: LayerTree.Point? {
-        guard let lastSegment = segments.last else { return nil }
-        switch lastSegment {
-        case .cubic(_, _, let p): return p
-        default: return nil
-        }
-    }
-    
-    var last: LayerTree.Point? {
-        guard let last = segments.last?.last else {
-            return lastStart
-        }
-
-        return last
-    }
-
-    var lastStart: LayerTree.Point? {
-        let rev = segments.reversed().dropFirst()
-        guard
-            let closeIdx = rev.index(where: { $0.isClose }),
-            closeIdx != rev.startIndex else {
-                return segments.first?.last
-        }
-
-        let point = rev.index(before: closeIdx)
-        return rev[point].last
-    }
-}
-
-private extension LayerTree.Path.Segment {
-
-    var isClose: Bool {
-        guard case .close = self else {
-            return false
-        }
-        return true
-    }
-
-    var last: LayerTree.Point? {
-        switch self {
-        case .move(to: let p): return p
-        case .line(let p): return p
-        case .cubic(let p, _, _): return p
-        case .close: return nil
-        }
     }
 }
