@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="2000" height="1000">
+	 
+
+ 	<rect width="2000" height="1000" fill="rgb(1, 100, 146)" />
+ 
+
+	
+	
+	<rect x="-30" y="100" width="200" height="13" fill="black" transform="skewX(40)" />	
+	<path d="M 530 131 a 40 40 0 0 1 60 0 z" fill="white" />
+	<path d="M 200 100 h 250 a 70 40 0 0 1 120 20 a 220 170 0 0  1 -170 100 z" fill="rgb(207, 21, 60)" />
+	<path d="M 450 120 q -125 0 -125 125 v 150 q 125 0 125 -125 z" /> 
+	<circle cx="538" cy="114" r="5" fill="black"/>
+
+
+  <g transform="translate(300,350) scale(0.75)">
+	<path d="M 530 131 a 40 40 0 0 1 60 0 z" fill="black" />
+	
+	<use xlink:href="#bird1" x="0" y="0" fill="white" />
+	<use xlink:href="#bird1" x="0" y="0" fill="black" clip-path="url(#head1)" />
+	<use xlink:href="#bird1" x="0" y="0" fill="rgb(248, 198, 30)" clip-path="url(#face1)" />
+
+	<rect x="-30" y="100" width="390" height="13" fill="black" transform="skewX(40)" />	
+	<path d="M 450 113 h -100 q -50 0 -50 -50 v -200 q 150 0 150 150 z" fill="rgb(80, 112, 143)" /> 
+	<circle cx="538" cy="114" r="5" fill="black"/>
+	
+	<defs>
+		<path id="bird1" d="M 200 100 h 250 a 70 40 0 0 1 120 20 a 220 300 0 0 1 -340 0" />
+	</defs>
+	
+	<clipPath id="head1">
+			<path d="M 580 200 h -150 v -15 h -15 v -15 h -15 v -15 h -15 v -15 h -15 v -100 h 200 z" />
+			
+			<rect x="400" y="190" width="10" height="10" />	
+			<rect x="380" y="190" width="10" height="10" />	
+			<rect x="360" y="190" width="10" height="10" />	
+			
+			<rect x="380" y="170" width="10" height="10" />	
+			<rect x="360" y="170" width="10" height="10" />	
+			<rect x="340" y="170" width="10" height="10" />
+			
+			<rect x="360" y="150" width="10" height="10" />	
+	</clipPath>
+	
+	<clipPath id="face1">
+			<path d="M 460 112 q 50 -35 100 0 z" />
+			<path d="M 460 115 c 0 35 35 50 100 0 z" />
+	</clipPath>
+	</g>
+ 
+</svg>

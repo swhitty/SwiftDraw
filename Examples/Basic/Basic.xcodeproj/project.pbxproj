@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		D90523452217927F00B3B94F /* mystery.svg in Resources */ = {isa = PBXBuildFile; fileRef = D90523442217927F00B3B94F /* mystery.svg */; };
 		D918D26D22122A7300097C9A /* arc2.svg in Resources */ = {isa = PBXBuildFile; fileRef = D918D26C22122A7300097C9A /* arc2.svg */; };
 		D956E1B122103A0C00C5ADA2 /* identity.svg in Resources */ = {isa = PBXBuildFile; fileRef = D956E1B022103A0C00C5ADA2 /* identity.svg */; };
 		D9618466220FDD1100C59D9B /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9618465220FDD1100C59D9B /* AppDelegate.swift */; };
@@ -45,6 +46,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		D90523442217927F00B3B94F /* mystery.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = mystery.svg; sourceTree = "<group>"; };
 		D918D26C22122A7300097C9A /* arc2.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = arc2.svg; sourceTree = "<group>"; };
 		D956E1B022103A0C00C5ADA2 /* identity.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = identity.svg; sourceTree = "<group>"; };
 		D9618462220FDD1100C59D9B /* Basic.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Basic.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -115,6 +117,7 @@
 		D9ACD782220FDDE0009717CF /* Samples */ = {
 			isa = PBXGroup;
 			children = (
+				D90523442217927F00B3B94F /* mystery.svg */,
 				D9ACD783220FDDE0009717CF /* use.svg */,
 				D9ACD784220FDDE0009717CF /* path.svg */,
 				D9ACD785220FDDE0009717CF /* viewbox.svg */,
@@ -217,6 +220,7 @@
 				D9ACD79B220FDDE0009717CF /* arc.svg in Resources */,
 				D961846D220FDD1200C59D9B /* Assets.xcassets in Resources */,
 				D9ACD79D220FDDE0009717CF /* display.svg in Resources */,
+				D90523452217927F00B3B94F /* mystery.svg in Resources */,
 				D956E1B122103A0C00C5ADA2 /* identity.svg in Resources */,
 				D9ACD792220FDDE0009717CF /* path.svg in Resources */,
 				D9ACD79A220FDDE0009717CF /* mask.svg in Resources */,
