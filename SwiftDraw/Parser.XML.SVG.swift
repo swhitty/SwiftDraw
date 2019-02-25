@@ -84,17 +84,27 @@ extension XMLParser {
         defs.masks = try parseMasks(e)
         defs.linearGradients = try parseLinearGradients(e)
 
-        //TODO parse all children for all defs nodes
-        if let node = e.children.first( where: { $0.name == "defs" }) {
-            defs.elements = try parseDefsElements(node)
+        defs.elements = try findDefElements(within: e).reduce(into: [String: DOM.GraphicsElement]()) {
+            let defs = try parseDefsElements($1)
+            $0.merge(defs, uniquingKeysWith: { lhs, _ in lhs })
         }
 
         return defs
     }
 
+    func findDefElements(within element: XML.Element) -> [XML.Element] {
+        return element.children.reduce(into: [XML.Element]()) {
+            if $1.name == "defs" {
+                $0.append($1)
+            } else {
+                $0.append(contentsOf: findDefElements(within: $1))
+            }
+        }
+    }
+
     func parseDefsElements(_ e: XML.Element) throws -> [String: DOM.GraphicsElement] {
         guard e.name == "defs" else {
-                throw Error.invalid
+            throw Error.invalid
         }
         
         var defs = Dictionary<String, DOM.GraphicsElement>()

@@ -122,4 +122,8 @@ extension XML.Element {
     convenience init(_ name: String, style: String) {
         self.init(name: name, attributes: ["style": style])
     }
+
+    convenience init(_ name: String, id: String, style: String) {
+        self.init(name: name, attributes: ["id": id, "style": style])
+    }
 }

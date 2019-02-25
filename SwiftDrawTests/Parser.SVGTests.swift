@@ -97,4 +97,23 @@ final class SVGTests: XCTestCase {
         XCTAssertEqual(parsed.childElements.count, 2)
     }
 
+    func testParseDefs() throws {
+        let svg = XML.Element(name: "svg")
+        let defs = XML.Element(name: "defs")
+        let g = XML.Element(name: "g")
+        svg.children.append(defs)
+        svg.children.append(g)
+
+        g.children.append(XML.Element("circle", id: "c2", style: "cx:0;cy:10;r:20"))
+        let defs1 = XML.Element(name: "defs")
+        g.children.append(defs1)
+        defs1.children.append(XML.Element("circle", id: "c3", style: "cx:0;cy:10;r:20"))
+
+        defs.children.append(XML.Element("circle", id: "c1", style: "cx:0;cy:10;r:20"))
+        svg.children.append(defs1)
+
+        let elements = try SwiftDraw.XMLParser().parseSVGDefs(svg).elements
+        XCTAssertEqual(elements.count, 2)
+    }
+
 }
