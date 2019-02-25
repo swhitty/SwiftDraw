@@ -4,9 +4,6 @@
 
  	<rect width="2000" height="1000" fill="rgb(1, 100, 146)" />
  
-
-	
-	
 	<rect x="-30" y="100" width="200" height="13" fill="black" transform="skewX(40)" />	
 	<path d="M 530 131 a 40 40 0 0 1 60 0 z" fill="white" />
 	<path d="M 200 100 h 250 a 70 40 0 0 1 120 20 a 220 170 0 0  1 -170 100 z" fill="rgb(207, 21, 60)" />
@@ -48,5 +45,36 @@
 			<path d="M 460 115 c 0 35 35 50 100 0 z" />
 	</clipPath>
 	</g>
+	
+  <g transform="translate(500,0) scale(0.9)">
+
+	<use xlink:href="#bird2" x="0" y="0" fill="rgb(178, 197, 209)" /> 
+	<rect x="0" y="100" width="200" height="13" fill="rgb(46, 59, 50)" transform="skewX(40)" />	
+	<use xlink:href="#bird2" x="0" y="0" fill="rgb(46, 59, 50)" clip-path="url(#top2)" /> 
+	<use xlink:href="#bird2" x="0" y="0" fill="black" clip-path="url(#face2)" /> 
+	<circle cx="545" cy="100" r="8.5" fill="rgb(46, 59, 50)"/>
+	<circle cx="545" cy="100" r="6" fill="black"/>
+	
+	<path d="M 450 113 h -75 q -75 0 -75 75 v 150 q 150 0 150 -150 z" /> 
+		<rect x="350" y="480" width="75" height="10" fill="white" transform="skewY(-35)" />	
+			<rect x="360" y="450" width="50" height="11" fill="white" transform="skewY(-35)" />	
+
+	<defs>
+		<path id="bird2" d="M 200 100 h 250 q 60 -60 120 0 
+										    a 50 40 0 0 1 22 12 l -25 2
+												a 220 400 0 0  1 -170 100 z" />
+	</defs>
+	
+	<clipPath id="top2">
+		<rect x="200" y="70" width="400" height="45" />	
+	</clipPath>
+	
+	<clipPath id="face2">
+		<polygon points="400,70 550,113 600,113, 600,70" />
+	</clipPath>
+	
+	</g>
+	
+	
  
 </svg>
