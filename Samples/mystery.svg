@@ -94,6 +94,25 @@
 		
 	</g>
 	
+  <g transform="translate(-40,175) scale(0.5)">
+		<use xlink:href="#bird4" x="0" y="0" fill="rgb(245, 245, 245)" />	
+		<use xlink:href="#face4" x="0" y="0" stroke="rgb(110,118,143)" fill="none" stroke-width="8"/>		
+		<rect x="520" y="100" width="25" height="20" fill="white" />	
+		<circle cx="533" cy="108" r="6" fill="black"/>
+		
+		<rect x="20" y="100" width="330" height="13" fill="rgb(90, 95, 60)" transform="skewX(40)" />	
+		<use xlink:href="#wing2" x="0" y="0" fill="rgb(124,144,185)" />
+		
+		<path d="M 570 105 a 50 40 0 0 1 22 12 l -31 2 l 5 -18 z" fill="rgb(110,118,143)" stroke="rgb(110,118,143)" stroke-width="3"/>
+			
+			
+		<defs>
+			<path id="bird4" d="M 200 100 h 250 a 70 40 0 0 1 120 5 a 220 300 0 0 1 -340 0" />
+			<path id="wing2" d="M 450 113 h -100 q -50 0 -50 -50 v -170 q 150 0 150 125 z" /> 
+			<path id="face4" d="M 450 108 v -8 a 70 40 0 0 1 112 0 v 7 z" />
+		</defs>		
+	</g>
+	
 	
  
 </svg>
