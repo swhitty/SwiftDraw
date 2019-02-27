@@ -12,67 +12,86 @@
 
 
   <g transform="translate(300,350) scale(0.75)">
-	<path d="M 530 131 a 40 40 0 0 1 60 0 z" fill="black" />
+		<path d="M 530 131 a 40 40 0 0 1 60 0 z" fill="black" />
 	
-	<use xlink:href="#bird1" x="0" y="0" fill="white" />
-	<use xlink:href="#bird1" x="0" y="0" fill="black" clip-path="url(#head1)" />
-	<use xlink:href="#bird1" x="0" y="0" fill="rgb(248, 198, 30)" clip-path="url(#face1)" />
+		<use xlink:href="#bird1" x="0" y="0" fill="white" />
+		<use xlink:href="#bird1" x="0" y="0" fill="black" clip-path="url(#head1)" />
+		<use xlink:href="#bird1" x="0" y="0" fill="rgb(248, 198, 30)" clip-path="url(#face1)" />
 
-	<rect x="-30" y="100" width="390" height="13" fill="black" transform="skewX(40)" />	
-	<path d="M 450 113 h -100 q -50 0 -50 -50 v -200 q 150 0 150 150 z" fill="rgb(80, 112, 143)" /> 
-	<circle cx="538" cy="114" r="5" fill="black"/>
+		<rect x="-30" y="100" width="390" height="13" fill="black" transform="skewX(40)" />	
+		<use xlink:href="#wing1" x="0" y="0" fill="rgb(80, 112, 143)" />
+		<path d="M 450 113 h -100 q -50 0 -50 -50 v -200 q 150 0 150 150 z" fill="rgb(80, 112, 143)" /> 
+		<circle cx="538" cy="114" r="5" fill="black"/>
 	
-	<defs>
-		<path id="bird1" d="M 200 100 h 250 a 70 40 0 0 1 120 20 a 220 300 0 0 1 -340 0" />
-	</defs>
+		<defs>
+			<path id="bird1" d="M 200 100 h 250 a 70 40 0 0 1 120 20 a 220 300 0 0 1 -340 0" />
+			<path id="wing1" d="M 450 113 h -100 q -50 0 -50 -50 v -200 q 150 0 150 150 z" /> 
+		</defs>
 	
-	<clipPath id="head1">
-			<path d="M 580 200 h -150 v -15 h -15 v -15 h -15 v -15 h -15 v -15 h -15 v -100 h 200 z" />
+		<clipPath id="head1">
+				<path d="M 580 200 h -150 v -15 h -15 v -15 h -15 v -15 h -15 v -15 h -15 v -100 h 200 z" />
 			
-			<rect x="400" y="190" width="10" height="10" />	
-			<rect x="380" y="190" width="10" height="10" />	
-			<rect x="360" y="190" width="10" height="10" />	
+				<rect x="400" y="190" width="10" height="10" />	
+				<rect x="380" y="190" width="10" height="10" />	
+				<rect x="360" y="190" width="10" height="10" />	
 			
-			<rect x="380" y="170" width="10" height="10" />	
-			<rect x="360" y="170" width="10" height="10" />	
-			<rect x="340" y="170" width="10" height="10" />
+				<rect x="380" y="170" width="10" height="10" />	
+				<rect x="360" y="170" width="10" height="10" />	
+				<rect x="340" y="170" width="10" height="10" />
 			
-			<rect x="360" y="150" width="10" height="10" />	
-	</clipPath>
+				<rect x="360" y="150" width="10" height="10" />	
+		</clipPath>
 	
-	<clipPath id="face1">
-			<path d="M 460 112 q 50 -35 100 0 z" />
-			<path d="M 460 115 c 0 35 35 50 100 0 z" />
-	</clipPath>
+		<clipPath id="face1">
+				<path d="M 460 112 q 50 -35 100 0 z" />
+				<path d="M 460 115 c 0 35 35 50 100 0 z" />
+		</clipPath>
 	</g>
 	
   <g transform="translate(500,0) scale(0.9)">
-
-	<use xlink:href="#bird2" x="0" y="0" fill="rgb(178, 197, 209)" /> 
-	<rect x="0" y="100" width="200" height="13" fill="rgb(46, 59, 50)" transform="skewX(40)" />	
-	<use xlink:href="#bird2" x="0" y="0" fill="rgb(46, 59, 50)" clip-path="url(#top2)" /> 
-	<use xlink:href="#bird2" x="0" y="0" fill="black" clip-path="url(#face2)" /> 
-	<circle cx="545" cy="100" r="8.5" fill="rgb(46, 59, 50)"/>
-	<circle cx="545" cy="100" r="6" fill="black"/>
+		<use xlink:href="#bird2" x="0" y="0" fill="rgb(178, 197, 209)" /> 
+		<rect x="0" y="100" width="200" height="13" fill="rgb(46, 59, 50)" transform="skewX(40)" />	
+		<use xlink:href="#bird2" x="0" y="0" fill="rgb(46, 59, 50)" clip-path="url(#top2)" /> 
+		<use xlink:href="#bird2" x="0" y="0" fill="black" clip-path="url(#face2)" /> 
+		<circle cx="545" cy="100" r="8.5" fill="rgb(46, 59, 50)"/>
+		<circle cx="545" cy="100" r="6" fill="black"/>
 	
-	<path d="M 450 113 h -75 q -75 0 -75 75 v 150 q 150 0 150 -150 z" /> 
+		<path d="M 450 113 h -75 q -75 0 -75 75 v 150 q 150 0 150 -150 z" /> 
 		<rect x="350" y="480" width="75" height="10" fill="white" transform="skewY(-35)" />	
-			<rect x="360" y="450" width="50" height="11" fill="white" transform="skewY(-35)" />	
+		<rect x="360" y="450" width="50" height="11" fill="white" transform="skewY(-35)" />	
 
-	<defs>
-		<path id="bird2" d="M 200 100 h 250 q 60 -60 120 0 
-										    a 50 40 0 0 1 22 12 l -25 2
-												a 220 400 0 0  1 -170 100 z" />
-	</defs>
+		<defs>
+			<path id="bird2" d="M 200 100 h 250 q 60 -60 120 0 
+											    a 50 40 0 0 1 22 12 l -25 2
+													a 180 270 0 0 1 -210 100 z" />
+		</defs>
 	
-	<clipPath id="top2">
-		<rect x="200" y="70" width="400" height="45" />	
-	</clipPath>
+		<clipPath id="top2">
+			<rect x="200" y="70" width="400" height="45" />	
+		</clipPath>
 	
-	<clipPath id="face2">
-		<polygon points="400,70 550,113 600,113, 600,70" />
-	</clipPath>
+		<clipPath id="face2">
+			<polygon points="400,70 550,113 600,113, 600,70" />
+		</clipPath>
+	</g>
 	
+  <g transform="translate(-50,500) scale(0.7)">
+		<use xlink:href="#bird2" x="0" y="0" fill="rgb(245, 210, 30)" />
+		<use xlink:href="#bird2" x="0" y="0" fill="black" clip-path="url(#face3)" /> 
+		<use xlink:href="#bird2" x="0" y="0" fill="rgb(124,144,185)" clip-path="url(#beak3)" /> 
+		<rect x="5" y="100" width="340" height="13" fill="rgb(124,144,185)" transform="skewX(40)" />	
+		<rect x="83" y="100" width="150" height="13" fill="rgb(46, 59, 50)" transform="skewX(50)" />	
+		<use xlink:href="#wing1" x="0" y="0" fill="rgb(124,144,185)" />
+
+
+		<clipPath id="face3">
+			<circle cx="540" cy="105" r="6" />
+			<rect x="540" y="104" width="27" height="2.5" />	
+		</clipPath>
+		<clipPath id="beak3">
+			<circle cx="616" cy="105" r="50" />
+		</clipPath>
+		
 	</g>
 	
 	
