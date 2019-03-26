@@ -89,7 +89,7 @@ extension LayerTree {
         var color: Color
         var rule: FillRule
     }
-    
+
     struct TextAttributes: Equatable {
         var color: Color
         var fontName: String

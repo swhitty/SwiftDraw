@@ -34,6 +34,9 @@ import XCTest
 
 final class LayerTreeBuilderTests: XCTestCase {
 
+    typealias Shape = LayerTree.Shape
+    typealias Contents = LayerTree.Layer.Contents
+
     func testMakeViewBoxTransform() {
         var transform = LayerTree.Builder.makeTransform(for: nil, width: 100, height: 200)
         XCTAssertEqual(transform, [])
@@ -87,6 +90,19 @@ final class LayerTreeBuilderTests: XCTestCase {
         XCTAssertEqual(layer.contents.count, 2)
     }
 
+    func testDOMPatternMakesPattern() {
+        let builder = LayerTree.Builder(svg: DOM.SVG(width: 10, height: 10))
+
+        var element = DOM.Pattern(id: "hi", width: 5, height: 5)
+        element.childElements = [DOM.Circle(cx: 10, cy: 10, r: 5)]
+
+        let pattern = builder.makePattern(for: element)
+
+        let ellipse = Shape.ellipse(within: LayerTree.Rect(x: 5, y: 5, width: 10, height: 10))
+        let contents = Contents.shape(ellipse, .default, .default)
+        XCTAssertEqual(pattern.contents, [contents])
+    }
+
     func testStrokeAttributes() {
         var state = LayerTree.Builder.State()
         state.stroke = .rgbf(1.0, 0.0, 0.0)
@@ -106,5 +122,19 @@ final class LayerTreeBuilderTests: XCTestCase {
         state.strokeWidth = 0
         let att2 = LayerTree.Builder.createStrokeAttributes(with: state)
         XCTAssertEqual(att2.color, .none)
+    }
+}
+
+private extension LayerTree.StrokeAttributes {
+
+    static var `default`: LayerTree.StrokeAttributes {
+        return LayerTree.Builder.createStrokeAttributes(with: LayerTree.Builder.State())
+    }
+}
+
+private extension LayerTree.FillAttributes {
+
+    static var `default`: LayerTree.FillAttributes {
+        return LayerTree.Builder.createFillAttributes(with: LayerTree.Builder.State())
     }
 }

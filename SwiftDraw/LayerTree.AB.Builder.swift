@@ -160,11 +160,17 @@ extension LayerTree.Builder {
         let fill = LayerTree.Color.create(from: state.fill).withAlpha(state.fillOpacity)
         return LayerTree.FillAttributes(color: fill, rule: state.fillRule)
     }
-    
+
     static func makeTextAttributes(with state: State) -> LayerTree.TextAttributes {
         return .normal
     }
-    
+
+    func makePattern(for element: DOM.Pattern) -> LayerTree.Pattern {
+        let pattern = LayerTree.Pattern()
+        pattern.contents = element.childElements.compactMap { makeContents(from: $0, with: .init()) }
+        return pattern
+    }
+
     //current state of the render tree, updated as builder traverses child nodes
     struct State {
         var opacity: DOM.Float
