@@ -371,6 +371,7 @@ public func __allTests() -> [XCTestCaseEntry] {
         testCase(ParserTransformTests.__allTests),
         testCase(ParserXMLGradientTests.__allTests),
         testCase(ParserXMLPathTests.__allTests),
+        testCase(ParserXMLPatternTests.__allTests),
         testCase(ParserXMLTextTests.__allTests),
         testCase(RendererTests.__allTests),
         testCase(SAXParserTests.__allTests),

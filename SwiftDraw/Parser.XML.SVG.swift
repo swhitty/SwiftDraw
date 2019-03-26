@@ -81,8 +81,9 @@ extension XMLParser {
     func parseSVGDefs(_ e: XML.Element) throws -> DOM.SVG.Defs {
         var defs = DOM.SVG.Defs()
         defs.clipPaths = try parseClipPaths(e)
-        defs.masks = try parseMasks(e)
         defs.linearGradients = try parseLinearGradients(e)
+        defs.masks = try parseMasks(e)
+        defs.patterns = try parsePatterns(e)
 
         defs.elements = try findDefElements(within: e).reduce(into: [String: DOM.GraphicsElement]()) {
             let defs = try parseDefsElements($1)
@@ -165,5 +166,27 @@ extension XMLParser {
    
         let children = try parseContainerChildren(e)
         return DOM.Mask(id: id, childElements: children)
+    }
+
+    func parsePatterns(_ e: XML.Element) throws -> [DOM.Pattern] {
+        var patterns = [DOM.Pattern]()
+
+        for n in e.children {
+            if n.name == "pattern" {
+                patterns.append(try parsePattern(n))
+            } else {
+                patterns.append(contentsOf: try parsePatterns(n))
+            }
+        }
+        return patterns
+    }
+
+    func parsePattern(_ e: XML.Element) throws -> DOM.Pattern {
+        guard e.name == "pattern" else { throw Error.invalid }
+
+        let att = try parseAttributes(e)
+        var pattern = try parsePattern(att)
+        pattern.childElements = try parseContainerChildren(e)
+        return pattern
     }
 }

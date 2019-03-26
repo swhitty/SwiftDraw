@@ -1,8 +1,8 @@
 //
-//  ViewController.swift
+//  Parser.XML.Pattern.swift
 //  SwiftDraw
 //
-//  Created by Simon Whitty on 10/2/19.
+//  Created by Simon Whitty on 26/3/19.
 //  Copyright 2019 Simon Whitty
 //
 //  Distributed under the permissive zlib license
@@ -29,18 +29,25 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-import SwiftDraw
-import UIKit
 
-class ViewController: UIViewController {
+import Foundation
 
-    override func loadView() {
-        let imageView = UIImageView(frame: UIScreen.main.bounds)
-        imageView.image = UIImage(svgNamed: "pattern.svg")
-        imageView.contentMode = .scaleAspectFit
-        imageView.backgroundColor = .white
-        self.view = imageView
+extension XMLParser {
+
+    func parsePattern(_ att: AttributeParser) throws -> DOM.Pattern {
+
+        let id: String = try att.parseString("id")
+        let width: DOM.Coordinate = try att.parseCoordinate("width")
+        let height: DOM.Coordinate = try att.parseCoordinate("height")
+
+        var pattern = DOM.Pattern(id: id, width: width, height: height)
+        pattern.x = try att.parseCoordinate("x")
+        pattern.y = try att.parseCoordinate("y")
+
+        pattern.patternUnits = try att.parseRaw("patternUnits")
+        pattern.patternContentUnits = try att.parseRaw("patternContentUnits")
+
+        return pattern
     }
 
 }
-

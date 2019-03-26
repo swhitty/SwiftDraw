@@ -29,8 +29,8 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
+import Foundation
 @testable import SwiftDraw
-
 
 extension DOM {
     
@@ -125,5 +125,23 @@ extension XML.Element {
 
     convenience init(_ name: String, id: String, style: String) {
         self.init(name: name, attributes: ["id": id, "style": style])
+    }
+}
+
+
+extension DOM.SVG {
+
+    static func parse(fileNamed name: String, in bundle: Bundle = .test) throws -> DOM.SVG {
+        guard let url = bundle.url(forResource: name, withExtension: nil) else {
+            throw Error.missing
+        }
+
+        let parser = XMLParser(options: [.skipInvalidElements])
+        let element = try XML.SAXParser.parse(contentsOf: url)
+        return try parser.parseSVG(element)
+    }
+
+    enum Error: Swift.Error {
+        case missing
     }
 }

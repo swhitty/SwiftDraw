@@ -1,8 +1,8 @@
 //
-//  ViewController.swift
+//  DOM.Pattern.swift
 //  SwiftDraw
 //
-//  Created by Simon Whitty on 10/2/19.
+//  Created by Simon Whitty on 26/3/19.
 //  Copyright 2019 Simon Whitty
 //
 //  Distributed under the permissive zlib license
@@ -29,18 +29,35 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-import SwiftDraw
-import UIKit
+import Foundation
 
-class ViewController: UIViewController {
+extension DOM {
 
-    override func loadView() {
-        let imageView = UIImageView(frame: UIScreen.main.bounds)
-        imageView.image = UIImage(svgNamed: "pattern.svg")
-        imageView.contentMode = .scaleAspectFit
-        imageView.backgroundColor = .white
-        self.view = imageView
+    struct Pattern: ContainerElement {
+
+        var id: String
+        var x: Coordinate?
+        var y: Coordinate?
+        var width: Coordinate
+        var height: Coordinate
+
+        var patternUnits: Units?
+        var patternContentUnits: Units?
+
+        var childElements: [DOM.GraphicsElement] = []
+
+        init(id: String, width: Coordinate, height: Coordinate) {
+            self.id = id
+            self.width = width
+            self.height = height
+        }
     }
-
 }
 
+extension DOM.Pattern {
+
+    enum Units: String {
+        case userSpaceOnUse
+        case objectBoundingBox
+    }
+}

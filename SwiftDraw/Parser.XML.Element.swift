@@ -109,6 +109,7 @@ extension XMLParser {
     func parseContainerChildren(_ e: XML.Element) throws -> [DOM.GraphicsElement] {
         guard e.name == "svg" ||
               e.name == "clipPath" ||
+              e.name == "pattern" ||
               e.name == "mask" ||
               e.name == "defs" ||
               e.name == "switch" ||

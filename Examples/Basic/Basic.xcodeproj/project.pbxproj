@@ -30,6 +30,7 @@
 		D9ACD79E220FDDE0009717CF /* invalid.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9ACD790220FDDE0009717CF /* invalid.svg */; };
 		D9ACD7A1220FDE04009717CF /* SwiftDraw.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D9ACD7A0220FDE04009717CF /* SwiftDraw.framework */; };
 		D9ACD7A3220FDE19009717CF /* SwiftDraw.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = D9ACD7A0220FDE04009717CF /* SwiftDraw.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		D9D9EB2D224A3BCA006CF83C /* pattern.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9D9EB2C224A3BCA006CF83C /* pattern.svg */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -70,6 +71,7 @@
 		D9ACD78F220FDDE0009717CF /* display.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = display.svg; sourceTree = "<group>"; };
 		D9ACD790220FDDE0009717CF /* invalid.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = invalid.svg; sourceTree = "<group>"; };
 		D9ACD7A0220FDE04009717CF /* SwiftDraw.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = SwiftDraw.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		D9D9EB2C224A3BCA006CF83C /* pattern.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = pattern.svg; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -128,6 +130,7 @@
 				D9ACD789220FDDE0009717CF /* shapes.svg */,
 				D9ACD78A220FDDE0009717CF /* lines.svg */,
 				D9ACD78B220FDDE0009717CF /* starry.svg */,
+				D9D9EB2C224A3BCA006CF83C /* pattern.svg */,
 				D9ACD78C220FDDE0009717CF /* mask.svg */,
 				D9ACD78D220FDDE0009717CF /* arc.svg */,
 				D918D26C22122A7300097C9A /* arc2.svg */,
@@ -225,6 +228,7 @@
 				D9ACD792220FDDE0009717CF /* path.svg in Resources */,
 				D9ACD79A220FDDE0009717CF /* mask.svg in Resources */,
 				D9ACD794220FDDE0009717CF /* transform.svg in Resources */,
+				D9D9EB2D224A3BCA006CF83C /* pattern.svg in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

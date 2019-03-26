@@ -53,9 +53,10 @@ extension DOM {
         
         struct Defs {
             var clipPaths = [ClipPath]()
-            var masks = [Mask]()
             var linearGradients = [LinearGradient]()
-            
+            var masks = [Mask]()
+            var patterns = [Pattern]()
+
             var elements = [String: GraphicsElement]()
         }
     }
