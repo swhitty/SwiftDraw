@@ -84,8 +84,9 @@ final class ParserXMLPatternTests: XCTestCase {
         XCTAssertThrowsError(try XMLParser().parsePattern(node))
     }
 
-    #if !os(Linux)
+    #if XCODE
     func testParseFile() throws {
+
         let dom = try DOM.SVG.parse(fileNamed: "pattern.svg")
 
         XCTAssertEqual(dom.defs.patterns.count, 3)
