@@ -231,8 +231,14 @@ extension XMLParser {
         } else {
             el.strokeDashArray = try att.parseFloats("stroke-dasharray")
         }
-        
-        el.fill = try att.parseColor("fill")
+
+        do {
+            el.fill = try att.parseFill("fill")
+        } catch {
+            print(error)
+        }
+
+
         el.fillOpacity = try att.parsePercentage("fill-opacity")
         el.fillRule = try att.parseRaw("fill-rule")
         

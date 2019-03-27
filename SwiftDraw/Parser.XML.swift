@@ -58,6 +58,7 @@ protocol AttributeValueParser {
     func parseLength(_ value: String) throws -> DOM.Length
     func parseBool(_ value: String) throws -> DOM.Bool
     func parseColor(_ value: String) throws -> DOM.Color
+    func parseFill(_ value: String) throws -> DOM.Fill
     func parseUrl(_ value: String) throws -> DOM.URL
     func parseUrlSelector(_ value: String) throws -> DOM.URL
     func parsePoints(_ value: String) throws -> [DOM.Point]
@@ -108,7 +109,11 @@ extension AttributeParser {
     func parseColor(_ key: String) throws -> DOM.Color {
         return try parse(key) { return try parser.parseColor($0) }
     }
-    
+
+    func parseFill(_ key: String) throws -> DOM.Fill {
+        return try parse(key) { return try parser.parseFill($0) }
+    }
+
     func parseUrl(_ key: String) throws -> DOM.URL {
         return try parse(key) { return try parser.parseUrl($0) }
     }
@@ -172,7 +177,11 @@ extension AttributeParser {
     func parseColor(_ key: String) throws -> DOM.Color? {
         return try parse(key) { return try parser.parseColor($0) }
     }
-    
+
+    func parseFill(_ key: String) throws -> DOM.Fill? {
+        return try parse(key) { return try parser.parseFill($0) }
+    }
+
     func parseUrl(_ key: String) throws -> DOM.URL? {
         return try parse(key) { return try parser.parseUrl($0) }
     }

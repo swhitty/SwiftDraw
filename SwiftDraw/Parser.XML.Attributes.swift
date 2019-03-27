@@ -80,7 +80,7 @@ extension XMLParser {
 extension XMLParser {
     
     struct ValueParser: AttributeValueParser {
-        
+
         func parseFloat(_ value: String) throws -> DOM.Float {
             var scanner = XMLParser.Scanner(text: value)
             return try scanner.scanFloat()
@@ -127,7 +127,11 @@ extension XMLParser {
         func parseColor(_ value: String) throws -> DOM.Color {
             return try XMLParser().parseColor(value)
         }
-        
+
+        func parseFill(_ value: String) throws -> DOM.Fill {
+            return try XMLParser().parseFill(value)
+        }
+
         func parseUrl(_ value: String) throws -> DOM.URL {
             guard let url = URL(maybeData: value) else { throw XMLParser.Error.invalid }
             return url

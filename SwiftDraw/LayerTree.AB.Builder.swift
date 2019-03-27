@@ -157,7 +157,7 @@ extension LayerTree.Builder {
     }
     
     static func createFillAttributes(with state: State) -> LayerTree.FillAttributes {
-        let fill = LayerTree.Color.create(from: state.fill).withAlpha(state.fillOpacity)
+        let fill = LayerTree.Color.create(from: state.fill.makeColor()).withAlpha(state.fillOpacity)
         return LayerTree.FillAttributes(color: fill, rule: state.fillRule)
     }
 
@@ -183,8 +183,8 @@ extension LayerTree.Builder {
         var strokeLineJoin: DOM.LineJoin
         var strokeLineMiterLimit: DOM.Float
         var strokeDashArray: [DOM.Float]
-        
-        var fill: DOM.Color
+
+        var fill: DOM.Fill
         var fillOpacity: DOM.Float
         var fillRule: DOM.FillRule
         
@@ -201,7 +201,7 @@ extension LayerTree.Builder {
             strokeLineMiterLimit = 4.0
             strokeDashArray = []
             
-            fill = .keyword(.black)
+            fill = .color(.keyword(.black))
             fillOpacity = 1.0
             fillRule = .evenodd
         }
@@ -219,7 +219,7 @@ extension LayerTree.Builder {
         state.strokeLineCap = attributes.strokeLineCap ?? existing.strokeLineCap
         state.strokeLineJoin = attributes.strokeLineJoin ?? existing.strokeLineJoin
         state.strokeDashArray = attributes.strokeDashArray ?? existing.strokeDashArray
-        
+
         state.fill = attributes.fill ?? existing.fill
         state.fillOpacity = attributes.fillOpacity ?? existing.fillOpacity
         state.fillRule = attributes.fillRule ?? existing.fillRule
@@ -268,5 +268,19 @@ extension LayerTree.Builder {
     
     static func createTransforms(from transforms: [DOM.Transform]) -> [LayerTree.Transform] {
         return transforms.flatMap{ createTransform(for: $0) }
+    }
+}
+
+
+
+private extension DOM.Fill {
+
+    func makeColor() -> DOM.Color {
+        switch self {
+        case .color(let c):
+            return c
+        case .url:
+            return .keyword(.black)
+        }
     }
 }

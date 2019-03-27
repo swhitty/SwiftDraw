@@ -93,6 +93,11 @@ final class ParserXMLPatternTests: XCTestCase {
         XCTAssertNotNil(dom.defs.patterns.first(where: { $0.id == "checkerboard" }))
         XCTAssertNotNil(dom.defs.patterns.first(where: { $0.id == "pattern1" }))
         XCTAssertNotNil(dom.defs.patterns.first(where: { $0.id == "pattern2" }))
+
+        XCTAssertEqual(dom.childElements.count, 3)
+//        XCTAssertNotNil(dom.childElements[0].fill)
+//        XCTAssertNotNil(dom.childElements[1].fill)
+//        XCTAssertNotNil(dom.childElements[2].fill)
     }
     #endif
 }

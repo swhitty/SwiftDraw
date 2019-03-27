@@ -50,7 +50,12 @@ extension DOM {
             self.y = y
         }
     }
-    
+
+    enum Fill: Equatable {
+        case url(URL)
+        case color(DOM.Color)
+    }
+
     enum FillRule: String {
         case nonzero
         case evenodd

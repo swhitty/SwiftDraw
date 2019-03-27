@@ -46,7 +46,25 @@ extension XMLParser {
         
         throw Error.invalid
     }
-    
+
+    func parseFill(_ data: String) throws -> DOM.Fill {
+        if let c = try parseColorRGB(data: data) {
+            return .color(c)
+        } else if let c = try parseColorHex(data: data) {
+            return .color(c)
+        } else if let c = parseColorKeyword(data: data) {
+            return .color(c)
+        } else if let c = parseColorNone(data: data) {
+            return .color(c)
+        } else if let c = parseColorNone(data: data) {
+            return .color(c)
+        } else if let url = try parseURLSelector(data: data) {
+            return .url(url)
+        }
+
+        throw Error.invalid
+    }
+
     private func parseColorNone(data: String) -> DOM.Color? {
         if data.trimmingCharacters(in: .whitespaces) == "none" {
             return DOM.Color.none // .none resolves to Optional.none
@@ -71,6 +89,24 @@ extension XMLParser {
         }
         
         return try parseColorRGBi(data: data)
+    }
+
+    private func parseURLSelector(data: String) throws -> DOM.URL? {
+        var scanner = XMLParser.Scanner(text: data)
+        guard (try? scanner.scanString("url(")) == true else {
+            return nil
+        }
+
+        let urlText = try scanner.scanString(upTo: ")")
+        _ = try? scanner.scanString(")")
+
+        let urlTrimmed = urlText.trimmingCharacters(in: .whitespaces)
+
+        guard scanner.isEOF, let url = URL(string: urlTrimmed) else {
+            throw XMLParser.Error.invalid
+        }
+
+        return url
     }
     
     private func parseColorRGBi(data: String) throws -> DOM.Color {

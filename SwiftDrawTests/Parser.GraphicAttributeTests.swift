@@ -77,7 +77,7 @@ final class ParserGraphicAttributeTests: XCTestCase {
         XCTAssertEqual(parsed.strokeLineCap, .butt)
         XCTAssertEqual(parsed.strokeLineJoin, .miter)
         XCTAssertEqual(parsed.strokeDashArray!, [1, 5, 10])
-        XCTAssertEqual(parsed.fill, .keyword(.purple))
+        XCTAssertEqual(parsed.fill, .color(.keyword(.purple)))
         XCTAssertEqual(parsed.fillOpacity, 0.25)
         XCTAssertEqual(parsed.fillRule, .evenodd)
         XCTAssertEqual(parsed.transform!, [.scale(sx: 15, sy: 15)])
@@ -92,7 +92,7 @@ final class ParserGraphicAttributeTests: XCTestCase {
         let circle = parsed as? DOM.Circle
         XCTAssertNotNil(circle)
         XCTAssertEqual(circle?.clipPath?.fragment, "cp1")
-        XCTAssertEqual(circle?.fill, .keyword(.black))
+        XCTAssertEqual(circle?.fill, .color(.keyword(.black)))
         XCTAssertEqual(circle?.strokeWidth, 2)
     }
     
