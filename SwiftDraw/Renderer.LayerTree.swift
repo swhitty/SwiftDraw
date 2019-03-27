@@ -82,7 +82,7 @@ struct LayerTreeProvider: RendererTypeProvider {
         return [shape]
     }
 
-    func createPattern(from pattern: LayerTree.Pattern) -> LayerTreeTypes.Pattern {
+    func createPattern(from pattern: LayerTree.Pattern, contents: [RendererCommand<Types>]) -> LayerTreeTypes.Pattern {
         return pattern
     }
 

@@ -9,16 +9,16 @@
 			<rect x="32" y="32" width="32" height="32" fill="#404040" />
 		</pattern>
 
-	 	<pattern id="pattern1" width="32" height="32" patternUnits="userSpaceOnUse" patternContentUnits="userSpaceOnUse">
-			<circle cx="16" cy="16" r="6" fill="#34D3F2"/>
+	 	<pattern id="pattern1" width="0.3333" height="0.3333" patternUnits="objectBoundingBox" patternContentUnits="objectBoundingBox">
+			<circle cx=".1666" cy=".1666" r=".1" fill="#34D3F2"/>
 	 	</pattern>
 		
-	 	<pattern id="pattern2" width="32" height="32" patternUnits="userSpaceOnUse" patternContentUnits="userSpaceOnUse">
-			<circle cx="16" cy="16" r="6" fill="#8C67C2"/>
+	 	<pattern id="pattern2" width="32" height="32" patternUnits="userSpaceOnUse" patternContentUnits="objectBoundingBox">
+			<circle cx=".1666" cy=".1666" r=".1" fill="#8C67C2"/>
 	 	</pattern>
 	 </defs>
 
 	 <rect x="0" y="0" width="256" height="256" fill="url(#checkerboard)" />
 	 <rect x="32" y="32" width="96" height="96" fill="url(#pattern1)" />
-	 <rect x="128" y="128" width="64" height="64" fill="url(#pattern2)" />
+	 <rect x="128" y="128 " width="64" height="64" fill="url(#pattern2)" />
 </svg>

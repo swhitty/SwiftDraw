@@ -176,6 +176,8 @@
 		D962D2A21E6ECE2000B825C6 /* SwiftDraw-macOS.h in Headers */ = {isa = PBXBuildFile; fileRef = D962D2A11E6ECE2000B825C6 /* SwiftDraw-macOS.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		D965B5821E3C48C6003E859E /* shapes.svg in Resources */ = {isa = PBXBuildFile; fileRef = D965B5811E3C48C6003E859E /* shapes.svg */; };
 		D965B5871E3C5CF8003E859E /* starry.svg in Resources */ = {isa = PBXBuildFile; fileRef = D965B5851E3C5C87003E859E /* starry.svg */; };
+		D9693D7E224C42C000A82949 /* CGPattern+Closure.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9693D7D224C42C000A82949 /* CGPattern+Closure.swift */; };
+		D9693D7F224C42C000A82949 /* CGPattern+Closure.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9693D7D224C42C000A82949 /* CGPattern+Closure.swift */; };
 		D96E22FB21C2690D00CCD17E /* LayerTree.CommandGeneratorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D96E22FA21C2690D00CCD17E /* LayerTree.CommandGeneratorTests.swift */; };
 		D96E22FC21C2690D00CCD17E /* LayerTree.CommandGeneratorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D96E22FA21C2690D00CCD17E /* LayerTree.CommandGeneratorTests.swift */; };
 		D9778E5B1E6ED66300FF6EBB /* starry.svg in Resources */ = {isa = PBXBuildFile; fileRef = D965B5851E3C5C87003E859E /* starry.svg */; };
@@ -348,6 +350,7 @@
 		D962D2A11E6ECE2000B825C6 /* SwiftDraw-macOS.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "SwiftDraw-macOS.h"; sourceTree = "<group>"; };
 		D965B5811E3C48C6003E859E /* shapes.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = shapes.svg; sourceTree = "<group>"; };
 		D965B5851E3C5C87003E859E /* starry.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = starry.svg; sourceTree = "<group>"; };
+		D9693D7D224C42C000A82949 /* CGPattern+Closure.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CGPattern+Closure.swift"; sourceTree = "<group>"; };
 		D96E22FA21C2690D00CCD17E /* LayerTree.CommandGeneratorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LayerTree.CommandGeneratorTests.swift; sourceTree = "<group>"; };
 		D97AD81921BE40A700F7DD10 /* Parser.XML.GradientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Parser.XML.GradientTests.swift; sourceTree = "<group>"; };
 		D9A843901E855672002A804B /* curves.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = curves.svg; sourceTree = "<group>"; };
@@ -499,6 +502,7 @@
 			isa = PBXGroup;
 			children = (
 				D90DB3EB219CCEDE00D374D2 /* CGPath+Segment.swift */,
+				D9693D7D224C42C000A82949 /* CGPattern+Closure.swift */,
 				D90DB3EC219CCEDE00D374D2 /* URL+Data.swift */,
 			);
 			name = Extensions;
@@ -1046,6 +1050,7 @@
 				D97C36582212194F006D28D2 /* LayerTree.Builder.Path.Arc.swift in Sources */,
 				D9D9EB28224A3B4F006CF83C /* DOM.Pattern.swift in Sources */,
 				D90DB44F219CD27800D374D2 /* Parser.XML.swift in Sources */,
+				D9693D7F224C42C000A82949 /* CGPattern+Closure.swift in Sources */,
 				D90DB453219CD27800D374D2 /* Parser.XML.Path.swift in Sources */,
 				D90DB457219CD27800D374D2 /* Parser.XML.Attributes.swift in Sources */,
 			);
@@ -1137,6 +1142,7 @@
 				D90DB437219CD1C600D374D2 /* DOM.Image.swift in Sources */,
 				D90DB45E219CD27800D374D2 /* Parser.XML.SVG.swift in Sources */,
 				D90DB3D8219CCCBD00D374D2 /* LayerTree.AB.Builder.swift in Sources */,
+				D9693D7E224C42C000A82949 /* CGPattern+Closure.swift in Sources */,
 				D925CC6A21A4B7E700C8897B /* LayerTree.Builder.Layer.swift in Sources */,
 				D90DB3B4219CCC4100D374D2 /* LayerTree.swift in Sources */,
 				D90DB45A219CD27800D374D2 /* Parser.XML.Transform.swift in Sources */,

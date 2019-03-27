@@ -99,8 +99,9 @@ final class LayerTreeBuilderTests: XCTestCase {
         let pattern = builder.makePattern(for: element)
 
         let ellipse = Shape.ellipse(within: LayerTree.Rect(x: 5, y: 5, width: 10, height: 10))
-        let contents = Contents.shape(ellipse, .default, .default)
-        XCTAssertEqual(pattern.contents, [contents])
+        let expected = LayerTree.Layer()
+        expected.contents = [Contents.shape(ellipse, .default, .default)]
+        XCTAssertEqual(pattern.contents, [.layer(expected)])
     }
 
     func testStrokeAttributes() {

@@ -46,6 +46,7 @@ final class RendererTests: XCTestCase {
             .scale(sx: 1, sy: 2),
             .rotate(angle: 10),
             .setFill(color: .none),
+            .setFillPattern(.mock),
             .setStroke(color: .none),
             .setLine(width: 10),
             .setLineCap(.butt),
@@ -69,6 +70,7 @@ final class RendererTests: XCTestCase {
             "scale",
             "rotate",
             "setFillColor",
+            "setFillPattern",
             "setStrokeColor",
             "setLineWidth",
             "setLineCap",
@@ -102,5 +104,12 @@ private extension LayerTree.Image {
 
     static var mock: LayerTree.Image {
         return .png(data: Data())
+    }
+}
+
+private extension LayerTree.Pattern {
+
+    static var mock: LayerTree.Pattern {
+        return LayerTree.Pattern(frame: .zero)
     }
 }

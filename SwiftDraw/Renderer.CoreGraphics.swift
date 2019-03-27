@@ -159,27 +159,6 @@ struct CGProvider: RendererTypeProvider {
         return cgPath
     }
 
-    func createPattern(from pattern: LayerTree.Pattern) -> CGPattern {
-        let mockPattern: CGPatternDrawPatternCallback = { _, ctx in
-            ctx.setFillColor(UIColor.green.cgColor)
-            ctx.fill(CGRect(x: 0, y: 0, width: 50, height: 50))
-            ctx.fill(CGRect(x: 50, y: 50, width: 50, height: 50))
-        }
-
-        var callbacks = CGPatternCallbacks(version: 0,
-                                           drawPattern: mockPattern,
-                                           releaseInfo: nil)
-
-        return CGPattern(info: nil,
-                         bounds: CGRect(x: 0, y: 0, width: 100, height: 100),
-                         matrix: .identity,
-                         xStep: 100,
-                         yStep: 100,
-                         tiling: .constantSpacing,
-                         isColored: true,
-                         callbacks: &callbacks)!
-    }
-    
     func createPath(from text: String, at origin: LayerTree.Point, with attributes: LayerTree.TextAttributes) -> Types.Path? {
         let font = CTFontCreateWithName(attributes.fontName as CFString,
                                         createFloat(from: attributes.size),
@@ -188,6 +167,18 @@ struct CGProvider: RendererTypeProvider {
         
         var transform = CGAffineTransform(translationX: createFloat(from: origin.x), y: createFloat(from: origin.y))
         return path.copy(using: &transform)
+    }
+
+    func createPattern(from pattern: LayerTree.Pattern, contents: [RendererCommand<Types>]) -> CGPattern {
+        let bounds = createRect(from: pattern.frame)
+        return CGPattern.make(bounds: bounds,
+                              matrix: .identity,
+                              step: bounds.size,
+                              tiling: .constantSpacing,
+                              isColored: true) { ctx in
+                                let renderer = CGRenderer(context: ctx)
+                                renderer.perform(contents)
+        }
     }
 
     func createFillRule(from rule: LayerTree.FillRule) -> CGPathFillRule {

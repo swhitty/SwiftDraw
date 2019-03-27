@@ -74,6 +74,10 @@ final class MockRenderer: Renderer {
         operations.append("setFillColor")
     }
 
+    func setFill(pattern: LayerTree.Pattern) {
+        operations.append("setFillPattern")
+    }
+
     func setStroke(color: LayerTree.Color) {
         operations.append("setStrokeColor")
     }

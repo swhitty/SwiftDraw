@@ -119,8 +119,13 @@ extension LayerTree {
                 commands.append(.setFill(color: color))
                 commands.append(.fill(path, rule: rule))
             } else if let fillPattern = fill.pattern {
+                var patternCommands = [RendererCommand<P.Types>]()
+                for contents in fillPattern.contents {
+                    patternCommands.append(contentsOf: renderCommands(for: contents))
+                }
+
+                let pattern = provider.createPattern(from: fillPattern, contents: patternCommands)
                 let rule = provider.createFillRule(from: fill.rule)
-                let pattern = provider.createPattern(from: fillPattern)
                 commands.append(.setFillPattern(pattern))
                 commands.append(.fill(path, rule: rule))
             }
