@@ -37,6 +37,7 @@ struct LayerTreeTypes: RendererTypes {
     typealias Rect = LayerTree.Rect
     typealias Color = LayerTree.Color
     typealias Path = [LayerTree.Shape]
+    typealias Pattern = LayerTree.Pattern
     typealias Transform = LayerTree.Transform
     typealias BlendMode = LayerTree.BlendMode
     typealias FillRule = LayerTree.FillRule
@@ -80,7 +81,11 @@ struct LayerTreeProvider: RendererTypeProvider {
     func createPath(from shape: LayerTree.Shape) -> [LayerTree.Shape] {
         return [shape]
     }
-    
+
+    func createPattern(from pattern: LayerTree.Pattern) -> LayerTreeTypes.Pattern {
+        return pattern
+    }
+
     func createPath(from subPaths: [[LayerTree.Shape]]) -> [LayerTree.Shape] {
         return subPaths.flatMap { $0 }
     }

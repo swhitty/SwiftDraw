@@ -155,10 +155,17 @@ extension LayerTree.Builder {
                                           join: state.strokeLineJoin,
                                           miterLimit: state.strokeLineMiterLimit)
     }
-    
+
     func makeFillAttributes(with state: State) -> LayerTree.FillAttributes {
         let fill = LayerTree.Color.create(from: state.fill.makeColor()).withAlpha(state.fillOpacity)
-        return LayerTree.FillAttributes(color: fill, rule: state.fillRule)
+
+        if case .url(let patternId) = state.fill,
+           let element = svg.defs.patterns.first(where: { $0.id == patternId.fragment }) {
+            let pattern = makePattern(for: element)
+            return LayerTree.FillAttributes(color: .none, pattern: pattern, rule: state.fillRule)
+        } else {
+            return LayerTree.FillAttributes(color: fill, pattern: nil, rule: state.fillRule)
+        }
     }
 
     static func makeTextAttributes(with state: State) -> LayerTree.TextAttributes {

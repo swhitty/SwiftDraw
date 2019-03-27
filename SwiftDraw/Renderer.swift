@@ -37,6 +37,7 @@ protocol RendererTypes {
     associatedtype Rect
     associatedtype Color
     associatedtype Path
+    associatedtype Pattern
     associatedtype Transform
     associatedtype BlendMode
     associatedtype FillRule
@@ -58,6 +59,7 @@ protocol RendererTypeProvider {
     func createPath(from shape: LayerTree.Shape) -> Types.Path
     func createPath(from subPaths: [Types.Path]) -> Types.Path
     func createPath(from text: String, at origin: LayerTree.Point, with attributes: LayerTree.TextAttributes) -> Types.Path?
+    func createPattern(from pattern: LayerTree.Pattern) -> Types.Pattern
     func createFillRule(from rule: LayerTree.FillRule) -> Types.FillRule
     func createLineCap(from cap: LayerTree.LineCap) -> Types.LineCap
     func createLineJoin(from join: LayerTree.LineJoin) -> Types.LineJoin
@@ -78,6 +80,7 @@ protocol Renderer {
     func scale(sx: Types.Float, sy: Types.Float)
     
     func setFill(color: Types.Color)
+    func setFill(pattern: Types.Pattern)
     func setStroke(color: Types.Color)
     func setLine(width: Types.Float)
     func setLine(cap: Types.LineCap)
@@ -113,6 +116,8 @@ extension Renderer {
             rotate(angle: a)
         case .setFill(color: let c):
             setFill(color: c)
+        case .setFillPattern(let p):
+            setFill(pattern: p)
         case .setStroke(color: let c):
             setStroke(color: c)
         case .setLine(width: let w):
@@ -155,6 +160,7 @@ enum RendererCommand<Types: RendererTypes> {
     case scale(sx: Types.Float, sy: Types.Float)
     
     case setFill(color: Types.Color)
+    case setFillPattern(Types.Pattern)
     case setStroke(color: Types.Color)
     case setLine(width: Types.Float)
     case setLineCap(Types.LineCap)

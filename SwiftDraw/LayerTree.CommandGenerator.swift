@@ -118,8 +118,13 @@ extension LayerTree {
                 let rule = provider.createFillRule(from: fill.rule)
                 commands.append(.setFill(color: color))
                 commands.append(.fill(path, rule: rule))
+            } else if let fillPattern = fill.pattern {
+                let rule = provider.createFillRule(from: fill.rule)
+                let pattern = provider.createPattern(from: fillPattern)
+                commands.append(.setFillPattern(pattern))
+                commands.append(.fill(path, rule: rule))
             }
-            
+
             if stroke.color != .none,
                stroke.width > 0.0 {
                 let converted = colorConverter.createColor(from: stroke.color)

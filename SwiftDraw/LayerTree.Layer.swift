@@ -87,6 +87,7 @@ extension LayerTree {
 
     struct FillAttributes: Equatable {
         var color: Color
+        var pattern: Pattern?
         var rule: FillRule
     }
 
