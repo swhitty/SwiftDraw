@@ -31,21 +31,6 @@
 import Foundation
 
 extension XMLParser {
-    
-    func parseColor(_ data: String) throws -> DOM.Color {
-        
-        if let c = try parseColorRGB(data: data) {
-            return c
-        } else if let c = try parseColorHex(data: data) {
-            return c
-        } else if let c = parseColorKeyword(data: data) {
-            return c
-        } else if let c = parseColorNone(data: data) {
-            return c
-        }
-        
-        throw Error.invalid
-    }
 
     func parseFill(_ data: String) throws -> DOM.Fill {
         if let c = try parseColorRGB(data: data) {

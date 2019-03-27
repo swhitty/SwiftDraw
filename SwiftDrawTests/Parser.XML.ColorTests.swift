@@ -70,3 +70,10 @@ final class ParserColorTests: XCTestCase {
         XCTAssertThrowsError(try XMLParser().parseColor("#invalid"))
     }
 }
+
+private extension SwiftDraw.XMLParser {
+
+    func parseColor(_ value: String) throws -> DOM.Color {
+        return try parseFill(value).getColor()
+    }
+}

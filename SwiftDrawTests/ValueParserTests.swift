@@ -106,17 +106,21 @@ final class ValueParserTests: XCTestCase {
         XCTAssertThrowsError(try parser.parseBool("yes"))
     }
     
-    func testColor() {
-        XCTAssertEqual(try parser.parseColor("none"), .none)
-        XCTAssertEqual(try parser.parseColor("black"), .keyword(.black))
-        XCTAssertEqual(try parser.parseColor("red"), .keyword(.red))
+    func testFill() {
+        XCTAssertEqual(try parser.parseFill("none"), .color(.none))
+        XCTAssertEqual(try parser.parseFill("black"), .color(.keyword(.black)))
+        XCTAssertEqual(try parser.parseFill("red"), .color(.keyword(.red)))
         
-        XCTAssertEqual(try parser.parseColor("rgb(10,20,30)"), .rgbi(10, 20, 30))
-        XCTAssertEqual(try parser.parseColor("rgb(10%,20%,100%)"), .rgbf(0.1, 0.2, 1.0))
-        XCTAssertEqual(try parser.parseColor("#AAFF00"), .hex(170, 255, 0))
-        
-        XCTAssertThrowsError(try parser.parseColor("Ns "))
-        XCTAssertThrowsError(try parser.parseColor("d"))
+        XCTAssertEqual(try parser.parseFill("rgb(10,20,30)"), .color(.rgbi(10, 20, 30)))
+        XCTAssertEqual(try parser.parseFill("rgb(10%,20%,100%)"), .color(.rgbf(0.1, 0.2, 1.0)))
+        XCTAssertEqual(try parser.parseFill("#AAFF00"), .color(.hex(170, 255, 0)))
+
+        XCTAssertEqual(try parser.parseFill("url(#test)"), .url(URL(string: "#test")!))
+
+        XCTAssertThrowsError(try parser.parseFill("Ns "))
+        XCTAssertThrowsError(try parser.parseFill("d"))
+        XCTAssertThrowsError(try parser.parseFill("url()"))
+        //XCTAssertThrowsError(try parser.parseFill("url(asdf"))
     }
     
     func testUrl() {

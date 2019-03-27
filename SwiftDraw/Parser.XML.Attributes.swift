@@ -123,10 +123,6 @@ extension XMLParser {
             var scanner = XMLParser.Scanner(text: value)
             return try scanner.scanBool()
         }
-        
-        func parseColor(_ value: String) throws -> DOM.Color {
-            return try XMLParser().parseColor(value)
-        }
 
         func parseFill(_ value: String) throws -> DOM.Fill {
             return try XMLParser().parseFill(value)

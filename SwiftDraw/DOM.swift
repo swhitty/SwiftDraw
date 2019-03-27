@@ -54,6 +54,15 @@ extension DOM {
     enum Fill: Equatable {
         case url(URL)
         case color(DOM.Color)
+
+        func getColor() throws -> DOM.Color {
+            switch self {
+            case .url:
+                throw Error.missing("Color")
+            case .color(let c):
+                return c
+            }
+        }
     }
 
     enum FillRule: String {
@@ -86,5 +95,9 @@ extension DOM {
         case rotatePoint(angle: Float, cx: Float, cy: Float)
         case skewX(angle: Float)
         case skewY(angle: Float)
+    }
+
+    enum Error: Swift.Error {
+        case missing(String)
     }
 }

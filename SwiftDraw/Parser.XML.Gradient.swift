@@ -61,9 +61,8 @@ extension XMLParser {
     
     func parseLinearGradientStop(_ att: AttributeParser) throws -> DOM.LinearGradient.Stop {
         let offset: DOM.Float = try att.parsePercentage("offset")
-        let color: DOM.Color = try att.parseColor("stop-color")
+        let color: DOM.Color = try att.parseFill("stop-color").getColor()
         let opacity: DOM.Float? = try att.parsePercentage("stop-opacity")
         return DOM.LinearGradient.Stop(offset: offset, color: color, opacity: opacity ?? 1.0)
     }
-    
 }

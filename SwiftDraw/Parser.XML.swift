@@ -57,7 +57,6 @@ protocol AttributeValueParser {
     func parseCoordinate(_ value: String) throws -> DOM.Coordinate
     func parseLength(_ value: String) throws -> DOM.Length
     func parseBool(_ value: String) throws -> DOM.Bool
-    func parseColor(_ value: String) throws -> DOM.Color
     func parseFill(_ value: String) throws -> DOM.Fill
     func parseUrl(_ value: String) throws -> DOM.URL
     func parseUrlSelector(_ value: String) throws -> DOM.URL
@@ -105,13 +104,13 @@ extension AttributeParser {
     func parseBool(_ key: String) throws -> DOM.Bool {
         return try parse(key) { return try parser.parseBool($0) }
     }
-    
-    func parseColor(_ key: String) throws -> DOM.Color {
-        return try parse(key) { return try parser.parseColor($0) }
-    }
 
     func parseFill(_ key: String) throws -> DOM.Fill {
         return try parse(key) { return try parser.parseFill($0) }
+    }
+
+    func parseColor(_ key: String) throws -> DOM.Color {
+        return try parseFill(key).getColor()
     }
 
     func parseUrl(_ key: String) throws -> DOM.URL {
@@ -173,13 +172,13 @@ extension AttributeParser {
     func parseBool(_ key: String) throws -> DOM.Bool? {
         return try parse(key) { return try parser.parseBool($0) }
     }
-    
-    func parseColor(_ key: String) throws -> DOM.Color? {
-        return try parse(key) { return try parser.parseColor($0) }
-    }
 
     func parseFill(_ key: String) throws -> DOM.Fill? {
         return try parse(key) { return try parser.parseFill($0) }
+    }
+
+    func parseColor(_ key: String) throws -> DOM.Color? {
+        return try parseFill(key)?.getColor()
     }
 
     func parseUrl(_ key: String) throws -> DOM.URL? {
