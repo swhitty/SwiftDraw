@@ -98,7 +98,7 @@ extension LayerTree {
         
         func makeContents(from element: DOM.GraphicsElement, with state: State) -> Layer.Contents? {
             if let shape = Builder.makeShape(from: element) {
-                return Builder.makeShapeContents(from: shape, with: state)
+                return makeShapeContents(from: shape, with: state)
             } else if let text = element as? DOM.Text {
                 return Builder.makeTextContents(from: text, with: state)
             } else if let image = element as? DOM.Image {
@@ -140,7 +140,7 @@ extension LayerTree {
 
 extension LayerTree.Builder {
 
-    static func createStrokeAttributes(with state: State) -> LayerTree.StrokeAttributes {
+    static func makeStrokeAttributes(with state: State) -> LayerTree.StrokeAttributes {
         let stroke: LayerTree.Color
         
         if state.strokeWidth > 0.0 {
@@ -156,7 +156,7 @@ extension LayerTree.Builder {
                                           miterLimit: state.strokeLineMiterLimit)
     }
     
-    static func createFillAttributes(with state: State) -> LayerTree.FillAttributes {
+    func makeFillAttributes(with state: State) -> LayerTree.FillAttributes {
         let fill = LayerTree.Color.create(from: state.fill.makeColor()).withAlpha(state.fillOpacity)
         return LayerTree.FillAttributes(color: fill, rule: state.fillRule)
     }

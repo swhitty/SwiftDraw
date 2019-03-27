@@ -41,6 +41,4 @@ class ViewController: UIViewController {
         imageView.backgroundColor = .white
         self.view = imageView
     }
-
 }
-
