@@ -2,7 +2,7 @@
 <svg xmlns="http://www.w3.org/2000/svg"
 	 xmlns:ns="http://www.w3.org/2000/svg" 
 	 xmlns:xlink="http://www.w3.org/1999/xlink" 
-	 width="1248" height="352" >
+	 width="512" height="512" >
 
 	 <defs>
 	 	<pattern id="checkerboard" x="0" y="0" width="64" height="64" patternUnits="userSpaceOnUse">
@@ -24,11 +24,11 @@
 		</linearGradient>
 		
 		<mask id="alpha">
- 	 		<rect x="585" y="136" width="150" height="150" fill="url(#alpha1)" />
-			<circle cx="618" cy="165" r="13" fill="#303030" opacity="0.5"/>
+ 	 		<rect x="200" y="200" width="150" height="150" fill="url(#alpha1)" />
+			<circldfe cx="233" cy="229" r="13" fill="#303030" opacity="0.5"/>
 		</mask> 
 	 </defs>
 	 
-	 <rect x="0" y="0" width="1248" height="352" fill="url(#checkerboard)" />
-	 <circle cx="640" cy="191" r="55" fill="url(#blue)" mask="url(#alpha)" />
+	 <rect x="0" y="0" width="512" height="512" fill="url(#checkerboard)" />
+	 <circle cx="256" cy="256" r="56" fill="url(#blue)" mask="url(#alpha)" />
 </svg>

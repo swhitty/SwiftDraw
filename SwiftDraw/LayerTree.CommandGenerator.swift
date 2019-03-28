@@ -137,7 +137,8 @@ extension LayerTree {
                 let pathStart = pathBounds.getPoint(offset: fillGradient.start)
                 let pathEnd = pathBounds.getPoint(offset: fillGradient.end)
 
-                let gradient = provider.createGradient(from: fillGradient)
+                let converted = apply(colorConverter: colorConverter, to: fillGradient)
+                let gradient = provider.createGradient(from: converted)
                 let start = provider.createPoint(from: pathStart)
                 let end = provider.createPoint(from: pathEnd)
 
@@ -251,4 +252,16 @@ private extension LayerTree.Rect {
         return LayerTree.Point(origin.x + size.width * offset.x,
                                origin.y + size.height * offset.y)
     }
+}
+
+private func apply(colorConverter: ColorConverter, to gradient: LayerTree.Gradient) -> LayerTree.Gradient {
+    let converted = LayerTree.Gradient(start: gradient.start, end: gradient.end)
+    converted.stops = gradient.stops.map { apply(colorConverter: colorConverter, to: $0) }
+    return converted
+}
+
+private func apply(colorConverter: ColorConverter, to stop: LayerTree.Gradient.Stop) -> LayerTree.Gradient.Stop {
+    var stop = stop
+    stop.color = colorConverter.createColor(from: stop.color)
+    return stop
 }
