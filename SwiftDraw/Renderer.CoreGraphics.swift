@@ -44,6 +44,7 @@ struct CGTypes: RendererTypes {
     typealias Size = CGSize
     typealias Rect = CGRect
     typealias Color = CGColor
+    typealias Gradient = CGGradient
     typealias Path = CGPath
     typealias Pattern = CGPattern
     typealias Transform = CGAffineTransform
@@ -84,6 +85,15 @@ struct CGProvider: RendererTypeProvider {
                                               b: CGFloat(c.b),
                                               a: CGFloat(c.a))
         }
+    }
+
+    func createGradient(from gradient: LayerTree.Gradient) -> CGGradient {
+        let colors = gradient.stops.map { createColor(from: $0.color) } as CFArray
+        var points = gradient.stops.map { createFloat(from: $0.offset) }
+
+        return CGGradient(colorsSpace: CGColorSpaceCreateDeviceRGB(),
+                          colors: colors,
+                          locations: &points)!
     }
 
     private func createColor(r: CGFloat, g: CGFloat, b: CGFloat, a: CGFloat) -> CGColor {
@@ -214,6 +224,14 @@ struct CGProvider: RendererTypeProvider {
             return CGImage.from(data: d)
         }
     }
+
+    func getBounds(from path: CGPath) -> LayerTree.Rect {
+        let bounds = path.boundingBoxOfPath
+        return LayerTree.Rect(x: LayerTree.Float(bounds.origin.x),
+                              y: LayerTree.Float(bounds.origin.y),
+                              width: LayerTree.Float(bounds.width),
+                              height: LayerTree.Float(bounds.height))
+    }
 }
 
 //TODO: replace with CG implementation
@@ -327,5 +345,12 @@ struct CGRenderer: Renderer {
     func draw(image: CGImage) {
         let rect = CGRect(x: 0, y: 0, width: image.width, height: image.height)
         ctx.draw(image, in: rect)
+    }
+
+    func draw(gradient: CGGradient, from start: CGPoint, to end: CGPoint) {
+        ctx.drawLinearGradient(gradient,
+                               start: start,
+                               end: end,
+                               options: [.drawsAfterEndLocation, .drawsBeforeStartLocation])
     }
 }

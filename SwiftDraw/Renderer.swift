@@ -36,6 +36,7 @@ protocol RendererTypes {
     associatedtype Size
     associatedtype Rect
     associatedtype Color
+    associatedtype Gradient
     associatedtype Path
     associatedtype Pattern
     associatedtype Transform
@@ -54,6 +55,7 @@ protocol RendererTypeProvider {
     func createSize(from size: LayerTree.Size) -> Types.Size
     func createRect(from rect: LayerTree.Rect) -> Types.Rect
     func createColor(from color: LayerTree.Color) -> Types.Color
+    func createGradient(from gradient: LayerTree.Gradient) -> Types.Gradient
     func createBlendMode(from mode: LayerTree.BlendMode) -> Types.BlendMode
     func createTransform(from transform: LayerTree.Transform.Matrix) -> Types.Transform
     func createPath(from shape: LayerTree.Shape) -> Types.Path
@@ -64,6 +66,8 @@ protocol RendererTypeProvider {
     func createLineCap(from cap: LayerTree.LineCap) -> Types.LineCap
     func createLineJoin(from join: LayerTree.LineJoin) -> Types.LineJoin
     func createImage(from image: LayerTree.Image) -> Types.Image?
+
+    func getBounds(from path: Types.Path) -> LayerTree.Rect
 }
 
 protocol Renderer {
@@ -93,6 +97,7 @@ protocol Renderer {
     func stroke(path: Types.Path)
     func fill(path: Types.Path, rule: Types.FillRule)
     func draw(image: Types.Image)
+    func draw(gradient: Types.Gradient, from start: Types.Point, to end: Types.Point)
 }
 
 extension Renderer {
@@ -140,9 +145,11 @@ extension Renderer {
             fill(path: p, rule: r)
         case .draw(image: let i):
             draw(image: i)
+        case .drawGradient(let g, let start, let end):
+            draw(gradient: g, from: start, to: end)
         }
     }
-    
+
     func perform(_ commands: [RendererCommand<Types>]) {
         for cmd in commands {
             perform(cmd)
@@ -174,7 +181,8 @@ enum RendererCommand<Types: RendererTypes> {
     case fill(Types.Path, rule: Types.FillRule)
     
     case draw(image: Types.Image)
-    
+    case drawGradient(Types.Gradient, from: Types.Point, to: Types.Point)
+
     case pushTransparencyLayer
     case popTransparencyLayer
 }

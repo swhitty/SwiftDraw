@@ -36,6 +36,7 @@ struct LayerTreeTypes: RendererTypes {
     typealias Size = LayerTree.Size
     typealias Rect = LayerTree.Rect
     typealias Color = LayerTree.Color
+    typealias Gradient = LayerTree.Gradient
     typealias Path = [LayerTree.Shape]
     typealias Pattern = LayerTree.Pattern
     typealias Transform = LayerTree.Transform
@@ -69,7 +70,11 @@ struct LayerTreeProvider: RendererTypeProvider {
     func createColor(from color: LayerTree.Color) -> LayerTree.Color {
         return color
     }
-    
+
+    func createGradient(from gradient: LayerTree.Gradient) -> LayerTree.Gradient {
+        return gradient
+    }
+
     func createBlendMode(from mode: LayerTree.BlendMode) -> LayerTree.BlendMode {
         return mode
     }
@@ -108,5 +113,9 @@ struct LayerTreeProvider: RendererTypeProvider {
     
     func createImage(from image: LayerTree.Image) -> LayerTree.Image? {
         return image
+    }
+
+    func getBounds(from path: Types.Path) -> LayerTree.Rect {
+        return LayerTree.Rect(x: 0, y: 0, width: 0, height: 0)
     }
 }

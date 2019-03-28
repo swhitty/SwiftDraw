@@ -33,6 +33,7 @@
 		D9ACD7A1220FDE04009717CF /* SwiftDraw.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D9ACD7A0220FDE04009717CF /* SwiftDraw.framework */; };
 		D9ACD7A3220FDE19009717CF /* SwiftDraw.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = D9ACD7A0220FDE04009717CF /* SwiftDraw.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		D9D9EB2D224A3BCA006CF83C /* pattern.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9D9EB2C224A3BCA006CF83C /* pattern.svg */; };
+		D9FD69D8224CD4960046A926 /* gradient2.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9FD69D7224CD4960046A926 /* gradient2.svg */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -76,6 +77,7 @@
 		D9ACD790220FDDE0009717CF /* invalid.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = invalid.svg; sourceTree = "<group>"; };
 		D9ACD7A0220FDE04009717CF /* SwiftDraw.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = SwiftDraw.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		D9D9EB2C224A3BCA006CF83C /* pattern.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = pattern.svg; sourceTree = "<group>"; };
+		D9FD69D7224CD4960046A926 /* gradient2.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = gradient2.svg; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -124,6 +126,7 @@
 			isa = PBXGroup;
 			children = (
 				D9494F45224C99950015ACE1 /* gradient.svg */,
+				D9FD69D7224CD4960046A926 /* gradient2.svg */,
 				D9494F43224C846D0015ACE1 /* thats-no-moon.svg */,
 				D90523442217927F00B3B94F /* mystery.svg */,
 				D9ACD783220FDDE0009717CF /* use.svg */,
@@ -218,6 +221,7 @@
 				D9ACD79E220FDDE0009717CF /* invalid.svg in Resources */,
 				D9ACD796220FDDE0009717CF /* curves.svg in Resources */,
 				D9ACD79C220FDDE0009717CF /* quad.svg in Resources */,
+				D9FD69D8224CD4960046A926 /* gradient2.svg in Resources */,
 				D9ACD797220FDDE0009717CF /* shapes.svg in Resources */,
 				D9ACD799220FDDE0009717CF /* starry.svg in Resources */,
 				D9ACD791220FDDE0009717CF /* use.svg in Resources */,

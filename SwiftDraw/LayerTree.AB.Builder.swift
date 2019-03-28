@@ -162,13 +162,13 @@ extension LayerTree.Builder {
         if case .url(let patternId) = state.fill,
            let element = svg.defs.patterns.first(where: { $0.id == patternId.fragment }) {
             let pattern = makePattern(for: element)
-            return LayerTree.FillAttributes(color: .none, pattern: pattern, gradient: nil, rule: state.fillRule)
+            return LayerTree.FillAttributes(pattern: pattern, rule: state.fillRule, opacity: state.fillOpacity)
         } else if case .url(let gradientId) = state.fill,
             let element = svg.defs.linearGradients.first(where: { $0.id == gradientId.fragment }) {
-            let gradient = makeGradient(for: element)
-            return LayerTree.FillAttributes(color: .none, pattern: nil, gradient: gradient, rule: state.fillRule)
+            let gradient = makeGradient(for: element)!
+            return LayerTree.FillAttributes(gradient: gradient, rule: state.fillRule, opacity: state.fillOpacity)
         } else {
-            return LayerTree.FillAttributes(color: fill, pattern: nil, gradient: nil, rule: state.fillRule)
+            return LayerTree.FillAttributes(color: fill, rule: state.fillRule)
         }
     }
 

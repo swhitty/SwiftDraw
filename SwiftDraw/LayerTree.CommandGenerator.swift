@@ -130,7 +130,22 @@ extension LayerTree {
                 commands.append(.fill(path, rule: rule))
             } else if let fillGradient = fill.gradient {
 
-                print("fill \(fillGradient)")
+                commands.append(.pushState)
+                commands.append(.setClip(path: path))
+
+                let pathBounds = provider.getBounds(from: path)
+                let pathStart = pathBounds.getPoint(offset: fillGradient.start)
+                let pathEnd = pathBounds.getPoint(offset: fillGradient.end)
+
+                let gradient = provider.createGradient(from: fillGradient)
+                let start = provider.createPoint(from: pathStart)
+                let end = provider.createPoint(from: pathEnd)
+
+                let apha = provider.createFloat(from: fill.opacity)
+                commands.append(.setAlpha(apha))
+
+                commands.append(.drawGradient(gradient, from: start, to: end))
+                commands.append(.popState)
             }
 
             if stroke.color != .none,
@@ -228,4 +243,12 @@ extension LayerTree {
         }
     }
     
+}
+
+private extension LayerTree.Rect {
+
+    func getPoint(offset: LayerTree.Point) -> LayerTree.Point {
+        return LayerTree.Point(origin.x + size.width * offset.x,
+                               origin.y + size.height * offset.y)
+    }
 }

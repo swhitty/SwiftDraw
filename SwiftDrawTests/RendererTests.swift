@@ -57,7 +57,8 @@ final class RendererTests: XCTestCase {
             .stroke(.mock),
             .setAlpha(0.5),
             .setBlend(mode: .sourceIn),
-            .draw(image: .mock)
+            .draw(image: .mock),
+            .drawGradient(.mock, from: .zero, to: .zero),
             ])
 
         XCTAssertEqual(renderer.operations, [
@@ -81,7 +82,8 @@ final class RendererTests: XCTestCase {
             "strokePath",
             "setAlpha",
             "setBlendMode",
-            "drawImage"
+            "drawImage",
+            "drawGradient"
             ])
     }
 }
@@ -111,5 +113,12 @@ private extension LayerTree.Pattern {
 
     static var mock: LayerTree.Pattern {
         return LayerTree.Pattern(frame: .zero)
+    }
+}
+
+private extension LayerTree.Gradient {
+
+    static var mock: LayerTree.Gradient {
+        return LayerTree.Gradient(start: .zero, end: .zero)
     }
 }
