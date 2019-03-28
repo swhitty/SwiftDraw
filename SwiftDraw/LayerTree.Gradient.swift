@@ -1,9 +1,9 @@
 //
-//  DOM.Gradient.swift
+//  LayerTree.Gradient.swift
 //  SwiftDraw
 //
-//  Created by Simon Whitty on 31/12/16.
-//  Copyright 2016 Simon Whitty
+//  Created by Simon Whitty on 28/3/19.
+//  Copyright © 2019 WhileLoop Pty Ltd. All rights reserved.
 //
 //  Distributed under the permissive zlib license
 //  Get the latest version from here:
@@ -29,45 +29,36 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-extension DOM {
-    
-    final class LinearGradient: Element {
+extension LayerTree {
 
-        var id: String
-        var x1: Coordinate?
-        var y1: Coordinate?
-        var x2: Coordinate?
-        var y2: Coordinate?
-
+    final class Gradient: Equatable {
+        var start: Point
+        var end: Point
         var stops: [Stop]
-        
-        init(id: String) {
-            self.id = id
+
+        init(start: Point, end: Point) {
+            self.start = start
+            self.end = end
             self.stops = []
+        }
+
+        static func == (lhs: LayerTree.Gradient, rhs: LayerTree.Gradient) -> Bool {
+            return
+                lhs.start == rhs.start &&
+                lhs.end == rhs.end &&
+                lhs.stops == rhs.stops
         }
 
         struct Stop: Equatable {
             var offset: Float
             var color: Color
             var opacity: Float
-            
-            init(offset: Float, color: Color, opacity: Opacity = 1.0) {
+
+            init(offset: Float, color: Color, opacity: Float) {
                 self.offset = offset
                 self.color = color
                 self.opacity = opacity
             }
         }
-    }
-}
-
-extension DOM.LinearGradient: Equatable {
-    static func ==(lhs: DOM.LinearGradient, rhs: DOM.LinearGradient) -> Bool {
-        return
-            lhs.id == rhs.id &&
-            lhs.x1 == rhs.x1 &&
-            lhs.y1 == rhs.y1 &&
-            lhs.x2 == rhs.x2 &&
-            lhs.y2 == rhs.y2 &&
-            lhs.stops == rhs.stops
     }
 }

@@ -128,6 +128,9 @@ extension LayerTree {
                 let rule = provider.createFillRule(from: fill.rule)
                 commands.append(.setFillPattern(pattern))
                 commands.append(.fill(path, rule: rule))
+            } else if let fillGradient = fill.gradient {
+
+                print("fill \(fillGradient)")
             }
 
             if stroke.color != .none,

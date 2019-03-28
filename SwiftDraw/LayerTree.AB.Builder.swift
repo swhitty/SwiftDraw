@@ -162,9 +162,13 @@ extension LayerTree.Builder {
         if case .url(let patternId) = state.fill,
            let element = svg.defs.patterns.first(where: { $0.id == patternId.fragment }) {
             let pattern = makePattern(for: element)
-            return LayerTree.FillAttributes(color: .none, pattern: pattern, rule: state.fillRule)
+            return LayerTree.FillAttributes(color: .none, pattern: pattern, gradient: nil, rule: state.fillRule)
+        } else if case .url(let gradientId) = state.fill,
+            let element = svg.defs.linearGradients.first(where: { $0.id == gradientId.fragment }) {
+            let gradient = makeGradient(for: element)
+            return LayerTree.FillAttributes(color: .none, pattern: nil, gradient: gradient, rule: state.fillRule)
         } else {
-            return LayerTree.FillAttributes(color: fill, pattern: nil, rule: state.fillRule)
+            return LayerTree.FillAttributes(color: fill, pattern: nil, gradient: nil, rule: state.fillRule)
         }
     }
 
@@ -177,6 +181,24 @@ extension LayerTree.Builder {
         let pattern = LayerTree.Pattern(frame: frame)
         pattern.contents = element.childElements.compactMap { .layer(makeLayer(from: $0, inheriting: .init())) }
         return pattern
+    }
+
+    func makeGradient(for element: DOM.LinearGradient) -> LayerTree.Gradient? {
+        guard
+            let x1 = element.x1,
+            let y1 = element.y1,
+            let x2 = element.x2,
+            let y2 = element.y2 else {
+                return nil
+        }
+
+        let gradient = LayerTree.Gradient(start: Point(x1, y1), end: Point(x2, y2))
+        gradient.stops = element.stops.map {
+            return LayerTree.Gradient.Stop(offset: $0.offset,
+                                           color: LayerTree.Color($0.color),
+                                           opacity: $0.opacity)
+        }
+        return gradient
     }
 
     //current state of the render tree, updated as builder traverses child nodes

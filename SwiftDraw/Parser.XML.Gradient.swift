@@ -51,7 +51,11 @@ extension XMLParser {
 
         let nodeAtt: AttributeParser = try parseAttributes(e)
         let node = DOM.LinearGradient(id: try nodeAtt.parseString("id"))
-        
+        node.x1 = try nodeAtt.parseCoordinate("x1")
+        node.y1 = try nodeAtt.parseCoordinate("y1")
+        node.x2 = try nodeAtt.parseCoordinate("x2")
+        node.y2 = try nodeAtt.parseCoordinate("y2")
+
         for n in e.children where n.name == "stop" {
             let att: AttributeParser = try parseAttributes(n)
             node.stops.append(try parseLinearGradientStop(att))
