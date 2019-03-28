@@ -319,7 +319,7 @@ extension UseTests {
 extension ValueParserTests {
     static let __allTests = [
         ("testBool", testBool),
-        ("testColor", testColor),
+        ("testFill", testFill),
         ("testCoordinate", testCoordinate),
         ("testFloat", testFloat),
         ("testFloats", testFloats),
