@@ -9,6 +9,8 @@
 /* Begin PBXBuildFile section */
 		D90523452217927F00B3B94F /* mystery.svg in Resources */ = {isa = PBXBuildFile; fileRef = D90523442217927F00B3B94F /* mystery.svg */; };
 		D918D26D22122A7300097C9A /* arc2.svg in Resources */ = {isa = PBXBuildFile; fileRef = D918D26C22122A7300097C9A /* arc2.svg */; };
+		D9494F44224C846D0015ACE1 /* thats-no-moon.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9494F43224C846D0015ACE1 /* thats-no-moon.svg */; };
+		D9494F46224C99950015ACE1 /* gradient.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9494F45224C99950015ACE1 /* gradient.svg */; };
 		D956E1B122103A0C00C5ADA2 /* identity.svg in Resources */ = {isa = PBXBuildFile; fileRef = D956E1B022103A0C00C5ADA2 /* identity.svg */; };
 		D9618466220FDD1100C59D9B /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9618465220FDD1100C59D9B /* AppDelegate.swift */; };
 		D9618468220FDD1100C59D9B /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9618467220FDD1100C59D9B /* ViewController.swift */; };
@@ -49,6 +51,8 @@
 /* Begin PBXFileReference section */
 		D90523442217927F00B3B94F /* mystery.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = mystery.svg; sourceTree = "<group>"; };
 		D918D26C22122A7300097C9A /* arc2.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = arc2.svg; sourceTree = "<group>"; };
+		D9494F43224C846D0015ACE1 /* thats-no-moon.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = "thats-no-moon.svg"; sourceTree = "<group>"; };
+		D9494F45224C99950015ACE1 /* gradient.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = gradient.svg; sourceTree = "<group>"; };
 		D956E1B022103A0C00C5ADA2 /* identity.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = identity.svg; sourceTree = "<group>"; };
 		D9618462220FDD1100C59D9B /* Basic.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Basic.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D9618465220FDD1100C59D9B /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -119,6 +123,8 @@
 		D9ACD782220FDDE0009717CF /* Samples */ = {
 			isa = PBXGroup;
 			children = (
+				D9494F45224C99950015ACE1 /* gradient.svg */,
+				D9494F43224C846D0015ACE1 /* thats-no-moon.svg */,
 				D90523442217927F00B3B94F /* mystery.svg */,
 				D9ACD783220FDDE0009717CF /* use.svg */,
 				D9ACD784220FDDE0009717CF /* path.svg */,
@@ -224,6 +230,8 @@
 				D961846D220FDD1200C59D9B /* Assets.xcassets in Resources */,
 				D9ACD79D220FDDE0009717CF /* display.svg in Resources */,
 				D90523452217927F00B3B94F /* mystery.svg in Resources */,
+				D9494F44224C846D0015ACE1 /* thats-no-moon.svg in Resources */,
+				D9494F46224C99950015ACE1 /* gradient.svg in Resources */,
 				D956E1B122103A0C00C5ADA2 /* identity.svg in Resources */,
 				D9ACD792220FDDE0009717CF /* path.svg in Resources */,
 				D9ACD79A220FDDE0009717CF /* mask.svg in Resources */,
