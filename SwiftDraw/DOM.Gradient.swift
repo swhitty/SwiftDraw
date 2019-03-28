@@ -32,13 +32,15 @@
 extension DOM {
     
     final class LinearGradient: Element {
-        
+
+        var id: String
         var stops: [Stop]
         
-        override init() {
+        init(id: String) {
+            self.id = id
             self.stops = []
         }
-        
+
         struct Stop: Equatable {
             var offset: Float
             var color: Color

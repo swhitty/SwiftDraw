@@ -35,14 +35,14 @@ import XCTest
 final class GradientTests: XCTestCase {
     
     func testLinerGradient() {
-        let node = XML.Element(name: "linearGradient")
+        let node = XML.Element(name: "linearGradient", attributes: ["id": "blue"])
         
         node.children.append(XML.Element(name: "stop", attributes: ["offset": "0%", "stop-color": "black"]))
         node.children.append(XML.Element(name: "stop", attributes: ["offset": "25%", "stop-color": "red"]))
         node.children.append(XML.Element(name: "stop", attributes: ["offset": "50%", "stop-color": "black"]))
         node.children.append(XML.Element(name: "stop", attributes: ["offset": "100%", "stop-color": "red"]))
         
-        let expected = DOM.LinearGradient()
+        let expected = DOM.LinearGradient(id: "blue")
         expected.stops.append(DOM.LinearGradient.Stop(offset: 0, color: .keyword(.black)))
         expected.stops.append(DOM.LinearGradient.Stop(offset: 0.25, color: .keyword(.red)))
         expected.stops.append(DOM.LinearGradient.Stop(offset: 0.5, color: .keyword(.black)))

@@ -47,11 +47,29 @@ final class ParserXMLGradientTests: XCTestCase {
         XCTAssertEqual(try XMLParser().parseLinearGradients(child).count, 2)
         XCTAssertEqual(try XMLParser().parseLinearGradients(parent).count, 3)
     }
+
+    #if XCODE
+    func testParseFile() throws {
+
+        let dom = try DOM.SVG.parse(fileNamed: "gradient.svg")
+
+        XCTAssertEqual(dom.defs.linearGradients.count, 5)
+        XCTAssertNotNil(dom.defs.linearGradients.first(where: { $0.id == "snow" }))
+        XCTAssertNotNil(dom.defs.linearGradients.first(where: { $0.id == "blue" }))
+        XCTAssertNotNil(dom.defs.linearGradients.first(where: { $0.id == "purple" }))
+        XCTAssertNotNil(dom.defs.linearGradients.first(where: { $0.id == "salmon" }))
+        XCTAssertNotNil(dom.defs.linearGradients.first(where: { $0.id == "green" }))
+
+        XCTAssertGreaterThan(dom.childElements.count, 2)
+        XCTAssertEqual(dom.childElements[0].fill, .url(URL(string: "#snow")!))
+        XCTAssertEqual(dom.childElements[1].fill, .url(URL(string: "#blue")!))
+    }
+    #endif
 }
 
 private extension XML.Element {
 
     static func makeMockGradient() -> XML.Element {
-        return XML.Element(name: "linearGradient")
+        return XML.Element(name: "linearGradient", attributes: ["id": "mock"])
     }
 }

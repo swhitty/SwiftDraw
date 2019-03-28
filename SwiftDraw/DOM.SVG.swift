@@ -61,7 +61,6 @@ extension DOM {
         }
     }
     
-    
     struct ClipPath: ContainerElement {
         var id: String
         var childElements = [GraphicsElement]()

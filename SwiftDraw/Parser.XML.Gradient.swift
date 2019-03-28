@@ -48,8 +48,9 @@ extension XMLParser {
         guard e.name == "linearGradient" else {
             throw Error.invalid
         }
-        
-        let node = DOM.LinearGradient()
+
+        let nodeAtt: AttributeParser = try parseAttributes(e)
+        let node = DOM.LinearGradient(id: try nodeAtt.parseString("id"))
         
         for n in e.children where n.name == "stop" {
             let att: AttributeParser = try parseAttributes(n)
