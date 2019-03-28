@@ -23,6 +23,7 @@ let exclude: [String]
         "Renderer.LayerTreeProviderTests.swift",
         "Parser.XML.ImageTests.swift",
         "CGPath+SegmentTests.swift",
+        "CGPattern+Closure.swift",
         "ImageTests.swift"
 	]
 #else
