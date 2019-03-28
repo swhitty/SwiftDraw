@@ -44,17 +44,14 @@ extension LayerTree {
         
         func renderCommands(for layer: Layer) -> [RendererCommand<P.Types>] {
             guard layer.opacity > 0.0 else { return [] }
-            
+
             let opacityCommands = renderCommands(forOpacity: layer.opacity)
             let transformCommands = renderCommands(forTransforms: layer.transform)
             let clipCommands = renderCommands(forClip: layer.clip)
             let maskCommands = renderCommands(forMask: layer.mask)
-            
-            //TODO: handle layer.mask
-            // render to transparanency layer then composite contents on top.
-            
+
             var commands = [RendererCommand<P.Types>]()
-            
+
             if !opacityCommands.isEmpty ||
                !transformCommands.isEmpty ||
                !clipCommands.isEmpty ||
@@ -218,7 +215,7 @@ extension LayerTree {
         func renderCommands(forClip shapes: [Shape]) -> [RendererCommand<P.Types>] {
             guard !shapes.isEmpty else { return [] }
             
-            let paths = shapes.map{ provider.createPath(from: $0) }
+            let paths = shapes.map { provider.createPath(from: $0) }
             let clipPath = provider.createPath(from: paths)
             
             return [.setClip(path: clipPath)]
@@ -233,6 +230,7 @@ extension LayerTree {
             var commands = [RendererCommand<P.Types>]()
             commands.append(.pushTransparencyLayer)
             commands.append(.setBlend(mode: modeCopy))
+            commands.append(contentsOf: renderCommands(forClip: layer.clip))
            
             let drawMask = layer.contents.flatMap{
                 renderCommands(for: $0, colorConverter: LuminanceColorConverter())

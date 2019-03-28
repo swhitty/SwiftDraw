@@ -82,20 +82,33 @@ extension LayerTree {
             l.clip = createClipShapes(for: element)
             l.mask = createMaskLayer(for: element)
             l.opacity = state.opacity
-            
-            if let contents = makeContents(from: element, with: state) {
-                l.appendContents(contents)
-            }
-            else if let container = element as? ContainerElement {
-                container.childElements.forEach{
-                    let contents = Layer.Contents.layer(makeLayer(from: $0, inheriting: state))
-                    l.appendContents(contents)
+            l.contents = makeAllContents(from: element, with: state)
+
+            // clips the mask to the content
+            l.mask?.clip = l.contents.compactMap { (contents: Layer.Contents) -> LayerTree.Shape? in
+                switch(contents) {
+                case .shape(let s, _, _): return s
+                default: return nil
                 }
             }
 
             return l
         }
-        
+
+        func makeAllContents(from element: DOM.GraphicsElement, with state: State) -> [Layer.Contents] {
+            var all = [Layer.Contents]()
+            if let contents = makeContents(from: element, with: state) {
+                all.append(contents)
+            }
+            else if let container = element as? ContainerElement {
+                container.childElements.forEach{
+                    let contents = Layer.Contents.layer(makeLayer(from: $0, inheriting: state))
+                    all.append(contents)
+                }
+            }
+            return all
+        }
+
         func makeContents(from element: DOM.GraphicsElement, with state: State) -> Layer.Contents? {
             if let shape = Builder.makeShape(from: element) {
                 return makeShapeContents(from: shape, with: state)

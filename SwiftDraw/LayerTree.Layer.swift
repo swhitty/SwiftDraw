@@ -40,7 +40,7 @@ extension LayerTree {
             case text(String, Point, TextAttributes)
             case layer(Layer)
         }
-        
+
         func appendContents(_ contents: Contents) {
             switch contents {
             case .layer(let l):
