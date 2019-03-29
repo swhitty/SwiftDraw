@@ -60,18 +60,21 @@ extension LayerTree {
             }
             
             commands.append(contentsOf: transformCommands)
-            commands.append(contentsOf: maskCommands)
             commands.append(contentsOf: opacityCommands)
             commands.append(contentsOf: clipCommands)
-  
+
+            if !maskCommands.isEmpty {
+                commands.append(.pushTransparencyLayer)
+            }
 
             //render all of the layer contents
             for contents in layer.contents {
                 commands.append(contentsOf: renderCommands(for: contents))
             }
             
-            //clean up state
+            //render apply mask
             if !maskCommands.isEmpty {
+                commands.append(contentsOf: maskCommands)
                 commands.append(.popTransparencyLayer)
             }
             
@@ -224,20 +227,20 @@ extension LayerTree {
         func renderCommands(forMask layer: Layer?) -> [RendererCommand<P.Types>] {
             guard let layer = layer else { return [] }
             
-            let modeCopy = provider.createBlendMode(from: .copy)
-            let modeSourceIn = provider.createBlendMode(from: .sourceIn)
+
+            let copy = provider.createBlendMode(from: .copy)
+            let destinationIn = provider.createBlendMode(from: .destinationIn)
             
             var commands = [RendererCommand<P.Types>]()
+            commands.append(.setBlend(mode: destinationIn))
             commands.append(.pushTransparencyLayer)
-            commands.append(.setBlend(mode: modeCopy))
-            commands.append(contentsOf: renderCommands(forClip: layer.clip))
-           
+            commands.append(.setBlend(mode: copy))
+            //commands.append(contentsOf: renderCommands(forClip: layer.clip))
             let drawMask = layer.contents.flatMap{
                 renderCommands(for: $0, colorConverter: LuminanceColorConverter())
             }
             commands.append(contentsOf: drawMask)
-            
-            commands.append(.setBlend(mode: modeSourceIn))
+            commands.append(.popTransparencyLayer)
             return commands
         }
     }

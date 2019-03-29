@@ -118,5 +118,6 @@ struct LayerTree {
         case normal
         case copy
         case sourceIn /* R = S*Da */
+        case destinationIn /* R = D*Sa */
     }
 }

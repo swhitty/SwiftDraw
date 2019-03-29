@@ -106,6 +106,7 @@ struct CGProvider: RendererTypeProvider {
         case .normal: return .normal
         case .copy: return .copy
         case .sourceIn: return .sourceIn
+        case .destinationIn: return .destinationIn
         }
     }
     func createTransform(from transform: LayerTree.Transform.Matrix) -> CGAffineTransform {

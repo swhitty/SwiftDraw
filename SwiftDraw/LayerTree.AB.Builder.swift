@@ -84,13 +84,13 @@ extension LayerTree {
             l.opacity = state.opacity
             l.contents = makeAllContents(from: element, with: state)
 
-            // clips the mask to the content
-            l.mask?.clip = l.contents.compactMap { (contents: Layer.Contents) -> LayerTree.Shape? in
-                switch(contents) {
-                case .shape(let s, _, _): return s
-                default: return nil
-                }
-            }
+//            // clips the mask to the content
+//            l.mask?.clip = l.contents.compactMap { (contents: Layer.Contents) -> LayerTree.Shape? in
+//                switch(contents) {
+//                case .shape(let s, _, _): return s
+//                default: return nil
+//                }
+//            }
 
             return l
         }
