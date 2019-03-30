@@ -157,7 +157,7 @@ extension LayerTree.Builder {
         let stroke: LayerTree.Color
         
         if state.strokeWidth > 0.0 {
-            stroke = LayerTree.Color.create(from: state.stroke).withAlpha(state.strokeOpacity)
+            stroke = LayerTree.Color.create(from: state.stroke).withAlpha(state.strokeOpacity).maybeNone()
         } else {
             stroke = .none
         }
@@ -170,7 +170,7 @@ extension LayerTree.Builder {
     }
 
     func makeFillAttributes(with state: State) -> LayerTree.FillAttributes {
-        let fill = LayerTree.Color.create(from: state.fill.makeColor()).withAlpha(state.fillOpacity)
+        let fill = LayerTree.Color.create(from: state.fill.makeColor()).withAlpha(state.fillOpacity).maybeNone()
 
         if case .url(let patternId) = state.fill,
            let element = svg.defs.patterns.first(where: { $0.id == patternId.fragment }) {

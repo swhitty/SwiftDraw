@@ -73,8 +73,6 @@ extension LayerTree.Color {
     }
     
     func withAlpha(_ alpha: Float) -> LayerTree.Color {
-        guard alpha > 0.0 else { return .none }
-        
         switch self {
         case .none:
             return .none
@@ -83,6 +81,15 @@ extension LayerTree.Color {
                          g: g,
                          b: b,
                          a: alpha)
+        }
+    }
+
+    func maybeNone() -> LayerTree.Color {
+        switch self {
+        case .none:
+            return .none
+        case .rgba(r: _, g: _, b: _, a: let a):
+            return a > 0 ? self : .none
         }
     }
     
@@ -105,10 +112,10 @@ extension LayerTree.Color {
     
     func luminanceToAlpha() -> LayerTree.Color {
         let alpha: Float
-        
+
         switch self {
         case .none:
-            alpha = 0
+            return .none
         case .rgba(let r, let g, let b, let a):
             //sRGB Luminance to alpha
             alpha = ((r*0.2126) + (g*0.7152) + (b*0.0722)) * a

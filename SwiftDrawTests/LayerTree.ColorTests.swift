@@ -50,20 +50,20 @@ final class LayerTreeColorTests: XCTestCase {
         //apha 0.0 == .none
         
         //.none color cannot change alpha
-        XCTAssertEqual(noColor.withAlpha(1.0), .none)
-        XCTAssertEqual(noColor.withAlpha(0.5), .none)
-        XCTAssertEqual(noColor.withAlpha(0.3), .none)
-        XCTAssertEqual(noColor.withAlpha(0.0), .none)
+        XCTAssertEqual(noColor.withAlpha(1.0).maybeNone(), .none)
+        XCTAssertEqual(noColor.withAlpha(0.5).maybeNone(), .none)
+        XCTAssertEqual(noColor.withAlpha(0.3).maybeNone(), .none)
+        XCTAssertEqual(noColor.withAlpha(0.0).maybeNone(), .none)
         
-        XCTAssertEqual(someColor.withAlpha(1.0), .rgba(r: 0.1, g: 0.2, b: 0.3, a: 1.0))
-        XCTAssertEqual(someColor.withAlpha(0.5), .rgba(r: 0.1, g: 0.2, b: 0.3, a: 0.5))
-        XCTAssertEqual(someColor.withAlpha(0.3), .rgba(r: 0.1, g: 0.2, b: 0.3, a: 0.3))
-        XCTAssertEqual(someColor.withAlpha(0.0), .none)
+        XCTAssertEqual(someColor.withAlpha(1.0).maybeNone(), .rgba(r: 0.1, g: 0.2, b: 0.3, a: 1.0))
+        XCTAssertEqual(someColor.withAlpha(0.5).maybeNone(), .rgba(r: 0.1, g: 0.2, b: 0.3, a: 0.5))
+        XCTAssertEqual(someColor.withAlpha(0.3).maybeNone(), .rgba(r: 0.1, g: 0.2, b: 0.3, a: 0.3))
+        XCTAssertEqual(someColor.withAlpha(0.0).maybeNone(), .none)
         
-        XCTAssertEqual(anotherColor.withAlpha(1.0), .rgba(r: 0.4, g: 0.3, b: 0.2, a: 1.0))
-        XCTAssertEqual(anotherColor.withAlpha(0.5), .rgba(r: 0.4, g: 0.3, b: 0.2, a: 0.5))
-        XCTAssertEqual(anotherColor.withAlpha(0.3), .rgba(r: 0.4, g: 0.3, b: 0.2, a: 0.3))
-        XCTAssertEqual(anotherColor.withAlpha(0.0), .none)
+        XCTAssertEqual(anotherColor.withAlpha(1.0).maybeNone(), .rgba(r: 0.4, g: 0.3, b: 0.2, a: 1.0))
+        XCTAssertEqual(anotherColor.withAlpha(0.5).maybeNone(), .rgba(r: 0.4, g: 0.3, b: 0.2, a: 0.5))
+        XCTAssertEqual(anotherColor.withAlpha(0.3).maybeNone(), .rgba(r: 0.4, g: 0.3, b: 0.2, a: 0.3))
+        XCTAssertEqual(anotherColor.withAlpha(0.0).maybeNone(), .none)
     }
     
     func testMultiplyingAlpha() {
@@ -108,9 +108,9 @@ final class LayerTreeColorTests: XCTestCase {
         
         //should be completley masked away
         XCTAssertEqual(noColor.luminanceToAlpha(), .none)
-        XCTAssertEqual(black.luminanceToAlpha(), .none)
-        XCTAssertEqual(clear.luminanceToAlpha(), .none)
-        
+        XCTAssertEqual(black.luminanceToAlpha(),  black.withAlpha(0.0))
+        XCTAssertEqual(clear.luminanceToAlpha(),  black.withAlpha(0.0))
+
         XCTAssertEqual(white.luminanceToAlpha(), black.withAlpha(1.0))
         XCTAssertEqual(red.luminanceToAlpha(), black.withAlpha(0.2126))
         XCTAssertEqual(green.luminanceToAlpha(), black.withAlpha(0.7152))
