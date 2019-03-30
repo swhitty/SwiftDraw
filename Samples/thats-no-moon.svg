@@ -13,19 +13,22 @@
 			<stop offset="100%" stop-color="#312452" />
 		</linearGradient>
 		
-		<linearGradient id="alpha1" x1="0" x2="1" y1="0" y2="0">
-			<stop offset="20%" stop-color="white" />
-			<stop offset="40%" stop-color="#A0A0A0" />
-			<stop offset="55%" stop-color="#202020" />
-			<stop offset="60%" stop-color="#000000" />
+		<linearGradient id="alpha1" x1="0" x2="0" y1="0" y2="1">
+			<stop offset="0%" stop-color="black" />
+			<stop offset="1000%" stop-color="white" />
 		</linearGradient>
-		
+
 		<mask id="alpha">
  	 		<rect x="76" y="76" width="250" height="250" fill="url(#alpha1)" />
-			<circle cx="138.5" cy="138.5" r="24.5" fill="#A0A080" />
 		</mask> 
+		
+		<rect id="frame" x="0" y="0" width="352" height="352" fill="url(#checkerboard)" />
+		
 	 </defs>
 	 
+	
 	 <rect x="0" y="0" width="352" height="352" fill="url(#checkerboard)" />
-	 <circle cx="176" cy="176" r="100" fill="url(#blue)" mask="url(#alpha)" />
+	 
+	 <use href="url(#frame)" fill="red" />
+
 </svg>

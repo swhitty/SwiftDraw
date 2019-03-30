@@ -42,7 +42,7 @@ extension LayerTree {
             self.provider = provider
         }
         
-        func renderCommands(for layer: Layer) -> [RendererCommand<P.Types>] {
+        func renderCommands(for layer: Layer, colorConverter: ColorConverter = DefaultColorConverter()) -> [RendererCommand<P.Types>] {
             guard layer.opacity > 0.0 else { return [] }
 
             let opacityCommands = renderCommands(forOpacity: layer.opacity)
@@ -69,7 +69,7 @@ extension LayerTree {
 
             //render all of the layer contents
             for contents in layer.contents {
-                commands.append(contentsOf: renderCommands(for: contents))
+                commands.append(contentsOf: renderCommands(for: contents, colorConverter: colorConverter))
             }
             
             //render apply mask
@@ -92,7 +92,7 @@ extension LayerTree {
             return commands
         }
         
-        func renderCommands(for contents: Layer.Contents, colorConverter: ColorConverter = DefaultColorConverter()) -> [RendererCommand<P.Types>] {
+        func renderCommands(for contents: Layer.Contents, colorConverter: ColorConverter) -> [RendererCommand<P.Types>] {
             switch contents {
             case .shape(let shape, let stroke, let fill):
                 return renderCommands(for: shape, stroke: stroke, fill: fill, colorConverter: colorConverter)
@@ -101,14 +101,14 @@ extension LayerTree {
             case .text(let text, let point, let att):
                 return renderCommands(for: text, at: point, attributes: att, colorConverter: colorConverter)
             case .layer(let layer):
-                return renderCommands(for: layer)
+                return renderCommands(for: layer, colorConverter: colorConverter)
             }
         }
         
         func renderCommands(for shape: Shape,
                             stroke: StrokeAttributes,
                             fill: FillAttributes,
-                            colorConverter: ColorConverter = DefaultColorConverter()) -> [RendererCommand<P.Types>] {
+                            colorConverter: ColorConverter) -> [RendererCommand<P.Types>] {
             var commands = [RendererCommand<P.Types>]()
             let path = provider.createPath(from: shape)
             
@@ -121,7 +121,7 @@ extension LayerTree {
             } else if let fillPattern = fill.pattern {
                 var patternCommands = [RendererCommand<P.Types>]()
                 for contents in fillPattern.contents {
-                    patternCommands.append(contentsOf: renderCommands(for: contents))
+                    patternCommands.append(contentsOf: renderCommands(for: contents, colorConverter: colorConverter))
                 }
 
                 let pattern = provider.createPattern(from: fillPattern, contents: patternCommands)
@@ -263,6 +263,6 @@ private func apply(colorConverter: ColorConverter, to gradient: LayerTree.Gradie
 
 private func apply(colorConverter: ColorConverter, to stop: LayerTree.Gradient.Stop) -> LayerTree.Gradient.Stop {
     var stop = stop
-    stop.color = colorConverter.createColor(from: stop.color)
+    stop.color = colorConverter.createColor(from: stop.color).withAlpha(stop.opacity)
     return stop
 }

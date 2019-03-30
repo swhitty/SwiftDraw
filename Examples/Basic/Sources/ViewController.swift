@@ -36,7 +36,7 @@ class ViewController: UIViewController {
 
     override func loadView() {
         let imageView = UIImageView(frame: UIScreen.main.bounds)
-        imageView.image = UIImage(svgNamed: "thats-no-moon.svg")
+        imageView.image = UIImage(svgNamed: "gradient-gratification.svg")
         imageView.contentMode = .scaleAspectFit
         imageView.backgroundColor = .white
         self.view = imageView
