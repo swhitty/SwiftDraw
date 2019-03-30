@@ -77,11 +77,11 @@ final class LayerTreeColorTests: XCTestCase {
         
         XCTAssertEqual(someColor.withMultiplyingAlpha(1.0), .rgba(r: 0.1, g: 0.2, b: 0.3, a: 0.4))
         XCTAssertEqual(someColor.withMultiplyingAlpha(0.5), .rgba(r: 0.1, g: 0.2, b: 0.3, a: 0.2))
-        XCTAssertEqual(someColor.withMultiplyingAlpha(0.0), .none)
+        XCTAssertEqual(someColor.withMultiplyingAlpha(0.0).maybeNone(), .none)
         
         XCTAssertEqual(anotherColor.withMultiplyingAlpha(1.0), .rgba(r: 0.4, g: 0.3, b: 0.2, a: 0.1))
         XCTAssertEqual(anotherColor.withMultiplyingAlpha(0.5), .rgba(r: 0.4, g: 0.3, b: 0.2, a: 0.05))
-        XCTAssertEqual(anotherColor.withMultiplyingAlpha(0.0), .none)
+        XCTAssertEqual(anotherColor.withMultiplyingAlpha(0.0).maybeNone(), .none)
     }
     
     func testRGBi() {

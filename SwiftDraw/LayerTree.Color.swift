@@ -99,17 +99,13 @@ extension LayerTree.Color {
             return .none
         case .rgba(r: let r, g: let g, b: let b, a: let a):
             let newAlpha = a * alpha
-            if newAlpha > 0 {
-                return .rgba(r: r,
-                             g: g,
-                             b: b,
-                             a: newAlpha)
-            } else {
-                return .none
-            }
+            return .rgba(r: r,
+                         g: g,
+                         b: b,
+                         a: newAlpha)
         }
     }
-    
+
     func luminanceToAlpha() -> LayerTree.Color {
         let alpha: Float
 

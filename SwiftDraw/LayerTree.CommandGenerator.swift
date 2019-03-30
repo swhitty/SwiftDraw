@@ -263,6 +263,6 @@ private func apply(colorConverter: ColorConverter, to gradient: LayerTree.Gradie
 
 private func apply(colorConverter: ColorConverter, to stop: LayerTree.Gradient.Stop) -> LayerTree.Gradient.Stop {
     var stop = stop
-    stop.color = colorConverter.createColor(from: stop.color).withAlpha(stop.opacity)
+    stop.color = colorConverter.createColor(from: stop.color).withMultiplyingAlpha(stop.opacity)
     return stop
 }
