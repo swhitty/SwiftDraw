@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:ns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="480" height="352" >
+	 <defs>
+	 	<pattern id="checkerboard" x="0" y="0" width="64" height="64" patternUnits="userSpaceOnUse">
+			<rect x="0" y="0" width="32" height="32" fill="#404040" />
+			<rect x="32" y="0" width="32" height="32" fill="#292929" />
+			<rect x="0" y="32" width="32" height="32" fill="#292929" />
+			<rect x="32" y="32" width="32" height="32" fill="#404040" />
+		</pattern>
+	
+		<g id="composite">
+		  <use xlink:href="#frame" fill="white" />
+			<use xlink:href="#frame" fill="black" opacity="0.5" />
+		</g>
+
+		<mask id="fade">
+		 <use xlink:href="#composite" />
+		</mask>
+		
+		<rect id="frame" x="112" y="48" width="256" height="256" />
+		
+		<rect id="row" x="112" y="48" width="256" height="32" />
+		<rect id="col" x="112" y="48" width="32" height="256" />
+	 </defs>
+	 
+	 <rect x="0" y="0" width="480" height="352" fill="url(#checkerboard)" />
+	 <use xlink:href="#frame" fill="red" />
+	 <use xlink:href="#frame" fill="blue" mask="url(#fade)" />
+
+	 <usae xlink:href="#composite" />
+
+</svg>

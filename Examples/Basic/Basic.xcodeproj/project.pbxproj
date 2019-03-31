@@ -18,6 +18,7 @@
 		D9618468220FDD1100C59D9B /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9618467220FDD1100C59D9B /* ViewController.swift */; };
 		D961846D220FDD1200C59D9B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D961846C220FDD1200C59D9B /* Assets.xcassets */; };
 		D9618470220FDD1200C59D9B /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = D961846E220FDD1200C59D9B /* LaunchScreen.storyboard */; };
+		D98375B622500FCC00974D71 /* mask-composite.svg in Resources */ = {isa = PBXBuildFile; fileRef = D98375B522500FCC00974D71 /* mask-composite.svg */; };
 		D9ACD791220FDDE0009717CF /* use.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9ACD783220FDDE0009717CF /* use.svg */; };
 		D9ACD792220FDDE0009717CF /* path.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9ACD784220FDDE0009717CF /* path.svg */; };
 		D9ACD793220FDDE0009717CF /* viewbox.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9ACD785220FDDE0009717CF /* viewbox.svg */; };
@@ -64,6 +65,7 @@
 		D961846C220FDD1200C59D9B /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		D961846F220FDD1200C59D9B /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		D9618471220FDD1200C59D9B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		D98375B522500FCC00974D71 /* mask-composite.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = "mask-composite.svg"; sourceTree = "<group>"; };
 		D9ACD783220FDDE0009717CF /* use.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = use.svg; sourceTree = "<group>"; };
 		D9ACD784220FDDE0009717CF /* path.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = path.svg; sourceTree = "<group>"; };
 		D9ACD785220FDDE0009717CF /* viewbox.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = viewbox.svg; sourceTree = "<group>"; };
@@ -128,6 +130,7 @@
 			isa = PBXGroup;
 			children = (
 				D945F5AC225241A100FAAAC4 /* blend.svg */,
+				D98375B522500FCC00974D71 /* mask-composite.svg */,
 				D91C3E42224ED9A4001BCDAE /* gradient-gratification.svg */,
 				D9494F45224C99950015ACE1 /* gradient.svg */,
 				D9FD69D7224CD4960046A926 /* gradient2.svg */,
@@ -222,6 +225,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				D9ACD79E220FDDE0009717CF /* invalid.svg in Resources */,
+				D98375B622500FCC00974D71 /* mask-composite.svg in Resources */,
 				D9ACD796220FDDE0009717CF /* curves.svg in Resources */,
 				D9ACD79C220FDDE0009717CF /* quad.svg in Resources */,
 				D9FD69D8224CD4960046A926 /* gradient2.svg in Resources */,
