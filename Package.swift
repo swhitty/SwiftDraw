@@ -24,6 +24,7 @@ let exclude: [String]
         "Parser.XML.ImageTests.swift",
         "CGPath+SegmentTests.swift",
         "CGPattern+Closure.swift",
+        "CGImage+Mask.swift",
         "ImageTests.swift"
 	]
 #else
