@@ -32,12 +32,12 @@ import UIKit
 
 public extension UIImage {
     convenience init?(svgNamed name: String, in bundle: Bundle = Bundle.main) {
-        guard let image = Image(named: name, in: bundle),
-              let cgImage = image.rasterize().cgImage else {
+        guard let image = Image(named: name, in: bundle)?.rasterize(),
+              let cgImage = image.cgImage else {
                 return nil
         }
-        
-        self.init(cgImage: cgImage)
+
+        self.init(cgImage: cgImage, scale: image.scale, orientation: image.imageOrientation)
     }
 }
 
