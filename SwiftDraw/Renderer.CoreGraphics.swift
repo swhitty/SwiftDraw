@@ -45,6 +45,7 @@ struct CGTypes: RendererTypes {
     typealias Rect = CGRect
     typealias Color = CGColor
     typealias Gradient = CGGradient
+    typealias Mask = CGImage
     typealias Path = CGPath
     typealias Pattern = CGPattern
     typealias Transform = CGAffineTransform
@@ -100,7 +101,15 @@ struct CGProvider: RendererTypeProvider {
         return CGColor(colorSpace: CGColorSpaceCreateDeviceRGB(),
                        components: [r, g, b, a])!
     }
-    
+
+    func createMask(from contents: [RendererCommand<CGTypes>], size: LayerTree.Size) -> CGImage {
+
+        return CGImage.makeMask(size: createSize(from: size)) { ctx in
+            let renderer = CGRenderer(context: ctx)
+            renderer.perform(contents)
+        }
+    }
+
     func createBlendMode(from mode: LayerTree.BlendMode) -> CGBlendMode {
         switch mode {
         case .normal: return .normal
@@ -324,7 +333,11 @@ struct CGRenderer: Renderer {
         ctx.addPath(path)
         ctx.clip()
     }
-    
+
+    func setClip(mask: CGImage, frame: CGRect) {
+        ctx.clip(to: frame, mask: mask)
+    }
+
     func setAlpha(_ alpha: CGFloat) {
         ctx.setAlpha(alpha)
     }

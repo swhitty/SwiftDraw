@@ -102,6 +102,10 @@ final class MockRenderer: Renderer {
         operations.append("setClip")
     }
 
+    func setClip(mask: [Any], frame: LayerTree.Rect) {
+        operations.append("setClipMask")
+    }
+
     func setAlpha(_ alpha: LayerTree.Float) {
         operations.append("setAlpha")
     }

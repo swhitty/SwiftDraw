@@ -37,6 +37,7 @@ protocol RendererTypes {
     associatedtype Rect
     associatedtype Color
     associatedtype Gradient
+    associatedtype Mask
     associatedtype Path
     associatedtype Pattern
     associatedtype Transform
@@ -58,6 +59,7 @@ protocol RendererTypeProvider {
     func createGradient(from gradient: LayerTree.Gradient) -> Types.Gradient
     func createBlendMode(from mode: LayerTree.BlendMode) -> Types.BlendMode
     func createTransform(from transform: LayerTree.Transform.Matrix) -> Types.Transform
+    func createMask(from contents: [RendererCommand<Types>], size: LayerTree.Size) -> Types.Mask
     func createPath(from shape: LayerTree.Shape) -> Types.Path
     func createPath(from subPaths: [Types.Path]) -> Types.Path
     func createPath(from text: String, at origin: LayerTree.Point, with attributes: LayerTree.TextAttributes) -> Types.Path?
@@ -91,6 +93,7 @@ protocol Renderer {
     func setLine(join: Types.LineJoin)
     func setLine(miterLimit: Types.Float)
     func setClip(path: Types.Path)
+    func setClip(mask: Types.Mask, frame: Types.Rect)
     func setAlpha(_ alpha: Types.Float)
     func setBlend(mode: Types.BlendMode)
     
@@ -135,6 +138,8 @@ extension Renderer {
             setLine(miterLimit: l)
         case .setClip(path: let p):
             setClip(path: p)
+        case .setClipMask(let m, frame: let f):
+            setClip(mask: m, frame: f)
         case .setAlpha(let a):
             setAlpha(a)
         case .setBlend(mode: let m):
@@ -174,6 +179,7 @@ enum RendererCommand<Types: RendererTypes> {
     case setLineJoin(Types.LineJoin)
     case setLineMiter(limit: Types.Float)
     case setClip(path: Types.Path)
+    case setClipMask(Types.Mask, frame: Types.Rect)
     case setAlpha(Types.Float)
     case setBlend(mode: Types.BlendMode)
     
