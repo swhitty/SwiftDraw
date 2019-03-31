@@ -1,34 +1,31 @@
 <?xml version="1.0"?>
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:ns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="352" height="352" >
-	 <defs>
-	 	<pattern id="checkerboard" x="0" y="0" width="64" height="64" patternUnits="userSpaceOnUse">
-			<rect x="0" y="0" width="32" height="32" fill="#404040" />
-			<rect x="32" y="0" width="32" height="32" fill="#292929" />
-			<rect x="0" y="32" width="32" height="32" fill="#292929" />
-			<rect x="32" y="32" width="32" height="32" fill="#404040" />
-		</pattern>
-		
-		<linearGradient id="blue" x1="0" x2="0" y1="0" y2="1">
-			<stop offset="10%" stop-color="#34D3F2" />
-			<stop offset="100%" stop-color="#312452" />
-		</linearGradient>
-		
-		<linearGradient id="alpha1" x1="0" x2="0" y1="0" y2="1">
-			<stop offset="0%" stop-color="black" />
-			<stop offset="1000%" stop-color="white" />
-		</linearGradient>
+  <defs>
+    <pattern id="checkerboard" x="0" y="0" width="64" height="64" patternUnits="userSpaceOnUse">
+      <rect x="0" y="0" width="32" height="32" fill="#404040" />
+      <rect x="32" y="0" width="32" height="32" fill="#292929" />
+      <rect x="0" y="32" width="32" height="32" fill="#292929" />
+      <rect x="32" y="32" width="32" height="32" fill="#404040" />
+    </pattern>
 
-		<mask id="alpha">
- 	 		<rect x="76" y="76" width="250" height="250" fill="url(#alpha1)" />
-		</mask> 
-		
-		<rect id="frame" x="0" y="0" width="352" height="352" fill="url(#checkerboard)" />
-		
-	 </defs>
-	 
-	
-	 <rect x="0" y="0" width="352" height="352" fill="url(#checkerboard)" />
-	 
-	 <use href="url(#frame)" fill="red" />
+    <linearGradient id="blue" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="10%" stop-color="#34D3F2" />
+      <stop offset="100%" stop-color="#312452" />
+    </linearGradient>
 
+    <linearGradient id="alpha1" x1="0" x2="1" y1="0" y2="0">
+      <stop offset="20%" stop-color="white" />
+      <stop offset="40%" stop-color="#A0A0A0" />
+      <stop offset="55%" stop-color="#202020" />
+      <stop offset="60%" stop-color="#000000" />
+    </linearGradient>
+
+    <mask id="alpha">
+      <rect x="76" y="76" width="250" height="250" fill="url(#alpha1)" />
+      <circle cx="138.5" cy="138.5" r="24.5" fill="#A0A080" />
+    </mask> 
+  </defs>
+
+  <rect x="0" y="0" width="352" height="352" fill="url(#checkerboard)" />
+  <circle cx="176" cy="176" r="100" fill="url(#blue)" mask="url(#alpha)" />
 </svg>
