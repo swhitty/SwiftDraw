@@ -71,7 +71,16 @@ extension LayerTree.Color {
                      b: Float(rgbi.2)/255.0,
                      a: 1.0)
     }
-    
+
+    var isOpaque: Bool {
+        switch self {
+        case .none:
+            return false
+        case .rgba(r: _, g: _, b: _, a: let a):
+            return a >= 1.0
+        }
+    }
+
     func withAlpha(_ alpha: Float) -> LayerTree.Color {
         switch self {
         case .none:
