@@ -86,27 +86,31 @@ extension LayerTree {
     }
 
     struct FillAttributes: Equatable {
-        var color: Color = .none
-        var pattern: Pattern?
-        var gradient: Gradient?
+        var fill: Fill = .color(.none)
         var opacity: Float = 1.0
         var rule: FillRule
 
         init(color: Color, rule: FillRule) {
-            self.color = color
+            self.fill = .color(color)
             self.rule = rule
         }
 
         init(pattern: Pattern, rule: FillRule, opacity: Float) {
-            self.pattern = pattern
+            self.fill = .pattern(pattern)
             self.rule = rule
             self.opacity = opacity
         }
 
         init(gradient: Gradient, rule: FillRule, opacity: Float) {
-            self.gradient = gradient
+            self.fill = .gradient(gradient)
             self.rule = rule
             self.opacity = opacity
+        }
+
+        enum Fill: Equatable {
+            case color(Color)
+            case pattern(Pattern)
+            case gradient(Gradient)
         }
     }
 

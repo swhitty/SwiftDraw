@@ -111,14 +111,17 @@ extension LayerTree {
                             colorConverter: ColorConverter) -> [RendererCommand<P.Types>] {
             var commands = [RendererCommand<P.Types>]()
             let path = provider.createPath(from: shape)
-            
-            if fill.color != .none {
-                let converted = colorConverter.createColor(from: fill.color)
-                let color = provider.createColor(from: converted)
-                let rule = provider.createFillRule(from: fill.rule)
-                commands.append(.setFill(color: color))
-                commands.append(.fill(path, rule: rule))
-            } else if let fillPattern = fill.pattern {
+
+            switch fill.fill {
+            case .color(let color):
+                if (color != .none) {
+                    let converted = colorConverter.createColor(from: color)
+                    let color = provider.createColor(from: converted)
+                    let rule = provider.createFillRule(from: fill.rule)
+                    commands.append(.setFill(color: color))
+                    commands.append(.fill(path, rule: rule))
+                }
+            case .pattern(let fillPattern):
                 var patternCommands = [RendererCommand<P.Types>]()
                 for contents in fillPattern.contents {
                     patternCommands.append(contentsOf: renderCommands(for: contents, colorConverter: colorConverter))
@@ -128,8 +131,7 @@ extension LayerTree {
                 let rule = provider.createFillRule(from: fill.rule)
                 commands.append(.setFillPattern(pattern))
                 commands.append(.fill(path, rule: rule))
-            } else if let fillGradient = fill.gradient {
-
+            case .gradient(let fillGradient):
                 commands.append(.pushState)
                 commands.append(.setClip(path: path))
 
