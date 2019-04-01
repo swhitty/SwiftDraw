@@ -95,29 +95,10 @@ final class LayerTreeColorTests: XCTestCase {
         XCTAssertEqual(Color((UInt8(204), UInt8(0), UInt8(204))), .rgba(r: 0.8, g: 0.0, b: 0.8, a: 1.0))
         XCTAssertEqual(Color((UInt8(204), UInt8(204), UInt8(0))), .rgba(r: 0.8, g: 0.8, b: 0.0, a: 1.0))
     }
-    
-    func testLuminanceToAlpha() {
-        // svg masks are constructed from 100% black with alpha from the RGB luminance value
-        
-        let white = Color.white
-        let black = Color.black
-        let clear = Color.rgba(r: 0.0, g: 0.0, b: 0.0, a: 1.0)
-        let red = Color.rgba(r: 1.0, g: 0.0, b: 0.0, a: 1.0)
-        let green = Color.rgba(r: 0.0, g: 1.0, b: 0.0, a: 1.0)
-        let blue = Color.rgba(r: 0.0, g: 0.0, b: 1.0, a: 1.0)
-        
-        //should be completley masked away
-        XCTAssertEqual(noColor.luminanceToAlpha(), .none)
-        XCTAssertEqual(black.luminanceToAlpha(),  black.withAlpha(0.0))
-        XCTAssertEqual(clear.luminanceToAlpha(),  black.withAlpha(0.0))
-
-        XCTAssertEqual(white.luminanceToAlpha(), black.withAlpha(1.0))
-        XCTAssertEqual(red.luminanceToAlpha(), black.withAlpha(0.2126))
-        XCTAssertEqual(green.luminanceToAlpha(), black.withAlpha(0.7152))
-        XCTAssertEqual(blue.luminanceToAlpha(), black.withAlpha(0.0722))
-    }
 
     func testLuminanceConverter() {
+        // svg masks are constructed from 100% black with alpha from the RGB luminance value
+
         let white = Color.white
         let black = Color.black
         let red = Color.rgba(r: 1.0, g: 0.0, b: 0.0, a: 1.0)
@@ -125,10 +106,11 @@ final class LayerTreeColorTests: XCTestCase {
         let blue = Color.rgba(r: 0.0, g: 0.0, b: 1.0, a: 1.0)
 
         let converter = LuminanceColorConverter()
-        XCTAssertEqual(converter.createColor(from: white), black.withAlpha(1.0))
-        XCTAssertEqual(converter.createColor(from: red), black.withAlpha(0.2126))
-        XCTAssertEqual(converter.createColor(from: green), black.withAlpha(0.7152))
-        XCTAssertEqual(converter.createColor(from: blue), black.withAlpha(0.0722))
+        XCTAssertEqual(converter.createColor(from: white), .gray(white: 0.0, a: 1.0))
+        XCTAssertEqual(converter.createColor(from: red), .gray(white: 0.0, a: 0.2126))
+        XCTAssertEqual(converter.createColor(from: green), .gray(white: 0.0, a: 0.7152))
+        XCTAssertEqual(converter.createColor(from: blue), .gray(white: 0.0, a: 0.0722))
+        XCTAssertEqual(converter.createColor(from: black), .gray(white: 0.0, a: 0.0))
     }
     
     func testFromDOM() {

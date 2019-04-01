@@ -85,6 +85,8 @@ struct CGProvider: RendererTypeProvider {
                                               g: CGFloat(c.g),
                                               b: CGFloat(c.b),
                                               a: CGFloat(c.a))
+        case .gray(white: let w, a: let a):
+            return createColor(w: CGFloat(w), a: CGFloat(a))
         }
     }
 
@@ -100,6 +102,11 @@ struct CGProvider: RendererTypeProvider {
     private func createColor(r: CGFloat, g: CGFloat, b: CGFloat, a: CGFloat) -> CGColor {
         return CGColor(colorSpace: CGColorSpaceCreateDeviceRGB(),
                        components: [r, g, b, a])!
+    }
+
+    private func createColor(w: CGFloat, a: CGFloat) -> CGColor {
+        let space = CGColorSpace(name: CGColorSpace.extendedGray)!
+        return CGColor(colorSpace: space, components: [w, a])!
     }
 
     func createMask(from contents: [RendererCommand<CGTypes>], size: LayerTree.Size) -> CGImage {

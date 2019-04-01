@@ -35,7 +35,8 @@ extension LayerTree {
 
         case none
         case rgba(r: Float, g: Float, b: Float, a: Float)
-        
+        case gray(white: Float, a: Float)
+
         static var white: Color { return Color.rgba(r: 1, g: 1, b: 1, a: 1) }
         static var black: Color { return Color.rgba(r: 0, g: 0, b: 0, a: 1) }
     }
@@ -90,6 +91,8 @@ extension LayerTree.Color {
                          g: g,
                          b: b,
                          a: alpha)
+        case .gray(white: let w, a: _):
+            return .gray(white: w, a: alpha)
         }
     }
 
@@ -98,6 +101,8 @@ extension LayerTree.Color {
         case .none:
             return .none
         case .rgba(r: _, g: _, b: _, a: let a):
+            return a > 0 ? self : .none
+        case .gray(white: _, a: let a):
             return a > 0 ? self : .none
         }
     }
@@ -112,20 +117,10 @@ extension LayerTree.Color {
                          g: g,
                          b: b,
                          a: newAlpha)
+        case .gray(white: let w, a: let a):
+            let newAlpha = a * alpha
+            return .gray(white: w, a: newAlpha)
         }
-    }
-
-    func luminanceToAlpha() -> LayerTree.Color {
-        let alpha: Float
-
-        switch self {
-        case .none:
-            return .none
-        case .rgba(let r, let g, let b, let a):
-            //sRGB Luminance to alpha
-            alpha = ((r*0.2126) + (g*0.7152) + (b*0.0722)) * a
-        }
-        return LayerTree.Color.rgba(r: 0, g: 0, b: 0, a: 1.0).withAlpha(alpha)
     }
 }
 
@@ -141,7 +136,14 @@ struct DefaultColorConverter: ColorConverter {
 
 struct LuminanceColorConverter: ColorConverter {
     func createColor(from color: LayerTree.Color) -> LayerTree.Color {
-        return color.luminanceToAlpha()
+        switch color {
+        case .rgba(let r, let g, let b, let a):
+            //sRGB Luminance to alpha
+            let alpha = ((r*0.2126) + (g*0.7152) + (b*0.0722)) * a
+            return .gray(white: 0.0, a: alpha)
+        default:
+            return color
+        }
     }
 }
 
