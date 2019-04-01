@@ -79,6 +79,8 @@ extension LayerTree.Color {
             return false
         case .rgba(r: _, g: _, b: _, a: let a):
             return a >= 1.0
+        case .gray(white: _, a: let a):
+            return a >= 1.0
         }
     }
 
