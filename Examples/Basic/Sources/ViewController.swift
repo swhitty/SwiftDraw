@@ -65,7 +65,7 @@ class ViewController: UIViewController {
 
     override func loadView() {
         let imageView = UIImageView(frame: UIScreen.main.bounds)
-        imageView.image = UIImage(svgNamed: "mask.svg")
+        imageView.image = UIImage(svgNamed: "mask-composite-3.svg")
         imageView.contentMode = .scaleAspectFit
         imageView.backgroundColor = .white
         self.view = imageView

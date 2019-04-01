@@ -22,8 +22,8 @@
 	 </defs>
 	 
 	 <rect x="0" y="0" width="480" height="352" fill="url(#checkerboard)" />
-	 <use xlink:href="#frame" fill="red" />
-	 <use xlink:href="#frame" fill="blue" mask="url(#fade)" />
+	 <use xlink:href="#frame" fill="#ff0000" />
+	 <use xlink:href="#frame" fill="#00ff00" mask="url(#fade)" />
 
 	 <usae xlink:href="#composite" />
 </svg>

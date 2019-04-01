@@ -50,7 +50,8 @@ public final class Image: NSObject {
         // - LayerTree is converted into RenderCommands
         // - RenderCommands are performed by Renderer (drawn to CGContext)
         let layer = LayerTree.Builder(svg: svg).makeLayer()
-        let generator = LayerTree.CommandGenerator(provider: CGProvider())
+        let generator = LayerTree.CommandGenerator(provider: CGProvider(),
+                                                   size: LayerTree.Size(svg.width, svg.height))
         commands = generator.renderCommands(for: layer)
     }
 }

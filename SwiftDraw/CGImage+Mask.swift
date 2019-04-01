@@ -32,6 +32,10 @@
 import CoreGraphics
 import Foundation
 
+func CGColorSpaceCreateExtendedGray() -> CGColorSpace {
+    return CGColorSpace(name: CGColorSpace.extendedGray)!
+}
+
 extension CGImage {
 
     static func makeMask(size: CGSize, draw: (CGContext) -> ()) -> CGImage {

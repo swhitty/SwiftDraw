@@ -147,3 +147,17 @@ struct LuminanceColorConverter: ColorConverter {
     }
 }
 
+struct GrayscaleMaskColorConverter: ColorConverter {
+    func createColor(from color: LayerTree.Color) -> LayerTree.Color {
+        switch color {
+        case .rgba(let r, let g, let b, let a):
+            //sRGB Luminance to alpha
+            let white = 1.0 - ((r*0.2126) + (g*0.7152) + (b*0.0722))
+           // let white = (r*0.2126) + (g*0.7152) + (b*0.0722)
+            return .gray(white: white, a: a)
+            //return .rgba(r: white, g: white, b: white, a: a)
+        default:
+            return color
+        }
+    }
+}

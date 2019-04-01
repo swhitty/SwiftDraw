@@ -105,8 +105,8 @@ struct CGProvider: RendererTypeProvider {
     }
 
     private func createColor(w: CGFloat, a: CGFloat) -> CGColor {
-        let space = CGColorSpace(name: CGColorSpace.extendedGray)!
-        return CGColor(colorSpace: space, components: [w, a])!
+        return CGColor(colorSpace: CGColorSpaceCreateExtendedGray(),
+                       components: [w, a])!
     }
 
     func createMask(from contents: [RendererCommand<CGTypes>], size: LayerTree.Size) -> CGImage {
@@ -342,6 +342,8 @@ struct CGRenderer: Renderer {
     }
 
     func setClip(mask: CGImage, frame: CGRect) {
+//        let rect = CGRect(x: 0, y: 0, width: mask.width, height: mask.height)
+//        ctx.draw(mask, in: rect)
         ctx.clip(to: frame, mask: mask)
     }
 

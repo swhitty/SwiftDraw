@@ -37,9 +37,13 @@ extension LayerTree {
     final class CommandGenerator<P: RendererTypeProvider>{
         
         let provider: P
+        let size: LayerTree.Size
+        let scale: LayerTree.Float
         
-        init(provider: P) {
+        init(provider: P, size: LayerTree.Size, scale: LayerTree.Float = 3.0) {
             self.provider = provider
+            self.size = size
+            self.scale = scale
         }
         
         func renderCommands(for layer: Layer, colorConverter: ColorConverter = DefaultColorConverter()) -> [RendererCommand<P.Types>] {
@@ -48,36 +52,37 @@ extension LayerTree {
             let opacityCommands = renderCommands(forOpacity: layer.opacity)
             let transformCommands = renderCommands(forTransforms: layer.transform)
             let clipCommands = renderCommands(forClip: layer.clip)
-            let maskCommands = renderCommands(forMask: layer.mask)
+            let mask = makeMask(forMask: layer.mask)
 
             var commands = [RendererCommand<P.Types>]()
 
             if !opacityCommands.isEmpty ||
                !transformCommands.isEmpty ||
                !clipCommands.isEmpty ||
-               !maskCommands.isEmpty {
+               mask != nil {
                 commands.append(.pushState)
             }
-            
+
             commands.append(contentsOf: transformCommands)
             commands.append(contentsOf: opacityCommands)
             commands.append(contentsOf: clipCommands)
 
-            if !maskCommands.isEmpty {
-                commands.append(.pushTransparencyLayer)
+            if let mask = mask {
+                let bounds = provider.createRect(from: LayerTree.Rect(x: 0, y: 0, width: size.width * scale, height: size.height * scale))
+                commands.append(.setClipMask(mask, frame: bounds))
+
+                //render all of the layer contents
+                for contents in layer.contents {
+                    commands.append(contentsOf: renderCommands(for: contents, colorConverter: colorConverter))
+                }
+
+            } else {
+                //render all of the layer contents
+                for contents in layer.contents {
+                    commands.append(contentsOf: renderCommands(for: contents, colorConverter: colorConverter))
+                }
             }
 
-            //render all of the layer contents
-            for contents in layer.contents {
-                commands.append(contentsOf: renderCommands(for: contents, colorConverter: colorConverter))
-            }
-            
-            //render apply mask
-            if !maskCommands.isEmpty {
-                commands.append(contentsOf: maskCommands)
-                commands.append(.popTransparencyLayer)
-            }
-            
             if !opacityCommands.isEmpty {
                 commands.append(.popTransparencyLayer)
             }
@@ -85,7 +90,7 @@ extension LayerTree {
             if !opacityCommands.isEmpty ||
                !transformCommands.isEmpty ||
                !clipCommands.isEmpty ||
-               !maskCommands.isEmpty {
+               mask != nil {
                 commands.append(.popState)
             }
             
@@ -225,10 +230,21 @@ extension LayerTree {
             
             return [.setClip(path: clipPath)]
         }
-        
+
+        func makeMask(forMask layer: Layer?) -> P.Types.Mask? {
+            guard let layer = layer else { return nil }
+
+            var commands = layer.contents.flatMap {
+                renderCommands(for: $0, colorConverter: GrayscaleMaskColorConverter())
+            }
+            guard commands.isEmpty == false else { return nil }
+
+            commands.append(.scale(sx: provider.createFloat(from: scale), sy: provider.createFloat(from: scale)))
+            return provider.createMask(from: commands, size: LayerTree.Size(size.width*scale, size.height*scale))
+        }
+
         func renderCommands(forMask layer: Layer?) -> [RendererCommand<P.Types>] {
             guard let layer = layer else { return [] }
-            
 
             let copy = provider.createBlendMode(from: .copy)
             let destinationIn = provider.createBlendMode(from: .destinationIn)
