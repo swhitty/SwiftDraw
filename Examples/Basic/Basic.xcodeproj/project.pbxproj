@@ -21,7 +21,6 @@
 		D9ACD792220FDDE0009717CF /* path.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9ACD784220FDDE0009717CF /* path.svg */; };
 		D9ACD793220FDDE0009717CF /* viewbox.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9ACD785220FDDE0009717CF /* viewbox.svg */; };
 		D9ACD794220FDDE0009717CF /* transform.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9ACD786220FDDE0009717CF /* transform.svg */; };
-		D9ACD795220FDDE0009717CF /* aa.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9ACD787220FDDE0009717CF /* aa.svg */; };
 		D9ACD796220FDDE0009717CF /* curves.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9ACD788220FDDE0009717CF /* curves.svg */; };
 		D9ACD797220FDDE0009717CF /* shapes.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9ACD789220FDDE0009717CF /* shapes.svg */; };
 		D9ACD798220FDDE0009717CF /* lines.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9ACD78A220FDDE0009717CF /* lines.svg */; };
@@ -67,7 +66,6 @@
 		D9ACD784220FDDE0009717CF /* path.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = path.svg; sourceTree = "<group>"; };
 		D9ACD785220FDDE0009717CF /* viewbox.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = viewbox.svg; sourceTree = "<group>"; };
 		D9ACD786220FDDE0009717CF /* transform.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = transform.svg; sourceTree = "<group>"; };
-		D9ACD787220FDDE0009717CF /* aa.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = aa.svg; sourceTree = "<group>"; };
 		D9ACD788220FDDE0009717CF /* curves.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = curves.svg; sourceTree = "<group>"; };
 		D9ACD789220FDDE0009717CF /* shapes.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = shapes.svg; sourceTree = "<group>"; };
 		D9ACD78A220FDDE0009717CF /* lines.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = lines.svg; sourceTree = "<group>"; };
@@ -136,7 +134,6 @@
 				D9ACD784220FDDE0009717CF /* path.svg */,
 				D9ACD785220FDDE0009717CF /* viewbox.svg */,
 				D9ACD786220FDDE0009717CF /* transform.svg */,
-				D9ACD787220FDDE0009717CF /* aa.svg */,
 				D9ACD788220FDDE0009717CF /* curves.svg */,
 				D956E1B022103A0C00C5ADA2 /* identity.svg */,
 				D9ACD789220FDDE0009717CF /* shapes.svg */,
@@ -229,7 +226,6 @@
 				D9ACD799220FDDE0009717CF /* starry.svg in Resources */,
 				D9ACD791220FDDE0009717CF /* use.svg in Resources */,
 				D91C3E43224ED9A4001BCDAE /* gradient-gratification.svg in Resources */,
-				D9ACD795220FDDE0009717CF /* aa.svg in Resources */,
 				D9ACD793220FDDE0009717CF /* viewbox.svg in Resources */,
 				D9618470220FDD1200C59D9B /* LaunchScreen.storyboard in Resources */,
 				D9ACD798220FDDE0009717CF /* lines.svg in Resources */,
