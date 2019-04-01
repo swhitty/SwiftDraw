@@ -34,6 +34,35 @@ import UIKit
 
 class ViewController: UIViewController {
 
+    init() {
+        super.init(nibName: nil, bundle: nil)
+        self.title = "SVG"
+        navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Mode", style: .plain, target: self, action: #selector(didTap))
+    }
+
+    required init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    @objc
+    func didTap() {
+        guard let contentMode = imageViewIfLoaded?.contentMode else { return }
+        switch contentMode {
+        case .center:
+            imageViewIfLoaded?.contentMode = .scaleAspectFit
+        case .scaleAspectFit:
+            imageViewIfLoaded?.contentMode = .scaleAspectFill
+        case .scaleAspectFill:
+            imageViewIfLoaded?.contentMode = .center
+        default:
+            imageViewIfLoaded?.contentMode = .center
+        }
+    }
+
+    var imageViewIfLoaded: UIImageView? {
+        return viewIfLoaded as? UIImageView
+    }
+
     override func loadView() {
         let imageView = UIImageView(frame: UIScreen.main.bounds)
         imageView.image = UIImage(svgNamed: "gradient-gratification.svg")
