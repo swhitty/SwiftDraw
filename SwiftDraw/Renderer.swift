@@ -50,7 +50,9 @@ protocol RendererTypes {
 
 protocol RendererTypeProvider {
     associatedtype Types: RendererTypes
-    
+
+    var supportsTransparencyLayers: Bool { get }
+
     func createFloat(from float: LayerTree.Float) -> Types.Float
     func createPoint(from point: LayerTree.Point) -> Types.Point
     func createSize(from size: LayerTree.Size) -> Types.Size
@@ -74,7 +76,7 @@ protocol RendererTypeProvider {
 
 protocol Renderer {
     associatedtype Types: RendererTypes
-    
+
     func pushState()
     func popState()
     func pushTransparencyLayer()

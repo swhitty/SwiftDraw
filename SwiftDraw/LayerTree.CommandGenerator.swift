@@ -47,6 +47,64 @@ extension LayerTree {
         }
         
         func renderCommands(for layer: Layer, colorConverter: ColorConverter = DefaultColorConverter()) -> [RendererCommand<P.Types>] {
+            if provider.supportsTransparencyLayers {
+                return renderCommandsWithTransparency(for: layer, colorConverter: colorConverter)
+            } else {
+                return renderCommandsWithoutTransparency(for: layer, colorConverter: colorConverter)
+            }
+        }
+
+        func renderCommandsWithTransparency(for layer: Layer, colorConverter: ColorConverter = DefaultColorConverter()) -> [RendererCommand<P.Types>] {
+            guard layer.opacity > 0.0 else { return [] }
+
+            let opacityCommands = renderCommands(forOpacity: layer.opacity)
+            let transformCommands = renderCommands(forTransforms: layer.transform)
+            let clipCommands = renderCommands(forClip: layer.clip)
+            let maskCommands = renderCommands(forMask: layer.mask)
+
+            var commands = [RendererCommand<P.Types>]()
+
+            if !opacityCommands.isEmpty ||
+               !transformCommands.isEmpty ||
+               !clipCommands.isEmpty ||
+               !maskCommands.isEmpty {
+                commands.append(.pushState)
+            }
+            
+            commands.append(contentsOf: transformCommands)
+            commands.append(contentsOf: opacityCommands)
+            commands.append(contentsOf: clipCommands)
+
+            if !maskCommands.isEmpty {
+                commands.append(.pushTransparencyLayer)
+            }
+
+            //render all of the layer contents
+            for contents in layer.contents {
+                commands.append(contentsOf: renderCommands(for: contents, colorConverter: colorConverter))
+            }
+            
+            //render apply mask
+            if !maskCommands.isEmpty {
+                commands.append(contentsOf: maskCommands)
+                commands.append(.popTransparencyLayer)
+            }
+            
+            if !opacityCommands.isEmpty {
+                commands.append(.popTransparencyLayer)
+            }
+
+            if !opacityCommands.isEmpty ||
+               !transformCommands.isEmpty ||
+               !clipCommands.isEmpty ||
+               !maskCommands.isEmpty {
+                commands.append(.popState)
+            }
+            
+            return commands
+        }
+
+        func renderCommandsWithoutTransparency(for layer: Layer, colorConverter: ColorConverter = DefaultColorConverter()) -> [RendererCommand<P.Types>] {
             guard layer.opacity > 0.0 else { return [] }
 
             let opacityCommands = renderCommands(forOpacity: layer.opacity)
@@ -57,9 +115,9 @@ extension LayerTree {
             var commands = [RendererCommand<P.Types>]()
 
             if !opacityCommands.isEmpty ||
-               !transformCommands.isEmpty ||
-               !clipCommands.isEmpty ||
-               mask != nil {
+                !transformCommands.isEmpty ||
+                !clipCommands.isEmpty ||
+                mask != nil {
                 commands.append(.pushState)
             }
 
@@ -88,12 +146,12 @@ extension LayerTree {
             }
 
             if !opacityCommands.isEmpty ||
-               !transformCommands.isEmpty ||
-               !clipCommands.isEmpty ||
-               mask != nil {
+                !transformCommands.isEmpty ||
+                !clipCommands.isEmpty ||
+                mask != nil {
                 commands.append(.popState)
             }
-            
+
             return commands
         }
         
