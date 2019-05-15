@@ -10,9 +10,9 @@
 		D90523452217927F00B3B94F /* mystery.svg in Resources */ = {isa = PBXBuildFile; fileRef = D90523442217927F00B3B94F /* mystery.svg */; };
 		D918D26D22122A7300097C9A /* arc2.svg in Resources */ = {isa = PBXBuildFile; fileRef = D918D26C22122A7300097C9A /* arc2.svg */; };
 		D91C3E43224ED9A4001BCDAE /* gradient-gratification.svg in Resources */ = {isa = PBXBuildFile; fileRef = D91C3E42224ED9A4001BCDAE /* gradient-gratification.svg */; };
-		D945F5AD225241A100FAAAC4 /* blend.svg in Resources */ = {isa = PBXBuildFile; fileRef = D945F5AC225241A100FAAAC4 /* blend.svg */; };
 		D945F5AA225220F900FAAAC4 /* mask-composite-2.svg in Resources */ = {isa = PBXBuildFile; fileRef = D945F5A8225220F900FAAAC4 /* mask-composite-2.svg */; };
 		D945F5AB225220F900FAAAC4 /* mask-composite-3.svg in Resources */ = {isa = PBXBuildFile; fileRef = D945F5A9225220F900FAAAC4 /* mask-composite-3.svg */; };
+		D945F5AD225241A100FAAAC4 /* blend.svg in Resources */ = {isa = PBXBuildFile; fileRef = D945F5AC225241A100FAAAC4 /* blend.svg */; };
 		D9494F44224C846D0015ACE1 /* thats-no-moon.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9494F43224C846D0015ACE1 /* thats-no-moon.svg */; };
 		D9494F46224C99950015ACE1 /* gradient.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9494F45224C99950015ACE1 /* gradient.svg */; };
 		D956E1B122103A0C00C5ADA2 /* identity.svg in Resources */ = {isa = PBXBuildFile; fileRef = D956E1B022103A0C00C5ADA2 /* identity.svg */; };
@@ -57,9 +57,9 @@
 		D90523442217927F00B3B94F /* mystery.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = mystery.svg; sourceTree = "<group>"; };
 		D918D26C22122A7300097C9A /* arc2.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = arc2.svg; sourceTree = "<group>"; };
 		D91C3E42224ED9A4001BCDAE /* gradient-gratification.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = "gradient-gratification.svg"; sourceTree = "<group>"; };
-		D945F5AC225241A100FAAAC4 /* blend.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = blend.svg; sourceTree = "<group>"; };
 		D945F5A8225220F900FAAAC4 /* mask-composite-2.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = "mask-composite-2.svg"; sourceTree = "<group>"; };
 		D945F5A9225220F900FAAAC4 /* mask-composite-3.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = "mask-composite-3.svg"; sourceTree = "<group>"; };
+		D945F5AC225241A100FAAAC4 /* blend.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = blend.svg; sourceTree = "<group>"; };
 		D9494F43224C846D0015ACE1 /* thats-no-moon.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = "thats-no-moon.svg"; sourceTree = "<group>"; };
 		D9494F45224C99950015ACE1 /* gradient.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = gradient.svg; sourceTree = "<group>"; };
 		D956E1B022103A0C00C5ADA2 /* identity.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = identity.svg; sourceTree = "<group>"; };
@@ -344,6 +344,7 @@
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
 			};
 			name = Debug;
 		};
@@ -398,6 +399,7 @@
 				SDKROOT = iphoneos;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;
@@ -415,7 +417,6 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.whiloop.Basic;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_VERSION = 4.2;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
@@ -433,7 +434,6 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.whiloop.Basic;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_VERSION = 4.2;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
