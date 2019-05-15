@@ -44,8 +44,8 @@ extension CGImage {
         let height = Int(size.height)
 
         var data = Data(repeating: 0xff, count: width*height)
-        data.withUnsafeMutableBytes { (start: UnsafeMutablePointer<UInt8>) -> Void in
-            let ctx = CGContext(data: start,
+        data.withUnsafeMutableBytes {
+            let ctx = CGContext(data: $0.baseAddress,
                                 width: width,
                                 height: height,
                                 bitsPerComponent: 8,

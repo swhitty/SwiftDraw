@@ -16,8 +16,8 @@
 		D90DB3AF219CCC4100D374D2 /* LayerTree.Shape.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB3A4219CCC4000D374D2 /* LayerTree.Shape.swift */; };
 		D90DB3B0219CCC4100D374D2 /* LayerTree.Transform.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB3A5219CCC4000D374D2 /* LayerTree.Transform.swift */; };
 		D90DB3B1219CCC4100D374D2 /* LayerTree.Transform.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB3A5219CCC4000D374D2 /* LayerTree.Transform.swift */; };
-		D90DB3B2219CCC4100D374D2 /* LayerTree.A.Path.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB3A6219CCC4000D374D2 /* LayerTree.A.Path.swift */; };
-		D90DB3B3219CCC4100D374D2 /* LayerTree.A.Path.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB3A6219CCC4000D374D2 /* LayerTree.A.Path.swift */; };
+		D90DB3B2219CCC4100D374D2 /* LayerTree.Path.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB3A6219CCC4000D374D2 /* LayerTree.Path.swift */; };
+		D90DB3B3219CCC4100D374D2 /* LayerTree.Path.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB3A6219CCC4000D374D2 /* LayerTree.Path.swift */; };
 		D90DB3B4219CCC4100D374D2 /* LayerTree.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB3A7219CCC4000D374D2 /* LayerTree.swift */; };
 		D90DB3B5219CCC4100D374D2 /* LayerTree.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB3A7219CCC4000D374D2 /* LayerTree.swift */; };
 		D90DB3B8219CCC4100D374D2 /* LayerTree.Layer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB3A9219CCC4000D374D2 /* LayerTree.Layer.swift */; };
@@ -43,8 +43,8 @@
 		D90DB3D5219CCC8A00D374D2 /* LayerTree.PathTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB3C9219CCC8100D374D2 /* LayerTree.PathTests.swift */; };
 		D90DB3D6219CCC8A00D374D2 /* LayerTree.ShapeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB3CB219CCC8100D374D2 /* LayerTree.ShapeTests.swift */; };
 		D90DB3D7219CCC8A00D374D2 /* LayerTree.TransformTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB3C7219CCC8100D374D2 /* LayerTree.TransformTests.swift */; };
-		D90DB3D8219CCCBD00D374D2 /* LayerTree.AB.Builder.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB3AA219CCC4000D374D2 /* LayerTree.AB.Builder.swift */; };
-		D90DB3D9219CCCBE00D374D2 /* LayerTree.AB.Builder.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB3AA219CCC4000D374D2 /* LayerTree.AB.Builder.swift */; };
+		D90DB3D8219CCCBD00D374D2 /* LayerTree.Builder.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB3AA219CCC4000D374D2 /* LayerTree.Builder.swift */; };
+		D90DB3D9219CCCBE00D374D2 /* LayerTree.Builder.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB3AA219CCC4000D374D2 /* LayerTree.Builder.swift */; };
 		D90DB3DA219CCCDA00D374D2 /* LayerTree.Builder.Path.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB3A8219CCC4000D374D2 /* LayerTree.Builder.Path.swift */; };
 		D90DB3DB219CCCDB00D374D2 /* LayerTree.Builder.Path.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB3A8219CCC4000D374D2 /* LayerTree.Builder.Path.swift */; };
 		D90DB3E2219CCE0E00D374D2 /* NSImage+Image.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB3DE219CCE0E00D374D2 /* NSImage+Image.swift */; };
@@ -271,11 +271,11 @@
 		D90DB39F219CCBBD00D374D2 /* Renderer.LayerTree.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Renderer.LayerTree.swift; sourceTree = "<group>"; };
 		D90DB3A4219CCC4000D374D2 /* LayerTree.Shape.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LayerTree.Shape.swift; sourceTree = "<group>"; };
 		D90DB3A5219CCC4000D374D2 /* LayerTree.Transform.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LayerTree.Transform.swift; sourceTree = "<group>"; };
-		D90DB3A6219CCC4000D374D2 /* LayerTree.A.Path.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LayerTree.A.Path.swift; sourceTree = "<group>"; };
+		D90DB3A6219CCC4000D374D2 /* LayerTree.Path.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LayerTree.Path.swift; sourceTree = "<group>"; };
 		D90DB3A7219CCC4000D374D2 /* LayerTree.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LayerTree.swift; sourceTree = "<group>"; };
 		D90DB3A8219CCC4000D374D2 /* LayerTree.Builder.Path.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LayerTree.Builder.Path.swift; sourceTree = "<group>"; };
 		D90DB3A9219CCC4000D374D2 /* LayerTree.Layer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LayerTree.Layer.swift; sourceTree = "<group>"; };
-		D90DB3AA219CCC4000D374D2 /* LayerTree.AB.Builder.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LayerTree.AB.Builder.swift; sourceTree = "<group>"; };
+		D90DB3AA219CCC4000D374D2 /* LayerTree.Builder.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LayerTree.Builder.swift; sourceTree = "<group>"; };
 		D90DB3AB219CCC4000D374D2 /* LayerTree.Color.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LayerTree.Color.swift; sourceTree = "<group>"; };
 		D90DB3AC219CCC4000D374D2 /* LayerTree.Image.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LayerTree.Image.swift; sourceTree = "<group>"; };
 		D90DB3AD219CCC4100D374D2 /* LayerTree.CommandGenerator.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LayerTree.CommandGenerator.swift; sourceTree = "<group>"; };
@@ -462,17 +462,17 @@
 			isa = PBXGroup;
 			children = (
 				D90DB3A7219CCC4000D374D2 /* LayerTree.swift */,
+				D90DB3AA219CCC4000D374D2 /* LayerTree.Builder.swift */,
 				D925CC6921A4B7E700C8897B /* LayerTree.Builder.Layer.swift */,
 				D90DB3A8219CCC4000D374D2 /* LayerTree.Builder.Path.swift */,
 				D9ACD7A4220FDF79009717CF /* LayerTree.Builder.Path.Arc.swift */,
 				D925CC6021A49C9C00C8897B /* LayerTree.Builder.Shape.swift */,
-				D90DB3AA219CCC4000D374D2 /* LayerTree.AB.Builder.swift */,
 				D90DB3AB219CCC4000D374D2 /* LayerTree.Color.swift */,
 				D90DB3AD219CCC4100D374D2 /* LayerTree.CommandGenerator.swift */,
 				D9B75C81224C9F0200C6BEE7 /* LayerTree.Gradient.swift */,
 				D90DB3AC219CCC4000D374D2 /* LayerTree.Image.swift */,
 				D90DB3A9219CCC4000D374D2 /* LayerTree.Layer.swift */,
-				D90DB3A6219CCC4000D374D2 /* LayerTree.A.Path.swift */,
+				D90DB3A6219CCC4000D374D2 /* LayerTree.Path.swift */,
 				D9D9EB36224AD524006CF83C /* LayerTree.Pattern.swift */,
 				D90DB3A4219CCC4000D374D2 /* LayerTree.Shape.swift */,
 				D90DB3A5219CCC4000D374D2 /* LayerTree.Transform.swift */,
@@ -933,10 +933,9 @@
 			};
 			buildConfigurationList = D9F3EBAB1DFF5BA3006691A1 /* Build configuration list for PBXProject "SwiftDraw" */;
 			compatibilityVersion = "Xcode 3.2";
-			developmentRegion = English;
+			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
-				English,
 				en,
 				Base,
 			);
@@ -1018,7 +1017,7 @@
 				D90DB436219CD1C600D374D2 /* DOM.SVG.swift in Sources */,
 				D90DB409219CD06800D374D2 /* XML.Parser.Scanner.swift in Sources */,
 				D90DB432219CD1C600D374D2 /* DOM.Text.swift in Sources */,
-				D90DB3B3219CCC4100D374D2 /* LayerTree.A.Path.swift in Sources */,
+				D90DB3B3219CCC4100D374D2 /* LayerTree.Path.swift in Sources */,
 				D90DB3BF219CCC4100D374D2 /* LayerTree.Image.swift in Sources */,
 				D90DB3F9219CCF6A00D374D2 /* Stack.swift in Sources */,
 				D90DB3AF219CCC4100D374D2 /* LayerTree.Shape.swift in Sources */,
@@ -1026,7 +1025,7 @@
 				D90DB499219CD32600D374D2 /* Formatter.swift in Sources */,
 				D90DB428219CD1C600D374D2 /* DOM.Gradient.swift in Sources */,
 				D90DB438219CD1C600D374D2 /* DOM.Image.swift in Sources */,
-				D90DB3D9219CCCBE00D374D2 /* LayerTree.AB.Builder.swift in Sources */,
+				D90DB3D9219CCCBE00D374D2 /* LayerTree.Builder.swift in Sources */,
 				D925CC6221A49C9C00C8897B /* LayerTree.Builder.Shape.swift in Sources */,
 				D90DB3BD219CCC4100D374D2 /* LayerTree.Color.swift in Sources */,
 				D925CC6B21A4B7E700C8897B /* LayerTree.Builder.Layer.swift in Sources */,
@@ -1157,7 +1156,7 @@
 				D9D9EB27224A3B4F006CF83C /* DOM.Pattern.swift in Sources */,
 				D90DB437219CD1C600D374D2 /* DOM.Image.swift in Sources */,
 				D90DB45E219CD27800D374D2 /* Parser.XML.SVG.swift in Sources */,
-				D90DB3D8219CCCBD00D374D2 /* LayerTree.AB.Builder.swift in Sources */,
+				D90DB3D8219CCCBD00D374D2 /* LayerTree.Builder.swift in Sources */,
 				D9693D7E224C42C000A82949 /* CGPattern+Closure.swift in Sources */,
 				D925CC6A21A4B7E700C8897B /* LayerTree.Builder.Layer.swift in Sources */,
 				D90DB3B4219CCC4100D374D2 /* LayerTree.swift in Sources */,
@@ -1168,7 +1167,7 @@
 				D90DB433219CD1C600D374D2 /* DOM.Path.swift in Sources */,
 				D90DB404219CD06800D374D2 /* XML.SAXParser.swift in Sources */,
 				D90DB3ED219CCEDE00D374D2 /* CGPath+Segment.swift in Sources */,
-				D90DB3B2219CCC4100D374D2 /* LayerTree.A.Path.swift in Sources */,
+				D90DB3B2219CCC4100D374D2 /* LayerTree.Path.swift in Sources */,
 				D90DB439219CD1C600D374D2 /* DOM.Color.swift in Sources */,
 				D90DB49A219CD32600D374D2 /* Formatter.XML.swift in Sources */,
 				D9BEDC3F2250CBBC00F51648 /* CGImage+Mask.swift in Sources */,
@@ -1436,7 +1435,7 @@
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_TREAT_WARNINGS_AS_ERRORS = YES;
-				SWIFT_VERSION = 4.2;
+				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
@@ -1493,7 +1492,7 @@
 				SDKROOT = iphoneos;
 				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
 				SWIFT_TREAT_WARNINGS_AS_ERRORS = YES;
-				SWIFT_VERSION = 4.2;
+				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VALIDATE_PRODUCT = YES;
 				VERSIONING_SYSTEM = "apple-generic";

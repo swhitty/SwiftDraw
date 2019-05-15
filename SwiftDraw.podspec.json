@@ -25,5 +25,5 @@
 	  "exclude_files": "SwiftDraw/UIImage+Image.swift",
 	  "frameworks": ["AppKit", "Foundation"]
   },
-  "swift_version": "4.2"
+  "swift_version": "5.0"
 }

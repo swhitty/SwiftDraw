@@ -72,6 +72,8 @@ extension CGPath {
                 segments.append(Segment.cubic(p.points[0], p.points[1], p.points[2]))
             case .closeSubpath:
                 segments.append(Segment.close)
+            @unknown default:
+                ()
             }
         }
         return segments
