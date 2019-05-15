@@ -1,5 +1,6 @@
 [![Travis](https://img.shields.io/travis/swhitty/SwiftDraw/master.svg)](https://travis-ci.org/swhitty/SwiftDraw)
 [![CodeCov](https://codecov.io/gh/swhitty/SwiftDraw/branch/master/graphs/badge.svg)](https://codecov.io/gh/swhitty/SwiftDraw/branch/master)
+[![Swift 5.0](https://img.shields.io/badge/swift-5.0-red.svg?style=flat)](https://developer.apple.com/swift)
 [![License](https://img.shields.io/badge/license-zlib-lightgrey.svg)](https://opensource.org/licenses/Zlib)
 [![Twitter](https://img.shields.io/badge/twitter-@simonwhitty-blue.svg)](http://twitter.com/simonwhitty)
 
