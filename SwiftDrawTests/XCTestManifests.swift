@@ -93,7 +93,6 @@ extension LayerTreeColorTests {
     static let __allTests = [
         ("testFromDOM", testFromDOM),
         ("testLuminanceConverter", testLuminanceConverter),
-        ("testLuminanceToAlpha", testLuminanceToAlpha),
         ("testMultiplyingAlpha", testMultiplyingAlpha),
         ("testRGBi", testRGBi),
         ("testStaticColors", testStaticColors),
