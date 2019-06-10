@@ -78,13 +78,20 @@ public final class Image: NSObject {
 }
 #endif
 
+extension DOM.SVG {
+
+    static func parse(fileURL url: URL) throws -> DOM.SVG {
+        let parser = XMLParser(options: [.skipInvalidElements])
+        let element = try XML.SAXParser.parse(contentsOf: url)
+        return try parser.parseSVG(element)
+    }
+}
+
 public extension Image {
 
     convenience init?(fileURL url: URL) {
-        let parser = XMLParser(options: [.skipInvalidElements])
-        guard let element = try? XML.SAXParser.parse(contentsOf: url),
-            let svg = try? parser.parseSVG(element) else {
-                return nil
+        guard let svg = try? DOM.SVG.parse(fileURL: url) else {
+            return nil
         }
 
         self.init(svg: svg)

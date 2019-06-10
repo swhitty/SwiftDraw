@@ -42,13 +42,18 @@ public extension CGContext {
             renderer.perform(image.commands)
             return
         }
-        
-        let sx = rect.width / image.size.width
-        let sy = rect.height / image.size.height
+
+        let scale = CGSize(width: rect.width / image.size.width,
+                           height: rect.height / image.size.height)
+        draw(image.commands, in: rect, scale: scale)
+    }
+
+    fileprivate func draw(_ commands: [RendererCommand<CGTypes>], in rect: CGRect, scale: CGSize = CGSize(width: 1.0, height: 1.0)) {
+        let renderer = CGRenderer(context: self)
         saveGState()
         translateBy(x: rect.origin.x, y: rect.origin.y)
-        scaleBy(x: sx, y: sy)
-        renderer.perform(image.commands)
+        scaleBy(x: scale.width, y: scale.height)
+        renderer.perform(commands)
         restoreGState()
     }
 }
@@ -72,5 +77,31 @@ public extension Image {
         ctx.closePDF()
 
         return data as Data
+    }
+
+    static func pdfData(fileURL url: URL) throws -> Data {
+        let svg = try DOM.SVG.parse(fileURL: url)
+        let layer = LayerTree.Builder(svg: svg).makeLayer()
+        var mediaBox = CGRect(x: 0, y: 0, width: CGFloat(svg.width), height: CGFloat(svg.height))
+        let generator = LayerTree.CommandGenerator(provider: CGProvider(supportsTransparencyLayers: false),
+                                                   size: LayerTree.Size(svg.width, svg.height))
+        let commands = generator.renderCommands(for: layer)
+        let data = NSMutableData()
+        guard let consumer = CGDataConsumer(data: data as CFMutableData) else { throw Error.unknown }
+
+        guard let ctx = CGContext(consumer: consumer, mediaBox: &mediaBox, nil) else { throw Error.unknown  }
+
+        ctx.beginPage(mediaBox: &mediaBox)
+        let flip = CGAffineTransform(a: 1, b: 0, c: 0, d: -1, tx: 0, ty: mediaBox.size.height)
+        ctx.concatenate(flip)
+        ctx.draw(commands, in: mediaBox)
+        ctx.endPage()
+        ctx.closePDF()
+
+        return data as Data
+    }
+
+    private enum Error: Swift.Error {
+        case unknown
     }
 }

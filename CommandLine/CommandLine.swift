@@ -75,7 +75,7 @@ extension SwiftDraw.CommandLine {
         case .jpeg:
             return image.jpegData()
         case .pdf:
-            return image.pdfData()
+            return try? Image.pdfData(fileURL: config.input)
         case .png:
             return image.pngData()
         }
@@ -84,8 +84,8 @@ extension SwiftDraw.CommandLine {
     static func printHelp() {
         print("")
         print("""
-swiftdraw, version 0.3
-copyright (c) 2018 Simon Whitty
+swiftdraw, version 0.6
+copyright (c) 2019 Simon Whitty
 
 usage: swiftdraw <file.svg> [--format png | pdf | jpeg]
 
