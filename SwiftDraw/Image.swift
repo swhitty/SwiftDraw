@@ -63,16 +63,19 @@ public final class Image: NSObject {
     init(svg: DOM.SVG) {
         size = CGSize(width: svg.width, height: svg.height)
     }
+}
 
-    public func pngData(size: CGSize? = nil, scale: CGFloat = 1) -> Data? {
+public extension Image {
+
+    func pngData(size: CGSize? = nil, scale: CGFloat = 1) -> Data? {
         return nil
     }
 
-    public func jpegData(size: CGSize? = nil, scale: CGFloat = 1, compressionQuality quality: CGFloat = 1) -> Data? {
+    func jpegData(size: CGSize? = nil, scale: CGFloat = 1, compressionQuality quality: CGFloat = 1) -> Data? {
         return nil
     }
 
-    public func pdfData(size: CGSize? = nil) -> Data? {
+    func pdfData(size: CGSize? = nil) -> Data? {
         return nil
     }
 
