@@ -75,6 +75,10 @@ public final class Image: NSObject {
     public func pdfData(size: CGSize? = nil) -> Data? {
         return nil
     }
+
+    static func pdfData(fileURL url: URL) throws -> Data {
+        throw DOM.Error.missing("not implemented")
+    }
 }
 #endif
 
