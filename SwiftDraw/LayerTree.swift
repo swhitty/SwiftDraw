@@ -29,7 +29,9 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-struct LayerTree {
+enum LayerTree { /* namespace */ }
+
+extension LayerTree {
 
     typealias Float = Swift.Float
     typealias LineCap = DOM.LineCap

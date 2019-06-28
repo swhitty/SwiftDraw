@@ -31,13 +31,15 @@
 
 import Foundation
 
-public struct DOM {
-    public typealias Float = Swift.Float
-    public typealias Coordinate = Swift.Float
-    public typealias Length = Swift.Int
-    public typealias Opacity = Swift.Float
-    public typealias Bool = Swift.Bool
-    public typealias URL = Foundation.URL
+public enum DOM { /* namespace */ }
+
+public extension DOM {
+    typealias Float = Swift.Float
+    typealias Coordinate = Swift.Float
+    typealias Length = Swift.Int
+    typealias Opacity = Swift.Float
+    typealias Bool = Swift.Bool
+    typealias URL = Foundation.URL
 }
 
 extension DOM {
