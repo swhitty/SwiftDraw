@@ -4,7 +4,7 @@ jobs:
   include:
     - stage: test
       name: iOS
-      script: xcodebuild clean test -project SwiftDraw.xcodeproj -scheme SwiftDraw -sdk iphonesimulator12.2
+      script: xcodebuild clean test -project SwiftDraw.xcodeproj -scheme SwiftDraw -sdk iphonesimulator12.4
     - stage: test
       name: macOS
       script: xcodebuild clean test -project SwiftDraw.xcodeproj -scheme SwiftDraw-macOS -sdk macosx
