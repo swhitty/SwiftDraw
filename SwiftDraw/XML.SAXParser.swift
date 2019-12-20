@@ -31,12 +31,20 @@
 
 import Foundation
 
+#if os(Linux)
+  import FoundationXML
+#endif
+
 extension XML {
     
     final class SAXParser: NSObject, XMLParserDelegate {
-        
+
+    #if os(Linux)
+        typealias XMLParser = FoundationXML.XMLParser
+    #else
         typealias XMLParser = Foundation.XMLParser
-        
+    #endif
+
         private let parser: XMLParser
         private let namespaceURI = "http://www.w3.org/2000/svg"
         
