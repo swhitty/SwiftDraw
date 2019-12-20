@@ -1,10 +1,10 @@
 language: swift
-osx_image: xcode10.3
+osx_image: xcode11.3
 jobs:  
   include:
     - stage: test
       name: iOS
-      script: xcodebuild clean test -project SwiftDraw.xcodeproj -scheme SwiftDraw -sdk iphonesimulator12.4
+      script: xcodebuild clean test -project SwiftDraw.xcodeproj -scheme SwiftDraw -sdk iphonesimulator13.3
     - stage: test
       name: macOS
       script: xcodebuild clean test -project SwiftDraw.xcodeproj -scheme SwiftDraw-macOS -sdk macosx
