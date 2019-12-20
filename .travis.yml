@@ -3,7 +3,7 @@ jobs:
   include:
     - stage: test
       name: iOS
-			osx_image: xcode11.3
+      osx_image: xcode11.3
       script:
         - xcodebuild clean test -project SwiftDraw.xcodeproj -scheme SwiftDraw -sdk iphonesimulator13.3
     - stage: test
