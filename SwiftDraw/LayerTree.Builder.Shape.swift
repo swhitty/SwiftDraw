@@ -3,7 +3,7 @@
 //  SwiftDraw
 //
 //  Created by Simon Whitty on 21/11/18.
-//  Copyright © 2018 WhileLoop Pty Ltd. All rights reserved.
+//  Copyright 2020 WhileLoop Pty Ltd. All rights reserved.
 //
 //  Distributed under the permissive zlib license
 //  Get the latest version from here:

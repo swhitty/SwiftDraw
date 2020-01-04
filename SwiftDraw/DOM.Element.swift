@@ -3,7 +3,7 @@
 //  SwiftDraw
 //
 //  Created by Simon Whitty on 31/12/16.
-//  Copyright 2016 Simon Whitty
+//  Copyright 2020 Simon Whitty
 //
 //  Distributed under the permissive zlib license
 //  Get the latest version from here:

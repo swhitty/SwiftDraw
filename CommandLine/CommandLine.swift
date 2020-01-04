@@ -3,7 +3,7 @@
 //  SwiftDraw
 //
 //  Created by Simon Whitty on 23/11/18.
-//  Copyright 2018 Simon Whitty
+//  Copyright 2020 Simon Whitty
 //
 //  Distributed under the permissive zlib license
 //  Get the latest version from here:
@@ -85,7 +85,7 @@ extension SwiftDraw.CommandLine {
     print("")
     print("""
 swiftdraw, version 0.6
-copyright (c) 2019 Simon Whitty
+copyright (c) 2020 Simon Whitty
 
 usage: swiftdraw <file.svg> [--format png | pdf | jpeg] [--scale 1x | 2x | 3x]
 
