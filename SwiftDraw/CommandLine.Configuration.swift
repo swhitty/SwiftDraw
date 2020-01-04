@@ -33,71 +33,120 @@ import Foundation
 
 extension CommandLine {
 
-    public struct Configuration {
-        public var input: URL
-        public var output: URL
-        public var format: Format
+  public struct Configuration {
+    public var input: URL
+    public var output: URL
+    public var format: Format
+    public var scale: Scale
+  }
+
+  public enum Format: String {
+    case jpeg
+    case pdf
+    case png
+  }
+
+  public enum Scale {
+    case `default`
+    case retina
+    case superRetina
+  }
+
+  public static func parseConfiguration(from args: [String], baseDirectory: URL) throws -> Configuration {
+    guard args.count > 2 else {
+      throw Error.invalid
     }
 
-    public enum Format: String {
-        case jpeg
-        case pdf
-        case png
+    let source = try parseFileURL(file: args[1], within: baseDirectory)
+    let modifiers = try parseModifiers(from: Array(args.dropFirst(2)))
+    guard
+      let formatString = modifiers[.format],
+      let format = Format(rawValue: formatString) else {
+        throw Error.invalid
     }
 
-    public static func parseConfiguration(from args: [String], baseDirectory: URL) throws -> Configuration {
-        guard args.count > 2 else {
-            throw Error.invalid
-        }
+    let scale = try parseScale(from: modifiers[.scale])
+    let result = source.newURL(for: format, scale: scale)
+    return Configuration(input: source,
+                         output: result,
+                         format: format,
+                         scale: scale)
+  }
 
-        let source = try CommandLine.parseFileURL(file: args[1], within: baseDirectory)
-        let modifiers = try CommandLine.parseModifiers(from: Array(args.dropFirst(2)))
-        guard
-            let formatString = modifiers[.format],
-            let format = Format(rawValue: formatString) else {
-                throw Error.invalid
-        }
-
-        let result = source.newURL(for: format)
-        return Configuration(input: source, output: result, format: format)
+  static func parseFileURL(file: String, within directory: URL) throws -> URL {
+    guard #available(macOS 10.11, *) else {
+      throw Error.invalid
     }
 
-    static func parseFileURL(file: String, within directory: URL) throws -> URL {
-        guard #available(macOS 10.11, *) else {
-            throw Error.invalid
-        }
+    return URL(fileURLWithPath: file, relativeTo: directory).standardizedFileURL
+  }
 
-        return URL(fileURLWithPath: file, relativeTo: directory).standardizedFileURL
+  static func parseScale(from value: String?) throws -> Scale {
+    guard let value = value else {
+      return .default
     }
+    guard let scale = Scale(value) else {
+      throw Error.invalid
+    }
+    return scale
+  }
 }
-
 
 extension URL {
 
-    var lastPathComponentName: String {
-        let filename = lastPathComponent
-        let extensionOffset = pathExtension.isEmpty ? 0 : -pathExtension.count - 1
-        let index = filename.index(filename.endIndex, offsetBy: extensionOffset)
-        return String(filename[..<index])
-    }
+  var lastPathComponentName: String {
+    let filename = lastPathComponent
+    let extensionOffset = pathExtension.isEmpty ? 0 : -pathExtension.count - 1
+    let index = filename.index(filename.endIndex, offsetBy: extensionOffset)
+    return String(filename[..<index])
+  }
 
-    func newURL(for format: CommandLine.Format) -> URL {
-        let newFilename = "\(lastPathComponentName).\(format.pathExtension)"
-        return deletingLastPathComponent().appendingPathComponent(newFilename).standardizedFileURL
+  func newURL(for format: CommandLine.Format, scale: CommandLine.Scale) -> URL {
+    let newFilename = lastPathComponentName(scale: scale)
+    let newFilenameWithExtension = "\(newFilename).\(format.pathExtension)"
+    return deletingLastPathComponent()
+      .appendingPathComponent(newFilenameWithExtension)
+      .standardizedFileURL
+  }
+
+  func lastPathComponentName(scale: CommandLine.Scale) -> String {
+    switch scale {
+    case .default:
+      return lastPathComponentName
+    case .retina:
+      return "\(lastPathComponentName)@2x"
+    case .superRetina:
+      return "\(lastPathComponentName)@3x"
     }
+  }
 }
 
 private extension CommandLine.Format {
 
-    var pathExtension: String {
-        switch self {
-        case .jpeg:
-            return "jpg"
-        case .pdf:
-            return "pdf"
-        case .png:
-            return "png"
-        }
+  var pathExtension: String {
+    switch self {
+    case .jpeg:
+      return "jpg"
+    case .pdf:
+      return "pdf"
+    case .png:
+      return "png"
     }
+  }
 }
 
+private extension CommandLine.Scale {
+
+  init?(_ value: String) {
+    switch value {
+    case "1x":
+      self = .default
+    case "2x":
+      self = .retina
+    case "3x":
+      self = .superRetina
+    default:
+      return nil
+    }
+  }
+}

@@ -34,80 +34,95 @@ import SwiftDraw
 
 extension SwiftDraw.CommandLine {
 
-    static func run(with args: [String] = Swift.CommandLine.arguments,
-                    baseDirectory: URL = .currentDirectory) -> ExitCode {
-        
-        guard let config = try? parseConfiguration(from: args, baseDirectory: baseDirectory) else {
-            print("Invalid Syntax.")
-            printHelp()
-            return .error
-        }
+  static func run(with args: [String] = Swift.CommandLine.arguments,
+                  baseDirectory: URL = .currentDirectory) -> ExitCode {
 
-        guard
-            let data = try? process(with: config) else {
-            print("Failure")
-            printHelp()
-            return .error
-        }
-
-        do {
-            try data.write(to: config.output)
-            print("Created: \(config.output.path)")
-        } catch _ {
-            print("Failure: \(config.output.path)")
-        }
-
-        return .ok
+    guard let config = try? parseConfiguration(from: args, baseDirectory: baseDirectory) else {
+      print("Invalid Syntax.")
+      printHelp()
+      return .error
     }
 
-    static func process(with config: Configuration) throws -> Data {
-        guard
-            let svg = SwiftDraw.Image(fileURL: config.input),
-            let data = CommandLine.processImage(svg, with: config) else {
-                throw Error.invalid
-        }
-
-        return data
+    guard
+      let data = try? process(with: config) else {
+        print("Failure")
+        printHelp()
+        return .error
     }
 
-    static func processImage(_ image: SwiftDraw.Image, with config: Configuration) -> Data? {
-        switch config.format {
-        case .jpeg:
-            return image.jpegData()
-        case .pdf:
-            return try? Image.pdfData(fileURL: config.input)
-        case .png:
-            return image.pngData()
-        }
+    do {
+      try data.write(to: config.output)
+      print("Created: \(config.output.path)")
+    } catch _ {
+      print("Failure: \(config.output.path)")
     }
 
-    static func printHelp() {
-        print("")
-        print("""
+    return .ok
+  }
+
+  static func process(with config: Configuration) throws -> Data {
+    guard
+      let svg = SwiftDraw.Image(fileURL: config.input),
+      let data = processImage(svg, with: config) else {
+        throw Error.invalid
+    }
+
+    return data
+  }
+
+  static func processImage(_ image: SwiftDraw.Image, with config: Configuration) -> Data? {
+    switch config.format {
+    case .jpeg:
+      return image.jpegData(scale: config.scale.floatValue)
+    case .pdf:
+      return try? Image.pdfData(fileURL: config.input)
+    case .png:
+      return image.pngData(scale: config.scale.floatValue)
+    }
+  }
+
+  static func printHelp() {
+    print("")
+    print("""
 swiftdraw, version 0.6
 copyright (c) 2019 Simon Whitty
 
-usage: swiftdraw <file.svg> [--format png | pdf | jpeg]
+usage: swiftdraw <file.svg> [--format png | pdf | jpeg] [--scale 1x | 2x | 3x]
 
 <file> svg file to be processed
 
---format    format to output image with. png | pdf | jpeg
+--format  format to output image with png | pdf | jpeg
+--scale   scale of output image with 1x | 2x | 3x
 """)
-    }
+  }
 }
 
 extension SwiftDraw.CommandLine {
 
-    // Represents the exit codes to the command line. See `man sysexits` for more information.
-    enum ExitCode: Int32 {
-        case ok = 0 // EX_OK
-        case error = 70 // EX_SOFTWARE
-    }
+  // Represents the exit codes to the command line. See `man sysexits` for more information.
+  enum ExitCode: Int32 {
+    case ok = 0 // EX_OK
+    case error = 70 // EX_SOFTWARE
+  }
 }
 
 private extension URL {
 
-    static var currentDirectory: URL {
-        return URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
+  static var currentDirectory: URL {
+    return URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
+  }
+}
+
+private extension CommandLine.Scale {
+
+  var floatValue: CGFloat {
+    switch self {
+    case .default:
+      return 1
+    case .retina:
+      return 2
+    case .superRetina:
+      return 3
     }
+  }
 }

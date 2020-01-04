@@ -36,6 +36,7 @@ extension CommandLine {
     enum Modifier: String {
         case format
         case output
+        case scale
 
         static func parse(from string: String) -> Modifier? {
             guard string.hasPrefix("--") else {
