@@ -33,52 +33,52 @@ import Foundation
 
 extension CommandLine {
 
-    enum Modifier: String {
-        case format
-        case output
-        case scale
+  enum Modifier: String {
+    case format
+    case output
+    case scale
 
-        static func parse(from string: String) -> Modifier? {
-            guard string.hasPrefix("--") else {
-                return nil
-            }
+    static func parse(from string: String) -> Modifier? {
+      guard string.hasPrefix("--") else {
+        return nil
+      }
 
-            return Modifier(rawValue: String(string.dropFirst(2)))
-        }
+      return Modifier(rawValue: String(string.dropFirst(2)))
+    }
+  }
+
+  static func parseModifiers(from args: [String]) throws -> [Modifier: String] {
+    var args = args
+    var modifiers = [Modifier: String]()
+    while let pair = args.takePair() {
+      if let modifier = Modifier.parse(from: pair.0), modifiers.keys.contains(modifier) == false  {
+        modifiers[modifier] = pair.1
+      } else {
+        throw Error.invalid
+      }
     }
 
-    static func parseModifiers(from args: [String]) throws -> [Modifier: String] {
-        var args = args
-        var modifiers = [Modifier: String]()
-        while let pair = args.takePair() {
-            if let modifier = Modifier.parse(from: pair.0), modifiers.keys.contains(modifier) == false  {
-                modifiers[modifier] = pair.1
-            } else {
-                throw Error.invalid
-            }
-        }
-
-        guard args.isEmpty else {
-            throw CommandLine.Error.invalid
-        }
-
-        return modifiers
+    guard args.isEmpty else {
+      throw CommandLine.Error.invalid
     }
 
-    public enum Error: Swift.Error {
-        case invalid
-    }
+    return modifiers
+  }
+
+  public enum Error: Swift.Error {
+    case invalid
+  }
 }
 
 private extension Array where Element == String {
 
-    mutating func takePair() -> (String, String)? {
-        guard count > 1 else {
-            return nil
-        }
-
-        let pair = (self[0], self[1])
-        removeFirst(2)
-        return pair
+  mutating func takePair() -> (String, String)? {
+    guard count > 1 else {
+      return nil
     }
+
+    let pair = (self[0], self[1])
+    removeFirst(2)
+    return pair
+  }
 }
