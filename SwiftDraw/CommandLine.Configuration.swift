@@ -37,6 +37,7 @@ extension CommandLine {
     public var input: URL
     public var output: URL
     public var format: Format
+    public var size: Size
     public var scale: Scale
   }
 
@@ -46,7 +47,12 @@ extension CommandLine {
     case png
   }
 
-  public enum Scale {
+  public enum Size: Equatable {
+    case `default`
+    case custom(width: Int, height: Int)
+  }
+
+  public enum Scale: Equatable {
     case `default`
     case retina
     case superRetina
@@ -65,11 +71,13 @@ extension CommandLine {
         throw Error.invalid
     }
 
+    let size = try parseSize(from: modifiers[.size])
     let scale = try parseScale(from: modifiers[.scale])
     let result = source.newURL(for: format, scale: scale)
     return Configuration(input: source,
                          output: result,
                          format: format,
+                         size: size,
                          scale: scale)
   }
 
@@ -89,6 +97,25 @@ extension CommandLine {
       throw Error.invalid
     }
     return scale
+  }
+
+  static func parseSize(from value: String?) throws -> Size {
+    guard let value = value else {
+      return .default
+    }
+
+    let scanner = Scanner(string: value)
+    var width: Int32 = 0
+    var height: Int32 = 0
+    guard
+      scanner.scanInt32(&width),
+      scanner.scanString("x", into: nil),
+      scanner.scanInt32(&height),
+      width > 0, height > 0 else {
+      throw Error.invalid
+    }
+
+    return .custom(width: Int(width), height: Int(height))
   }
 }
 

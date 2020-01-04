@@ -63,6 +63,17 @@ final class CommandLineConfigurationTests: XCTestCase {
     XCTAssertEqual(config.output, URL(fileURLWithPath: "/file.pdf"))
     XCTAssertEqual(config.scale, .default)
     XCTAssertEqual(config.format, .pdf)
+    XCTAssertEqual(config.size, .default)
+  }
+
+  func testParseConfigurationSize() throws {
+    let config = try CommandLine.parseConfiguration(from: ["swiftdraw", "file.svg", "--format", "png", "--size", "400x300"],
+                                                    baseDirectory: URL(directory: "/"))
+
+    XCTAssertEqual(config.input, URL(fileURLWithPath: "/file.svg"))
+    XCTAssertEqual(config.output, URL(fileURLWithPath: "/file.png"))
+    XCTAssertEqual(config.format, .png)
+    XCTAssertEqual(config.size, .custom(width: 400, height: 300))
   }
 
   func testParseConfigurationScale2x() throws {

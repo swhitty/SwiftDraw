@@ -73,11 +73,11 @@ extension SwiftDraw.CommandLine {
   static func processImage(_ image: SwiftDraw.Image, with config: Configuration) -> Data? {
     switch config.format {
     case .jpeg:
-      return image.jpegData(scale: config.scale.floatValue)
+      return image.jpegData(size: config.size.cgValue, scale: config.scale.cgValue)
     case .pdf:
-      return try? Image.pdfData(fileURL: config.input)
+      return try? Image.pdfData(fileURL: config.input, size: config.size.cgValue)
     case .png:
-      return image.pngData(scale: config.scale.floatValue)
+      return image.pngData(size: config.size.cgValue, scale: config.scale.cgValue)
     }
   }
 
@@ -115,7 +115,7 @@ private extension URL {
 
 private extension CommandLine.Scale {
 
-  var floatValue: CGFloat {
+  var cgValue: CGFloat {
     switch self {
     case .default:
       return 1
@@ -123,6 +123,18 @@ private extension CommandLine.Scale {
       return 2
     case .superRetina:
       return 3
+    }
+  }
+}
+
+private extension CommandLine.Size {
+
+  var cgValue: CGSize? {
+    switch self {
+    case .default:
+      return nil
+    case .custom(width: let width, height: let height):
+      return CGSize(width: CGFloat(width), height: CGFloat(height))
     }
   }
 }

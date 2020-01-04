@@ -35,8 +35,8 @@ import XCTest
 final class CommandLineArgumentsTests: XCTestCase {
 
     func testParseModifiers() throws {
-        let modifiers = try CommandLine.parseModifiers(from: ["--format", "some", "--output", "more"])
-        XCTAssertEqual(modifiers, [.format: "some", .output: "more"])
+        let modifiers = try CommandLine.parseModifiers(from: ["--format", "some", "--output", "more", "--scale", "magnify", "--size", "huge"])
+        XCTAssertEqual(modifiers, [.format: "some", .output: "more", .scale: "magnify", .size: "huge"])
     }
 
     func testParseModifiersThrowsForOddPairs() {

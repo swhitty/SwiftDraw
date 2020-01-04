@@ -36,6 +36,7 @@ extension CommandLine {
   enum Modifier: String {
     case format
     case output
+    case size
     case scale
 
     static func parse(from string: String) -> Modifier? {

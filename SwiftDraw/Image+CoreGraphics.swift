@@ -79,12 +79,13 @@ public extension Image {
         return data as Data
     }
 
-    static func pdfData(fileURL url: URL) throws -> Data {
+    static func pdfData(fileURL url: URL, size: CGSize? = nil, ) throws -> Data {
         let svg = try DOM.SVG.parse(fileURL: url)
+        let size = size ?? CGSize(width: CGFloat(svg.width), height: CGFloat(svg.height))
         let layer = LayerTree.Builder(svg: svg).makeLayer()
-        var mediaBox = CGRect(x: 0, y: 0, width: CGFloat(svg.width), height: CGFloat(svg.height))
+        var mediaBox = CGRect(origin: .zero, size: size)
         let generator = LayerTree.CommandGenerator(provider: CGProvider(supportsTransparencyLayers: false),
-                                                   size: LayerTree.Size(svg.width, svg.height))
+                                                   size: LayerTree.Size(size))
         let commands = generator.renderCommands(for: layer)
         let data = NSMutableData()
         guard let consumer = CGDataConsumer(data: data as CFMutableData) else { throw Error.unknown }
@@ -104,4 +105,12 @@ public extension Image {
     private enum Error: Swift.Error {
         case unknown
     }
+}
+
+private extension LayerTree.Size {
+
+  init(_ size: CGSize) {
+    self.width = LayerTree.Float(size.width)
+    self.height = LayerTree.Float(size.height)
+  }
 }
