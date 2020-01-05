@@ -30,19 +30,19 @@
 //
 
 extension LayerTree {
-
-    final class Pattern: Equatable {
-
-        var frame: LayerTree.Rect
-        var contents: [LayerTree.Layer.Contents]
-
-        init(frame: LayerTree.Rect) {
-          self.frame = frame
-          self.contents = []
-        }
-
-        static func == (lhs: LayerTree.Pattern, rhs: LayerTree.Pattern) -> Bool {
-            return lhs.contents == rhs.contents
-        }
+  
+  final class Pattern: Equatable {
+    
+    var frame: LayerTree.Rect
+    var contents: [LayerTree.Layer.Contents]
+    
+    init(frame: LayerTree.Rect) {
+      self.frame = frame
+      self.contents = []
     }
+    
+    static func == (lhs: LayerTree.Pattern, rhs: LayerTree.Pattern) -> Bool {
+      return lhs.contents == rhs.contents
+    }
+  }
 }

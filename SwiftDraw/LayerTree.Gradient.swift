@@ -30,35 +30,35 @@
 //
 
 extension LayerTree {
-
-    final class Gradient: Equatable {
-        var start: Point
-        var end: Point
-        var stops: [Stop]
-
-        init(start: Point, end: Point) {
-            self.start = start
-            self.end = end
-            self.stops = []
-        }
-
-        static func == (lhs: LayerTree.Gradient, rhs: LayerTree.Gradient) -> Bool {
-            return
-                lhs.start == rhs.start &&
-                lhs.end == rhs.end &&
-                lhs.stops == rhs.stops
-        }
-
-        struct Stop: Equatable {
-            var offset: Float
-            var color: Color
-            var opacity: Float
-
-            init(offset: Float, color: Color, opacity: Float) {
-                self.offset = offset
-                self.color = color
-                self.opacity = opacity
-            }
-        }
+  
+  final class Gradient: Equatable {
+    var start: Point
+    var end: Point
+    var stops: [Stop]
+    
+    init(start: Point, end: Point) {
+      self.start = start
+      self.end = end
+      self.stops = []
     }
+    
+    static func == (lhs: LayerTree.Gradient, rhs: LayerTree.Gradient) -> Bool {
+      return
+        lhs.start == rhs.start &&
+          lhs.end == rhs.end &&
+          lhs.stops == rhs.stops
+    }
+    
+    struct Stop: Equatable {
+      var offset: Float
+      var color: Color
+      var opacity: Float
+      
+      init(offset: Float, color: Color, opacity: Float) {
+        self.offset = offset
+        self.color = color
+        self.opacity = opacity
+      }
+    }
+  }
 }

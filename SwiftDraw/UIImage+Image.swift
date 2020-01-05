@@ -28,42 +28,43 @@
 //
 //  3. This notice may not be removed or altered from any source distribution.
 //
+
 import UIKit
 
 public extension UIImage {
-    convenience init?(svgNamed name: String, in bundle: Bundle = Bundle.main) {
-        guard let image = Image(named: name, in: bundle)?.rasterize(),
-              let cgImage = image.cgImage else {
-                return nil
-        }
-
-        self.init(cgImage: cgImage, scale: image.scale, orientation: image.imageOrientation)
+  convenience init?(svgNamed name: String, in bundle: Bundle = Bundle.main) {
+    guard let image = Image(named: name, in: bundle)?.rasterize(),
+      let cgImage = image.cgImage else {
+        return nil
     }
+
+    self.init(cgImage: cgImage, scale: image.scale, orientation: image.imageOrientation)
+  }
 }
 
 public extension Image {
-    func rasterize() -> UIImage {
-        return rasterize(with: size)
-    }
-    
-    func rasterize(with size: CGSize) -> UIImage {
-        let f = UIGraphicsImageRendererFormat.default()
-        f.opaque = false
-        f.prefersExtendedRange = false
-        let r = UIGraphicsImageRenderer(size: size, format: f)
+  func rasterize() -> UIImage {
+    return rasterize(with: size)
+  }
 
-        return r.image{
-            $0.cgContext.draw(self, in: CGRect(x: 0, y: 0, width: size.width, height: size.height))
-        }
-    }
+  func rasterize(with size: CGSize) -> UIImage {
+    let f = UIGraphicsImageRendererFormat.default()
+    f.opaque = false
+    f.prefersExtendedRange = false
+    let r = UIGraphicsImageRenderer(size: size, format: f)
 
-    func pngData(size: CGSize? = nil, scale: CGFloat = 1) -> Data? {
-        let pngSize = size ?? self.size
-        return rasterize(with: pngSize).pngData()
+    return r.image{
+      $0.cgContext.draw(self, in: CGRect(x: 0, y: 0, width: size.width, height: size.height))
     }
+  }
 
-    func jpegData(size: CGSize? = nil, scale: CGFloat = 1, compressionQuality quality: CGFloat = 1) -> Data? {
-        let jpgSize = size ?? self.size
-        return rasterize(with: jpgSize).jpegData(compressionQuality: quality)
-    }
+  func pngData(size: CGSize? = nil, scale: CGFloat = 1) -> Data? {
+    let pngSize = size ?? self.size
+    return rasterize(with: pngSize).pngData()
+  }
+
+  func jpegData(size: CGSize? = nil, scale: CGFloat = 1, compressionQuality quality: CGFloat = 1) -> Data? {
+    let jpgSize = size ?? self.size
+    return rasterize(with: jpgSize).jpegData(compressionQuality: quality)
+  }
 }

@@ -30,44 +30,44 @@
 //
 
 extension DOM {
-    final class SVG: GraphicsElement, ContainerElement {
-        var width: Length
-        var height: Length
-        var viewBox: ViewBox?
-        
-        var childElements = [GraphicsElement]()
-        
-        var defs = Defs()
-        
-        init(width: Length, height: Length) {
-            self.width = width
-            self.height = height
-        }
-        
-        struct ViewBox {
-            var x: Coordinate
-            var y: Coordinate
-            var width: Coordinate
-            var height: Coordinate
-        }
-        
-        struct Defs {
-            var clipPaths = [ClipPath]()
-            var linearGradients = [LinearGradient]()
-            var masks = [Mask]()
-            var patterns = [Pattern]()
-
-            var elements = [String: GraphicsElement]()
-        }
+  final class SVG: GraphicsElement, ContainerElement {
+    var width: Length
+    var height: Length
+    var viewBox: ViewBox?
+    
+    var childElements = [GraphicsElement]()
+    
+    var defs = Defs()
+    
+    init(width: Length, height: Length) {
+      self.width = width
+      self.height = height
     }
     
-    struct ClipPath: ContainerElement {
-        var id: String
-        var childElements = [GraphicsElement]()
+    struct ViewBox {
+      var x: Coordinate
+      var y: Coordinate
+      var width: Coordinate
+      var height: Coordinate
     }
     
-    struct Mask: ContainerElement {
-        var id: String
-        var childElements = [GraphicsElement]()
+    struct Defs {
+      var clipPaths = [ClipPath]()
+      var linearGradients = [LinearGradient]()
+      var masks = [Mask]()
+      var patterns = [Pattern]()
+      
+      var elements = [String: GraphicsElement]()
     }
+  }
+  
+  struct ClipPath: ContainerElement {
+    var id: String
+    var childElements = [GraphicsElement]()
+  }
+  
+  struct Mask: ContainerElement {
+    var id: String
+    var childElements = [GraphicsElement]()
+  }
 }

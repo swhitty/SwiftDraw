@@ -32,64 +32,64 @@
 import Foundation
 
 extension XMLFormatter {
-
-    struct CoordinateFormatter {
-        var delimeter: Delimeter = .space
-        var precision: Precision = .capped(max: 5)
-        
-        enum Precision {
-            case capped(max: Int)
-            case maximum
-        }
-        
-        enum Delimeter: String {
-            case space = " "
-            case comma = ","
-        }
-        
-        func format(_ coordinates: DOM.Coordinate...) -> String {
-            return coordinates.map { format(Double($0)) }.joined(separator: delimeter.rawValue)
-        }
-        
-        func format(_ c: Double) -> String {
-            switch precision {
-            case .capped(let max):
-                return format(c, capped: max)
-            default:
-                return String(describing: c)
-            }
-        }
-
-        func format(fraction n: Double, maxDigits: Int) -> String {
-            assert(n.sign == .plus)
-            
-            let min = pow(Double(10), Double(-maxDigits)) - Double.ulpOfOne
-            
-            guard n >= min else {
-                return ""
-            }
-
-            let s = String(format: "%.\(maxDigits)g", n)
-            let idx = s.index(s.startIndex, offsetBy: 1)
-            return String(s[idx..<s.endIndex])
-        }
-        
-        func format(_ c: Double, capped: Int) -> String {
-            let sign: String
-            let n: (Double, Double)
-            
-            if c.sign == .minus {
-                sign = "-"
-                n = modf(abs(c))
-            } else {
-                sign = ""
-                n = modf(c)
-            }
-            
-            let integer = Int(n.0)
-            let fraction = format(fraction: n.1, maxDigits: capped)
-            
-            return "\(sign)\(integer)\(fraction)"
-        }
+  
+  struct CoordinateFormatter {
+    var delimeter: Delimeter = .space
+    var precision: Precision = .capped(max: 5)
+    
+    enum Precision {
+      case capped(max: Int)
+      case maximum
     }
+    
+    enum Delimeter: String {
+      case space = " "
+      case comma = ","
+    }
+    
+    func format(_ coordinates: DOM.Coordinate...) -> String {
+      return coordinates.map { format(Double($0)) }.joined(separator: delimeter.rawValue)
+    }
+    
+    func format(_ c: Double) -> String {
+      switch precision {
+      case .capped(let max):
+        return format(c, capped: max)
+      default:
+        return String(describing: c)
+      }
+    }
+    
+    func format(fraction n: Double, maxDigits: Int) -> String {
+      assert(n.sign == .plus)
+      
+      let min = pow(Double(10), Double(-maxDigits)) - Double.ulpOfOne
+      
+      guard n >= min else {
+        return ""
+      }
+      
+      let s = String(format: "%.\(maxDigits)g", n)
+      let idx = s.index(s.startIndex, offsetBy: 1)
+      return String(s[idx..<s.endIndex])
+    }
+    
+    func format(_ c: Double, capped: Int) -> String {
+      let sign: String
+      let n: (Double, Double)
+      
+      if c.sign == .minus {
+        sign = "-"
+        n = modf(abs(c))
+      } else {
+        sign = ""
+        n = modf(c)
+      }
+      
+      let integer = Int(n.0)
+      let fraction = format(fraction: n.1, maxDigits: capped)
+      
+      return "\(sign)\(integer)\(fraction)"
+    }
+  }
 }

@@ -30,22 +30,22 @@
 //
 
 extension DOM {
+  
+  final class Text: GraphicsElement {
+    var x: Coordinate?
+    var y: Coordinate?
+    var value: String
     
-    final class Text: GraphicsElement {
-        var x: Coordinate?
-        var y: Coordinate?
-        var value: String
-        
-        var fontFamily: String?
-        var fontSize: Float?
-        
-        // var textLength: Coordinate
-        // var text: [TSpan] child nodes
-        
-        init(x: Coordinate? = nil, y: Coordinate? = nil, value: String) {
-            self.x = x
-            self.y = y
-            self.value = value
-        }
+    var fontFamily: String?
+    var fontSize: Float?
+    
+    // var textLength: Coordinate
+    // var text: [TSpan] child nodes
+    
+    init(x: Coordinate? = nil, y: Coordinate? = nil, value: String) {
+      self.x = x
+      self.y = y
+      self.value = value
     }
+  }
 }

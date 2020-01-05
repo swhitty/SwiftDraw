@@ -30,12 +30,12 @@
 //
 
 extension LayerTree {
-
-    enum Shape: Hashable {
-        case line(between: [Point])
-        case rect(within: Rect, radii: Size)
-        case ellipse(within: Rect)
-        case polygon(between: [Point])
-        case path(Path)
-    }
+  
+  enum Shape: Hashable {
+    case line(between: [Point])
+    case rect(within: Rect, radii: Size)
+    case ellipse(within: Rect)
+    case polygon(between: [Point])
+    case path(Path)
+  }
 }

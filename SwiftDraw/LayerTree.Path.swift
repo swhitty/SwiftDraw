@@ -30,75 +30,75 @@
 //
 
 extension LayerTree {
-    final class Path: Hashable {
-        var segments: [Segment]
-        
-        init(_ segments: [Segment] = []) {
-            self.segments = segments
-        }
-        
-        enum Segment: Hashable {
-            case move(to: Point)
-            case line(to: Point)
-            case cubic(to: Point, control1: Point, control2: Point)
-            case close
-        }
-
-        func hash(into hasher: inout Hasher) {
-            hasher.combine(self.segments)
-        }
-
-        static func ==(lhs: LayerTree.Path, rhs: LayerTree.Path) -> Bool {
-            return lhs.segments == rhs.segments
-        }
+  final class Path: Hashable {
+    var segments: [Segment]
+    
+    init(_ segments: [Segment] = []) {
+      self.segments = segments
     }
+    
+    enum Segment: Hashable {
+      case move(to: Point)
+      case line(to: Point)
+      case cubic(to: Point, control1: Point, control2: Point)
+      case close
+    }
+    
+    func hash(into hasher: inout Hasher) {
+      hasher.combine(self.segments)
+    }
+    
+    static func ==(lhs: LayerTree.Path, rhs: LayerTree.Path) -> Bool {
+      return lhs.segments == rhs.segments
+    }
+  }
 }
 
 extension LayerTree.Path {
-    var lastControl: LayerTree.Point? {
-        guard let lastSegment = segments.last else { return nil }
-        switch lastSegment {
-        case .cubic(_, _, let p): return p
-        default: return nil
-        }
+  var lastControl: LayerTree.Point? {
+    guard let lastSegment = segments.last else { return nil }
+    switch lastSegment {
+    case .cubic(_, _, let p): return p
+    default: return nil
     }
-
-    var location: LayerTree.Point? {
-        guard let location = segments.last?.location else {
-            return lastStart
-        }
-
-        return location
+  }
+  
+  var location: LayerTree.Point? {
+    guard let location = segments.last?.location else {
+      return lastStart
     }
-
-    var lastStart: LayerTree.Point? {
-        let rev = segments.reversed().dropFirst()
-        guard
-            let closeIdx = rev.firstIndex(where: { $0.isClose }),
-            closeIdx != rev.startIndex else {
-                return segments.first?.location
-        }
-
-        let point = rev.index(before: closeIdx)
-        return rev[point].location
+    
+    return location
+  }
+  
+  var lastStart: LayerTree.Point? {
+    let rev = segments.reversed().dropFirst()
+    guard
+      let closeIdx = rev.firstIndex(where: { $0.isClose }),
+      closeIdx != rev.startIndex else {
+        return segments.first?.location
     }
+    
+    let point = rev.index(before: closeIdx)
+    return rev[point].location
+  }
 }
 
 private extension LayerTree.Path.Segment {
-
-    var isClose: Bool {
-        guard case .close = self else {
-            return false
-        }
-        return true
+  
+  var isClose: Bool {
+    guard case .close = self else {
+      return false
     }
-
-    var location: LayerTree.Point? {
-        switch self {
-        case .move(to: let p): return p
-        case .line(let p): return p
-        case .cubic(let p, _, _): return p
-        case .close: return nil
-        }
+    return true
+  }
+  
+  var location: LayerTree.Point? {
+    switch self {
+    case .move(to: let p): return p
+    case .line(let p): return p
+    case .cubic(let p, _, _): return p
+    case .close: return nil
     }
+  }
 }

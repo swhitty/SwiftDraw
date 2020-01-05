@@ -31,6 +31,4 @@
 
 import Foundation
 
-public struct CommandLine {
-
-}
+public enum CommandLine { /* namespace */ }

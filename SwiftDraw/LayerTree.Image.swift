@@ -32,23 +32,23 @@
 import Foundation
 
 extension LayerTree {
-    enum Image: Equatable {
-        case jpeg(data: Data)
-        case png(data: Data)
-        
-        init?(mimeType: String, data: Data) {
-            guard data.count > 0 else { return nil }
-            
-            switch mimeType {
-            case "image/png":
-                self = .png(data: data)
-            case "image/jpeg":
-                self = .jpeg(data: data)
-            case "image/jpg":
-                self = .jpeg(data: data)
-            default:
-                return nil
-            }
-        }
+  enum Image: Equatable {
+    case jpeg(data: Data)
+    case png(data: Data)
+    
+    init?(mimeType: String, data: Data) {
+      guard data.count > 0 else { return nil }
+      
+      switch mimeType {
+      case "image/png":
+        self = .png(data: data)
+      case "image/jpeg":
+        self = .jpeg(data: data)
+      case "image/jpg":
+        self = .jpeg(data: data)
+      default:
+        return nil
+      }
     }
+  }
 }

@@ -28,83 +28,84 @@
 //
 //  3. This notice may not be removed or altered from any source distribution.
 //
+
 import AppKit
 import CoreGraphics
 
 public extension NSImage {
-    convenience init?(svgNamed name: String, in bundle: Bundle = Bundle.main) {
-        guard let image = Image(named: name, in: bundle) else { return nil }
- 
-        self.init(size: image.size, flipped: true) { rect in
-            guard let ctx = NSGraphicsContext.current?.cgContext else { return false }
-            ctx.draw(image, in: CGRect(x: 0, y: 0, width: rect.size.width, height: rect.size.height))
-            return true
-        }
+  convenience init?(svgNamed name: String, in bundle: Bundle = Bundle.main) {
+    guard let image = Image(named: name, in: bundle) else { return nil }
+
+    self.init(size: image.size, flipped: true) { rect in
+      guard let ctx = NSGraphicsContext.current?.cgContext else { return false }
+      ctx.draw(image, in: CGRect(x: 0, y: 0, width: rect.size.width, height: rect.size.height))
+      return true
     }
+  }
 }
 
 public extension Image {
-    func rasterize() -> NSImage {
-        return rasterize(with: size)
+  func rasterize() -> NSImage {
+    return rasterize(with: size)
+  }
+
+  func rasterize(with size: CGSize) -> NSImage {
+    let imageSize = NSSize(width: size.width, height: size.height)
+
+    let image = NSImage(size: imageSize, flipped: true) { rect in
+      guard let ctx = NSGraphicsContext.current?.cgContext else { return false }
+      ctx.draw(self, in: CGRect(x: 0, y: 0, width: rect.size.width, height: rect.size.height))
+      return true
     }
-    
-    func rasterize(with size: CGSize) -> NSImage {
-        let imageSize = NSSize(width: size.width, height: size.height)
-        
-        let image = NSImage(size: imageSize, flipped: true) { rect in
-            guard let ctx = NSGraphicsContext.current?.cgContext else { return false }
-            ctx.draw(self, in: CGRect(x: 0, y: 0, width: rect.size.width, height: rect.size.height))
-            return true
-        }
-        
-        return image
-    }
-    
-    func createBitmap(size: CGSize? = nil, scale: CGFloat = 1, isOpaque: Bool = false) -> NSBitmapImageRep? {
-        
-        let defaultScale = NSScreen.main?.backingScaleFactor ?? 1.0
-        let renderScale = scale == 0 ? defaultScale : scale
-        let renderSize = size ?? self.size
-        
-        let width = Int(ceil(renderSize.width * renderScale))
-        let height = Int(ceil(renderSize.height * renderScale))
-        
-        return NSBitmapImageRep(bitmapDataPlanes: nil,
-                                pixelsWide: max(width, 0),
-                                pixelsHigh: max(height, 0),
-                                bitsPerSample: 8,
-                                samplesPerPixel: isOpaque ? 3 : 4,
-                                hasAlpha: !isOpaque,
-                                isPlanar: false,
-                                colorSpaceName: NSColorSpaceName.deviceRGB,
-                                bytesPerRow: 0,
-                                bitsPerPixel: 32)
-    }
-    
-    func pngData(size: CGSize? = nil, scale: CGFloat = 1) -> Data? {
-        guard let bitmap = createBitmap(size: size, scale: scale, isOpaque: false),
-              let ctx = NSGraphicsContext(bitmapImageRep: bitmap)?.cgContext else { return nil }
-        
-        let rect = CGRect(x: 0, y: 0, width: CGFloat(bitmap.pixelsWide), height: CGFloat(bitmap.pixelsHigh))
-        let flip = CGAffineTransform(a: 1, b: 0, c: 0, d: -1, tx: 0, ty: rect.size.height)
-        ctx.concatenate(flip)
-        ctx.draw(self, in: rect)
-        
-        return bitmap.representation(using: .png, properties: [:])
-    }
-    
-    func jpegData(size: CGSize? = nil, scale: CGFloat = 1, compressionQuality quality: CGFloat = 1) -> Data? {
-        guard let bitmap = createBitmap(size: size, scale: scale, isOpaque: true),
-              let ctx = NSGraphicsContext(bitmapImageRep: bitmap)?.cgContext else { return nil }
-        
-        let rect = CGRect(x: 0, y: 0, width: CGFloat(bitmap.pixelsWide), height: CGFloat(bitmap.pixelsHigh))
-        
-        let flip = CGAffineTransform(a: 1, b: 0, c: 0, d: -1, tx: 0, ty: rect.size.height)
-        ctx.concatenate(flip)
-        ctx.setFillColor(.white)
-        ctx.fill(rect)
-        ctx.draw(self, in: rect)
-        
-        return bitmap.representation(using: .jpeg, properties: [NSBitmapImageRep.PropertyKey.compressionFactor: quality])
-    }
+
+    return image
+  }
+
+  func createBitmap(size: CGSize? = nil, scale: CGFloat = 1, isOpaque: Bool = false) -> NSBitmapImageRep? {
+
+    let defaultScale = NSScreen.main?.backingScaleFactor ?? 1.0
+    let renderScale = scale == 0 ? defaultScale : scale
+    let renderSize = size ?? self.size
+
+    let width = Int(ceil(renderSize.width * renderScale))
+    let height = Int(ceil(renderSize.height * renderScale))
+
+    return NSBitmapImageRep(bitmapDataPlanes: nil,
+                            pixelsWide: max(width, 0),
+                            pixelsHigh: max(height, 0),
+                            bitsPerSample: 8,
+                            samplesPerPixel: isOpaque ? 3 : 4,
+                            hasAlpha: !isOpaque,
+                            isPlanar: false,
+                            colorSpaceName: NSColorSpaceName.deviceRGB,
+                            bytesPerRow: 0,
+                            bitsPerPixel: 32)
+  }
+
+  func pngData(size: CGSize? = nil, scale: CGFloat = 1) -> Data? {
+    guard let bitmap = createBitmap(size: size, scale: scale, isOpaque: false),
+      let ctx = NSGraphicsContext(bitmapImageRep: bitmap)?.cgContext else { return nil }
+
+    let rect = CGRect(x: 0, y: 0, width: CGFloat(bitmap.pixelsWide), height: CGFloat(bitmap.pixelsHigh))
+    let flip = CGAffineTransform(a: 1, b: 0, c: 0, d: -1, tx: 0, ty: rect.size.height)
+    ctx.concatenate(flip)
+    ctx.draw(self, in: rect)
+
+    return bitmap.representation(using: .png, properties: [:])
+  }
+
+  func jpegData(size: CGSize? = nil, scale: CGFloat = 1, compressionQuality quality: CGFloat = 1) -> Data? {
+    guard let bitmap = createBitmap(size: size, scale: scale, isOpaque: true),
+      let ctx = NSGraphicsContext(bitmapImageRep: bitmap)?.cgContext else { return nil }
+
+    let rect = CGRect(x: 0, y: 0, width: CGFloat(bitmap.pixelsWide), height: CGFloat(bitmap.pixelsHigh))
+
+    let flip = CGAffineTransform(a: 1, b: 0, c: 0, d: -1, tx: 0, ty: rect.size.height)
+    ctx.concatenate(flip)
+    ctx.setFillColor(.white)
+    ctx.fill(rect)
+    ctx.draw(self, in: rect)
+
+    return bitmap.representation(using: .jpeg, properties: [NSBitmapImageRep.PropertyKey.compressionFactor: quality])
+  }
 }

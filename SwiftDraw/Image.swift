@@ -35,80 +35,80 @@ import Foundation
 
 @objc(SVGImage)
 public final class Image: NSObject {
-    public let size: CGSize
-    
-    //An Image is simply an array of CoreGraphics draw commands
-    //see: Renderer.swift
-    let commands: [RendererCommand<CGTypes>]
+  public let size: CGSize
 
-    init(svg: DOM.SVG) {
-        size = CGSize(width: svg.width, height: svg.height)
+  //An Image is simply an array of CoreGraphics draw commands
+  //see: Renderer.swift
+  let commands: [RendererCommand<CGTypes>]
 
-        //To create the draw commands;
-        // - XML is parsed into DOM.SVG
-        // - DOM.SVG is converted into a LayerTree
-        // - LayerTree is converted into RenderCommands
-        // - RenderCommands are performed by Renderer (drawn to CGContext)
-        let layer = LayerTree.Builder(svg: svg).makeLayer()
-        let generator = LayerTree.CommandGenerator(provider: CGProvider(),
-                                                   size: LayerTree.Size(svg.width, svg.height))
-        commands = generator.renderCommands(for: layer)
-    }
+  init(svg: DOM.SVG) {
+    size = CGSize(width: svg.width, height: svg.height)
+
+    //To create the draw commands;
+    // - XML is parsed into DOM.SVG
+    // - DOM.SVG is converted into a LayerTree
+    // - LayerTree is converted into RenderCommands
+    // - RenderCommands are performed by Renderer (drawn to CGContext)
+    let layer = LayerTree.Builder(svg: svg).makeLayer()
+    let generator = LayerTree.CommandGenerator(provider: CGProvider(),
+                                               size: LayerTree.Size(svg.width, svg.height))
+    commands = generator.renderCommands(for: layer)
+  }
 }
 #else
 
 public final class Image: NSObject {
-    public let size: CGSize
+  public let size: CGSize
 
-    init(svg: DOM.SVG) {
-        size = CGSize(width: svg.width, height: svg.height)
-    }
+  init(svg: DOM.SVG) {
+    size = CGSize(width: svg.width, height: svg.height)
+  }
 }
 
 public extension Image {
 
-    func pngData(size: CGSize? = nil, scale: CGFloat = 1) -> Data? {
-        return nil
-    }
+  func pngData(size: CGSize? = nil, scale: CGFloat = 1) -> Data? {
+    return nil
+  }
 
-    func jpegData(size: CGSize? = nil, scale: CGFloat = 1, compressionQuality quality: CGFloat = 1) -> Data? {
-        return nil
-    }
+  func jpegData(size: CGSize? = nil, scale: CGFloat = 1, compressionQuality quality: CGFloat = 1) -> Data? {
+    return nil
+  }
 
-    func pdfData(size: CGSize? = nil) -> Data? {
-        return nil
-    }
+  func pdfData(size: CGSize? = nil) -> Data? {
+    return nil
+  }
 
-    static func pdfData(fileURL url: URL, size: CGSize? = nil) throws -> Data {
-        throw DOM.Error.missing("not implemented")
-    }
+  static func pdfData(fileURL url: URL, size: CGSize? = nil) throws -> Data {
+    throw DOM.Error.missing("not implemented")
+  }
 }
 #endif
 
 extension DOM.SVG {
 
-    static func parse(fileURL url: URL) throws -> DOM.SVG {
-        let parser = XMLParser(options: [.skipInvalidElements])
-        let element = try XML.SAXParser.parse(contentsOf: url)
-        return try parser.parseSVG(element)
-    }
+  static func parse(fileURL url: URL) throws -> DOM.SVG {
+    let parser = XMLParser(options: [.skipInvalidElements])
+    let element = try XML.SAXParser.parse(contentsOf: url)
+    return try parser.parseSVG(element)
+  }
 }
 
 public extension Image {
 
-    convenience init?(fileURL url: URL) {
-        guard let svg = try? DOM.SVG.parse(fileURL: url) else {
-            return nil
-        }
-
-        self.init(svg: svg)
+  convenience init?(fileURL url: URL) {
+    guard let svg = try? DOM.SVG.parse(fileURL: url) else {
+      return nil
     }
 
-    convenience init?(named name: String, in bundle: Bundle = Bundle.main) {
-        guard let url = bundle.url(forResource: name, withExtension: nil) else {
-            return nil
-        }
+    self.init(svg: svg)
+  }
 
-        self.init(fileURL: url)
+  convenience init?(named name: String, in bundle: Bundle = Bundle.main) {
+    guard let url = bundle.url(forResource: name, withExtension: nil) else {
+      return nil
     }
+
+    self.init(fileURL: url)
+  }
 }

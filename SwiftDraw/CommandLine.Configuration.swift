@@ -112,7 +112,7 @@ extension CommandLine {
       scanner.scanString("x", into: nil),
       scanner.scanInt32(&height),
       width > 0, height > 0 else {
-      throw Error.invalid
+        throw Error.invalid
     }
 
     return .custom(width: Int(width), height: Int(height))

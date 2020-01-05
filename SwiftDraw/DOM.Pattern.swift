@@ -32,32 +32,32 @@
 import Foundation
 
 extension DOM {
-
-    struct Pattern: ContainerElement {
-
-        var id: String
-        var x: Coordinate?
-        var y: Coordinate?
-        var width: Coordinate
-        var height: Coordinate
-
-        var patternUnits: Units?
-        var patternContentUnits: Units?
-
-        var childElements: [DOM.GraphicsElement] = []
-
-        init(id: String, width: Coordinate, height: Coordinate) {
-            self.id = id
-            self.width = width
-            self.height = height
-        }
+  
+  struct Pattern: ContainerElement {
+    
+    var id: String
+    var x: Coordinate?
+    var y: Coordinate?
+    var width: Coordinate
+    var height: Coordinate
+    
+    var patternUnits: Units?
+    var patternContentUnits: Units?
+    
+    var childElements: [DOM.GraphicsElement] = []
+    
+    init(id: String, width: Coordinate, height: Coordinate) {
+      self.id = id
+      self.width = width
+      self.height = height
     }
+  }
 }
 
 extension DOM.Pattern {
-
-    enum Units: String {
-        case userSpaceOnUse
-        case objectBoundingBox
-    }
+  
+  enum Units: String {
+    case userSpaceOnUse
+    case objectBoundingBox
+  }
 }

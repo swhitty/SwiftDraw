@@ -33,43 +33,43 @@ import Foundation
 import SwiftDraw
 
 extension SwiftDraw.CommandLine {
-
+  
   static func run(with args: [String] = Swift.CommandLine.arguments,
                   baseDirectory: URL = .currentDirectory) -> ExitCode {
-
+    
     guard let config = try? parseConfiguration(from: args, baseDirectory: baseDirectory) else {
       print("Invalid Syntax.")
       printHelp()
       return .error
     }
-
+    
     guard
       let data = try? process(with: config) else {
         print("Failure")
         printHelp()
         return .error
     }
-
+    
     do {
       try data.write(to: config.output)
       print("Created: \(config.output.path)")
     } catch _ {
       print("Failure: \(config.output.path)")
     }
-
+    
     return .ok
   }
-
+  
   static func process(with config: Configuration) throws -> Data {
     guard
       let svg = SwiftDraw.Image(fileURL: config.input),
       let data = processImage(svg, with: config) else {
         throw Error.invalid
     }
-
+    
     return data
   }
-
+  
   static func processImage(_ image: SwiftDraw.Image, with config: Configuration) -> Data? {
     switch config.format {
     case .jpeg:
@@ -80,7 +80,7 @@ extension SwiftDraw.CommandLine {
       return image.pngData(size: config.size.cgValue, scale: config.scale.cgValue)
     }
   }
-
+  
   static func printHelp() {
     print("")
     print("""
@@ -99,7 +99,7 @@ usage: swiftdraw <file.svg> [--format png | pdf | jpeg] [--size wxh] [--scale 1x
 }
 
 extension SwiftDraw.CommandLine {
-
+  
   // Represents the exit codes to the command line. See `man sysexits` for more information.
   enum ExitCode: Int32 {
     case ok = 0 // EX_OK
@@ -108,14 +108,14 @@ extension SwiftDraw.CommandLine {
 }
 
 private extension URL {
-
+  
   static var currentDirectory: URL {
     return URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
   }
 }
 
 private extension CommandLine.Scale {
-
+  
   var cgValue: CGFloat {
     switch self {
     case .default:
@@ -129,7 +129,7 @@ private extension CommandLine.Scale {
 }
 
 private extension CommandLine.Size {
-
+  
   var cgValue: CGSize? {
     switch self {
     case .default:
