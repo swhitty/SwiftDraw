@@ -79,7 +79,7 @@ public extension Image {
         return nil
     }
 
-    static func pdfData(fileURL url: URL) throws -> Data {
+    static func pdfData(fileURL url: URL, size: CGSize? = nil) throws -> Data {
         throw DOM.Error.missing("not implemented")
     }
 }
