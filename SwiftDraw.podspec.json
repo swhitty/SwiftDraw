@@ -10,7 +10,7 @@
   },
   "source": {
     "git": "https://github.com/swhitty/SwiftDraw.git",
-    "tag": "0.6.0"
+    "tag": "0.7.0"
   },
   "platforms": {
     "ios": "10.0",
