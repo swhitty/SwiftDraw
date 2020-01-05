@@ -79,7 +79,7 @@ public extension Image {
         return data as Data
     }
 
-    static func pdfData(fileURL url: URL, size: CGSize? = nil, ) throws -> Data {
+    static func pdfData(fileURL url: URL, size: CGSize? = nil) throws -> Data {
         let svg = try DOM.SVG.parse(fileURL: url)
         let size = size ?? CGSize(width: CGFloat(svg.width), height: CGFloat(svg.height))
         let layer = LayerTree.Builder(svg: svg).makeLayer()
@@ -95,7 +95,10 @@ public extension Image {
         ctx.beginPage(mediaBox: &mediaBox)
         let flip = CGAffineTransform(a: 1, b: 0, c: 0, d: -1, tx: 0, ty: mediaBox.size.height)
         ctx.concatenate(flip)
-        ctx.draw(commands, in: mediaBox)
+
+        let scale = CGSize(width: mediaBox.width / CGFloat(svg.width),
+                           height: mediaBox.height / CGFloat(svg.height))
+        ctx.draw(commands, in: mediaBox, scale: scale)
         ctx.endPage()
         ctx.closePDF()
 
