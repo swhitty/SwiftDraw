@@ -33,16 +33,16 @@ import XCTest
 @testable import SwiftDraw
 
 final class LayerTreeBuilderShapeTests: XCTestCase {
-
-    func testDOMRectMakesRectWithDefaultOrigin() {
-        let dom = DOM.Rect(width: 10, height: 20)
-        let rect = LayerTree.Builder.makeRect(from: dom)
-        XCTAssertEqual(rect, LayerTree.Rect(x: 0, y: 0, width: 10, height: 20))
-    }
-
-    func testDOMRectMakesRect() {
-        let dom = DOM.Rect(x: 10, y: 20, width: 30, height: 40)
-        let rect = LayerTree.Builder.makeRect(from: dom)
-        XCTAssertEqual(rect, LayerTree.Rect(x: 10, y: 20, width: 30, height: 40))
-    }
+  
+  func testDOMRectMakesRectWithDefaultOrigin() {
+    let dom = DOM.Rect(width: 10, height: 20)
+    let rect = LayerTree.Builder.makeRect(from: dom)
+    XCTAssertEqual(rect, LayerTree.Rect(x: 0, y: 0, width: 10, height: 20))
+  }
+  
+  func testDOMRectMakesRect() {
+    let dom = DOM.Rect(x: 10, y: 20, width: 30, height: 40)
+    let rect = LayerTree.Builder.makeRect(from: dom)
+    XCTAssertEqual(rect, LayerTree.Rect(x: 10, y: 20, width: 30, height: 40))
+  }
 }

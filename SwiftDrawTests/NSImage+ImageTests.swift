@@ -34,45 +34,45 @@ import XCTest
 
 final class NSImageTests: XCTestCase {
 
-    func testImageLoads() {
-        let image = NSImage(svgNamed: "lines.svg", in: .test)
-        XCTAssertNotNil(image)
-    }
+  func testImageLoads() {
+    let image = NSImage(svgNamed: "lines.svg", in: .test)
+    XCTAssertNotNil(image)
+  }
 
-    func testMissingImageDoesNotLoad() {
-        let image = NSImage(svgNamed: "missing.svg", in: .test)
-        XCTAssertNil(image)
-    }
+  func testMissingImageDoesNotLoad() {
+    let image = NSImage(svgNamed: "missing.svg", in: .test)
+    XCTAssertNil(image)
+  }
 
-    func testNSImageDraws() {
-        let canvas = NSBitmapImageRep(pixelsWide: 2, pixelsHigh: 2)
+  func testNSImageDraws() {
+    let canvas = NSBitmapImageRep(pixelsWide: 2, pixelsHigh: 2)
 
-        canvas.lockFocus()
-        NSImage(svgNamed: "lines.svg", in: .test)?.draw(in: NSRect(x: 0, y: 0, width: 2, height: 2))
-        canvas.unlockFocus()
-    }
+    canvas.lockFocus()
+    NSImage(svgNamed: "lines.svg", in: .test)?.draw(in: NSRect(x: 0, y: 0, width: 2, height: 2))
+    canvas.unlockFocus()
+  }
 
-    func testImageDraws() {
-        let canvas = NSBitmapImageRep(pixelsWide: 2, pixelsHigh: 2)
-        let image = Image.makeQuad().rasterize(with: CGSize(width: 2, height: 2))
+  func testImageDraws() {
+    let canvas = NSBitmapImageRep(pixelsWide: 2, pixelsHigh: 2)
+    let image = Image.makeQuad().rasterize(with: CGSize(width: 2, height: 2))
 
-        canvas.lockFocus()
-        image.draw(in: NSRect(x: 0, y: 0, width: 2, height: 2))
-        canvas.unlockFocus()
+    canvas.lockFocus()
+    image.draw(in: NSRect(x: 0, y: 0, width: 2, height: 2))
+    canvas.unlockFocus()
 
-        XCTAssertEqual(canvas.colorAt(x: 0, y: 0), NSColor(deviceRed: 1.0, green: 0, blue: 0, alpha: 1.0))
-        XCTAssertEqual(canvas.colorAt(x: 1, y: 1), NSColor(deviceRed: 0.0, green: 0, blue: 1.0, alpha: 1.0))
-    }
+    XCTAssertEqual(canvas.colorAt(x: 0, y: 0), NSColor(deviceRed: 1.0, green: 0, blue: 0, alpha: 1.0))
+    XCTAssertEqual(canvas.colorAt(x: 1, y: 1), NSColor(deviceRed: 0.0, green: 0, blue: 1.0, alpha: 1.0))
+  }
 }
 
 private extension Image {
 
-    static func makeQuad() -> Image {
-        let svg = DOM.SVG(width: 2, height: 2)
-        svg.childElements.append(DOM.Rect(x: 0, y: 0, width: 1, height: 1))
-        svg.childElements.append(DOM.Rect(x: 1, y: 1, width: 1, height: 1))
-        svg.childElements[0].fill = .color(DOM.Color.rgbi(255, 0, 0))
-        svg.childElements[1].fill = .color(DOM.Color.rgbi(0, 0, 255))
-        return Image(svg: svg)
-    }
+  static func makeQuad() -> Image {
+    let svg = DOM.SVG(width: 2, height: 2)
+    svg.childElements.append(DOM.Rect(x: 0, y: 0, width: 1, height: 1))
+    svg.childElements.append(DOM.Rect(x: 1, y: 1, width: 1, height: 1))
+    svg.childElements[0].fill = .color(DOM.Color.rgbi(255, 0, 0))
+    svg.childElements[1].fill = .color(DOM.Color.rgbi(0, 0, 255))
+    return Image(svg: svg)
+  }
 }

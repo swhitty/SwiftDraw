@@ -34,86 +34,86 @@ import XCTest
 @testable import SwiftDraw
 
 final class SVGTests: XCTestCase {
+  
+  func testSVG() throws {
+    let node = XML.Element(name: "svg", attributes: ["width": "100", "height": "200"])
+    let parser = XMLParser()
     
-    func testSVG() throws {
-        let node = XML.Element(name: "svg", attributes: ["width": "100", "height": "200"])
-        let parser = XMLParser()
-        
-        var parsed = try parser.parseSVG(node)
-        let expected = DOM.SVG(width: 100, height: 200)
-        XCTAssertEqual(parsed, expected)
-        
-        expected.viewBox = DOM.SVG.ViewBox(x: 10, y: 20, width: 100, height: 200)
-        XCTAssertNotEqual(parsed, expected)
-        
-        node.attributes["viewBox"] = "10 20 100 200"
-        parsed = try parser.parseSVG(node)
-        XCTAssertEqual(parsed, expected)
-        
-        expected.fill = .color(.keyword(.red))
-        XCTAssertNotEqual(parsed, expected)
-    }
-
-    func testParseSVGInvalidNode() {
-        let node = XML.Element(name: "svg2", attributes: ["width": "100", "height": "200"])
-        XCTAssertThrowsError(try XMLParser().parseSVG(node))
-    }
-
-    func testParseSVGMissingHeightInvalidNode() {
-        let node = XML.Element(name: "svg", attributes: ["width": "100"])
-        XCTAssertThrowsError(try XMLParser().parseSVG(node))
-    }
-
-    func testParseSVGMissingWidthInvalidNode() {
-        let node = XML.Element(name: "svg", attributes: ["height": "100"])
-        XCTAssertThrowsError(try XMLParser().parseSVG(node))
-    }
+    var parsed = try parser.parseSVG(node)
+    let expected = DOM.SVG(width: 100, height: 200)
+    XCTAssertEqual(parsed, expected)
     
-    func testViewBox() {
-        let parsed = (try? XMLParser().parseViewBox(" 10\t20  300.0  5e2")!)!
-        XCTAssertEqual(parsed.x, 10)
-        XCTAssertEqual(parsed.y, 20)
-        XCTAssertEqual(parsed.width, 300)
-        XCTAssertEqual(parsed.height, 500)
-        
-        XCTAssertNotNil(try! XMLParser().parseViewBox("10 10 10 10"))
-        XCTAssertThrowsError(try XMLParser().parseViewBox("10 10 10 10a"))
-        XCTAssertThrowsError(try XMLParser().parseViewBox(" 10\t20  300"))
-        XCTAssertThrowsError(try XMLParser().parseViewBox("10 10 10 10a"))
-    }
+    expected.viewBox = DOM.SVG.ViewBox(x: 10, y: 20, width: 100, height: 200)
+    XCTAssertNotEqual(parsed, expected)
     
-    func testClipPath() throws {
-        
-        let node = XML.Element(name: "clipPath", attributes: ["id": "hello"])
-        
-        var parsed = try XMLParser().parseClipPath(node)
-        XCTAssertEqual(parsed.id, "hello")
-        
-        node.children.append(XML.Element("line", style: "x1:0;y1:0;x2:50;y2:60"))
-        node.children.append(XML.Element("circle", style: "cx:0;cy:10;r:20"))
-
-        parsed = try XMLParser().parseClipPath(node)
-        XCTAssertEqual(parsed.id, "hello")
-        XCTAssertEqual(parsed.childElements.count, 2)
-    }
-
-    func testParseDefs() throws {
-        let svg = XML.Element(name: "svg")
-        let defs = XML.Element(name: "defs")
-        let g = XML.Element(name: "g")
-        svg.children.append(defs)
-        svg.children.append(g)
-
-        g.children.append(XML.Element("circle", id: "c2", style: "cx:0;cy:10;r:20"))
-        let defs1 = XML.Element(name: "defs")
-        g.children.append(defs1)
-        defs1.children.append(XML.Element("circle", id: "c3", style: "cx:0;cy:10;r:20"))
-
-        defs.children.append(XML.Element("circle", id: "c1", style: "cx:0;cy:10;r:20"))
-        svg.children.append(defs1)
-
-        let elements = try SwiftDraw.XMLParser().parseSVGDefs(svg).elements
-        XCTAssertEqual(elements.count, 2)
-    }
-
+    node.attributes["viewBox"] = "10 20 100 200"
+    parsed = try parser.parseSVG(node)
+    XCTAssertEqual(parsed, expected)
+    
+    expected.fill = .color(.keyword(.red))
+    XCTAssertNotEqual(parsed, expected)
+  }
+  
+  func testParseSVGInvalidNode() {
+    let node = XML.Element(name: "svg2", attributes: ["width": "100", "height": "200"])
+    XCTAssertThrowsError(try XMLParser().parseSVG(node))
+  }
+  
+  func testParseSVGMissingHeightInvalidNode() {
+    let node = XML.Element(name: "svg", attributes: ["width": "100"])
+    XCTAssertThrowsError(try XMLParser().parseSVG(node))
+  }
+  
+  func testParseSVGMissingWidthInvalidNode() {
+    let node = XML.Element(name: "svg", attributes: ["height": "100"])
+    XCTAssertThrowsError(try XMLParser().parseSVG(node))
+  }
+  
+  func testViewBox() {
+    let parsed = (try? XMLParser().parseViewBox(" 10\t20  300.0  5e2")!)!
+    XCTAssertEqual(parsed.x, 10)
+    XCTAssertEqual(parsed.y, 20)
+    XCTAssertEqual(parsed.width, 300)
+    XCTAssertEqual(parsed.height, 500)
+    
+    XCTAssertNotNil(try! XMLParser().parseViewBox("10 10 10 10"))
+    XCTAssertThrowsError(try XMLParser().parseViewBox("10 10 10 10a"))
+    XCTAssertThrowsError(try XMLParser().parseViewBox(" 10\t20  300"))
+    XCTAssertThrowsError(try XMLParser().parseViewBox("10 10 10 10a"))
+  }
+  
+  func testClipPath() throws {
+    
+    let node = XML.Element(name: "clipPath", attributes: ["id": "hello"])
+    
+    var parsed = try XMLParser().parseClipPath(node)
+    XCTAssertEqual(parsed.id, "hello")
+    
+    node.children.append(XML.Element("line", style: "x1:0;y1:0;x2:50;y2:60"))
+    node.children.append(XML.Element("circle", style: "cx:0;cy:10;r:20"))
+    
+    parsed = try XMLParser().parseClipPath(node)
+    XCTAssertEqual(parsed.id, "hello")
+    XCTAssertEqual(parsed.childElements.count, 2)
+  }
+  
+  func testParseDefs() throws {
+    let svg = XML.Element(name: "svg")
+    let defs = XML.Element(name: "defs")
+    let g = XML.Element(name: "g")
+    svg.children.append(defs)
+    svg.children.append(g)
+    
+    g.children.append(XML.Element("circle", id: "c2", style: "cx:0;cy:10;r:20"))
+    let defs1 = XML.Element(name: "defs")
+    g.children.append(defs1)
+    defs1.children.append(XML.Element("circle", id: "c3", style: "cx:0;cy:10;r:20"))
+    
+    defs.children.append(XML.Element("circle", id: "c1", style: "cx:0;cy:10;r:20"))
+    svg.children.append(defs1)
+    
+    let elements = try SwiftDraw.XMLParser().parseSVGDefs(svg).elements
+    XCTAssertEqual(elements.count, 2)
+  }
+  
 }

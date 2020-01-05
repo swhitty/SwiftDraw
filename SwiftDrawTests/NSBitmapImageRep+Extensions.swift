@@ -33,25 +33,25 @@ import AppKit
 
 extension NSBitmapImageRep {
 
-    convenience init(pixelsWide width: Int, pixelsHigh height: Int) {
-        self.init(bitmapDataPlanes: nil,
-                  pixelsWide: width,
-                  pixelsHigh: height,
-                  bitsPerSample: 8,
-                  samplesPerPixel: 4,
-                  hasAlpha: true,
-                  isPlanar: false,
-                  colorSpaceName: NSColorSpaceName.deviceRGB,
-                  bytesPerRow: 0,
-                  bitsPerPixel: 32)!
-    }
+  convenience init(pixelsWide width: Int, pixelsHigh height: Int) {
+    self.init(bitmapDataPlanes: nil,
+              pixelsWide: width,
+              pixelsHigh: height,
+              bitsPerSample: 8,
+              samplesPerPixel: 4,
+              hasAlpha: true,
+              isPlanar: false,
+              colorSpaceName: NSColorSpaceName.deviceRGB,
+              bytesPerRow: 0,
+              bitsPerPixel: 32)!
+  }
 
-    func lockFocus() {
-        NSGraphicsContext.saveGraphicsState()
-        NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: self)
-    }
+  func lockFocus() {
+    NSGraphicsContext.saveGraphicsState()
+    NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: self)
+  }
 
-    func unlockFocus() {
-        NSGraphicsContext.restoreGraphicsState()
-    }
+  func unlockFocus() {
+    NSGraphicsContext.restoreGraphicsState()
+  }
 }

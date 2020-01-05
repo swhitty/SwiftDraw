@@ -34,29 +34,29 @@ import XCTest
 
 final class CommandLineArgumentsTests: XCTestCase {
 
-    func testParseModifiers() throws {
-        let modifiers = try CommandLine.parseModifiers(from: ["--format", "some", "--output", "more", "--scale", "magnify", "--size", "huge"])
-        XCTAssertEqual(modifiers, [.format: "some", .output: "more", .scale: "magnify", .size: "huge"])
-    }
+  func testParseModifiers() throws {
+    let modifiers = try CommandLine.parseModifiers(from: ["--format", "some", "--output", "more", "--scale", "magnify", "--size", "huge"])
+    XCTAssertEqual(modifiers, [.format: "some", .output: "more", .scale: "magnify", .size: "huge"])
+  }
 
-    func testParseModifiersThrowsForOddPairs() {
-        XCTAssertThrowsError(try CommandLine.parseModifiers(from: ["--format"]))
-        XCTAssertThrowsError(try CommandLine.parseModifiers(from: ["--format", "png", "--output"]))
-    }
+  func testParseModifiersThrowsForOddPairs() {
+    XCTAssertThrowsError(try CommandLine.parseModifiers(from: ["--format"]))
+    XCTAssertThrowsError(try CommandLine.parseModifiers(from: ["--format", "png", "--output"]))
+  }
 
-    func testParseModifiersThrowsForDuplicateModifiers() {
-        XCTAssertThrowsError(try CommandLine.parseModifiers(from: ["--format", "png", "--format", "jpg"]))
-        XCTAssertThrowsError(try CommandLine.parseModifiers(from:  ["--format", "png", "--output", "more", "--output", "evenmore"]))
-    }
+  func testParseModifiersThrowsForDuplicateModifiers() {
+    XCTAssertThrowsError(try CommandLine.parseModifiers(from: ["--format", "png", "--format", "jpg"]))
+    XCTAssertThrowsError(try CommandLine.parseModifiers(from:  ["--format", "png", "--output", "more", "--output", "evenmore"]))
+  }
 
-    func testParseModifiersThrowsForUnknownModifiers() {
-        XCTAssertThrowsError(try CommandLine.parseModifiers(from: ["--unknown", "png"]))
-        XCTAssertThrowsError(try CommandLine.parseModifiers(from: ["--format", "png", "--unknown", "more"]))
-    }
+  func testParseModifiersThrowsForUnknownModifiers() {
+    XCTAssertThrowsError(try CommandLine.parseModifiers(from: ["--unknown", "png"]))
+    XCTAssertThrowsError(try CommandLine.parseModifiers(from: ["--format", "png", "--unknown", "more"]))
+  }
 
-    func testParseModifiersThrowsForMissingPrefix() {
-        XCTAssertThrowsError(try CommandLine.parseModifiers(from: ["format", "png"]))
-        XCTAssertThrowsError(try CommandLine.parseModifiers(from: ["--format", "png", "output", "more"]))
-    }
+  func testParseModifiersThrowsForMissingPrefix() {
+    XCTAssertThrowsError(try CommandLine.parseModifiers(from: ["format", "png"]))
+    XCTAssertThrowsError(try CommandLine.parseModifiers(from: ["--format", "png", "output", "more"]))
+  }
 
 }

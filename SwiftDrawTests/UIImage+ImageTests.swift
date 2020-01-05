@@ -34,13 +34,13 @@ import XCTest
 
 final class UIImageTests: XCTestCase {
 
-    func testImageLoads() {
-        let image = UIImage(svgNamed: "lines.svg", in: .test)
-        XCTAssertNotNil(image)
-    }
+  func testImageLoads() {
+    let image = UIImage(svgNamed: "lines.svg", in: .test)
+    XCTAssertNotNil(image)
+  }
 
-    func testMissingImageDoesNotLoad() {
-        let image = UIImage(svgNamed: "missing.svg", in: .test)
-        XCTAssertNil(image)
-    }
+  func testMissingImageDoesNotLoad() {
+    let image = UIImage(svgNamed: "missing.svg", in: .test)
+    XCTAssertNil(image)
+  }
 }

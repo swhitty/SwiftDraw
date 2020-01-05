@@ -33,38 +33,38 @@ import XCTest
 @testable import SwiftDraw
 
 final class ParserXMLTextTests: XCTestCase {
+  
+  func testParseText() {
+    XCTAssertEqual(try XMLParser().parseText([:], value: "Simon").value, "Simon")
     
-    func testParseText() {
-        XCTAssertEqual(try XMLParser().parseText([:], value: "Simon").value, "Simon")
-        
-        var node = ["x": "10", "y": "25"]
-        XCTAssertNotNil(try? XMLParser().parseText(node, value: "Simon"))
-        
-        node["font-family"] = "Futura"
-        node["font-size"] = "12.5"
-        
-        let expected = DOM.Text(x: 10, y: 25, value: "Simon")
-        expected.fontFamily = "Futura"
-        expected.fontSize = 12.5
-        
-        let parsed = try? XMLParser().parseText(node, value: "Simon")
-        XCTAssertEqual(parsed, expected)
-    }
-
-    func testTextNodeParses() throws {
-        let el = XML.Element(name: "text", attributes: [:])
-        el.innerText = "Simon"
-
-        let node = try XMLParser().parseText(["x": "1", "y": "1"], element: el)
-        XCTAssertEqual(node?.value, "Simon")
-    }
-
-    func testEmptyTextNodeReturnsNil() {
-        let el = XML.Element(name: "text", attributes: [:])
-        XCTAssertNil(try XMLParser().parseText(["x": "1", "y": "1"], element: el))
-        el.innerText = "    "
-        XCTAssertNil(try XMLParser().parseText(["x": "1", "y": "1"], element: el))
-    }
+    var node = ["x": "10", "y": "25"]
+    XCTAssertNotNil(try? XMLParser().parseText(node, value: "Simon"))
+    
+    node["font-family"] = "Futura"
+    node["font-size"] = "12.5"
+    
+    let expected = DOM.Text(x: 10, y: 25, value: "Simon")
+    expected.fontFamily = "Futura"
+    expected.fontSize = 12.5
+    
+    let parsed = try? XMLParser().parseText(node, value: "Simon")
+    XCTAssertEqual(parsed, expected)
+  }
+  
+  func testTextNodeParses() throws {
+    let el = XML.Element(name: "text", attributes: [:])
+    el.innerText = "Simon"
+    
+    let node = try XMLParser().parseText(["x": "1", "y": "1"], element: el)
+    XCTAssertEqual(node?.value, "Simon")
+  }
+  
+  func testEmptyTextNodeReturnsNil() {
+    let el = XML.Element(name: "text", attributes: [:])
+    XCTAssertNil(try XMLParser().parseText(["x": "1", "y": "1"], element: el))
+    el.innerText = "    "
+    XCTAssertNil(try XMLParser().parseText(["x": "1", "y": "1"], element: el))
+  }
 }
 
 

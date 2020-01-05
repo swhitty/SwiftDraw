@@ -33,34 +33,34 @@ import XCTest
 @testable import SwiftDraw
 
 final class StyleTests: XCTestCase {
+  
+  func testStyle() {
+    XCTAssertEqual(try XMLParser().parseStyleAttributes("selector: hi;"),
+                   ["selector": "hi"])
+    XCTAssertEqual(try XMLParser().parseStyleAttributes("selector: hi"),
+                   ["selector": "hi"])
+    XCTAssertEqual(try XMLParser().parseStyleAttributes("selector: hi "),
+                   ["selector": "hi"])
+    XCTAssertEqual(try XMLParser().parseStyleAttributes(" trans-form : rotate(4)"),
+                   ["trans-form": "rotate(4)"])
     
-    func testStyle() {
-        XCTAssertEqual(try XMLParser().parseStyleAttributes("selector: hi;"),
-                       ["selector": "hi"])
-        XCTAssertEqual(try XMLParser().parseStyleAttributes("selector: hi"),
-                       ["selector": "hi"])
-        XCTAssertEqual(try XMLParser().parseStyleAttributes("selector: hi "),
-                       ["selector": "hi"])
-        XCTAssertEqual(try XMLParser().parseStyleAttributes(" trans-form : rotate(4)"),
-                       ["trans-form": "rotate(4)"])
-
-        XCTAssertThrowsError(try XMLParser().parseStyleAttributes("selector"))
-        XCTAssertThrowsError(try XMLParser().parseStyleAttributes(": hmm"))
-    }
+    XCTAssertThrowsError(try XMLParser().parseStyleAttributes("selector"))
+    XCTAssertThrowsError(try XMLParser().parseStyleAttributes(": hmm"))
+  }
+  
+  func testStyles() throws {
+    let e = XML.Element(name: "line")
+    e.attributes["x"] = "5"
+    e.attributes["y"] = "5"
+    e.attributes["stroke-color"] = "black"
+    e.attributes["style"] = "fill: red; x: 20"
     
-    func testStyles() throws {
-        let e = XML.Element(name: "line")
-        e.attributes["x"] = "5"
-        e.attributes["y"] = "5"
-        e.attributes["stroke-color"] = "black"
-        e.attributes["style"] = "fill: red; x: 20"
-        
-        //Style attributes should override any XML.Element attribute
-        let att = try XMLParser().parseAttributes(e)
-        
-        XCTAssertEqual(try att.parseCoordinate("x"), 20.0)
-        XCTAssertEqual(try att.parseCoordinate("y"), 5.0)
-        XCTAssertEqual(try att.parseColor("stroke-color"), .keyword(.black))
-        XCTAssertEqual(try att.parseColor("fill"), .keyword(.red))
-    }
+    //Style attributes should override any XML.Element attribute
+    let att = try XMLParser().parseAttributes(e)
+    
+    XCTAssertEqual(try att.parseCoordinate("x"), 20.0)
+    XCTAssertEqual(try att.parseCoordinate("y"), 5.0)
+    XCTAssertEqual(try att.parseColor("stroke-color"), .keyword(.black))
+    XCTAssertEqual(try att.parseColor("fill"), .keyword(.red))
+  }
 }

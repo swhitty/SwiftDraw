@@ -35,61 +35,61 @@ import AppKit
 import XCTest
 
 final class CGRendererTests: XCTestCase {
-
-    func testDrawsRect() {
-        let renderer = ImageRenderer(pixelsWide: 2, pixelsHigh: 2)
-
-        renderer.renderer.setFill(color: .red)
-        renderer.renderer.fill(path: CGPath.rect(), rule: .evenOdd)
-
-        XCTAssertEqual(renderer.getColor(x: 0, y: 0), .red)
-        XCTAssertEqual(renderer.getColor(x: 1, y: 1), .red)
-    }
-
-    func testAlphaClips() {
-        let renderer = ImageRenderer(pixelsWide: 2, pixelsHigh: 2)
-
-        renderer.renderer.setFill(color: .red)
-        renderer.renderer.fill(path: CGPath.rect(), rule: .evenOdd)
-
-        XCTAssertEqual(renderer.getColor(x: 0, y: 0), .red)
-        XCTAssertEqual(renderer.getColor(x: 1, y: 1), .red)
-    }
+  
+  func testDrawsRect() {
+    let renderer = ImageRenderer(pixelsWide: 2, pixelsHigh: 2)
+    
+    renderer.renderer.setFill(color: .red)
+    renderer.renderer.fill(path: CGPath.rect(), rule: .evenOdd)
+    
+    XCTAssertEqual(renderer.getColor(x: 0, y: 0), .red)
+    XCTAssertEqual(renderer.getColor(x: 1, y: 1), .red)
+  }
+  
+  func testAlphaClips() {
+    let renderer = ImageRenderer(pixelsWide: 2, pixelsHigh: 2)
+    
+    renderer.renderer.setFill(color: .red)
+    renderer.renderer.fill(path: CGPath.rect(), rule: .evenOdd)
+    
+    XCTAssertEqual(renderer.getColor(x: 0, y: 0), .red)
+    XCTAssertEqual(renderer.getColor(x: 1, y: 1), .red)
+  }
 }
 
 final class ImageRenderer {
-
-    let renderer: CGRenderer
-    private let bitmap: NSBitmapImageRep
-
-    init(pixelsWide: Int, pixelsHigh: Int) {
-        self.bitmap = NSBitmapImageRep(pixelsWide: pixelsWide,
-                                       pixelsHigh: pixelsHigh)
-        let context = NSGraphicsContext(bitmapImageRep: bitmap)!.cgContext
-        self.renderer = CGRenderer(context: context)
-    }
-
-    func getColor(x: Int, y: Int) -> CGColor? {
-        return bitmap.colorAt(x: x, y: y)?.cgColor
-    }
+  
+  let renderer: CGRenderer
+  private let bitmap: NSBitmapImageRep
+  
+  init(pixelsWide: Int, pixelsHigh: Int) {
+    self.bitmap = NSBitmapImageRep(pixelsWide: pixelsWide,
+                                   pixelsHigh: pixelsHigh)
+    let context = NSGraphicsContext(bitmapImageRep: bitmap)!.cgContext
+    self.renderer = CGRenderer(context: context)
+  }
+  
+  func getColor(x: Int, y: Int) -> CGColor? {
+    return bitmap.colorAt(x: x, y: y)?.cgColor
+  }
 }
 
 private extension CGPath {
-
-    static func rect(x: CGFloat = 0,
-                     y: CGFloat = 0,
-                     width: CGFloat = 2,
-                     height: CGFloat = 2) -> CGPath {
-
-        let rect = CGRect(x: x, y: y, width: width, height: height)
-        return CGPath(rect: rect, transform: nil)
-    }
+  
+  static func rect(x: CGFloat = 0,
+                   y: CGFloat = 0,
+                   width: CGFloat = 2,
+                   height: CGFloat = 2) -> CGPath {
+    
+    let rect = CGRect(x: x, y: y, width: width, height: height)
+    return CGPath(rect: rect, transform: nil)
+  }
 }
 
 private extension CGColor {
-
-    static var red: CGColor {
-        //return CGColor(red: 1.0, green: 0, blue: 0, alpha: 1.0)
-        return NSColor(deviceRed: 0.0, green: 0, blue: 1.0, alpha: 1.0).cgColor
-    }
+  
+  static var red: CGColor {
+    //return CGColor(red: 1.0, green: 0, blue: 0, alpha: 1.0)
+    return NSColor(deviceRed: 0.0, green: 0, blue: 1.0, alpha: 1.0).cgColor
+  }
 }

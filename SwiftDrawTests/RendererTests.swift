@@ -33,94 +33,94 @@ import XCTest
 @testable import SwiftDraw
 
 final class RendererTests: XCTestCase {
-
-    func testPerformCommands() {
-        let renderer = MockRenderer()
-        renderer.perform([
-            .pushState,
-            .popState,
-            .pushTransparencyLayer,
-            .popTransparencyLayer,
-            .concatenate(transform: .identity),
-            .translate(tx: 10, ty: 20),
-            .scale(sx: 1, sy: 2),
-            .rotate(angle: 10),
-            .setFill(color: .none),
-            .setFillPattern(.mock),
-            .setStroke(color: .none),
-            .setLine(width: 10),
-            .setLineCap(.butt),
-            .setLineJoin(.bevel),
-            .setLineMiter(limit: 10),
-            .setClip(path: .mock),
-            .setClipMask([], frame: .zero),
-            .fill(.mock, rule: .nonzero),
-            .stroke(.mock),
-            .setAlpha(0.5),
-            .setBlend(mode: .sourceIn),
-            .draw(image: .mock),
-            .drawGradient(.mock, from: .zero, to: .zero),
-            ])
-
-        XCTAssertEqual(renderer.operations, [
-            "pushState",
-            "popState",
-            "pushTransparencyLayer",
-            "popTransparencyLayer",
-            "concatenateTransform",
-            "translate",
-            "scale",
-            "rotate",
-            "setFillColor",
-            "setFillPattern",
-            "setStrokeColor",
-            "setLineWidth",
-            "setLineCap",
-            "setLineJoin",
-            "setLineMiterLimit",
-            "setClip",
-            "setClipMask",
-            "fillPath",
-            "strokePath",
-            "setAlpha",
-            "setBlendMode",
-            "drawImage",
-            "drawGradient"
-            ])
-    }
+  
+  func testPerformCommands() {
+    let renderer = MockRenderer()
+    renderer.perform([
+      .pushState,
+      .popState,
+      .pushTransparencyLayer,
+      .popTransparencyLayer,
+      .concatenate(transform: .identity),
+      .translate(tx: 10, ty: 20),
+      .scale(sx: 1, sy: 2),
+      .rotate(angle: 10),
+      .setFill(color: .none),
+      .setFillPattern(.mock),
+      .setStroke(color: .none),
+      .setLine(width: 10),
+      .setLineCap(.butt),
+      .setLineJoin(.bevel),
+      .setLineMiter(limit: 10),
+      .setClip(path: .mock),
+      .setClipMask([], frame: .zero),
+      .fill(.mock, rule: .nonzero),
+      .stroke(.mock),
+      .setAlpha(0.5),
+      .setBlend(mode: .sourceIn),
+      .draw(image: .mock),
+      .drawGradient(.mock, from: .zero, to: .zero),
+    ])
+    
+    XCTAssertEqual(renderer.operations, [
+      "pushState",
+      "popState",
+      "pushTransparencyLayer",
+      "popTransparencyLayer",
+      "concatenateTransform",
+      "translate",
+      "scale",
+      "rotate",
+      "setFillColor",
+      "setFillPattern",
+      "setStrokeColor",
+      "setLineWidth",
+      "setLineCap",
+      "setLineJoin",
+      "setLineMiterLimit",
+      "setClip",
+      "setClipMask",
+      "fillPath",
+      "strokePath",
+      "setAlpha",
+      "setBlendMode",
+      "drawImage",
+      "drawGradient"
+    ])
+  }
 }
 
 private extension LayerTree.Shape {
-
-    static var mock: LayerTree.Shape {
-        return .line(between: [])
-    }
+  
+  static var mock: LayerTree.Shape {
+    return .line(between: [])
+  }
 }
 
 private extension Array where Element == LayerTree.Shape {
-
-    static var mock: [LayerTree.Shape] {
-        return [.mock]
-    }
+  
+  static var mock: [LayerTree.Shape] {
+    return [.mock]
+  }
 }
 
 private extension LayerTree.Image {
-
-    static var mock: LayerTree.Image {
-        return .png(data: Data())
-    }
+  
+  static var mock: LayerTree.Image {
+    return .png(data: Data())
+  }
 }
 
 private extension LayerTree.Pattern {
-
-    static var mock: LayerTree.Pattern {
-        return LayerTree.Pattern(frame: .zero)
-    }
+  
+  static var mock: LayerTree.Pattern {
+    return LayerTree.Pattern(frame: .zero)
+  }
 }
 
 private extension LayerTree.Gradient {
-
-    static var mock: LayerTree.Gradient {
-        return LayerTree.Gradient(start: .zero, end: .zero)
-    }
+  
+  static var mock: LayerTree.Gradient {
+    return LayerTree.Gradient(start: .zero, end: .zero)
+  }
 }

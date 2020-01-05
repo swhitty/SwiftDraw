@@ -33,93 +33,93 @@ import XCTest
 @testable import SwiftDraw
 
 final class StackTests: XCTestCase {
+  
+  func testInit() {
+    let stack = Stack<Int>(root: 10)
     
-    func testInit() {
-        let stack = Stack<Int>(root: 10)
-        
-        XCTAssertEqual(stack.root, 10)
-        XCTAssertEqual(stack.top, 10)
-        XCTAssertTrue(stack.storage.isEmpty)
-    }
+    XCTAssertEqual(stack.root, 10)
+    XCTAssertEqual(stack.top, 10)
+    XCTAssertTrue(stack.storage.isEmpty)
+  }
+  
+  func testPush() {
+    var stack = Stack<Int>(root: 10)
     
-    func testPush() {
-        var stack = Stack<Int>(root: 10)
-        
-        XCTAssertTrue(stack.storage.isEmpty)
-        
-        stack.push(20)
-        XCTAssertEqual(stack.top, 20)
-        XCTAssertFalse(stack.storage.isEmpty)
-        
-        stack.push(30)
-        XCTAssertEqual(stack.top, 30)
-        stack.push(40)
-        XCTAssertEqual(stack.top, 40)
-        stack.push(50)
-        XCTAssertEqual(stack.top, 50)
-        XCTAssertEqual(stack.storage, [20, 30, 40, 50])
-    }
+    XCTAssertTrue(stack.storage.isEmpty)
     
-    func testPop() {
-        var stack = Stack<Int>(root: 10)
-        
-        //cannot pop off root
-        XCTAssertFalse(stack.pop())
-        
-        stack.push(20)
-        stack.push(30)
-        stack.push(40)
-        stack.push(50)
-        XCTAssertEqual(stack.top, 50)
-        XCTAssertTrue(stack.pop())
-        XCTAssertEqual(stack.top, 40)
-        XCTAssertTrue(stack.pop())
-        XCTAssertEqual(stack.top, 30)
-        XCTAssertTrue(stack.pop())
-        XCTAssertEqual(stack.top, 20)
-        XCTAssertTrue(stack.pop())
-        XCTAssertEqual(stack.top, 10)
-        
-        //cannot pop off root
-        XCTAssertFalse(stack.pop())
-    }
+    stack.push(20)
+    XCTAssertEqual(stack.top, 20)
+    XCTAssertFalse(stack.storage.isEmpty)
     
-    func testMutation() {
-        
-        var stack = Stack<Int>(root: 10)
-        
-        XCTAssertEqual(stack.top, 10)
-        stack.top = 50
-        XCTAssertEqual(stack.top, 50)
-        XCTAssertEqual(stack.root, 50)
-        XCTAssertTrue(stack.storage.isEmpty)
-        
-        stack.push(100)
-        stack.top = 200
-        
-        XCTAssertEqual(stack.top, 200)
-        XCTAssertEqual(stack.root, 50)
-        XCTAssertEqual(stack.storage, [200])
-        
-        stack.push(500)
-        stack.top = 600
-        XCTAssertEqual(stack.top, 600)
-        XCTAssertEqual(stack.root, 50)
-        XCTAssertEqual(stack.storage, [200, 600])
-        
-        stack.pop()
-        stack.top = 33
-        XCTAssertEqual(stack.top, 33)
-        XCTAssertEqual(stack.root, 50)
-        XCTAssertEqual(stack.storage, [33])
-        
-        stack.pop()
-        stack.top = 1
-        XCTAssertEqual(stack.top, 1)
-        XCTAssertEqual(stack.root, 1)
-        XCTAssertTrue(stack.storage.isEmpty)
-        
-    }
+    stack.push(30)
+    XCTAssertEqual(stack.top, 30)
+    stack.push(40)
+    XCTAssertEqual(stack.top, 40)
+    stack.push(50)
+    XCTAssertEqual(stack.top, 50)
+    XCTAssertEqual(stack.storage, [20, 30, 40, 50])
+  }
+  
+  func testPop() {
+    var stack = Stack<Int>(root: 10)
     
-
+    //cannot pop off root
+    XCTAssertFalse(stack.pop())
+    
+    stack.push(20)
+    stack.push(30)
+    stack.push(40)
+    stack.push(50)
+    XCTAssertEqual(stack.top, 50)
+    XCTAssertTrue(stack.pop())
+    XCTAssertEqual(stack.top, 40)
+    XCTAssertTrue(stack.pop())
+    XCTAssertEqual(stack.top, 30)
+    XCTAssertTrue(stack.pop())
+    XCTAssertEqual(stack.top, 20)
+    XCTAssertTrue(stack.pop())
+    XCTAssertEqual(stack.top, 10)
+    
+    //cannot pop off root
+    XCTAssertFalse(stack.pop())
+  }
+  
+  func testMutation() {
+    
+    var stack = Stack<Int>(root: 10)
+    
+    XCTAssertEqual(stack.top, 10)
+    stack.top = 50
+    XCTAssertEqual(stack.top, 50)
+    XCTAssertEqual(stack.root, 50)
+    XCTAssertTrue(stack.storage.isEmpty)
+    
+    stack.push(100)
+    stack.top = 200
+    
+    XCTAssertEqual(stack.top, 200)
+    XCTAssertEqual(stack.root, 50)
+    XCTAssertEqual(stack.storage, [200])
+    
+    stack.push(500)
+    stack.top = 600
+    XCTAssertEqual(stack.top, 600)
+    XCTAssertEqual(stack.root, 50)
+    XCTAssertEqual(stack.storage, [200, 600])
+    
+    stack.pop()
+    stack.top = 33
+    XCTAssertEqual(stack.top, 33)
+    XCTAssertEqual(stack.root, 50)
+    XCTAssertEqual(stack.storage, [33])
+    
+    stack.pop()
+    stack.top = 1
+    XCTAssertEqual(stack.top, 1)
+    XCTAssertEqual(stack.root, 1)
+    XCTAssertTrue(stack.storage.isEmpty)
+    
+  }
+  
+  
 }

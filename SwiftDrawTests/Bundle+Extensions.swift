@@ -33,21 +33,21 @@
 import Foundation
 
 extension Bundle {
-
-    static var test: Bundle {
-        return Bundle(for: Marker.self)
+  
+  static var test: Bundle {
+    return Bundle(for: Marker.self)
+  }
+  
+  func url(forResource named: String) throws -> URL {
+    guard let url = self.url(forResource: named, withExtension: nil) else {
+      throw Error.invalid
     }
-
-    func url(forResource named: String) throws -> URL {
-        guard let url = self.url(forResource: named, withExtension: nil) else {
-            throw Error.invalid
-        }
-        return url
-    }
-
-    private enum Error: Swift.Error {
-        case invalid
-    }
-
-    private class Marker { }
+    return url
+  }
+  
+  private enum Error: Swift.Error {
+    case invalid
+  }
+  
+  private class Marker { }
 }

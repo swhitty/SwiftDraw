@@ -34,65 +34,65 @@ import XCTest
 
 final class LayerTreeLayerTests: XCTestCase {
 
-    private typealias Layer = LayerTree.Layer
-    private typealias Contents = LayerTree.Layer.Contents
-    private typealias TextAttributes = LayerTree.TextAttributes
-    private typealias Point = LayerTree.Point
+  private typealias Layer = LayerTree.Layer
+  private typealias Contents = LayerTree.Layer.Contents
+  private typealias TextAttributes = LayerTree.TextAttributes
+  private typealias Point = LayerTree.Point
 
-    func testLayersWithSimpleContentsAreAppendedWithoutLayer() {
-        let parent = LayerTree.Layer()
-        let simple = LayerTree.Layer()
-        simple.appendContents(.mockImage)
+  func testLayersWithSimpleContentsAreAppendedWithoutLayer() {
+    let parent = LayerTree.Layer()
+    let simple = LayerTree.Layer()
+    simple.appendContents(.mockImage)
 
-        parent.appendContents(.layer(simple))
-        XCTAssertEqual(parent.contents, [.mockImage])
-    }
+    parent.appendContents(.layer(simple))
+    XCTAssertEqual(parent.contents, [.mockImage])
+  }
 
-    func testLayersWithComplexContentsAreAppendedWithoutLayer() {
-        let parent = LayerTree.Layer()
-        let complex = LayerTree.Layer()
-        complex.appendContents(.mockImage)
-        complex.opacity = 0.5
+  func testLayersWithComplexContentsAreAppendedWithoutLayer() {
+    let parent = LayerTree.Layer()
+    let complex = LayerTree.Layer()
+    complex.appendContents(.mockImage)
+    complex.opacity = 0.5
 
-        parent.appendContents(.layer(complex))
-        XCTAssertEqual(parent.contents, [.layer(complex)])
-    }
+    parent.appendContents(.layer(complex))
+    XCTAssertEqual(parent.contents, [.layer(complex)])
+  }
 
-    func testContentsTextEquality() {
-        let c1 = Contents.text("Charlie", .zero, .normal)
-        let c2 = Contents.text("Ida", .zero, .normal)
-        let c3 = Contents.text("Charlie", Point(10, 20), .normal)
+  func testContentsTextEquality() {
+    let c1 = Contents.text("Charlie", .zero, .normal)
+    let c2 = Contents.text("Ida", .zero, .normal)
+    let c3 = Contents.text("Charlie", Point(10, 20), .normal)
 
-        var att = TextAttributes.normal
-        att.color = .rgba(r: 1.0, g: 0, b: 0, a: 1.0)
-        let c4 = Contents.text("Charlie", .zero, att)
+    var att = TextAttributes.normal
+    att.color = .rgba(r: 1.0, g: 0, b: 0, a: 1.0)
+    let c4 = Contents.text("Charlie", .zero, att)
 
-        XCTAssertEqual(c1, c1)
-        XCTAssertEqual(c1, .text("Charlie", .zero, .normal))
+    XCTAssertEqual(c1, c1)
+    XCTAssertEqual(c1, .text("Charlie", .zero, .normal))
 
-        XCTAssertEqual(c2, c2)
-        XCTAssertEqual(c2, .text("Ida", .zero, .normal))
+    XCTAssertEqual(c2, c2)
+    XCTAssertEqual(c2, .text("Ida", .zero, .normal))
+    
+    XCTAssertEqual(c3, c3)
+    XCTAssertEqual(c3, .text("Charlie", Point(10, 20), .normal))
 
-        XCTAssertEqual(c3, c3)
-        XCTAssertEqual(c3, .text("Charlie", Point(10, 20), .normal))
+    XCTAssertEqual(c4, c4)
+    XCTAssertEqual(c4, .text("Charlie", .zero, att))
 
-        XCTAssertEqual(c4, c4)
-        XCTAssertEqual(c4, .text("Charlie", .zero, att))
-
-        XCTAssertNotEqual(c1, c2)
-        XCTAssertNotEqual(c1, c3)
-        XCTAssertNotEqual(c1, c4)
-        XCTAssertNotEqual(c2, c3)
-        XCTAssertNotEqual(c2, c4)
-        XCTAssertNotEqual(c3, c4)
-    }
+    XCTAssertNotEqual(c1, c2)
+    XCTAssertNotEqual(c1, c3)
+    XCTAssertNotEqual(c1, c4)
+    XCTAssertNotEqual(c2, c3)
+    XCTAssertNotEqual(c2, c4)
+    XCTAssertNotEqual(c3, c4)
+  }
 }
 
 private extension LayerTree.Layer.Contents {
 
-    static var mockImage: LayerTree.Layer.Contents {
-        let image = LayerTree.Image(mimeType: "image/png", data: Data(base64Encoded: "f00d")!)!
-        return .image(image)
-    }
+  static var mockImage: LayerTree.Layer.Contents {
+    let image = LayerTree.Image(mimeType: "image/png", data: Data(base64Encoded: "f00d")!)!
+    return .image(image)
+  }
 
 }

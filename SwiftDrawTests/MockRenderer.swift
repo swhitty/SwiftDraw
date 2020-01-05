@@ -33,100 +33,100 @@ import XCTest
 @testable import SwiftDraw
 
 final class MockRenderer: Renderer {
-
-    typealias Types = LayerTreeTypes
-
-    var operations = [String]()
-
-    func pushState() {
-        operations.append("pushState")
-    }
-
-    func popState() {
-        operations.append("popState")
-    }
-
-    func pushTransparencyLayer() {
-        operations.append("pushTransparencyLayer")
-    }
-
-    func popTransparencyLayer() {
-        operations.append("popTransparencyLayer")
-    }
-
-    func concatenate(transform: LayerTree.Transform) {
-        operations.append("concatenateTransform")
-    }
-
-    func translate(tx: LayerTree.Float, ty: LayerTree.Float) {
-        operations.append("translate")
-    }
-
-    func rotate(angle: LayerTree.Float) {
-        operations.append("rotate")
-    }
-
-    func scale(sx: LayerTree.Float, sy: LayerTree.Float) {
-        operations.append("scale")
-    }
-
-    func setFill(color: LayerTree.Color) {
-        operations.append("setFillColor")
-    }
-
-    func setFill(pattern: LayerTree.Pattern) {
-        operations.append("setFillPattern")
-    }
-
-    func setStroke(color: LayerTree.Color) {
-        operations.append("setStrokeColor")
-    }
-
-    func setLine(width: LayerTree.Float) {
-        operations.append("setLineWidth")
-    }
-
-    func setLine(cap: LayerTree.LineCap) {
-        operations.append("setLineCap")
-    }
-
-    func setLine(join: LayerTree.LineJoin) {
-        operations.append("setLineJoin")
-    }
-
-    func setLine(miterLimit: LayerTree.Float) {
-        operations.append("setLineMiterLimit")
-    }
-
-    func setClip(path: [LayerTree.Shape]) {
-        operations.append("setClip")
-    }
-
-    func setClip(mask: [Any], frame: LayerTree.Rect) {
-        operations.append("setClipMask")
-    }
-
-    func setAlpha(_ alpha: LayerTree.Float) {
-        operations.append("setAlpha")
-    }
-
-    func setBlend(mode: LayerTree.BlendMode) {
-        operations.append("setBlendMode")
-    }
-
-    func stroke(path: [LayerTree.Shape]) {
-        operations.append("strokePath")
-    }
-
-    func fill(path: [LayerTree.Shape], rule: LayerTree.FillRule) {
-        operations.append("fillPath")
-    }
-
-    func draw(image: LayerTree.Image) {
-        operations.append("drawImage")
-    }
-
-    func draw(gradient: LayerTree.Gradient, from start: LayerTree.Point, to end: LayerTree.Point) {
-        operations.append("drawGradient")
-    }
+  
+  typealias Types = LayerTreeTypes
+  
+  var operations = [String]()
+  
+  func pushState() {
+    operations.append("pushState")
+  }
+  
+  func popState() {
+    operations.append("popState")
+  }
+  
+  func pushTransparencyLayer() {
+    operations.append("pushTransparencyLayer")
+  }
+  
+  func popTransparencyLayer() {
+    operations.append("popTransparencyLayer")
+  }
+  
+  func concatenate(transform: LayerTree.Transform) {
+    operations.append("concatenateTransform")
+  }
+  
+  func translate(tx: LayerTree.Float, ty: LayerTree.Float) {
+    operations.append("translate")
+  }
+  
+  func rotate(angle: LayerTree.Float) {
+    operations.append("rotate")
+  }
+  
+  func scale(sx: LayerTree.Float, sy: LayerTree.Float) {
+    operations.append("scale")
+  }
+  
+  func setFill(color: LayerTree.Color) {
+    operations.append("setFillColor")
+  }
+  
+  func setFill(pattern: LayerTree.Pattern) {
+    operations.append("setFillPattern")
+  }
+  
+  func setStroke(color: LayerTree.Color) {
+    operations.append("setStrokeColor")
+  }
+  
+  func setLine(width: LayerTree.Float) {
+    operations.append("setLineWidth")
+  }
+  
+  func setLine(cap: LayerTree.LineCap) {
+    operations.append("setLineCap")
+  }
+  
+  func setLine(join: LayerTree.LineJoin) {
+    operations.append("setLineJoin")
+  }
+  
+  func setLine(miterLimit: LayerTree.Float) {
+    operations.append("setLineMiterLimit")
+  }
+  
+  func setClip(path: [LayerTree.Shape]) {
+    operations.append("setClip")
+  }
+  
+  func setClip(mask: [Any], frame: LayerTree.Rect) {
+    operations.append("setClipMask")
+  }
+  
+  func setAlpha(_ alpha: LayerTree.Float) {
+    operations.append("setAlpha")
+  }
+  
+  func setBlend(mode: LayerTree.BlendMode) {
+    operations.append("setBlendMode")
+  }
+  
+  func stroke(path: [LayerTree.Shape]) {
+    operations.append("strokePath")
+  }
+  
+  func fill(path: [LayerTree.Shape], rule: LayerTree.FillRule) {
+    operations.append("fillPath")
+  }
+  
+  func draw(image: LayerTree.Image) {
+    operations.append("drawImage")
+  }
+  
+  func draw(gradient: LayerTree.Gradient, from start: LayerTree.Point, to end: LayerTree.Point) {
+    operations.append("drawGradient")
+  }
 }
