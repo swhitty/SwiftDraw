@@ -65,9 +65,28 @@ class ViewController: UIViewController {
 
     override func loadView() {
         let imageView = UIImageView(frame: UIScreen.main.bounds)
-        imageView.image = UIImage(svgNamed: "thats-no-moon.svg")
+        imageView.image = Image(named: "arc.svg")?.pdfImage()
         imageView.contentMode = .scaleAspectFit
         imageView.backgroundColor = .white
         self.view = imageView
     }
+}
+
+private extension Image {
+
+  // UIImage backed with PDF preserves vector data.
+
+  func pdfImage() -> UIImage? {
+    guard
+      let data = pdfData(),
+      let provider = CGDataProvider(data: data as CFData),
+      let pdf = CGPDFDocument(provider),
+      let page = pdf.page(at: 1) else {
+        return nil
+    }
+
+    return UIImage
+      .perform(NSSelectorFromString("_imageWithCGPDFPage:"), with: page)?
+      .takeUnretainedValue() as? UIImage
+  }
 }
