@@ -52,27 +52,28 @@ extension LayerTree.Color {
     switch(color){
     case .none:
       return .none
-    case .keyword(let c):
-      return LayerTree.Color(c.rgbi)
-    case .rgbi(let c):
-      return LayerTree.Color(c)
-    case .hex(let c):
-      return LayerTree.Color(c)
-    case .rgbf(let c):
-      return .rgba(r: Float(c.0),
-                   g: Float(c.1),
-                   b: Float(c.2),
+    case let .keyword(c):
+      let rgbi = c.rgbi
+      return LayerTree.Color(rgbi.0, rgbi.1, rgbi.2)
+    case let .rgbi(r, g, b):
+      return LayerTree.Color(r, g, b)
+    case let .hex(r, g, b):
+      return LayerTree.Color(r, g, b)
+    case let .rgbf(r, g, b):
+      return .rgba(r: Float(r),
+                   g: Float(g),
+                   b: Float(b),
                    a: 1.0)
     }
   }
-  
-  init(_ rgbi: (UInt8, UInt8, UInt8)) {
-    self = .rgba(r: Float(rgbi.0)/255.0,
-                 g: Float(rgbi.1)/255.0,
-                 b: Float(rgbi.2)/255.0,
+
+  init(_ r: UInt8, _ g: UInt8, _ b: UInt8) {
+    self = .rgba(r: Float(r)/255.0,
+                 g: Float(g)/255.0,
+                 b: Float(b)/255.0,
                  a: 1.0)
   }
-  
+
   var isOpaque: Bool {
     switch self {
     case .none:

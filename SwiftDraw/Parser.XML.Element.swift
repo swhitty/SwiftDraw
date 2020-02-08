@@ -140,11 +140,11 @@ extension XMLParser {
     }
     
     switch error {
-    case XMLParser.Error.invalidElement(let v):
-      return .invalidElement(name: v.name,
-                             error: v.error,
-                             line: v.line,
-                             column: v.column)
+    case let XMLParser.Error.invalidElement(name, error, line, column):
+      return .invalidElement(name: name,
+                             error: error,
+                             line: line,
+                             column: column)
     default:
       return .invalidElement(name: element.name,
                              error: error,

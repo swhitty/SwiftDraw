@@ -45,7 +45,7 @@ final class ParserSVGImageTests: XCTestCase {
     
     do {
       return try loadSVG(url)
-    } catch SwiftDraw.XMLParser.Error.invalidElement(let e)  {
+    } catch let SwiftDraw.XMLParser.Error.invalidElement(_ , e, _, _)  {
       XCTFail("Failed to load \(filename) \(e)")
       return nil
     } catch {

@@ -266,13 +266,13 @@ extension LayerTree {
       case .matrix(let m):
         let t = provider.createTransform(from: m)
         return .concatenate(transform: t)
-      case .translate(let t):
-        let tx = provider.createFloat(from: t.tx)
-        let ty = provider.createFloat(from: t.ty)
+      case let .translate(tx, ty):
+        let tx = provider.createFloat(from: tx)
+        let ty = provider.createFloat(from: ty)
         return .translate(tx: tx, ty: ty)
-      case .scale(let s):
-        let sx = provider.createFloat(from: s.sx)
-        let sy = provider.createFloat(from: s.sy)
+      case let .scale(sx, sy):
+        let sx = provider.createFloat(from: sx)
+        let sy = provider.createFloat(from: sy)
         return .scale(sx: sx, sy: sy)
       case .rotate(let r):
         let radians = provider.createFloat(from: r)

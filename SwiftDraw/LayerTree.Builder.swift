@@ -274,36 +274,36 @@ extension LayerTree.Builder {
 extension LayerTree.Builder {
   static func createTransform(for dom: DOM.Transform) -> [LayerTree.Transform] {
     switch dom {
-    case .matrix(let m):
-      let matrix = LayerTree.Transform.Matrix(a: Float(m.a),
-                                              b: Float(m.b),
-                                              c: Float(m.c),
-                                              d: Float(m.d),
-                                              tx: Float(m.e),
-                                              ty: Float(m.f))
+    case let .matrix(a, b, c, d, e, f):
+      let matrix = LayerTree.Transform.Matrix(a: Float(a),
+                                              b: Float(b),
+                                              c: Float(c),
+                                              d: Float(d),
+                                              tx: Float(e),
+                                              ty: Float(f))
       return [.matrix(matrix)]
 
-    case .translate(let t):
-      return [.translate(tx: Float(t.tx), ty: Float(t.ty))]
+    case let .translate(tx, ty):
+      return [.translate(tx: Float(tx), ty: Float(ty))]
 
-    case .scale(let s):
-      return [.scale(sx: Float(s.sx), sy: Float(s.sy))]
+    case let .scale(sx, sy):
+      return [.scale(sx: Float(sx), sy: Float(sy))]
 
     case .rotate(let angle):
       let radians = Float(angle)*Float.pi/180.0
       return [.rotate(radians: radians)]
 
-    case .rotatePoint(let r):
-      let radians = Float(r.angle)*Float.pi/180.0
-      let t1 = LayerTree.Transform.translate(tx: r.cx, ty: r.cy)
+    case let .rotatePoint(angle, cx, cy):
+      let radians = Float(angle)*Float.pi/180.0
+      let t1 = LayerTree.Transform.translate(tx: cx, ty: cy)
       let t2 = LayerTree.Transform.rotate(radians: radians)
-      let t3 = LayerTree.Transform.translate(tx: -r.cx, ty: -r.cy)
+      let t3 = LayerTree.Transform.translate(tx: -cx, ty: -cy)
       return [t1, t2, t3]
 
-    case .skewX(let angle):
+    case let .skewX(angle):
       let radians = Float(angle)*Float.pi/180.0
       return [.skewX(angle: radians)]
-    case .skewY(let angle):
+    case let .skewY(angle):
       let radians = Float(angle)*Float.pi/180.0
       return [.skewY(angle: radians)]
     }

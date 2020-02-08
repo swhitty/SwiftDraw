@@ -87,10 +87,10 @@ struct CGProvider: RendererTypeProvider {
   func createColor(from color: LayerTree.Color) -> CGColor {
     switch color {
     case .none: return createColor(r: 0, g: 0, b: 0, a: 0)
-    case .rgba(let c): return createColor(r: CGFloat(c.r),
-                                          g: CGFloat(c.g),
-                                          b: CGFloat(c.b),
-                                          a: CGFloat(c.a))
+    case let .rgba(r, g, b, a): return createColor(r: CGFloat(r),
+                                                   g: CGFloat(g),
+                                                   b: CGFloat(b),
+                                                   a: CGFloat(a))
     case .gray(white: let w, a: let a):
       return createColor(w: CGFloat(w), a: CGFloat(a))
     }

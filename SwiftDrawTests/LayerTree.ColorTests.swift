@@ -86,14 +86,14 @@ final class LayerTreeColorTests: XCTestCase {
   
   func testRGBi() {
     //a color can be created from (UInt8, UInt8, UInt8)
-    
-    XCTAssertEqual(Color((UInt8(102), UInt8(102), UInt8(102))), .rgba(r: 0.4, g: 0.4, b: 0.4, a: 1.0))
-    XCTAssertEqual(Color((UInt8(102), UInt8(0), UInt8(102))), .rgba(r: 0.4, g: 0.0, b: 0.4, a: 1.0))
-    XCTAssertEqual(Color((UInt8(102), UInt8(102), UInt8(0))), .rgba(r: 0.4, g: 0.4, b: 0.0, a: 1.0))
-    
-    XCTAssertEqual(Color((UInt8(204), UInt8(204), UInt8(204))), .rgba(r: 0.8, g: 0.8, b: 0.8, a: 1.0))
-    XCTAssertEqual(Color((UInt8(204), UInt8(0), UInt8(204))), .rgba(r: 0.8, g: 0.0, b: 0.8, a: 1.0))
-    XCTAssertEqual(Color((UInt8(204), UInt8(204), UInt8(0))), .rgba(r: 0.8, g: 0.8, b: 0.0, a: 1.0))
+
+    XCTAssertEqual(Color(UInt8(102), UInt8(102), UInt8(102)), .rgba(r: 0.4, g: 0.4, b: 0.4, a: 1.0))
+    XCTAssertEqual(Color(UInt8(102), UInt8(0), UInt8(102)), .rgba(r: 0.4, g: 0.0, b: 0.4, a: 1.0))
+    XCTAssertEqual(Color(UInt8(102), UInt8(102), UInt8(0)), .rgba(r: 0.4, g: 0.4, b: 0.0, a: 1.0))
+
+    XCTAssertEqual(Color(UInt8(204), UInt8(204), UInt8(204)), .rgba(r: 0.8, g: 0.8, b: 0.8, a: 1.0))
+    XCTAssertEqual(Color(UInt8(204), UInt8(0), UInt8(204)), .rgba(r: 0.8, g: 0.0, b: 0.8, a: 1.0))
+    XCTAssertEqual(Color(UInt8(204), UInt8(204), UInt8(0)), .rgba(r: 0.8, g: 0.8, b: 0.0, a: 1.0))
   }
   
   func testLuminanceConverter() {

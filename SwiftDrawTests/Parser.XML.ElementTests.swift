@@ -128,9 +128,9 @@ final class XMLParserElementTests: XCTestCase {
                                           with: [])
     
     switch parseError! {
-    case .invalidElement(let val):
-      XCTAssertEqual(val.line, 100)
-      XCTAssertEqual(val.column, 50)
+    case let .invalidElement(_, _, line, column):
+      XCTAssertEqual(line, 100)
+      XCTAssertEqual(column, 50)
     default:
       XCTFail("not forwarderd")
     }
@@ -145,9 +145,9 @@ final class XMLParserElementTests: XCTestCase {
                                           with: [])
     
     switch parseError! {
-    case .invalidElement(let val):
-      XCTAssertEqual(val.line, 100)
-      XCTAssertEqual(val.column, 50)
+    case let .invalidElement(_, _, line, column):
+      XCTAssertEqual(line, 100)
+      XCTAssertEqual(column, 50)
     default:
       XCTFail("not forwarderd")
     }

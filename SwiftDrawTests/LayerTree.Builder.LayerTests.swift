@@ -38,8 +38,8 @@ final class LayerTreeBuilderLayerTests: XCTestCase {
     let text = DOM.Text(value: "Hello")
     let contents = LayerTree.Builder.makeTextContents(from: text, with: .init())
     
-    guard case .text(let t) = contents else { XCTFail(); return }
-    XCTAssertEqual(t.0, "Hello")
+    guard case .text(let t, _, _) = contents else { XCTFail(); return }
+    XCTAssertEqual(t, "Hello")
   }
   
   func testMakeImageContentsFromDOM() throws {
