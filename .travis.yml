@@ -5,7 +5,7 @@ jobs:
       name: iOS
       osx_image: xcode11.4
       script:
-        - xcodebuild clean test -project SwiftDraw.xcodeproj -scheme SwiftDraw -sdk iphonesimulator13.3 -destination "name=iPhone 11"
+        - xcodebuild clean test -project SwiftDraw.xcodeproj -scheme SwiftDraw -sdk iphonesimulator13.4.1 -destination "name=iPhone 11"
     - stage: test
       name: macOS
       osx_image: xcode11.4
