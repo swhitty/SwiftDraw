@@ -40,7 +40,10 @@ extension DOM {
     var y2: Coordinate?
 
     var stops: [Stop]
-    
+
+    //references another LinearGradient element id within defs
+    var href: URL?
+
     init(id: String) {
       self.id = id
       self.stops = []

@@ -206,12 +206,22 @@ extension LayerTree.Builder {
     }
 
     let gradient = LayerTree.Gradient(start: Point(x1, y1), end: Point(x2, y2))
-    gradient.stops = element.stops.map {
-      return LayerTree.Gradient.Stop(offset: $0.offset,
-                                     color: LayerTree.Color($0.color),
-                                     opacity: $0.opacity)
+    if let id = element.href?.fragment,
+       let reference = svg.defs.linearGradients.first(where: { $0.id == id }) {
+      gradient.stops = makeGradientStops(for: reference)
+    } else {
+      gradient.stops = makeGradientStops(for: element)
     }
+
     return gradient
+  }
+
+  func makeGradientStops(for element: DOM.LinearGradient) -> [LayerTree.Gradient.Stop] {
+    return element.stops.map {
+      LayerTree.Gradient.Stop(offset: $0.offset,
+                              color: LayerTree.Color($0.color),
+                              opacity: $0.opacity)
+    }
   }
 
   //current state of the render tree, updated as builder traverses child nodes

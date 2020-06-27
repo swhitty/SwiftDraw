@@ -60,6 +60,8 @@ extension XMLParser {
       let att: AttributeParser = try parseAttributes(n)
       node.stops.append(try parseLinearGradientStop(att))
     }
+
+    node.href  = try? nodeAtt.parseUrl("xlink:href")
     
     return node
   }
