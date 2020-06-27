@@ -26,6 +26,6 @@ let image = NSImage(svgNamed: "sample.svg")
 
 ### Command line tool
 
-Download the latest command line tool [here](https://github.com/swhitty/SwiftDraw/releases/latest/download/CommandLineTool.zip).
+Download the latest command line tool [here](https://github.com/swhitty/SwiftDraw/releases/latest/download/SwiftDraw.dmg).
 
 `$ swiftdraw sample.svg --format pdf --size 48x48`
