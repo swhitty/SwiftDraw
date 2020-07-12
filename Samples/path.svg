@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:ns="http://www.w3.org/2000/svg" width="400" height="100" >
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:ns="http://www.w3.org/2000/svg" width="400" height="200" >
 					
 	<g fill="none">
 	
@@ -13,7 +13,10 @@
 	<path d="M0,50
 		 q50,-50 200,0
 		 t100,0"
-	 	 stroke="yellowgreen" stroke-width="5" />			 
+	 	 stroke="yellowgreen" stroke-width="5" />
+	
+	
+	<path d="m40,100 40 20 40 -20 40 20 40 -20 40 20"  stroke="yellowgreen" stroke-width="5" />	 
 
   	</g>
 	

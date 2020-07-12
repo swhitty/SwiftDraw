@@ -56,15 +56,31 @@ extension XMLParser {
     var lastCommand: Command?
     
     repeat {
-      if let cmd = parseCommand(&scanner) {
-        lastCommand = cmd
+      guard let cmd = nextPathCommand(&scanner, lastCommand: lastCommand) else {
+        throw Error.invalid
       }
-      guard let command = lastCommand else { throw Error.invalid }
-      segments.append(try parsePathSegment(for: command, with: &scanner))
+      lastCommand = cmd
+      segments.append(try parsePathSegment(for: cmd, with: &scanner))
     } while !scanner.isAtEnd
     
     return segments
   }
+
+  func nextPathCommand(_ scanner: inout PathScanner, lastCommand: Command?) -> Command? {
+    if let cmd = parseCommand(&scanner) {
+      return cmd
+    }
+
+    switch lastCommand {
+    case .some(.move):
+      return .line
+    case .some(.moveRelative):
+      return .lineRelative
+    default:
+      return lastCommand
+    }
+  }
+
   
   func parsePathSegment(for command: Command, with scanner: inout PathScanner) throws -> Segment {
     switch command {

@@ -76,7 +76,10 @@ final class ParserXMLPathTests: XCTestCase {
     AssertSegmentEquals("M10-20", move(10, -20, .absolute))
     
     AssertSegmentsEquals("M10-20 5 1", [move(10, -20, .absolute),
-                                        move(5, 1, .absolute)])
+                                        line(5, 1, .absolute)])
+
+    AssertSegmentsEquals("m10-20 5 1", [move(10, -20, .relative),
+                                        line(5, 1, .relative)])
   }
   
   func testLine() {
