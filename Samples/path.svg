@@ -15,7 +15,7 @@
 		 t100,0"
 	 	 stroke="yellowgreen" stroke-width="5" />
 	
-	
+	<path d="M40,100 L80 120 L120 100 L160 120 L200 100 L240 120"  stroke="black" stroke-width="15" />	 
 	<path d="m40,100 40 20 40 -20 40 20 40 -20 40 20"  stroke="yellowgreen" stroke-width="5" />	 
 
   	</g>
