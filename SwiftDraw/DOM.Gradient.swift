@@ -40,6 +40,7 @@ extension DOM {
     var y2: Coordinate?
 
     var stops: [Stop]
+    var gradientUnits: Units?
 
     //references another LinearGradient element id within defs
     var href: URL?
@@ -72,5 +73,13 @@ extension DOM.LinearGradient: Equatable {
         lhs.x2 == rhs.x2 &&
         lhs.y2 == rhs.y2 &&
         lhs.stops == rhs.stops
+  }
+}
+
+extension DOM.LinearGradient {
+
+  enum Units: String {
+    case userSpaceOnUse
+    case objectBoundingBox
   }
 }

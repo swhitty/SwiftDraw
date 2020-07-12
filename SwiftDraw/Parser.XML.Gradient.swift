@@ -61,6 +61,7 @@ extension XMLParser {
       node.stops.append(try parseLinearGradientStop(att))
     }
 
+    node.gradientUnits = try nodeAtt.parseRaw("gradientUnits")
     node.href  = try? nodeAtt.parseUrl("xlink:href")
     
     return node

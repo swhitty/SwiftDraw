@@ -73,4 +73,22 @@ final class GradientTests: XCTestCase {
     node["stop-color"] = "black"
     XCTAssertNotNil(try XMLParser().parseLinearGradientStop(node))
   }
+
+  func testGradientUnits() throws {
+    let node = XML.Element(name: "linearGradient", attributes: ["id": "abc"])
+
+    var gradient = try XMLParser().parseLinearGradient(node)
+    XCTAssertNil(gradient.gradientUnits)
+
+    node.attributes["gradientUnits"] = "userSpaceOnUse"
+    gradient = try XMLParser().parseLinearGradient(node)
+    XCTAssertEqual(gradient.gradientUnits, .userSpaceOnUse)
+
+    node.attributes["gradientUnits"] = "objectBoundingBox"
+    gradient = try XMLParser().parseLinearGradient(node)
+    XCTAssertEqual(gradient.gradientUnits, .objectBoundingBox)
+
+    node.attributes["gradientUnits"] = "invalid"
+    XCTAssertThrowsError(try XMLParser().parseLinearGradient(node))
+  }
 }
