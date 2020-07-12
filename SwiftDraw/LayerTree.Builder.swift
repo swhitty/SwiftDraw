@@ -213,6 +213,14 @@ extension LayerTree.Builder {
       gradient.stops = makeGradientStops(for: element)
     }
 
+    if element.gradientUnits == .userSpaceOnUse {
+      gradient.units = .userSpaceOnUse
+    }
+
+    guard gradient.stops.count > 1 else {
+      return nil
+    }
+
     return gradient
   }
 

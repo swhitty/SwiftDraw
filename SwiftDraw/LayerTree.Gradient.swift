@@ -35,7 +35,8 @@ extension LayerTree {
     var start: Point
     var end: Point
     var stops: [Stop]
-    
+    var units: Units = .objectBoundingBox
+
     init(start: Point, end: Point) {
       self.start = start
       self.end = end
@@ -59,6 +60,11 @@ extension LayerTree {
         self.color = color
         self.opacity = opacity
       }
+    }
+
+    enum Units {
+      case userSpaceOnUse
+      case objectBoundingBox
     }
   }
 }
