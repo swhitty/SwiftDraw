@@ -22,6 +22,7 @@
 		D961846D220FDD1200C59D9B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D961846C220FDD1200C59D9B /* Assets.xcassets */; };
 		D9618470220FDD1200C59D9B /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = D961846E220FDD1200C59D9B /* LaunchScreen.storyboard */; };
 		D98375B622500FCC00974D71 /* mask-composite.svg in Resources */ = {isa = PBXBuildFile; fileRef = D98375B522500FCC00974D71 /* mask-composite.svg */; };
+		D991955824BAF8E200E58925 /* rings.svg in Resources */ = {isa = PBXBuildFile; fileRef = D991955724BAF8E200E58925 /* rings.svg */; };
 		D9ACD791220FDDE0009717CF /* use.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9ACD783220FDDE0009717CF /* use.svg */; };
 		D9ACD792220FDDE0009717CF /* path.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9ACD784220FDDE0009717CF /* path.svg */; };
 		D9ACD793220FDDE0009717CF /* viewbox.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9ACD785220FDDE0009717CF /* viewbox.svg */; };
@@ -72,6 +73,7 @@
 		D961846F220FDD1200C59D9B /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		D9618471220FDD1200C59D9B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		D98375B522500FCC00974D71 /* mask-composite.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = "mask-composite.svg"; sourceTree = "<group>"; };
+		D991955724BAF8E200E58925 /* rings.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = rings.svg; sourceTree = "<group>"; };
 		D9ACD783220FDDE0009717CF /* use.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = use.svg; sourceTree = "<group>"; };
 		D9ACD784220FDDE0009717CF /* path.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = path.svg; sourceTree = "<group>"; };
 		D9ACD785220FDDE0009717CF /* viewbox.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = viewbox.svg; sourceTree = "<group>"; };
@@ -155,6 +157,7 @@
 				D9ACD784220FDDE0009717CF /* path.svg */,
 				D9D9EB2C224A3BCA006CF83C /* pattern.svg */,
 				D9ACD78E220FDDE0009717CF /* quad.svg */,
+				D991955724BAF8E200E58925 /* rings.svg */,
 				D9ACD789220FDDE0009717CF /* shapes.svg */,
 				D9ACD78B220FDDE0009717CF /* starry.svg */,
 				D9494F43224C846D0015ACE1 /* thats-no-moon.svg */,
@@ -240,6 +243,7 @@
 				D9ACD79C220FDDE0009717CF /* quad.svg in Resources */,
 				D945F5AB225220F900FAAAC4 /* mask-composite-3.svg in Resources */,
 				D9FD69D8224CD4960046A926 /* gradient2.svg in Resources */,
+				D991955824BAF8E200E58925 /* rings.svg in Resources */,
 				D9ACD797220FDDE0009717CF /* shapes.svg in Resources */,
 				D9ACD799220FDDE0009717CF /* starry.svg in Resources */,
 				D9ACD791220FDDE0009717CF /* use.svg in Resources */,

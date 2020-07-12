@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="400" height="400">
+
+ 	<rect width="400" height="400" fill="snow" />
+	
+	<circle cx="200" cy="200" r="100" fill="none" stroke="darkgray" />
+
+	<circle cx="200" cy="200" r="80" fill="none" stroke="darkgray" />
+ 
+    <path d="M 200 100 A 100 100 0 0 1 217.36 298.48 L 213.89 278.78 A 80 80 0 0 0 200 120 z" fill="blue" fill-opacity="0.4" />
+	
+	<path d="M 202.39 299.97 A 100 100 0 0 1 137.57 278.12 L 150.06 262.49 A 80 80 0 0 0 201.91 279.97 z" fill="green" fill-opacity="0.4" />
+
+	<path d="M 126.56 267.87 A 100 100 0 0 1 185.00 101.13 L 188.00 120.90 A 80 80 0 0 0 141.25 254.30 z" fill="red" fill-opacity="0.4" />
+	
+	<circle cx="200" cy="200" r="3" fill="yellow" stroke="black" stroke-width="1" />
+ 
+	<circle cx="200" cy="100" r="3" fill="yellow" stroke="black" stroke-width="1" />
+
+	<circle cx="200" cy="120" r="3" fill="yellow" stroke="black" stroke-width="1" />
+	
+	<circle cx="213.89" cy="278.78" r="3" fill="yellow" stroke="black" stroke-width="1" />
+	
+	<circle cx="217.36" cy="298.48" r="3" fill="yellow" stroke="black" stroke-width="1" />
+	
+	<circle cx="201.91" cy="279.97" r="3" fill="yellow" stroke="black" stroke-width="1" />
+		
+	<circle cx="202.39" cy="299.97" r="3" fill="yellow" stroke="black" stroke-width="1" />
+	
+	<circle cx="137.57" cy="278.12" r="3" fill="yellow" stroke="black" stroke-width="1" />
+	
+	<circle cx="150.06" cy="262.49" r="3" fill="yellow" stroke="black" stroke-width="1" />
+	
+	<circle cx="141.25" cy="254.30" r="3" fill="yellow" stroke="black" stroke-width="1" />
+	
+	<circle cx="126.56" cy="267.87" r="3" fill="yellow" stroke="black" stroke-width="1" />
+
+	<circle cx="185.00" cy="101.13" r="3" fill="yellow" stroke="black" stroke-width="1" />
+	
+	<circle cx="188.00" cy="120.90" r="3" fill="yellow" stroke="black" stroke-width="1" />
+	
+		
+</svg>
+
