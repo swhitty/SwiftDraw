@@ -197,11 +197,19 @@ extension LayerTree {
       case .gradient(let fillGradient):
         commands.append(.pushState)
         commands.append(.setClip(path: path))
-        
-        let pathBounds = provider.getBounds(from: path)
-        let pathStart = pathBounds.getPoint(offset: fillGradient.start)
-        let pathEnd = pathBounds.getPoint(offset: fillGradient.end)
-        
+
+        let pathStart: LayerTree.Point
+        let pathEnd: LayerTree.Point
+        switch fillGradient.units  {
+        case .objectBoundingBox:
+          let pathBounds = provider.getBounds(from: path)
+          pathStart = pathBounds.getPoint(offset: fillGradient.start)
+          pathEnd = pathBounds.getPoint(offset: fillGradient.end)
+        case .userSpaceOnUse:
+          pathStart = fillGradient.start
+          pathEnd = fillGradient.end
+        }
+
         let converted = apply(colorConverter: colorConverter, to: fillGradient)
         let gradient = provider.createGradient(from: converted)
         let start = provider.createPoint(from: pathStart)
