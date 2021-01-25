@@ -65,7 +65,7 @@ class ViewController: UIViewController {
 
     override func loadView() {
         let imageView = UIImageView(frame: UIScreen.main.bounds)
-        imageView.image = Image(named: "gradient-apple.svg")?.pdfImage()
+        imageView.image = Image(named: "rings.svg")?.pdfImage()
         imageView.contentMode = .scaleAspectFit
         imageView.backgroundColor = .white
         self.view = imageView
