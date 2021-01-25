@@ -3,18 +3,18 @@ jobs:
   include:
     - stage: test
       name: iOS
-      osx_image: xcode11.4
+      osx_image: xcode12.3
       script:
-        - xcodebuild clean test -project SwiftDraw.xcodeproj -scheme SwiftDraw -sdk iphonesimulator13.4 -destination "name=iPhone 11"
+        - xcodebuild clean test -project SwiftDraw.xcodeproj -scheme SwiftDraw -sdk iphonesimulator14.3 -destination "name=iPhone 12 Pro"
     - stage: test
       name: macOS
-      osx_image: xcode11.4
+      osx_image: xcode12.3
       script:
         - xcodebuild clean test -project SwiftDraw.xcodeproj -scheme SwiftDraw-macOS -sdk macosx
       after_success: bash <(curl -s https://codecov.io/bash) -J 'SwiftDraw'
     - stage: test
       name: Swift PM
-      osx_image: xcode11.4
+      osx_image: xcode12.3
       script:
         - swift package clean; swift test
     - stage: test
