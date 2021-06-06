@@ -32,6 +32,7 @@
 import Foundation
 
 #if canImport(CoreGraphics)
+import CoreGraphics
 
 @objc(SVGImage)
 public final class Image: NSObject {

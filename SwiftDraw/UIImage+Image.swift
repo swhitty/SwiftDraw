@@ -29,6 +29,7 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
+#if canImport(UIKit)
 import UIKit
 
 public extension UIImage {
@@ -68,3 +69,5 @@ public extension Image {
     return rasterize(with: jpgSize).jpegData(compressionQuality: quality)
   }
 }
+
+#endif

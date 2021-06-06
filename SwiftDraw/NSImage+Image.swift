@@ -29,6 +29,7 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
+#if canImport(AppKit)
 import AppKit
 import CoreGraphics
 
@@ -109,3 +110,5 @@ public extension Image {
     return bitmap.representation(using: .jpeg, properties: [NSBitmapImageRep.PropertyKey.compressionFactor: quality])
   }
 }
+
+#endif
