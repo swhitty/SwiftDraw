@@ -3,26 +3,17 @@ jobs:
   include:
     - stage: test
       name: iOS
-      osx_image: xcode12.3
+      osx_image: xcode12.5
       script:
-        - xcodebuild clean test -project SwiftDraw.xcodeproj -scheme SwiftDraw -sdk iphonesimulator14.3 -destination "name=iPhone 12 Pro"
+        - xcodebuild clean test -project SwiftDraw.xcodeproj -scheme SwiftDraw -sdk iphonesimulator14.5 -destination "name=iPhone 12 Pro"
     - stage: test
       name: macOS
-      osx_image: xcode12.3
+      osx_image: xcode12.5
       script:
         - xcodebuild clean test -project SwiftDraw.xcodeproj -scheme SwiftDraw-macOS -sdk macosx
       after_success: bash <(curl -s https://codecov.io/bash) -J 'SwiftDraw'
     - stage: test
       name: Swift PM
-      osx_image: xcode12.3
+      osx_image: xcode12.5
       script:
         - swift package clean; swift test
-    - stage: test
-      name: Swift Linux Build
-      language: ruby
-      os: linux
-      dist: trusty
-      services: docker
-      script:
-        - docker pull swift
-        - docker run -it --mount src="$(pwd)",target=/swift_source,type=bind swift /bin/sh -c "cd swift_source; swift package clean; swift build"
