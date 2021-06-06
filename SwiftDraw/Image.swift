@@ -93,6 +93,12 @@ extension DOM.SVG {
     let element = try XML.SAXParser.parse(contentsOf: url)
     return try parser.parseSVG(element)
   }
+
+  static func parse(data: Data) throws -> DOM.SVG {
+    let parser = XMLParser(options: [.skipInvalidElements])
+    let element = try XML.SAXParser.parse(data: data)
+    return try parser.parseSVG(element)
+  }
 }
 
 public extension Image {
@@ -111,5 +117,13 @@ public extension Image {
     }
 
     self.init(fileURL: url)
+  }
+
+  convenience init?(data: Data) {
+    guard let svg = try? DOM.SVG.parse(data: data) else {
+      return nil
+    }
+
+    self.init(svg: svg)
   }
 }
