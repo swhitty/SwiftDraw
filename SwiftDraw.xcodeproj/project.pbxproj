@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		01FAD0512678CFA9003B6875 /* Renderer.CGText.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01FAD0502678CFA9003B6875 /* Renderer.CGText.swift */; };
+		01FAD0582678D652003B6875 /* Image+CGText.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01FAD0572678D652003B6875 /* Image+CGText.swift */; };
 		D90DB39A219CCB9E00D374D2 /* Renderer.CoreGraphicsTypesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB397219CCB9E00D374D2 /* Renderer.CoreGraphicsTypesTests.swift */; };
 		D90DB39B219CCB9E00D374D2 /* Renderer.CoreGraphicsTypesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB397219CCB9E00D374D2 /* Renderer.CoreGraphicsTypesTests.swift */; };
 		D90DB3A0219CCBBD00D374D2 /* Renderer.CoreGraphics.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB39D219CCBBD00D374D2 /* Renderer.CoreGraphics.swift */; };
@@ -264,6 +266,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		01FAD0502678CFA9003B6875 /* Renderer.CGText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Renderer.CGText.swift; sourceTree = "<group>"; };
+		01FAD0572678D652003B6875 /* Image+CGText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Image+CGText.swift"; sourceTree = "<group>"; };
 		D90DB396219CCB9E00D374D2 /* CGRenderer.PathTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CGRenderer.PathTests.swift; sourceTree = "<group>"; };
 		D90DB397219CCB9E00D374D2 /* Renderer.CoreGraphicsTypesTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Renderer.CoreGraphicsTypesTests.swift; sourceTree = "<group>"; };
 		D90DB39D219CCBBD00D374D2 /* Renderer.CoreGraphics.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Renderer.CoreGraphics.swift; sourceTree = "<group>"; };
@@ -453,6 +457,7 @@
 			children = (
 				D90DB39F219CCBBD00D374D2 /* Renderer.LayerTree.swift */,
 				D90DB39D219CCBBD00D374D2 /* Renderer.CoreGraphics.swift */,
+				01FAD0502678CFA9003B6875 /* Renderer.CGText.swift */,
 				D90DB39E219CCBBD00D374D2 /* Renderer.swift */,
 			);
 			name = Renderer;
@@ -504,6 +509,7 @@
 				D928197821FBB9D200F5D060 /* Image+CoreGraphics.swift */,
 				D90DB3DE219CCE0E00D374D2 /* NSImage+Image.swift */,
 				D90DB3DF219CCE0E00D374D2 /* UIImage+Image.swift */,
+				01FAD0572678D652003B6875 /* Image+CGText.swift */,
 			);
 			name = Image;
 			sourceTree = "<group>";
@@ -1153,8 +1159,10 @@
 				D90DB3E3219CCE0E00D374D2 /* UIImage+Image.swift in Sources */,
 				D9D9EB2F224A3DEA006CF83C /* Parser.XML.Pattern.swift in Sources */,
 				D90DB427219CD1C600D374D2 /* DOM.Gradient.swift in Sources */,
+				01FAD0582678D652003B6875 /* Image+CGText.swift in Sources */,
 				D9D9EB27224A3B4F006CF83C /* DOM.Pattern.swift in Sources */,
 				D90DB437219CD1C600D374D2 /* DOM.Image.swift in Sources */,
+				01FAD0512678CFA9003B6875 /* Renderer.CGText.swift in Sources */,
 				D90DB45E219CD27800D374D2 /* Parser.XML.SVG.swift in Sources */,
 				D90DB3D8219CCCBD00D374D2 /* LayerTree.Builder.swift in Sources */,
 				D9693D7E224C42C000A82949 /* CGPattern+Closure.swift in Sources */,

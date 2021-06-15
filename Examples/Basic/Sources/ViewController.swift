@@ -69,6 +69,8 @@ class ViewController: UIViewController {
         imageView.contentMode = .scaleAspectFit
         imageView.backgroundColor = .white
         self.view = imageView
+      
+        print(Image.cgCodeText(named: "rings.svg")!)
     }
 }
 
