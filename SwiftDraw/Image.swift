@@ -53,7 +53,11 @@ public final class Image: NSObject {
     let layer = LayerTree.Builder(svg: svg).makeLayer()
     let generator = LayerTree.CommandGenerator(provider: CGProvider(),
                                                size: LayerTree.Size(svg.width, svg.height))
-    commands = generator.renderCommands(for: layer)
+  
+    let optimizer = LayerTree.CommandOptimizer<CGTypes>()
+    commands = optimizer.optimizeCommands(
+      generator.renderCommands(for: layer)
+    )
   }
 }
 #else

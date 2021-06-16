@@ -38,7 +38,7 @@ struct CGTextTypes: RendererTypes {
   typealias Color = String
   typealias Gradient = LayerTree.Gradient
   typealias Mask = [Any]
-  typealias Path = [LayerTree.Shape]
+  typealias Path = String
   typealias Pattern = LayerTree.Pattern
   typealias Transform = LayerTree.Transform
   typealias BlendMode = String
@@ -66,7 +66,7 @@ struct CGTextProvider: RendererTypeProvider {
   }
   
   func createRect(from rect: LayerTree.Rect) -> String {
-    return "CGRect(x: \(rect.x), y: x: \(rect.y), width: \(rect.width), height: \(rect.height))"
+    return "CGRect(x: \(rect.x), y: \(rect.y), width: \(rect.width), height: \(rect.height))"
   }
 
   func createColor(from color: LayerTree.Color) -> String {
@@ -105,19 +105,84 @@ struct CGTextProvider: RendererTypeProvider {
     return .matrix(transform)
   }
   
-  func createPath(from shape: LayerTree.Shape) -> [LayerTree.Shape] {
-    return [shape]
+  func createPath(from shape: LayerTree.Shape) -> String {
+    switch shape {
+    case .line(let points):
+      return createLinePath(between: points)
+  
+    case .rect(let frame, let radii):
+      return createRectPath(frame: frame, radii: radii)
+      
+    case .ellipse(let frame):
+      return createEllipsePath(frame: frame)
+
+    case .path(let path):
+      return createPath(from: path)
+
+    default:
+      return String(describing: shape)
+    }
+  }
+
+  func createLinePath(between points: [LayerTree.Point]) -> String {
+    """
+    let path1 = CGMutablePath()
+    path1.addLines(between: [
+    \(points, indent: 2)
+    ])
+    """
   }
   
+  func createRectPath(frame: LayerTree.Rect, radii: LayerTree.Size) -> String {
+    """
+    let path1 = CGPath(
+      roundedRect: \(createRect(from: frame)),
+      cornerWidth: \(createFloat(from: radii.width)),
+      cornerHeight: \(createFloat(from: radii.height)),
+      transform: nil
+    )
+    """
+  }
+  
+  func createEllipsePath(frame: LayerTree.Rect) -> String {
+    """
+    let path1 = CGPath(
+      ellipseIn: \(createRect(from: frame)),
+      transform: nil
+    )
+    """
+  }
+
+  func createPath(from path: LayerTree.Path) -> String {
+    var lines: [String] = ["let path1 = CGMutablePath()"]
+    for s in path.segments {
+      switch s {
+      case .move(let p):
+        lines.append("path1.move(to: \(createPoint(from: p)))")
+      case .line(let p):
+        lines.append("path1.addLine(to: \(createPoint(from: p)))")
+      case .cubic(let p, let cp1, let cp2):
+        lines.append("""
+        path1.addCurve(to: \(createPoint(from: p)),
+                       control1: \(createPoint(from: cp1)),
+                       control2: \(createPoint(from: cp2)))
+        """)
+      case .close:
+        lines.append("path1.closeSubpath()")
+      }
+    }
+    return lines.joined(separator: "\n")
+  }
+
   func createPattern(from pattern: LayerTree.Pattern, contents: [RendererCommand<Types>]) -> LayerTreeTypes.Pattern {
     return pattern
   }
   
-  func createPath(from subPaths: [[LayerTree.Shape]]) -> [LayerTree.Shape] {
-    return subPaths.flatMap { $0 }
+  func createPath(from subPaths: [String]) -> String {
+    return "suboaths"
   }
   
-  func createPath(from text: String, at origin: LayerTree.Point, with attributes: LayerTree.TextAttributes) -> [LayerTree.Shape]? {
+  func createPath(from text: String, at origin: LayerTree.Point, with attributes: LayerTree.TextAttributes) -> String? {
     return nil
   }
   
@@ -126,7 +191,7 @@ struct CGTextProvider: RendererTypeProvider {
     case .nonzero:
       return ".winding"
     case .evenodd:
-      return ".evenodd"
+      return ".evenOdd"
     }
   }
 
@@ -165,6 +230,34 @@ final class CGTextRenderer: Renderer {
   typealias Types = CGTextTypes
   
   private var lines = [String]()
+  private var colors: [String: String] = [:]
+  private var paths: [String: String] = [:]
+  
+  func createOrGetColor(_ color: String) -> String {
+    if let identifier = colors[color] {
+      return identifier
+    }
+
+    let identifier = "color\(colors.count + 1)"
+    colors[color] = identifier
+    lines.append("let \(identifier) = \(color)")
+    return identifier
+  }
+  
+  func createOrGetPath(_ path: String) -> String {
+    if let identifier = paths[path] {
+      return identifier
+    }
+
+    let identifier = "path\(paths.count + 1)"
+    paths[path] = identifier
+    let newPath = path
+      .replacingOccurrences(of: "path1", with: identifier)
+      .split(separator: "\n")
+      .map(String.init)
+    lines.append(contentsOf: newPath)
+    return identifier
+  }
 
   func pushState() {
     lines.append("ctx.saveGState()")
@@ -199,7 +292,8 @@ final class CGTextRenderer: Renderer {
   }
   
   func setFill(color: String) {
-    lines.append("ctx.setFillColor(\(color))")
+    let identifier = createOrGetColor(color)
+    lines.append("ctx.setFillColor(\(identifier))")
   }
   
   func setFill(pattern: LayerTree.Pattern) {
@@ -209,7 +303,8 @@ final class CGTextRenderer: Renderer {
   }
   
   func setStroke(color: String) {
-    lines.append("ctx.setStrokeColor(\(color)")
+    let identifier = createOrGetColor(color)
+    lines.append("ctx.setStrokeColor(\(identifier))")
   }
   
   func setLine(width: LayerTree.Float) {
@@ -228,11 +323,12 @@ final class CGTextRenderer: Renderer {
     lines.append("ctx.setMiterLimit(\(miterLimit))")
   }
   
-  func setClip(path: [LayerTree.Shape]) {
-    lines.append("ctx.addPath(\(path))")
+  func setClip(path: String) {
+    let identifier = createOrGetPath(path)
+    lines.append("ctx.addPath(\(identifier))")
     lines.append("ctx.clip()")
   }
-  
+
   func setClip(mask: [Any], frame: String) {
     lines.append("ctx.clip(to: \(frame), mask: \(mask))")
   }
@@ -244,14 +340,16 @@ final class CGTextRenderer: Renderer {
   func setBlend(mode: String) {
     lines.append("ctx.setBlendMode(\(mode))")
   }
-  
-  func stroke(path: [LayerTree.Shape]) {
-    lines.append("ctx.addPath(\(path))")
+
+  func stroke(path: String) {
+    let identifier = createOrGetPath(path)
+    lines.append("ctx.addPath(\(identifier))")
     lines.append("ctx.strokePath()")
   }
-  
-  func fill(path: [LayerTree.Shape], rule: String) {
-    lines.append("ctx.addPath(\(path))")
+
+  func fill(path: String, rule: String) {
+    let identifier = createOrGetPath(path)
+    lines.append("ctx.addPath(\(identifier))")
     lines.append("ctx.fillPath(using: \(rule))")
   }
   
@@ -275,5 +373,16 @@ final class CGTextRenderer: Renderer {
     lines.insert("func drawImage(in ctx: CGContext) {", at: 0)
     lines.append("}")
     return lines.joined(separator: "\n")
+  }
+}
+
+extension String.StringInterpolation {
+  mutating func appendInterpolation(_ points: [LayerTree.Point], indent: Int) {
+    let indentation = String(repeating: " ", count: indent)
+    let provider = CGTextProvider()
+    let elements = points
+      .map { "\(indentation)\(provider.createPoint(from: $0))" }
+      .joined(separator: ",\n")
+    appendLiteral(elements)
   }
 }
