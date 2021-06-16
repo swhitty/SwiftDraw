@@ -46,7 +46,11 @@ public extension Image {
     let generator = LayerTree.CommandGenerator(provider: CGTextProvider(),
                                                size: LayerTree.Size(svg.width, svg.height))
     
-    let commands = generator.renderCommands(for: layer)
+    let optimizer = LayerTree.CommandOptimizer<CGTextTypes>()
+    let commands = optimizer.optimizeCommands(
+      generator.renderCommands(for: layer)
+    )
+
     let renderer = CGTextRenderer()
     renderer.perform(commands)
     

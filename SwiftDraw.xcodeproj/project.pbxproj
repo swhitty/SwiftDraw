@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		01FAD0512678CFA9003B6875 /* Renderer.CGText.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01FAD0502678CFA9003B6875 /* Renderer.CGText.swift */; };
 		01FAD0582678D652003B6875 /* Image+CGText.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01FAD0572678D652003B6875 /* Image+CGText.swift */; };
+		01FAD070267A0DA6003B6875 /* LayerTree.CommandOptimizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01FAD06F267A0DA6003B6875 /* LayerTree.CommandOptimizer.swift */; };
 		D90DB39A219CCB9E00D374D2 /* Renderer.CoreGraphicsTypesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB397219CCB9E00D374D2 /* Renderer.CoreGraphicsTypesTests.swift */; };
 		D90DB39B219CCB9E00D374D2 /* Renderer.CoreGraphicsTypesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB397219CCB9E00D374D2 /* Renderer.CoreGraphicsTypesTests.swift */; };
 		D90DB3A0219CCBBD00D374D2 /* Renderer.CoreGraphics.swift in Sources */ = {isa = PBXBuildFile; fileRef = D90DB39D219CCBBD00D374D2 /* Renderer.CoreGraphics.swift */; };
@@ -268,6 +269,7 @@
 /* Begin PBXFileReference section */
 		01FAD0502678CFA9003B6875 /* Renderer.CGText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Renderer.CGText.swift; sourceTree = "<group>"; };
 		01FAD0572678D652003B6875 /* Image+CGText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Image+CGText.swift"; sourceTree = "<group>"; };
+		01FAD06F267A0DA6003B6875 /* LayerTree.CommandOptimizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LayerTree.CommandOptimizer.swift; sourceTree = "<group>"; };
 		D90DB396219CCB9E00D374D2 /* CGRenderer.PathTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CGRenderer.PathTests.swift; sourceTree = "<group>"; };
 		D90DB397219CCB9E00D374D2 /* Renderer.CoreGraphicsTypesTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Renderer.CoreGraphicsTypesTests.swift; sourceTree = "<group>"; };
 		D90DB39D219CCBBD00D374D2 /* Renderer.CoreGraphics.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Renderer.CoreGraphics.swift; sourceTree = "<group>"; };
@@ -455,9 +457,9 @@
 		D90DB39C219CCBAF00D374D2 /* Renderer */ = {
 			isa = PBXGroup;
 			children = (
-				D90DB39F219CCBBD00D374D2 /* Renderer.LayerTree.swift */,
-				D90DB39D219CCBBD00D374D2 /* Renderer.CoreGraphics.swift */,
 				01FAD0502678CFA9003B6875 /* Renderer.CGText.swift */,
+				D90DB39D219CCBBD00D374D2 /* Renderer.CoreGraphics.swift */,
+				D90DB39F219CCBBD00D374D2 /* Renderer.LayerTree.swift */,
 				D90DB39E219CCBBD00D374D2 /* Renderer.swift */,
 			);
 			name = Renderer;
@@ -466,20 +468,21 @@
 		D90DB3A3219CCC2100D374D2 /* LayerTree */ = {
 			isa = PBXGroup;
 			children = (
-				D90DB3A7219CCC4000D374D2 /* LayerTree.swift */,
-				D90DB3AA219CCC4000D374D2 /* LayerTree.Builder.swift */,
 				D925CC6921A4B7E700C8897B /* LayerTree.Builder.Layer.swift */,
-				D90DB3A8219CCC4000D374D2 /* LayerTree.Builder.Path.swift */,
 				D9ACD7A4220FDF79009717CF /* LayerTree.Builder.Path.Arc.swift */,
+				D90DB3A8219CCC4000D374D2 /* LayerTree.Builder.Path.swift */,
 				D925CC6021A49C9C00C8897B /* LayerTree.Builder.Shape.swift */,
+				D90DB3AA219CCC4000D374D2 /* LayerTree.Builder.swift */,
 				D90DB3AB219CCC4000D374D2 /* LayerTree.Color.swift */,
 				D90DB3AD219CCC4100D374D2 /* LayerTree.CommandGenerator.swift */,
+				01FAD06F267A0DA6003B6875 /* LayerTree.CommandOptimizer.swift */,
 				D9B75C81224C9F0200C6BEE7 /* LayerTree.Gradient.swift */,
 				D90DB3AC219CCC4000D374D2 /* LayerTree.Image.swift */,
 				D90DB3A9219CCC4000D374D2 /* LayerTree.Layer.swift */,
 				D90DB3A6219CCC4000D374D2 /* LayerTree.Path.swift */,
 				D9D9EB36224AD524006CF83C /* LayerTree.Pattern.swift */,
 				D90DB3A4219CCC4000D374D2 /* LayerTree.Shape.swift */,
+				D90DB3A7219CCC4000D374D2 /* LayerTree.swift */,
 				D90DB3A5219CCC4000D374D2 /* LayerTree.Transform.swift */,
 			);
 			name = LayerTree;
@@ -1180,6 +1183,7 @@
 				D90DB49A219CD32600D374D2 /* Formatter.XML.swift in Sources */,
 				D9BEDC3F2250CBBC00F51648 /* CGImage+Mask.swift in Sources */,
 				D90DB3E5219CCE0E00D374D2 /* Image.swift in Sources */,
+				01FAD070267A0DA6003B6875 /* LayerTree.CommandOptimizer.swift in Sources */,
 				D90DB406219CD06800D374D2 /* XML.swift in Sources */,
 				D90DB454219CD27800D374D2 /* Parser.XML.Gradient.swift in Sources */,
 				D90DB3A0219CCBBD00D374D2 /* Renderer.CoreGraphics.swift in Sources */,

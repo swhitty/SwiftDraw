@@ -203,8 +203,7 @@ final class CGTextRenderer: Renderer {
   }
   
   func setFill(pattern: LayerTree.Pattern) {
-    lines.append("let patternSpace = CGColorSpace(patternBaseSpace: nil)!")
-    lines.append("ctx.setFillColorSpace(patternSpace)")
+    lines.append("ctx.setFillColorSpace(CGColorSpace(patternBaseSpace: nil)!)")
     lines.append("var alpha : CGFloat = 1.0")
     lines.append("ctx.setFillPattern(pattern, colorComponents: &alpha)")
   }

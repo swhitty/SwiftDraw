@@ -34,7 +34,7 @@ import Foundation
 
 extension LayerTree {
   
-  final class CommandGenerator<P: RendererTypeProvider>{
+  final class CommandGenerator<P: RendererTypeProvider> {
     
     let provider: P
     let size: LayerTree.Size
