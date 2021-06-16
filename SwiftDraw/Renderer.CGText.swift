@@ -248,7 +248,15 @@ struct CGTextProvider: RendererTypeProvider {
 
 final class CGTextRenderer: Renderer {
   typealias Types = CGTextTypes
-  
+
+  private let name: String
+  private let size: LayerTree.Size
+
+  init(name: String, size: LayerTree.Size) {
+    self.name = name
+    self.size = size
+  }
+
   private var lines = [String]()
   private var colors: [String: String] = [:]
   private var paths: [String: String] = [:]
@@ -403,13 +411,27 @@ final class CGTextRenderer: Renderer {
     """)
   }
   
-  func makeText(spaces: Int = 2) -> String {
-    let indent = String(repeating: " ", count: spaces)
-    var lines = self.lines.map { "\(indent)\($0)" }
-    
-    lines.insert("func drawImage(in ctx: CGContext) {", at: 0)
-    lines.append("}")
-    return lines.joined(separator: "\n")
+  func makeText() -> String {
+    var template = """
+    extension UIImage {
+      static func svg\(name.capitalized)() -> UIImage {
+        let f = UIGraphicsImageRendererFormat.default()
+        f.opaque = false
+        f.preferredRange = .standard
+        UIGraphicsImageRenderer(size: CGSize(width: \(size.width), height: \(size.height)), format: f).image {
+          drawSVG(in: $0.cgContext)
+        }
+      }
+
+      private static func drawSVG(in ctx: CGContext) {
+
+    """
+
+    let indent = String(repeating: " ", count: 4)
+    let lines = self.lines.map { "\(indent)\($0)" }
+    template.append(lines.joined(separator: "\n"))
+    template.append("\n  }\n}")
+    return template
   }
 }
 

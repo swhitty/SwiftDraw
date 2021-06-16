@@ -38,20 +38,26 @@ public extension Image {
         return nil
     }
 
-    return cgCodeText(svg: svg)
+    return cgCodeText(url: url, svg: svg)
   }
     
-  private static func cgCodeText(svg: DOM.SVG) -> String {
+  private static func cgCodeText(url: URL, svg: DOM.SVG) -> String {
     let layer = LayerTree.Builder(svg: svg).makeLayer()
+    let size = LayerTree.Size(svg.width, svg.height)
     let generator = LayerTree.CommandGenerator(provider: CGTextProvider(),
-                                               size: LayerTree.Size(svg.width, svg.height))
+                                               size: size)
     
     let optimizer = LayerTree.CommandOptimizer<CGTextTypes>()
     let commands = optimizer.optimizeCommands(
       generator.renderCommands(for: layer)
     )
 
-    let renderer = CGTextRenderer()
+    let name = url.lastPathComponent
+      .replacingOccurrences(of: ".\(url.pathExtension)", with: "")
+      .replacingOccurrences(of: "-", with: "")
+      .replacingOccurrences(of: " ", with: "")
+
+    let renderer = CGTextRenderer(name: name, size: size)
     renderer.perform(commands)
     
     return renderer.makeText()
