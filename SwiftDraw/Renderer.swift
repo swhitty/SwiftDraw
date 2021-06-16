@@ -31,21 +31,21 @@
 import Foundation
 
 protocol RendererTypes {
-  associatedtype Float
-  associatedtype Point
-  associatedtype Size
-  associatedtype Rect
-  associatedtype Color
-  associatedtype Gradient
+  associatedtype Float: Equatable
+  associatedtype Point: Equatable
+  associatedtype Size: Equatable
+  associatedtype Rect: Equatable
+  associatedtype Color: Equatable
+  associatedtype Gradient: Equatable
   associatedtype Mask
-  associatedtype Path
-  associatedtype Pattern
-  associatedtype Transform
-  associatedtype BlendMode
-  associatedtype FillRule
-  associatedtype LineCap
-  associatedtype LineJoin
-  associatedtype Image
+  associatedtype Path: Equatable
+  associatedtype Pattern: Equatable
+  associatedtype Transform: Equatable
+  associatedtype BlendMode: Equatable
+  associatedtype FillRule: Equatable
+  associatedtype LineCap: Equatable
+  associatedtype LineJoin: Equatable
+  associatedtype Image: Equatable
 }
 
 protocol RendererTypeProvider {
