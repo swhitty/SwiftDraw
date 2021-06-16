@@ -40,7 +40,7 @@ struct CGTextTypes: RendererTypes {
   typealias Mask = [Any]
   typealias Path = String
   typealias Pattern = LayerTree.Pattern
-  typealias Transform = LayerTree.Transform
+  typealias Transform = String
   typealias BlendMode = String
   typealias FillRule = String
   typealias LineCap = String
@@ -100,11 +100,20 @@ struct CGTextProvider: RendererTypeProvider {
       return ".destinationIn"
     }
   }
-  
-  func createTransform(from transform: LayerTree.Transform.Matrix) -> LayerTree.Transform {
-    return .matrix(transform)
+
+  func createTransform(from transform: LayerTree.Transform.Matrix) -> String {
+    """
+    let transform1 = CGAffineTransform(
+      a: \(createFloat(from: transform.a)),
+      b: \(createFloat(from: transform.b)),
+      c: \(createFloat(from: transform.c)),
+      d: \(createFloat(from: transform.d)),
+      tx: \(createFloat(from: transform.tx)),
+      ty: \(createFloat(from: transform.ty))
+    )
+    """
   }
-  
+
   func createPath(from shape: LayerTree.Shape) -> String {
     switch shape {
     case .line(let points):
@@ -232,7 +241,8 @@ final class CGTextRenderer: Renderer {
   private var lines = [String]()
   private var colors: [String: String] = [:]
   private var paths: [String: String] = [:]
-  
+  private var transforms: [String: String] = [:]
+
   func createOrGetColor(_ color: String) -> String {
     if let identifier = colors[color] {
       return identifier
@@ -258,6 +268,21 @@ final class CGTextRenderer: Renderer {
     lines.append(contentsOf: newPath)
     return identifier
   }
+  
+  func createOrGetTransform(_ transform: String) -> String {
+    if let identifier = transforms[transform] {
+      return identifier
+    }
+
+    let identifier = "transform\(transforms.count + 1)"
+    transforms[transform] = identifier
+    let newTransform = transform
+      .replacingOccurrences(of: "transform1", with: identifier)
+      .split(separator: "\n")
+      .map(String.init)
+    lines.append(contentsOf: newTransform)
+    return identifier
+  }
 
   func pushState() {
     lines.append("ctx.saveGState()")
@@ -275,10 +300,11 @@ final class CGTextRenderer: Renderer {
     lines.append("ctx.endTransparencyLayer()")
   }
   
-  func concatenate(transform: LayerTree.Transform) {
-    lines.append("ctx.concatenate(transform)")
+  func concatenate(transform: String) {
+    let identifier = createOrGetTransform(transform)
+    lines.append("ctx.concatenate(\(identifier))")
   }
-  
+
   func translate(tx: LayerTree.Float, ty: LayerTree.Float) {
     lines.append("ctx.translateBy(x: \(tx), y: \(ty))")
   }
