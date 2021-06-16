@@ -127,9 +127,9 @@ struct CGTextProvider: RendererTypeProvider {
 
     case .path(let path):
       return createPath(from: path)
-
-    default:
-      return String(describing: shape)
+      
+    case .polygon(let points):
+      return createPolygonPath(between: points)
     }
   }
 
@@ -152,7 +152,18 @@ struct CGTextProvider: RendererTypeProvider {
     )
     """
   }
-  
+
+  func createPolygonPath(between points: [LayerTree.Point]) -> String {
+    var lines: [String] = ["let path1 = CGMutablePath()"]
+    lines.append("path1.addLines(between: [")
+    for p in points {
+      lines.append("  \(createPoint(from: p)),")
+    }
+    lines.append("])")
+    lines.append("path1.closeSubpath()")
+    return lines.joined(separator: "\n")
+  }
+
   func createEllipsePath(frame: LayerTree.Rect) -> String {
     """
     let path1 = CGPath(
@@ -188,7 +199,7 @@ struct CGTextProvider: RendererTypeProvider {
   }
   
   func createPath(from subPaths: [String]) -> String {
-    return "suboaths"
+    return "subpaths"
   }
   
   func createPath(from text: String, at origin: LayerTree.Point, with attributes: LayerTree.TextAttributes) -> String? {
@@ -314,7 +325,7 @@ final class CGTextRenderer: Renderer {
   }
   
   func scale(sx: LayerTree.Float, sy: LayerTree.Float) {
-    lines.append("ctx.scaleBy(x: \(sx), y: \(sy)")
+    lines.append("ctx.scaleBy(x: \(sx), y: \(sy))")
   }
   
   func setFill(color: String) {
