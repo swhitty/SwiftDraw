@@ -35,13 +35,13 @@ struct CGTextTypes: RendererTypes {
   typealias Point = String
   typealias Size = String
   typealias Rect = String
-  typealias Color = LayerTree.Color
+  typealias Color = String
   typealias Gradient = LayerTree.Gradient
   typealias Mask = [Any]
   typealias Path = [LayerTree.Shape]
   typealias Pattern = LayerTree.Pattern
   typealias Transform = LayerTree.Transform
-  typealias BlendMode = LayerTree.BlendMode
+  typealias BlendMode = String
   typealias FillRule = String
   typealias LineCap = String
   typealias LineJoin = String
@@ -68,11 +68,18 @@ struct CGTextProvider: RendererTypeProvider {
   func createRect(from rect: LayerTree.Rect) -> String {
     return "CGRect(x: \(rect.x), y: x: \(rect.y), width: \(rect.width), height: \(rect.height))"
   }
-  
-  func createColor(from color: LayerTree.Color) -> LayerTree.Color {
-    return color
+
+  func createColor(from color: LayerTree.Color) -> String {
+    switch color {
+    case .none:
+      return "CGColor(colorSpace: CGColorSpaceCreateDeviceRGB(), components: [0, 0, 0, 0])!"
+    case let .rgba(r, g, b, a):
+      return "CGColor(colorSpace: CGColorSpaceCreateDeviceRGB(), components: [\(r), \(g), \(b), \(a)])!"
+    case .gray(white: let w, a: let a):
+      return "CGColor(colorSpace: CGColorSpaceCreateExtendedGray(), components: [\(w), \(a)])!"
+    }
   }
-  
+
   func createGradient(from gradient: LayerTree.Gradient) -> LayerTree.Gradient {
     return gradient
   }
@@ -81,8 +88,17 @@ struct CGTextProvider: RendererTypeProvider {
     return []
   }
   
-  func createBlendMode(from mode: LayerTree.BlendMode) -> LayerTree.BlendMode {
-    return mode
+  func createBlendMode(from mode: LayerTree.BlendMode) -> String {
+    switch mode {
+    case .normal:
+      return ".normal"
+    case .copy:
+      return ".copy"
+    case .sourceIn:
+      return ".sourceIn"
+    case .destinationIn:
+      return ".destinationIn"
+    }
   }
   
   func createTransform(from transform: LayerTree.Transform.Matrix) -> LayerTree.Transform {
@@ -182,7 +198,7 @@ final class CGTextRenderer: Renderer {
     lines.append("ctx.scaleBy(x: \(sx), y: \(sy)")
   }
   
-  func setFill(color: LayerTree.Color) {
+  func setFill(color: String) {
     lines.append("ctx.setFillColor(\(color))")
   }
   
@@ -193,8 +209,8 @@ final class CGTextRenderer: Renderer {
     lines.append("ctx.setFillPattern(pattern, colorComponents: &alpha)")
   }
   
-  func setStroke(color: LayerTree.Color) {
-    lines.append("ctx.setStrokeColor(color)")
+  func setStroke(color: String) {
+    lines.append("ctx.setStrokeColor(\(color)")
   }
   
   func setLine(width: LayerTree.Float) {
@@ -226,7 +242,7 @@ final class CGTextRenderer: Renderer {
     lines.append("ctx.setAlpha(\(alpha))")
   }
   
-  func setBlend(mode: LayerTree.BlendMode) {
+  func setBlend(mode: String) {
     lines.append("ctx.setBlendMode(\(mode))")
   }
   
