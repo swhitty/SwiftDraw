@@ -47,7 +47,7 @@ public extension Image {
     let generator = LayerTree.CommandGenerator(provider: CGTextProvider(),
                                                size: size)
     
-    let optimizer = LayerTree.CommandOptimizer<CGTextTypes>()
+    let optimizer = LayerTree.CommandOptimizer<CGTextTypes>(options: [.skipRedundantState, .skipInitialSaveState])
     let commands = optimizer.optimizeCommands(
       generator.renderCommands(for: layer)
     )

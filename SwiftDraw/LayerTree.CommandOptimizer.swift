@@ -34,10 +34,16 @@ extension LayerTree {
   // Optimize a sequence of commands removing redundant entries
   
   final class CommandOptimizer<T: RendererTypes> {
-    
-    private var state = Stack<State>(root: State())
-    
-    func filterCommand(for command: RendererCommand<T>) -> RendererCommand<T>? {
+
+    private var options: OptimizerOptions
+    private var state: Stack<State>
+
+    init(options: OptimizerOptions = .skipRedundantState) {
+      self.options = options
+      self.state = Stack(root: State())
+    }
+
+    func filterStateCommand(for command: RendererCommand<T>) -> RendererCommand<T>? {
       switch command {
       case .setFill(let color):
         if state.top.fill != color {
@@ -93,7 +99,23 @@ extension LayerTree {
     
     func optimizeCommands(_ commands: [RendererCommand<T>]) -> [RendererCommand<T>] {
       state = Stack<State>(root: State())
-      return commands.compactMap { filterCommand(for: $0) }
+
+      var commands = commands
+
+      if options.contains(.skipInitialSaveState),
+         case .pushState = commands.first,
+         case .popState = commands.last {
+        commands = commands
+          .dropFirst()
+          .dropLast()
+      }
+
+      if options.contains(.skipRedundantState) {
+        state = Stack(root: State())
+        commands = commands.compactMap { filterStateCommand(for: $0) }
+      }
+
+      return commands
     }
     
     struct State {
@@ -106,4 +128,14 @@ extension LayerTree {
       var blendMode: T.BlendMode?
     }
   }
+}
+
+struct OptimizerOptions: OptionSet {
+  let rawValue: Int
+  init(rawValue: Int) {
+    self.rawValue = rawValue
+  }
+
+  static let skipRedundantState = OptimizerOptions(rawValue: 1)
+  static let skipInitialSaveState = OptimizerOptions(rawValue: 2)
 }

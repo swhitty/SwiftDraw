@@ -410,6 +410,23 @@ final class CGTextRenderer: Renderer {
                            options: [.drawsAfterEndLocation, .drawsBeforeStartLocation])
     """)
   }
+
+  private func linesOptimized() -> [String] {
+    var lines = lines
+    if lines.contains(where: { $0.contains("CGColorSpaceCreateExtendedGray()") }) {
+      let rgb = "let rgb = CGColorSpaceCreateExtendedGray()"
+      lines = lines.map { $0.replacingOccurrences(of: "CGColorSpaceCreateExtendedGray()", with: "rgb") }
+      lines.insert(rgb, at: 0)
+    }
+
+    if lines.contains(where: { $0.contains("CGColorSpaceCreateDeviceRGB()") }) {
+      let rgb = "let rgb = CGColorSpaceCreateDeviceRGB()"
+      lines = lines.map { $0.replacingOccurrences(of: "CGColorSpaceCreateDeviceRGB()", with: "rgb") }
+      lines.insert(rgb, at: 0)
+    }
+
+    return lines
+  }
   
   func makeText() -> String {
     var template = """
@@ -418,7 +435,7 @@ final class CGTextRenderer: Renderer {
         let f = UIGraphicsImageRendererFormat.default()
         f.opaque = false
         f.preferredRange = .standard
-        UIGraphicsImageRenderer(size: CGSize(width: \(size.width), height: \(size.height)), format: f).image {
+        return UIGraphicsImageRenderer(size: CGSize(width: \(size.width), height: \(size.height)), format: f).image {
           drawSVG(in: $0.cgContext)
         }
       }
@@ -428,7 +445,7 @@ final class CGTextRenderer: Renderer {
     """
 
     let indent = String(repeating: " ", count: 4)
-    let lines = self.lines.map { "\(indent)\($0)" }
+    let lines = linesOptimized().map { "\(indent)\($0)" }
     template.append(lines.joined(separator: "\n"))
     template.append("\n  }\n}")
     return template
