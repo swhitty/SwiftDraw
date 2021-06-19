@@ -569,8 +569,8 @@ final class CGTextRenderer: Renderer {
     """
 
     let indent = String(repeating: " ", count: 4)
-    let patternLines = patternLines.map { "\(indent)\($0)" }
-    let lines = lines.map { "\(indent)\($0)" }
+    let patternLines = self.patternLines.map { "\(indent)\($0)" }
+    let lines = self.lines.map { "\(indent)\($0)" }
     let allLines = patternLines + lines
     template.append(allLines.joined(separator: "\n"))
     template.append("\n  }\n}")
