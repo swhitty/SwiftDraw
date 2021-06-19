@@ -29,6 +29,8 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
+import Foundation
+
 public extension Image {
 
   static func cgCodeText(named name: String, in bundle: Bundle = Bundle.main) -> String? {
@@ -52,11 +54,13 @@ public extension Image {
       generator.renderCommands(for: layer)
     )
 
-    let name = url.lastPathComponent
+    let identifier = url.lastPathComponent
       .replacingOccurrences(of: ".\(url.pathExtension)", with: "")
       .replacingOccurrences(of: "-", with: " ")
+      .capitalized
+      .replacingOccurrences(of: " ", with: "")
 
-    let renderer = CGTextRenderer(name: name, size: size)
+    let renderer = CGTextRenderer(name:"svg\(identifier)", size: size)
     renderer.perform(commands)
     
     return renderer.makeText()

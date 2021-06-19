@@ -553,10 +553,9 @@ final class CGTextRenderer: Renderer {
   }
   
   func makeText() -> String {
-    let identifier = name.capitalized.replacingOccurrences(of: " ", with: "")
     var template = """
     extension UIImage {
-      static func svg\(identifier)() -> UIImage {
+      static func \(name)() -> UIImage {
         let f = UIGraphicsImageRendererFormat.default()
         f.opaque = false
         f.preferredRange = .standard
