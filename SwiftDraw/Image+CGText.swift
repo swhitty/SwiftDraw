@@ -54,8 +54,7 @@ public extension Image {
 
     let name = url.lastPathComponent
       .replacingOccurrences(of: ".\(url.pathExtension)", with: "")
-      .replacingOccurrences(of: "-", with: "")
-      .replacingOccurrences(of: " ", with: "")
+      .replacingOccurrences(of: "-", with: " ")
 
     let renderer = CGTextRenderer(name: name, size: size)
     renderer.perform(commands)

@@ -453,9 +453,9 @@ final class CGTextRenderer: Renderer {
   private func linesOptimized() -> [String] {
     var lines = lines
     if lines.contains(where: { $0.contains("CGColorSpaceCreateExtendedGray()") }) {
-      let rgb = "let rgb = CGColorSpaceCreateExtendedGray()"
-      lines = lines.map { $0.replacingOccurrences(of: "CGColorSpaceCreateExtendedGray()", with: "rgb") }
-      lines.insert(rgb, at: 0)
+      let gray = "let gray = CGColorSpace(name: CGColorSpace.extendedGray)!"
+      lines = lines.map { $0.replacingOccurrences(of: "CGColorSpaceCreateExtendedGray()", with: "gray") }
+      lines.insert(gray, at: 0)
     }
 
     if lines.contains(where: { $0.contains("CGColorSpaceCreateDeviceRGB()") }) {
@@ -468,9 +468,10 @@ final class CGTextRenderer: Renderer {
   }
   
   func makeText() -> String {
+    let identifier = name.capitalized.replacingOccurrences(of: " ", with: "")
     var template = """
     extension UIImage {
-      static func svg\(name.capitalized)() -> UIImage {
+      static func svg\(identifier)() -> UIImage {
         let f = UIGraphicsImageRendererFormat.default()
         f.opaque = false
         f.preferredRange = .standard
