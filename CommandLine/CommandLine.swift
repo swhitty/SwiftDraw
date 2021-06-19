@@ -71,7 +71,7 @@ extension SwiftDraw.CommandLine {
   static func processImage(config: Configuration) -> Data? {
     switch config.format {
     case .swift:
-      let code = Image.cgCodeText(fileURL: config.input)
+      let code = CGTextRenderer.render(fileURL: config.input)
       return code?.data(using: .utf8)
     case .jpeg, .pdf, .png:
       return SwiftDraw.Image(fileURL: config.input).flatMap { processImage($0, with: config) }
@@ -94,7 +94,7 @@ extension SwiftDraw.CommandLine {
   static func printHelp() {
     print("")
     print("""
-swiftdraw, version 0.7.6
+swiftdraw, version 0.8.0
 copyright (c) 2021 Simon Whitty
 
 usage: swiftdraw <file.svg> [--format png | pdf | jpeg | swift] [--size wxh] [--scale 1x | 2x | 3x]

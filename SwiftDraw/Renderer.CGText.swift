@@ -270,7 +270,7 @@ struct CGTextProvider: RendererTypeProvider {
   }
 }
 
-final class CGTextRenderer: Renderer {
+public final class CGTextRenderer: Renderer {
   typealias Types = CGTextTypes
 
   private let name: String

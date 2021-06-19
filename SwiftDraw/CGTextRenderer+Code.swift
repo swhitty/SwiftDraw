@@ -31,14 +31,14 @@
 
 import Foundation
 
-public extension Image {
+public extension CGTextRenderer {
 
-  static func cgCodeText(named name: String, in bundle: Bundle = Bundle.main) -> String? {
+  static func render(named name: String, in bundle: Bundle = Bundle.main) -> String? {
     guard let url = bundle.url(forResource: name, withExtension: nil) else { return nil }
-    return cgCodeText(fileURL: url)
+    return render(fileURL: url)
   }
 
-  static func cgCodeText(fileURL: URL) -> String? {
+  static func render(fileURL: URL) -> String? {
     guard let svg = try? DOM.SVG.parse(fileURL: fileURL) else {
       return nil
     }

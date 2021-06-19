@@ -70,7 +70,7 @@ class ViewController: UIViewController {
         imageView.backgroundColor = .white
         self.view = imageView
       
-        print(Image.cgCodeText(named: "rings.svg")!)
+        print(CGTextRenderer.render(named: "rings.svg")!)
     }
 }
 
