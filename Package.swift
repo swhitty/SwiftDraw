@@ -8,6 +8,7 @@ let exclude: [String]
 		"CGPath+Segment.swift",
 		"Renderer.CoreGraphics.swift",
         "Image+CoreGraphics.swift",
+		"Image+CGText.swift",
         "NSImage+Image.swift",
         "UIImage+Image.swift",
         "CGRendererTests.swift",

@@ -224,6 +224,7 @@
 		D9ECAF9921AADA02006A5328 /* CommandLine.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9CFB5CF21A73E0F000D2875 /* CommandLine.swift */; };
 		D9ECAF9B21AADA1E006A5328 /* SwiftDraw.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D962D26D1E6ECD5C00B825C6 /* SwiftDraw.framework */; };
 		D9F33F96267DA1EF00FD3173 /* LayerTree.CommandOptimizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01FAD06F267A0DA6003B6875 /* LayerTree.CommandOptimizer.swift */; };
+		D9F33F97267DA27000FD3173 /* Renderer.CGText.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01FAD0502678CFA9003B6875 /* Renderer.CGText.swift */; };
 		D9F3AD5A219E9DF400BAFA55 /* XML.SAXParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9F3AD59219E9DF400BAFA55 /* XML.SAXParserTests.swift */; };
 		D9F3AD5B219E9DF400BAFA55 /* XML.SAXParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9F3AD59219E9DF400BAFA55 /* XML.SAXParserTests.swift */; };
 		D9F3AD5E21A218CF00BAFA55 /* ImageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9F3AD5D21A218CF00BAFA55 /* ImageTests.swift */; };
@@ -1038,6 +1039,7 @@
 				D90DB438219CD1C600D374D2 /* DOM.Image.swift in Sources */,
 				D90DB3D9219CCCBE00D374D2 /* LayerTree.Builder.swift in Sources */,
 				D925CC6221A49C9C00C8897B /* LayerTree.Builder.Shape.swift in Sources */,
+				D9F33F97267DA27000FD3173 /* Renderer.CGText.swift in Sources */,
 				D90DB3BD219CCC4100D374D2 /* LayerTree.Color.swift in Sources */,
 				D925CC6B21A4B7E700C8897B /* LayerTree.Builder.Layer.swift in Sources */,
 				D90DB45F219CD27800D374D2 /* Parser.XML.SVG.swift in Sources */,
