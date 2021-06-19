@@ -39,7 +39,7 @@ struct CGTextTypes: RendererTypes {
   typealias Gradient = String
   typealias Mask = [Any]
   typealias Path = String
-  typealias Pattern = LayerTree.Pattern
+  typealias Pattern = String
   typealias Transform = String
   typealias BlendMode = String
   typealias FillRule = String
@@ -212,10 +212,34 @@ struct CGTextProvider: RendererTypeProvider {
     return lines.joined(separator: "\n")
   }
 
-  func createPattern(from pattern: LayerTree.Pattern, contents: [RendererCommand<Types>]) -> LayerTreeTypes.Pattern {
-    return pattern
+  func createPattern(from pattern: LayerTree.Pattern, contents: [RendererCommand<Types>]) -> String {
+    let optimizer = LayerTree.CommandOptimizer<CGTextTypes>(options: [.skipRedundantState, .skipInitialSaveState])
+    let contents = optimizer.optimizeCommands(contents)
+
+    let renderer = CGTextRenderer(name: "pattern", size: pattern.frame.size)
+    renderer.perform(contents)
+    let lines = renderer.linesOptimized()
+      .map { "  \($0)" }
+      .joined(separator: "\n")
+
+    return """
+    let patternDraw1: CGPatternDrawPatternCallback = { _, ctx in
+    \(lines)
+    }
+    var patternCallback1 = CGPatternCallbacks(version: 0, drawPattern: patternDraw1, releaseInfo: nil)
+    let pattern1 = CGPattern(
+      info: nil,
+      bounds: \(createRect(from: pattern.frame)),
+      matrix: .identity,
+      xStep: \(pattern.frame.width),
+      yStep: \(pattern.frame.height),
+      tiling: .constantSpacing,
+      isColored: true,
+      callbacks: &patternCallback1
+    )!
+    """
   }
-  
+
   func createPath(from subPaths: [String]) -> String {
     return "subpaths"
   }
@@ -276,10 +300,12 @@ final class CGTextRenderer: Renderer {
   }
 
   private var lines = [String]()
+  private var patternLines = [String]()
   private var colors: [String: String] = [:]
   private var paths: [String: String] = [:]
   private var transforms: [String: String] = [:]
   private var gradients: [String: String] = [:]
+  private var patterns: [String: String] = [:]
 
   func createOrGetColor(_ color: String) -> String {
     if let identifier = colors[color] {
@@ -341,6 +367,25 @@ final class CGTextRenderer: Renderer {
     return identifier
   }
 
+  func createOrGetPattern(_ pattern: String) -> String {
+    if let identifier = patterns[pattern] {
+      return identifier
+    }
+
+    let identifier = "pattern\(patterns.count + 1)"
+    let draw = "patternDraw\(patterns.count + 1)"
+    let callback = "patternCallback\(patterns.count + 1)"
+    patterns[pattern] = identifier
+    let newPattern = pattern
+      .replacingOccurrences(of: "pattern1", with: identifier)
+      .replacingOccurrences(of: "patternDraw1", with: draw)
+      .replacingOccurrences(of: "patternCallback1", with: callback)
+      .split(separator: "\n")
+      .map(String.init)
+    patternLines.append(contentsOf: newPattern)
+    return identifier
+  }
+
   func pushState() {
     lines.append("ctx.saveGState()")
   }
@@ -379,12 +424,14 @@ final class CGTextRenderer: Renderer {
     lines.append("ctx.setFillColor(\(identifier))")
   }
   
-  func setFill(pattern: LayerTree.Pattern) {
+  func setFill(pattern: String) {
+    let identifier = createOrGetPattern(pattern)
+    let alpha = identifier.replacingOccurrences(of: "pattern", with: "patternAlpha")
     lines.append("ctx.setFillColorSpace(CGColorSpace(patternBaseSpace: nil)!)")
-    lines.append("var alpha : CGFloat = 1.0")
-    lines.append("ctx.setFillPattern(pattern, colorComponents: &alpha)")
+    lines.append("var \(alpha) : CGFloat = 1.0")
+    lines.append("ctx.setFillPattern(\(identifier), colorComponents: &\(alpha))")
   }
-  
+
   func setStroke(color: String) {
     let identifier = createOrGetColor(color)
     lines.append("ctx.setStrokeColor(\(identifier))")
@@ -450,7 +497,15 @@ final class CGTextRenderer: Renderer {
     """)
   }
 
-  private func linesOptimized() -> [String] {
+  fileprivate func linesOptimized() -> [String] {
+    Self.optimizeLines(lines)
+  }
+
+  func patternLinesOptimized() -> [String] {
+    Self.optimizeLines(patternLines)
+  }
+
+  static func optimizeLines(_ lines: [String]) -> [String] {
     var lines = lines
     if lines.contains(where: { $0.contains("CGColorSpaceCreateExtendedGray()") }) {
       let gray = "let gray = CGColorSpace(name: CGColorSpace.extendedGray)!"
@@ -485,8 +540,10 @@ final class CGTextRenderer: Renderer {
     """
 
     let indent = String(repeating: " ", count: 4)
+    let patternLines = patternLines.map { "\(indent)\($0)" }
     let lines = linesOptimized().map { "\(indent)\($0)" }
-    template.append(lines.joined(separator: "\n"))
+    let allLines = patternLines + lines
+    template.append(allLines.joined(separator: "\n"))
     template.append("\n  }\n}")
     return template
   }
