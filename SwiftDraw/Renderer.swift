@@ -71,7 +71,7 @@ protocol RendererTypeProvider {
   func createLineJoin(from join: LayerTree.LineJoin) -> Types.LineJoin
   func createImage(from image: LayerTree.Image) -> Types.Image?
   
-  func getBounds(from path: Types.Path) -> LayerTree.Rect
+  func getBounds(from shape: LayerTree.Shape) -> LayerTree.Rect
 }
 
 protocol Renderer {

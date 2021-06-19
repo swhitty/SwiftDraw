@@ -202,7 +202,7 @@ extension LayerTree {
         let pathEnd: LayerTree.Point
         switch fillGradient.units  {
         case .objectBoundingBox:
-          let pathBounds = provider.getBounds(from: path)
+          let pathBounds = provider.getBounds(from: shape)
           pathStart = pathBounds.getPoint(offset: fillGradient.start)
           pathEnd = pathBounds.getPoint(offset: fillGradient.end)
         case .userSpaceOnUse:

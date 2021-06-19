@@ -36,7 +36,7 @@ struct CGTextTypes: RendererTypes {
   typealias Size = String
   typealias Rect = String
   typealias Color = String
-  typealias Gradient = LayerTree.Gradient
+  typealias Gradient = String
   typealias Mask = [Any]
   typealias Path = String
   typealias Pattern = LayerTree.Pattern
@@ -80,10 +80,28 @@ struct CGTextProvider: RendererTypeProvider {
     }
   }
 
-  func createGradient(from gradient: LayerTree.Gradient) -> LayerTree.Gradient {
-    return gradient
+  func createGradient(from gradient: LayerTree.Gradient) -> String {
+    let colors = gradient.stops
+      .map { "  \(createColor(from: $0.color))" }
+      .joined(separator: ",\n")
+
+    let points = gradient.stops
+      .map { String($0.offset) }
+      .joined(separator: ", ")
+
+    return """
+    let colors1 = [
+    \(colors)
+    ] as CFArray
+    var locations1: [CGFloat] = [\(points)]
+    let gradient1 = CGGradient(
+      colorsSpace: CGColorSpaceCreateDeviceRGB(),
+      colors: colors1,
+      locations: &locations1
+    )!
+    """
   }
-  
+
   func createMask(from contents: [RendererCommand<CGTextTypes>], size: LayerTree.Size) -> [Any] {
     return []
   }
@@ -241,8 +259,8 @@ struct CGTextProvider: RendererTypeProvider {
     return image
   }
   
-  func getBounds(from path: Types.Path) -> LayerTree.Rect {
-    return LayerTree.Rect(x: 0, y: 0, width: 0, height: 0)
+  func getBounds(from shape: LayerTree.Shape) -> LayerTree.Rect {
+    return CGProvider().getBounds(from: shape)
   }
 }
 
@@ -261,6 +279,7 @@ final class CGTextRenderer: Renderer {
   private var colors: [String: String] = [:]
   private var paths: [String: String] = [:]
   private var transforms: [String: String] = [:]
+  private var gradients: [String: String] = [:]
 
   func createOrGetColor(_ color: String) -> String {
     if let identifier = colors[color] {
@@ -300,6 +319,25 @@ final class CGTextRenderer: Renderer {
       .split(separator: "\n")
       .map(String.init)
     lines.append(contentsOf: newTransform)
+    return identifier
+  }
+
+  func createOrGetGradient(_ gradient: String) -> String {
+    if let identifier = gradients[gradient] {
+      return identifier
+    }
+
+    let identifier = "gradient\(gradients.count + 1)"
+    let locations = "locations\(gradients.count + 1)"
+    let colors = "colors\(gradients.count + 1)"
+    gradients[gradient] = identifier
+    let newGradient = gradient
+      .replacingOccurrences(of: "gradient1", with: identifier)
+      .replacingOccurrences(of: "colors1", with: colors)
+      .replacingOccurrences(of: "locations1", with: locations)
+      .split(separator: "\n")
+      .map(String.init)
+    lines.append(contentsOf: newGradient)
     return identifier
   }
 
@@ -401,10 +439,11 @@ final class CGTextRenderer: Renderer {
   func draw(image: LayerTree.Image) {
     lines.append("ctx.draw(image, in: CGRect(x: 0, y: 0, width: image.width, height: image.height)")
   }
-  
-  func draw(gradient: LayerTree.Gradient, from start: String, to end: String) {
+
+  func draw(gradient: String, from start: String, to end: String) {
+    let identifier = createOrGetGradient(gradient)
     lines.append("""
-    ctx.drawLinearGradient(gradient,
+    ctx.drawLinearGradient(\(identifier),
                            start: \(start),
                            end: \(end),
                            options: [.drawsAfterEndLocation, .drawsBeforeStartLocation])

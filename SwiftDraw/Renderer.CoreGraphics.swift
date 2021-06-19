@@ -248,8 +248,8 @@ struct CGProvider: RendererTypeProvider {
     }
   }
 
-  func getBounds(from path: CGPath) -> LayerTree.Rect {
-    let bounds = path.boundingBoxOfPath
+  func getBounds(from shape: LayerTree.Shape) -> LayerTree.Rect {
+    let bounds = createPath(from: shape).boundingBoxOfPath
     return LayerTree.Rect(x: LayerTree.Float(bounds.origin.x),
                           y: LayerTree.Float(bounds.origin.y),
                           width: LayerTree.Float(bounds.width),
