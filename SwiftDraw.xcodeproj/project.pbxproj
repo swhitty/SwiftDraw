@@ -223,6 +223,7 @@
 		D9ECAF9821AADA00006A5328 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9CFB5D021A73E84000D2875 /* main.swift */; };
 		D9ECAF9921AADA02006A5328 /* CommandLine.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9CFB5CF21A73E0F000D2875 /* CommandLine.swift */; };
 		D9ECAF9B21AADA1E006A5328 /* SwiftDraw.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D962D26D1E6ECD5C00B825C6 /* SwiftDraw.framework */; };
+		D9F33F96267DA1EF00FD3173 /* LayerTree.CommandOptimizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01FAD06F267A0DA6003B6875 /* LayerTree.CommandOptimizer.swift */; };
 		D9F3AD5A219E9DF400BAFA55 /* XML.SAXParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9F3AD59219E9DF400BAFA55 /* XML.SAXParserTests.swift */; };
 		D9F3AD5B219E9DF400BAFA55 /* XML.SAXParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9F3AD59219E9DF400BAFA55 /* XML.SAXParserTests.swift */; };
 		D9F3AD5E21A218CF00BAFA55 /* ImageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9F3AD5D21A218CF00BAFA55 /* ImageTests.swift */; };
@@ -1024,6 +1025,7 @@
 				D90DB42A219CD1C600D374D2 /* DOM.swift in Sources */,
 				D90DB430219CD1C600D374D2 /* DOM.Element.swift in Sources */,
 				D90DB436219CD1C600D374D2 /* DOM.SVG.swift in Sources */,
+				D9F33F96267DA1EF00FD3173 /* LayerTree.CommandOptimizer.swift in Sources */,
 				D90DB409219CD06800D374D2 /* XML.Parser.Scanner.swift in Sources */,
 				D90DB432219CD1C600D374D2 /* DOM.Text.swift in Sources */,
 				D90DB3B3219CCC4100D374D2 /* LayerTree.Path.swift in Sources */,
