@@ -33,7 +33,7 @@ Download the latest command line tool [here](https://github.com/swhitty/SwiftDra
 
 #### Source code generation
 
-The command line tool can also covert an SVG image into swift source code:
+The command line tool can also convert an SVG image into Swift source code:
 
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
