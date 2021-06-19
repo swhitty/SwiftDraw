@@ -45,6 +45,7 @@ extension CommandLine {
     case jpeg
     case pdf
     case png
+    case swift
   }
 
   public enum Size: Equatable {
@@ -158,6 +159,8 @@ private extension CommandLine.Format {
       return "pdf"
     case .png:
       return "png"
+    case .swift:
+      return "swift"
     }
   }
 }

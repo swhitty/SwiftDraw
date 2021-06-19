@@ -34,15 +34,17 @@ import Foundation
 public extension Image {
 
   static func cgCodeText(named name: String, in bundle: Bundle = Bundle.main) -> String? {
-    guard
-      let url = bundle.url(forResource: name, withExtension: nil),
-      let svg = try? DOM.SVG.parse(fileURL: url) else {
-        return nil
-    }
-
-    return cgCodeText(url: url, svg: svg)
+    guard let url = bundle.url(forResource: name, withExtension: nil) else { return nil }
+    return cgCodeText(fileURL: url)
   }
-    
+
+  static func cgCodeText(fileURL: URL) -> String? {
+    guard let svg = try? DOM.SVG.parse(fileURL: fileURL) else {
+      return nil
+    }
+    return cgCodeText(url: fileURL, svg: svg)
+  }
+
   private static func cgCodeText(url: URL, svg: DOM.SVG) -> String {
     let layer = LayerTree.Builder(svg: svg).makeLayer()
     let size = LayerTree.Size(svg.width, svg.height)

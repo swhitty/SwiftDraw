@@ -61,15 +61,23 @@ extension SwiftDraw.CommandLine {
   }
   
   static func process(with config: Configuration) throws -> Data {
-    guard
-      let svg = SwiftDraw.Image(fileURL: config.input),
-      let data = processImage(svg, with: config) else {
+    guard let data = processImage(config: config) else {
         throw Error.invalid
     }
-    
+
     return data
   }
-  
+
+  static func processImage(config: Configuration) -> Data? {
+    switch config.format {
+    case .swift:
+      let code = Image.cgCodeText(fileURL: config.input)
+      return code?.data(using: .utf8)
+    case .jpeg, .pdf, .png:
+      return SwiftDraw.Image(fileURL: config.input).flatMap { processImage($0, with: config) }
+    }
+  }
+
   static func processImage(_ image: SwiftDraw.Image, with config: Configuration) -> Data? {
     switch config.format {
     case .jpeg:
@@ -78,6 +86,8 @@ extension SwiftDraw.CommandLine {
       return try? Image.pdfData(fileURL: config.input, size: config.size.cgValue)
     case .png:
       return image.pngData(size: config.size.cgValue, scale: config.scale.cgValue)
+    case .swift:
+      preconditionFailure()
     }
   }
   
@@ -87,11 +97,11 @@ extension SwiftDraw.CommandLine {
 swiftdraw, version 0.7.6
 copyright (c) 2021 Simon Whitty
 
-usage: swiftdraw <file.svg> [--format png | pdf | jpeg] [--size wxh] [--scale 1x | 2x | 3x]
+usage: swiftdraw <file.svg> [--format png | pdf | jpeg | swift] [--size wxh] [--scale 1x | 2x | 3x]
 
 <file> svg file to be processed
 
---format  format to output image with png | pdf | jpeg
+--format  format to output image with png | pdf | jpeg | swift
 --size    size of output image e.g. 100x200
 --scale   scale of output image with 1x | 2x | 3x
 """)
