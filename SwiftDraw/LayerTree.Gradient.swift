@@ -31,7 +31,7 @@
 
 extension LayerTree {
   
-  final class Gradient: Equatable {
+  struct Gradient: Hashable {
     var start: Point
     var end: Point
     var stops: [Stop]
@@ -42,15 +42,8 @@ extension LayerTree {
       self.end = end
       self.stops = []
     }
-    
-    static func == (lhs: LayerTree.Gradient, rhs: LayerTree.Gradient) -> Bool {
-      return
-        lhs.start == rhs.start &&
-          lhs.end == rhs.end &&
-          lhs.stops == rhs.stops
-    }
-    
-    struct Stop: Equatable {
+
+    struct Stop: Hashable {
       var offset: Float
       var color: Color
       var opacity: Float
@@ -62,7 +55,7 @@ extension LayerTree {
       }
     }
 
-    enum Units {
+    enum Units: Hashable {
       case userSpaceOnUse
       case objectBoundingBox
     }

@@ -205,7 +205,7 @@ extension LayerTree.Builder {
         return nil
     }
 
-    let gradient = LayerTree.Gradient(start: Point(x1, y1), end: Point(x2, y2))
+    var gradient = LayerTree.Gradient(start: Point(x1, y1), end: Point(x2, y2))
     if let id = element.href?.fragment,
        let reference = svg.defs.linearGradients.first(where: { $0.id == id }) {
       gradient.stops = makeGradientStops(for: reference)

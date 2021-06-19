@@ -340,7 +340,7 @@ private extension LayerTree.Rect {
 }
 
 private func apply(colorConverter: ColorConverter, to gradient: LayerTree.Gradient) -> LayerTree.Gradient {
-  let converted = LayerTree.Gradient(start: gradient.start, end: gradient.end)
+  var converted = LayerTree.Gradient(start: gradient.start, end: gradient.end)
   converted.stops = gradient.stops.map { apply(colorConverter: colorConverter, to: $0) }
   return converted
 }

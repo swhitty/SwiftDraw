@@ -36,7 +36,7 @@ struct CGTextTypes: RendererTypes {
   typealias Size = String
   typealias Rect = String
   typealias Color = String
-  typealias Gradient = String
+  typealias Gradient = LayerTree.Gradient
   typealias Mask = [Any]
   typealias Path = String
   typealias Pattern = String
@@ -80,26 +80,8 @@ struct CGTextProvider: RendererTypeProvider {
     }
   }
 
-  func createGradient(from gradient: LayerTree.Gradient) -> String {
-    let colors = gradient.stops
-      .map { "  \(createColor(from: $0.color))" }
-      .joined(separator: ",\n")
-
-    let points = gradient.stops
-      .map { String($0.offset) }
-      .joined(separator: ", ")
-
-    return """
-    let colors1 = [
-    \(colors)
-    ] as CFArray
-    var locations1: [CGFloat] = [\(points)]
-    let gradient1 = CGGradient(
-      colorsSpace: CGColorSpaceCreateDeviceRGB(),
-      colors: colors1,
-      locations: &locations1
-    )!
-    """
+  func createGradient(from gradient: LayerTree.Gradient) -> LayerTree.Gradient {
+    return gradient
   }
 
   func createMask(from contents: [RendererCommand<CGTextTypes>], size: LayerTree.Size) -> [Any] {
@@ -218,7 +200,7 @@ struct CGTextProvider: RendererTypeProvider {
 
     let renderer = CGTextRenderer(name: "pattern", size: pattern.frame.size)
     renderer.perform(contents)
-    let lines = renderer.linesOptimized()
+    let lines = renderer.lines
       .map { "  \($0)" }
       .joined(separator: "\n")
 
@@ -299,15 +281,61 @@ final class CGTextRenderer: Renderer {
     self.size = size
   }
 
-  private var lines = [String]()
+  private(set) var lines = [String]()
   private var patternLines = [String]()
+  private var colorSpaces: Set<ColorSpace> = []
   private var colors: [String: String] = [:]
   private var paths: [String: String] = [:]
   private var transforms: [String: String] = [:]
-  private var gradients: [String: String] = [:]
+  private var gradients: [LayerTree.Gradient: String] = [:]
   private var patterns: [String: String] = [:]
 
+  enum ColorSpace: String, Hashable {
+    case rgb
+    case gray
+
+    init?(for color: String) {
+      if color.contains("CGColorSpaceCreateExtendedGray()") {
+        self = .gray
+      } else if color.contains("CGColorSpaceCreateDeviceRGB()")  {
+        self = .rgb
+      } else {
+        return nil
+      }
+    }
+  }
+
+  func createOrGetColorSpace(for color: String) -> ColorSpace {
+    guard let space = ColorSpace(for: color) else {
+      fatalError("not a support color")
+    }
+
+    if !colorSpaces.contains(space) {
+      switch space {
+      case .gray:
+        lines.append("let gray = CGColorSpace(name: CGColorSpace.extendedGray)!")
+        colorSpaces.insert(.gray)
+      case .rgb:
+        lines.append("let rgb = CGColorSpaceCreateDeviceRGB()")
+        colorSpaces.insert(.rgb)
+      }
+    }
+
+    return space
+  }
+
+  func updateColor(_ color: String) -> String {
+    let space = createOrGetColorSpace(for: color)
+    switch  space {
+    case .gray:
+      return color.replacingOccurrences(of: "CGColorSpaceCreateExtendedGray()", with: "gray")
+    case .rgb:
+      return color.replacingOccurrences(of: "CGColorSpaceCreateDeviceRGB()", with: "rgb")
+    }
+  }
+
   func createOrGetColor(_ color: String) -> String {
+    let color = updateColor(color)
     if let identifier = colors[color] {
       return identifier
     }
@@ -317,13 +345,25 @@ final class CGTextRenderer: Renderer {
     lines.append("let \(identifier) = \(color)")
     return identifier
   }
+
+  func createOrGetColor(_ color: LayerTree.Color) -> String {
+    switch color {
+    case .none:
+      return createOrGetColor("CGColor(colorSpace: CGColorSpaceCreateDeviceRGB(), components: [0, 0, 0, 0])!")
+    case let .rgba(r, g, b, a):
+      return createOrGetColor("CGColor(colorSpace: CGColorSpaceCreateDeviceRGB(), components: [\(r), \(g), \(b), \(a)])!")
+    case .gray(white: let w, a: let a):
+      return createOrGetColor("CGColor(colorSpace: CGColorSpaceCreateExtendedGray(), components: [\(w), \(a)])!")
+    }
+  }
   
   func createOrGetPath(_ path: String) -> String {
     if let identifier = paths[path] {
       return identifier
     }
 
-    let identifier = "path\(paths.count + 1)"
+    let idx = paths.count
+    let identifier = "path".makeIdentifier(idx)
     paths[path] = identifier
     let newPath = path
       .replacingOccurrences(of: "path1", with: identifier)
@@ -338,7 +378,8 @@ final class CGTextRenderer: Renderer {
       return identifier
     }
 
-    let identifier = "transform\(transforms.count + 1)"
+    let idx = transforms.count
+    let identifier = "transform".makeIdentifier(idx)
     transforms[transform] = identifier
     let newTransform = transform
       .replacingOccurrences(of: "transform1", with: identifier)
@@ -348,22 +389,34 @@ final class CGTextRenderer: Renderer {
     return identifier
   }
 
-  func createOrGetGradient(_ gradient: String) -> String {
+  func createOrGetGradient(_ gradient: LayerTree.Gradient) -> String {
     if let identifier = gradients[gradient] {
       return identifier
     }
 
-    let identifier = "gradient\(gradients.count + 1)"
-    let locations = "locations\(gradients.count + 1)"
-    let colors = "colors\(gradients.count + 1)"
+    let idx = gradients.count
+    let identifier = "gradient".makeIdentifier(idx)
     gradients[gradient] = identifier
-    let newGradient = gradient
-      .replacingOccurrences(of: "gradient1", with: identifier)
-      .replacingOccurrences(of: "colors1", with: colors)
-      .replacingOccurrences(of: "locations1", with: locations)
-      .split(separator: "\n")
-      .map(String.init)
-    lines.append(contentsOf: newGradient)
+
+    let colorTxt = gradient.stops
+      .map { createOrGetColor($0.color) }
+      .joined(separator: ", ")
+
+    let pointsTxt = gradient.stops
+      .map { String($0.offset) }
+      .joined(separator: ", ")
+
+    let space = createOrGetColorSpace(for: "CGColorSpaceCreateDeviceRGB()")
+    let locationsIdentifier = "locations".makeIdentifier(idx)
+    let code = """
+    var \(locationsIdentifier): [CGFloat] = [\(pointsTxt)]
+    let \(identifier) = CGGradient(
+      colorsSpace: \(space.rawValue),
+      colors: [\(colorTxt)] as CFArray,
+      locations: &\(locationsIdentifier)
+    )!
+    """.split(separator: "\n").map(String.init)
+    lines.append(contentsOf: code)
     return identifier
   }
 
@@ -372,9 +425,11 @@ final class CGTextRenderer: Renderer {
       return identifier
     }
 
-    let identifier = "pattern\(patterns.count + 1)"
-    let draw = "patternDraw\(patterns.count + 1)"
-    let callback = "patternCallback\(patterns.count + 1)"
+    let idx = patterns.count
+
+    let identifier = "pattern".makeIdentifier(idx)
+    let draw = "patternDraw".makeIdentifier(idx)
+    let callback = "patternCallback".makeIdentifier(idx)
     patterns[pattern] = identifier
     let newPattern = pattern
       .replacingOccurrences(of: "pattern1", with: identifier)
@@ -487,7 +542,7 @@ final class CGTextRenderer: Renderer {
     lines.append("ctx.draw(image, in: CGRect(x: 0, y: 0, width: image.width, height: image.height)")
   }
 
-  func draw(gradient: String, from start: String, to end: String) {
+  func draw(gradient: LayerTree.Gradient, from start: String, to end: String) {
     let identifier = createOrGetGradient(gradient)
     lines.append("""
     ctx.drawLinearGradient(\(identifier),
@@ -495,31 +550,6 @@ final class CGTextRenderer: Renderer {
                            end: \(end),
                            options: [.drawsAfterEndLocation, .drawsBeforeStartLocation])
     """)
-  }
-
-  fileprivate func linesOptimized() -> [String] {
-    Self.optimizeLines(lines)
-  }
-
-  func patternLinesOptimized() -> [String] {
-    Self.optimizeLines(patternLines)
-  }
-
-  static func optimizeLines(_ lines: [String]) -> [String] {
-    var lines = lines
-    if lines.contains(where: { $0.contains("CGColorSpaceCreateExtendedGray()") }) {
-      let gray = "let gray = CGColorSpace(name: CGColorSpace.extendedGray)!"
-      lines = lines.map { $0.replacingOccurrences(of: "CGColorSpaceCreateExtendedGray()", with: "gray") }
-      lines.insert(gray, at: 0)
-    }
-
-    if lines.contains(where: { $0.contains("CGColorSpaceCreateDeviceRGB()") }) {
-      let rgb = "let rgb = CGColorSpaceCreateDeviceRGB()"
-      lines = lines.map { $0.replacingOccurrences(of: "CGColorSpaceCreateDeviceRGB()", with: "rgb") }
-      lines.insert(rgb, at: 0)
-    }
-
-    return lines
   }
   
   func makeText() -> String {
@@ -541,7 +571,7 @@ final class CGTextRenderer: Renderer {
 
     let indent = String(repeating: " ", count: 4)
     let patternLines = patternLines.map { "\(indent)\($0)" }
-    let lines = linesOptimized().map { "\(indent)\($0)" }
+    let lines = lines.map { "\(indent)\($0)" }
     let allLines = patternLines + lines
     template.append(allLines.joined(separator: "\n"))
     template.append("\n  }\n}")
@@ -557,5 +587,15 @@ extension String.StringInterpolation {
       .map { "\(indentation)\(provider.createPoint(from: $0))" }
       .joined(separator: ",\n")
     appendLiteral(elements)
+  }
+}
+
+private extension String {
+
+  func makeIdentifier(_ index: Int) -> String {
+    guard index > 0 else {
+      return self
+    }
+    return "\(self)\(index)"
   }
 }
