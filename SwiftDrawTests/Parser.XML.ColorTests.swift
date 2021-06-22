@@ -69,6 +69,13 @@ final class ParserColorTests: XCTestCase {
     XCTAssertEqual(try XMLParser().parseColor("#FF11DD"), .hex(255, 17, 221))
     XCTAssertThrowsError(try XMLParser().parseColor("#invalid"))
   }
+  
+  func testColorP3() {
+    // percentage 0-100%
+    XCTAssertEqual(try XMLParser().parseColor("color(display-p3 0 0.5 0.9)"), .p3(0, 0.5, 0.9))
+    XCTAssertEqual(try XMLParser().parseColor("color(display-p3 0.1, 0.2, 0)"), .p3(0.1, 0.2, 0))
+    XCTAssertEqual(try XMLParser().parseColor("color(display-p3 1,0.3,0.5)"), .p3(1, 0.3, 0.5))
+  }
 }
 
 private extension SwiftDraw.XMLParser {

@@ -36,8 +36,9 @@ extension DOM {
     case keyword(Keyword)
     case rgbi(UInt8, UInt8, UInt8)
     case rgbf(DOM.Float, DOM.Float, DOM.Float)
+    case p3(DOM.Float, DOM.Float, DOM.Float)
     case hex(UInt8, UInt8, UInt8)
-    
+
     // see: https://www.w3.org/TR/SVG11/types.html#ColorKeywords
     enum Keyword: String {
       case aliceblue

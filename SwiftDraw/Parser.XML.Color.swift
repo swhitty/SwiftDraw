@@ -37,6 +37,8 @@ extension XMLParser {
       return .color(c)
     } else if let c = try parseColorHex(data: data) {
       return .color(c)
+    } else if let c = try parseColorP3(data: data) {
+      return .color(c)
     } else if let c = parseColorKeyword(data: data) {
       return .color(c)
     } else if let c = parseColorNone(data: data) {
@@ -119,6 +121,20 @@ extension XMLParser {
     try scanner.scanString(")")
     
     return .rgbf(r, g, b)
+  }
+  
+  private func parseColorP3(data: String) throws -> DOM.Color? {
+    var scanner = XMLParser.Scanner(text: data)
+    guard scanner.scanStringIfPossible("color(display-p3") else { return nil }
+
+    let r = try scanner.scanFloat()
+    scanner.scanStringIfPossible(",")
+    let g = try scanner.scanFloat()
+    scanner.scanStringIfPossible(",")
+    let b = try scanner.scanFloat()
+    try scanner.scanString(")")
+
+    return .p3(r, g, b)
   }
   
   // #a5F should be parsed as #a050F0
