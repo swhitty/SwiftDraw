@@ -37,6 +37,13 @@ extension LayerTree {
     var stops: [Stop]
     var units: Units = .objectBoundingBox
 
+    var colorSpace: ColorSpace {
+      if stops.contains(where: { $0.color.isP3 }) {
+        return .p3
+      }
+      return .srgb
+    }
+
     init(start: Point, end: Point) {
       self.start = start
       self.end = end
@@ -58,6 +65,17 @@ extension LayerTree {
     enum Units: Hashable {
       case userSpaceOnUse
       case objectBoundingBox
+    }
+  }
+}
+
+private extension LayerTree.Color {
+  var isP3: Bool {
+    switch self {
+    case .rgba(r: _, g: _, b: _, a: _, space: .p3):
+      return true
+    default:
+      return false
     }
   }
 }
