@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		01BA4DA826820DE8001FF7B5 /* gradient-gratification-p3.svg in Resources */ = {isa = PBXBuildFile; fileRef = 01BA4DA726820DE8001FF7B5 /* gradient-gratification-p3.svg */; };
 		D90523452217927F00B3B94F /* mystery.svg in Resources */ = {isa = PBXBuildFile; fileRef = D90523442217927F00B3B94F /* mystery.svg */; };
 		D9126F0E24A6C19300859CC5 /* gradient-apple.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9126F0D24A6C19200859CC5 /* gradient-apple.svg */; };
 		D918D26D22122A7300097C9A /* arc2.svg in Resources */ = {isa = PBXBuildFile; fileRef = D918D26C22122A7300097C9A /* arc2.svg */; };
@@ -56,6 +57,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		01BA4DA726820DE8001FF7B5 /* gradient-gratification-p3.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = "gradient-gratification-p3.svg"; sourceTree = "<group>"; };
 		D90523442217927F00B3B94F /* mystery.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = mystery.svg; sourceTree = "<group>"; };
 		D9126F0D24A6C19200859CC5 /* gradient-apple.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "gradient-apple.svg"; sourceTree = "<group>"; };
 		D918D26C22122A7300097C9A /* arc2.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = arc2.svg; sourceTree = "<group>"; };
@@ -143,6 +145,7 @@
 				D9ACD788220FDDE0009717CF /* curves.svg */,
 				D9ACD78F220FDDE0009717CF /* display.svg */,
 				D9126F0D24A6C19200859CC5 /* gradient-apple.svg */,
+				01BA4DA726820DE8001FF7B5 /* gradient-gratification-p3.svg */,
 				D91C3E42224ED9A4001BCDAE /* gradient-gratification.svg */,
 				D9494F45224C99950015ACE1 /* gradient.svg */,
 				D9FD69D7224CD4960046A926 /* gradient2.svg */,
@@ -244,6 +247,7 @@
 				D945F5AB225220F900FAAAC4 /* mask-composite-3.svg in Resources */,
 				D9FD69D8224CD4960046A926 /* gradient2.svg in Resources */,
 				D991955824BAF8E200E58925 /* rings.svg in Resources */,
+				01BA4DA826820DE8001FF7B5 /* gradient-gratification-p3.svg in Resources */,
 				D9ACD797220FDDE0009717CF /* shapes.svg in Resources */,
 				D9ACD799220FDDE0009717CF /* starry.svg in Resources */,
 				D9ACD791220FDDE0009717CF /* use.svg in Resources */,

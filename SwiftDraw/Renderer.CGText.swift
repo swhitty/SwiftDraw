@@ -70,7 +70,6 @@ struct CGTextProvider: RendererTypeProvider {
   }
 
   func createColor(from color: LayerTree.Color) -> String {
-    print(color)
     switch color {
     case .none:
       return "CGColor(colorSpace: CGColorSpaceCreateDeviceRGB(), components: [0, 0, 0, 0])!"
@@ -584,7 +583,6 @@ public final class CGTextRenderer: Renderer {
       static func \(name)() -> UIImage {
         let f = UIGraphicsImageRendererFormat.preferred()
         f.opaque = false
-        f.preferredRange = .automatic
         return UIGraphicsImageRenderer(size: CGSize(width: \(size.width), height: \(size.height)), format: f).image {
           drawSVG(in: $0.cgContext)
         }
