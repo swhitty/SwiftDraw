@@ -368,8 +368,6 @@ struct CGRenderer: Renderer {
   }
 
   func setClip(mask: CGImage, frame: CGRect) {
-    //        let rect = CGRect(x: 0, y: 0, width: mask.width, height: mask.height)
-    //        ctx.draw(mask, in: rect)
     ctx.clip(to: frame, mask: mask)
   }
 
