@@ -64,7 +64,7 @@ final class LayerTreeLayerTests: XCTestCase {
     let c3 = Contents.text("Charlie", Point(10, 20), .normal)
 
     var att = TextAttributes.normal
-    att.color = .rgba(r: 1.0, g: 0, b: 0, a: 1.0)
+    att.color = .srgb(r: 1.0, g: 0, b: 0, a: 1.0)
     let c4 = Contents.text("Charlie", .zero, att)
 
     XCTAssertEqual(c1, c1)

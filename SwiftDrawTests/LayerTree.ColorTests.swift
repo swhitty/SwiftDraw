@@ -37,12 +37,12 @@ final class LayerTreeColorTests: XCTestCase {
   typealias Color = LayerTree.Color
   
   let noColor = Color.none
-  let someColor = Color.rgba(r: 0.1, g: 0.2, b: 0.3, a: 0.4)
-  let anotherColor = Color.rgba(r: 0.4, g: 0.3, b: 0.2, a: 0.1)
+  let someColor = Color.srgb(r: 0.1, g: 0.2, b: 0.3, a: 0.4)
+  let anotherColor = Color.srgb(r: 0.4, g: 0.3, b: 0.2, a: 0.1)
   
   func testStaticColors() {
-    XCTAssertEqual(Color.black, .rgba(r: 0, g: 0, b: 0, a: 1.0))
-    XCTAssertEqual(Color.white, .rgba(r: 1, g: 1, b: 1, a: 1.0))
+    XCTAssertEqual(Color.black, .srgb(r: 0, g: 0, b: 0, a: 1.0))
+    XCTAssertEqual(Color.white, .srgb(r: 1, g: 1, b: 1, a: 1.0))
   }
   
   func testWithAlpha() {
@@ -55,14 +55,14 @@ final class LayerTreeColorTests: XCTestCase {
     XCTAssertEqual(noColor.withAlpha(0.3).maybeNone(), .none)
     XCTAssertEqual(noColor.withAlpha(0.0).maybeNone(), .none)
     
-    XCTAssertEqual(someColor.withAlpha(1.0).maybeNone(), .rgba(r: 0.1, g: 0.2, b: 0.3, a: 1.0))
-    XCTAssertEqual(someColor.withAlpha(0.5).maybeNone(), .rgba(r: 0.1, g: 0.2, b: 0.3, a: 0.5))
-    XCTAssertEqual(someColor.withAlpha(0.3).maybeNone(), .rgba(r: 0.1, g: 0.2, b: 0.3, a: 0.3))
+    XCTAssertEqual(someColor.withAlpha(1.0).maybeNone(), .srgb(r: 0.1, g: 0.2, b: 0.3, a: 1.0))
+    XCTAssertEqual(someColor.withAlpha(0.5).maybeNone(), .srgb(r: 0.1, g: 0.2, b: 0.3, a: 0.5))
+    XCTAssertEqual(someColor.withAlpha(0.3).maybeNone(), .srgb(r: 0.1, g: 0.2, b: 0.3, a: 0.3))
     XCTAssertEqual(someColor.withAlpha(0.0).maybeNone(), .none)
     
-    XCTAssertEqual(anotherColor.withAlpha(1.0).maybeNone(), .rgba(r: 0.4, g: 0.3, b: 0.2, a: 1.0))
-    XCTAssertEqual(anotherColor.withAlpha(0.5).maybeNone(), .rgba(r: 0.4, g: 0.3, b: 0.2, a: 0.5))
-    XCTAssertEqual(anotherColor.withAlpha(0.3).maybeNone(), .rgba(r: 0.4, g: 0.3, b: 0.2, a: 0.3))
+    XCTAssertEqual(anotherColor.withAlpha(1.0).maybeNone(), .srgb(r: 0.4, g: 0.3, b: 0.2, a: 1.0))
+    XCTAssertEqual(anotherColor.withAlpha(0.5).maybeNone(), .srgb(r: 0.4, g: 0.3, b: 0.2, a: 0.5))
+    XCTAssertEqual(anotherColor.withAlpha(0.3).maybeNone(), .srgb(r: 0.4, g: 0.3, b: 0.2, a: 0.3))
     XCTAssertEqual(anotherColor.withAlpha(0.0).maybeNone(), .none)
   }
   
@@ -75,25 +75,25 @@ final class LayerTreeColorTests: XCTestCase {
     XCTAssertEqual(noColor.withMultiplyingAlpha(0.3), .none)
     XCTAssertEqual(noColor.withMultiplyingAlpha(0.0), .none)
     
-    XCTAssertEqual(someColor.withMultiplyingAlpha(1.0), .rgba(r: 0.1, g: 0.2, b: 0.3, a: 0.4))
-    XCTAssertEqual(someColor.withMultiplyingAlpha(0.5), .rgba(r: 0.1, g: 0.2, b: 0.3, a: 0.2))
+    XCTAssertEqual(someColor.withMultiplyingAlpha(1.0), .srgb(r: 0.1, g: 0.2, b: 0.3, a: 0.4))
+    XCTAssertEqual(someColor.withMultiplyingAlpha(0.5), .srgb(r: 0.1, g: 0.2, b: 0.3, a: 0.2))
     XCTAssertEqual(someColor.withMultiplyingAlpha(0.0).maybeNone(), .none)
     
-    XCTAssertEqual(anotherColor.withMultiplyingAlpha(1.0), .rgba(r: 0.4, g: 0.3, b: 0.2, a: 0.1))
-    XCTAssertEqual(anotherColor.withMultiplyingAlpha(0.5), .rgba(r: 0.4, g: 0.3, b: 0.2, a: 0.05))
+    XCTAssertEqual(anotherColor.withMultiplyingAlpha(1.0), .srgb(r: 0.4, g: 0.3, b: 0.2, a: 0.1))
+    XCTAssertEqual(anotherColor.withMultiplyingAlpha(0.5), .srgb(r: 0.4, g: 0.3, b: 0.2, a: 0.05))
     XCTAssertEqual(anotherColor.withMultiplyingAlpha(0.0).maybeNone(), .none)
   }
   
   func testRGBi() {
     //a color can be created from (UInt8, UInt8, UInt8)
 
-    XCTAssertEqual(Color(UInt8(102), UInt8(102), UInt8(102)), .rgba(r: 0.4, g: 0.4, b: 0.4, a: 1.0))
-    XCTAssertEqual(Color(UInt8(102), UInt8(0), UInt8(102)), .rgba(r: 0.4, g: 0.0, b: 0.4, a: 1.0))
-    XCTAssertEqual(Color(UInt8(102), UInt8(102), UInt8(0)), .rgba(r: 0.4, g: 0.4, b: 0.0, a: 1.0))
+    XCTAssertEqual(Color(UInt8(102), UInt8(102), UInt8(102)), .srgb(r: 0.4, g: 0.4, b: 0.4, a: 1.0))
+    XCTAssertEqual(Color(UInt8(102), UInt8(0), UInt8(102)), .srgb(r: 0.4, g: 0.0, b: 0.4, a: 1.0))
+    XCTAssertEqual(Color(UInt8(102), UInt8(102), UInt8(0)), .srgb(r: 0.4, g: 0.4, b: 0.0, a: 1.0))
 
-    XCTAssertEqual(Color(UInt8(204), UInt8(204), UInt8(204)), .rgba(r: 0.8, g: 0.8, b: 0.8, a: 1.0))
-    XCTAssertEqual(Color(UInt8(204), UInt8(0), UInt8(204)), .rgba(r: 0.8, g: 0.0, b: 0.8, a: 1.0))
-    XCTAssertEqual(Color(UInt8(204), UInt8(204), UInt8(0)), .rgba(r: 0.8, g: 0.8, b: 0.0, a: 1.0))
+    XCTAssertEqual(Color(UInt8(204), UInt8(204), UInt8(204)), .srgb(r: 0.8, g: 0.8, b: 0.8, a: 1.0))
+    XCTAssertEqual(Color(UInt8(204), UInt8(0), UInt8(204)), .srgb(r: 0.8, g: 0.0, b: 0.8, a: 1.0))
+    XCTAssertEqual(Color(UInt8(204), UInt8(204), UInt8(0)), .srgb(r: 0.8, g: 0.8, b: 0.0, a: 1.0))
   }
   
   func testLuminanceConverter() {
@@ -101,9 +101,9 @@ final class LayerTreeColorTests: XCTestCase {
     
     let white = Color.white
     let black = Color.black
-    let red = Color.rgba(r: 1.0, g: 0.0, b: 0.0, a: 1.0)
-    let green = Color.rgba(r: 0.0, g: 1.0, b: 0.0, a: 1.0)
-    let blue = Color.rgba(r: 0.0, g: 0.0, b: 1.0, a: 1.0)
+    let red = Color.srgb(r: 1.0, g: 0.0, b: 0.0, a: 1.0)
+    let green = Color.srgb(r: 0.0, g: 1.0, b: 0.0, a: 1.0)
+    let blue = Color.srgb(r: 0.0, g: 0.0, b: 1.0, a: 1.0)
     
     let converter = LuminanceColorConverter()
     XCTAssertEqual(converter.createColor(from: white), .gray(white: 0.0, a: 1.0))
@@ -124,12 +124,21 @@ final class LayerTreeColorTests: XCTestCase {
     let blue = DOM.Color.rgbi(0, 0, 255)
     
     XCTAssertEqual(Color(none), .none)
-    XCTAssertEqual(Color(black), .rgba(r: 0.0, g: 0.0, b: 0.0, a: 1.0))
-    XCTAssertEqual(Color(white), .rgba(r: 1.0, g: 1.0, b: 1.0, a: 1.0))
-    XCTAssertEqual(Color(red), .rgba(r: 1.0, g: 0.0, b: 0.0, a: 1.0))
-    XCTAssertEqual(Color(green), .rgba(r: 0.0, g: 1.0, b: 0.0, a: 1.0))
-    XCTAssertEqual(Color(blue), .rgba(r: 0.0, g: 0.0, b: 1.0, a: 1.0))
+    XCTAssertEqual(Color(black), .srgb(r: 0.0, g: 0.0, b: 0.0, a: 1.0))
+    XCTAssertEqual(Color(white), .srgb(r: 1.0, g: 1.0, b: 1.0, a: 1.0))
+    XCTAssertEqual(Color(red), .srgb(r: 1.0, g: 0.0, b: 0.0, a: 1.0))
+    XCTAssertEqual(Color(green), .srgb(r: 0.0, g: 1.0, b: 0.0, a: 1.0))
+    XCTAssertEqual(Color(blue), .srgb(r: 0.0, g: 0.0, b: 1.0, a: 1.0))
   }
   
 }
 
+extension LayerTree.Color {
+  
+  static func srgb(r: LayerTree.Float,
+                   g: LayerTree.Float,
+                   b: LayerTree.Float,
+                   a: LayerTree.Float) -> Self {
+    .rgba(r: r, g: g, b: b, a: a, space: .srgb)
+  }
+}

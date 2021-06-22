@@ -34,18 +34,23 @@ extension LayerTree {
   enum Color: Hashable {
     
     case none
-    case rgba(r: Float, g: Float, b: Float, a: Float)
+    case rgba(r: Float, g: Float, b: Float, a: Float, space: ColorSpace)
     case gray(white: Float, a: Float)
     
-    static var white: Color { return Color.rgba(r: 1, g: 1, b: 1, a: 1) }
-    static var black: Color { return Color.rgba(r: 0, g: 0, b: 0, a: 1) }
+    static var white: Color { return Color.rgba(r: 1, g: 1, b: 1, a: 1, space: .srgb) }
+    static var black: Color { return Color.rgba(r: 0, g: 0, b: 0, a: 1, space: .srgb) }
+  }
+
+  enum ColorSpace {
+    case srgb
+    case p3
   }
 }
 
 extension LayerTree.Color {
   
   init(_ color: DOM.Color) {
-    self =  LayerTree.Color.create(from: color)
+    self = LayerTree.Color.create(from: color)
   }
   
   static func create(from color: DOM.Color) -> LayerTree.Color {
@@ -63,7 +68,14 @@ extension LayerTree.Color {
       return .rgba(r: Float(r),
                    g: Float(g),
                    b: Float(b),
-                   a: 1.0)
+                   a: 1.0,
+                   space: .srgb)
+    case let .p3(r, g, b):
+      return .rgba(r: Float(r),
+                   g: Float(g),
+                   b: Float(b),
+                   a: 1.0,
+                   space: .p3)
     }
   }
 
@@ -71,14 +83,15 @@ extension LayerTree.Color {
     self = .rgba(r: Float(r)/255.0,
                  g: Float(g)/255.0,
                  b: Float(b)/255.0,
-                 a: 1.0)
+                 a: 1.0,
+                 space: .srgb)
   }
 
   var isOpaque: Bool {
     switch self {
     case .none:
       return false
-    case .rgba(r: _, g: _, b: _, a: let a):
+    case .rgba(r: _, g: _, b: _, a: let a, _):
       return a >= 1.0
     case .gray(white: _, a: let a):
       return a >= 1.0
@@ -89,11 +102,12 @@ extension LayerTree.Color {
     switch self {
     case .none:
       return .none
-    case .rgba(r: let r, g: let g, b: let b, a: _):
+    case let .rgba(r: r, g: g, b: b, a: _, space):
       return .rgba(r: r,
                    g: g,
                    b: b,
-                   a: alpha)
+                   a: alpha,
+                   space: space)
     case .gray(white: let w, a: _):
       return .gray(white: w, a: alpha)
     }
@@ -103,7 +117,7 @@ extension LayerTree.Color {
     switch self {
     case .none:
       return .none
-    case .rgba(r: _, g: _, b: _, a: let a):
+    case .rgba(r: _, g: _, b: _, a: let a, _):
       return a > 0 ? self : .none
     case .gray(white: _, a: let a):
       return a > 0 ? self : .none
@@ -114,12 +128,13 @@ extension LayerTree.Color {
     switch self {
     case .none:
       return .none
-    case .rgba(r: let r, g: let g, b: let b, a: let a):
+    case let .rgba(r: r, g: g, b: b, a: a, space: space):
       let newAlpha = a * alpha
       return .rgba(r: r,
                    g: g,
                    b: b,
-                   a: newAlpha)
+                   a: newAlpha,
+                   space: space)
     case .gray(white: let w, a: let a):
       let newAlpha = a * alpha
       return .gray(white: w, a: newAlpha)
@@ -140,7 +155,7 @@ struct DefaultColorConverter: ColorConverter {
 struct LuminanceColorConverter: ColorConverter {
   func createColor(from color: LayerTree.Color) -> LayerTree.Color {
     switch color {
-    case .rgba(let r, let g, let b, let a):
+    case .rgba(let r, let g, let b, let a, _):
       //sRGB Luminance to alpha
       let alpha = ((r*0.2126) + (g*0.7152) + (b*0.0722)) * a
       return .gray(white: 0.0, a: alpha)
@@ -153,7 +168,7 @@ struct LuminanceColorConverter: ColorConverter {
 struct GrayscaleMaskColorConverter: ColorConverter {
   func createColor(from color: LayerTree.Color) -> LayerTree.Color {
     switch color {
-    case .rgba(let r, let g, let b, let a):
+    case .rgba(let r, let g, let b, let a, _):
       //sRGB Luminance to alpha
       let white = 1.0 - ((r*0.2126) + (g*0.7152) + (b*0.0722))
       // let white = (r*0.2126) + (g*0.7152) + (b*0.0722)

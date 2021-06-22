@@ -114,7 +114,7 @@ final class LayerTreeBuilderTests: XCTestCase {
     state.strokeLineMiterLimit = 10.0
     
     let att = LayerTree.Builder.makeStrokeAttributes(with: state)
-    XCTAssertEqual(att.color, .rgba(r: 1.0, g: 0, b: 0, a: 0.5))
+    XCTAssertEqual(att.color, .srgb(r: 1.0, g: 0, b: 0, a: 0.5))
     XCTAssertEqual(att.width, 5.0)
     XCTAssertEqual(att.cap, .square)
     XCTAssertEqual(att.join, .round)
