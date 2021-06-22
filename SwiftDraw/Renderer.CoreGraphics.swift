@@ -86,13 +86,28 @@ struct CGProvider: RendererTypeProvider {
 
   func createColor(from color: LayerTree.Color) -> CGColor {
     switch color {
-    case .none: return createColor(r: 0, g: 0, b: 0, a: 0)
-    case let .rgba(r, g, b, a): return createColor(r: CGFloat(r),
-                                                   g: CGFloat(g),
-                                                   b: CGFloat(b),
-                                                   a: CGFloat(a))
+    case .none: return createSRGB(r: 0, g: 0, b: 0, a: 0)
+    case let .rgba(r, g, b, a, .srgb):
+      return createSRGB(r: CGFloat(r),
+                        g: CGFloat(g),
+                        b: CGFloat(b),
+                        a: CGFloat(a))
+    case let .rgba(r, g, b, a, .p3):
+      return createP3(r: CGFloat(r),
+                      g: CGFloat(g),
+                      b: CGFloat(b),
+                      a: CGFloat(a))
     case .gray(white: let w, a: let a):
       return createColor(w: CGFloat(w), a: CGFloat(a))
+    }
+  }
+
+  private func createColorSpace(for colorSpace: LayerTree.ColorSpace) -> CGColorSpace {
+    switch colorSpace {
+    case .srgb:
+      return CGColorSpaceCreateDeviceRGB()
+    case .p3:
+      return CGColorSpace(name: CGColorSpace.displayP3)!
     }
   }
 
@@ -100,13 +115,18 @@ struct CGProvider: RendererTypeProvider {
     let colors = gradient.stops.map { createColor(from: $0.color) } as CFArray
     var points = gradient.stops.map { createFloat(from: $0.offset) }
 
-    return CGGradient(colorsSpace: CGColorSpaceCreateDeviceRGB(),
+    return CGGradient(colorsSpace: createColorSpace(for: gradient.colorSpace),
                       colors: colors,
                       locations: &points)!
   }
 
-  private func createColor(r: CGFloat, g: CGFloat, b: CGFloat, a: CGFloat) -> CGColor {
+  private func createSRGB(r: CGFloat, g: CGFloat, b: CGFloat, a: CGFloat) -> CGColor {
     return CGColor(colorSpace: CGColorSpaceCreateDeviceRGB(),
+                   components: [r, g, b, a])!
+  }
+  
+  private func createP3(r: CGFloat, g: CGFloat, b: CGFloat, a: CGFloat) -> CGColor {
+    return CGColor(colorSpace: CGColorSpace(name: CGColorSpace.displayP3)!,
                    components: [r, g, b, a])!
   }
 

@@ -70,11 +70,14 @@ struct CGTextProvider: RendererTypeProvider {
   }
 
   func createColor(from color: LayerTree.Color) -> String {
+    print(color)
     switch color {
     case .none:
       return "CGColor(colorSpace: CGColorSpaceCreateDeviceRGB(), components: [0, 0, 0, 0])!"
-    case let .rgba(r, g, b, a):
+    case let .rgba(r, g, b, a, .srgb):
       return "CGColor(colorSpace: CGColorSpaceCreateDeviceRGB(), components: [\(r), \(g), \(b), \(a)])!"
+    case let .rgba(r, g, b, a, .p3):
+      return "CGColor(colorSpace: CGColorSpaceCreateDisplayP3(), components: [\(r), \(g), \(b), \(a)])!"
     case .gray(white: let w, a: let a):
       return "CGColor(colorSpace: CGColorSpaceCreateExtendedGray(), components: [\(w), \(a)])!"
     }
@@ -292,6 +295,7 @@ public final class CGTextRenderer: Renderer {
 
   enum ColorSpace: String, Hashable {
     case rgb
+    case p3
     case gray
 
     init?(for color: String) {
@@ -299,6 +303,8 @@ public final class CGTextRenderer: Renderer {
         self = .gray
       } else if color.contains("CGColorSpaceCreateDeviceRGB()")  {
         self = .rgb
+      } else if color.contains("CGColorSpaceCreateDisplayP3()")  {
+        self = .p3
       } else {
         return nil
       }
@@ -309,7 +315,11 @@ public final class CGTextRenderer: Renderer {
     guard let space = ColorSpace(for: color) else {
       fatalError("not a support color")
     }
+    createColorSpace(space)
+    return space
+  }
 
+  func createColorSpace(_ space: ColorSpace) {
     if !colorSpaces.contains(space) {
       switch space {
       case .gray:
@@ -318,10 +328,11 @@ public final class CGTextRenderer: Renderer {
       case .rgb:
         lines.append("let rgb = CGColorSpaceCreateDeviceRGB()")
         colorSpaces.insert(.rgb)
+      case .p3:
+        lines.append("let p3 = CGColorSpace(name: CGColorSpace.displayP3)!")
+        colorSpaces.insert(.p3)
       }
     }
-
-    return space
   }
 
   func updateColor(_ color: String) -> String {
@@ -331,6 +342,8 @@ public final class CGTextRenderer: Renderer {
       return color.replacingOccurrences(of: "CGColorSpaceCreateExtendedGray()", with: "gray")
     case .rgb:
       return color.replacingOccurrences(of: "CGColorSpaceCreateDeviceRGB()", with: "rgb")
+    case .p3:
+      return color.replacingOccurrences(of: "CGColorSpaceCreateDisplayP3()", with: "p3")
     }
   }
 
@@ -350,8 +363,10 @@ public final class CGTextRenderer: Renderer {
     switch color {
     case .none:
       return createOrGetColor("CGColor(colorSpace: CGColorSpaceCreateDeviceRGB(), components: [0, 0, 0, 0])!")
-    case let .rgba(r, g, b, a):
+    case let .rgba(r, g, b, a, .srgb):
       return createOrGetColor("CGColor(colorSpace: CGColorSpaceCreateDeviceRGB(), components: [\(r), \(g), \(b), \(a)])!")
+    case let .rgba(r, g, b, a, .p3):
+      return createOrGetColor("CGColor(colorSpace: CGColorSpaceCreateDisplayP3(), components: [\(r), \(g), \(b), \(a)])!")
     case .gray(white: let w, a: let a):
       return createOrGetColor("CGColor(colorSpace: CGColorSpaceCreateExtendedGray(), components: [\(w), \(a)])!")
     }
@@ -389,6 +404,17 @@ public final class CGTextRenderer: Renderer {
     return identifier
   }
 
+  func createOrGetColorSpace(for colorSpace: LayerTree.ColorSpace) -> ColorSpace {
+    switch colorSpace {
+    case .srgb:
+      createColorSpace(.rgb)
+      return .rgb
+    case .p3:
+      createColorSpace(.p3)
+      return .p3
+    }
+  }
+
   func createOrGetGradient(_ gradient: LayerTree.Gradient) -> String {
     if let identifier = gradients[gradient] {
       return identifier
@@ -406,7 +432,7 @@ public final class CGTextRenderer: Renderer {
       .map { String($0.offset) }
       .joined(separator: ", ")
 
-    let space = createOrGetColorSpace(for: "CGColorSpaceCreateDeviceRGB()")
+    let space = createOrGetColorSpace(for: gradient.colorSpace)
     let locationsIdentifier = "locations".makeIdentifier(idx)
     let code = """
     var \(locationsIdentifier): [CGFloat] = [\(pointsTxt)]
@@ -556,9 +582,9 @@ public final class CGTextRenderer: Renderer {
     var template = """
     extension UIImage {
       static func \(name)() -> UIImage {
-        let f = UIGraphicsImageRendererFormat.default()
+        let f = UIGraphicsImageRendererFormat.preferred()
         f.opaque = false
-        f.preferredRange = .standard
+        f.preferredRange = .automatic
         return UIGraphicsImageRenderer(size: CGSize(width: \(size.width), height: \(size.height)), format: f).image {
           drawSVG(in: $0.cgContext)
         }
@@ -598,3 +624,4 @@ private extension String {
     return "\(self)\(index)"
   }
 }
+
