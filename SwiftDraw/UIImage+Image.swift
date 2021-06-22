@@ -47,13 +47,22 @@ public extension Image {
   func rasterize() -> UIImage {
     return rasterize(with: size)
   }
+  
+  private func makeFormat() -> UIGraphicsImageRendererFormat {
+    guard #available(iOS 12.0, *) else {
+      let f = UIGraphicsImageRendererFormat.default()
+      f.prefersExtendedRange = true
+      return f
+    }
+    let f = UIGraphicsImageRendererFormat.preferred()
+    f.preferredRange = .automatic
+    return f
+  }
 
   func rasterize(with size: CGSize) -> UIImage {
-    let f = UIGraphicsImageRendererFormat.default()
+    let f = makeFormat()
     f.opaque = false
-    f.prefersExtendedRange = false
     let r = UIGraphicsImageRenderer(size: size, format: f)
-
     return r.image{
       $0.cgContext.draw(self, in: CGRect(x: 0, y: 0, width: size.width, height: size.height))
     }
