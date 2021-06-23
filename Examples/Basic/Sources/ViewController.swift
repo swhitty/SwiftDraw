@@ -99,12 +99,12 @@ extension UIImage {
     f.opaque = false
     let scale = CGSize(width: size.width / 480.0, height: size.height / 352.0)
     return UIGraphicsImageRenderer(size: size, format: f).image {
-      $0.cgContext.scaleBy(x: scale.width, y: scale.height)
-      drawSVG(in: $0.cgContext)
+      drawSVG(in: $0.cgContext, scale: scale)
     }
   }
 
-  private static func drawSVG(in ctx: CGContext) {
+  private static func drawSVG(in ctx: CGContext, scale: CGSize) {
+    ctx.scaleBy(x: scale.width, y: scale.height)
     let patternDraw: CGPatternDrawPatternCallback = { _, ctx in
       let rgb = CGColorSpaceCreateDeviceRGB()
       let color1 = CGColor(colorSpace: rgb, components: [0.2509804, 0.2509804, 0.2509804, 1.0])!
@@ -149,7 +149,7 @@ extension UIImage {
     let pattern = CGPattern(
       info: nil,
       bounds: CGRect(x: 0.0, y: 0.0, width: 64.0, height: 64.0),
-      matrix: .identity,
+      matrix: CGAffineTransform(scaleX: scale.width, y: scale.height),
       xStep: 64.0,
       yStep: 64.0,
       tiling: .constantSpacing,

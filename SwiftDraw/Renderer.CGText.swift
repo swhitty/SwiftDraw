@@ -214,7 +214,7 @@ struct CGTextProvider: RendererTypeProvider {
     let pattern1 = CGPattern(
       info: nil,
       bounds: \(createRect(from: pattern.frame)),
-      matrix: .identity,
+      matrix: CGAffineTransform(scaleX: scale.width, y: scale.height),
       xStep: \(pattern.frame.width),
       yStep: \(pattern.frame.height),
       tiling: .constantSpacing,
@@ -578,7 +578,7 @@ public final class CGTextRenderer: Renderer {
                            options: [.drawsAfterEndLocation, .drawsBeforeStartLocation])
     """)
   }
-  
+
   func makeText() -> String {
     var template = """
     extension UIImage {
@@ -587,12 +587,12 @@ public final class CGTextRenderer: Renderer {
         f.opaque = false
         let scale = CGSize(width: size.width / \(commandSize.width), height: size.height / \(commandSize.height))
         return UIGraphicsImageRenderer(size: size, format: f).image {
-          $0.cgContext.scaleBy(x: scale.width, y: scale.height)
-          drawSVG(in: $0.cgContext)
+          drawSVG(in: $0.cgContext, scale: scale)
         }
       }
 
-      private static func drawSVG(in ctx: CGContext) {
+      private static func drawSVG(in ctx: CGContext, scale: CGSize) {
+        ctx.scaleBy(x: scale.width, y: scale.height)
 
     """
     let indent = String(repeating: " ", count: 4)
