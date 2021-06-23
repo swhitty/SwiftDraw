@@ -94,7 +94,7 @@ extension SwiftDraw.CommandLine {
   static func printHelp() {
     print("")
     print("""
-swiftdraw, version 0.8.0
+swiftdraw, version 0.9.0
 copyright (c) 2021 Simon Whitty
 
 usage: swiftdraw <file.svg> [--format png | pdf | jpeg | swift] [--size wxh] [--scale 1x | 2x | 3x]
