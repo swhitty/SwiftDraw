@@ -200,7 +200,7 @@ struct CGTextProvider: RendererTypeProvider {
     let optimizer = LayerTree.CommandOptimizer<CGTextTypes>(options: [.skipRedundantState, .skipInitialSaveState])
     let contents = optimizer.optimizeCommands(contents)
 
-    let renderer = CGTextRenderer(name: "pattern", size: pattern.frame.size)
+    let renderer = CGTextRenderer(name: "pattern", size: pattern.frame.size, commandSize: pattern.frame.size)
     renderer.perform(contents)
     let lines = renderer.lines
       .map { "  \($0)" }
@@ -277,10 +277,12 @@ public final class CGTextRenderer: Renderer {
 
   private let name: String
   private let size: LayerTree.Size
+  private let commandSize: LayerTree.Size
 
-  init(name: String, size: LayerTree.Size) {
+  init(name: String, size: LayerTree.Size, commandSize: LayerTree.Size) {
     self.name = name
     self.size = size
+    self.commandSize = commandSize
   }
 
   private(set) var lines = [String]()
@@ -580,10 +582,12 @@ public final class CGTextRenderer: Renderer {
   func makeText() -> String {
     var template = """
     extension UIImage {
-      static func \(name)() -> UIImage {
+      static func \(name)(size: CGSize = CGSize(width: \(size.width), height: \(size.height))) -> UIImage {
         let f = UIGraphicsImageRendererFormat.preferred()
         f.opaque = false
-        return UIGraphicsImageRenderer(size: CGSize(width: \(size.width), height: \(size.height)), format: f).image {
+        let scale = CGSize(width: size.width / \(commandSize.width), height: size.height / \(commandSize.height))
+        return UIGraphicsImageRenderer(size: size, format: f).image {
+          $0.cgContext.scaleBy(x: scale.width, y: scale.height)
           drawSVG(in: $0.cgContext)
         }
       }
@@ -591,7 +595,6 @@ public final class CGTextRenderer: Renderer {
       private static func drawSVG(in ctx: CGContext) {
 
     """
-
     let indent = String(repeating: " ", count: 4)
     let patternLines = self.patternLines.map { "\(indent)\($0)" }
     let lines = self.lines.map { "\(indent)\($0)" }

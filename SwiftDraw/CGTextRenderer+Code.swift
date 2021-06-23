@@ -33,23 +33,34 @@ import Foundation
 
 public extension CGTextRenderer {
 
-  static func render(named name: String, in bundle: Bundle = Bundle.main) -> String? {
+  typealias Size = (width: Double, height: Double)
+
+  static func render(named name: String, in bundle: Bundle = Bundle.main, size: Size? = nil) -> String? {
     guard let url = bundle.url(forResource: name, withExtension: nil) else { return nil }
-    return render(fileURL: url)
+    return render(fileURL: url, size: size)
   }
 
-  static func render(fileURL: URL) -> String? {
+  static func render(fileURL: URL, size: Size? = nil) -> String? {
     guard let svg = try? DOM.SVG.parse(fileURL: fileURL) else {
       return nil
     }
-    return cgCodeText(url: fileURL, svg: svg)
+
+    let size = makeSize(svg: svg, size: size)
+    return cgCodeText(url: fileURL, svg: svg, size: size)
   }
 
-  private static func cgCodeText(url: URL, svg: DOM.SVG) -> String {
+  private static func makeSize(svg: DOM.SVG, size: Size?) -> LayerTree.Size {
+    guard let size = size else {
+        return LayerTree.Size(svg.width, svg.height)
+    }
+    return LayerTree.Size(LayerTree.Float(size.width), LayerTree.Float(size.height))
+  }
+
+  private static func cgCodeText(url: URL, svg: DOM.SVG, size: LayerTree.Size) -> String {
     let layer = LayerTree.Builder(svg: svg).makeLayer()
-    let size = LayerTree.Size(svg.width, svg.height)
+    let commandSize = LayerTree.Size(svg.width, svg.height)
     let generator = LayerTree.CommandGenerator(provider: CGTextProvider(),
-                                               size: size)
+                                               size: commandSize)
     
     let optimizer = LayerTree.CommandOptimizer<CGTextTypes>(options: [.skipRedundantState, .skipInitialSaveState])
     let commands = optimizer.optimizeCommands(
@@ -62,7 +73,7 @@ public extension CGTextRenderer {
       .capitalized
       .replacingOccurrences(of: " ", with: "")
 
-    let renderer = CGTextRenderer(name:"svg\(identifier)", size: size)
+    let renderer = CGTextRenderer(name:"svg\(identifier)", size: size, commandSize: commandSize)
     renderer.perform(commands)
     
     return renderer.makeText()

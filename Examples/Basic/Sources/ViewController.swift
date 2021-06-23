@@ -94,10 +94,12 @@ private extension Image {
 }
 
 extension UIImage {
-  static func svgGradientGratificationP3() -> UIImage {
+  static func svgGradientGratificationP3(size: CGSize = CGSize(width: 480.0, height: 352.0)) -> UIImage {
     let f = UIGraphicsImageRendererFormat.preferred()
     f.opaque = false
-    return UIGraphicsImageRenderer(size: CGSize(width: 480.0, height: 352.0), format: f).image {
+    let scale = CGSize(width: size.width / 480.0, height: size.height / 352.0)
+    return UIGraphicsImageRenderer(size: size, format: f).image {
+      $0.cgContext.scaleBy(x: scale.width, y: scale.height)
       drawSVG(in: $0.cgContext)
     }
   }
