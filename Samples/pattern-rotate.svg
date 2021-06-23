@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:ns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="256" height="256">
+
+	 <defs>
+	 	<pattern id="checkerboard" width="64" height="64" patternUnits="userSpaceOnUse">
+			<rect x="0" y="0" width="32" height="32" fill="green" />
+			<rect x="32" y="0" width="32" height="32" fill="red" />
+			<rect x="0" y="32" width="32" height="32" fill="blue" />
+			<rect x="32" y="32" width="32" height="32" fill="pink" />
+		</pattern>
+	 </defs>
+
+	 <rect x="0" y="0" width="256" height="256" fill="snow" />
+	 
+	 <rect x="-64" y="-64" width="128" height="128" fill="url(#checkerboard)" transform="translate(128, 128) rotate(45)"/>
+</svg>

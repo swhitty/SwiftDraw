@@ -46,17 +46,25 @@ class ViewController: UIViewController {
 
     @objc
     func didTap() {
-        guard let contentMode = imageViewIfLoaded?.contentMode else { return }
-        switch contentMode {
-        case .center:
-            imageViewIfLoaded?.contentMode = .scaleAspectFit
-        case .scaleAspectFit:
-            imageViewIfLoaded?.contentMode = .scaleAspectFill
-        case .scaleAspectFill:
-            imageViewIfLoaded?.contentMode = .center
+        guard let size = imageViewIfLoaded?.image?.size else { return }
+
+        switch size {
+        case CGSize(width: 480, height: 352):
+            imageViewIfLoaded?.image = Image(named: "gradient-gratification-p3.svg")?.rasterize(with: CGSize(width: 960, height: 704))
         default:
-            imageViewIfLoaded?.contentMode = .center
+            imageViewIfLoaded?.image = Image(named: "gradient-gratification-p3.svg")?.rasterize(with: CGSize(width: 480, height: 352))
         }
+//        guard let contentMode = imageViewIfLoaded?.contentMode else { return }
+//        switch contentMode {
+//        case .center:
+//            imageViewIfLoaded?.contentMode = .scaleAspectFit
+//        case .scaleAspectFit:
+//            imageViewIfLoaded?.contentMode = .scaleAspectFill
+//        case .scaleAspectFill:
+//            imageViewIfLoaded?.contentMode = .center
+//        default:
+//            imageViewIfLoaded?.contentMode = .center
+//        }
     }
 
     var imageViewIfLoaded: UIImageView? {
@@ -65,12 +73,12 @@ class ViewController: UIViewController {
 
     override func loadView() {
         let imageView = UIImageView(frame: UIScreen.main.bounds)
-        imageView.image = .svgGradientGratificationP3()
+        imageView.image = .svgPatternRotate()
         imageView.contentMode = .scaleAspectFit
         imageView.backgroundColor = .white
         self.view = imageView
       
-        print(CGTextRenderer.render(named: "gradient-gratification-p3.svg")!)
+        print(CGTextRenderer.render(named: "pattern-rotate.svg")!)
     }
 }
 
@@ -94,20 +102,35 @@ private extension Image {
 }
 
 extension UIImage {
-  static func svgGradientGratificationP3(size: CGSize = CGSize(width: 480.0, height: 352.0)) -> UIImage {
+  static func svgPatternRotate(size: CGSize = CGSize(width: 256.0, height: 256.0)) -> UIImage {
     let f = UIGraphicsImageRendererFormat.preferred()
     f.opaque = false
-    let scale = CGSize(width: size.width / 480.0, height: size.height / 352.0)
+    let scale = CGSize(width: size.width / 256.0, height: size.height / 256.0)
     return UIGraphicsImageRenderer(size: size, format: f).image {
       drawSVG(in: $0.cgContext, scale: scale)
     }
   }
 
   private static func drawSVG(in ctx: CGContext, scale: CGSize) {
+    let baseCTM = ctx.ctm
     ctx.scaleBy(x: scale.width, y: scale.height)
+    let rgb = CGColorSpaceCreateDeviceRGB()
+    let color1 = CGColor(colorSpace: rgb, components: [1.0, 0.98039216, 0.98039216, 1.0])!
+    ctx.setFillColor(color1)
+    let path = CGPath(
+      roundedRect: CGRect(x: 0.0, y: 0.0, width: 256.0, height: 256.0),
+      cornerWidth: 0.0,
+      cornerHeight: 0.0,
+      transform: nil
+    )
+    ctx.addPath(path)
+    ctx.fillPath(using: .evenOdd)
+    ctx.saveGState()
+    ctx.translateBy(x: 128.0, y: 128.0)
+    ctx.rotate(by: 0.7853981)
     let patternDraw: CGPatternDrawPatternCallback = { _, ctx in
       let rgb = CGColorSpaceCreateDeviceRGB()
-      let color1 = CGColor(colorSpace: rgb, components: [0.2509804, 0.2509804, 0.2509804, 1.0])!
+      let color1 = CGColor(colorSpace: rgb, components: [0.0, 0.5019608, 0.0, 1.0])!
       ctx.setFillColor(color1)
       let path = CGPath(
         roundedRect: CGRect(x: 0.0, y: 0.0, width: 32.0, height: 32.0),
@@ -117,7 +140,7 @@ extension UIImage {
       )
       ctx.addPath(path)
       ctx.fillPath(using: .evenOdd)
-      let color2 = CGColor(colorSpace: rgb, components: [0.16078432, 0.16078432, 0.16078432, 1.0])!
+      let color2 = CGColor(colorSpace: rgb, components: [1.0, 0.0, 0.0, 1.0])!
       ctx.setFillColor(color2)
       let path1 = CGPath(
         roundedRect: CGRect(x: 32.0, y: 0.0, width: 32.0, height: 32.0),
@@ -127,6 +150,8 @@ extension UIImage {
       )
       ctx.addPath(path1)
       ctx.fillPath(using: .evenOdd)
+      let color3 = CGColor(colorSpace: rgb, components: [0.0, 0.0, 1.0, 1.0])!
+      ctx.setFillColor(color3)
       let path2 = CGPath(
         roundedRect: CGRect(x: 0.0, y: 32.0, width: 32.0, height: 32.0),
         cornerWidth: 0.0,
@@ -135,7 +160,8 @@ extension UIImage {
       )
       ctx.addPath(path2)
       ctx.fillPath(using: .evenOdd)
-      ctx.setFillColor(color1)
+      let color4 = CGColor(colorSpace: rgb, components: [1.0, 0.7529412, 0.79607844, 1.0])!
+      ctx.setFillColor(color4)
       let path3 = CGPath(
         roundedRect: CGRect(x: 32.0, y: 32.0, width: 32.0, height: 32.0),
         cornerWidth: 0.0,
@@ -149,7 +175,7 @@ extension UIImage {
     let pattern = CGPattern(
       info: nil,
       bounds: CGRect(x: 0.0, y: 0.0, width: 64.0, height: 64.0),
-      matrix: CGAffineTransform(scaleX: scale.width, y: scale.height),
+      matrix: ctx.ctm.concatenating(baseCTM.inverted()),
       xStep: 64.0,
       yStep: 64.0,
       tiling: .constantSpacing,
@@ -159,81 +185,14 @@ extension UIImage {
     ctx.setFillColorSpace(CGColorSpace(patternBaseSpace: nil)!)
     var patternAlpha : CGFloat = 1.0
     ctx.setFillPattern(pattern, colorComponents: &patternAlpha)
-    let path = CGPath(
-      roundedRect: CGRect(x: 0.0, y: 0.0, width: 480.0, height: 352.0),
-      cornerWidth: 0.0,
-      cornerHeight: 0.0,
-      transform: nil
-    )
-    ctx.addPath(path)
-    ctx.fillPath(using: .evenOdd)
-    ctx.saveGState()
     let path1 = CGPath(
-      roundedRect: CGRect(x: 112.0, y: 48.0, width: 256.0, height: 256.0),
+      roundedRect: CGRect(x: -64.0, y: -64.0, width: 128.0, height: 128.0),
       cornerWidth: 0.0,
       cornerHeight: 0.0,
       transform: nil
     )
     ctx.addPath(path1)
-    ctx.clip()
-    ctx.setAlpha(1.0)
-    let p3 = CGColorSpace(name: CGColorSpace.displayP3)!
-    let color1 = CGColor(colorSpace: p3, components: [1.0, 0.93, 0.19, 1.0])!
-    let color2 = CGColor(colorSpace: p3, components: [1.0, 0.2, 0.3, 1.0])!
-    var locations: [CGFloat] = [0.0, 1.0]
-    let gradient = CGGradient(
-      colorsSpace: p3,
-      colors: [color1, color2] as CFArray,
-      locations: &locations
-    )!
-    ctx.drawLinearGradient(gradient,
-                       start: CGPoint(x: 112.0, y: 304.0),
-                       end: CGPoint(x: 368.0, y: 304.0),
-                       options: [.drawsAfterEndLocation, .drawsBeforeStartLocation])
-    ctx.restoreGState()
-    ctx.saveGState()
-    ctx.beginTransparencyLayer(auxiliaryInfo: nil)
-    ctx.saveGState()
-    ctx.addPath(path1)
-    ctx.clip()
-    ctx.setAlpha(1.0)
-    let color3 = CGColor(colorSpace: p3, components: [0.0, 1.0, 1.0, 1.0])!
-    let color4 = CGColor(colorSpace: p3, components: [0.2, 0.1, 0.5, 1.0])!
-    var locations1: [CGFloat] = [0.0, 1.0]
-    let gradient1 = CGGradient(
-      colorsSpace: p3,
-      colors: [color3, color4] as CFArray,
-      locations: &locations1
-    )!
-    ctx.drawLinearGradient(gradient1,
-                       start: CGPoint(x: 112.0, y: 304.0),
-                       end: CGPoint(x: 368.0, y: 304.0),
-                       options: [.drawsAfterEndLocation, .drawsBeforeStartLocation])
-    ctx.restoreGState()
-    ctx.setBlendMode(.destinationIn)
-    ctx.beginTransparencyLayer(auxiliaryInfo: nil)
-    ctx.setBlendMode(.copy)
-    ctx.saveGState()
-    ctx.addPath(path1)
-    ctx.clip()
-    ctx.setAlpha(1.0)
-    let gray = CGColorSpace(name: CGColorSpace.extendedGray)!
-    let color5 = CGColor(colorSpace: gray, components: [0.0, 0.0])!
-    let color6 = CGColor(colorSpace: gray, components: [0.0, 1.0])!
-    let rgb = CGColorSpaceCreateDeviceRGB()
-    var locations2: [CGFloat] = [0.0, 1.0]
-    let gradient2 = CGGradient(
-      colorsSpace: rgb,
-      colors: [color5, color6] as CFArray,
-      locations: &locations2
-    )!
-    ctx.drawLinearGradient(gradient2,
-                       start: CGPoint(x: 112.0, y: 48.0),
-                       end: CGPoint(x: 112.0, y: 304.0),
-                       options: [.drawsAfterEndLocation, .drawsBeforeStartLocation])
-    ctx.restoreGState()
-    ctx.endTransparencyLayer()
-    ctx.endTransparencyLayer()
+    ctx.fillPath(using: .evenOdd)
     ctx.restoreGState()
   }
 }

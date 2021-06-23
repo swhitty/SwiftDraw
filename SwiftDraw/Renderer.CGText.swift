@@ -214,7 +214,7 @@ struct CGTextProvider: RendererTypeProvider {
     let pattern1 = CGPattern(
       info: nil,
       bounds: \(createRect(from: pattern.frame)),
-      matrix: CGAffineTransform(scaleX: scale.width, y: scale.height),
+      matrix: ctx.ctm.concatenating(baseCTM.inverted()),
       xStep: \(pattern.frame.width),
       yStep: \(pattern.frame.height),
       tiling: .constantSpacing,
@@ -286,7 +286,6 @@ public final class CGTextRenderer: Renderer {
   }
 
   private(set) var lines = [String]()
-  private var patternLines = [String]()
   private var colorSpaces: Set<ColorSpace> = []
   private var colors: [String: String] = [:]
   private var paths: [String: String] = [:]
@@ -464,7 +463,8 @@ public final class CGTextRenderer: Renderer {
       .replacingOccurrences(of: "patternCallback1", with: callback)
       .split(separator: "\n")
       .map(String.init)
-    patternLines.append(contentsOf: newPattern)
+    lines.append(contentsOf: newPattern)
+
     return identifier
   }
 
@@ -592,14 +592,17 @@ public final class CGTextRenderer: Renderer {
       }
 
       private static func drawSVG(in ctx: CGContext, scale: CGSize) {
-        ctx.scaleBy(x: scale.width, y: scale.height)
 
     """
+
+    lines.insert("ctx.scaleBy(x: scale.width, y: scale.height)", at: 0)
+    if !patterns.isEmpty {
+        lines.insert("let baseCTM = ctx.ctm", at: 0)
+    }
+
     let indent = String(repeating: " ", count: 4)
-    let patternLines = self.patternLines.map { "\(indent)\($0)" }
     let lines = self.lines.map { "\(indent)\($0)" }
-    let allLines = patternLines + lines
-    template.append(allLines.joined(separator: "\n"))
+    template.append(lines.joined(separator: "\n"))
     template.append("\n  }\n}")
     return template
   }

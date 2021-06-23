@@ -47,13 +47,33 @@ struct CGTypes: RendererTypes {
   typealias Gradient = CGGradient
   typealias Mask = CGImage
   typealias Path = CGPath
-  typealias Pattern = CGPattern
+  typealias Pattern = CGTransformingPattern
   typealias Transform = CGAffineTransform
   typealias BlendMode = CGBlendMode
   typealias FillRule = CGPathFillRule
   typealias LineCap = CGLineCap
   typealias LineJoin = CGLineJoin
   typealias Image = CGImage
+}
+
+final class CGTransformingPattern: Equatable {
+
+    let bounds: CGRect
+    let contents: [RendererCommand<CGTypes>]
+
+    init(bounds: CGRect, contents: [RendererCommand<CGTypes>]) {
+        self.bounds = bounds
+        self.contents = contents
+    }
+
+    func draw(_ ctx: CGContext) {
+        let renderer = CGRenderer(context: ctx)
+        renderer.perform(contents)
+    }
+
+    static func == (lhs: CGTransformingPattern, rhs: CGTransformingPattern) -> Bool {
+        lhs === rhs
+    }
 }
 
 struct CGProvider: RendererTypeProvider {
@@ -222,16 +242,9 @@ struct CGProvider: RendererTypeProvider {
     return path.copy(using: &transform)
   }
 
-  func createPattern(from pattern: LayerTree.Pattern, contents: [RendererCommand<Types>]) -> CGPattern {
+  func createPattern(from pattern: LayerTree.Pattern, contents: [RendererCommand<Types>]) -> CGTransformingPattern {
     let bounds = createRect(from: pattern.frame)
-    return CGPattern.make(bounds: bounds,
-                          matrix: .identity,
-                          step: bounds.size,
-                          tiling: .constantSpacing,
-                          isColored: true) { ctx in
-                            let renderer = CGRenderer(context: ctx)
-                            renderer.perform(contents)
-    }
+    return CGTransformingPattern(bounds: bounds, contents: contents)
   }
 
   func createFillRule(from rule: LayerTree.FillRule) -> CGPathFillRule {
@@ -294,9 +307,11 @@ struct CGRenderer: Renderer {
   typealias Types = CGTypes
 
   let ctx: CGContext
+  let baseCTM: CGAffineTransform
 
   init(context: CGContext) {
     self.ctx = context
+    self.baseCTM = ctx.ctm
   }
 
   func pushState() {
@@ -335,11 +350,18 @@ struct CGRenderer: Renderer {
     ctx.setFillColor(color)
   }
 
-  func setFill(pattern: CGPattern) {
+  func setFill(pattern: CGTransformingPattern) {
     let patternSpace = CGColorSpace(patternBaseSpace: nil)!
     ctx.setFillColorSpace(patternSpace)
     var alpha : CGFloat = 1.0
-    ctx.setFillPattern(pattern, colorComponents: &alpha)
+
+    let cgPattern = CGPattern.make(bounds: pattern.bounds,
+                                   matrix: ctx.ctm.concatenating(baseCTM.inverted()),
+                                   step: pattern.bounds.size,
+                                   tiling: .constantSpacingMinimalDistortion,
+                                   isColored: true,
+                                   draw: pattern.draw)
+    ctx.setFillPattern(cgPattern, colorComponents: &alpha)
   }
 
   func setStroke(color: CGColor) {
