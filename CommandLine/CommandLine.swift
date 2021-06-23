@@ -71,7 +71,7 @@ extension SwiftDraw.CommandLine {
   static func processImage(config: Configuration) -> Data? {
     switch config.format {
     case .swift:
-      let code = CGTextRenderer.render(fileURL: config.input)
+      let code = CGTextRenderer.render(fileURL: config.input, size: config.size.renderSize)
       return code?.data(using: .utf8)
     case .jpeg, .pdf, .png:
       return SwiftDraw.Image(fileURL: config.input).flatMap { processImage($0, with: config) }
@@ -146,6 +146,15 @@ private extension CommandLine.Size {
       return nil
     case .custom(width: let width, height: let height):
       return CGSize(width: CGFloat(width), height: CGFloat(height))
+    }
+  }
+
+  var renderSize: CGTextRenderer.Size? {
+    switch self {
+    case .default:
+      return nil
+    case .custom(width: let width, height: let height):
+        return (width: width, height: height)
     }
   }
 }

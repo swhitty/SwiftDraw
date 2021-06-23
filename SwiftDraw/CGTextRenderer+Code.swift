@@ -33,7 +33,7 @@ import Foundation
 
 public extension CGTextRenderer {
 
-  typealias Size = (width: Double, height: Double)
+  typealias Size = (width: Int, height: Int)
 
   static func render(named name: String, in bundle: Bundle = Bundle.main, size: Size? = nil) -> String? {
     guard let url = bundle.url(forResource: name, withExtension: nil) else { return nil }
