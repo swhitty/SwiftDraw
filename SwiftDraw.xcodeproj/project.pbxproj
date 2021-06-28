@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		01BA4DAA2689F91E001FF7B5 /* Renderer.CGText+Path.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01BA4DA92689F91E001FF7B5 /* Renderer.CGText+Path.swift */; };
+		01BA4DB02689F923001FF7B5 /* Renderer.CGText+Path.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01BA4DA92689F91E001FF7B5 /* Renderer.CGText+Path.swift */; };
 		01FAD0512678CFA9003B6875 /* Renderer.CGText.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01FAD0502678CFA9003B6875 /* Renderer.CGText.swift */; };
 		01FAD0582678D652003B6875 /* CGTextRenderer+Code.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01FAD0572678D652003B6875 /* CGTextRenderer+Code.swift */; };
 		01FAD070267A0DA6003B6875 /* LayerTree.CommandOptimizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01FAD06F267A0DA6003B6875 /* LayerTree.CommandOptimizer.swift */; };
@@ -270,6 +272,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		01BA4DA92689F91E001FF7B5 /* Renderer.CGText+Path.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Renderer.CGText+Path.swift"; sourceTree = "<group>"; };
 		01FAD0502678CFA9003B6875 /* Renderer.CGText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Renderer.CGText.swift; sourceTree = "<group>"; };
 		01FAD0572678D652003B6875 /* CGTextRenderer+Code.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CGTextRenderer+Code.swift"; sourceTree = "<group>"; };
 		01FAD06F267A0DA6003B6875 /* LayerTree.CommandOptimizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LayerTree.CommandOptimizer.swift; sourceTree = "<group>"; };
@@ -461,6 +464,7 @@
 			isa = PBXGroup;
 			children = (
 				01FAD0502678CFA9003B6875 /* Renderer.CGText.swift */,
+				01BA4DA92689F91E001FF7B5 /* Renderer.CGText+Path.swift */,
 				D90DB39D219CCBBD00D374D2 /* Renderer.CoreGraphics.swift */,
 				D90DB39F219CCBBD00D374D2 /* Renderer.LayerTree.swift */,
 				D90DB39E219CCBBD00D374D2 /* Renderer.swift */,
@@ -1053,6 +1057,7 @@
 				D923F11E21FBC09500FEA273 /* Image+CoreGraphics.swift in Sources */,
 				D90DB434219CD1C600D374D2 /* DOM.Path.swift in Sources */,
 				D90DB405219CD06800D374D2 /* XML.SAXParser.swift in Sources */,
+				01BA4DB02689F923001FF7B5 /* Renderer.CGText+Path.swift in Sources */,
 				D9D9EB30224A3DEA006CF83C /* Parser.XML.Pattern.swift in Sources */,
 				D9BA810721BA577B005159E7 /* CommandLine.Configuration.swift in Sources */,
 				D90DB43A219CD1C600D374D2 /* DOM.Color.swift in Sources */,
@@ -1193,6 +1198,7 @@
 				D90DB406219CD06800D374D2 /* XML.swift in Sources */,
 				D90DB454219CD27800D374D2 /* Parser.XML.Gradient.swift in Sources */,
 				D90DB3A0219CCBBD00D374D2 /* Renderer.CoreGraphics.swift in Sources */,
+				01BA4DAA2689F91E001FF7B5 /* Renderer.CGText+Path.swift in Sources */,
 				D90DB450219CD27800D374D2 /* Parser.XML.Color.swift in Sources */,
 				D90DB3EF219CCEDE00D374D2 /* URL+Data.swift in Sources */,
 				D90DB460219CD27800D374D2 /* Parser.XML.Image.swift in Sources */,

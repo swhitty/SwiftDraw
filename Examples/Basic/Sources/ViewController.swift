@@ -117,14 +117,7 @@ extension UIImage {
     let rgb = CGColorSpaceCreateDeviceRGB()
     let color1 = CGColor(colorSpace: rgb, components: [1.0, 0.98039216, 0.98039216, 1.0])!
     ctx.setFillColor(color1)
-    let path = CGPath(
-      roundedRect: CGRect(x: 0.0, y: 0.0, width: 256.0, height: 256.0),
-      cornerWidth: 0.0,
-      cornerHeight: 0.0,
-      transform: nil
-    )
-    ctx.addPath(path)
-    ctx.fillPath(using: .evenOdd)
+    ctx.fill(CGRect(x: 0.0, y: 0.0, width: 256.0, height: 256.0))
     ctx.saveGState()
     ctx.translateBy(x: 128.0, y: 128.0)
     ctx.rotate(by: 0.7853981)
@@ -132,44 +125,16 @@ extension UIImage {
       let rgb = CGColorSpaceCreateDeviceRGB()
       let color1 = CGColor(colorSpace: rgb, components: [0.0, 0.5019608, 0.0, 1.0])!
       ctx.setFillColor(color1)
-      let path = CGPath(
-        roundedRect: CGRect(x: 0.0, y: 0.0, width: 32.0, height: 32.0),
-        cornerWidth: 0.0,
-        cornerHeight: 0.0,
-        transform: nil
-      )
-      ctx.addPath(path)
-      ctx.fillPath(using: .evenOdd)
+      ctx.fill(CGRect(x: 0.0, y: 0.0, width: 32.0, height: 32.0))
       let color2 = CGColor(colorSpace: rgb, components: [1.0, 0.0, 0.0, 1.0])!
       ctx.setFillColor(color2)
-      let path1 = CGPath(
-        roundedRect: CGRect(x: 32.0, y: 0.0, width: 32.0, height: 32.0),
-        cornerWidth: 0.0,
-        cornerHeight: 0.0,
-        transform: nil
-      )
-      ctx.addPath(path1)
-      ctx.fillPath(using: .evenOdd)
+      ctx.fill(CGRect(x: 32.0, y: 0.0, width: 32.0, height: 32.0))
       let color3 = CGColor(colorSpace: rgb, components: [0.0, 0.0, 1.0, 1.0])!
       ctx.setFillColor(color3)
-      let path2 = CGPath(
-        roundedRect: CGRect(x: 0.0, y: 32.0, width: 32.0, height: 32.0),
-        cornerWidth: 0.0,
-        cornerHeight: 0.0,
-        transform: nil
-      )
-      ctx.addPath(path2)
-      ctx.fillPath(using: .evenOdd)
+      ctx.fill(CGRect(x: 0.0, y: 32.0, width: 32.0, height: 32.0))
       let color4 = CGColor(colorSpace: rgb, components: [1.0, 0.7529412, 0.79607844, 1.0])!
       ctx.setFillColor(color4)
-      let path3 = CGPath(
-        roundedRect: CGRect(x: 32.0, y: 32.0, width: 32.0, height: 32.0),
-        cornerWidth: 0.0,
-        cornerHeight: 0.0,
-        transform: nil
-      )
-      ctx.addPath(path3)
-      ctx.fillPath(using: .evenOdd)
+      ctx.fill(CGRect(x: 32.0, y: 32.0, width: 32.0, height: 32.0))
     }
     var patternCallback = CGPatternCallbacks(version: 0, drawPattern: patternDraw, releaseInfo: nil)
     let pattern = CGPattern(
@@ -185,14 +150,7 @@ extension UIImage {
     ctx.setFillColorSpace(CGColorSpace(patternBaseSpace: nil)!)
     var patternAlpha : CGFloat = 1.0
     ctx.setFillPattern(pattern, colorComponents: &patternAlpha)
-    let path1 = CGPath(
-      roundedRect: CGRect(x: -64.0, y: -64.0, width: 128.0, height: 128.0),
-      cornerWidth: 0.0,
-      cornerHeight: 0.0,
-      transform: nil
-    )
-    ctx.addPath(path1)
-    ctx.fillPath(using: .evenOdd)
+    ctx.fill(CGRect(x: -64.0, y: -64.0, width: 128.0, height: 128.0))
     ctx.restoreGState()
   }
 }
