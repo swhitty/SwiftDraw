@@ -12,6 +12,8 @@
 		D9126F0E24A6C19300859CC5 /* gradient-apple.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9126F0D24A6C19200859CC5 /* gradient-apple.svg */; };
 		D918D26D22122A7300097C9A /* arc2.svg in Resources */ = {isa = PBXBuildFile; fileRef = D918D26C22122A7300097C9A /* arc2.svg */; };
 		D91C3E43224ED9A4001BCDAE /* gradient-gratification.svg in Resources */ = {isa = PBXBuildFile; fileRef = D91C3E42224ED9A4001BCDAE /* gradient-gratification.svg */; };
+		D92A71FE27818B860001630A /* simple.svg in Resources */ = {isa = PBXBuildFile; fileRef = D92A71FC27818B860001630A /* simple.svg */; };
+		D92A71FF27818B860001630A /* pattern-bounding.svg in Resources */ = {isa = PBXBuildFile; fileRef = D92A71FD27818B860001630A /* pattern-bounding.svg */; };
 		D938A203268307670051E18B /* pattern-rotate.svg in Resources */ = {isa = PBXBuildFile; fileRef = D938A202268307670051E18B /* pattern-rotate.svg */; };
 		D945F5AA225220F900FAAAC4 /* mask-composite-2.svg in Resources */ = {isa = PBXBuildFile; fileRef = D945F5A8225220F900FAAAC4 /* mask-composite-2.svg */; };
 		D945F5AB225220F900FAAAC4 /* mask-composite-3.svg in Resources */ = {isa = PBXBuildFile; fileRef = D945F5A9225220F900FAAAC4 /* mask-composite-3.svg */; };
@@ -63,6 +65,8 @@
 		D9126F0D24A6C19200859CC5 /* gradient-apple.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "gradient-apple.svg"; sourceTree = "<group>"; };
 		D918D26C22122A7300097C9A /* arc2.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = arc2.svg; sourceTree = "<group>"; };
 		D91C3E42224ED9A4001BCDAE /* gradient-gratification.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = "gradient-gratification.svg"; sourceTree = "<group>"; };
+		D92A71FC27818B860001630A /* simple.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = simple.svg; sourceTree = "<group>"; };
+		D92A71FD27818B860001630A /* pattern-bounding.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = "pattern-bounding.svg"; sourceTree = "<group>"; };
 		D938A202268307670051E18B /* pattern-rotate.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = "pattern-rotate.svg"; sourceTree = "<group>"; };
 		D945F5A8225220F900FAAAC4 /* mask-composite-2.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = "mask-composite-2.svg"; sourceTree = "<group>"; };
 		D945F5A9225220F900FAAAC4 /* mask-composite-3.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = "mask-composite-3.svg"; sourceTree = "<group>"; };
@@ -141,7 +145,6 @@
 		D9ACD782220FDDE0009717CF /* Samples */ = {
 			isa = PBXGroup;
 			children = (
-				D938A202268307670051E18B /* pattern-rotate.svg */,
 				D9ACD78D220FDDE0009717CF /* arc.svg */,
 				D918D26C22122A7300097C9A /* arc2.svg */,
 				D945F5AC225241A100FAAAC4 /* blend.svg */,
@@ -161,10 +164,13 @@
 				D9ACD78C220FDDE0009717CF /* mask.svg */,
 				D90523442217927F00B3B94F /* mystery.svg */,
 				D9ACD784220FDDE0009717CF /* path.svg */,
+				D92A71FD27818B860001630A /* pattern-bounding.svg */,
+				D938A202268307670051E18B /* pattern-rotate.svg */,
 				D9D9EB2C224A3BCA006CF83C /* pattern.svg */,
 				D9ACD78E220FDDE0009717CF /* quad.svg */,
 				D991955724BAF8E200E58925 /* rings.svg */,
 				D9ACD789220FDDE0009717CF /* shapes.svg */,
+				D92A71FC27818B860001630A /* simple.svg */,
 				D9ACD78B220FDDE0009717CF /* starry.svg */,
 				D9494F43224C846D0015ACE1 /* thats-no-moon.svg */,
 				D9ACD786220FDDE0009717CF /* transform.svg */,
@@ -253,6 +259,7 @@
 				01BA4DA826820DE8001FF7B5 /* gradient-gratification-p3.svg in Resources */,
 				D9ACD797220FDDE0009717CF /* shapes.svg in Resources */,
 				D9ACD799220FDDE0009717CF /* starry.svg in Resources */,
+				D92A71FF27818B860001630A /* pattern-bounding.svg in Resources */,
 				D9ACD791220FDDE0009717CF /* use.svg in Resources */,
 				D91C3E43224ED9A4001BCDAE /* gradient-gratification.svg in Resources */,
 				D9ACD793220FDDE0009717CF /* viewbox.svg in Resources */,
@@ -260,6 +267,7 @@
 				D9ACD798220FDDE0009717CF /* lines.svg in Resources */,
 				D918D26D22122A7300097C9A /* arc2.svg in Resources */,
 				D9ACD79B220FDDE0009717CF /* arc.svg in Resources */,
+				D92A71FE27818B860001630A /* simple.svg in Resources */,
 				D961846D220FDD1200C59D9B /* Assets.xcassets in Resources */,
 				D938A203268307670051E18B /* pattern-rotate.svg in Resources */,
 				D9ACD79D220FDDE0009717CF /* display.svg in Resources */,

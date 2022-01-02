@@ -46,25 +46,17 @@ class ViewController: UIViewController {
 
     @objc
     func didTap() {
-        guard let size = imageViewIfLoaded?.image?.size else { return }
-
-        switch size {
-        case CGSize(width: 480, height: 352):
-            imageViewIfLoaded?.image = Image(named: "gradient-gratification-p3.svg")?.rasterize(with: CGSize(width: 960, height: 704))
+        guard let contentMode = imageViewIfLoaded?.contentMode else { return }
+        switch contentMode {
+        case .center:
+            imageViewIfLoaded?.contentMode = .scaleAspectFit
+        case .scaleAspectFit:
+            imageViewIfLoaded?.contentMode = .scaleAspectFill
+        case .scaleAspectFill:
+            imageViewIfLoaded?.contentMode = .center
         default:
-            imageViewIfLoaded?.image = Image(named: "gradient-gratification-p3.svg")?.rasterize(with: CGSize(width: 480, height: 352))
+            imageViewIfLoaded?.contentMode = .center
         }
-//        guard let contentMode = imageViewIfLoaded?.contentMode else { return }
-//        switch contentMode {
-//        case .center:
-//            imageViewIfLoaded?.contentMode = .scaleAspectFit
-//        case .scaleAspectFit:
-//            imageViewIfLoaded?.contentMode = .scaleAspectFill
-//        case .scaleAspectFill:
-//            imageViewIfLoaded?.contentMode = .center
-//        default:
-//            imageViewIfLoaded?.contentMode = .center
-//        }
     }
 
     var imageViewIfLoaded: UIImageView? {
@@ -73,12 +65,10 @@ class ViewController: UIViewController {
 
     override func loadView() {
         let imageView = UIImageView(frame: UIScreen.main.bounds)
-        imageView.image = .svgPatternRotate()
+        imageView.image = Image(named: "gradient-gratification-p3.svg")?.rasterize()
         imageView.contentMode = .scaleAspectFit
         imageView.backgroundColor = .white
         self.view = imageView
-      
-        print(CGTextRenderer.render(named: "pattern-rotate.svg")!)
     }
 }
 
@@ -98,59 +88,5 @@ private extension Image {
     return UIImage
       .perform(NSSelectorFromString("_imageWithCGPDFPage:"), with: page)?
       .takeUnretainedValue() as? UIImage
-  }
-}
-
-extension UIImage {
-  static func svgPatternRotate(size: CGSize = CGSize(width: 256.0, height: 256.0)) -> UIImage {
-    let f = UIGraphicsImageRendererFormat.preferred()
-    f.opaque = false
-    let scale = CGSize(width: size.width / 256.0, height: size.height / 256.0)
-    return UIGraphicsImageRenderer(size: size, format: f).image {
-      drawSVG(in: $0.cgContext, scale: scale)
-    }
-  }
-
-  private static func drawSVG(in ctx: CGContext, scale: CGSize) {
-    let baseCTM = ctx.ctm
-    ctx.scaleBy(x: scale.width, y: scale.height)
-    let rgb = CGColorSpaceCreateDeviceRGB()
-    let color1 = CGColor(colorSpace: rgb, components: [1.0, 0.98039216, 0.98039216, 1.0])!
-    ctx.setFillColor(color1)
-    ctx.fill(CGRect(x: 0.0, y: 0.0, width: 256.0, height: 256.0))
-    ctx.saveGState()
-    ctx.translateBy(x: 128.0, y: 128.0)
-    ctx.rotate(by: 0.7853981)
-    let patternDraw: CGPatternDrawPatternCallback = { _, ctx in
-      let rgb = CGColorSpaceCreateDeviceRGB()
-      let color1 = CGColor(colorSpace: rgb, components: [0.0, 0.5019608, 0.0, 1.0])!
-      ctx.setFillColor(color1)
-      ctx.fill(CGRect(x: 0.0, y: 0.0, width: 32.0, height: 32.0))
-      let color2 = CGColor(colorSpace: rgb, components: [1.0, 0.0, 0.0, 1.0])!
-      ctx.setFillColor(color2)
-      ctx.fill(CGRect(x: 32.0, y: 0.0, width: 32.0, height: 32.0))
-      let color3 = CGColor(colorSpace: rgb, components: [0.0, 0.0, 1.0, 1.0])!
-      ctx.setFillColor(color3)
-      ctx.fill(CGRect(x: 0.0, y: 32.0, width: 32.0, height: 32.0))
-      let color4 = CGColor(colorSpace: rgb, components: [1.0, 0.7529412, 0.79607844, 1.0])!
-      ctx.setFillColor(color4)
-      ctx.fill(CGRect(x: 32.0, y: 32.0, width: 32.0, height: 32.0))
-    }
-    var patternCallback = CGPatternCallbacks(version: 0, drawPattern: patternDraw, releaseInfo: nil)
-    let pattern = CGPattern(
-      info: nil,
-      bounds: CGRect(x: 0.0, y: 0.0, width: 64.0, height: 64.0),
-      matrix: ctx.ctm.concatenating(baseCTM.inverted()),
-      xStep: 64.0,
-      yStep: 64.0,
-      tiling: .constantSpacing,
-      isColored: true,
-      callbacks: &patternCallback
-    )!
-    ctx.setFillColorSpace(CGColorSpace(patternBaseSpace: nil)!)
-    var patternAlpha : CGFloat = 1.0
-    ctx.setFillPattern(pattern, colorComponents: &patternAlpha)
-    ctx.fill(CGRect(x: -64.0, y: -64.0, width: 128.0, height: 128.0))
-    ctx.restoreGState()
   }
 }
