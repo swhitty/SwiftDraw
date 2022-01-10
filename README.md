@@ -33,6 +33,8 @@ Download the latest command line tool [here](https://github.com/swhitty/SwiftDra
 
 #### Source code generation
 
+Source code can be generated using [www.whileloop.com/swiftdraw](https://www.whileloop.com/swiftdraw).
+
 The command line tool can also convert an SVG image into Swift source code:
 
 ```xml
