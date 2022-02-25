@@ -35,10 +35,7 @@ import Foundation
 
 final class ParserSVGImageTests: XCTestCase {
   
-  func loadSVG(_ filename: String) -> DOM.SVG? {
-    
-    let bundle = Bundle(for: ParserSVGImageTests.self)
-    
+  func loadSVG(_ filename: String, in bundle: Bundle = .test) -> DOM.SVG? {
     guard let url = bundle.url(forResource: filename, withExtension: nil) else {
       return nil
     }

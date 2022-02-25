@@ -177,12 +177,9 @@
 		D93BAB9121AD21E4005ADFBE /* Renderer.LayerTreeProviderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D93BAB8F21AD21E4005ADFBE /* Renderer.LayerTreeProviderTests.swift */; };
 		D93BAB9421AD5517005ADFBE /* NSImage+ImageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D93BAB9221AD5517005ADFBE /* NSImage+ImageTests.swift */; };
 		D93BAB9621AD56FC005ADFBE /* UIImage+ImageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D93BAB9521AD56FC005ADFBE /* UIImage+ImageTests.swift */; };
-		D9494F49224C9AF60015ACE1 /* gradient.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9494F47224C9AF30015ACE1 /* gradient.svg */; };
 		D9494F4A224C9AF60015ACE1 /* gradient.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9494F47224C9AF30015ACE1 /* gradient.svg */; };
 		D962D2761E6ECD5C00B825C6 /* SwiftDraw.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D962D26D1E6ECD5C00B825C6 /* SwiftDraw.framework */; };
 		D962D2A21E6ECE2000B825C6 /* SwiftDraw-macOS.h in Headers */ = {isa = PBXBuildFile; fileRef = D962D2A11E6ECE2000B825C6 /* SwiftDraw-macOS.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		D965B5821E3C48C6003E859E /* shapes.svg in Resources */ = {isa = PBXBuildFile; fileRef = D965B5811E3C48C6003E859E /* shapes.svg */; };
-		D965B5871E3C5CF8003E859E /* starry.svg in Resources */ = {isa = PBXBuildFile; fileRef = D965B5851E3C5C87003E859E /* starry.svg */; };
 		D9693D7E224C42C000A82949 /* CGPattern+Closure.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9693D7D224C42C000A82949 /* CGPattern+Closure.swift */; };
 		D9693D7F224C42C000A82949 /* CGPattern+Closure.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9693D7D224C42C000A82949 /* CGPattern+Closure.swift */; };
 		D96E22FB21C2690D00CCD17E /* LayerTree.CommandGeneratorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D96E22FA21C2690D00CCD17E /* LayerTree.CommandGeneratorTests.swift */; };
@@ -192,9 +189,13 @@
 		D97AD81A21BE40A700F7DD10 /* Parser.XML.GradientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D97AD81921BE40A700F7DD10 /* Parser.XML.GradientTests.swift */; };
 		D97AD81B21BE40A700F7DD10 /* Parser.XML.GradientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D97AD81921BE40A700F7DD10 /* Parser.XML.GradientTests.swift */; };
 		D97C36582212194F006D28D2 /* LayerTree.Builder.Path.Arc.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9ACD7A4220FDF79009717CF /* LayerTree.Builder.Path.Arc.swift */; };
-		D9A843931E85F1C1002A804B /* quad.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9A843921E85F1C1002A804B /* quad.svg */; };
+		D9A4E19227C9A42B008F69ED /* curves.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9A4E18C27C9A42B008F69ED /* curves.svg */; };
+		D9A4E19327C9A42B008F69ED /* shapes.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9A4E18D27C9A42B008F69ED /* shapes.svg */; };
+		D9A4E19427C9A42B008F69ED /* lines.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9A4E18E27C9A42B008F69ED /* lines.svg */; };
+		D9A4E19527C9A42B008F69ED /* starry.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9A4E18F27C9A42B008F69ED /* starry.svg */; };
+		D9A4E19627C9A42B008F69ED /* quad.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9A4E19027C9A42B008F69ED /* quad.svg */; };
+		D9A4E19727C9A42B008F69ED /* invalid.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9A4E19127C9A42B008F69ED /* invalid.svg */; };
 		D9A843941E85F1C1002A804B /* quad.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9A843921E85F1C1002A804B /* quad.svg */; };
-		D9A843951E8611D6002A804B /* curves.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9A843901E855672002A804B /* curves.svg */; };
 		D9A843961E8611D7002A804B /* curves.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9A843901E855672002A804B /* curves.svg */; };
 		D9ACD7A5220FDF79009717CF /* LayerTree.Builder.Path.Arc.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9ACD7A4220FDF79009717CF /* LayerTree.Builder.Path.Arc.swift */; };
 		D9B75C82224C9F0200C6BEE7 /* LayerTree.Gradient.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9B75C81224C9F0200C6BEE7 /* LayerTree.Gradient.swift */; };
@@ -206,11 +207,8 @@
 		D9BA810921BA94A4005159E7 /* CommandLine.ConfigurationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9BA810821BA94A4005159E7 /* CommandLine.ConfigurationTests.swift */; };
 		D9BEDC3F2250CBBC00F51648 /* CGImage+Mask.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9BEDC3E2250CBBC00F51648 /* CGImage+Mask.swift */; };
 		D9BEDC402250CBBE00F51648 /* CGImage+Mask.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9BEDC3E2250CBBC00F51648 /* CGImage+Mask.swift */; };
-		D9C47AC21ED54FA100178D06 /* mask.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9C47ABF1ED54FA100178D06 /* mask.svg */; };
 		D9C47AC31ED54FA100178D06 /* mask.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9C47ABF1ED54FA100178D06 /* mask.svg */; };
-		D9C47AC41ED54FA100178D06 /* transform.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9C47AC01ED54FA100178D06 /* transform.svg */; };
 		D9C47AC51ED54FA100178D06 /* transform.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9C47AC01ED54FA100178D06 /* transform.svg */; };
-		D9C47AC61ED54FA100178D06 /* viewbox.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9C47AC11ED54FA100178D06 /* viewbox.svg */; };
 		D9C47AC71ED54FA100178D06 /* viewbox.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9C47AC11ED54FA100178D06 /* viewbox.svg */; };
 		D9D9EB27224A3B4F006CF83C /* DOM.Pattern.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9D9EB26224A3B4F006CF83C /* DOM.Pattern.swift */; };
 		D9D9EB28224A3B4F006CF83C /* DOM.Pattern.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9D9EB26224A3B4F006CF83C /* DOM.Pattern.swift */; };
@@ -219,7 +217,6 @@
 		D9D9EB32224A3E7D006CF83C /* Parser.XML.PatternTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9D9EB31224A3E7D006CF83C /* Parser.XML.PatternTests.swift */; };
 		D9D9EB33224A3E7D006CF83C /* Parser.XML.PatternTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9D9EB31224A3E7D006CF83C /* Parser.XML.PatternTests.swift */; };
 		D9D9EB34224A4660006CF83C /* pattern.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9D9EB29224A3BA9006CF83C /* pattern.svg */; };
-		D9D9EB35224A4661006CF83C /* pattern.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9D9EB29224A3BA9006CF83C /* pattern.svg */; };
 		D9D9EB37224AD524006CF83C /* LayerTree.Pattern.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9D9EB36224AD524006CF83C /* LayerTree.Pattern.swift */; };
 		D9D9EB38224AD524006CF83C /* LayerTree.Pattern.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9D9EB36224AD524006CF83C /* LayerTree.Pattern.swift */; };
 		D9ECAF9821AADA00006A5328 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9CFB5D021A73E84000D2875 /* main.swift */; };
@@ -234,9 +231,7 @@
 		D9F3AD5F21A218CF00BAFA55 /* ImageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9F3AD5D21A218CF00BAFA55 /* ImageTests.swift */; };
 		D9F3AD6121A21B7800BAFA55 /* Bundle+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9F3AD6021A21B7800BAFA55 /* Bundle+Extensions.swift */; };
 		D9F3AD6221A21B7800BAFA55 /* Bundle+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9F3AD6021A21B7800BAFA55 /* Bundle+Extensions.swift */; };
-		D9F3AD6421A21CD200BAFA55 /* invalid.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9F3AD6321A21CD100BAFA55 /* invalid.svg */; };
 		D9F3AD6521A21CD200BAFA55 /* invalid.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9F3AD6321A21CD100BAFA55 /* invalid.svg */; };
-		D9F3AD6721A2A73F00BAFA55 /* lines.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9F3AD6621A2A73F00BAFA55 /* lines.svg */; };
 		D9F3AD6821A2A73F00BAFA55 /* lines.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9F3AD6621A2A73F00BAFA55 /* lines.svg */; };
 		D9F3EBBB1DFF5BA3006691A1 /* SwiftDraw.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D9F3EBB11DFF5BA3006691A1 /* SwiftDraw.framework */; };
 		D9F3EBC21DFF5BA3006691A1 /* SwiftDraw.h in Headers */ = {isa = PBXBuildFile; fileRef = D9F3EBB41DFF5BA3006691A1 /* SwiftDraw.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -371,6 +366,12 @@
 		D9693D7D224C42C000A82949 /* CGPattern+Closure.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CGPattern+Closure.swift"; sourceTree = "<group>"; };
 		D96E22FA21C2690D00CCD17E /* LayerTree.CommandGeneratorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LayerTree.CommandGeneratorTests.swift; sourceTree = "<group>"; };
 		D97AD81921BE40A700F7DD10 /* Parser.XML.GradientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Parser.XML.GradientTests.swift; sourceTree = "<group>"; };
+		D9A4E18C27C9A42B008F69ED /* curves.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = curves.svg; sourceTree = "<group>"; };
+		D9A4E18D27C9A42B008F69ED /* shapes.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = shapes.svg; sourceTree = "<group>"; };
+		D9A4E18E27C9A42B008F69ED /* lines.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = lines.svg; sourceTree = "<group>"; };
+		D9A4E18F27C9A42B008F69ED /* starry.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = starry.svg; sourceTree = "<group>"; };
+		D9A4E19027C9A42B008F69ED /* quad.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = quad.svg; sourceTree = "<group>"; };
+		D9A4E19127C9A42B008F69ED /* invalid.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = invalid.svg; sourceTree = "<group>"; };
 		D9A843901E855672002A804B /* curves.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = curves.svg; sourceTree = "<group>"; };
 		D9A843921E85F1C1002A804B /* quad.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = quad.svg; sourceTree = "<group>"; };
 		D9ACD7A4220FDF79009717CF /* LayerTree.Builder.Path.Arc.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LayerTree.Builder.Path.Arc.swift; sourceTree = "<group>"; };
@@ -697,6 +698,19 @@
 			path = Samples;
 			sourceTree = "<group>";
 		};
+		D9A4E18B27C9A42B008F69ED /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				D9A4E18C27C9A42B008F69ED /* curves.svg */,
+				D9A4E18D27C9A42B008F69ED /* shapes.svg */,
+				D9A4E18E27C9A42B008F69ED /* lines.svg */,
+				D9A4E18F27C9A42B008F69ED /* starry.svg */,
+				D9A4E19027C9A42B008F69ED /* quad.svg */,
+				D9A4E19127C9A42B008F69ED /* invalid.svg */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
 		D9BA80FE21B9C5C1005159E7 /* CommandLine */ = {
 			isa = PBXGroup;
 			children = (
@@ -786,6 +800,7 @@
 		D9F3EBBE1DFF5BA3006691A1 /* SwiftDrawTests */ = {
 			isa = PBXGroup;
 			children = (
+				D9A4E18B27C9A42B008F69ED /* Resources */,
 				D9BA810321B9C645005159E7 /* CommandLine */,
 				D90DB3F2219CCF1A00D374D2 /* Extensions */,
 				D9F3AD5C21A2172800BAFA55 /* Image */,
@@ -1004,17 +1019,12 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D9F3AD6421A21CD200BAFA55 /* invalid.svg in Resources */,
-				D9C47AC61ED54FA100178D06 /* viewbox.svg in Resources */,
-				D9F3AD6721A2A73F00BAFA55 /* lines.svg in Resources */,
-				D9A843951E8611D6002A804B /* curves.svg in Resources */,
-				D965B5821E3C48C6003E859E /* shapes.svg in Resources */,
-				D9494F49224C9AF60015ACE1 /* gradient.svg in Resources */,
-				D9C47AC21ED54FA100178D06 /* mask.svg in Resources */,
-				D9A843931E85F1C1002A804B /* quad.svg in Resources */,
-				D965B5871E3C5CF8003E859E /* starry.svg in Resources */,
-				D9C47AC41ED54FA100178D06 /* transform.svg in Resources */,
-				D9D9EB35224A4661006CF83C /* pattern.svg in Resources */,
+				D9A4E19327C9A42B008F69ED /* shapes.svg in Resources */,
+				D9A4E19527C9A42B008F69ED /* starry.svg in Resources */,
+				D9A4E19727C9A42B008F69ED /* invalid.svg in Resources */,
+				D9A4E19627C9A42B008F69ED /* quad.svg in Resources */,
+				D9A4E19227C9A42B008F69ED /* curves.svg in Resources */,
+				D9A4E19427C9A42B008F69ED /* lines.svg in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

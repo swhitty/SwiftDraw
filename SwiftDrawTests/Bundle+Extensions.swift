@@ -35,7 +35,11 @@ import Foundation
 extension Bundle {
   
   static var test: Bundle {
-    return Bundle(for: Marker.self)
+#if SWIFT_PACKAGE
+      return .module
+#else
+      return Bundle(for: Marker.self)
+#endif
   }
   
   func url(forResource named: String) throws -> URL {

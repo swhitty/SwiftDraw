@@ -1,4 +1,4 @@
-// swift-tools-version:5.0
+// swift-tools-version:5.4
 
 import PackageDescription
 
@@ -29,7 +29,10 @@ let package = Package(
         .testTarget(
             name: "SwiftDrawTests",
             dependencies: ["SwiftDraw"],
-            path: "SwiftDrawTests"
+            path: "SwiftDrawTests",
+            resources: [
+                .process("Resources")
+            ]
 		)
     ]
 )
