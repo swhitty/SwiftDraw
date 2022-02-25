@@ -29,7 +29,7 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-import CoreGraphics
+#if canImport(CoreGraphics)
 import CoreText
 import Foundation
 #if os(macOS)
@@ -119,3 +119,5 @@ extension String {
     return path
   }
 }
+
+#endif

@@ -27,6 +27,7 @@
 //
 
 import XCTest
+#if canImport(CoreGraphics)
 import CoreGraphics
 @testable import SwiftDraw
 
@@ -198,3 +199,5 @@ private extension CGPoint {
     self.init(x: x, y: y)
   }
 }
+
+#endif

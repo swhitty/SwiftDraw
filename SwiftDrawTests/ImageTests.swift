@@ -49,6 +49,7 @@ final class ImageTests: XCTestCase {
     XCTAssertNil(Image(named: "missing.svg", in: .test))
   }
 
+#if canImport(CoreGraphics)
   func testImageRasterizes() {
     let image = Image.makeLines()
     let rendered = image.rasterize()
@@ -66,6 +67,7 @@ final class ImageTests: XCTestCase {
     XCTAssertNotNil(image.pngData(size: doubleSize))
     XCTAssertNotNil(image.jpegData(size: doubleSize))
   }
+#endif
 
 }
 

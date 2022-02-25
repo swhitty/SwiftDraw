@@ -31,6 +31,7 @@
 
 import XCTest
 @testable import SwiftDraw
+#if canImport(AppKit)
 
 final class NSImageTests: XCTestCase {
 
@@ -76,3 +77,5 @@ private extension Image {
     return Image(svg: svg)
   }
 }
+
+#endif

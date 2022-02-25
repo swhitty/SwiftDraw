@@ -19,31 +19,17 @@ let package = Package(
         .target(
             name: "SwiftDraw",
             dependencies: [],
-			path: "SwiftDraw",
-			exclude: exclude()),
+			path: "SwiftDraw"
+		),
         .target(
             name: "CommandLine",
             dependencies: ["SwiftDraw"],
-            path: "CommandLine"),
+            path: "CommandLine"
+		),
         .testTarget(
             name: "SwiftDrawTests",
             dependencies: ["SwiftDraw"],
-            path: "SwiftDrawTests")
+            path: "SwiftDrawTests"
+		)
     ]
 )
-
-func exclude() -> [String] {
-#if os(Linux)
-    [
-        "CGPath+Segment.swift",
-        "Renderer.CoreGraphics.swift",
-        "Image+CoreGraphics.swift",
-        "NSImage+Image.swift",
-        "UIImage+Image.swift",
-        "CGPattern+Closure.swift",
-        "CGImage+Mask.swift"
-    ]
-#else
-    []
-#endif
-}

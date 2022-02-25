@@ -31,6 +31,8 @@
 
 import XCTest
 @testable import SwiftDraw
+#if canImport(CoreGraphics)
+import CoreGraphics
 
 final class CGPathSegmentTests: XCTestCase {
 
@@ -65,5 +67,6 @@ final class CGPathSegmentTests: XCTestCase {
     guard case .line(_) = segments[3] else { XCTFail("expected line"); return }
     XCTAssertEqual(segments[4], .close)
   }
-
 }
+
+#endif

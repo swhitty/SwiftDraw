@@ -29,6 +29,7 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
+#if canImport(CoreGraphics)
 import CoreGraphics
 
 extension CGPattern {
@@ -70,3 +71,5 @@ extension CGPattern {
     }
   }
 }
+
+#endif

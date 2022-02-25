@@ -29,7 +29,7 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-import CoreGraphics
+#if canImport(CoreGraphics)
 import Foundation
 import CoreText
 #if os(macOS)
@@ -423,3 +423,5 @@ struct CGRenderer: Renderer {
                            options: [.drawsAfterEndLocation, .drawsBeforeStartLocation])
   }
 }
+
+#endif

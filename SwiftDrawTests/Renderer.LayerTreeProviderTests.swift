@@ -27,7 +27,6 @@
 //
 
 import XCTest
-import CoreGraphics
 @testable import SwiftDraw
 
 final class RendererLayerTreeProviderTests: XCTestCase {

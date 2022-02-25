@@ -29,6 +29,7 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
+#if canImport(CoreGraphics)
 import CoreGraphics
 import Foundation
 
@@ -117,3 +118,5 @@ private extension LayerTree.Size {
     self.height = LayerTree.Float(size.height)
   }
 }
+
+#endif

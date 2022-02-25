@@ -30,6 +30,7 @@
 //
 
 @testable import SwiftDraw
+#if canImport(CoreGraphics)
 import CoreGraphics
 import AppKit
 import XCTest
@@ -93,3 +94,5 @@ private extension CGColor {
     return NSColor(deviceRed: 0.0, green: 0, blue: 1.0, alpha: 1.0).cgColor
   }
 }
+
+#endif

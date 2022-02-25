@@ -34,6 +34,8 @@ import Foundation
 
 import XCTest
 @testable import SwiftDraw
+#if canImport(CoreGraphics)
+import CoreGraphics
 
 extension CGImage {
   static func from(data: Data) -> CGImage? {
@@ -90,3 +92,5 @@ final class ParserXMLImageTests: XCTestCase {
     XCTAssertEqual(cgImage?.height, 5)
   }
 }
+
+#endif
