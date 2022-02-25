@@ -40,11 +40,15 @@ extension XMLParser {
   typealias CoordinateSpace = DOM.Path.Segment.CoordinateSpace
   
   func parsePath(_ att: AttributeParser) throws -> DOM.Path {
+    return try parsePath(from: att.parseString("d"))
+  }
+
+  func parsePath(from data: String) throws -> DOM.Path {
     let path = DOM.Path(x: 0, y: 0)
-    path.segments = try parsePathSegments(try att.parseString("d"))
+    path.segments = try parsePathSegments(data)
     return path
   }
-  
+
   func parsePathSegments(_ data: String) throws -> [Segment] {
     
     var segments = Array<Segment>()

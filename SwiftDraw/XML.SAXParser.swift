@@ -30,8 +30,7 @@
 //
 
 import Foundation
-
-#if os(Linux)
+#if canImport(FoundationXML)
 import FoundationXML
 #endif
 
@@ -39,7 +38,7 @@ extension XML {
   
   final class SAXParser: NSObject, XMLParserDelegate {
     
-    #if os(Linux)
+    #if canImport(FoundationXML)
     typealias XMLParser = FoundationXML.XMLParser
     #else
     typealias XMLParser = Foundation.XMLParser

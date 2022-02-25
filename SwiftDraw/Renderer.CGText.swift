@@ -192,7 +192,11 @@ struct CGTextProvider: RendererTypeProvider {
   }
   
   func getBounds(from shape: LayerTree.Shape) -> LayerTree.Rect {
+#if canImport(CoreGraphics)
     return CGProvider().getBounds(from: shape)
+#else
+    return .zero
+#endif
   }
 }
 

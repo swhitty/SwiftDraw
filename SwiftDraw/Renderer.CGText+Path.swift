@@ -123,8 +123,16 @@ extension CGTextRenderer {
     )
     """
   }
-  
+
   func renderPath(from path: LayerTree.Path) -> String {
+      Self.renderPath(from: path)
+  }
+
+  static func renderPath(from path: LayerTree.Path) -> String {
+    func renderPoint(from point: LayerTree.Point) -> String {
+      return "CGPoint(x: \(point.x), y: \(point.y))"
+    }
+
     var lines: [String] = ["let path1 = CGMutablePath()"]
     for s in path.segments {
       switch s {

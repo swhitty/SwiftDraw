@@ -77,7 +77,12 @@ extension XMLParser {
     
     mutating func scanString(matchingAny characters: Foundation.CharacterSet) throws -> String {
       scanner.scanLocation = scanLocation
-      var result: NSString?
+    #if os(Linux)
+        var result: String?
+    #else
+        var result: NSString?
+    #endif
+
       guard
         scanner.scanCharacters(from: characters, into: &result),
         let match = result.map({ $0 as String }),
@@ -91,7 +96,11 @@ extension XMLParser {
     
     mutating func scanString(upTo token: String) throws -> String {
       scanner.scanLocation = scanLocation
-      var result: NSString?
+    #if os(Linux)
+        var result: String?
+    #else
+        var result: NSString?
+    #endif
       guard
         scanner.scanUpTo(token, into: &result),
         let match = result.map({ $0 as String }) else {
@@ -224,7 +233,11 @@ extension Scanner {
   }
   
   func scan(first set: Foundation.CharacterSet) -> UnicodeScalar? {
+    #if os(Linux)
+    var val: String?
+    #else
     var val: NSString?
+    #endif
     let start = scanLocation
     guard scanCharacters(from: set, into: &val),
       let string = val,
@@ -247,19 +260,3 @@ extension Scanner {
     return DOM.Coordinate(val)
   }
 }
-
-
-#if os(Linux)
-
-private extension Foundation.Scanner {
-  
-  func scanUpTo(_ string: String, into result: inout NSString?) -> Bool {
-    return false
-  }
-  
-  func scanCharacters(from set: CharacterSet, into result: inout NSString?) -> Bool {
-    return false
-  }
-}
-
-#endif
