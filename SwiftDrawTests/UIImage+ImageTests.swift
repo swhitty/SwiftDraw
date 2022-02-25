@@ -32,6 +32,9 @@
 import XCTest
 @testable import SwiftDraw
 
+#if canImport(UIKit)
+import UIKit
+
 final class UIImageTests: XCTestCase {
 
   func testImageLoads() {
@@ -44,3 +47,5 @@ final class UIImageTests: XCTestCase {
     XCTAssertNil(image)
   }
 }
+
+#endif

@@ -2,39 +2,6 @@
 
 import PackageDescription
 
-let exclude: [String]
-#if os(Linux)
-	exclude = [
-		"CGPath+Segment.swift",
-		"Renderer.CoreGraphics.swift",
-        "Image+CoreGraphics.swift",
-		"CGTextRenderer+Code.swift",
-        "NSImage+Image.swift",
-        "UIImage+Image.swift",
-        "CGRendererTests.swift",
-        "CGRenderer.PathTests.swift",
-        "ParserSVGImageTests.swift",
-        "UIImage+ImageTests.swift",
-        "NSImage+ImageTests.swift",
-        "NSBitmapImageRep+Extensions.swift",
-        "Renderer.CoreGraphicsTypesTests.swift",
-        "Renderer.LayerTreeProviderTests.swift",
-        "Parser.XML.ImageTests.swift",
-        "CGPath+SegmentTests.swift",
-        "CGPattern+Closure.swift",
-        "CGImage+Mask.swift",
-        "ImageTests.swift"
-	]
-#else
-	exclude = [
-        "UIImage+Image.swift",
-        "CGRenderer.PathTests.swift",
-        "ParserSVGImageTests.swift",
-        "UIImage+ImageTests.swift",
-        "NSImage+ImageTests.swift"
-    ]
-#endif
-
 let package = Package(
     name: "SwiftDraw",
 	  platforms: [
@@ -53,7 +20,7 @@ let package = Package(
             name: "SwiftDraw",
             dependencies: [],
 			path: "SwiftDraw",
-			exclude: exclude),
+			exclude: exclude()),
         .target(
             name: "CommandLine",
             dependencies: ["SwiftDraw"],
@@ -61,7 +28,22 @@ let package = Package(
         .testTarget(
             name: "SwiftDrawTests",
             dependencies: ["SwiftDraw"],
-            path: "SwiftDrawTests",
-			exclude: exclude)
+            path: "SwiftDrawTests")
     ]
 )
+
+func exclude() -> [String] {
+#if os(Linux)
+    [
+        "CGPath+Segment.swift",
+        "Renderer.CoreGraphics.swift",
+        "Image+CoreGraphics.swift",
+        "NSImage+Image.swift",
+        "UIImage+Image.swift",
+        "CGPattern+Closure.swift",
+        "CGImage+Mask.swift"
+    ]
+#else
+    []
+#endif
+}
