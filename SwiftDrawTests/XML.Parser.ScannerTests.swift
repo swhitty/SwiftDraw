@@ -102,7 +102,9 @@ final class ScannerTests: XCTestCase {
     AssertScanUInt8("0", 0)
     AssertScanUInt8("124", 124)
     AssertScanUInt8(" 045", 45)
+#if canImport(Darwin)
     AssertScanUInt8("-29", nil)
+#endif
     AssertScanUInt8("ab24", nil)
   }
   

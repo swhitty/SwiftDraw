@@ -55,14 +55,17 @@ final class SAXParserTests: XCTestCase {
     XCTAssertEqual(root.name, "svg")
     XCTAssertTrue(root.children.isEmpty)
   }
-  
+
+
   func testUnexpectedElementsThrows() throws {
     let xml = """
 <svg xmlns="http://www.w3.org/2000/svg">
     </b>
 </svg>
 """
+#if canImport(Darwin)
     XCTAssertThrowsError(try XML.SAXParser.parse(data: xml.data(using: .utf8)!))
+#endif
   }
   
   func testUnexpectedNamespaceElementsSkipped() throws {
