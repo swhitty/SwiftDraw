@@ -34,12 +34,9 @@ import XCTest
 
 final class ImageTests: XCTestCase {
 
-  #if SWIFT_PACKAGE
-  #else
   func testValidSVGLoads() {
     XCTAssertNotNil(Image(named: "lines.svg", in: .test))
   }
-  #endif
 
   func testInvalidSVGReturnsNil() {
     XCTAssertNil(Image(named: "invalid.svg", in: .test))
