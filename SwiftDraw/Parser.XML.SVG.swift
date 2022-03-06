@@ -41,7 +41,7 @@ extension XMLParser {
     var height: DOM.Coordinate?
 
     if (try? att.parsePercentage("width")) == nil {
-      height = try att.parseCoordinate("width")
+      width = try att.parseCoordinate("width")
     }
     if (try? att.parsePercentage("height")) == nil {
       height = try att.parseCoordinate("height")

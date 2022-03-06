@@ -21,7 +21,7 @@ let package = Package(
             dependencies: [],
 			path: "SwiftDraw"
 		),
-        .target(
+        .executableTarget(
             name: "CommandLine",
             dependencies: ["SwiftDraw"],
             path: "CommandLine"

@@ -1,6 +1,5 @@
 docker run -it \
-  --publish 8080:80 \
   --rm \
-  --mount src="$(pwd)",target=/source,type=bind \
+  --mount src="$(pwd)",target=/SwiftDraw,type=bind \
   swift \
-  /bin/sh -c "cd source; swift test"
+  /usr/bin/swift test --package-path /SwiftDraw
