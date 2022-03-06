@@ -83,7 +83,6 @@ final class RendererCGTextTests: XCTestCase {
 
     func testGradientAppleCode() throws {
         let code = try CGTextRenderer.render(svgNamed: "gradient-apple.svg")
-        print(code)
         XCTAssertEqual(
             code,
             """

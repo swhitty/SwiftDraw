@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 50;
+	objectVersion = 52;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -25,6 +25,7 @@
 		D9618468220FDD1100C59D9B /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9618467220FDD1100C59D9B /* ViewController.swift */; };
 		D961846D220FDD1200C59D9B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D961846C220FDD1200C59D9B /* Assets.xcassets */; };
 		D9618470220FDD1200C59D9B /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = D961846E220FDD1200C59D9B /* LaunchScreen.storyboard */; };
+		D9742E1E27D4877300E02FFD /* SwiftDraw in Frameworks */ = {isa = PBXBuildFile; productRef = D9742E1D27D4877300E02FFD /* SwiftDraw */; };
 		D98375B622500FCC00974D71 /* mask-composite.svg in Resources */ = {isa = PBXBuildFile; fileRef = D98375B522500FCC00974D71 /* mask-composite.svg */; };
 		D991955824BAF8E200E58925 /* rings.svg in Resources */ = {isa = PBXBuildFile; fileRef = D991955724BAF8E200E58925 /* rings.svg */; };
 		D9ACD791220FDDE0009717CF /* use.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9ACD783220FDDE0009717CF /* use.svg */; };
@@ -40,8 +41,7 @@
 		D9ACD79C220FDDE0009717CF /* quad.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9ACD78E220FDDE0009717CF /* quad.svg */; };
 		D9ACD79D220FDDE0009717CF /* display.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9ACD78F220FDDE0009717CF /* display.svg */; };
 		D9ACD79E220FDDE0009717CF /* invalid.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9ACD790220FDDE0009717CF /* invalid.svg */; };
-		D9ACD7A1220FDE04009717CF /* SwiftDraw.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D9ACD7A0220FDE04009717CF /* SwiftDraw.framework */; };
-		D9ACD7A3220FDE19009717CF /* SwiftDraw.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = D9ACD7A0220FDE04009717CF /* SwiftDraw.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		D9C6E95927D4859C008194E5 /* symbol.refresh.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9C6E95827D4859C008194E5 /* symbol.refresh.svg */; };
 		D9D9EB2D224A3BCA006CF83C /* pattern.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9D9EB2C224A3BCA006CF83C /* pattern.svg */; };
 		D9FD69D8224CD4960046A926 /* gradient2.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9FD69D7224CD4960046A926 /* gradient2.svg */; };
 /* End PBXBuildFile section */
@@ -53,7 +53,6 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				D9ACD7A3220FDE19009717CF /* SwiftDraw.framework in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -80,6 +79,7 @@
 		D961846C220FDD1200C59D9B /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		D961846F220FDD1200C59D9B /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		D9618471220FDD1200C59D9B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		D9742E1C27D4875100E02FFD /* SwiftDraw */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = SwiftDraw; path = ..; sourceTree = "<group>"; };
 		D98375B522500FCC00974D71 /* mask-composite.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = "mask-composite.svg"; sourceTree = "<group>"; };
 		D991955724BAF8E200E58925 /* rings.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = rings.svg; sourceTree = "<group>"; };
 		D9ACD783220FDDE0009717CF /* use.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = use.svg; sourceTree = "<group>"; };
@@ -96,6 +96,7 @@
 		D9ACD78F220FDDE0009717CF /* display.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = display.svg; sourceTree = "<group>"; };
 		D9ACD790220FDDE0009717CF /* invalid.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = invalid.svg; sourceTree = "<group>"; };
 		D9ACD7A0220FDE04009717CF /* SwiftDraw.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = SwiftDraw.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		D9C6E95827D4859C008194E5 /* symbol.refresh.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = symbol.refresh.svg; sourceTree = "<group>"; };
 		D9D9EB2C224A3BCA006CF83C /* pattern.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = pattern.svg; sourceTree = "<group>"; };
 		D9FD69D7224CD4960046A926 /* gradient2.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = gradient2.svg; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -105,7 +106,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D9ACD7A1220FDE04009717CF /* SwiftDraw.framework in Frameworks */,
+				D9742E1E27D4877300E02FFD /* SwiftDraw in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -115,6 +116,7 @@
 		D9618459220FDD1100C59D9B = {
 			isa = PBXGroup;
 			children = (
+				D9742E1C27D4875100E02FFD /* SwiftDraw */,
 				D9ACD782220FDDE0009717CF /* Samples */,
 				D9618464220FDD1100C59D9B /* Sources */,
 				D9618463220FDD1100C59D9B /* Products */,
@@ -145,6 +147,7 @@
 		D9ACD782220FDDE0009717CF /* Samples */ = {
 			isa = PBXGroup;
 			children = (
+				D9C6E95827D4859C008194E5 /* symbol.refresh.svg */,
 				D9ACD78D220FDDE0009717CF /* arc.svg */,
 				D918D26C22122A7300097C9A /* arc2.svg */,
 				D945F5AC225241A100FAAAC4 /* blend.svg */,
@@ -178,7 +181,7 @@
 				D9ACD785220FDDE0009717CF /* viewbox.svg */,
 			);
 			name = Samples;
-			path = ../../Samples;
+			path = ../Samples;
 			sourceTree = "<group>";
 		};
 		D9ACD79F220FDE04009717CF /* Frameworks */ = {
@@ -206,6 +209,9 @@
 			dependencies = (
 			);
 			name = Basic;
+			packageProductDependencies = (
+				D9742E1D27D4877300E02FFD /* SwiftDraw */,
+			);
 			productName = Basic;
 			productReference = D9618462220FDD1100C59D9B /* Basic.app */;
 			productType = "com.apple.product-type.application";
@@ -263,6 +269,7 @@
 				D9ACD791220FDDE0009717CF /* use.svg in Resources */,
 				D91C3E43224ED9A4001BCDAE /* gradient-gratification.svg in Resources */,
 				D9ACD793220FDDE0009717CF /* viewbox.svg in Resources */,
+				D9C6E95927D4859C008194E5 /* symbol.refresh.svg in Resources */,
 				D9618470220FDD1200C59D9B /* LaunchScreen.storyboard in Resources */,
 				D9ACD798220FDDE0009717CF /* lines.svg in Resources */,
 				D918D26D22122A7300097C9A /* arc2.svg in Resources */,
@@ -484,6 +491,13 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		D9742E1D27D4877300E02FFD /* SwiftDraw */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = SwiftDraw;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = D961845A220FDD1100C59D9B /* Project object */;
 }

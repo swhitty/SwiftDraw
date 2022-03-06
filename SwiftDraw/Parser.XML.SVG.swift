@@ -37,8 +37,16 @@ extension XMLParser {
     }
     
     let att = try parseAttributes(e)
-    var width: DOM.Coordinate? = try att.parseCoordinate("width")
-    var height: DOM.Coordinate? = try att.parseCoordinate("height")
+    var width: DOM.Coordinate?
+    var height: DOM.Coordinate?
+
+    if (try? att.parsePercentage("width")) == nil {
+      height = try att.parseCoordinate("width")
+    }
+    if (try? att.parsePercentage("height")) == nil {
+      height = try att.parseCoordinate("height")
+    }
+
     let viewBox: DOM.SVG.ViewBox? = try parseViewBox(try att.parseString("viewBox"))
     
     width = width ?? viewBox?.width
