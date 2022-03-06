@@ -97,3 +97,21 @@ extension LayerTree.Transform.Matrix {
                                       ty: (t.tx * m.b) + (t.ty * m.d) + m.ty)
   }
 }
+
+extension LayerTree.Transform.Matrix {
+
+    func transform(point: LayerTree.Point) -> LayerTree.Point {
+        LayerTree.Point(
+            (a * point.x) + (c * point.y) + tx,
+            (b * point.x) + (d * point.y) + ty
+        )
+    }
+}
+
+extension Array where Element == LayerTree.Transform {
+    func toMatrix() -> LayerTree.Transform.Matrix {
+        reversed().reduce(LayerTree.Transform.identity.toMatrix()) {
+            $0.concatenated($1.toMatrix())
+        }
+    }
+}

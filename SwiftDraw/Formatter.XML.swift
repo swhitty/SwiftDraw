@@ -50,7 +50,11 @@ extension XMLFormatter {
     func format(_ coordinates: DOM.Coordinate...) -> String {
       return coordinates.map { format(Double($0)) }.joined(separator: delimeter.rawValue)
     }
-    
+
+    func format(_ coordinates: Double...) -> String {
+      return coordinates.map { format($0) }.joined(separator: delimeter.rawValue)
+    }
+
     func format(_ c: Double) -> String {
       switch precision {
       case .capped(let max):

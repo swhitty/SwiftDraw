@@ -102,3 +102,31 @@ private extension LayerTree.Path.Segment {
     }
   }
 }
+
+
+extension LayerTree.Path {
+
+    func applying(matrix: LayerTree.Transform.Matrix) -> LayerTree.Path {
+        LayerTree.Path(
+            segments.map { $0.applying(matrix: matrix) }
+        )
+    }
+}
+
+extension LayerTree.Path.Segment {
+
+    func applying(matrix: LayerTree.Transform.Matrix) -> Self {
+        switch self {
+        case .move(let point):
+            return .move(to: matrix.transform(point: point))
+        case .line(let point):
+            return .line(to: matrix.transform(point: point))
+        case .cubic(let p, let cp1, let cp2):
+            return .cubic(to: matrix.transform(point: p),
+                          control1: matrix.transform(point: cp1),
+                          control2: matrix.transform(point: cp2))
+        case .close:
+            return .close
+        }
+    }
+}
