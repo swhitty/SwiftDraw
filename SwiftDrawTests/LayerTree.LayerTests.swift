@@ -94,5 +94,14 @@ private extension LayerTree.Layer.Contents {
     let image = LayerTree.Image(mimeType: "image/png", data: Data(base64Encoded: "f00d")!)!
     return .image(image)
   }
+}
 
+extension LayerTree.TextAttributes {
+    static var normal: Self {
+        LayerTree.TextAttributes(
+            color: .black,
+            fontName: "Helvetica",
+            size: 12.0
+        )
+    }
 }

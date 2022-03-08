@@ -49,7 +49,10 @@ protocol PresentationAttributes {
   var fill: DOM.Fill?  { get set }
   var fillOpacity: DOM.Float?  { get set }
   var fillRule: DOM.FillRule?  { get set }
-  
+
+  var fontFamily: String?  { get set }
+  var fontSize: Float?  { get set }
+
   var transform: [DOM.Transform]?  { get set }
   var clipPath: DOM.URL?  { get set }
   var mask: DOM.URL?  { get set }
@@ -75,7 +78,10 @@ extension DOM {
     var fill: DOM.Fill?
     var fillOpacity: DOM.Float?
     var fillRule: DOM.FillRule?
-    
+
+    var fontFamily: String?
+    var fontSize: Float?
+
     var transform: [DOM.Transform]?
     var clipPath: URL?
     var mask: URL?

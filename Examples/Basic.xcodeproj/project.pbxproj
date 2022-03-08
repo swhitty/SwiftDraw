@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		01BA4DA826820DE8001FF7B5 /* gradient-gratification-p3.svg in Resources */ = {isa = PBXBuildFile; fileRef = 01BA4DA726820DE8001FF7B5 /* gradient-gratification-p3.svg */; };
+		01F290A027D7839900743E2F /* transform-path.svg in Resources */ = {isa = PBXBuildFile; fileRef = 01F2909E27D7839800743E2F /* transform-path.svg */; };
+		01F290A127D7839900743E2F /* symbol-test.svg in Resources */ = {isa = PBXBuildFile; fileRef = 01F2909F27D7839900743E2F /* symbol-test.svg */; };
 		D90523452217927F00B3B94F /* mystery.svg in Resources */ = {isa = PBXBuildFile; fileRef = D90523442217927F00B3B94F /* mystery.svg */; };
 		D9126F0E24A6C19300859CC5 /* gradient-apple.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9126F0D24A6C19200859CC5 /* gradient-apple.svg */; };
 		D918D26D22122A7300097C9A /* arc2.svg in Resources */ = {isa = PBXBuildFile; fileRef = D918D26C22122A7300097C9A /* arc2.svg */; };
@@ -60,6 +62,8 @@
 
 /* Begin PBXFileReference section */
 		01BA4DA726820DE8001FF7B5 /* gradient-gratification-p3.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = "gradient-gratification-p3.svg"; sourceTree = "<group>"; };
+		01F2909E27D7839800743E2F /* transform-path.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = "transform-path.svg"; sourceTree = "<group>"; };
+		01F2909F27D7839900743E2F /* symbol-test.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = "symbol-test.svg"; sourceTree = "<group>"; };
 		D90523442217927F00B3B94F /* mystery.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = mystery.svg; sourceTree = "<group>"; };
 		D9126F0D24A6C19200859CC5 /* gradient-apple.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "gradient-apple.svg"; sourceTree = "<group>"; };
 		D918D26C22122A7300097C9A /* arc2.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = arc2.svg; sourceTree = "<group>"; };
@@ -147,6 +151,8 @@
 		D9ACD782220FDDE0009717CF /* Samples */ = {
 			isa = PBXGroup;
 			children = (
+				01F2909F27D7839900743E2F /* symbol-test.svg */,
+				01F2909E27D7839800743E2F /* transform-path.svg */,
 				D9C6E95827D4859C008194E5 /* symbol.refresh.svg */,
 				D9ACD78D220FDDE0009717CF /* arc.svg */,
 				D918D26C22122A7300097C9A /* arc2.svg */,
@@ -254,6 +260,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				01F290A127D7839900743E2F /* symbol-test.svg in Resources */,
 				D9ACD79E220FDDE0009717CF /* invalid.svg in Resources */,
 				D9126F0E24A6C19300859CC5 /* gradient-apple.svg in Resources */,
 				D98375B622500FCC00974D71 /* mask-composite.svg in Resources */,
@@ -275,6 +282,7 @@
 				D918D26D22122A7300097C9A /* arc2.svg in Resources */,
 				D9ACD79B220FDDE0009717CF /* arc.svg in Resources */,
 				D92A71FE27818B860001630A /* simple.svg in Resources */,
+				01F290A027D7839900743E2F /* transform-path.svg in Resources */,
 				D961846D220FDD1200C59D9B /* Assets.xcassets in Resources */,
 				D938A203268307670051E18B /* pattern-rotate.svg in Resources */,
 				D9ACD79D220FDDE0009717CF /* display.svg in Resources */,

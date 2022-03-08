@@ -237,11 +237,13 @@ extension XMLParser {
     } catch {
       print(error)
     }
-    
-    
+
     el.fillOpacity = try att.parsePercentage("fill-opacity")
     el.fillRule = try att.parseRaw("fill-rule")
-    
+
+    el.fontFamily = (try att.parseString("font-family"))?.trimmingCharacters(in: .whitespacesAndNewlines)
+    el.fontSize = try att.parseFloat("font-size")
+
     if let val = try? att.parseString("transform") {
       el.transform = try parseTransform(val)
     }
@@ -269,6 +271,8 @@ extension PresentationAttributes {
     fill = attributes.fill
     fillOpacity = attributes.fillOpacity
     fillRule = attributes.fillRule
+    fontFamily = attributes.fontFamily
+    fontSize = attributes.fontSize
     transform = attributes.transform
     clipPath = attributes.clipPath
     mask = attributes.mask

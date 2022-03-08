@@ -118,9 +118,5 @@ extension LayerTree {
     var color: Color
     var fontName: String
     var size: Float
-    
-    static var normal: TextAttributes {
-      return TextAttributes(color: .black, fontName: "Helvetica", size: 12.0)
-    }
   }
 }

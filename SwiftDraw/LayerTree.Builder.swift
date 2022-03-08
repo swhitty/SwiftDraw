@@ -186,7 +186,12 @@ extension LayerTree.Builder {
   }
 
   static func makeTextAttributes(with state: State) -> LayerTree.TextAttributes {
-    return .normal
+      let fill = LayerTree.Color.create(from: state.fill.makeColor()).withAlpha(state.fillOpacity).maybeNone()
+      return LayerTree.TextAttributes(
+        color: fill,
+        fontName: state.fontFamily,
+        size: state.fontSize
+      )
   }
 
   func makePattern(for element: DOM.Pattern) -> LayerTree.Pattern {
@@ -249,6 +254,9 @@ extension LayerTree.Builder {
     var fillOpacity: DOM.Float
     var fillRule: DOM.FillRule
 
+    var fontFamily: String
+    var fontSize: DOM.Float
+
     init() {
       //default root SVG element state
       opacity = 1.0
@@ -265,6 +273,9 @@ extension LayerTree.Builder {
       fill = .color(.keyword(.black))
       fillOpacity = 1.0
       fillRule = .evenodd
+
+      fontFamily = "Helvetica"
+      fontSize = 12.0
     }
   }
 
@@ -284,6 +295,9 @@ extension LayerTree.Builder {
     state.fill = attributes.fill ?? existing.fill
     state.fillOpacity = attributes.fillOpacity ?? existing.fillOpacity
     state.fillRule = attributes.fillRule ?? existing.fillRule
+
+    state.fontFamily = attributes.fontFamily ?? existing.fontFamily
+      state.fontSize = attributes.fontSize ?? existing.fontSize
 
     return state
   }
