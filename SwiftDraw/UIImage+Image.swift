@@ -33,6 +33,7 @@
 import UIKit
 
 public extension UIImage {
+
   convenience init?(svgNamed name: String, in bundle: Bundle = Bundle.main) {
     guard let image = Image(named: name, in: bundle)?.rasterize(),
       let cgImage = image.cgImage else {
@@ -40,6 +41,11 @@ public extension UIImage {
     }
 
     self.init(cgImage: cgImage, scale: image.scale, orientation: image.imageOrientation)
+  }
+
+  @objc
+  static func svgNamed(_ name: String, in bundle: Bundle = Bundle.main) -> UIImage? {
+    UIImage(svgNamed: name, in: bundle)
   }
 }
 

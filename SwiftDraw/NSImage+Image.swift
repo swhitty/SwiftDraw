@@ -34,6 +34,7 @@ import AppKit
 import CoreGraphics
 
 public extension NSImage {
+
   convenience init?(svgNamed name: String, in bundle: Bundle = Bundle.main) {
     guard let image = Image(named: name, in: bundle) else { return nil }
 
@@ -42,6 +43,11 @@ public extension NSImage {
       ctx.draw(image, in: CGRect(x: 0, y: 0, width: rect.size.width, height: rect.size.height))
       return true
     }
+  }
+
+  @objc
+  static func svgNamed(_ name: String, in bundle: Bundle = Bundle.main) -> NSImage? {
+    NSImage(svgNamed: name, in: bundle)
   }
 }
 
