@@ -40,12 +40,14 @@ public extension UIImage {
         return nil
     }
 
+      UIImage(n)
+
     self.init(cgImage: cgImage, scale: image.scale, orientation: image.imageOrientation)
   }
 
   @objc
-  static func svgNamed(_ name: String, in bundle: Bundle) -> UIImage? {
-    UIImage(svgNamed: name, in: bundle)
+  static func svgNamed(_ name: String, inBundle: Bundle) -> UIImage? {
+    UIImage(svgNamed: name, in: inBundle)
   }
 
   @objc

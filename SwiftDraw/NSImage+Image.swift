@@ -46,8 +46,8 @@ public extension NSImage {
   }
 
   @objc
-  static func svgNamed(_ name: String, in bundle: Bundle) -> NSImage? {
-    NSImage(svgNamed: name, in: bundle)
+  static func svgNamed(_ name: String, inBundle: Bundle) -> NSImage? {
+    NSImage(svgNamed: name, in: inBundle)
   }
 
   @objc
