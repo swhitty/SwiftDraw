@@ -40,8 +40,6 @@ public extension UIImage {
         return nil
     }
 
-      UIImage(n)
-
     self.init(cgImage: cgImage, scale: image.scale, orientation: image.imageOrientation)
   }
 
