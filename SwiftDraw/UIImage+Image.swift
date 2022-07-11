@@ -44,8 +44,13 @@ public extension UIImage {
   }
 
   @objc
-  static func svgNamed(_ name: String, in bundle: Bundle = Bundle.main) -> UIImage? {
+  static func svgNamed(_ name: String, in bundle: Bundle) -> UIImage? {
     UIImage(svgNamed: name, in: bundle)
+  }
+
+  @objc
+  static func svgNamed(_ name: String) -> UIImage? {
+      UIImage(svgNamed: name, in: .main)
   }
 }
 
