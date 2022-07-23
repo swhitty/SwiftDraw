@@ -34,23 +34,36 @@ import UIKit
 
 public extension UIImage {
 
-  convenience init?(svgNamed name: String, in bundle: Bundle = Bundle.main) {
-    guard let image = Image(named: name, in: bundle)?.rasterize(),
-      let cgImage = image.cgImage else {
-        return nil
-    }
-
-    self.init(cgImage: cgImage, scale: image.scale, orientation: image.imageOrientation)
+  convenience init?(svgNamed name: String, in bundle: Bundle = .main) {
+    guard let image = Image(named: name, in: bundle) else { return nil }
+    self.init(image)
   }
 
-  @objc
-  static func svgNamed(_ name: String, inBundle: Bundle) -> UIImage? {
-    UIImage(svgNamed: name, in: inBundle)
+  @objc(initWithSVGData:)
+  convenience init?(svgData: Data) {
+    guard let image = Image(data: svgData) else { return nil }
+    self.init(image)
   }
 
-  @objc
-  static func svgNamed(_ name: String) -> UIImage? {
+  @objc(initWithContentsOfSVGFile:)
+  convenience init?(contentsOfSVGFile path: String) {
+    guard let image = Image(fileURL: URL(fileURLWithPath: path)) else { return nil }
+    self.init(image)
+  }
+
+  @objc(svgNamed:)
+  static func _svgNamed(_ name: String) -> UIImage? {
       UIImage(svgNamed: name, in: .main)
+  }
+
+  @objc(svgNamed:inBundle:)
+  static func _svgNamed(_ name: String, in bundle: Bundle) -> UIImage? {
+    UIImage(svgNamed: name, in: bundle)
+  }
+
+  convenience init(_ image: Image) {
+      let image = image.rasterize()
+      self.init(cgImage: image.cgImage!, scale: image.scale, orientation: image.imageOrientation)
   }
 }
 

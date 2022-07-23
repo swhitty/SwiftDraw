@@ -35,24 +35,39 @@ import CoreGraphics
 
 public extension NSImage {
 
-  convenience init?(svgNamed name: String, in bundle: Bundle = Bundle.main) {
+  convenience init?(svgNamed name: String, in bundle: Bundle = .main) {
     guard let image = Image(named: name, in: bundle) else { return nil }
+    self.init(image)
+  }
 
+  @objc(initWithSVGData:)
+  convenience init?(_ data: Data) {
+    guard let image = Image(data: data) else { return nil }
+    self.init(image)
+  }
+
+  @objc(initWithContentsOfSVGFile:)
+  convenience init?(contentsOfSVGFile path: String) {
+    guard let image = Image(fileURL: URL(fileURLWithPath: path)) else { return nil }
+    self.init(image)
+  }
+
+  @objc(svgNamed:)
+  static func _svgNamed(_ name: String) -> NSImage? {
+    NSImage(svgNamed: name, in: .main)
+  }
+
+  @objc(svgNamed:inBundle:)
+  static func _svgNamed(_ name: String, in bundle: Bundle) -> NSImage? {
+    NSImage(svgNamed: name, in: bundle)
+  }
+
+  convenience init(_ image: Image) {
     self.init(size: image.size, flipped: true) { rect in
       guard let ctx = NSGraphicsContext.current?.cgContext else { return false }
       ctx.draw(image, in: CGRect(x: 0, y: 0, width: rect.size.width, height: rect.size.height))
       return true
     }
-  }
-
-  @objc
-  static func svgNamed(_ name: String, inBundle: Bundle) -> NSImage? {
-    NSImage(svgNamed: name, in: inBundle)
-  }
-
-  @objc
-  static func svgNamed(_ name: String) -> NSImage? {
-      NSImage(svgNamed: name, in: .main)
   }
 }
 
