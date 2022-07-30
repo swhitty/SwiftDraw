@@ -130,11 +130,26 @@ final class LayerTreeColorTests: XCTestCase {
     XCTAssertEqual(Color(green), .srgb(r: 0.0, g: 1.0, b: 0.0, a: 1.0))
     XCTAssertEqual(Color(blue), .srgb(r: 0.0, g: 0.0, b: 1.0, a: 1.0))
   }
-  
+
+  func testCurrentColor() {
+      // DOM.Color converts correctly
+
+    let none = DOM.Color.none
+    let black = DOM.Color.keyword(.black)
+    let white = DOM.Color.keyword(.white)
+
+    XCTAssertEqual(Color.create(from: .currentColor, current: none), .none)
+    XCTAssertEqual(Color.create(from: .currentColor, current: black), Color(black))
+    XCTAssertEqual(Color.create(from: .currentColor, current: white), Color(white))
+  }
 }
 
 extension LayerTree.Color {
-  
+
+  init(_ color: DOM.Color) {
+    self = LayerTree.Color.create(from: color, current: .none)
+  }
+
   static func srgb(r: LayerTree.Float,
                    g: LayerTree.Float,
                    b: LayerTree.Float,

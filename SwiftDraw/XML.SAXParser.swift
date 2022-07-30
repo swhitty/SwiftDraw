@@ -39,12 +39,12 @@ extension XML {
   final class SAXParser: NSObject, XMLParserDelegate {
     
     #if canImport(FoundationXML)
-    typealias XMLParser = FoundationXML.XMLParser
+    typealias FoundationXMLParser = FoundationXML.XMLParser
     #else
-    typealias XMLParser = Foundation.XMLParser
+    typealias FoundationXMLParser = Foundation.XMLParser
     #endif
     
-    private let parser: XMLParser
+    private let parser: FoundationXMLParser
     private let namespaceURI = "http://www.w3.org/2000/svg"
     
     private var rootNode: Element?
@@ -55,7 +55,7 @@ extension XML {
     }
     
     private init(data: Data) {
-      self.parser = XMLParser(data: data)
+      self.parser = FoundationXMLParser(data: data)
       elements = [Element]()
       super.init()
       
@@ -69,7 +69,7 @@ extension XML {
       guard
         parser.parser.parse(),
         let rootNode = parser.rootNode else {
-          let error = parser.parser.parserError ?? SwiftDraw.XMLParser.Error.invalid
+          let error = parser.parser.parserError ?? XMLParser.Error.invalid
           throw error
       }
       
@@ -81,7 +81,7 @@ extension XML {
       return try parse(data: data)
     }
     
-    func parser(_ parser: XMLParser, didStartElement elementName: String, namespaceURI: String?, qualifiedName _: String?, attributes attributeDict: [String: String] = [:]) {
+    func parser(_ parser: FoundationXMLParser, didStartElement elementName: String, namespaceURI: String?, qualifiedName _: String?, attributes attributeDict: [String: String] = [:]) {
       guard
         self.parser === parser,
         namespaceURI == self.namespaceURI else {
@@ -99,7 +99,7 @@ extension XML {
       }
     }
     
-    func parser(_ parser: XMLParser, didEndElement elementName: String, namespaceURI: String?, qualifiedName _: String?) {
+    func parser(_ parser: FoundationXMLParser, didEndElement elementName: String, namespaceURI: String?, qualifiedName _: String?) {
       guard
         namespaceURI == self.namespaceURI,
         currentElement.name == elementName else {
@@ -109,7 +109,7 @@ extension XML {
       elements.removeLast()
     }
     
-    func parser(_ parser: XMLParser, foundCharacters string: String) {
+    func parser(_ parser: FoundationXMLParser, foundCharacters string: String) {
       guard let element = elements.last else { return }
       let text = element.innerText.map { $0.appending(string) }
       element.innerText = text ?? string

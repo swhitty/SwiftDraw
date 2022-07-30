@@ -48,15 +48,13 @@ extension LayerTree {
 }
 
 extension LayerTree.Color {
-  
-  init(_ color: DOM.Color) {
-    self = LayerTree.Color.create(from: color)
-  }
-  
-  static func create(from color: DOM.Color) -> LayerTree.Color {
+
+  static func create(from color: DOM.Color, current: DOM.Color) -> LayerTree.Color {
     switch(color){
     case .none:
       return .none
+    case .currentColor:
+      return create(from: current, current: .none)
     case let .keyword(c):
       let rgbi = c.rgbi
       return LayerTree.Color(rgbi.0, rgbi.1, rgbi.2)

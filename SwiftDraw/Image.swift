@@ -108,11 +108,13 @@ extension DOM.SVG {
 public extension Image {
 
   convenience init?(fileURL url: URL) {
-    guard let svg = try? DOM.SVG.parse(fileURL: url) else {
+    do {
+      let svg = try DOM.SVG.parse(fileURL: url)
+      self.init(svg: svg)
+    } catch {
+      print("[swiftdraw]", "parsing error", error)
       return nil
     }
-
-    self.init(svg: svg)
   }
 
   convenience init?(named name: String, in bundle: Bundle = Bundle.main) {

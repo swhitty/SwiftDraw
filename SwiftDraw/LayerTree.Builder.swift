@@ -157,7 +157,9 @@ extension LayerTree.Builder {
     let stroke: LayerTree.Color
 
     if state.strokeWidth > 0.0 {
-      stroke = LayerTree.Color.create(from: state.stroke).withAlpha(state.strokeOpacity).maybeNone()
+      stroke = LayerTree.Color
+            .create(from: state.stroke, current: state.color)
+            .withAlpha(state.strokeOpacity).maybeNone()
     } else {
       stroke = .none
     }
@@ -170,7 +172,9 @@ extension LayerTree.Builder {
   }
 
   func makeFillAttributes(with state: State) -> LayerTree.FillAttributes {
-    let fill = LayerTree.Color.create(from: state.fill.makeColor()).withAlpha(state.fillOpacity).maybeNone()
+    let fill = LayerTree.Color
+          .create(from: state.fill.makeColor(), current: state.color)
+          .withAlpha(state.fillOpacity).maybeNone()
 
     if case .url(let patternId) = state.fill,
       let element = svg.defs.patterns.first(where: { $0.id == patternId.fragment }) {
@@ -186,7 +190,9 @@ extension LayerTree.Builder {
   }
 
   static func makeTextAttributes(with state: State) -> LayerTree.TextAttributes {
-      let fill = LayerTree.Color.create(from: state.fill.makeColor()).withAlpha(state.fillOpacity).maybeNone()
+      let fill = LayerTree.Color
+          .create(from: state.fill.makeColor(), current: state.color)
+          .withAlpha(state.fillOpacity).maybeNone()
       return LayerTree.TextAttributes(
         color: fill,
         fontName: state.fontFamily,
@@ -232,7 +238,7 @@ extension LayerTree.Builder {
   func makeGradientStops(for element: DOM.LinearGradient) -> [LayerTree.Gradient.Stop] {
     return element.stops.map {
       LayerTree.Gradient.Stop(offset: $0.offset,
-                              color: LayerTree.Color($0.color),
+                              color: LayerTree.Color.create(from: $0.color, current: .none),
                               opacity: $0.opacity)
     }
   }
@@ -241,6 +247,7 @@ extension LayerTree.Builder {
   struct State {
     var opacity: DOM.Float
     var display: DOM.DisplayMode
+    var color: DOM.Color
 
     var stroke: DOM.Color
     var strokeWidth: DOM.Float
@@ -261,6 +268,7 @@ extension LayerTree.Builder {
       //default root SVG element state
       opacity = 1.0
       display = .inline
+      color = .keyword(.black)
 
       stroke = .none
       strokeWidth = 1.0
@@ -284,6 +292,7 @@ extension LayerTree.Builder {
 
     state.opacity = attributes.opacity ?? 1.0
     state.display = attributes.display ?? existing.display
+    state.color = attributes.color ?? existing.color
 
     state.stroke = attributes.stroke ?? existing.stroke
     state.strokeWidth = attributes.strokeWidth ?? existing.strokeWidth
@@ -297,7 +306,7 @@ extension LayerTree.Builder {
     state.fillRule = attributes.fillRule ?? existing.fillRule
 
     state.fontFamily = attributes.fontFamily ?? existing.fontFamily
-      state.fontSize = attributes.fontSize ?? existing.fontSize
+    state.fontSize = attributes.fontSize ?? existing.fontSize
 
     return state
   }

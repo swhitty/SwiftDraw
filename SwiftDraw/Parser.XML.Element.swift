@@ -216,7 +216,8 @@ extension XMLParser {
     
     el.opacity = try att.parsePercentage("opacity")
     el.display = try att.parseRaw("display")
-    
+    el.color = try att.parseColor("color")
+
     el.stroke = try att.parseColor("stroke")
     el.strokeWidth = try att.parseFloat("stroke-width")
     el.strokeOpacity = try att.parsePercentage("stroke-opacity")
@@ -262,6 +263,7 @@ extension PresentationAttributes {
   mutating func updateAttributes(from attributes: PresentationAttributes) {
     opacity = attributes.opacity
     display = attributes.display
+    color = attributes.color
     stroke = attributes.stroke
     strokeWidth = attributes.strokeWidth
     strokeOpacity = attributes.strokeOpacity

@@ -38,7 +38,8 @@ protocol ContainerElement {
 protocol PresentationAttributes {
   var opacity: DOM.Float?  { get set }
   var display: DOM.DisplayMode?  { get set }
-  
+  var color: DOM.Color?  { get set }
+
   var stroke: DOM.Color?  { get set }
   var strokeWidth: DOM.Float?  { get set }
   var strokeOpacity: DOM.Float?  { get set }
@@ -67,7 +68,8 @@ extension DOM {
     
     var opacity: DOM.Float?
     var display: DOM.DisplayMode?
-    
+    var color: DOM.Color?
+
     var stroke: DOM.Color?
     var strokeWidth: DOM.Float?
     var strokeOpacity: DOM.Float?

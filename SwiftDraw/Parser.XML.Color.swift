@@ -39,6 +39,8 @@ extension XMLParser {
       return .color(c)
     } else if let c = try parseColorP3(data: data) {
       return .color(c)
+    } else if let c = parseCurrentColor(data: data) {
+      return .color(c)
     } else if let c = parseColorKeyword(data: data) {
       return .color(c)
     } else if let c = parseColorNone(data: data) {
@@ -58,7 +60,15 @@ extension XMLParser {
     }
     return nil
   }
-  
+
+  private func parseCurrentColor(data: String) -> DOM.Color? {
+    let raw = data.trimmingCharacters(in: .whitespaces)
+    guard raw == "currentColor" else {
+      return nil
+    }
+    return .currentColor
+  }
+
   private func parseColorKeyword(data: String) -> DOM.Color? {
     let raw = data.trimmingCharacters(in: .whitespaces)
     guard let keyword = DOM.Color.Keyword(rawValue: raw) else {
