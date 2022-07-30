@@ -7,45 +7,12 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		01BA4DA826820DE8001FF7B5 /* gradient-gratification-p3.svg in Resources */ = {isa = PBXBuildFile; fileRef = 01BA4DA726820DE8001FF7B5 /* gradient-gratification-p3.svg */; };
-		01F290A027D7839900743E2F /* transform-path.svg in Resources */ = {isa = PBXBuildFile; fileRef = 01F2909E27D7839800743E2F /* transform-path.svg */; };
-		01F290A127D7839900743E2F /* symbol-test.svg in Resources */ = {isa = PBXBuildFile; fileRef = 01F2909F27D7839900743E2F /* symbol-test.svg */; };
-		D90523452217927F00B3B94F /* mystery.svg in Resources */ = {isa = PBXBuildFile; fileRef = D90523442217927F00B3B94F /* mystery.svg */; };
-		D9126F0E24A6C19300859CC5 /* gradient-apple.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9126F0D24A6C19200859CC5 /* gradient-apple.svg */; };
-		D918D26D22122A7300097C9A /* arc2.svg in Resources */ = {isa = PBXBuildFile; fileRef = D918D26C22122A7300097C9A /* arc2.svg */; };
-		D91C3E43224ED9A4001BCDAE /* gradient-gratification.svg in Resources */ = {isa = PBXBuildFile; fileRef = D91C3E42224ED9A4001BCDAE /* gradient-gratification.svg */; };
-		D92A71FE27818B860001630A /* simple.svg in Resources */ = {isa = PBXBuildFile; fileRef = D92A71FC27818B860001630A /* simple.svg */; };
-		D92A71FF27818B860001630A /* pattern-bounding.svg in Resources */ = {isa = PBXBuildFile; fileRef = D92A71FD27818B860001630A /* pattern-bounding.svg */; };
-		D938A203268307670051E18B /* pattern-rotate.svg in Resources */ = {isa = PBXBuildFile; fileRef = D938A202268307670051E18B /* pattern-rotate.svg */; };
-		D945F5AA225220F900FAAAC4 /* mask-composite-2.svg in Resources */ = {isa = PBXBuildFile; fileRef = D945F5A8225220F900FAAAC4 /* mask-composite-2.svg */; };
-		D945F5AB225220F900FAAAC4 /* mask-composite-3.svg in Resources */ = {isa = PBXBuildFile; fileRef = D945F5A9225220F900FAAAC4 /* mask-composite-3.svg */; };
-		D945F5AD225241A100FAAAC4 /* blend.svg in Resources */ = {isa = PBXBuildFile; fileRef = D945F5AC225241A100FAAAC4 /* blend.svg */; };
-		D9494F44224C846D0015ACE1 /* thats-no-moon.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9494F43224C846D0015ACE1 /* thats-no-moon.svg */; };
-		D9494F46224C99950015ACE1 /* gradient.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9494F45224C99950015ACE1 /* gradient.svg */; };
-		D956E1B122103A0C00C5ADA2 /* identity.svg in Resources */ = {isa = PBXBuildFile; fileRef = D956E1B022103A0C00C5ADA2 /* identity.svg */; };
 		D9618466220FDD1100C59D9B /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9618465220FDD1100C59D9B /* AppDelegate.swift */; };
 		D9618468220FDD1100C59D9B /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9618467220FDD1100C59D9B /* ViewController.swift */; };
 		D961846D220FDD1200C59D9B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D961846C220FDD1200C59D9B /* Assets.xcassets */; };
 		D9618470220FDD1200C59D9B /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = D961846E220FDD1200C59D9B /* LaunchScreen.storyboard */; };
 		D9742E1E27D4877300E02FFD /* SwiftDraw in Frameworks */ = {isa = PBXBuildFile; productRef = D9742E1D27D4877300E02FFD /* SwiftDraw */; };
-		D98375B622500FCC00974D71 /* mask-composite.svg in Resources */ = {isa = PBXBuildFile; fileRef = D98375B522500FCC00974D71 /* mask-composite.svg */; };
-		D991955824BAF8E200E58925 /* rings.svg in Resources */ = {isa = PBXBuildFile; fileRef = D991955724BAF8E200E58925 /* rings.svg */; };
-		D9ACD791220FDDE0009717CF /* use.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9ACD783220FDDE0009717CF /* use.svg */; };
-		D9ACD792220FDDE0009717CF /* path.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9ACD784220FDDE0009717CF /* path.svg */; };
-		D9ACD793220FDDE0009717CF /* viewbox.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9ACD785220FDDE0009717CF /* viewbox.svg */; };
-		D9ACD794220FDDE0009717CF /* transform.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9ACD786220FDDE0009717CF /* transform.svg */; };
-		D9ACD796220FDDE0009717CF /* curves.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9ACD788220FDDE0009717CF /* curves.svg */; };
-		D9ACD797220FDDE0009717CF /* shapes.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9ACD789220FDDE0009717CF /* shapes.svg */; };
-		D9ACD798220FDDE0009717CF /* lines.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9ACD78A220FDDE0009717CF /* lines.svg */; };
-		D9ACD799220FDDE0009717CF /* starry.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9ACD78B220FDDE0009717CF /* starry.svg */; };
-		D9ACD79A220FDDE0009717CF /* mask.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9ACD78C220FDDE0009717CF /* mask.svg */; };
-		D9ACD79B220FDDE0009717CF /* arc.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9ACD78D220FDDE0009717CF /* arc.svg */; };
-		D9ACD79C220FDDE0009717CF /* quad.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9ACD78E220FDDE0009717CF /* quad.svg */; };
-		D9ACD79D220FDDE0009717CF /* display.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9ACD78F220FDDE0009717CF /* display.svg */; };
-		D9ACD79E220FDDE0009717CF /* invalid.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9ACD790220FDDE0009717CF /* invalid.svg */; };
-		D9C6E95927D4859C008194E5 /* symbol.refresh.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9C6E95827D4859C008194E5 /* symbol.refresh.svg */; };
-		D9D9EB2D224A3BCA006CF83C /* pattern.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9D9EB2C224A3BCA006CF83C /* pattern.svg */; };
-		D9FD69D8224CD4960046A926 /* gradient2.svg in Resources */ = {isa = PBXBuildFile; fileRef = D9FD69D7224CD4960046A926 /* gradient2.svg */; };
+		D9BA1AAD2894A33C007A6033 /* Samples.bundle in Resources */ = {isa = PBXBuildFile; fileRef = D9BA1AAC2894A32A007A6033 /* Samples.bundle */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -61,22 +28,6 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		01BA4DA726820DE8001FF7B5 /* gradient-gratification-p3.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = "gradient-gratification-p3.svg"; sourceTree = "<group>"; };
-		01F2909E27D7839800743E2F /* transform-path.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = "transform-path.svg"; sourceTree = "<group>"; };
-		01F2909F27D7839900743E2F /* symbol-test.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = "symbol-test.svg"; sourceTree = "<group>"; };
-		D90523442217927F00B3B94F /* mystery.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = mystery.svg; sourceTree = "<group>"; };
-		D9126F0D24A6C19200859CC5 /* gradient-apple.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "gradient-apple.svg"; sourceTree = "<group>"; };
-		D918D26C22122A7300097C9A /* arc2.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = arc2.svg; sourceTree = "<group>"; };
-		D91C3E42224ED9A4001BCDAE /* gradient-gratification.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = "gradient-gratification.svg"; sourceTree = "<group>"; };
-		D92A71FC27818B860001630A /* simple.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = simple.svg; sourceTree = "<group>"; };
-		D92A71FD27818B860001630A /* pattern-bounding.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = "pattern-bounding.svg"; sourceTree = "<group>"; };
-		D938A202268307670051E18B /* pattern-rotate.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = "pattern-rotate.svg"; sourceTree = "<group>"; };
-		D945F5A8225220F900FAAAC4 /* mask-composite-2.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = "mask-composite-2.svg"; sourceTree = "<group>"; };
-		D945F5A9225220F900FAAAC4 /* mask-composite-3.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = "mask-composite-3.svg"; sourceTree = "<group>"; };
-		D945F5AC225241A100FAAAC4 /* blend.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = blend.svg; sourceTree = "<group>"; };
-		D9494F43224C846D0015ACE1 /* thats-no-moon.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = "thats-no-moon.svg"; sourceTree = "<group>"; };
-		D9494F45224C99950015ACE1 /* gradient.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = gradient.svg; sourceTree = "<group>"; };
-		D956E1B022103A0C00C5ADA2 /* identity.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = identity.svg; sourceTree = "<group>"; };
 		D9618462220FDD1100C59D9B /* Basic.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Basic.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D9618465220FDD1100C59D9B /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		D9618467220FDD1100C59D9B /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -84,25 +35,8 @@
 		D961846F220FDD1200C59D9B /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		D9618471220FDD1200C59D9B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		D9742E1C27D4875100E02FFD /* SwiftDraw */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = SwiftDraw; path = ..; sourceTree = "<group>"; };
-		D98375B522500FCC00974D71 /* mask-composite.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = "mask-composite.svg"; sourceTree = "<group>"; };
-		D991955724BAF8E200E58925 /* rings.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = rings.svg; sourceTree = "<group>"; };
-		D9ACD783220FDDE0009717CF /* use.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = use.svg; sourceTree = "<group>"; };
-		D9ACD784220FDDE0009717CF /* path.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = path.svg; sourceTree = "<group>"; };
-		D9ACD785220FDDE0009717CF /* viewbox.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = viewbox.svg; sourceTree = "<group>"; };
-		D9ACD786220FDDE0009717CF /* transform.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = transform.svg; sourceTree = "<group>"; };
-		D9ACD788220FDDE0009717CF /* curves.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = curves.svg; sourceTree = "<group>"; };
-		D9ACD789220FDDE0009717CF /* shapes.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = shapes.svg; sourceTree = "<group>"; };
-		D9ACD78A220FDDE0009717CF /* lines.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = lines.svg; sourceTree = "<group>"; };
-		D9ACD78B220FDDE0009717CF /* starry.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = starry.svg; sourceTree = "<group>"; };
-		D9ACD78C220FDDE0009717CF /* mask.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = mask.svg; sourceTree = "<group>"; };
-		D9ACD78D220FDDE0009717CF /* arc.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = arc.svg; sourceTree = "<group>"; };
-		D9ACD78E220FDDE0009717CF /* quad.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = quad.svg; sourceTree = "<group>"; };
-		D9ACD78F220FDDE0009717CF /* display.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = display.svg; sourceTree = "<group>"; };
-		D9ACD790220FDDE0009717CF /* invalid.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = invalid.svg; sourceTree = "<group>"; };
 		D9ACD7A0220FDE04009717CF /* SwiftDraw.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = SwiftDraw.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		D9C6E95827D4859C008194E5 /* symbol.refresh.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = symbol.refresh.svg; sourceTree = "<group>"; };
-		D9D9EB2C224A3BCA006CF83C /* pattern.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = pattern.svg; sourceTree = "<group>"; };
-		D9FD69D7224CD4960046A926 /* gradient2.svg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = gradient2.svg; sourceTree = "<group>"; };
+		D9BA1AAC2894A32A007A6033 /* Samples.bundle */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.plug-in"; path = Samples.bundle; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -121,7 +55,7 @@
 			isa = PBXGroup;
 			children = (
 				D9742E1C27D4875100E02FFD /* SwiftDraw */,
-				D9ACD782220FDDE0009717CF /* Samples */,
+				D9BA1AAC2894A32A007A6033 /* Samples.bundle */,
 				D9618464220FDD1100C59D9B /* Sources */,
 				D9618463220FDD1100C59D9B /* Products */,
 				D9ACD79F220FDE04009717CF /* Frameworks */,
@@ -146,48 +80,6 @@
 				D9618471220FDD1200C59D9B /* Info.plist */,
 			);
 			path = Sources;
-			sourceTree = "<group>";
-		};
-		D9ACD782220FDDE0009717CF /* Samples */ = {
-			isa = PBXGroup;
-			children = (
-				01F2909F27D7839900743E2F /* symbol-test.svg */,
-				01F2909E27D7839800743E2F /* transform-path.svg */,
-				D9C6E95827D4859C008194E5 /* symbol.refresh.svg */,
-				D9ACD78D220FDDE0009717CF /* arc.svg */,
-				D918D26C22122A7300097C9A /* arc2.svg */,
-				D945F5AC225241A100FAAAC4 /* blend.svg */,
-				D9ACD788220FDDE0009717CF /* curves.svg */,
-				D9ACD78F220FDDE0009717CF /* display.svg */,
-				D9126F0D24A6C19200859CC5 /* gradient-apple.svg */,
-				01BA4DA726820DE8001FF7B5 /* gradient-gratification-p3.svg */,
-				D91C3E42224ED9A4001BCDAE /* gradient-gratification.svg */,
-				D9494F45224C99950015ACE1 /* gradient.svg */,
-				D9FD69D7224CD4960046A926 /* gradient2.svg */,
-				D956E1B022103A0C00C5ADA2 /* identity.svg */,
-				D9ACD790220FDDE0009717CF /* invalid.svg */,
-				D9ACD78A220FDDE0009717CF /* lines.svg */,
-				D945F5A8225220F900FAAAC4 /* mask-composite-2.svg */,
-				D945F5A9225220F900FAAAC4 /* mask-composite-3.svg */,
-				D98375B522500FCC00974D71 /* mask-composite.svg */,
-				D9ACD78C220FDDE0009717CF /* mask.svg */,
-				D90523442217927F00B3B94F /* mystery.svg */,
-				D9ACD784220FDDE0009717CF /* path.svg */,
-				D92A71FD27818B860001630A /* pattern-bounding.svg */,
-				D938A202268307670051E18B /* pattern-rotate.svg */,
-				D9D9EB2C224A3BCA006CF83C /* pattern.svg */,
-				D9ACD78E220FDDE0009717CF /* quad.svg */,
-				D991955724BAF8E200E58925 /* rings.svg */,
-				D9ACD789220FDDE0009717CF /* shapes.svg */,
-				D92A71FC27818B860001630A /* simple.svg */,
-				D9ACD78B220FDDE0009717CF /* starry.svg */,
-				D9494F43224C846D0015ACE1 /* thats-no-moon.svg */,
-				D9ACD786220FDDE0009717CF /* transform.svg */,
-				D9ACD783220FDDE0009717CF /* use.svg */,
-				D9ACD785220FDDE0009717CF /* viewbox.svg */,
-			);
-			name = Samples;
-			path = ../Samples;
 			sourceTree = "<group>";
 		};
 		D9ACD79F220FDE04009717CF /* Frameworks */ = {
@@ -260,42 +152,9 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				01F290A127D7839900743E2F /* symbol-test.svg in Resources */,
-				D9ACD79E220FDDE0009717CF /* invalid.svg in Resources */,
-				D9126F0E24A6C19300859CC5 /* gradient-apple.svg in Resources */,
-				D98375B622500FCC00974D71 /* mask-composite.svg in Resources */,
-				D9ACD796220FDDE0009717CF /* curves.svg in Resources */,
-				D9ACD79C220FDDE0009717CF /* quad.svg in Resources */,
-				D945F5AB225220F900FAAAC4 /* mask-composite-3.svg in Resources */,
-				D9FD69D8224CD4960046A926 /* gradient2.svg in Resources */,
-				D991955824BAF8E200E58925 /* rings.svg in Resources */,
-				01BA4DA826820DE8001FF7B5 /* gradient-gratification-p3.svg in Resources */,
-				D9ACD797220FDDE0009717CF /* shapes.svg in Resources */,
-				D9ACD799220FDDE0009717CF /* starry.svg in Resources */,
-				D92A71FF27818B860001630A /* pattern-bounding.svg in Resources */,
-				D9ACD791220FDDE0009717CF /* use.svg in Resources */,
-				D91C3E43224ED9A4001BCDAE /* gradient-gratification.svg in Resources */,
-				D9ACD793220FDDE0009717CF /* viewbox.svg in Resources */,
-				D9C6E95927D4859C008194E5 /* symbol.refresh.svg in Resources */,
 				D9618470220FDD1200C59D9B /* LaunchScreen.storyboard in Resources */,
-				D9ACD798220FDDE0009717CF /* lines.svg in Resources */,
-				D918D26D22122A7300097C9A /* arc2.svg in Resources */,
-				D9ACD79B220FDDE0009717CF /* arc.svg in Resources */,
-				D92A71FE27818B860001630A /* simple.svg in Resources */,
-				01F290A027D7839900743E2F /* transform-path.svg in Resources */,
+				D9BA1AAD2894A33C007A6033 /* Samples.bundle in Resources */,
 				D961846D220FDD1200C59D9B /* Assets.xcassets in Resources */,
-				D938A203268307670051E18B /* pattern-rotate.svg in Resources */,
-				D9ACD79D220FDDE0009717CF /* display.svg in Resources */,
-				D90523452217927F00B3B94F /* mystery.svg in Resources */,
-				D9494F44224C846D0015ACE1 /* thats-no-moon.svg in Resources */,
-				D9494F46224C99950015ACE1 /* gradient.svg in Resources */,
-				D956E1B122103A0C00C5ADA2 /* identity.svg in Resources */,
-				D9ACD792220FDDE0009717CF /* path.svg in Resources */,
-				D945F5AD225241A100FAAAC4 /* blend.svg in Resources */,
-				D9ACD79A220FDDE0009717CF /* mask.svg in Resources */,
-				D9ACD794220FDDE0009717CF /* transform.svg in Resources */,
-				D9D9EB2D224A3BCA006CF83C /* pattern.svg in Resources */,
-				D945F5AA225220F900FAAAC4 /* mask-composite-2.svg in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

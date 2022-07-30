@@ -20,10 +20,12 @@
 	
 	<circle cx="250" cy="250" r="50" fill="darkblue" stroke="purple" style="stroke-width:5;fillno: url(#MyGradient)"/>
 	
-	<g fill-opacity="0" stroke="red" stroke-width="4">
+	<g color="green" stroke="hotpink">
+	  <g fill-opacity="0" stroke="red" stroke-width="4">
 		<rect x="70" y="420" width="75" height="75" />	
 		<rect x="215" y="445" width="75" height="50" fill="blue" fill-opacity="0.5" />	
-		<rect x="355" y="420" width="75" height="75" />	
+		<rect x="355" y="420" width="75" height="75" fill="currentColor" fill-opacity="0.2" />	
+	  </g>
 	</g>
 	
 	<line x1="0" y1="0" x2="250" y2="250" stroke="fuchsia" stroke-width="2" />

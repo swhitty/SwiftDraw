@@ -65,7 +65,7 @@ class ViewController: UIViewController {
 
     override func loadView() {
         let imageView = UIImageView(frame: UIScreen.main.bounds)
-        imageView.image = Image(named: "symbol-test.svg")?.rasterize()
+        imageView.image = Image(named: "shapes.svg", in: .samples)?.rasterize()
         imageView.contentMode = .scaleAspectFit
         imageView.backgroundColor = .white
         self.view = imageView
@@ -89,4 +89,11 @@ private extension Image {
       .perform(NSSelectorFromString("_imageWithCGPDFPage:"), with: page)?
       .takeUnretainedValue() as? UIImage
   }
+}
+
+extension Bundle {
+    static let samples: Bundle = {
+        let url = Bundle.main.url(forResource: "Samples.bundle", withExtension: nil)!
+        return Bundle(url: url)!
+    }()
 }
