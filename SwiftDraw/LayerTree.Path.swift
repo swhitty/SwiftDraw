@@ -70,17 +70,12 @@ extension LayerTree.Path {
     
     return location
   }
-  
+
   var lastStart: LayerTree.Point? {
-    let rev = segments.reversed().dropFirst()
-    guard
-      let closeIdx = rev.firstIndex(where: { $0.isClose }),
-      closeIdx != rev.startIndex else {
-        return segments.first?.location
-    }
-    
-    let point = rev.index(before: closeIdx)
-    return rev[point].location
+      guard let index = segments.lastIndex(where:\.isMove) else {
+          return segments.first?.location
+      }
+      return segments[index].location
   }
 }
 
@@ -88,6 +83,13 @@ private extension LayerTree.Path.Segment {
   
   var isClose: Bool {
     guard case .close = self else {
+      return false
+    }
+    return true
+  }
+
+  var isMove: Bool {
+    guard case .move = self else {
       return false
     }
     return true

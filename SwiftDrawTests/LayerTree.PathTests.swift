@@ -42,6 +42,12 @@ final class LayerTreePathTests: XCTestCase {
   func testLocation() {
     let path = Path()
     XCTAssertNil(path.location)
+
+    path.segments.append(move(10, 10))
+    XCTAssertEqual(path.location, Point(10, 10))
+
+    path.segments.append(line(20, 20))
+    XCTAssertEqual(path.location, Point(20, 20))
     
     path.segments.append(move(110, 90))
     XCTAssertEqual(path.location, Point(110, 90))
