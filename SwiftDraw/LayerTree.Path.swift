@@ -65,17 +65,10 @@ extension LayerTree.Path {
   
   var location: LayerTree.Point? {
     guard let location = segments.last?.location else {
-      return lastStart
+      return segments.last(where:\.isMove)?.location
     }
     
     return location
-  }
-
-  var lastStart: LayerTree.Point? {
-      guard let index = segments.lastIndex(where:\.isMove) else {
-          return segments.first?.location
-      }
-      return segments[index].location
   }
 }
 
