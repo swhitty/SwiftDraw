@@ -51,15 +51,15 @@ public struct SVGRenderer {
     }
 
     static func makeDOM(path: LayerTree.Path, precision: Int) -> String {
-        let formatter = XMLFormatter.CoordinateFormatter(delimeter: .comma,
-                                                         precision: .capped(max: precision))
+        let formatter = XML.Formatter.CoordinateFormatter(delimeter: .comma,
+                                                          precision: .capped(max: precision))
         return path.segments
             .map { makeDOM(segment: $0, formatter: formatter) }
             .joined(separator: " ")
     }
 
     static func makeDOM(segment: LayerTree.Path.Segment,
-                        formatter: XMLFormatter.CoordinateFormatter) -> String {
+                        formatter: XML.Formatter.CoordinateFormatter) -> String {
         switch segment {
         case .move(let point):
             let point = formatter.format(point.x, point.y)

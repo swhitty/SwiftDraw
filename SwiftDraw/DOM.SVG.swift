@@ -44,7 +44,7 @@ extension DOM {
       self.height = height
     }
     
-    struct ViewBox {
+    struct ViewBox: Equatable {
       var x: Coordinate
       var y: Coordinate
       var width: Coordinate

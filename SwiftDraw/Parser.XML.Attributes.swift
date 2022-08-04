@@ -76,7 +76,6 @@ extension XMLParser {
   }
 }
 
-
 extension XMLParser {
   
   struct ValueParser: AttributeValueParser {

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <svg viewBox="0 0 550 550" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
 	<defs>
 		<path id="A" d="M0,69.755 L2.685,69.755 L28.369,3.287 L29.052,3.287 L29.052,0 L27.148,0 L0,69.755 Z 
@@ -6,7 +6,7 @@
 						M54.15,69.755 L56.787,69.755 L29.638,0 L28.466,0 L28.466,3.287 L54.15,69.755 Z" fill="rgb(39,170,225)" />
 	</defs>
 
-    <g id="Notes" font-family="'LucidaGrande', 'Lucida Grande', sans-serif" font-weight="500" font-size="13px">
+    <g id="Notes" font-family="LucidaGrande, 'Lucida Grande', sans-serif" font-size="13px">
         <text x="18px" y="126px">Small</text>
         <text x="18px" y="320px">Medium</text>
         <text x="18px" y="517px">Large</text>

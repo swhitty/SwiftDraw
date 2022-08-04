@@ -35,7 +35,7 @@ import XCTest
 final class CoordinateTests: XCTestCase {
   
   func testPrecisionMax() {
-    var f = XMLFormatter.CoordinateFormatter()
+      var f = XML.Formatter.CoordinateFormatter()
     f.precision = .maximum
     
     XCTAssertEqual(f.format(1.0), "1.0")
@@ -51,7 +51,7 @@ final class CoordinateTests: XCTestCase {
   
   func testPrecisionCapped() {
     
-    var f = XMLFormatter.CoordinateFormatter()
+    var f = XML.Formatter.CoordinateFormatter()
     f.precision = .capped(max: 4)
     
     XCTAssertEqual(f.format(1.0), "1")
@@ -66,7 +66,7 @@ final class CoordinateTests: XCTestCase {
   }
   
   func testDelimeterSpace() {
-    var f = XMLFormatter.CoordinateFormatter()
+    var f = XML.Formatter.CoordinateFormatter()
     f.delimeter = .space
     
     XCTAssertEqual(f.format(2.05), "2.05")
@@ -75,7 +75,7 @@ final class CoordinateTests: XCTestCase {
   }
   
   func testDelimeterComma() {
-    var f = XMLFormatter.CoordinateFormatter()
+    var f = XML.Formatter.CoordinateFormatter()
     f.delimeter = .comma
     
     XCTAssertEqual(f.format(2.05), "2.05")
