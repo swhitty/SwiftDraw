@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="400" height="400">
+
+    <rect width="400" height="400" fill="snow" />
+
+    <g stroke="black" stroke-width="2" fill="green" fill-opacity="0.2">
+    
+        <path d="M 75 100 
+                 A 50 50 0 0 1 175 100
+                 A 50 50 0 0 1 75 100 Z
+                 M 100 100
+                 A 25 25 0 0 1 150 100
+                 A 25 25 0 0 1 100 100 Z" fill-rule="evenodd" />
+             
+    </g>
+    
+    <g stroke="black" stroke-width="2" fill="yellow" fill-opacity="0.2"  transform="translate(150, 0)">
+    
+        <path d="M 75 100 
+                 A 50 50 0 0 1 175 100
+                 A 50 50 0 0 1 75 100 Z
+                 M 100 100
+                 A 25 25 0 0 0 150 100 
+                 A 25 25 0 0 0 100 100 Z" fill-rule="nonzero" />             
+    </g>
+    
+    
+    <g stroke="black" stroke-width="2" fill="blue" fill-opacity="0.2" transform="translate(0, 150)" >
+    
+    <path d="M 75 100
+             l 50 -50 l 50 50 l -50 50 Z
+             M 100 100
+             l 25 25 l 25 -25 l -25 -25 Z
+             M 110 100
+             l 15 15 l 15 -15 l -15 -15 Z
+             M 120 100
+             l 5 -5 l 5 5 l -5 5 Z" fill-rule="nonzero"/>
+
+    </g>
+    
+    <g stroke="black" stroke-width="2" fill="red" fill-opacity="0.2" transform="translate(150, 150)" >
+    
+    <path d="M 75 100
+             l 50 -50 l 50 50 l -50 50 Z
+             M 100 100
+             l 25 -25 l 25 25 l -25 25 Z
+             M 110 100
+             l 15 -15 l 15 15 l -15 15 Z
+             M 120 100
+             l 5 -5 l 5 5 l -5 5 Z" fill-rule="evenodd"/>
+
+    </g>
+    
+</svg>
