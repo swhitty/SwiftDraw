@@ -225,6 +225,8 @@ extension XML.Formatter {
             switch color {
             case .none:
                 return "none"
+            case .currentColor:
+                return "currentColor"
             case let .keyword(k):
                 return k.rawValue
             case let .rgbi(r, g, b):
