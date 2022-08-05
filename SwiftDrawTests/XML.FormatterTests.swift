@@ -120,4 +120,242 @@ final class XMLFormatterTests: XCTestCase {
             """
         )
     }
+
+    func testPairedSequence() {
+        XCTAssertEqual(
+            ["a", "b", "c", "d"].paired(with: .nextSkippingLast).map { "\($0)\($1)" },
+            ["ab", "bc", "cd"]
+        )
+
+        XCTAssertEqual(
+            ["a", "b", "c", "d"].paired(with: .nextWrappingToFirst).map { "\($0)\($1)" },
+            ["ab", "bc", "cd", "da"]
+        )
+
+        XCTAssertEqual(
+            ["a", "b"].paired(with: .nextSkippingLast).map { "\($0)\($1)" },
+            ["ab"]
+        )
+
+        XCTAssertEqual(
+            ["a", "b"].paired(with: .nextWrappingToFirst).map { "\($0)\($1)" },
+            ["ab", "ba"]
+        )
+
+        XCTAssertEqual(
+            ["a"].paired(with: .nextSkippingLast).map { "\($0)\($1)" },
+            []
+        )
+
+        XCTAssertEqual(
+            ["a"].paired(with: .nextWrappingToFirst).map { "\($0)\($1)" },
+            []
+        )
+
+        XCTAssertEqual(
+            [].paired(with: .nextSkippingLast).map { "\($0)\($1)" },
+            []
+        )
+
+        XCTAssertEqual(
+            [].paired(with: .nextWrappingToFirst).map { "\($0)\($1)" },
+            []
+        )
+    }
+
+    func testEvenOddPathDirection() throws {
+        let pathData = """
+        M12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12C22 17.5228 17.5228 22 12 22Z
+        M12 13C11.4477 13 11 12.5523 11 12V8C11 7.44772 11.4477 7 12 7C12.5523 7 13 7.44772 13 8V12C13 12.5523 12.5523 13 12 13
+        ZM13 17H11V15H13V17Z
+        """
+        let domPath = try XMLParser().parsePath(from: pathData)
+        let layerPath = try LayerTree.Builder.createPath(from: domPath)
+
+        XCTAssertEqual(
+            layerPath.subPaths().map(\.direction),
+            [.clockwise, .clockwise, .clockwise]
+        )
+    }
+
+    func testNonZeroDirection() throws {
+        let pathData = """
+        M12,22C17.523,22 22,17.523 22,12C22,6.477 17.523,2 12,2C6.477,2 2,6.477 2,12C2,17.523 6.477,22 12,22ZM13,17L11,17L11,15L13,15L13,17ZM12,13C11.448,13 11,12.552 11,12L11,8C11,7.448 11.448,7 12,7C12.552,7 13,7.448 13,8L13,12C13,12.552 12.552,13 12,13Z
+        """
+        let domPath = try XMLParser().parsePath(from: pathData)
+        let layerPath = try LayerTree.Builder.createPath(from: domPath)
+
+        XCTAssertEqual(
+            layerPath.subPaths().map(\.direction),
+            [.anticlockwise, .clockwise, .clockwise]
+        )
+    }
+
+    func testEvenOdd() throws {
+        let pathData = """
+        M 75 100
+        l 50 -50 l 50 50 l -50 50 Z
+        m 25 0
+        l 25 -25 l 25 25 l -25 25 Z
+        m 10 0
+        l 15 -15 l 15 15 l -15 15 Z
+        m 10 0
+        l 5 -5 l 5 5 l -5 5 Z
+        M 225 100
+        l 50 -50 l 50 50 l -50 50 Z
+        m 25 0
+        l 25 -25 l 25 25 l -25 25 Z
+        m 10 0
+        l 15 -15 l 15 15 l -15 15 Z
+        m 10 0
+        l 5 -5 l 5 5 l -5 5 Z
+        """
+        let domPath = try XMLParser().parsePath(from: pathData)
+        let layerPath = try LayerTree.Builder.createPath(from: domPath)
+
+        let paths = MyPath.make(from: layerPath)
+        print(paths.count)
+        print(paths[0].inside.count)
+        print(paths[1].inside.count)
+    }
+
+    func testNonZero() throws {
+        let pathData = """
+        M 75 100
+        l 50 -50 l 50 50 l -50 50 Z
+        m 25 0
+        l 25 25 l 25 -25 l -25 -25 Z
+        m 10 0
+        l 15 15 l 15 -15 l -15 -15 Z
+        m 10 0
+        l 5 -5 l 5 5 l -5 5 Z
+        M 225 100
+        l 50 -50 l 50 50 l -50 50 Z
+        m 25 0
+        l 25 25 l 25 -25 l -25 -25 Z
+        m 10 0
+        l 15 15 l 15 -15 l -15 -15 Z
+        m 10 0
+        l 5 -5 l 5 5 l -5 5 Z
+        """
+        let domPath = try XMLParser().parsePath(from: pathData)
+        let layerPath = try LayerTree.Builder.createPath(from: domPath)
+
+        let paths = MyPath.make(from: layerPath)
+        print(paths.count)
+        print(paths[0].inside.count)
+        print(paths[1].inside.count)
+
+        print(paths[0].inside[0].inside.count)
+        print(paths[0].inside[0].inside[0].inside.count)
+    }
+}
+
+extension LayerTree.Path {
+
+    func subPaths() -> [ArraySlice<Segment>] {
+        segments.split(separator: .close)
+    }
+}
+
+extension Array where Element == LayerTree.Point {
+    func isPointInside(_ test: LayerTree.Point) -> Bool {
+        var j: Int = count - 1
+        var contains = false
+
+        for i in indices {
+            if (((self[i].y < test.y && self[j].y >= test.y) || (self[j].y < test.y && self[i].y >= test.y))
+                && (self[i].x <= test.x || self[j].x <= test.x)) {
+                contains = contains != (self[i].x + (test.y - self[i].y) / (self[j].y - self[i].y) * (self[j].x - self[i].x) < test.x)
+            }
+
+            j = i
+        }
+
+        if !contains {
+            print("****")
+            print("polygon", self.map { $0.stringValue })
+            print("point", test.stringValue, contains)
+            print("****")
+        }
+
+        return contains
+    }
+}
+
+struct MyPath {
+    var segments: ArraySlice<LayerTree.Path.Segment>
+    var inside: [MyPath] = []
+
+    func bounds(segments: ArraySlice<LayerTree.Path.Segment>) -> Bool {
+        let outer = self.segments.compactMap(\.location)
+        let inner = segments.compactMap(\.location)
+        guard !inner.isEmpty else { return false }
+
+        for p in inner {
+            if !outer.isPointInside(p) {
+                return false
+            }
+        }
+
+        return true
+    }
+
+    mutating func appendPath(_ p: MyPath) {
+        for (idx, path) in inside.enumerated() {
+            if path.bounds(segments: p.segments) {
+                inside[idx].appendPath(p)
+                return
+            }
+        }
+        inside.append(p)
+    }
+
+    static func make(from path: LayerTree.Path) -> [MyPath] {
+        var paths = [MyPath]()
+        for segments in path.segments.split(separator: .close) {
+            paths.append(segments: segments)
+        }
+        return paths
+    }
+}
+
+private extension Array where Element == MyPath {
+
+    mutating func append(segments: ArraySlice<LayerTree.Path.Segment>) {
+        for (idx, path) in enumerated() {
+            if path.bounds(segments: segments) {
+                self[idx].appendPath(MyPath(segments: segments))
+                return
+            }
+        }
+
+        append(MyPath(segments: segments))
+    }
+
+}
+
+private extension LayerTree.Path.Segment {
+
+  var isMove: Bool {
+    switch self {
+    case .move: return true
+    default: return false
+    }
+  }
+
+  var location: LayerTree.Point? {
+    switch self {
+    case .move(to: let p): return p
+    case .line(let p): return p
+    case .cubic(let p, _, _): return p
+    case .close: return nil
+    }
+  }
+}
+
+extension LayerTree.Point {
+    var stringValue: String {
+        "\(x), \(y)"
+    }
 }
