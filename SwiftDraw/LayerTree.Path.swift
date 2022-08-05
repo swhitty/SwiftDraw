@@ -43,6 +43,11 @@ extension LayerTree {
       case cubic(to: Point, control1: Point, control2: Point)
       case close
     }
+
+    enum Direction {
+      case clockwise
+      case anticlockwise
+    }
     
     func hash(into hasher: inout Hasher) {
       hasher.combine(self.segments)
@@ -123,5 +128,32 @@ extension LayerTree.Path.Segment {
         case .close:
             return .close
         }
+    }
+}
+
+
+extension BidirectionalCollection where Element == LayerTree.Path.Segment, Index == Int {
+
+    // Determine direction by sign of calculated area
+    // https://www.101computing.net/the-shoelace-algorithm/
+    //
+    var direction: LayerTree.Path.Direction {
+        var lhs: LayerTree.Float = 0
+        var rhs: LayerTree.Float = 0
+        for (current, next) in compactMap(\.location).paired(with: .nextWrappingToFirst) {
+            lhs += current.x * next.y
+            rhs += current.y * next.x
+        }
+
+        return (lhs - rhs) < 0 ? .anticlockwise : .clockwise
+    }
+}
+
+prefix func !(direction: LayerTree.Path.Direction) -> LayerTree.Path.Direction  {
+    switch direction {
+    case .clockwise:
+        return .anticlockwise
+    case .anticlockwise:
+        return .clockwise
     }
 }
