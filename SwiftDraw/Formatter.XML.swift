@@ -63,8 +63,8 @@ extension XML.Formatter {
         return String(describing: c)
       }
     }
-    
-    func format(fraction n: Double, maxDigits: Int) -> String {
+
+    func format(fraction n: Double, maxDigits: Int) -> String? {
       assert(n.sign == .plus)
       
       let min = pow(Double(10), Double(-maxDigits)) - Double.ulpOfOne
@@ -74,6 +74,9 @@ extension XML.Formatter {
       }
       
       let s = String(format: "%.\(maxDigits)g", n)
+      if s == "1" {
+        return nil
+      }
       let idx = s.index(s.startIndex, offsetBy: 1)
       return String(s[idx..<s.endIndex])
     }
@@ -92,8 +95,12 @@ extension XML.Formatter {
       
       let integer = Int(n.0)
       let fraction = format(fraction: n.1, maxDigits: capped)
-      
-      return "\(sign)\(integer)\(fraction)"
+
+      if let fraction = fraction {
+        return "\(sign)\(integer)\(fraction)"
+      } else {
+        return "\(sign)\(integer + 1)"
+      }
     }
   }
 }
