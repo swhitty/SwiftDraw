@@ -132,7 +132,7 @@ extension LayerTree.Path.Segment {
 }
 
 
-extension BidirectionalCollection where Element == LayerTree.Path.Segment, Index == Int {
+extension Sequence where Element == LayerTree.Path.Segment {
 
     // Determine direction by sign of calculated area
     // https://www.101computing.net/the-shoelace-algorithm/
