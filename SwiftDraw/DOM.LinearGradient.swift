@@ -1,5 +1,5 @@
 //
-//  DOM.Gradient.swift
+//  DOM.LinearGradient.swift
 //  SwiftDraw
 //
 //  Created by Simon Whitty on 31/12/16.

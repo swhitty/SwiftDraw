@@ -90,6 +90,7 @@ extension XMLParser {
     var defs = DOM.SVG.Defs()
     defs.clipPaths = try parseClipPaths(e)
     defs.linearGradients = try parseLinearGradients(e)
+    defs.radialGradients = try parseRadialGradients(e)
     defs.masks = try parseMasks(e)
     defs.patterns = try parsePatterns(e)
     

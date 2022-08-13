@@ -1,9 +1,9 @@
 //
-//  Parser.XML.GradientTests.swift
+//  Parser.XML.RadialGradientTests.swift
 //  SwiftDraw
 //
-//  Created by Simon Whitty on 10/12/18.
-//  Copyright 2020 Simon Whitty
+//  Created by Simon Whitty on 13/8/22.
+//  Copyright 2022 Simon Whitty
 //
 //  Distributed under the permissive zlib license
 //  Get the latest version from here:
@@ -35,7 +35,7 @@ import Foundation
 import XCTest
 @testable import SwiftDraw
 
-final class ParserXMLGradientTests: XCTestCase {
+final class ParserXMLRadialGradientTests: XCTestCase {
   
   func testParseGradients() throws {
     let child = XML.Element(name: "child")
@@ -44,32 +44,30 @@ final class ParserXMLGradientTests: XCTestCase {
     let parent = XML.Element(name: "parent")
     parent.children = [XML.Element.makeMockGradient(), child]
     
-    XCTAssertEqual(try XMLParser().parseLinearGradients(child).count, 2)
-    XCTAssertEqual(try XMLParser().parseLinearGradients(parent).count, 3)
+    XCTAssertEqual(try XMLParser().parseRadialGradients(child).count, 2)
+    XCTAssertEqual(try XMLParser().parseRadialGradients(parent).count, 3)
   }
   
-  #if XCODE
   func testParseFile() throws {
     
-    let dom = try DOM.SVG.parse(fileNamed: "gradient.svg")
+    let dom = try DOM.SVG.parse(fileNamed: "radialGradient.svg")
     
-    XCTAssertEqual(dom.defs.linearGradients.count, 5)
-    XCTAssertNotNil(dom.defs.linearGradients.first(where: { $0.id == "snow" }))
-    XCTAssertNotNil(dom.defs.linearGradients.first(where: { $0.id == "blue" }))
-    XCTAssertNotNil(dom.defs.linearGradients.first(where: { $0.id == "purple" }))
-    XCTAssertNotNil(dom.defs.linearGradients.first(where: { $0.id == "salmon" }))
-    XCTAssertNotNil(dom.defs.linearGradients.first(where: { $0.id == "green" }))
+    XCTAssertEqual(dom.defs.radialGradients.count, 5)
+    XCTAssertNotNil(dom.defs.radialGradients.first(where: { $0.id == "snow" }))
+    XCTAssertNotNil(dom.defs.radialGradients.first(where: { $0.id == "blue" }))
+    XCTAssertNotNil(dom.defs.radialGradients.first(where: { $0.id == "purple" }))
+    XCTAssertNotNil(dom.defs.radialGradients.first(where: { $0.id == "salmon" }))
+    XCTAssertNotNil(dom.defs.radialGradients.first(where: { $0.id == "green" }))
     
     XCTAssertGreaterThan(dom.childElements.count, 2)
     XCTAssertEqual(dom.childElements[0].fill, .url(URL(string: "#snow")!))
     XCTAssertEqual(dom.childElements[1].fill, .url(URL(string: "#blue")!))
   }
-  #endif
 }
 
 private extension XML.Element {
   
   static func makeMockGradient() -> XML.Element {
-    return XML.Element(name: "linearGradient", attributes: ["id": "mock"])
+    return XML.Element(name: "radialGradient", attributes: ["id": "mock"])
   }
 }

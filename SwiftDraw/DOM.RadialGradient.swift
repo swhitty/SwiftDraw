@@ -1,9 +1,9 @@
 //
-//  DOM.SVG.swift
+//  DOM.RadialGradient.swift
 //  SwiftDraw
 //
-//  Created by Simon Whitty on 11/2/17.
-//  Copyright 2020 Simon Whitty
+//  Created by Simon Whitty on 13/8/22.
+//  Copyright 2022 Simon Whitty
 //
 //  Distributed under the permissive zlib license
 //  Get the latest version from here:
@@ -30,45 +30,48 @@
 //
 
 extension DOM {
-  final class SVG: GraphicsElement, ContainerElement {
-    var width: Length
-    var height: Length
-    var viewBox: ViewBox?
-    
-    var childElements = [GraphicsElement]()
-    
-    var defs = Defs()
-    
-    init(width: Length, height: Length) {
-      self.width = width
-      self.height = height
+
+    final class RadialGradient: Element {
+
+        var id: String
+
+        var stops: [Stop]
+        var gradientUnits: Units?
+
+        //references another RadialGradient element id within defs
+        var href: URL?
+
+        init(id: String) {
+            self.id = id
+            self.stops = []
+        }
+
+        struct Stop: Equatable {
+            var offset: Float
+            var color: Color
+            var opacity: Float
+
+            init(offset: Float, color: Color, opacity: Opacity = 1.0) {
+                self.offset = offset
+                self.color = color
+                self.opacity = opacity
+            }
+        }
     }
-    
-    struct ViewBox: Equatable {
-      var x: Coordinate
-      var y: Coordinate
-      var width: Coordinate
-      var height: Coordinate
+}
+
+extension DOM.RadialGradient: Equatable {
+    static func ==(lhs: DOM.RadialGradient, rhs: DOM.RadialGradient) -> Bool {
+        return
+        lhs.id == rhs.id &&
+        lhs.stops == rhs.stops
     }
-    
-    struct Defs {
-      var clipPaths = [ClipPath]()
-      var linearGradients = [LinearGradient]()
-      var radialGradients = [RadialGradient]()
-      var masks = [Mask]()
-      var patterns = [Pattern]()
-      
-      var elements = [String: GraphicsElement]()
+}
+
+extension DOM.RadialGradient {
+
+    enum Units: String {
+        case userSpaceOnUse
+        case objectBoundingBox
     }
-  }
-  
-  struct ClipPath: ContainerElement {
-    var id: String
-    var childElements = [GraphicsElement]()
-  }
-  
-  struct Mask: ContainerElement {
-    var id: String
-    var childElements = [GraphicsElement]()
-  }
 }
