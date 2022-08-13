@@ -107,7 +107,7 @@ extension LayerTree {
             self.opacity = opacity
         }
 
-        init(radial gradient: Gradient, rule: FillRule, opacity: Float) {
+        init(radial gradient: RadialGradient, rule: FillRule, opacity: Float) {
             self.fill = .radialGradient(gradient)
             self.rule = rule
             self.opacity = opacity
@@ -117,7 +117,7 @@ extension LayerTree {
             case color(Color)
             case pattern(Pattern)
             case linearGradient(Gradient)
-            case radialGradient(Gradient)
+            case radialGradient(RadialGradient)
         }
     }
 

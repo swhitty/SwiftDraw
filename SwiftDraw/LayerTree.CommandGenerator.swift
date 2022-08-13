@@ -227,7 +227,7 @@ extension LayerTree {
                 commands.append(.pushState)
                 commands.append(.setClip(path: path))
 
-                let converted = apply(colorConverter: colorConverter, to: fillGradient)
+                let converted = apply(colorConverter: colorConverter, to: fillGradient.gradient)
                 let gradient = provider.createGradient(from: converted)
                 let pathBounds = provider.getBounds(from: shape)
                 let center = provider.createPoint(from: pathBounds.center)
@@ -235,7 +235,7 @@ extension LayerTree {
                 let y = (pathBounds.center.y - pathBounds.origin.y)
                 let radius = provider.createFloat(from: sqrt(x*x+y*y))
 
-                if !fillGradient.transform.isEmpty {
+                if !fillGradient.gradient.transform.isEmpty {
                    // commands.append(contentsOf: renderCommands(forTransforms: fillGradient.transform))
                 }
 

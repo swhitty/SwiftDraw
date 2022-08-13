@@ -241,7 +241,7 @@ extension LayerTree.Builder {
         return gradient
     }
 
-    func makeGradient(for element: DOM.RadialGradient) -> LayerTree.Gradient? {
+    func makeGradient(for element: DOM.RadialGradient) -> LayerTree.RadialGradient? {
         var gradient = LayerTree.Gradient(start: Point(0, 0), end: Point(1, 1))
         if let id = element.href?.fragment,
            let reference = svg.defs.linearGradients.first(where: { $0.id == id }) {
@@ -260,7 +260,13 @@ extension LayerTree.Builder {
             return nil
         }
 
-        return gradient
+        return LayerTree.RadialGradient(
+            gradient: gradient,
+            center: LayerTree.Point(element.cx ?? 0.5, element.cy ?? 0.5),
+            radius: LayerTree.Float(element.r ?? 0.5),
+            endCenter: LayerTree.Point(element.fx ?? 0.5, element.fy ?? 0.5),
+            endRadius: LayerTree.Float(element.fr ?? 0.5)
+        )
     }
 
     func makeGradientStops(for element: DOM.LinearGradient) -> [LayerTree.Gradient.Stop] {

@@ -69,6 +69,14 @@ extension LayerTree {
             case objectBoundingBox
         }
     }
+
+    struct RadialGradient: Hashable {
+        var gradient: Gradient
+        var center: Point
+        var radius: Float
+        var endCenter: Point
+        var endRadius: Float
+    }
 }
 
 private extension LayerTree.Color {
