@@ -37,13 +37,15 @@ extension DOM {
 
         var stops: [Stop]
         var gradientUnits: Units?
+        var gradientTransform: [Transform]
 
         //references another RadialGradient element id within defs
         var href: URL?
-
+        
         init(id: String) {
             self.id = id
             self.stops = []
+            self.gradientTransform = []
         }
 
         struct Stop: Equatable {
