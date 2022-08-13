@@ -34,6 +34,12 @@ extension DOM {
     final class RadialGradient: Element {
 
         var id: String
+        var r: Coordinate?
+        var cx: Coordinate?
+        var cy: Coordinate?
+        var fr: Coordinate?
+        var fx: Coordinate?
+        var fy: Coordinate?
 
         var stops: [Stop]
         var gradientUnits: Units?

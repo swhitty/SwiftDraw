@@ -30,52 +30,54 @@
 //
 
 extension LayerTree {
-  
-  struct Gradient: Hashable {
-    var start: Point
-    var end: Point
-    var stops: [Stop]
-    var units: Units = .objectBoundingBox
 
-    var colorSpace: ColorSpace {
-      if stops.contains(where: { $0.color.isP3 }) {
-        return .p3
-      }
-      return .srgb
-    }
+    struct Gradient: Hashable {
+        var start: Point
+        var end: Point
+        var stops: [Stop]
+        var units: Units = .objectBoundingBox
+        var transform: [Transform]
 
-    init(start: Point, end: Point) {
-      self.start = start
-      self.end = end
-      self.stops = []
-    }
+        var colorSpace: ColorSpace {
+            if stops.contains(where: { $0.color.isP3 }) {
+                return .p3
+            }
+            return .srgb
+        }
 
-    struct Stop: Hashable {
-      var offset: Float
-      var color: Color
-      var opacity: Float
-      
-      init(offset: Float, color: Color, opacity: Float) {
-        self.offset = offset
-        self.color = color
-        self.opacity = opacity
-      }
-    }
+        init(start: Point, end: Point) {
+            self.start = start
+            self.end = end
+            self.stops = []
+            self.transform = []
+        }
 
-    enum Units: Hashable {
-      case userSpaceOnUse
-      case objectBoundingBox
+        struct Stop: Hashable {
+            var offset: Float
+            var color: Color
+            var opacity: Float
+
+            init(offset: Float, color: Color, opacity: Float) {
+                self.offset = offset
+                self.color = color
+                self.opacity = opacity
+            }
+        }
+
+        enum Units: Hashable {
+            case userSpaceOnUse
+            case objectBoundingBox
+        }
     }
-  }
 }
 
 private extension LayerTree.Color {
-  var isP3: Bool {
-    switch self {
-    case .rgba(r: _, g: _, b: _, a: _, space: .p3):
-      return true
-    default:
-      return false
+    var isP3: Bool {
+        switch self {
+        case .rgba(r: _, g: _, b: _, a: _, space: .p3):
+            return true
+        default:
+            return false
+        }
     }
-  }
 }

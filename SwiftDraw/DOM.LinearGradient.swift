@@ -68,13 +68,12 @@ extension DOM {
 
 extension DOM.LinearGradient: Equatable {
     static func ==(lhs: DOM.LinearGradient, rhs: DOM.LinearGradient) -> Bool {
-        return
-        lhs.id == rhs.id &&
-        lhs.x1 == rhs.x1 &&
-        lhs.y1 == rhs.y1 &&
-        lhs.x2 == rhs.x2 &&
-        lhs.y2 == rhs.y2 &&
-        lhs.stops == rhs.stops
+        return lhs.id == rhs.id &&
+               lhs.x1 == rhs.x1 &&
+               lhs.y1 == rhs.y1 &&
+               lhs.x2 == rhs.x2 &&
+               lhs.y2 == rhs.y2 &&
+               lhs.stops == rhs.stops
     }
 }
 

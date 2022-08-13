@@ -51,6 +51,12 @@ extension XMLParser {
 
         let nodeAtt: AttributeParser = try parseAttributes(e)
         let node = DOM.RadialGradient(id: try nodeAtt.parseString("id"))
+        node.r = try? nodeAtt.parseCoordinate("r")
+        node.cx = try? nodeAtt.parseCoordinate("cx")
+        node.cy = try? nodeAtt.parseCoordinate("cy")
+        node.fr = try? nodeAtt.parseCoordinate("fr")
+        node.fx = try? nodeAtt.parseCoordinate("fx")
+        node.fy = try? nodeAtt.parseCoordinate("fy")
 
         for n in e.children where n.name == "stop" {
             let att: AttributeParser = try parseAttributes(n)

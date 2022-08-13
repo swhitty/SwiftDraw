@@ -215,9 +215,12 @@ extension LayerTree {
                 let start = provider.createPoint(from: pathStart)
                 let end = provider.createPoint(from: pathEnd)
 
+                if !fillGradient.transform.isEmpty {
+                    //commands.append(contentsOf: renderCommands(forTransforms: fillGradient.transform))
+                }
+
                 let apha = provider.createFloat(from: fill.opacity)
                 commands.append(.setAlpha(apha))
-
                 commands.append(.drawLinearGradient(gradient, from: start, to: end))
                 commands.append(.popState)
             case .radialGradient(let fillGradient):
@@ -231,6 +234,10 @@ extension LayerTree {
                 let x = (pathBounds.center.x - pathBounds.origin.x)
                 let y = (pathBounds.center.y - pathBounds.origin.y)
                 let radius = provider.createFloat(from: sqrt(x*x+y*y))
+
+                if !fillGradient.transform.isEmpty {
+                   // commands.append(contentsOf: renderCommands(forTransforms: fillGradient.transform))
+                }
 
                 let apha = provider.createFloat(from: fill.opacity)
                 commands.append(.setAlpha(apha))

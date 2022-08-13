@@ -232,6 +232,8 @@ extension LayerTree.Builder {
             gradient.units = .userSpaceOnUse
         }
 
+        gradient.transform = Self.createTransforms(from: element.gradientTransform)
+
         guard gradient.stops.count > 1 else {
             return nil
         }
@@ -251,6 +253,8 @@ extension LayerTree.Builder {
         if element.gradientUnits == .userSpaceOnUse {
             gradient.units = .userSpaceOnUse
         }
+
+        gradient.transform = Self.createTransforms(from: element.gradientTransform)
 
         guard gradient.stops.count > 1 else {
             return nil

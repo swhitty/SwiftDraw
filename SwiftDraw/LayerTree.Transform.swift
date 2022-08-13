@@ -37,7 +37,7 @@ import Glibc
 
 extension LayerTree {
   
-  enum Transform: Equatable {
+  enum Transform: Hashable {
     case matrix(Matrix)
     case scale(sx: Float, sy: Float)
     case translate(tx: Float, ty: Float)
@@ -58,7 +58,7 @@ extension LayerTree {
       return .matrix(m)
     }
     
-    struct Matrix: Equatable {
+    struct Matrix: Hashable {
       var a: Float
       var b: Float
       var c: Float
