@@ -126,7 +126,11 @@ final class MockRenderer: Renderer {
     operations.append("drawImage")
   }
   
-  func draw(gradient: LayerTree.Gradient, from start: LayerTree.Point, to end: LayerTree.Point) {
-    operations.append("drawGradient")
+  func draw(linear gradient: LayerTree.Gradient, from start: LayerTree.Point, to end: LayerTree.Point) {
+    operations.append("drawLinearGradient")
+  }
+
+  func draw(radial gradient: LayerTree.Gradient, at center: LayerTree.Point, radius: LayerTree.Float) {
+    operations.append("drawRadialGradient")
   }
 }

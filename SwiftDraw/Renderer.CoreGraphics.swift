@@ -416,11 +416,22 @@ struct CGRenderer: Renderer {
     ctx.draw(image, in: rect)
   }
 
-  func draw(gradient: CGGradient, from start: CGPoint, to end: CGPoint) {
+  func draw(linear gradient: CGGradient, from start: CGPoint, to end: CGPoint) {
     ctx.drawLinearGradient(gradient,
                            start: start,
                            end: end,
-                           options: [.drawsAfterEndLocation, .drawsBeforeStartLocation])
+                           options: [.drawsAfterEndLocation, .drawsBeforeStartLocation]
+    )
+  }
+
+  func draw(radial gradient: CGGradient, at center: CGPoint, radius: CGFloat) {
+    ctx.drawRadialGradient(gradient,
+      startCenter: center,
+      startRadius: 0,
+      endCenter: center,
+      endRadius: radius,
+      options: [.drawsAfterEndLocation, .drawsBeforeStartLocation]
+    )
   }
 }
 

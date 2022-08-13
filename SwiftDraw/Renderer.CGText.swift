@@ -510,12 +510,24 @@ public final class CGTextRenderer: Renderer {
     lines.append("ctx.draw(image, in: CGRect(x: 0, y: 0, width: image.width, height: image.height)")
   }
 
-  func draw(gradient: LayerTree.Gradient, from start: String, to end: String) {
+  func draw(linear gradient: LayerTree.Gradient, from start: String, to end: String) {
     let identifier = createOrGetGradient(gradient)
     lines.append("""
     ctx.drawLinearGradient(\(identifier),
                            start: \(start),
                            end: \(end),
+                           options: [.drawsAfterEndLocation, .drawsBeforeStartLocation])
+    """)
+  }
+
+  func draw(radial gradient: LayerTree.Gradient, at center: String, radius: LayerTree.Float) {
+    let identifier = createOrGetGradient(gradient)
+    lines.append("""
+    ctx.drawLinearGradient(\(identifier),
+                           startCenter: \(center),
+                           startRadius: 0,
+                           endCenter: \(center),
+                           endRadius: radius,
                            options: [.drawsAfterEndLocation, .drawsBeforeStartLocation])
     """)
   }

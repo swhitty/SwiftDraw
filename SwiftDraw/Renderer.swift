@@ -102,7 +102,8 @@ protocol Renderer {
   func stroke(path: Types.Path)
   func fill(path: Types.Path, rule: Types.FillRule)
   func draw(image: Types.Image)
-  func draw(gradient: Types.Gradient, from start: Types.Point, to end: Types.Point)
+  func draw(linear gradient: Types.Gradient, from start: Types.Point, to end: Types.Point)
+  func draw(radial gradient: Types.Gradient, at center: Types.Point, radius: Types.Float)
 }
 
 extension Renderer {
@@ -152,11 +153,13 @@ extension Renderer {
       fill(path: p, rule: r)
     case .draw(image: let i):
       draw(image: i)
-    case .drawGradient(let g, let start, let end):
-      draw(gradient: g, from: start, to: end)
+    case .drawLinearGradient(let g, let start, let end):
+      draw(linear: g, from: start, to: end)
+    case .drawRadialGradient(let g, center: let center, radius: let radius):
+      draw(radial: g, at: center, radius: radius)
     }
   }
-  
+
   func perform(_ commands: [RendererCommand<Types>]) {
     for cmd in commands {
       perform(cmd)
@@ -189,8 +192,9 @@ enum RendererCommand<Types: RendererTypes> {
   case fill(Types.Path, rule: Types.FillRule)
   
   case draw(image: Types.Image)
-  case drawGradient(Types.Gradient, from: Types.Point, to: Types.Point)
-  
+  case drawLinearGradient(Types.Gradient, from: Types.Point, to: Types.Point)
+  case drawRadialGradient(Types.Gradient, center: Types.Point, radius: Types.Float)
+
   case pushTransparencyLayer
   case popTransparencyLayer
 }

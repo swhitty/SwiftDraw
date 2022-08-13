@@ -218,7 +218,7 @@ extension LayerTree {
         let apha = provider.createFloat(from: fill.opacity)
         commands.append(.setAlpha(apha))
         
-        commands.append(.drawGradient(gradient, from: start, to: end))
+        commands.append(.drawLinearGradient(gradient, from: start, to: end))
         commands.append(.popState)
       }
       
