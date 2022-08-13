@@ -27,96 +27,103 @@
 //
 
 extension LayerTree {
-  final class Layer: Equatable {
-    var contents: [Contents] = []
-    var opacity: Float = 1.0
-    var transform: [Transform] = []
-    var clip: [Shape] = []
-    var mask: Layer?
-    
-    enum Contents: Equatable {
-      case shape(Shape, StrokeAttributes, FillAttributes)
-      case image(Image)
-      case text(String, Point, TextAttributes)
-      case layer(Layer)
-    }
-    
-    func appendContents(_ contents: Contents) {
-      switch contents {
-      case .layer(let l):
-        guard l.contents.isEmpty == false else { return }
-        
-        //if layer is simple, we can ignore all other properties
-        if let simple = l.simpleContents {
-          self.contents.append(simple)
-        } else {
-          self.contents.append(.layer(l))
+    final class Layer: Equatable {
+        var contents: [Contents] = []
+        var opacity: Float = 1.0
+        var transform: [Transform] = []
+        var clip: [Shape] = []
+        var mask: Layer?
+
+        enum Contents: Equatable {
+            case shape(Shape, StrokeAttributes, FillAttributes)
+            case image(Image)
+            case text(String, Point, TextAttributes)
+            case layer(Layer)
         }
-      default:
-        self.contents.append(contents)
-      }
+
+        func appendContents(_ contents: Contents) {
+            switch contents {
+            case .layer(let l):
+                guard l.contents.isEmpty == false else { return }
+
+                //if layer is simple, we can ignore all other properties
+                if let simple = l.simpleContents {
+                    self.contents.append(simple)
+                } else {
+                    self.contents.append(.layer(l))
+                }
+            default:
+                self.contents.append(contents)
+            }
+        }
+
+        var simpleContents: Contents? {
+            guard self.contents.count == 1,
+                  let first = self.contents.first,
+                  opacity == 1.0,
+                  transform == [],
+                  clip == [],
+                  mask == nil else { return nil }
+
+            return first
+        }
+
+        static func ==(lhs: Layer, rhs: Layer) -> Bool {
+            return lhs.contents == rhs.contents &&
+            lhs.opacity == rhs.opacity &&
+            lhs.transform == rhs.transform &&
+            lhs.clip == rhs.clip &&
+            lhs.mask == rhs.mask
+        }
     }
-    
-    var simpleContents: Contents? {
-      guard self.contents.count == 1,
-        let first = self.contents.first,
-        opacity == 1.0,
-        transform == [],
-        clip == [],
-        mask == nil else { return nil }
-      
-      return first
+
+    struct StrokeAttributes: Equatable {
+        var color: Color
+        var width: Float
+        var cap: LineCap
+        var join: LineJoin
+        var miterLimit: Float
     }
-    
-    static func ==(lhs: Layer, rhs: Layer) -> Bool {
-      return lhs.contents == rhs.contents &&
-        lhs.opacity == rhs.opacity &&
-        lhs.transform == rhs.transform &&
-        lhs.clip == rhs.clip &&
-        lhs.mask == rhs.mask
+
+    struct FillAttributes: Equatable {
+        var fill: Fill = .color(.none)
+        var opacity: Float = 1.0
+        var rule: FillRule
+
+        init(color: Color, rule: FillRule) {
+            self.fill = .color(color)
+            self.rule = rule
+        }
+
+        init(pattern: Pattern, rule: FillRule, opacity: Float) {
+            self.fill = .pattern(pattern)
+            self.rule = rule
+            self.opacity = opacity
+        }
+
+        init(linear gradient: Gradient, rule: FillRule, opacity: Float) {
+            self.fill = .linearGradient(gradient)
+            self.rule = rule
+            self.opacity = opacity
+        }
+
+        init(radial gradient: Gradient, rule: FillRule, opacity: Float) {
+            self.fill = .radialGradient(gradient)
+            self.rule = rule
+            self.opacity = opacity
+        }
+        
+        enum Fill: Equatable {
+            case color(Color)
+            case pattern(Pattern)
+            case linearGradient(Gradient)
+            case radialGradient(Gradient)
+        }
     }
-  }
-  
-  struct StrokeAttributes: Equatable {
-    var color: Color
-    var width: Float
-    var cap: LineCap
-    var join: LineJoin
-    var miterLimit: Float
-  }
-  
-  struct FillAttributes: Equatable {
-    var fill: Fill = .color(.none)
-    var opacity: Float = 1.0
-    var rule: FillRule
-    
-    init(color: Color, rule: FillRule) {
-      self.fill = .color(color)
-      self.rule = rule
+
+    struct TextAttributes: Equatable {
+        var color: Color
+        var fontName: String
+        var size: Float
     }
-    
-    init(pattern: Pattern, rule: FillRule, opacity: Float) {
-      self.fill = .pattern(pattern)
-      self.rule = rule
-      self.opacity = opacity
-    }
-    
-    init(gradient: Gradient, rule: FillRule, opacity: Float) {
-      self.fill = .gradient(gradient)
-      self.rule = rule
-      self.opacity = opacity
-    }
-    
-    enum Fill: Equatable {
-      case color(Color)
-      case pattern(Pattern)
-      case gradient(Gradient)
-    }
-  }
-  
-  struct TextAttributes: Equatable {
-    var color: Color
-    var fontName: String
-    var size: Float
-  }
 }

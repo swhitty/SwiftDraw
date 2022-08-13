@@ -65,8 +65,8 @@ extension XMLParser {
 
     func parseRadialGradientStop(_ att: AttributeParser) throws -> DOM.RadialGradient.Stop {
         let offset: DOM.Float? = try? att.parsePercentage("offset")
-        let color: DOM.Color = try att.parseFill("stop-color").getColor()
+        let color: DOM.Color? = try? att.parseFill("stop-color").getColor()
         let opacity: DOM.Float? = try att.parsePercentage("stop-opacity")
-        return DOM.RadialGradient.Stop(offset: offset ?? 0, color: color, opacity: opacity ?? 1.0)
+        return DOM.RadialGradient.Stop(offset: offset ?? 0, color: color ?? .currentColor, opacity: opacity ?? 1.0)
     }
 }

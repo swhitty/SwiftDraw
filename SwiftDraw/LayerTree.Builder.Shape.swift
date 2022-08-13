@@ -32,50 +32,53 @@
 import Foundation
 
 extension LayerTree.Builder {
-  
-  static func makeShape(from element: DOM.GraphicsElement) -> LayerTree.Shape? {
-    if let line = element as? DOM.Line {
-      let from = Point(line.x1, line.y1)
-      let to = Point(line.x2, line.y2)
-      return .line(between: [from, to])
-    } else if let circle = element as? DOM.Circle {
-      return .ellipse(within: makeRect(from: circle))
-    } else if let ellipse = element as? DOM.Ellipse {
-      return .ellipse(within: makeRect(from: ellipse))
-    } else if let rect = element as? DOM.Rect {
-      let radii = LayerTree.Size(rect.rx ?? 0, rect.ry ?? 0)
-      return .rect(within: makeRect(from: rect), radii: radii)
-    } else if let polyline = element as? DOM.Polyline {
-      return .line(between: polyline.points.map{ Point($0.x, $0.y) })
-    } else if let polygon = element as? DOM.Polygon {
-      return .polygon(between: polygon.points.map{ Point($0.x, $0.y) })
-    } else if let domPath = element as? DOM.Path,
-      let path = try? createPath(from: domPath) {
-      return .path(path)
+
+    static func makeShape(from element: DOM.GraphicsElement) -> LayerTree.Shape? {
+        if let line = element as? DOM.Line {
+            let from = Point(line.x1, line.y1)
+            let to = Point(line.x2, line.y2)
+            return .line(between: [from, to])
+        } else if let circle = element as? DOM.Circle {
+            return .ellipse(within: makeRect(from: circle))
+        } else if let ellipse = element as? DOM.Ellipse {
+            return .ellipse(within: makeRect(from: ellipse))
+        } else if let rect = element as? DOM.Rect {
+            let radii = makeRadii(rx: rect.rx, ry: rect.ry)
+            return .rect(within: makeRect(from: rect), radii: radii)
+        } else if let polyline = element as? DOM.Polyline {
+            return .line(between: polyline.points.map{ Point($0.x, $0.y) })
+        } else if let polygon = element as? DOM.Polygon {
+            return .polygon(between: polygon.points.map{ Point($0.x, $0.y) })
+        } else if let domPath = element as? DOM.Path,
+                  let path = try? createPath(from: domPath) {
+            return .path(path)
+        }
+
+        return nil;
     }
-    
-    return nil;
-  }
-  
-  static func makeRect(from rect: DOM.Rect) -> LayerTree.Rect {
-    return LayerTree.Rect(x: rect.x ?? 0,
-                          y: rect.y ?? 0,
-                          width: rect.width,
-                          height: rect.height)
-  }
-  
-  static func makeRect(from ellipse: DOM.Ellipse) -> LayerTree.Rect {
-    return LayerTree.Rect(x: ellipse.cx - ellipse.rx,
-                          y: ellipse.cy - ellipse.ry,
-                          width: ellipse.rx * 2,
-                          height: ellipse.ry * 2)
-  }
-  
-  static func makeRect(from circle: DOM.Circle) -> LayerTree.Rect {
-    return LayerTree.Rect(x: circle.cx - circle.r,
-                          y: circle.cy - circle.r,
-                          width: circle.r * 2,
-                          height: circle.r * 2)
-  }
-  
+
+    static func makeRect(from rect: DOM.Rect) -> LayerTree.Rect {
+        return LayerTree.Rect(x: rect.x ?? 0,
+                              y: rect.y ?? 0,
+                              width: rect.width,
+                              height: rect.height)
+    }
+
+    static func makeRect(from ellipse: DOM.Ellipse) -> LayerTree.Rect {
+        return LayerTree.Rect(x: ellipse.cx - ellipse.rx,
+                              y: ellipse.cy - ellipse.ry,
+                              width: ellipse.rx * 2,
+                              height: ellipse.ry * 2)
+    }
+
+    static func makeRect(from circle: DOM.Circle) -> LayerTree.Rect {
+        return LayerTree.Rect(x: circle.cx - circle.r,
+                              y: circle.cy - circle.r,
+                              width: circle.r * 2,
+                              height: circle.r * 2)
+    }
+
+    static func makeRadii(rx: DOM.Float?, ry: DOM.Float?) -> LayerTree.Size {
+        LayerTree.Size(rx ?? ry ?? 0, ry ?? rx ?? 0)
+    }
 }

@@ -62,9 +62,7 @@ extension DOM {
 
 extension DOM.RadialGradient: Equatable {
     static func ==(lhs: DOM.RadialGradient, rhs: DOM.RadialGradient) -> Bool {
-        return
-        lhs.id == rhs.id &&
-        lhs.stops == rhs.stops
+        return lhs.id == rhs.id && lhs.stops == rhs.stops
     }
 }
 
