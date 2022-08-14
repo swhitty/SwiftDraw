@@ -60,7 +60,7 @@ final class RendererTests: XCTestCase {
       .setBlend(mode: .sourceIn),
       .draw(image: .mock),
       .drawLinearGradient(.mock, from: .zero, to: .zero),
-      .drawRadialGradient(.mock, center: .zero, radius: 100)
+      .drawRadialGradient(.mock, startCenter: .zero, startRadius: 0, endCenter: .zero, endRadius: 0)
     ])
     
     XCTAssertEqual(renderer.operations, [
