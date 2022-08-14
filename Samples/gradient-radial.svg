@@ -18,7 +18,7 @@
 			<stop offset="80%" stop-color="darkslateblue" />
 		</radialGradient>
 		
-		<radialGradient id="green" fx="0.4" fy="0.35" fr="0.2" cr="0.2">
+		<radialGradient id="green" fx="0.4" fy="0.35" fr="0.2" r="0.6">
 			<stop stop-color="dodgerblue" />
 			<stop offset="100%" stop-color="darkslategray" />
 		</radialGradient>
