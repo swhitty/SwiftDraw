@@ -262,10 +262,10 @@ extension LayerTree.Builder {
 
         return LayerTree.RadialGradient(
             gradient: gradient,
-            center: LayerTree.Point(element.cx ?? 0.5, element.cy ?? 0.5),
-            radius: LayerTree.Float(element.r ?? 0.5),
-            endCenter: LayerTree.Point(element.fx ?? 0.5, element.fy ?? 0.5),
-            endRadius: LayerTree.Float(element.fr ?? 0.5)
+            center: LayerTree.Point(element.fx ?? element.cx ?? 0.5, element.fy ?? element.cy ?? 0.5),
+            radius: LayerTree.Float(element.fr ?? 0),
+            endCenter: LayerTree.Point(element.cx ?? 0.5, element.cy ?? 0.5),
+            endRadius: LayerTree.Float(element.r ?? 0.5)
         )
     }
 

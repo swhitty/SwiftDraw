@@ -520,14 +520,14 @@ public final class CGTextRenderer: Renderer {
     """)
   }
 
-  func draw(radial gradient: LayerTree.Gradient, at center: String, radius: LayerTree.Float) {
+  func draw(radial gradient: LayerTree.Gradient, startCenter: String, startRadius: LayerTree.Float, endCenter: String, endRadius: LayerTree.Float) {
     let identifier = createOrGetGradient(gradient)
     lines.append("""
-    ctx.drawLinearGradient(\(identifier),
-                           startCenter: \(center),
-                           startRadius: 0,
-                           endCenter: \(center),
-                           endRadius: radius,
+    ctx.drawRadialGradient(\(identifier),
+                           startCenter: \(startCenter),
+                           startRadius: \(startRadius),
+                           endCenter: \(endCenter),
+                           endRadius: \(endRadius),
                            options: [.drawsAfterEndLocation, .drawsBeforeStartLocation])
     """)
   }

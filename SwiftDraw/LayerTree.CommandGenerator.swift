@@ -216,7 +216,7 @@ extension LayerTree {
                 let end = provider.createPoint(from: pathEnd)
 
                 if !fillGradient.transform.isEmpty {
-                    //commands.append(contentsOf: renderCommands(forTransforms: fillGradient.transform))
+                    commands.append(contentsOf: renderCommands(forTransforms: fillGradient.transform))
                 }
 
                 let apha = provider.createFloat(from: fill.opacity)
@@ -227,21 +227,47 @@ extension LayerTree {
                 commands.append(.pushState)
                 commands.append(.setClip(path: path))
 
-                let converted = apply(colorConverter: colorConverter, to: fillGradient.gradient)
-                let gradient = provider.createGradient(from: converted)
-                let pathBounds = provider.getBounds(from: shape)
-                let center = provider.createPoint(from: pathBounds.center)
-                let x = (pathBounds.center.x - pathBounds.origin.x)
-                let y = (pathBounds.center.y - pathBounds.origin.y)
-                let radius = provider.createFloat(from: sqrt(x*x+y*y))
+                let startCenter: LayerTree.Point
+                let startRadius: LayerTree.Float
+                let endCenter: LayerTree.Point
+                let endRadius: LayerTree.Float
 
-                if !fillGradient.gradient.transform.isEmpty {
-                   // commands.append(contentsOf: renderCommands(forTransforms: fillGradient.transform))
+                switch fillGradient.gradient.units  {
+                case .objectBoundingBox:
+                    let pathBounds = provider.getBounds(from: shape)
+                    let h = sqrt((pathBounds.width*pathBounds.width) + (pathBounds.height*pathBounds.height))
+                    startCenter = LayerTree.Point(
+                        pathBounds.x + (fillGradient.center.x * pathBounds.width),
+                        pathBounds.y + (fillGradient.center.y * pathBounds.height)
+                    )
+                    startRadius = h * fillGradient.radius
+                    endCenter = LayerTree.Point(
+                        pathBounds.x + (fillGradient.endCenter.x * pathBounds.width),
+                        pathBounds.y + (fillGradient.endCenter.y * pathBounds.height)
+                    )
+                    endRadius = h * fillGradient.endRadius
+                case .userSpaceOnUse:
+                    startCenter = fillGradient.center
+                    startRadius = fillGradient.radius
+                    endCenter = fillGradient.endCenter
+                    endRadius = fillGradient.endRadius
                 }
 
+                if !fillGradient.gradient.transform.isEmpty {
+                    commands.append(contentsOf: renderCommands(forTransforms: fillGradient.gradient.transform))
+                }
+
+                let converted = apply(colorConverter: colorConverter, to: fillGradient.gradient)
+                let gradient = provider.createGradient(from: converted)
                 let apha = provider.createFloat(from: fill.opacity)
                 commands.append(.setAlpha(apha))
-                commands.append(.drawRadialGradient(gradient, center: center, radius: radius))
+                commands.append(.drawRadialGradient(
+                    gradient,
+                    startCenter: provider.createPoint(from: startCenter),
+                    startRadius: provider.createFloat(from: startRadius),
+                    endCenter: provider.createPoint(from: endCenter),
+                    endRadius: provider.createFloat(from: endRadius)
+                ))
                 commands.append(.popState)
             }
 
