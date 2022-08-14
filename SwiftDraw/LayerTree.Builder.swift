@@ -260,11 +260,14 @@ extension LayerTree.Builder {
             return nil
         }
 
+        let cx = element.cx ?? 0.5
+        let cy = element.cy ?? 0.5
+
         return LayerTree.RadialGradient(
             gradient: gradient,
-            center: LayerTree.Point(element.fx ?? element.cx ?? 0.5, element.fy ?? element.cy ?? 0.5),
+            center: LayerTree.Point(element.fx ?? cx, element.fy ?? cy),
             radius: LayerTree.Float(element.fr ?? 0),
-            endCenter: LayerTree.Point(element.cx ?? 0.5, element.cy ?? 0.5),
+            endCenter: LayerTree.Point(cx, cy),
             endRadius: LayerTree.Float(element.r ?? 0.5)
         )
     }

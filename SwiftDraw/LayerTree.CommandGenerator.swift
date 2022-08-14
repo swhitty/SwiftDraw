@@ -235,7 +235,7 @@ extension LayerTree {
                 switch fillGradient.gradient.units  {
                 case .objectBoundingBox:
                     let pathBounds = provider.getBounds(from: shape)
-                    let h = sqrt((pathBounds.width*pathBounds.width) + (pathBounds.height*pathBounds.height))
+                    let h = sqrt((pathBounds.width*pathBounds.width) + (pathBounds.height*pathBounds.height)) / 2
                     startCenter = LayerTree.Point(
                         pathBounds.x + (fillGradient.center.x * pathBounds.width),
                         pathBounds.y + (fillGradient.center.y * pathBounds.height)
