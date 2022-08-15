@@ -497,6 +497,13 @@ public final class CGTextRenderer: Renderer {
     }
   }
 
+  func clipStrokeOutline(path: [LayerTree.Shape]) {
+      let identifier = createOrGetPath(path)
+      lines.append("ctx.addPath(\(identifier))")
+      lines.append("ctx.replacePathWithStrokedPath()")
+      lines.append("ctx.clip()")
+  }
+
   func fill(path: [LayerTree.Shape], rule: String) {
     
     if let frame = getSimpleRect(from: path) {

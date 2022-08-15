@@ -66,6 +66,11 @@ extension LayerTree.Path {
         return finder.makeBounds(for: segments)
     }
 
+    var endpoints: (start: LayerTree.Point, end: LayerTree.Point) {
+        var finder = BoundsFinder()
+        return finder.makeEndpoints(for: segments)
+    }
+
     var lastControl: LayerTree.Point? {
         guard let lastSegment = segments.last else { return nil }
         switch lastSegment {

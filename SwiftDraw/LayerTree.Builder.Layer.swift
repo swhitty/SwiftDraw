@@ -34,7 +34,7 @@ import Foundation
 extension LayerTree.Builder {
   
   func makeShapeContents(from shape: LayerTree.Shape, with state: State) -> LayerTree.Layer.Contents {
-    let stroke = LayerTree.Builder.makeStrokeAttributes(with: state)
+    let stroke = makeStrokeAttributes(with: state)
     let fill = makeFillAttributes(with: state)
     return .shape(shape, stroke, fill)
   }

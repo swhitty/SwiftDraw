@@ -100,6 +100,7 @@ protocol Renderer {
     func setBlend(mode: Types.BlendMode)
 
     func stroke(path: Types.Path)
+    func clipStrokeOutline(path: Types.Path)
     func fill(path: Types.Path, rule: Types.FillRule)
     func draw(image: Types.Image)
     func draw(linear gradient: Types.Gradient, from start: Types.Point, to end: Types.Point)
@@ -149,6 +150,8 @@ extension Renderer {
             setBlend(mode: m)
         case .stroke(let p):
             stroke(path: p)
+        case .clipStrokeOutline(let p):
+            clipStrokeOutline(path: p)
         case .fill(let p, let r):
             fill(path: p, rule: r)
         case .draw(image: let i):
@@ -189,6 +192,7 @@ enum RendererCommand<Types: RendererTypes> {
     case setBlend(mode: Types.BlendMode)
 
     case stroke(Types.Path)
+    case clipStrokeOutline(Types.Path)
     case fill(Types.Path, rule: Types.FillRule)
 
     case draw(image: Types.Image)

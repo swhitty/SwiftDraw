@@ -51,6 +51,11 @@ extension LayerTree.Path {
             )
         }
 
+        mutating func makeEndpoints(for segments: [Segment]) -> (start: LayerTree.Point, end: LayerTree.Point) {
+            _ = makeBounds(for: segments)
+            return (start: start ?? .zero, end: location)
+        }
+
         mutating func updateBounds(for segments: [LayerTree.Path.Segment]) {
             for s in segments {
                 updateBounds(for: s)

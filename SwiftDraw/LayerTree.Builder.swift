@@ -31,6 +31,8 @@
 
 // Convert a DOM.SVG into a layer tree
 
+import Foundation
+
 extension LayerTree {
 
     struct Builder {
@@ -154,15 +156,25 @@ extension LayerTree {
 
 extension LayerTree.Builder {
 
-    static func makeStrokeAttributes(with state: State) -> LayerTree.StrokeAttributes {
-        let stroke: LayerTree.Color
+    func makeStrokeAttributes(with state: State) -> LayerTree.StrokeAttributes {
+        let stroke: LayerTree.StrokeAttributes.Stroke
 
         if state.strokeWidth > 0.0 {
-            stroke = LayerTree.Color
-                .create(from: state.stroke, current: state.color)
-                .withAlpha(state.strokeOpacity).maybeNone()
+            switch state.stroke {
+            case .color(let c):
+                let color = LayerTree.Color
+                    .create(from: c, current: state.color)
+                    .withAlpha(state.strokeOpacity).maybeNone()
+                stroke = .color(color)
+            case .url(let gradientId):
+                if let gradient = makeLinearGradient(for: gradientId) {
+                    stroke = .linearGradient(gradient)
+                } else {
+                    stroke = .color(.none)
+                }
+            }
         } else {
-            stroke = .none
+            stroke = .color(.none)
         }
 
         return LayerTree.StrokeAttributes(color: stroke,
@@ -192,6 +204,14 @@ extension LayerTree.Builder {
         } else {
             return LayerTree.FillAttributes(color: fill, rule: state.fillRule)
         }
+    }
+
+    func makeLinearGradient(for gradientId: URL) -> LayerTree.Gradient? {
+        guard let element = svg.defs.linearGradients.first(where: { $0.id == gradientId.fragment }),
+              let gradient = makeGradient(for: element) else {
+            return nil
+        }
+        return gradient
     }
 
     static func makeTextAttributes(with state: State) -> LayerTree.TextAttributes {
@@ -295,7 +315,7 @@ extension LayerTree.Builder {
         var display: DOM.DisplayMode
         var color: DOM.Color
 
-        var stroke: DOM.Color
+        var stroke: DOM.Fill
         var strokeWidth: DOM.Float
         var strokeOpacity: DOM.Float
         var strokeLineCap: DOM.LineCap
@@ -316,7 +336,7 @@ extension LayerTree.Builder {
             display = .inline
             color = .keyword(.black)
 
-            stroke = .none
+            stroke = .color(.none)
             strokeWidth = 1.0
             strokeOpacity = 1.0
             strokeLineCap = .butt

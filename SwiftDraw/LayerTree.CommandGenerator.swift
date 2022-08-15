@@ -273,9 +273,9 @@ extension LayerTree {
                 commands.append(.popState)
             }
 
-            if stroke.color != .none,
-               stroke.width > 0.0 {
-                let converted = colorConverter.createColor(from: stroke.color)
+            switch stroke.color {
+            case .color(let color) where color != .none && stroke.width > 0:
+                let converted = colorConverter.createColor(from: color)
                 let color = provider.createColor(from: converted)
                 let width = provider.createFloat(from: stroke.width)
                 let cap = provider.createLineCap(from: stroke.cap)
@@ -288,6 +288,31 @@ extension LayerTree {
                 commands.append(.setLineMiter(limit: limit))
                 commands.append(.setStroke(color: color))
                 commands.append(.stroke(path))
+            case .linearGradient(let gradient):
+                if let endpoints = shape.endpoints {
+                    let width = provider.createFloat(from: stroke.width)
+                    let cap = provider.createLineCap(from: stroke.cap)
+                    let join = provider.createLineJoin(from: stroke.join)
+                    let limit = provider.createFloat(from: stroke.miterLimit)
+
+                    commands.append(.pushState)
+                    commands.append(.setLineCap(cap))
+                    commands.append(.setLineJoin(join))
+                    commands.append(.setLine(width: width))
+                    commands.append(.setLineMiter(limit: limit))
+                    commands.append(.clipStrokeOutline(path))
+
+                    let converted = apply(colorConverter: colorConverter, to: gradient)
+                    let gradient = provider.createGradient(from: converted)
+                    let start = provider.createPoint(from: endpoints.start)
+                    let end = provider.createPoint(from: endpoints.end)
+                    let apha = provider.createFloat(from: fill.opacity)
+                    commands.append(.setAlpha(apha))
+                    commands.append(.drawLinearGradient(gradient, from: start, to: end))
+                    commands.append(.popState)
+                }
+            default:
+                ()
             }
 
             return commands
@@ -408,5 +433,13 @@ private extension LayerTree.Rect {
             origin.x + (size.width / 2),
             origin.y + (size.height / 2)
         )
+    }
+}
+
+private extension LayerTree.Shape {
+
+    var endpoints: (start: LayerTree.Point, end: LayerTree.Point)? {
+        guard case .path(let p) = self else { return nil }
+        return p.endpoints
     }
 }

@@ -71,7 +71,7 @@ final class ParserGraphicAttributeTests: XCTestCase {
     
     XCTAssertEqual(parsed.opacity, 0.95)
     XCTAssertEqual(parsed.display!, .none)
-    XCTAssertEqual(parsed.stroke, .keyword(.green))
+      XCTAssertEqual(parsed.stroke, .color(.keyword(.green)))
     XCTAssertEqual(parsed.strokeWidth, 15)
     XCTAssertEqual(parsed.strokeOpacity, 0.756)
     XCTAssertEqual(parsed.strokeLineCap, .butt)

@@ -218,7 +218,7 @@ extension XMLParser {
     el.display = try att.parseRaw("display")
     el.color = try att.parseColor("color")
 
-    el.stroke = try att.parseStrokeColor("stroke")
+    el.stroke = try att.parseFill("stroke")
     el.strokeWidth = try att.parseFloat("stroke-width")
     el.strokeOpacity = try att.parsePercentage("stroke-opacity")
     el.strokeLineCap = try att.parseRaw("stroke-linecap")
@@ -233,12 +233,7 @@ extension XMLParser {
       el.strokeDashArray = try att.parseFloats("stroke-dasharray")
     }
     
-    do {
-      el.fill = try att.parseFill("fill")
-    } catch {
-      print(error)
-    }
-
+    el.fill = try att.parseFill("fill")
     el.fillOpacity = try att.parsePercentage("fill-opacity")
     el.fillRule = try att.parseRaw("fill-rule")
 

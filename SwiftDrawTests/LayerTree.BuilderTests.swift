@@ -106,7 +106,7 @@ final class LayerTreeBuilderTests: XCTestCase {
   
   func testStrokeAttributes() {
     var state = LayerTree.Builder.State()
-    state.stroke = .rgbf(1.0, 0.0, 0.0)
+      state.stroke = .color(.rgbf(1.0, 0.0, 0.0))
     state.strokeOpacity = 0.5
     state.strokeWidth = 5.0
     state.strokeLineCap = .square
@@ -114,7 +114,7 @@ final class LayerTreeBuilderTests: XCTestCase {
     state.strokeLineMiterLimit = 10.0
     
     let att = LayerTree.Builder.makeStrokeAttributes(with: state)
-    XCTAssertEqual(att.color, .srgb(r: 1.0, g: 0, b: 0, a: 0.5))
+    XCTAssertEqual(att.color, .color(.srgb(r: 1.0, g: 0, b: 0, a: 0.5)))
     XCTAssertEqual(att.width, 5.0)
     XCTAssertEqual(att.cap, .square)
     XCTAssertEqual(att.join, .round)
@@ -139,4 +139,12 @@ private extension LayerTree.FillAttributes {
     let builder = LayerTree.Builder(svg: DOM.SVG(width: 10, height: 10))
     return builder.makeFillAttributes(with: LayerTree.Builder.State())
   }
+}
+
+private extension LayerTree.Builder {
+
+    static func makeStrokeAttributes(with state: State) -> LayerTree.StrokeAttributes {
+        let builder = LayerTree.Builder(svg: DOM.SVG(width: 10, height: 10))
+        return builder.makeStrokeAttributes(with: state)
+    }
 }

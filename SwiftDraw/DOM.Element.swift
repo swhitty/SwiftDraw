@@ -40,7 +40,7 @@ protocol PresentationAttributes {
   var display: DOM.DisplayMode?  { get set }
   var color: DOM.Color?  { get set }
 
-  var stroke: DOM.Color?  { get set }
+  var stroke: DOM.Fill?  { get set }
   var strokeWidth: DOM.Float?  { get set }
   var strokeOpacity: DOM.Float?  { get set }
   var strokeLineCap: DOM.LineCap?  { get set }
@@ -70,7 +70,7 @@ extension DOM {
     var display: DOM.DisplayMode?
     var color: DOM.Color?
 
-    var stroke: DOM.Color?
+    var stroke: DOM.Fill?
     var strokeWidth: DOM.Float?
     var strokeOpacity: DOM.Float?
     var strokeLineCap: DOM.LineCap?

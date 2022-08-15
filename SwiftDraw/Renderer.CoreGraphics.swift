@@ -406,6 +406,12 @@ struct CGRenderer: Renderer {
         ctx.strokePath()
     }
 
+    func clipStrokeOutline(path: CGPath) {
+        ctx.addPath(path)
+        ctx.replacePathWithStrokedPath()
+        ctx.clip()
+    }
+
     func fill(path: CGPath, rule: CGPathFillRule) {
         ctx.addPath(path)
         ctx.fillPath(using: rule)

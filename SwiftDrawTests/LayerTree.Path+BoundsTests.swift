@@ -111,4 +111,23 @@ final class LayerTreePathBoundsTests: XCTestCase {
             Point(100,100)
         )
     }
+
+    func testEndpoints() {
+        let path = LayerTree.Path([
+            .move(to: Point(-50, -50)),
+            .move(to: Point(0, 0)),
+            .move(to: Point(50, 10)),
+            .line(to: Point(300, 300)),
+            .line(to: Point(200, 15))
+        ])
+
+        XCTAssertEqual(
+            path.endpoints.start,
+            Point(50, 10)
+        )
+        XCTAssertEqual(
+            path.endpoints.end,
+            Point(200, 15)
+        )
+    }
 }

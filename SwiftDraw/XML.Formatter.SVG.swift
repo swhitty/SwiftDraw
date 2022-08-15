@@ -89,7 +89,7 @@ extension XML.Formatter {
             attributes["id"] = graphic.id
             attributes["opacity"] = graphic.opacity.map { String($0) }
             attributes["display"] = graphic.display?.rawValue
-            attributes["stroke"] = graphic.stroke.map(encodeColor)
+            attributes["stroke"] = graphic.stroke.map(encodeFill)
             attributes["stroke-width"] = graphic.strokeWidth.map { String($0) }
             attributes["stroke-opacity"] = graphic.strokeOpacity.map { String($0) }
             attributes["stroke-linecap"] = graphic.strokeLineCap?.rawValue

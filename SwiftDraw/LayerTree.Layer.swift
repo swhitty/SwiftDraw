@@ -79,11 +79,18 @@ extension LayerTree {
     }
 
     struct StrokeAttributes: Equatable {
-        var color: Color
+        var color: Stroke
         var width: Float
         var cap: LineCap
         var join: LineJoin
         var miterLimit: Float
+
+        enum Stroke: Equatable {
+            case color(Color)
+            case linearGradient(Gradient)
+
+            static let none = Stroke.color(.none)
+        }
     }
 
     struct FillAttributes: Equatable {

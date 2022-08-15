@@ -117,6 +117,10 @@ final class MockRenderer: Renderer {
   func stroke(path: [LayerTree.Shape]) {
     operations.append("strokePath")
   }
+
+  func clipStrokeOutline(path: [LayerTree.Shape]) {
+    operations.append("clipStrokeOutline")
+  }
   
   func fill(path: [LayerTree.Shape], rule: LayerTree.FillRule) {
     operations.append("fillPath")
