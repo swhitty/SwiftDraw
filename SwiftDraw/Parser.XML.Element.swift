@@ -218,12 +218,12 @@ extension XMLParser {
     el.display = try att.parseRaw("display")
     el.color = try att.parseColor("color")
 
-    el.stroke = try att.parseColor("stroke")
+    el.stroke = try att.parseStrokeColor("stroke")
     el.strokeWidth = try att.parseFloat("stroke-width")
     el.strokeOpacity = try att.parsePercentage("stroke-opacity")
     el.strokeLineCap = try att.parseRaw("stroke-linecap")
     el.strokeLineJoin = try att.parseRaw("stroke-linejoin")
-    
+
     //maybe handle this better
     // att.parseDashArray?
     if let dash = try att.parseString("stroke-dasharray") as String?,

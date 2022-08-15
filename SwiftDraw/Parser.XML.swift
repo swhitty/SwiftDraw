@@ -176,7 +176,19 @@ extension AttributeParser {
   func parseFill(_ key: String) throws -> DOM.Fill? {
     return try parse(key) { return try parser.parseFill($0) }
   }
-  
+
+  func parseStrokeColor(_ key: String) throws -> DOM.Color? {
+      guard let fill = try parseFill(key) else {
+          return nil
+      }
+      switch fill {
+      case .color(let c):
+          return c
+      case .url:
+          return nil
+      }
+  }
+
   func parseColor(_ key: String) throws -> DOM.Color? {
     return try parseFill(key)?.getColor()
   }
