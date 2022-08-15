@@ -534,6 +534,9 @@ public final class CGTextRenderer: Renderer {
 
   func makeText() -> String {
     var template = """
+    import CoreGraphics
+    import UIKit
+
     extension UIImage {
       static func \(name)(size: CGSize = CGSize(width: \(size.width), height: \(size.height))) -> UIImage {
         let f = UIGraphicsImageRendererFormat.preferred()
