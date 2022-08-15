@@ -469,7 +469,7 @@ public final class CGTextRenderer: Renderer {
     if rule == ".winding" {
       lines.append("ctx.clip()")
     } else {
-      lines.append("ctx.clip(using: \(rule)")
+      lines.append("ctx.clip(using: \(rule))")
     }
   }
 
