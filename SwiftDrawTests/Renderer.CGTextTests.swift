@@ -37,6 +37,9 @@ final class RendererCGTextTests: XCTestCase {
         XCTAssertEqual(
             code,
             """
+            import CoreGraphics
+            import UIKit
+
             extension UIImage {
               static func svgImage(size: CGSize = CGSize(width: 100.0, height: 100.0)) -> UIImage {
                 let f = UIGraphicsImageRendererFormat.preferred()
@@ -86,6 +89,9 @@ final class RendererCGTextTests: XCTestCase {
         XCTAssertEqual(
             code,
             """
+            import CoreGraphics
+            import UIKit
+
             extension UIImage {
               static func svgImage(size: CGSize = CGSize(width: 512.0, height: 512.0)) -> UIImage {
                 let f = UIGraphicsImageRendererFormat.preferred()
@@ -98,6 +104,7 @@ final class RendererCGTextTests: XCTestCase {
 
               private static func drawSVG(in ctx: CGContext, scale: CGSize) {
                 ctx.scaleBy(x: scale.width, y: scale.height)
+                ctx.saveGState()
                 ctx.scaleBy(x: 1.0039216, y: 1.0039216)
                 ctx.saveGState()
                 let path = CGMutablePath()
@@ -122,7 +129,7 @@ final class RendererCGTextTests: XCTestCase {
                                control2: CGPoint(x: 384.717, y: 13.592989))
                 path.closeSubpath()
                 ctx.addPath(path)
-                ctx.clip()
+                ctx.clip(using: .evenOdd
                 ctx.setAlpha(1.0)
                 let rgb = CGColorSpaceCreateDeviceRGB()
                 let color1 = CGColor(colorSpace: rgb, components: [0.63529414, 0.9019608, 0.18039216, 1.0])!
@@ -168,7 +175,7 @@ final class RendererCGTextTests: XCTestCase {
                                control2: CGPoint(x: 475.84198, y: -0.19800949))
                 path1.closeSubpath()
                 ctx.addPath(path1)
-                ctx.clip()
+                ctx.clip(using: .evenOdd
                 ctx.setAlpha(1.0)
                 var locations1: [CGFloat] = [0.0, 0.7542, 1.0]
                 let gradient1 = CGGradient(
@@ -211,7 +218,7 @@ final class RendererCGTextTests: XCTestCase {
                                control2: CGPoint(x: 327.677, y: 194.555))
                 path2.closeSubpath()
                 ctx.addPath(path2)
-                ctx.clip()
+                ctx.clip(using: .evenOdd
                 ctx.setAlpha(1.0)
                 let color4 = CGColor(colorSpace: rgb, components: [0.654902, 0.60784316, 0.654902, 1.0])!
                 let color5 = CGColor(colorSpace: rgb, components: [0.47843137, 0.42745098, 0.4745098, 1.0])!
@@ -273,7 +280,7 @@ final class RendererCGTextTests: XCTestCase {
                                control2: CGPoint(x: 515.78503, y: 216.98001))
                 path3.closeSubpath()
                 ctx.addPath(path3)
-                ctx.clip()
+                ctx.clip(using: .evenOdd
                 ctx.setAlpha(1.0)
                 let color7 = CGColor(colorSpace: rgb, components: [0.99607843, 0.6, 0.627451, 1.0])!
                 let color8 = CGColor(colorSpace: rgb, components: [0.99607843, 0.39215687, 0.43529412, 1.0])!
@@ -308,7 +315,7 @@ final class RendererCGTextTests: XCTestCase {
                                control2: CGPoint(x: 308.18396, y: 455.118))
                 path4.closeSubpath()
                 ctx.addPath(path4)
-                ctx.clip()
+                ctx.clip(using: .evenOdd
                 ctx.setAlpha(1.0)
                 var locations4: [CGFloat] = [0.0, 0.593, 1.0]
                 let gradient4 = CGGradient(
@@ -355,7 +362,7 @@ final class RendererCGTextTests: XCTestCase {
                                control2: CGPoint(x: 494.15198, y: 174.252))
                 path5.closeSubpath()
                 ctx.addPath(path5)
-                ctx.clip()
+                ctx.clip(using: .evenOdd
                 ctx.setAlpha(1.0)
                 let color10 = CGColor(colorSpace: rgb, components: [0.76862746, 0.09803922, 0.14901961, 1.0])!
                 var locations5: [CGFloat] = [0.0, 0.7043, 1.0]
@@ -386,7 +393,7 @@ final class RendererCGTextTests: XCTestCase {
                                control2: CGPoint(x: 74.53802, y: 246.48302))
                 path6.closeSubpath()
                 ctx.addPath(path6)
-                ctx.clip()
+                ctx.clip(using: .evenOdd
                 ctx.setAlpha(1.0)
                 let color11 = CGColor(colorSpace: rgb, components: [1.0, 0.9764706, 0.8745098, 1.0])!
                 let color12 = CGColor(colorSpace: rgb, components: [1.0, 0.88235295, 0.46666667, 1.0])!
@@ -437,7 +444,7 @@ final class RendererCGTextTests: XCTestCase {
                                control2: CGPoint(x: 283.173, y: 455.118))
                 path7.closeSubpath()
                 ctx.addPath(path7)
-                ctx.clip()
+                ctx.clip(using: .evenOdd
                 ctx.setAlpha(1.0)
                 var locations7: [CGFloat] = [0.0, 1.0]
                 let gradient7 = CGGradient(
@@ -467,7 +474,7 @@ final class RendererCGTextTests: XCTestCase {
                                control2: CGPoint(x: 131.55899, y: 353.086))
                 path8.closeSubpath()
                 ctx.addPath(path8)
-                ctx.clip()
+                ctx.clip(using: .evenOdd
                 ctx.setAlpha(1.0)
                 var locations8: [CGFloat] = [0.0, 0.7487, 1.0]
                 let gradient8 = CGGradient(
@@ -479,6 +486,7 @@ final class RendererCGTextTests: XCTestCase {
                                    start: CGPoint(x: 112.416, y: 341.873),
                                    end: CGPoint(x: 164.335, y: 341.873),
                                    options: [.drawsAfterEndLocation, .drawsBeforeStartLocation])
+                ctx.restoreGState()
                 ctx.restoreGState()
               }
             }

@@ -97,8 +97,8 @@ final class MockRenderer: Renderer {
   func setLine(miterLimit: LayerTree.Float) {
     operations.append("setLineMiterLimit")
   }
-  
-  func setClip(path: [LayerTree.Shape]) {
+
+  func setClip(path: [LayerTree.Shape], rule: LayerTree.FillRule) {
     operations.append("setClip")
   }
   

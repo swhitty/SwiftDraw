@@ -52,7 +52,7 @@ final class RendererTests: XCTestCase {
       .setLineCap(.butt),
       .setLineJoin(.bevel),
       .setLineMiter(limit: 10),
-      .setClip(path: .mock),
+      .setClip(path: .mock, rule: .nonzero),
       .setClipMask([], frame: .zero),
       .fill(.mock, rule: .nonzero),
       .stroke(.mock),

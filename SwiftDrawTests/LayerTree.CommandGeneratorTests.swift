@@ -36,11 +36,12 @@ final class LayerTreeCommandGeneratorTests: XCTestCase {
     let circle = LayerTree.Shape.ellipse(within: .init(x: 0, y: 0, width: 10, height: 10))
     let rect = LayerTree.Shape.rect(within: .init(x: 20, y: 0, width: 10, height: 10), radii: .zero)
     
-    let commands = generator.renderCommands(forClip: [circle, rect])
+    let commands = generator.renderCommands(forClip: [circle, rect], using: nil)
     XCTAssertEqual(commands.count, 1)
     
-    if case .setClip(path: let path) = commands[0] {
+    if case .setClip(path: let path, rule: let rule) = commands[0] {
       XCTAssertEqual(path, [circle, rect])
+      XCTAssertEqual(rule, .nonzero)
     } else {
       XCTFail("expected clip command")
     }
