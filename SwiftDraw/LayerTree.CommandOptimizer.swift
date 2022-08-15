@@ -103,11 +103,12 @@ extension LayerTree {
       var commands = commands
 
       if options.contains(.skipInitialSaveState),
-         case .pushState = commands.first,
-         case .popState = commands.last {
-        commands = commands
-          .dropFirst()
-          .dropLast()
+         let pushIdx = commands.firstIndex(where: \.isPushState),
+         let popIdx = commands.firstIndex(where: \.isPopState),
+         pushIdx == commands.indices.first,
+         popIdx == commands.indices.last {
+          commands.remove(at: popIdx)
+          commands.remove(at: pushIdx)
       }
 
       if options.contains(.skipRedundantState) {
@@ -138,4 +139,21 @@ struct OptimizerOptions: OptionSet {
 
   static let skipRedundantState = OptimizerOptions(rawValue: 1)
   static let skipInitialSaveState = OptimizerOptions(rawValue: 2)
+}
+
+extension RendererCommand {
+
+    var isPushState: Bool {
+        switch self {
+        case .pushState: return true
+        default: return false
+        }
+    }
+
+    var isPopState: Bool {
+        switch self {
+        case .popState: return true
+        default: return false
+        }
+    }
 }
