@@ -30,77 +30,83 @@
 //
 
 extension LayerTree {
-  final class Path: Hashable {
-    var segments: [Segment]
-    
-    init(_ segments: [Segment] = []) {
-      self.segments = segments
-    }
-    
-    enum Segment: Hashable {
-      case move(to: Point)
-      case line(to: Point)
-      case cubic(to: Point, control1: Point, control2: Point)
-      case close
-    }
+    final class Path: Hashable {
+        var segments: [Segment]
 
-    enum Direction {
-      case clockwise
-      case anticlockwise
+        init(_ segments: [Segment] = []) {
+            self.segments = segments
+        }
+
+        enum Segment: Hashable {
+            case move(to: Point)
+            case line(to: Point)
+            case cubic(to: Point, control1: Point, control2: Point)
+            case close
+        }
+
+        enum Direction {
+            case clockwise
+            case anticlockwise
+        }
+
+        func hash(into hasher: inout Hasher) {
+            hasher.combine(self.segments)
+        }
+
+        static func ==(lhs: LayerTree.Path, rhs: LayerTree.Path) -> Bool {
+            return lhs.segments == rhs.segments
+        }
     }
-    
-    func hash(into hasher: inout Hasher) {
-      hasher.combine(self.segments)
-    }
-    
-    static func ==(lhs: LayerTree.Path, rhs: LayerTree.Path) -> Bool {
-      return lhs.segments == rhs.segments
-    }
-  }
 }
 
 extension LayerTree.Path {
-  var lastControl: LayerTree.Point? {
-    guard let lastSegment = segments.last else { return nil }
-    switch lastSegment {
-    case .cubic(_, _, let p): return p
-    default: return nil
+
+    var bounds: LayerTree.Rect {
+        var finder = BoundsFinder()
+        return finder.makeBounds(for: segments)
     }
-  }
-  
-  var location: LayerTree.Point? {
-    guard let location = segments.last?.location else {
-      return segments.last(where:\.isMove)?.location
+
+    var lastControl: LayerTree.Point? {
+        guard let lastSegment = segments.last else { return nil }
+        switch lastSegment {
+        case .cubic(_, _, let p): return p
+        default: return nil
+        }
     }
-    
-    return location
-  }
+
+    var location: LayerTree.Point? {
+        guard let location = segments.last?.location else {
+            return segments.last(where:\.isMove)?.location
+        }
+
+        return location
+    }
 }
 
 private extension LayerTree.Path.Segment {
-  
-  var isClose: Bool {
-    guard case .close = self else {
-      return false
-    }
-    return true
-  }
 
-  var isMove: Bool {
-    guard case .move = self else {
-      return false
+    var isClose: Bool {
+        guard case .close = self else {
+            return false
+        }
+        return true
     }
-    return true
-  }
-  
-  var location: LayerTree.Point? {
-    switch self {
-    case .move(to: let p): return p
-    case .line(let p): return p
-    case .cubic(let p, _, _): return p
-    case .close: return nil
+
+    var isMove: Bool {
+        guard case .move = self else {
+            return false
+        }
+        return true
     }
-  }
+
+    var location: LayerTree.Point? {
+        switch self {
+        case .move(to: let p): return p
+        case .line(let p): return p
+        case .cubic(let p, _, _): return p
+        case .close: return nil
+        }
+    }
 }
 
 
