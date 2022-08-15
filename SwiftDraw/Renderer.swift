@@ -94,7 +94,7 @@ protocol Renderer {
     func setLine(cap: Types.LineCap)
     func setLine(join: Types.LineJoin)
     func setLine(miterLimit: Types.Float)
-    func setClip(path: Types.Path)
+    func setClip(path: Types.Path, rule: Types.FillRule)
     func setClip(mask: Types.Mask, frame: Types.Rect)
     func setAlpha(_ alpha: Types.Float)
     func setBlend(mode: Types.BlendMode)
@@ -139,8 +139,8 @@ extension Renderer {
             setLine(join: j)
         case .setLineMiter(limit: let l):
             setLine(miterLimit: l)
-        case .setClip(path: let p):
-            setClip(path: p)
+        case .setClip(path: let p, rule: let r):
+            setClip(path: p, rule: r)
         case .setClipMask(let m, frame: let f):
             setClip(mask: m, frame: f)
         case .setAlpha(let a):
@@ -183,7 +183,7 @@ enum RendererCommand<Types: RendererTypes> {
     case setLineCap(Types.LineCap)
     case setLineJoin(Types.LineJoin)
     case setLineMiter(limit: Types.Float)
-    case setClip(path: Types.Path)
+    case setClip(path: Types.Path, rule: Types.FillRule)
     case setClipMask(Types.Mask, frame: Types.Rect)
     case setAlpha(Types.Float)
     case setBlend(mode: Types.BlendMode)

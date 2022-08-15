@@ -59,7 +59,7 @@ extension LayerTree {
 
             let opacityCommands = renderCommands(forOpacity: layer.opacity)
             let transformCommands = renderCommands(forTransforms: layer.transform)
-            let clipCommands = renderCommands(forClip: layer.clip)
+            let clipCommands = renderCommands(forClip: layer.clip, using: layer.clipRule)
             let maskCommands = renderCommands(forMask: layer.mask)
 
             var commands = [RendererCommand<P.Types>]()
@@ -109,7 +109,7 @@ extension LayerTree {
 
             let opacityCommands = renderCommands(forOpacity: layer.opacity)
             let transformCommands = renderCommands(forTransforms: layer.transform)
-            let clipCommands = renderCommands(forClip: layer.clip)
+            let clipCommands = renderCommands(forClip: layer.clip, using: layer.clipRule)
             let mask = makeMask(forMask: layer.mask)
 
             var commands = [RendererCommand<P.Types>]()
@@ -196,7 +196,8 @@ extension LayerTree {
                 commands.append(.fill(path, rule: rule))
             case .linearGradient(let fillGradient):
                 commands.append(.pushState)
-                commands.append(.setClip(path: path))
+                let rule = provider.createFillRule(from: fill.rule)
+                commands.append(.setClip(path: path, rule: rule))
 
                 let pathStart: LayerTree.Point
                 let pathEnd: LayerTree.Point
@@ -225,7 +226,8 @@ extension LayerTree {
                 commands.append(.popState)
             case .radialGradient(let fillGradient):
                 commands.append(.pushState)
-                commands.append(.setClip(path: path))
+                let rule = provider.createFillRule(from: fill.rule)
+                commands.append(.setClip(path: path, rule: rule))
 
                 let startCenter: LayerTree.Point
                 let startRadius: LayerTree.Float
@@ -337,13 +339,13 @@ extension LayerTree {
             }
         }
 
-        func renderCommands(forClip shapes: [Shape]) -> [RendererCommand<P.Types>] {
+        func renderCommands(forClip shapes: [Shape], using rule: FillRule?) -> [RendererCommand<P.Types>] {
             guard !shapes.isEmpty else { return [] }
 
             let paths = shapes.map { provider.createPath(from: $0) }
             let clipPath = provider.createPath(from: paths)
-
-            return [.setClip(path: clipPath)]
+            let rule = provider.createFillRule(from: rule ?? .nonzero)
+            return [.setClip(path: clipPath, rule: rule)]
         }
 
         func makeMask(forMask layer: Layer?) -> P.Types.Mask? {

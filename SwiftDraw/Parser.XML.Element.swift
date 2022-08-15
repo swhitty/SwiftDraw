@@ -250,8 +250,9 @@ extension XMLParser {
     }
     
     el.clipPath = try att.parseUrlSelector("clip-path")
+    el.clipRule = try att.parseRaw("clip-rule")
     el.mask = try att.parseUrlSelector("mask")
-    
+
     return el
   }
   

@@ -32,6 +32,7 @@ extension LayerTree {
         var opacity: Float = 1.0
         var transform: [Transform] = []
         var clip: [Shape] = []
+        var clipRule: FillRule?
         var mask: Layer?
 
         enum Contents: Equatable {

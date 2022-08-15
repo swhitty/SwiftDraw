@@ -384,9 +384,9 @@ struct CGRenderer: Renderer {
         ctx.setMiterLimit(miterLimit)
     }
 
-    func setClip(path: CGPath) {
+    func setClip(path: CGPath, rule: CGPathFillRule) {
         ctx.addPath(path)
-        ctx.clip()
+        ctx.clip(using: rule)
     }
 
     func setClip(mask: CGImage, frame: CGRect) {

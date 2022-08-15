@@ -86,9 +86,10 @@ extension DOM {
 
     var transform: [DOM.Transform]?
     var clipPath: URL?
+    var clipRule: DOM.FillRule?
     var mask: URL?
   }
-  
+
   final class Line: GraphicsElement {
     var x1: Coordinate
     var y1: Coordinate

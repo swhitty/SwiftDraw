@@ -80,6 +80,7 @@ extension LayerTree {
 
             l.transform = Builder.createTransforms(from: element.transform ?? [])
             l.clip = createClipShapes(for: element)
+            l.clipRule = element.clipRule
             l.mask = createMaskLayer(for: element)
             l.opacity = state.opacity
             l.contents = makeAllContents(from: element, with: state)

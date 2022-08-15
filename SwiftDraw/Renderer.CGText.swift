@@ -462,11 +462,15 @@ public final class CGTextRenderer: Renderer {
   func setLine(miterLimit: LayerTree.Float) {
     lines.append("ctx.setMiterLimit(\(miterLimit))")
   }
-  
-  func setClip(path: [LayerTree.Shape]) {
+
+  func setClip(path: [LayerTree.Shape], rule: String) {
     let identifier = createOrGetPath(path)
     lines.append("ctx.addPath(\(identifier))")
-    lines.append("ctx.clip()")
+    if rule == ".winding" {
+      lines.append("ctx.clip()")
+    } else {
+      lines.append("ctx.clip(using: \(rule)")
+    }
   }
 
   func setClip(mask: [Any], frame: String) {
