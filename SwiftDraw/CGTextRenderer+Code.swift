@@ -49,17 +49,18 @@ public extension CGTextRenderer {
 
         let identifier = fileURL.lastPathComponent
             .replacingOccurrences(of: ".\(fileURL.pathExtension)", with: "")
+            .replacingOccurrences(of: "_", with: " ")
             .replacingOccurrences(of: "-", with: " ")
             .capitalized
             .replacingOccurrences(of: " ", with: "")
 
-        return cgCodeText(name: "svg\(identifier)", svg: svg, size: size)
+        return cgCodeText(name: identifier, svg: svg, size: size)
     }
 
     static func render(data: Data) throws -> String {
         let svg = try DOM.SVG.parse(data: data)
         let size = makeSize(svg: svg, size: nil)
-        return cgCodeText(name: "svgImage", svg: svg, size: size)
+        return cgCodeText(name: "Image", svg: svg, size: size)
     }
 
     static func renderPath(from svgPath: String) throws -> String {

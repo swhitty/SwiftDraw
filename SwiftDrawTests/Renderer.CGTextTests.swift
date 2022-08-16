@@ -46,11 +46,11 @@ final class RendererCGTextTests: XCTestCase {
                 f.opaque = false
                 let scale = CGSize(width: size.width / 100.0, height: size.height / 100.0)
                 return UIGraphicsImageRenderer(size: size, format: f).image {
-                  drawSVG(in: $0.cgContext, scale: scale)
+                  drawImage(in: $0.cgContext, scale: scale)
                 }
               }
 
-              private static func drawSVG(in ctx: CGContext, scale: CGSize) {
+              private static func drawImage(in ctx: CGContext, scale: CGSize) {
                 ctx.scaleBy(x: scale.width, y: scale.height)
                 let rgb = CGColorSpaceCreateDeviceRGB()
                 let color1 = CGColor(colorSpace: rgb, components: [0.0, 0.0, 0.0, 1.0])!
@@ -98,11 +98,11 @@ final class RendererCGTextTests: XCTestCase {
                 f.opaque = false
                 let scale = CGSize(width: size.width / 512.0, height: size.height / 512.0)
                 return UIGraphicsImageRenderer(size: size, format: f).image {
-                  drawSVG(in: $0.cgContext, scale: scale)
+                  drawImage(in: $0.cgContext, scale: scale)
                 }
               }
 
-              private static func drawSVG(in ctx: CGContext, scale: CGSize) {
+              private static func drawImage(in ctx: CGContext, scale: CGSize) {
                 ctx.scaleBy(x: scale.width, y: scale.height)
                 ctx.saveGState()
                 ctx.scaleBy(x: 1.0039216, y: 1.0039216)
