@@ -1,9 +1,9 @@
 //
-//  DOM.SVG.swift
+//  DOM.Filter.swift
 //  SwiftDraw
 //
-//  Created by Simon Whitty on 11/2/17.
-//  Copyright 2020 Simon Whitty
+//  Created by Simon Whitty on 16/8/22.
+//  Copyright 2022 Simon Whitty
 //
 //  Distributed under the permissive zlib license
 //  Get the latest version from here:
@@ -30,46 +30,19 @@
 //
 
 extension DOM {
-  final class SVG: GraphicsElement, ContainerElement {
-    var width: Length
-    var height: Length
-    var viewBox: ViewBox?
-    
-    var childElements = [GraphicsElement]()
-    
-    var defs = Defs()
-    
-    init(width: Length, height: Length) {
-      self.width = width
-      self.height = height
-    }
-    
-    struct ViewBox: Equatable {
-      var x: Coordinate
-      var y: Coordinate
-      var width: Coordinate
-      var height: Coordinate
-    }
-    
-    struct Defs {
-      var clipPaths = [ClipPath]()
-      var linearGradients = [LinearGradient]()
-      var radialGradients = [RadialGradient]()
-      var masks = [Mask]()
-      var patterns = [Pattern]()
-      var filters = [Filter]()
 
-      var elements = [String: GraphicsElement]()
+    final class Filter: Element {
+        var id: String
+
+        var effects: [Effect]
+
+        init(id: String) {
+            self.id = id
+            self.effects = []
+        }
+
+        enum Effect: Equatable {
+            case gaussianBlur(stdDeviation: DOM.Float)
+        }
     }
-  }
-  
-  struct ClipPath: ContainerElement {
-    var id: String
-    var childElements = [GraphicsElement]()
-  }
-  
-  struct Mask: ContainerElement {
-    var id: String
-    var childElements = [GraphicsElement]()
-  }
 }
