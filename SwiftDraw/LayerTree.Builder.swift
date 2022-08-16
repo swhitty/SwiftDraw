@@ -86,6 +86,7 @@ extension LayerTree {
             l.mask = createMaskLayer(for: element)
             l.opacity = state.opacity
             l.contents = makeAllContents(from: element, with: state)
+            l.filters = makeFilters(for: state)
 
             //            // clips the mask to the content
             //            l.mask?.clip = l.contents.compactMap { (contents: Layer.Contents) -> LayerTree.Shape? in
@@ -149,6 +150,12 @@ extension LayerTree {
             }
 
             return l
+        }
+
+        func makeFilters(for state: State) -> [Filter] {
+            guard let filterId = state.filter?.fragment,
+                  let filter = svg.defs.filters.first(where: { $0.id == filterId }) else { return [] }
+            return filter.effects
         }
     }
 }
@@ -327,6 +334,8 @@ extension LayerTree.Builder {
         var fillOpacity: DOM.Float
         var fillRule: DOM.FillRule
 
+        var filter: DOM.URL?
+
         var fontFamily: String
         var fontSize: DOM.Float
 
@@ -370,6 +379,8 @@ extension LayerTree.Builder {
         state.fill = attributes.fill ?? existing.fill
         state.fillOpacity = attributes.fillOpacity ?? existing.fillOpacity
         state.fillRule = attributes.fillRule ?? existing.fillRule
+
+        state.filter = attributes.filter ?? existing.filter
 
         state.fontFamily = attributes.fontFamily ?? existing.fontFamily
         state.fontSize = attributes.fontSize ?? existing.fontSize

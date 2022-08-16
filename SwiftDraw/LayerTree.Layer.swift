@@ -34,6 +34,7 @@ extension LayerTree {
         var clip: [Shape] = []
         var clipRule: FillRule?
         var mask: Layer?
+        var filters: [Filter] = []
 
         enum Contents: Equatable {
             case shape(Shape, StrokeAttributes, FillAttributes)
@@ -64,7 +65,8 @@ extension LayerTree {
                   opacity == 1.0,
                   transform == [],
                   clip == [],
-                  mask == nil else { return nil }
+                  mask == nil,
+                  filters == [] else { return nil }
 
             return first
         }
@@ -74,7 +76,8 @@ extension LayerTree {
             lhs.opacity == rhs.opacity &&
             lhs.transform == rhs.transform &&
             lhs.clip == rhs.clip &&
-            lhs.mask == rhs.mask
+            lhs.mask == rhs.mask &&
+            lhs.filters == rhs.filters
         }
     }
 

@@ -37,7 +37,8 @@ extension LayerTree {
   typealias LineCap = DOM.LineCap
   typealias LineJoin = DOM.LineJoin
   typealias FillRule = DOM.FillRule
-  
+  typealias Filter = DOM.Filter.Effect
+
   enum Error: Swift.Error {
     case unsupported(Any)
     case invalid(String)
