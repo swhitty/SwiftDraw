@@ -77,8 +77,19 @@ public final class Image: NSObject {
 public final class Image: NSObject {
     public let size: CGSize
 
-    init(svg: DOM.SVG) {
+    init(svg: DOM.SVG, options: Options) {
         size = CGSize(width: svg.width, height: svg.height)
+    }
+
+    public struct Options: OptionSet {
+        public let rawValue: Int
+        public init(rawValue: Int) {
+            self.rawValue = rawValue
+        }
+
+        public static let hideUnsupportedFilters = Options(rawValue: 1 << 0)
+
+        public static let `default`: Options = []
     }
 }
 
