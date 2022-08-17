@@ -429,7 +429,7 @@ extension LayerTree {
 
             switch gradient.units  {
             case .objectBoundingBox:
-                let h = sqrt((bounds.width*bounds.width) + (bounds.height*bounds.height)) / 2
+                let h = max(bounds.width, bounds.height)
                 startCenter = LayerTree.Point(
                     bounds.x + (gradient.center.x * bounds.width),
                     bounds.y + (gradient.center.y * bounds.height)
