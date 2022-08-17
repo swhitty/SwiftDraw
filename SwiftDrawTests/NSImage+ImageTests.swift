@@ -74,7 +74,7 @@ private extension Image {
     svg.childElements.append(DOM.Rect(x: 1, y: 1, width: 1, height: 1))
     svg.childElements[0].fill = .color(DOM.Color.rgbi(255, 0, 0))
     svg.childElements[1].fill = .color(DOM.Color.rgbi(0, 0, 255))
-    return Image(svg: svg)
+    return Image(svg: svg, options: .default)
   }
 }
 

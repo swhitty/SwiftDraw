@@ -42,7 +42,7 @@ public final class Image: NSObject {
     //see: Renderer.swift
     let commands: [RendererCommand<CGTypes>]
 
-    init(svg: DOM.SVG) {
+    init(svg: DOM.SVG, options: Options) {
         size = CGSize(width: svg.width, height: svg.height)
 
         //To create the draw commands;
@@ -52,12 +52,24 @@ public final class Image: NSObject {
         // - RenderCommands are performed by Renderer (drawn to CGContext)
         let layer = LayerTree.Builder(svg: svg).makeLayer()
         let generator = LayerTree.CommandGenerator(provider: CGProvider(),
-                                                   size: LayerTree.Size(svg.width, svg.height))
+                                                   size: LayerTree.Size(svg.width, svg.height),
+                                                   options: options)
 
         let optimizer = LayerTree.CommandOptimizer<CGTypes>()
         commands = optimizer.optimizeCommands(
             generator.renderCommands(for: layer)
         )
+    }
+
+    public struct Options: OptionSet {
+        public let rawValue: Int
+        public init(rawValue: Int) {
+            self.rawValue = rawValue
+        }
+
+        public static let hideUnsupportedFilters = Options(rawValue: 1 << 0)
+
+        public static let `default`: Options = []
     }
 }
 #else
@@ -107,29 +119,29 @@ extension DOM.SVG {
 
 public extension Image {
 
-    convenience init?(fileURL url: URL) {
+    convenience init?(fileURL url: URL, options: Image.Options = .default) {
         do {
             let svg = try DOM.SVG.parse(fileURL: url)
-            self.init(svg: svg)
+            self.init(svg: svg, options: options)
         } catch {
             XMLParser.logParsingError(for: error, filename: url.lastPathComponent, parsing: nil)
             return nil
         }
     }
 
-    convenience init?(named name: String, in bundle: Bundle = Bundle.main) {
+    convenience init?(named name: String, in bundle: Bundle = Bundle.main, options: Image.Options = .default) {
         guard let url = bundle.url(forResource: name, withExtension: nil) else {
             return nil
         }
 
-        self.init(fileURL: url)
+        self.init(fileURL: url, options: options)
     }
 
-    convenience init?(data: Data) {
+    convenience init?(data: Data, options: Image.Options = .default) {
         guard let svg = try? DOM.SVG.parse(data: data) else {
             return nil
         }
 
-        self.init(svg: svg)
+        self.init(svg: svg, options: options)
     }
 }

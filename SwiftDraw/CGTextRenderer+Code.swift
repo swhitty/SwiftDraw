@@ -35,12 +35,12 @@ public extension CGTextRenderer {
 
     typealias Size = (width: Int, height: Int)
 
-    static func render(named name: String, in bundle: Bundle = Bundle.main, size: Size? = nil) -> String? {
+    static func render(named name: String, in bundle: Bundle = Bundle.main, size: Size? = nil, options: Image.Options) -> String? {
         guard let url = bundle.url(forResource: name, withExtension: nil) else { return nil }
-        return render(fileURL: url, size: size)
+        return render(fileURL: url, size: size, options: options)
     }
 
-    static func render(fileURL: URL, size: Size? = nil) -> String? {
+    static func render(fileURL: URL, size: Size? = nil, options: Image.Options) -> String? {
         guard let svg = try? DOM.SVG.parse(fileURL: fileURL) else {
             return nil
         }
@@ -54,13 +54,13 @@ public extension CGTextRenderer {
             .capitalized
             .replacingOccurrences(of: " ", with: "")
 
-        return cgCodeText(name: identifier, svg: svg, size: size)
+        return cgCodeText(name: identifier, svg: svg, size: size, options: options)
     }
 
-    static func render(data: Data) throws -> String {
+    static func render(data: Data, options: Image.Options) throws -> String {
         let svg = try DOM.SVG.parse(data: data)
         let size = makeSize(svg: svg, size: nil)
-        return cgCodeText(name: "Image", svg: svg, size: size)
+        return cgCodeText(name: "Image", svg: svg, size: size, options: options)
     }
 
     static func renderPath(from svgPath: String) throws -> String {
@@ -76,11 +76,12 @@ public extension CGTextRenderer {
         return LayerTree.Size(LayerTree.Float(size.width), LayerTree.Float(size.height))
     }
 
-    private static func cgCodeText(name: String, svg: DOM.SVG, size: LayerTree.Size) -> String {
+    private static func cgCodeText(name: String, svg: DOM.SVG, size: LayerTree.Size, options: Image.Options) -> String {
         let layer = LayerTree.Builder(svg: svg).makeLayer()
         let commandSize = LayerTree.Size(svg.width, svg.height)
         let generator = LayerTree.CommandGenerator(provider: CGTextProvider(),
-                                                   size: commandSize)
+                                                   size: commandSize,
+                                                   options: options)
 
         let optimizer = LayerTree.CommandOptimizer<CGTextTypes>(options: [.skipRedundantState, .skipInitialSaveState])
         let commands = optimizer.optimizeCommands(

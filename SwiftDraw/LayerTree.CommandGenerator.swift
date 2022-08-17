@@ -39,11 +39,15 @@ extension LayerTree {
         let provider: P
         let size: LayerTree.Size
         let scale: LayerTree.Float
+        let options: SwiftDraw.Image.Options
 
-        init(provider: P, size: LayerTree.Size, scale: LayerTree.Float = 3.0) {
+        private var hasLoggedFilterWarning: Bool = false
+
+        init(provider: P, size: LayerTree.Size, scale: LayerTree.Float = 3.0, options: SwiftDraw.Image.Options) {
             self.provider = provider
             self.size = size
             self.scale = scale
+            self.options = options
         }
 
         func renderCommands(for layer: Layer, colorConverter: ColorConverter = DefaultColorConverter()) -> [RendererCommand<P.Types>] {
@@ -56,6 +60,13 @@ extension LayerTree {
 
         func renderCommandsWithTransparency(for layer: Layer, colorConverter: ColorConverter = DefaultColorConverter()) -> [RendererCommand<P.Types>] {
             guard layer.opacity > 0.0 else { return [] }
+
+            if !layer.filters.isEmpty {
+                guard !options.contains(.hideUnsupportedFilters) else {
+                    return []
+                }
+                logUnsupportedFilters(layer.filters)
+            }
 
             let opacityCommands = renderCommands(forOpacity: layer.opacity)
             let transformCommands = renderCommands(forTransforms: layer.transform)
@@ -106,6 +117,13 @@ extension LayerTree {
 
         func renderCommandsWithoutTransparency(for layer: Layer, colorConverter: ColorConverter = DefaultColorConverter()) -> [RendererCommand<P.Types>] {
             guard layer.opacity > 0.0 else { return [] }
+
+            if !layer.filters.isEmpty {
+                guard !options.contains(.hideUnsupportedFilters) else {
+                    return []
+                }
+                logUnsupportedFilters(layer.filters)
+            }
 
             let opacityCommands = renderCommands(forOpacity: layer.opacity)
             let transformCommands = renderCommands(forTransforms: layer.transform)
@@ -448,7 +466,54 @@ extension LayerTree {
             return commands
         }
     }
+}
 
+extension LayerTree.CommandGenerator {
+
+    func logUnsupportedFilters(_ filters: [LayerTree.Filter]) {
+        guard !hasLoggedFilterWarning else { return }
+        let name = filters.map(\.name).joined(separator: ", ")
+
+        let hint: String
+        if options.contains(.commandLine) {
+            hint = "[--hideUnsupportedFilters]"
+        } else {
+        #if canImport(UIKit)
+            hint = "UIImage(svgNamed:, options: .hideUnsupportedFilters)"
+        #else
+            hint = "NSImage(svgNamed:, options: .hideUnsupportedFilters)"
+        #endif
+        }
+
+        print("Warning:", name, "is not supported. Elements with this filter can be hidden with \(hint)", to: &.standardError)
+        hasLoggedFilterWarning = true
+    }
+
+    static func logParsingError(for error: Swift.Error, filename: String?, parsing element: XML.Element? = nil) {
+        let elementName = element.map { "<\($0.name)>" } ?? ""
+        let filename = filename ?? ""
+        switch error {
+        case let XMLParser.Error.invalidDocument(error, element, line, column):
+            let element = element.map { "<\($0)>" } ?? ""
+            if let error = error {
+                print("[parsing error]", filename, element, "line:", line, "column:", column, "error:", error, to: &.standardError)
+            } else {
+                print("[parsing error]", filename, element, "line:", line, "column:", column, to: &.standardError)
+            }
+        case let XMLParser.Error.invalidElement(name, error, line, column):
+            if let line = line {
+                print("[parsing error]", filename, "<\(name)>", "line:", line, "column:", column ?? -1, "error:", error, to: &.standardError)
+            } else {
+                print("[parsing error]", filename, "<\(name)>", "error:", error, to: &.standardError)
+            }
+        default:
+            if let location = element?.parsedLocation {
+                print("[parsing error]", filename, elementName, "line:", location.line, "column:", location.column, "error:", error, to: &.standardError)
+            } else {
+                print("[parsing error]", filename, elementName, "error:", error, to: &.standardError)
+            }
+        }
+    }
 }
 
 private extension LayerTree.Rect {
@@ -501,5 +566,14 @@ private extension LayerTree.Shape {
     var bounds: LayerTree.Rect? {
         guard case .path(let p) = self else { return nil }
         return p.bounds
+    }
+}
+
+private extension LayerTree.Filter {
+    var name: String {
+        switch self {
+        case .gaussianBlur:
+            return "<feGaussianBlur>"
+        }
     }
 }

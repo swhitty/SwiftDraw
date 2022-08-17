@@ -32,7 +32,7 @@ import XCTest
 final class LayerTreeCommandGeneratorTests: XCTestCase {
   
   func testClip() {
-    let generator = LayerTree.CommandGenerator(provider: LayerTreeProvider(), size: .zero)
+    let generator = LayerTree.CommandGenerator(provider: LayerTreeProvider(), size: .zero, options: .default)
     let circle = LayerTree.Shape.ellipse(within: .init(x: 0, y: 0, width: 10, height: 10))
     let rect = LayerTree.Shape.rect(within: .init(x: 20, y: 0, width: 10, height: 10), radii: .zero)
     
@@ -53,7 +53,7 @@ final class LayerTreeCommandGeneratorTests: XCTestCase {
     let translate = LayerTree.Transform.translate(tx: 10, ty: 20)
     let rotate = LayerTree.Transform.rotate(radians: 10)
     
-    let generator = LayerTree.CommandGenerator(provider: LayerTreeProvider(), size: .zero)
+    let generator = LayerTree.CommandGenerator(provider: LayerTreeProvider(), size: .zero, options: .default)
     let commands = generator.renderCommands(forTransforms: [matrix, scale, translate, rotate])
     XCTAssertEqual(commands.count, 4)
   }

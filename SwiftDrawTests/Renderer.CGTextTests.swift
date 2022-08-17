@@ -482,7 +482,7 @@ private extension CGTextRenderer {
     static func render(svgNamed name: String, in bundle: Bundle = .test) throws -> String {
         let url = try bundle.url(forResource: name)
         let data = try Data(contentsOf: url)
-        return try render(data: data)
+        return try render(data: data, options: .default)
     }
 
 }

@@ -35,8 +35,8 @@ import CoreGraphics
 
 public extension NSImage {
 
-  convenience init?(svgNamed name: String, in bundle: Bundle = .main) {
-    guard let image = Image(named: name, in: bundle) else { return nil }
+  convenience init?(svgNamed name: String, in bundle: Bundle = .main, options: Image.Options = .default) {
+    guard let image = Image(named: name, in: bundle, options: options) else { return nil }
     self.init(image)
   }
 

@@ -80,13 +80,14 @@ public extension Image {
     return data as Data
   }
 
-  static func pdfData(fileURL url: URL, size: CGSize? = nil) throws -> Data {
+  static func pdfData(fileURL url: URL, size: CGSize? = nil, options: Image.Options = .default) throws -> Data {
     let svg = try DOM.SVG.parse(fileURL: url)
     let size = size ?? CGSize(width: CGFloat(svg.width), height: CGFloat(svg.height))
     let layer = LayerTree.Builder(svg: svg).makeLayer()
     var mediaBox = CGRect(origin: .zero, size: size)
     let generator = LayerTree.CommandGenerator(provider: CGProvider(supportsTransparencyLayers: false),
-                                               size: LayerTree.Size(size))
+                                               size: LayerTree.Size(size),
+                                               options: options)
     let commands = generator.renderCommands(for: layer)
     let data = NSMutableData()
     guard let consumer = CGDataConsumer(data: data as CFMutableData) else { throw Error.unknown }

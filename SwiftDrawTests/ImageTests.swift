@@ -74,6 +74,6 @@ private extension Image {
     let svg = DOM.SVG(width: 100, height: 100)
     svg.childElements.append(DOM.Line(x1: 0, y1: 0, x2: 100, y2: 100))
     svg.childElements.append(DOM.Line(x1: 100, y1: 0, x2: 0, y2: 100))
-    return Image(svg: svg)
+    return Image(svg: svg, options: .default)
   }
 }

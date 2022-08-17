@@ -33,53 +33,62 @@ import Foundation
 
 extension CommandLine {
 
-  enum Modifier: String {
-    case format
-    case output
-    case size
-    case scale
+    enum Modifier: String {
+        case format
+        case output
+        case size
+        case scale
+        case hideUnsupportedFilters
 
-    static func parse(from string: String) -> Modifier? {
-      guard string.hasPrefix("--") else {
-        return nil
-      }
-
-      return Modifier(rawValue: String(string.dropFirst(2)))
-    }
-  }
-
-  static func parseModifiers(from args: [String]) throws -> [Modifier: String] {
-    var args = args
-    var modifiers = [Modifier: String]()
-    while let pair = args.takePair() {
-      if let modifier = Modifier.parse(from: pair.0), modifiers.keys.contains(modifier) == false  {
-        modifiers[modifier] = pair.1
-      } else {
-        throw Error.invalid
-      }
+        var hasValue: Bool {
+            self != .hideUnsupportedFilters
+        }
     }
 
-    guard args.isEmpty else {
-      throw CommandLine.Error.invalid
+    static func parseModifiers(from args: [String]) throws -> [Modifier: String?] {
+        var args = args
+        var modifiers = [Modifier: String?]()
+        while let pair = try args.takeModifier() {
+            if modifiers.keys.contains(pair.0) == false  {
+                modifiers[pair.0] = pair.1
+            } else {
+                throw Error.invalid
+            }
+        }
+
+        guard args.isEmpty else {
+            throw CommandLine.Error.invalid
+        }
+
+        return modifiers
     }
 
-    return modifiers
-  }
-
-  public enum Error: Swift.Error {
-    case invalid
-  }
+    public enum Error: Swift.Error {
+        case invalid
+    }
 }
 
 private extension Array where Element == String {
 
-  mutating func takePair() -> (String, String)? {
-    guard count > 1 else {
-      return nil
-    }
+    mutating func takeModifier() throws -> (CommandLine.Modifier, String?)? {
+        guard !isEmpty else {
+            return nil
+        }
 
-    let pair = (self[0], self[1])
-    removeFirst(2)
-    return pair
-  }
+        guard self[0].hasPrefix("--"),
+              let modifier = CommandLine.Modifier(rawValue: String(self[0].dropFirst(2))) else {
+            throw CommandLine.Error.invalid
+        }
+
+        if modifier.hasValue {
+            guard count > 1 else {
+                throw CommandLine.Error.invalid
+            }
+            defer { removeFirst(2) }
+            return (modifier, self[1])
+        } else {
+            removeFirst(1)
+            return (modifier, nil)
+        }
+    }
 }
