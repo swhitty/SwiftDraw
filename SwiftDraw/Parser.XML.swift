@@ -35,10 +35,12 @@ struct XMLParser {
     case missingAttribute(name: String)
     case invalidAttribute(name: String, value: Any)
     case invalidElement(name: String, error: Swift.Error, line: Int?, column: Int?)
+    case invalidDocument(error: Swift.Error?, element: String?, line: Int, column: Int)
   }
   
   var options: Options = []
-  
+  var filename: String?
+
   struct Options: OptionSet {
     let rawValue: Int
     init(rawValue: Int) {
@@ -68,7 +70,7 @@ protocol AttributeValueParser {
 protocol AttributeParser {
   var parser: AttributeValueParser { get }
   var options: XMLParser.Options { get }
-  
+
   // either parse and return T or
   // throw Error.missingAttribute when key cannot resolve to a value
   // throw Error.invalidAttribute when value cannot be parsed into T

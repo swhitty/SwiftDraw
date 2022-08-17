@@ -36,100 +36,100 @@ import CoreGraphics
 
 @objc(SVGImage)
 public final class Image: NSObject {
-  public let size: CGSize
+    public let size: CGSize
 
-  //An Image is simply an array of CoreGraphics draw commands
-  //see: Renderer.swift
-  let commands: [RendererCommand<CGTypes>]
+    //An Image is simply an array of CoreGraphics draw commands
+    //see: Renderer.swift
+    let commands: [RendererCommand<CGTypes>]
 
-  init(svg: DOM.SVG) {
-    size = CGSize(width: svg.width, height: svg.height)
+    init(svg: DOM.SVG) {
+        size = CGSize(width: svg.width, height: svg.height)
 
-    //To create the draw commands;
-    // - XML is parsed into DOM.SVG
-    // - DOM.SVG is converted into a LayerTree
-    // - LayerTree is converted into RenderCommands
-    // - RenderCommands are performed by Renderer (drawn to CGContext)
-    let layer = LayerTree.Builder(svg: svg).makeLayer()
-    let generator = LayerTree.CommandGenerator(provider: CGProvider(),
-                                               size: LayerTree.Size(svg.width, svg.height))
-  
-    let optimizer = LayerTree.CommandOptimizer<CGTypes>()
-    commands = optimizer.optimizeCommands(
-      generator.renderCommands(for: layer)
-    )
-  }
+        //To create the draw commands;
+        // - XML is parsed into DOM.SVG
+        // - DOM.SVG is converted into a LayerTree
+        // - LayerTree is converted into RenderCommands
+        // - RenderCommands are performed by Renderer (drawn to CGContext)
+        let layer = LayerTree.Builder(svg: svg).makeLayer()
+        let generator = LayerTree.CommandGenerator(provider: CGProvider(),
+                                                   size: LayerTree.Size(svg.width, svg.height))
+
+        let optimizer = LayerTree.CommandOptimizer<CGTypes>()
+        commands = optimizer.optimizeCommands(
+            generator.renderCommands(for: layer)
+        )
+    }
 }
 #else
 
 public final class Image: NSObject {
-  public let size: CGSize
+    public let size: CGSize
 
-  init(svg: DOM.SVG) {
-    size = CGSize(width: svg.width, height: svg.height)
-  }
+    init(svg: DOM.SVG) {
+        size = CGSize(width: svg.width, height: svg.height)
+    }
 }
 
 public extension Image {
 
-  func pngData(size: CGSize? = nil, scale: CGFloat = 1) -> Data? {
-    return nil
-  }
+    func pngData(size: CGSize? = nil, scale: CGFloat = 1) -> Data? {
+        return nil
+    }
 
-  func jpegData(size: CGSize? = nil, scale: CGFloat = 1, compressionQuality quality: CGFloat = 1) -> Data? {
-    return nil
-  }
+    func jpegData(size: CGSize? = nil, scale: CGFloat = 1, compressionQuality quality: CGFloat = 1) -> Data? {
+        return nil
+    }
 
-  func pdfData(size: CGSize? = nil) -> Data? {
-    return nil
-  }
+    func pdfData(size: CGSize? = nil) -> Data? {
+        return nil
+    }
 
-  static func pdfData(fileURL url: URL, size: CGSize? = nil) throws -> Data {
-    throw DOM.Error.missing("not implemented")
-  }
+    static func pdfData(fileURL url: URL, size: CGSize? = nil) throws -> Data {
+        throw DOM.Error.missing("not implemented")
+    }
 }
 #endif
 
 extension DOM.SVG {
 
-  static func parse(fileURL url: URL) throws -> DOM.SVG {
-    let parser = XMLParser(options: [.skipInvalidElements])
-    let element = try XML.SAXParser.parse(contentsOf: url)
-    return try parser.parseSVG(element)
-  }
+    static func parse(fileURL url: URL, options: XMLParser.Options = .skipInvalidElements) throws -> DOM.SVG {
+        let element = try XML.SAXParser.parse(contentsOf: url)
+        let parser = XMLParser(options: options, filename: url.lastPathComponent)
+        return try parser.parseSVG(element)
+    }
 
-  static func parse(data: Data) throws -> DOM.SVG {
-    let parser = XMLParser(options: [.skipInvalidElements])
-    let element = try XML.SAXParser.parse(data: data)
-    return try parser.parseSVG(element)
-  }
+    static func parse(data: Data, options: XMLParser.Options = .skipInvalidElements) throws -> DOM.SVG {
+        let element = try XML.SAXParser.parse(data: data)
+        let parser = XMLParser(options: options)
+        return try parser.parseSVG(element)
+    }
 }
 
 public extension Image {
 
-  convenience init?(fileURL url: URL) {
-    do {
-      let svg = try DOM.SVG.parse(fileURL: url)
-      self.init(svg: svg)
-    } catch {
-      print("[swiftdraw]", "parsing error", error)
-      return nil
-    }
-  }
-
-  convenience init?(named name: String, in bundle: Bundle = Bundle.main) {
-    guard let url = bundle.url(forResource: name, withExtension: nil) else {
-      return nil
+    convenience init?(fileURL url: URL) {
+        do {
+            let svg = try DOM.SVG.parse(fileURL: url)
+            self.init(svg: svg)
+        } catch {
+            XMLParser.logParsingError(for: error, filename: url.lastPathComponent, parsing: nil)
+            return nil
+        }
     }
 
-    self.init(fileURL: url)
-  }
+    convenience init?(named name: String, in bundle: Bundle = Bundle.main) {
+        guard let url = bundle.url(forResource: name, withExtension: nil) else {
+            return nil
+        }
 
-  convenience init?(data: Data) {
-    guard let svg = try? DOM.SVG.parse(data: data) else {
-      return nil
+        self.init(fileURL: url)
     }
 
-    self.init(svg: svg)
-  }
+    convenience init?(data: Data) {
+        guard let svg = try? DOM.SVG.parse(data: data) else {
+            return nil
+        }
+
+        self.init(svg: svg)
+    }
 }

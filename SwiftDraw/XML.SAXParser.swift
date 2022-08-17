@@ -68,11 +68,14 @@ extension XML {
       
       guard
         parser.parser.parse(),
+
         let rootNode = parser.rootNode else {
-          let error = parser.parser.parserError ?? XMLParser.Error.invalid
-          throw error
+          throw XMLParser.Error.invalidDocument(error: parser.parser.parserError,
+                                                element: parser.elements.last?.name,
+                                                line: parser.parser.lineNumber,
+                                                column: parser.parser.columnNumber)
       }
-      
+
       return rootNode
     }
     

@@ -136,7 +136,7 @@ extension DOM.SVG {
       throw Error.missing
     }
     
-    let parser = XMLParser(options: [.skipInvalidElements])
+    let parser = XMLParser(options: [.skipInvalidElements], filename: url.lastPathComponent)
     let element = try XML.SAXParser.parse(contentsOf: url)
     return try parser.parseSVG(element)
   }

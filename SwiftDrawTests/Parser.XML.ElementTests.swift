@@ -110,7 +110,7 @@ final class XMLParserElementTests: XCTestCase {
   }
   
   func testElementParserSkipsErrors() {
-    let error = XMLParser.parseError(for: XMLParser.Error.invalid,
+    let error = XMLParser().parseError(for: XMLParser.Error.invalid,
                                      parsing: XML.Element(name: "polygon"),
                                      with: [.skipInvalidElements])
     
@@ -123,9 +123,9 @@ final class XMLParserElementTests: XCTestCase {
                                                         line: 100,
                                                         column: 50)
     
-    let parseError = XMLParser.parseError(for: invalidElement,
-                                          parsing: XML.Element(name: "polygon"),
-                                          with: [])
+    let parseError = XMLParser().parseError(for: invalidElement,
+                                            parsing: XML.Element(name: "polygon"),
+                                            with: [])
     
     switch parseError! {
     case let .invalidElement(_, _, line, column):
@@ -140,9 +140,9 @@ final class XMLParserElementTests: XCTestCase {
     let element = XML.Element(name: "polygon")
     element.parsedLocation = (line: 100, column: 50)
     
-    let parseError = XMLParser.parseError(for: XMLParser.Error.invalid,
-                                          parsing: element,
-                                          with: [])
+    let parseError = XMLParser().parseError(for: XMLParser.Error.invalid,
+                                            parsing: element,
+                                            with: [])
     
     switch parseError! {
     case let .invalidElement(_, _, line, column):

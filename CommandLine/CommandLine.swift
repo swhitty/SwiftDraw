@@ -33,67 +33,67 @@ import Foundation
 import SwiftDraw
 
 extension SwiftDraw.CommandLine {
-  
-  static func run(with args: [String] = Swift.CommandLine.arguments,
-                  baseDirectory: URL = .currentDirectory) -> ExitCode {
     
-    guard let config = try? parseConfiguration(from: args, baseDirectory: baseDirectory) else {
-      print("Invalid Syntax.")
-      printHelp()
-      return .error
+    static func run(with args: [String] = Swift.CommandLine.arguments,
+                    baseDirectory: URL = .currentDirectory) -> ExitCode {
+        
+        guard let config = try? parseConfiguration(from: args, baseDirectory: baseDirectory) else {
+            print("Invalid Syntax.", to: &.standardError)
+            printHelp()
+            return .error
+        }
+        
+        guard
+            let data = try? process(with: config) else {
+            print("Failure", to: &.standardError)
+            printHelp()
+            return .error
+        }
+        
+        do {
+            try data.write(to: config.output)
+            print("Created: \(config.output.path)")
+        } catch _ {
+            print("Failure: \(config.output.path)", to: &.standardError)
+        }
+        
+        return .ok
     }
     
-    guard
-      let data = try? process(with: config) else {
-        print("Failure")
-        printHelp()
-        return .error
+    static func process(with config: Configuration) throws -> Data {
+        guard let data = processImage(config: config) else {
+            throw Error.invalid
+        }
+        
+        return data
     }
     
-    do {
-      try data.write(to: config.output)
-      print("Created: \(config.output.path)")
-    } catch _ {
-      print("Failure: \(config.output.path)")
+    static func processImage(config: Configuration) -> Data? {
+        switch config.format {
+        case .swift:
+            let code = CGTextRenderer.render(fileURL: config.input, size: config.size.renderSize)
+            return code?.data(using: .utf8)
+        case .jpeg, .pdf, .png:
+            return SwiftDraw.Image(fileURL: config.input).flatMap { processImage($0, with: config) }
+        }
     }
     
-    return .ok
-  }
-  
-  static func process(with config: Configuration) throws -> Data {
-    guard let data = processImage(config: config) else {
-        throw Error.invalid
+    static func processImage(_ image: SwiftDraw.Image, with config: Configuration) -> Data? {
+        switch config.format {
+        case .jpeg:
+            return image.jpegData(size: config.size.cgValue, scale: config.scale.cgValue)
+        case .pdf:
+            return try? Image.pdfData(fileURL: config.input, size: config.size.cgValue)
+        case .png:
+            return image.pngData(size: config.size.cgValue, scale: config.scale.cgValue)
+        case .swift:
+            preconditionFailure()
+        }
     }
-
-    return data
-  }
-
-  static func processImage(config: Configuration) -> Data? {
-    switch config.format {
-    case .swift:
-      let code = CGTextRenderer.render(fileURL: config.input, size: config.size.renderSize)
-      return code?.data(using: .utf8)
-    case .jpeg, .pdf, .png:
-      return SwiftDraw.Image(fileURL: config.input).flatMap { processImage($0, with: config) }
-    }
-  }
-
-  static func processImage(_ image: SwiftDraw.Image, with config: Configuration) -> Data? {
-    switch config.format {
-    case .jpeg:
-      return image.jpegData(size: config.size.cgValue, scale: config.scale.cgValue)
-    case .pdf:
-      return try? Image.pdfData(fileURL: config.input, size: config.size.cgValue)
-    case .png:
-      return image.pngData(size: config.size.cgValue, scale: config.scale.cgValue)
-    case .swift:
-      preconditionFailure()
-    }
-  }
-  
-  static func printHelp() {
-    print("")
-    print("""
+    
+    static func printHelp() {
+        print("")
+        print("""
 swiftdraw, version 0.10.2
 copyright (c) 2022 Simon Whitty
 
@@ -105,56 +105,56 @@ usage: swiftdraw <file.svg> [--format png | pdf | jpeg | swift] [--size wxh] [--
 --size    size of output image e.g. 100x200
 --scale   scale of output image with 1x | 2x | 3x
 """)
-  }
+    }
 }
 
 extension SwiftDraw.CommandLine {
-  
-  // Represents the exit codes to the command line. See `man sysexits` for more information.
-  enum ExitCode: Int32 {
-    case ok = 0 // EX_OK
-    case error = 70 // EX_SOFTWARE
-  }
+    
+    // Represents the exit codes to the command line. See `man sysexits` for more information.
+    enum ExitCode: Int32 {
+        case ok = 0 // EX_OK
+        case error = 70 // EX_SOFTWARE
+    }
 }
 
 private extension URL {
-  
-  static var currentDirectory: URL {
-    return URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
-  }
+    
+    static var currentDirectory: URL {
+        return URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
+    }
 }
 
 private extension CommandLine.Scale {
-  
-  var cgValue: CGFloat {
-    switch self {
-    case .default:
-      return 1
-    case .retina:
-      return 2
-    case .superRetina:
-      return 3
+    
+    var cgValue: CGFloat {
+        switch self {
+        case .default:
+            return 1
+        case .retina:
+            return 2
+        case .superRetina:
+            return 3
+        }
     }
-  }
 }
 
 private extension CommandLine.Size {
-  
-  var cgValue: CGSize? {
-    switch self {
-    case .default:
-      return nil
-    case .custom(width: let width, height: let height):
-      return CGSize(width: CGFloat(width), height: CGFloat(height))
+    
+    var cgValue: CGSize? {
+        switch self {
+        case .default:
+            return nil
+        case .custom(width: let width, height: let height):
+            return CGSize(width: CGFloat(width), height: CGFloat(height))
+        }
     }
-  }
-
-  var renderSize: CGTextRenderer.Size? {
-    switch self {
-    case .default:
-      return nil
-    case .custom(width: let width, height: let height):
-        return (width: width, height: height)
+    
+    var renderSize: CGTextRenderer.Size? {
+        switch self {
+        case .default:
+            return nil
+        case .custom(width: let width, height: let height):
+            return (width: width, height: height)
+        }
     }
-  }
 }
