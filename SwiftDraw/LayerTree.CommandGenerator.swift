@@ -366,7 +366,7 @@ extension LayerTree {
         }
 
 
-        func renderCommands(forLinear gradient: LayerTree.Gradient,
+        func renderCommands(forLinear gradient: LayerTree.LinearGradient,
                             endpoints: (start: LayerTree.Point, end: LayerTree.Point),
                             opacity: LayerTree.Float,
                             colorConverter: ColorConverter) -> [RendererCommand<P.Types>] {
@@ -390,7 +390,7 @@ extension LayerTree {
                 commands.append(contentsOf: renderCommands(forTransforms: gradient.transform))
             }
 
-            let converted = apply(colorConverter: colorConverter, to: gradient)
+            let converted = apply(colorConverter: colorConverter, to: gradient.gradient)
             let gradient = provider.createGradient(from: converted)
             let start = provider.createPoint(from: pathStart)
             let end = provider.createPoint(from: pathEnd)
@@ -409,7 +409,7 @@ extension LayerTree {
             let endCenter: LayerTree.Point
             let endRadius: LayerTree.Float
 
-            switch gradient.gradient.units  {
+            switch gradient.units  {
             case .objectBoundingBox:
                 let h = sqrt((bounds.width*bounds.width) + (bounds.height*bounds.height)) / 2
                 startCenter = LayerTree.Point(
@@ -430,8 +430,8 @@ extension LayerTree {
             }
 
             var commands = [RendererCommand<P.Types>]()
-            if !gradient.gradient.transform.isEmpty {
-                commands.append(contentsOf: renderCommands(forTransforms: gradient.gradient.transform))
+            if !gradient.transform.isEmpty {
+                commands.append(contentsOf: renderCommands(forTransforms: gradient.transform))
             }
 
             let converted = apply(colorConverter: colorConverter, to: gradient.gradient)
@@ -465,9 +465,8 @@ private extension LayerTree.Rect {
 }
 
 private func apply(colorConverter: ColorConverter, to gradient: LayerTree.Gradient) -> LayerTree.Gradient {
-    var converted = LayerTree.Gradient(start: gradient.start, end: gradient.end)
-    converted.stops = gradient.stops.map { apply(colorConverter: colorConverter, to: $0) }
-    return converted
+    let stops = gradient.stops.map { apply(colorConverter: colorConverter, to: $0) }
+    return LayerTree.Gradient(stops: stops)
 }
 
 private func apply(colorConverter: ColorConverter, to stop: LayerTree.Gradient.Stop) -> LayerTree.Gradient.Stop {

@@ -90,7 +90,7 @@ extension LayerTree {
 
         enum Stroke: Equatable {
             case color(Color)
-            case linearGradient(Gradient)
+            case linearGradient(LinearGradient)
             case radialGradient(RadialGradient)
 
             static let none = Stroke.color(.none)
@@ -113,7 +113,7 @@ extension LayerTree {
             self.opacity = opacity
         }
 
-        init(linear gradient: Gradient, rule: FillRule, opacity: Float) {
+        init(linear gradient: LinearGradient, rule: FillRule, opacity: Float) {
             self.fill = .linearGradient(gradient)
             self.rule = rule
             self.opacity = opacity
@@ -128,7 +128,7 @@ extension LayerTree {
         enum Fill: Equatable {
             case color(Color)
             case pattern(Pattern)
-            case linearGradient(Gradient)
+            case linearGradient(LinearGradient)
             case radialGradient(RadialGradient)
         }
     }

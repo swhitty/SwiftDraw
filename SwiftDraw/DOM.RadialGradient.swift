@@ -32,6 +32,7 @@
 extension DOM {
 
     final class RadialGradient: Element {
+        typealias Units = LinearGradient.Units
 
         var id: String
         var r: Coordinate?
@@ -71,13 +72,5 @@ extension DOM {
 extension DOM.RadialGradient: Equatable {
     static func ==(lhs: DOM.RadialGradient, rhs: DOM.RadialGradient) -> Bool {
         return lhs.id == rhs.id && lhs.stops == rhs.stops
-    }
-}
-
-extension DOM.RadialGradient {
-
-    enum Units: String {
-        case userSpaceOnUse
-        case objectBoundingBox
     }
 }

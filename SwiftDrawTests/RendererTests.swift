@@ -125,6 +125,6 @@ private extension LayerTree.Pattern {
 private extension LayerTree.Gradient {
   
   static var mock: LayerTree.Gradient {
-    return LayerTree.Gradient(start: .zero, end: .zero)
+    return LayerTree.Gradient(stops: [])
   }
 }

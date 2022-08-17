@@ -215,7 +215,7 @@ extension LayerTree.Builder {
         }
     }
 
-    func makeLinearGradient(for gradientId: URL) -> LayerTree.Gradient? {
+    func makeLinearGradient(for gradientId: URL) -> LayerTree.LinearGradient? {
         guard let element = svg.defs.linearGradients.first(where: { $0.id == gradientId.fragment }),
               let gradient = makeGradient(for: element) else {
             return nil
@@ -249,7 +249,7 @@ extension LayerTree.Builder {
         return pattern
     }
 
-    func makeGradient(for element: DOM.LinearGradient) -> LayerTree.Gradient? {
+    func makeGradient(for element: DOM.LinearGradient) -> LayerTree.LinearGradient? {
         guard
             let x1 = element.x1,
             let y1 = element.y1,
@@ -258,56 +258,52 @@ extension LayerTree.Builder {
             return nil
         }
 
-        var gradient = LayerTree.Gradient(start: Point(x1, y1), end: Point(x2, y2))
+        var stops = [LayerTree.Gradient.Stop]()
         if let id = element.href?.fragment,
            let reference = svg.defs.linearGradients.first(where: { $0.id == id }) {
-            gradient.stops = makeGradientStops(for: reference)
+            stops = makeGradientStops(for: reference)
         } else {
-            gradient.stops = makeGradientStops(for: element)
+            stops = makeGradientStops(for: element)
         }
-
-        if element.gradientUnits == .userSpaceOnUse {
-            gradient.units = .userSpaceOnUse
-        }
-
-        gradient.transform = Self.createTransforms(from: element.gradientTransform)
-
-        guard gradient.stops.count > 1 else {
+        guard stops.count > 1 else {
             return nil
         }
 
+        var gradient = LayerTree.LinearGradient(
+            gradient: .init(stops: stops),
+            start: Point(x1, y1),
+            end: Point(x2, y2)
+        )
+
+        gradient.units = Self.createUnits(from: element.gradientUnits)
+        gradient.transform = Self.createTransforms(from: element.gradientTransform)
         return gradient
     }
 
     func makeGradient(for element: DOM.RadialGradient) -> LayerTree.RadialGradient? {
-        var gradient = LayerTree.Gradient(start: Point(0, 0), end: Point(1, 1))
+        var stops = [LayerTree.Gradient.Stop]()
         if let id = element.href?.fragment,
-           let reference = svg.defs.linearGradients.first(where: { $0.id == id }) {
-            gradient.stops = makeGradientStops(for: reference)
+           let reference = svg.defs.radialGradients.first(where: { $0.id == id }) {
+            stops = makeGradientStops(for: reference)
         } else {
-            gradient.stops = makeGradientStops(for: element)
+            stops = makeGradientStops(for: element)
         }
-
-        if element.gradientUnits == .userSpaceOnUse {
-            gradient.units = .userSpaceOnUse
-        }
-
-        gradient.transform = Self.createTransforms(from: element.gradientTransform)
-
-        guard gradient.stops.count > 1 else {
+        guard stops.count > 1 else {
             return nil
         }
 
         let cx = element.cx ?? 0.5
         let cy = element.cy ?? 0.5
-
-        return LayerTree.RadialGradient(
-            gradient: gradient,
+        var gradient = LayerTree.RadialGradient(
+            gradient: .init(stops: stops),
             center: LayerTree.Point(element.fx ?? cx, element.fy ?? cy),
             radius: LayerTree.Float(element.fr ?? 0),
             endCenter: LayerTree.Point(cx, cy),
             endRadius: LayerTree.Float(element.r ?? 0.5)
         )
+        gradient.units = Self.createUnits(from: element.gradientUnits)
+        gradient.transform = Self.createTransforms(from: element.gradientTransform)
+        return gradient
     }
 
     func makeGradientStops(for element: DOM.LinearGradient) -> [LayerTree.Gradient.Stop] {
@@ -434,6 +430,18 @@ extension LayerTree.Builder {
         case let .skewY(angle):
             let radians = Float(angle)*Float.pi/180.0
             return [.skewY(angle: radians)]
+        }
+    }
+
+    static func createUnits(from units: DOM.LinearGradient.Units?) -> LayerTree.Gradient.Units {
+        guard let units = units else {
+            return .objectBoundingBox
+        }
+        switch units {
+        case .objectBoundingBox:
+            return .objectBoundingBox
+        case .userSpaceOnUse:
+            return .userSpaceOnUse
         }
     }
 

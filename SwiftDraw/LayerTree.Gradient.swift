@@ -32,12 +32,7 @@
 extension LayerTree {
 
     struct Gradient: Hashable {
-        var start: Point
-        var end: Point
         var stops: [Stop]
-        var units: Units = .objectBoundingBox
-        var transform: [Transform]
-
         var colorSpace: ColorSpace {
             if stops.contains(where: { $0.color.isP3 }) {
                 return .p3
@@ -45,11 +40,8 @@ extension LayerTree {
             return .srgb
         }
 
-        init(start: Point, end: Point) {
-            self.start = start
-            self.end = end
-            self.stops = []
-            self.transform = []
+        init(stops: [Stop]) {
+            self.stops = stops
         }
 
         struct Stop: Hashable {
@@ -70,12 +62,22 @@ extension LayerTree {
         }
     }
 
+    struct LinearGradient: Hashable {
+        var gradient: Gradient
+        var start: Point
+        var end: Point
+        var units: Gradient.Units = .objectBoundingBox
+        var transform: [Transform] = []
+    }
+
     struct RadialGradient: Hashable {
         var gradient: Gradient
         var center: Point
         var radius: Float
         var endCenter: Point
         var endRadius: Float
+        var units: Gradient.Units = .objectBoundingBox
+        var transform: [Transform] = []
     }
 }
 

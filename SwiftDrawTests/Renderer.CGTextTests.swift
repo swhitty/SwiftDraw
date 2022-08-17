@@ -177,13 +177,7 @@ final class RendererCGTextTests: XCTestCase {
                 ctx.addPath(path1)
                 ctx.clip(using: .evenOdd)
                 ctx.setAlpha(1.0)
-                var locations1: [CGFloat] = [0.0, 0.7542, 1.0]
-                let gradient1 = CGGradient(
-                  colorsSpace: rgb,
-                  colors: [color1, color2, color3] as CFArray,
-                  locations: &locations1
-                )!
-                ctx.drawLinearGradient(gradient1,
+                ctx.drawLinearGradient(gradient,
                                    start: CGPoint(x: 189.125, y: 84.818),
                                    end: CGPoint(x: 519.599, y: 84.818),
                                    options: [.drawsAfterEndLocation, .drawsBeforeStartLocation])
@@ -223,13 +217,13 @@ final class RendererCGTextTests: XCTestCase {
                 let color4 = CGColor(colorSpace: rgb, components: [0.654902, 0.60784316, 0.654902, 1.0])!
                 let color5 = CGColor(colorSpace: rgb, components: [0.47843137, 0.42745098, 0.4745098, 1.0])!
                 let color6 = CGColor(colorSpace: rgb, components: [0.40784314, 0.36862746, 0.40784314, 1.0])!
-                var locations2: [CGFloat] = [0.0, 0.7487, 1.0]
-                let gradient2 = CGGradient(
+                var locations1: [CGFloat] = [0.0, 0.7487, 1.0]
+                let gradient1 = CGGradient(
                   colorsSpace: rgb,
                   colors: [color4, color5, color6] as CFArray,
-                  locations: &locations2
+                  locations: &locations1
                 )!
-                ctx.drawLinearGradient(gradient2,
+                ctx.drawLinearGradient(gradient1,
                                    start: CGPoint(x: 246.314, y: 103.837),
                                    end: CGPoint(x: 335.512, y: 103.837),
                                    options: [.drawsAfterEndLocation, .drawsBeforeStartLocation])
@@ -285,13 +279,13 @@ final class RendererCGTextTests: XCTestCase {
                 let color7 = CGColor(colorSpace: rgb, components: [0.99607843, 0.6, 0.627451, 1.0])!
                 let color8 = CGColor(colorSpace: rgb, components: [0.99607843, 0.39215687, 0.43529412, 1.0])!
                 let color9 = CGColor(colorSpace: rgb, components: [0.89411765, 0.12156863, 0.1764706, 1.0])!
-                var locations3: [CGFloat] = [0.0, 0.593, 1.0]
-                let gradient3 = CGGradient(
+                var locations2: [CGFloat] = [0.0, 0.593, 1.0]
+                let gradient2 = CGGradient(
                   colorsSpace: rgb,
                   colors: [color7, color8, color9] as CFArray,
-                  locations: &locations3
+                  locations: &locations2
                 )!
-                ctx.drawLinearGradient(gradient3,
+                ctx.drawLinearGradient(gradient2,
                                    start: CGPoint(x: 149.353, y: 329.056),
                                    end: CGPoint(x: 490.041, y: 329.056),
                                    options: [.drawsAfterEndLocation, .drawsBeforeStartLocation])
@@ -317,13 +311,7 @@ final class RendererCGTextTests: XCTestCase {
                 ctx.addPath(path4)
                 ctx.clip(using: .evenOdd)
                 ctx.setAlpha(1.0)
-                var locations4: [CGFloat] = [0.0, 0.593, 1.0]
-                let gradient4 = CGGradient(
-                  colorsSpace: rgb,
-                  colors: [color7, color8, color9] as CFArray,
-                  locations: &locations4
-                )!
-                ctx.drawLinearGradient(gradient4,
+                ctx.drawLinearGradient(gradient2,
                                    start: CGPoint(x: 67.0, y: 392.046),
                                    end: CGPoint(x: 435.067, y: 392.046),
                                    options: [.drawsAfterEndLocation, .drawsBeforeStartLocation])
@@ -365,13 +353,13 @@ final class RendererCGTextTests: XCTestCase {
                 ctx.clip(using: .evenOdd)
                 ctx.setAlpha(1.0)
                 let color10 = CGColor(colorSpace: rgb, components: [0.76862746, 0.09803922, 0.14901961, 1.0])!
-                var locations5: [CGFloat] = [0.0, 0.7043, 1.0]
-                let gradient5 = CGGradient(
+                var locations3: [CGFloat] = [0.0, 0.7043, 1.0]
+                let gradient3 = CGGradient(
                   colorsSpace: rgb,
                   colors: [color8, color9, color10] as CFArray,
-                  locations: &locations5
+                  locations: &locations3
                 )!
-                ctx.drawLinearGradient(gradient5,
+                ctx.drawLinearGradient(gradient3,
                                    start: CGPoint(x: 356.106, y: 329.055),
                                    end: CGPoint(x: 501.483, y: 329.055),
                                    options: [.drawsAfterEndLocation, .drawsBeforeStartLocation])
@@ -398,13 +386,13 @@ final class RendererCGTextTests: XCTestCase {
                 let color11 = CGColor(colorSpace: rgb, components: [1.0, 0.9764706, 0.8745098, 1.0])!
                 let color12 = CGColor(colorSpace: rgb, components: [1.0, 0.88235295, 0.46666667, 1.0])!
                 let color13 = CGColor(colorSpace: rgb, components: [0.99607843, 0.69411767, 0.21568628, 1.0])!
-                var locations6: [CGFloat] = [0.0, 0.593, 1.0]
-                let gradient6 = CGGradient(
+                var locations4: [CGFloat] = [0.0, 0.593, 1.0]
+                let gradient4 = CGGradient(
                   colorsSpace: rgb,
                   colors: [color11, color12, color13] as CFArray,
-                  locations: &locations6
+                  locations: &locations4
                 )!
-                ctx.drawLinearGradient(gradient6,
+                ctx.drawLinearGradient(gradient4,
                                    start: CGPoint(x: 8.0, y: 380.08),
                                    end: CGPoint(x: 260.642, y: 380.08),
                                    options: [.drawsAfterEndLocation, .drawsBeforeStartLocation])
@@ -446,13 +434,13 @@ final class RendererCGTextTests: XCTestCase {
                 ctx.addPath(path7)
                 ctx.clip(using: .evenOdd)
                 ctx.setAlpha(1.0)
-                var locations7: [CGFloat] = [0.0, 1.0]
-                let gradient7 = CGGradient(
+                var locations5: [CGFloat] = [0.0, 1.0]
+                let gradient5 = CGGradient(
                   colorsSpace: rgb,
                   colors: [color12, color13] as CFArray,
-                  locations: &locations7
+                  locations: &locations5
                 )!
-                ctx.drawLinearGradient(gradient7,
+                ctx.drawLinearGradient(gradient5,
                                    start: CGPoint(x: 62.712, y: 380.08),
                                    end: CGPoint(x: 264.266, y: 380.08),
                                    options: [.drawsAfterEndLocation, .drawsBeforeStartLocation])
@@ -476,13 +464,7 @@ final class RendererCGTextTests: XCTestCase {
                 ctx.addPath(path8)
                 ctx.clip(using: .evenOdd)
                 ctx.setAlpha(1.0)
-                var locations8: [CGFloat] = [0.0, 0.7487, 1.0]
-                let gradient8 = CGGradient(
-                  colorsSpace: rgb,
-                  colors: [color4, color5, color6] as CFArray,
-                  locations: &locations8
-                )!
-                ctx.drawLinearGradient(gradient8,
+                ctx.drawLinearGradient(gradient1,
                                    start: CGPoint(x: 112.416, y: 341.873),
                                    end: CGPoint(x: 164.335, y: 341.873),
                                    options: [.drawsAfterEndLocation, .drawsBeforeStartLocation])
