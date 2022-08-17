@@ -390,7 +390,7 @@ extension LayerTree {
                 commands.append(contentsOf: renderCommands(forTransforms: gradient.transform))
             }
 
-            let converted = apply(colorConverter: colorConverter, to: gradient.gradient)
+            let converted =  gradient.gradient.convertColor(using: colorConverter)
             let gradient = provider.createGradient(from: converted)
             let start = provider.createPoint(from: pathStart)
             let end = provider.createPoint(from: pathEnd)
@@ -434,7 +434,7 @@ extension LayerTree {
                 commands.append(contentsOf: renderCommands(forTransforms: gradient.transform))
             }
 
-            let converted = apply(colorConverter: colorConverter, to: gradient.gradient)
+            let converted =  gradient.gradient.convertColor(using: colorConverter)
             let gradient = provider.createGradient(from: converted)
             let apha = provider.createFloat(from: opacity)
             commands.append(.setAlpha(apha))
@@ -464,9 +464,16 @@ private extension LayerTree.Rect {
     }
 }
 
-private func apply(colorConverter: ColorConverter, to gradient: LayerTree.Gradient) -> LayerTree.Gradient {
-    let stops = gradient.stops.map { apply(colorConverter: colorConverter, to: $0) }
-    return LayerTree.Gradient(stops: stops)
+
+private extension LayerTree.Gradient {
+    func convertColor(using converter: ColorConverter) -> LayerTree.Gradient {
+        let stops: [LayerTree.Gradient.Stop] = stops.map { stop in
+            var stop = stop
+            stop.color = converter.createColor(from: stop.color).withMultiplyingAlpha(stop.opacity)
+            return stop
+        }
+        return LayerTree.Gradient(stops: stops)
+    }
 }
 
 private func apply(colorConverter: ColorConverter, to stop: LayerTree.Gradient.Stop) -> LayerTree.Gradient.Stop {
