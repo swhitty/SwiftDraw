@@ -40,15 +40,15 @@ extension XMLParser {
     }
 
     func parseCircle(_ att: AttributeParser) throws -> DOM.Circle {
-        let cx: DOM.Coordinate = try att.parseCoordinate("cx")
-        let cy: DOM.Coordinate = try att.parseCoordinate("cy")
+        let cx: DOM.Coordinate? = try att.parseCoordinate("cx")
+        let cy: DOM.Coordinate? = try att.parseCoordinate("cy")
         let r: DOM.Coordinate = try att.parseCoordinate("r")
         return DOM.Circle(cx: cx, cy: cy, r: r)
     }
 
     func parseEllipse(_ att: AttributeParser) throws -> DOM.Ellipse {
-        let cx: DOM.Coordinate = try att.parseCoordinate("cx")
-        let cy: DOM.Coordinate = try att.parseCoordinate("cy")
+        let cx: DOM.Coordinate? = try att.parseCoordinate("cx")
+        let cy: DOM.Coordinate? = try att.parseCoordinate("cy")
         let rx: DOM.Coordinate = try att.parseCoordinate("rx")
         let ry: DOM.Coordinate = try att.parseCoordinate("ry")
         return DOM.Ellipse(cx: cx, cy: cy, rx: rx, ry: ry)

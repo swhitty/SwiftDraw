@@ -65,15 +65,19 @@ extension LayerTree.Builder {
     }
 
     static func makeRect(from ellipse: DOM.Ellipse) -> LayerTree.Rect {
-        return LayerTree.Rect(x: ellipse.cx - ellipse.rx,
-                              y: ellipse.cy - ellipse.ry,
+        let cx = ellipse.cx ?? 0
+        let cy = ellipse.cy ?? 0
+        return LayerTree.Rect(x: cx - ellipse.rx,
+                              y: cy - ellipse.ry,
                               width: ellipse.rx * 2,
                               height: ellipse.ry * 2)
     }
 
     static func makeRect(from circle: DOM.Circle) -> LayerTree.Rect {
-        return LayerTree.Rect(x: circle.cx - circle.r,
-                              y: circle.cy - circle.r,
+        let cx = circle.cx ?? 0
+        let cy = circle.cy ?? 0
+        return LayerTree.Rect(x: cx - circle.r,
+                              y: cy - circle.r,
                               width: circle.r * 2,
                               height: circle.r * 2)
     }

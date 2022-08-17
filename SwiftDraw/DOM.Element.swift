@@ -108,11 +108,11 @@ extension DOM {
     }
 
     final class Circle: GraphicsElement {
-        var cx: Coordinate
-        var cy: Coordinate
+        var cx: Coordinate?
+        var cy: Coordinate?
         var r: Coordinate
 
-        init(cx: Coordinate, cy: Coordinate, r: Coordinate) {
+        init(cx: Coordinate?, cy: Coordinate?, r: Coordinate) {
             self.cx = cx
             self.cy = cy
             self.r = r
@@ -121,12 +121,12 @@ extension DOM {
     }
 
     final class Ellipse: GraphicsElement {
-        var cx: Coordinate
-        var cy: Coordinate
+        var cx: Coordinate?
+        var cy: Coordinate?
         var rx: Coordinate
         var ry: Coordinate
 
-        init(cx: Coordinate, cy: Coordinate, rx: Coordinate, ry: Coordinate) {
+        init(cx: Coordinate?, cy: Coordinate?, rx: Coordinate, ry: Coordinate) {
             self.cx = cx
             self.cy = cy
             self.rx = rx
