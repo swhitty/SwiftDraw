@@ -91,6 +91,7 @@ extension LayerTree {
         enum Stroke: Equatable {
             case color(Color)
             case linearGradient(Gradient)
+            case radialGradient(RadialGradient)
 
             static let none = Stroke.color(.none)
         }

@@ -176,6 +176,8 @@ extension LayerTree.Builder {
             case .url(let gradientId):
                 if let gradient = makeLinearGradient(for: gradientId) {
                     stroke = .linearGradient(gradient)
+                } else if let gradient = makeRadialGradient(for: gradientId) {
+                    stroke = .radialGradient(gradient)
                 } else {
                     stroke = .color(.none)
                 }
@@ -215,6 +217,14 @@ extension LayerTree.Builder {
 
     func makeLinearGradient(for gradientId: URL) -> LayerTree.Gradient? {
         guard let element = svg.defs.linearGradients.first(where: { $0.id == gradientId.fragment }),
+              let gradient = makeGradient(for: element) else {
+            return nil
+        }
+        return gradient
+    }
+
+    func makeRadialGradient(for gradientId: URL) -> LayerTree.RadialGradient? {
+        guard let element = svg.defs.radialGradients.first(where: { $0.id == gradientId.fragment }),
               let gradient = makeGradient(for: element) else {
             return nil
         }
