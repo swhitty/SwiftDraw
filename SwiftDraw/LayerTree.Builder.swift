@@ -44,7 +44,8 @@ extension LayerTree {
         }
 
         func makeLayer() -> Layer {
-            let l = makeLayer(from: svg, inheriting: State())
+            let state = Builder.createState(for: svg, inheriting: State())
+            let l = makeLayer(from: svg, inheriting: state)
             l.transform = Builder.makeTransform(for: svg.viewBox,
                                                 width: svg.width,
                                                 height: svg.height)
@@ -459,7 +460,7 @@ private extension DOM.Fill {
         case .color(let c):
             return c
         case .url:
-            return .keyword(.black)
+            return .none
         }
     }
 }
