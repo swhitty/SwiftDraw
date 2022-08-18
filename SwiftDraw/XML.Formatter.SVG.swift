@@ -41,10 +41,6 @@ extension XML.Formatter {
 
         private let formatter: XML.Formatter.CoordinateFormatter
 
-        init() {
-            self.formatter = .init(delimeter: .comma, precision: .capped(max: 5))
-        }
-
         init(formatter: XML.Formatter.CoordinateFormatter) {
             self.formatter = formatter
         }

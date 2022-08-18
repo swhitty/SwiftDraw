@@ -47,7 +47,8 @@ public extension SFSymbolRenderer {
 
     static func render(fileURL: URL, options: Image.Options) throws -> String {
         let svg = try DOM.SVG.parse(fileURL: fileURL)
-        let element = try XML.Formatter.SVG().makeElement(from: svg)
+        let coordinate = XML.Formatter.CoordinateFormatter(delimeter: .comma, precision: .capped(max: 5))
+        let element = try XML.Formatter.SVG(formatter: coordinate).makeElement(from: svg)
         let formatter = XML.Formatter(spaces: 2)
         return formatter.encodeRootElement(element)
     }
