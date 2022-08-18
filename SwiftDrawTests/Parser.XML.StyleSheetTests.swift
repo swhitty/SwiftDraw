@@ -48,4 +48,65 @@ final class ParserXMLStyleSheetTests: XCTestCase {
              .id("a")]
         )
     }
+
+    func testParsesSelectors() throws {
+        let entries = try XMLParser.parseEntries(
+            """
+             .s {
+                stroke: darkgray;
+                stroke-width: 5 /* asd */;
+                fill-opacity: 0.3
+            }
+
+            /* comment */
+            /* another */
+
+             .b {
+                fill: blue;
+            }
+
+            rect {
+                fill: pink;
+            }
+            /* comment */
+            """
+        )
+
+        XCTAssertEqual(
+            entries,
+            [.class("s"): ["stroke": "darkgray", "stroke-width": "5", "fill-opacity": "0.3"],
+             .class("b"): ["fill": "blue"],
+             .element("rect"): ["fill": "pink"]]
+        )
+    }
+
+    func testParsesStyleSheet() throws {
+        let sheet = try XMLParser().parseStyleSheetElement(
+            """
+             .s {
+                stroke: darkgray;
+                stroke-width: 5 /* asd */;
+                fill-opacity: 30%
+            }
+
+            /* comment */
+            /* another */
+
+             .b {
+                fill: blue;
+            }
+
+            rect {
+                fill: pink;
+            }
+            /* comment */
+            """
+        ).entries
+
+        XCTAssertEqual(sheet[.class("s")]?.stroke, .color(.keyword(.darkgray)))
+        XCTAssertEqual(sheet[.class("s")]?.strokeWidth, 5)
+        XCTAssertEqual(sheet[.class("s")]?.fillOpacity, 0.3)
+        XCTAssertEqual(sheet[.class("b")]?.fill, .color(.keyword(.blue)))
+        XCTAssertEqual(sheet[.element("rect")]?.fill, .color(.keyword(.pink)))
+    }
 }

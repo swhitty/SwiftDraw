@@ -4,8 +4,8 @@
 	 <style>
 	 	.s {
 			stroke: darkgray;
-			stroke-width: 2;
-			fill-opacity: 0.3;
+			stroke-width: 5 /* asd */;
+			fill-opacity: 0.3
 		}
 		
 		/* comment */
@@ -33,7 +33,7 @@
 			}
 		
 			circle {
-				fill: peachpuff;
+				fill: peachpuff
 			}
 		
 			#a {

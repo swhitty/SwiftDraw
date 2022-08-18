@@ -59,59 +59,60 @@ extension XMLParser {
     }
 
     func parseStyleSheetElement(_ text: String?) throws -> DOM.StyleSheet {
-        var scanner = XMLParser.Scanner(text: text ?? "")
-        var sheet = DOM.StyleSheet()
+        let entries = try Self.parseEntries(text)
 
-        var last: (DOM.StyleSheet.Selector, String)?
+        var sheet = DOM.StyleSheet()
+        sheet.entries = try entries.mapValues(parsePresentationAttributes)
+        return sheet
+    }
+
+    static func parseEntries(_ text: String?) throws -> [DOM.StyleSheet.Selector: [String: String]] {
+        guard let text = text else { return [:] }
+        var scanner = XMLParser.Scanner(text: removeCSSComments(from: text))
+        var entries = [DOM.StyleSheet.Selector: [String: String]]()
+
+        var last: (DOM.StyleSheet.Selector, [String: String])?
         repeat {
             last = try scanner.scanNextSelector()
             if let last = last {
-                sheet.entries[last.0] = DOM.GraphicsElement()
+                entries[last.0] = last.1
             }
         } while last != nil
 
-        return sheet
+        return entries
+    }
+
+    static func removeCSSComments(from text: String) -> String {
+        let regex = try! NSRegularExpression(pattern: "\\/\\*.*\\*\\/", options: .caseInsensitive)
+        let range = NSMakeRange(0, (text as NSString).length)
+        return regex.stringByReplacingMatches(in: text, options: [], range: range, withTemplate: "")
     }
 }
 
 extension XMLParser.Scanner {
 
-    mutating func scanNextSelector() throws -> (DOM.StyleSheet.Selector, String)? {
-        try scanPastComments()
+    mutating func scanNextSelector() throws -> (DOM.StyleSheet.Selector, [String: String])? {
         if let c = try scanNextClass() {
-            return (.class(c), try scanNextBody())
+            return (.class(c), try scanAtttributes())
         } else if let id = try scanNextID() {
-            return (.id(id), try scanNextBody())
+            return (.id(id), try scanAtttributes())
         } else if let e = try scanNextElement() {
-            return (.element(e), try scanNextBody())
+            return (.element(e), try scanAtttributes())
         }
         return nil
     }
 
-    mutating func scanPastComments() throws {
-        while try scanPastNextComment() {
-            ()
-        }
-    }
-
-    mutating func scanPastNextComment() throws -> Bool {
-        guard scanStringIfPossible("/*") else { return false }
-        _ = try scanString(upTo: "*/")
-        _ = try scanString("*/")
-        return true
-    }
-
-    mutating func scanNextClass() throws -> String? {
-        guard scanStringIfPossible(".") else { return nil }
+    private mutating func scanNextClass() throws -> String? {
+        guard doScanString(".") else { return nil }
         return try scanSelectorName()
     }
 
-    mutating func scanNextID() throws -> String? {
-        guard scanStringIfPossible("#") else { return nil }
+    private mutating func scanNextID() throws -> String? {
+        guard doScanString("#") else { return nil }
         return try scanSelectorName()
     }
 
-    mutating func scanNextElement() throws -> String? {
+    private mutating func scanNextElement() throws -> String? {
         do {
             return try scanSelectorName()
         } catch {
@@ -122,14 +123,53 @@ extension XMLParser.Scanner {
         }
     }
 
-    mutating func scanSelectorName() throws -> String? {
+    private mutating func scanSelectorName() throws -> String? {
         try scanString(upTo: "{").trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
-    mutating func scanNextBody() throws -> String {
-        _ = try scanString("{")
-        let body = try scanString(upTo: "}")
-        _ = try scanString("}")
-        return body
+    private mutating func scanAtttributes() throws -> [String: String] {
+        _ = doScanString("{")
+        var attributes = [String: String]()
+        var last: String?
+        repeat {
+            last = try scanNextAttributeKey()
+            if let last = last {
+                attributes[last] = try scanNextAttributeValue()
+            }
+        } while last != nil
+        return attributes
     }
+
+    mutating func scanNextAttribute() throws -> (key: String, value: String)? {
+        if let key = try scanNextAttributeKey() {
+            return (key: key, value: try scanNextAttributeValue())
+        }
+        return nil
+    }
+
+    mutating func scanNextAttributeKey() throws -> String? {
+        guard !doScanString("}") else { return nil }
+        let key = try scanString(upTo: ":")
+        _ = try scanString(":")
+        return key.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    mutating func scanNextAttributeValue() throws -> String {
+        let value = try scanString(upTo: .init(charactersIn: ";\n}"))
+        _ = doScanString(";")
+        return value.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+}
+
+//Allow Dictionary to become an attribute parser
+extension Dictionary: AttributeParser {
+  var parser: AttributeValueParser { return XMLParser.ValueParser() }
+  var options: SwiftDraw.XMLParser.Options { return [] }
+
+  func parse<T>(_ key: String, _ exp: (String) throws -> T) throws -> T {
+    guard let dict = self as? [String: String],
+      let value = dict[key] else { throw XMLParser.Error.missingAttribute(name: key) }
+
+    return try exp(value)
+  }
 }

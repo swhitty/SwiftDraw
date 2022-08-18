@@ -162,19 +162,3 @@ final class AttributeParserTests: XCTestCase {
   
 }
 
-
-//Allow Dictionary to become an attribute parser
-extension Dictionary: AttributeParser {
-  public var parser: AttributeValueParser { return XMLParser.ValueParser() }
-  public var options: SwiftDraw.XMLParser.Options { return [] }
-  
-  public func parse<T>(_ key: String, _ exp: (String) throws -> T) throws -> T {
-    guard let dict = self as? [String: String],
-      let value = dict[key] else { throw XMLParser.Error.missingAttribute(name: key) }
-    
-    return try exp(value)
-  }
-}
-
-
-
