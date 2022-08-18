@@ -60,6 +60,7 @@ extension XMLParser {
         svg.viewBox = try parseViewBox(try att.parseString("viewBox"))
 
         svg.defs = try parseSVGDefs(e)
+        svg.styles = parseStyleSheetElements(within: e)
 
         let presentation = try parsePresentationAttributes(att)
         svg.updateAttributes(from: presentation)
