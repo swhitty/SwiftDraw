@@ -73,6 +73,10 @@ extension SwiftDraw.CommandLine {
         case .swift:
             let code = CGTextRenderer.render(fileURL: config.input, size: config.size.renderSize, options: config.options)
             return code?.data(using: .utf8)
+        case .sfsymbol:
+            print("[--format sfsymbol] is an experimental feature.")
+            let svg = try? SFSymbolRenderer.render(fileURL: config.input, options: config.options)
+            return svg?.data(using: .utf8)
         case .jpeg, .pdf, .png:
             return SwiftDraw.Image(fileURL: config.input, options: config.options).flatMap { processImage($0, with: config) }
         }
@@ -86,7 +90,7 @@ extension SwiftDraw.CommandLine {
             return try? Image.pdfData(fileURL: config.input, size: config.size.cgValue)
         case .png:
             return image.pngData(size: config.size.cgValue, scale: config.scale.cgValue)
-        case .swift:
+        case .swift, .sfsymbol:
             preconditionFailure()
         }
     }

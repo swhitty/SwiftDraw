@@ -32,78 +32,89 @@
 import Foundation
 
 extension XML.Formatter {
+
+    enum Error: Swift.Error {
+        case unsupportedGraphicsElement(DOM.GraphicsElement)
+    }
+
     struct SVG {
 
-        static func makeElement(from svg: DOM.SVG) -> XML.Element {
+        private let formatter: XML.Formatter.CoordinateFormatter
+
+        init() {
+            self.formatter = .init(delimeter: .comma, precision: .capped(max: 5))
+        }
+
+        init(formatter: XML.Formatter.CoordinateFormatter) {
+            self.formatter = formatter
+        }
+
+        func makeElement(from svg: DOM.SVG) throws -> XML.Element {
             let element = XML.Element(
                 name: "svg",
-                attributes: ["xmlns": "http://www.w3.org/2000/svg",
-                             "xmlns:xlink": "http://www.w3.org/1999/xlink"]
+                attributes: makeGraphicsAttributes(from: svg)
             )
 
+            element.attributes["xmlns"] = "http://www.w3.org/2000/svg"
+            element.attributes["xmlns:xlink"] = "http://www.w3.org/1999/xlink"
             element.attributes["viewBox"] = makeViewBox(svg.viewBox)
 
             if svg.viewBox != .init(x: 0, y: 0, width: DOM.Coordinate(svg.width), height: DOM.Coordinate(svg.height)) {
-                element.attributes["width"] = String(svg.width)
-                element.attributes["height"] = String(svg.height)
+                element.attributes["width"] = formatter.formatLength(svg.width)
+                element.attributes["height"] = formatter.formatLength(svg.height)
             }
 
-            if let defs = makeDefs(svg.defs) {
+            if let defs = try makeDefs(svg.defs) {
                 element.children.append(defs)
             }
 
-            element.children.append(
-                contentsOf: svg.childElements.map(makeElement)
+            try element.children.append(
+                contentsOf: makeElements(from: svg.childElements)
             )
 
             return element
         }
 
-        static func makeViewBox(_ viewBox: DOM.SVG.ViewBox?) -> String? {
+        func makeViewBox(_ viewBox: DOM.SVG.ViewBox?) -> String? {
             guard let viewBox = viewBox else { return nil }
-            return [
-                String(viewBox.x),
-                String(viewBox.y),
-                String(viewBox.width),
-                String(viewBox.height)
-            ].joined(separator: " ")
+            return formatter.format(viewBox.x, viewBox.y, viewBox.width, viewBox.height)
         }
 
-        static func makeDefs(_ defs: DOM.SVG.Defs) -> XML.Element? {
+        func makeDefs(_ defs: DOM.SVG.Defs) throws -> XML.Element? {
             let element = XML.Element(name: "defs")
 
             element.children.append(
                 contentsOf: defs.linearGradients.map(makeLinearGradient)
             )
 
-            element.children.append(
-                contentsOf: defs.elements.values.map(makeElement)
+            try element.children.append(
+                contentsOf: makeElements(from: defs.elements.values)
             )
 
             return element.children.isEmpty ? nil : element
         }
 
-        static func makeGraphicsAttributes(from graphic: DOM.GraphicsElement) -> [String: String] {
+        func makeGraphicsAttributes(from graphic: DOM.GraphicsElement) -> [String: String] {
             var attributes: [String: String] = [:]
 
             attributes["id"] = graphic.id
-            attributes["opacity"] = graphic.opacity.map { String($0) }
+            attributes["opacity"] = formatter.format(graphic.opacity)
             attributes["display"] = graphic.display?.rawValue
             attributes["stroke"] = graphic.stroke.map(encodeFill)
-            attributes["stroke-width"] = graphic.strokeWidth.map { String($0) }
-            attributes["stroke-opacity"] = graphic.strokeOpacity.map { String($0) }
+            attributes["stroke-width"] = formatter.format(graphic.strokeWidth)
+            attributes["stroke-opacity"] = formatter.format(graphic.strokeOpacity)
             attributes["stroke-linecap"] = graphic.strokeLineCap?.rawValue
             attributes["stroke-linejoin"] = graphic.strokeLineJoin?.rawValue
             attributes["stroke-dasharray"] = graphic.strokeDashArray?
-                                                            .map { String($0) }
+                                                            .map { formatter.format($0) }
                                                             .joined(separator: " ")
 
-            attributes["fill-opacity"] = graphic.fillOpacity.map { String($0) }
+            attributes["fill-opacity"] = formatter.format(graphic.fillOpacity)
             attributes["fill"] = graphic.fill.map(encodeFill)
             attributes["fill-rule"] = graphic.fillRule?.rawValue
 
             attributes["font-family"] = graphic.fontFamily
-            attributes["font-size"] = graphic.fontSize.map { String($0) }
+            attributes["font-size"] = formatter.format(graphic.fontSize)
 
             attributes["clip-path"] = graphic.clipPath.map(encodeURL)
             attributes["mask"] = graphic.mask.map(encodeURL)
@@ -113,7 +124,7 @@ extension XML.Formatter {
             return attributes
         }
 
-        static func makeLinearGradient(_ gradient: DOM.LinearGradient) -> XML.Element {
+        func makeLinearGradient(_ gradient: DOM.LinearGradient) -> XML.Element {
             let element = XML.Element(
                 name: "linearGradient",
                 attributes: ["id": gradient.id]
@@ -125,7 +136,23 @@ extension XML.Formatter {
             return element
         }
 
-        static func makeElement(from graphic: DOM.GraphicsElement) -> XML.Element {
+        func makeElements<S: Sequence>(from graphicElements: S) throws -> [XML.Element] where S.Element == DOM.GraphicsElement {
+            var elements = [XML.Element]()
+            for graphic in graphicElements {
+                let elementName = String(describing: graphic).replacingOccurrences(of: "SwiftDraw.", with: "")
+                do {
+                    elements.append(try makeElement(from: graphic))
+                } catch Error.unsupportedGraphicsElement {
+                    print("Warning:", elementName, "has no encoder, ignoring element.", to: &.standardError)
+                } catch {
+                    print("[encoding error]", elementName, "error:", error, to: &.standardError)
+                    throw error
+                }
+            }
+            return elements
+        }
+
+        func makeElement(from graphic: DOM.GraphicsElement) throws -> XML.Element {
 
             let element: XML.Element
 
@@ -140,19 +167,19 @@ extension XML.Formatter {
             } else if let path = graphic as? DOM.Path {
                 element = makeElement(from: path)
             } else {
-                fatalError("Element not supported \(graphic)")
+                throw Error.unsupportedGraphicsElement(graphic)
             }
 
             if let container = graphic as? ContainerElement {
-                element.children.append(
-                    contentsOf: container.childElements.map(makeElement)
+                try element.children.append(
+                    contentsOf: makeElements(from: container.childElements)
                 )
             }
 
             return element
         }
 
-        static func makeElement(from rect: DOM.Rect) -> XML.Element {
+        func makeElement(from rect: DOM.Rect) -> XML.Element {
             let element = XML.Element(
                 name: "rect",
                 attributes: makeGraphicsAttributes(from: rect)
@@ -167,7 +194,7 @@ extension XML.Formatter {
             return element
         }
 
-        static func makeElement(from use: DOM.Use) -> XML.Element {
+        func makeElement(from use: DOM.Use) -> XML.Element {
             let element = XML.Element(
                 name: "use",
                 attributes: makeGraphicsAttributes(from: use)
@@ -179,7 +206,7 @@ extension XML.Formatter {
             return element
         }
 
-        static func makeElement(from group: DOM.Group) -> XML.Element {
+        func makeElement(from group: DOM.Group) -> XML.Element {
             let element = XML.Element(
                 name: "g",
                 attributes: makeGraphicsAttributes(from: group)
@@ -188,7 +215,7 @@ extension XML.Formatter {
             return element
         }
 
-        static func makeElement(from text: DOM.Text) -> XML.Element {
+        func makeElement(from text: DOM.Text) -> XML.Element {
             let element = XML.Element(
                 name: "text",
                 attributes: makeGraphicsAttributes(from: text)
@@ -199,7 +226,7 @@ extension XML.Formatter {
             return element
         }
 
-        static func makeElement(from path: DOM.Path) -> XML.Element {
+        func makeElement(from path: DOM.Path) -> XML.Element {
             let element = XML.Element(
                 name: "path",
                 attributes: makeGraphicsAttributes(from: path)
@@ -208,7 +235,7 @@ extension XML.Formatter {
             return element
         }
 
-        static func encodeFill(from fill: DOM.Fill) -> String {
+        func encodeFill(from fill: DOM.Fill) -> String {
             switch fill {
             case .color(let color):
                 return encodeColor(from: color)
@@ -217,11 +244,11 @@ extension XML.Formatter {
             }
         }
 
-        static func encodeURL(_ url: URL) -> String {
+        func encodeURL(_ url: URL) -> String {
             "url(\(url.absoluteString))"
         }
 
-        static func encodeColor(from color: DOM.Color) -> String {
+        func encodeColor(from color: DOM.Color) -> String {
             switch color {
             case .none:
                 return "none"
@@ -246,58 +273,76 @@ extension XML.Formatter {
             }
         }
 
-        static func encodeTransform(_ transform: DOM.Transform) -> String {
+        func encodeTransform(_ transform: DOM.Transform) -> String {
             switch transform {
             case let .matrix(a: a, b: b, c: c, d: d, e: e, f: f):
-                return "matrix(\(a), \(b), \(c), \(d), \(e), \(f))"
+                return "matrix(\(formatter.format(a,b,c,d,e,f)))"
             case let .translate(tx: tx, ty: ty):
-                return "translate(\(tx), \(ty)"
+                return "translate(\(formatter.format(tx, ty))"
             case let .scale(sx: sx, sy: sy):
-                return "scale(\(sx), \(sy)"
+                return "scale(\(formatter.format(sx, sy))"
             case let .rotate(angle: angle):
-                return "rotate(\(angle))"
+                return "rotate(\(formatter.format(angle))"
             case let .rotatePoint(angle: angle, cx: cx, cy: cy):
-                return "rotate(\(angle), \(cx), \(cy))"
+                return "rotate(\(formatter.format(angle, cx, cy))"
             case let .skewX(angle: angle):
-                return "skewX(\(angle))"
+                return "skewX(\(formatter.format(angle))"
             case let .skewY(angle: angle):
-                return "skewY(\(angle))"
+                return "skewY(\(formatter.format(angle))"
             }
         }
 
-        static func encodeSegments(_ segments: [DOM.Path.Segment]) -> String {
-            segments.map(encodeSegment).joined(separator: " ")
+        func encodeSegments(_ segments: [DOM.Path.Segment]) -> String {
+            let encoded = segments.map(encodeSegment)
+            return encoded.joined(separator: " ")
         }
 
-        static func encodeSegment(_ segment: DOM.Path.Segment) -> String {
+        func encodeSegment(_ segment: DOM.Path.Segment) -> String {
             switch segment {
             case .move(x: let x, y: let y, space: let space):
                 let cmd: DOM.Path.Command = space == .absolute ? .move : .moveRelative
-                return "\(cmd.rawValue)\(x),\(y)"
+                let point = formatter.format(x, y)
+                return "\(cmd.rawValue)\(point)"
             case .line(x: let x, y: let y, space: let space):
                 let cmd: DOM.Path.Command = space == .absolute ? .line : .lineRelative
-                return "\(cmd.rawValue)\(x),\(y)"
+                let point = formatter.format(x, y)
+                return "\(cmd.rawValue)\(point)"
             case .horizontal(x: let x, space: let space):
                 let cmd: DOM.Path.Command = space == .absolute ? .horizontal : .horizontalRelative
+                let x = formatter.format(x)
                 return "\(cmd.rawValue)\(x)"
             case .vertical(y: let y, space: let space):
                 let cmd: DOM.Path.Command = space == .absolute ? .vertical : .verticalRelative
+                let y = formatter.format(y)
                 return "\(cmd.rawValue)\(y)"
             case .cubic(x1: let x1, y1: let y1, x2: let x2, y2: let y2, x: let x, y: let y, space: let space):
                 let cmd: DOM.Path.Command = space == .absolute ? .cubic : .cubicRelative
-                return "\(cmd.rawValue)\(x1),\(y1) \(x2),\(y2) \(x),\(y)"
+                let control1 = formatter.format(x1, y1)
+                let control2 = formatter.format(x2, y2)
+                let point = formatter.format(x, y)
+                return "\(cmd.rawValue)\(control1) \(control2) \(point)"
             case .cubicSmooth(x2: let x2, y2: let y2, x: let x, y: let y, space: let space):
                 let cmd: DOM.Path.Command = space == .absolute ? .cubicSmooth : .cubicSmoothRelative
-                return "\(cmd.rawValue)\(x2),\(y2) \(x),\(y)"
+                let control = formatter.format(x2, y2)
+                let point = formatter.format(x, y)
+                return "\(cmd.rawValue)\(control) \(point)"
             case .quadratic(x1: let x1, y1: let y1, x: let x, y: let y, space: let space):
                 let cmd: DOM.Path.Command = space == .absolute ? .quadratic : .quadraticRelative
-                return "\(cmd.rawValue)\(x1),\(y1) \(x),\(y)"
+                let control = formatter.format(x1, y1)
+                let point = formatter.format(x, y)
+                return "\(cmd.rawValue)\(control) \(point)"
             case .quadraticSmooth(x: let x, y: let y, space: let space):
                 let cmd: DOM.Path.Command = space == .absolute ? .quadraticSmooth : .quadraticSmoothRelative
-                return "\(cmd.rawValue)\(x),\(y)"
+                let point = formatter.format(x, y)
+                return "\(cmd.rawValue)\(point)"
             case .arc(rx: let rx, ry: let ry, rotate: let rotate, large: let large, sweep: let sweep, x: let x, y: let y, space: let space):
                 let cmd: DOM.Path.Command = space == .absolute ? .arc : .arcRelative
-                return "\(cmd.rawValue)\(rx),\(ry) \(rotate) \(large), \(sweep) \(x),\(y)"
+                let r = formatter.format(rx, ry)
+                let rotate = formatter.format(rotate)
+                let large = formatter.format(large)
+                let sweep = formatter.format(sweep)
+                let point = formatter.format(x, y)
+                return "\(cmd.rawValue)\(r) \(rotate) \(large) \(sweep) \(point)"
             case .close:
                 let cmd = DOM.Path.Command.close
                 return "\(cmd.rawValue)"

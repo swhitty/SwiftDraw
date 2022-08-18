@@ -47,6 +47,7 @@ extension CommandLine {
         case pdf
         case png
         case swift
+        case sfsymbol
     }
 
     public enum Size: Equatable {
@@ -151,21 +152,23 @@ extension URL {
     }
 
     func newURL(for format: CommandLine.Format, scale: CommandLine.Scale) -> URL {
-        let newFilename = lastPathComponentName(scale: scale)
-        let newFilenameWithExtension = "\(newFilename).\(format.pathExtension)"
+        let suffix = Self.lastPathComponentSuffix(format: format, scale: scale)
+        let newfilename = "\(lastPathComponentName)\(suffix).\(format.pathExtension)"
         return deletingLastPathComponent()
-            .appendingPathComponent(newFilenameWithExtension)
+            .appendingPathComponent(newfilename)
             .standardizedFileURL
     }
 
-    func lastPathComponentName(scale: CommandLine.Scale) -> String {
-        switch scale {
-        case .default:
-            return lastPathComponentName
-        case .retina:
-            return "\(lastPathComponentName)@2x"
-        case .superRetina:
-            return "\(lastPathComponentName)@3x"
+    static func lastPathComponentSuffix(format: CommandLine.Format, scale: CommandLine.Scale) -> String {
+        switch (format, scale) {
+        case (.sfsymbol, _):
+            return "-symbol"
+        case (.png, .retina):
+            return "@2x"
+        case (.png, .superRetina):
+            return "@3x"
+        default:
+            return ""
         }
     }
 }
@@ -182,6 +185,8 @@ private extension CommandLine.Format {
             return "png"
         case .swift:
             return "swift"
+        case .sfsymbol:
+            return "svg"
         }
     }
 }
