@@ -83,11 +83,14 @@ extension DOM {
         }
 
         if let classes = element.class?.split(separator: " ") {
-            selectors.append(contentsOf: classes.map { .class(String($0)) })
+            selectors.append(contentsOf: classes
+                .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+                .map(StyleSheet.Selector.class)
+            )
         }
 
         if let id = element.id {
-            selectors.append(.id(id))
+            selectors.append(.id(id.trimmingCharacters(in: .whitespacesAndNewlines)))
         }
 
         return selectors

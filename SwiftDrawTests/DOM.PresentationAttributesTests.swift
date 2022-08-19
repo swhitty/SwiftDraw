@@ -35,6 +35,7 @@ import XCTest
 final class PresentationAttributesTests: XCTestCase {
 
     typealias Attributes = DOM.PresentationAttributes
+    typealias StyleSheet = DOM.StyleSheet
 
     func testOpacityIsApplied() {
         XCTAssertNil(
@@ -100,5 +101,104 @@ final class PresentationAttributesTests: XCTestCase {
                 .color,
             .currentColor
         )
+    }
+
+    func testSelectors() {
+        XCTAssertEqual(
+            DOM.makeSelectors(for: .circle()),
+            [.element("circle")]
+        )
+
+        XCTAssertEqual(
+            DOM.makeSelectors(for: .circle(id: "c1")),
+            [.element("circle"),
+             .id("c1")]
+        )
+
+        XCTAssertEqual(
+            DOM.makeSelectors(for: .circle(class: "c")),
+            [.element("circle"),
+             .class("c")]
+        )
+
+        XCTAssertEqual(
+            DOM.makeSelectors(for: .circle(id: "c1 ", class: "a  b c")),
+            [.element("circle"),
+             .class("a"),
+             .class("b"),
+             .class("c"),
+             .id("c1")]
+        )
+    }
+
+    func testLastSheetAttributesAreUsed() {
+        var sheet = StyleSheet()
+        sheet[.id("b")].opacity = 0
+        sheet[.id("a")].opacity = 1
+
+        var another = StyleSheet()
+        another[.id("b")].opacity = 0.1
+        another[.id("a")].opacity = 0.5
+
+        XCTAssertEqual(
+            DOM.makeAttributes(for: .id("a"), styles: [sheet])
+                .opacity,
+            1
+        )
+
+        XCTAssertEqual(
+            DOM.makeAttributes(for: .id("a"), styles: [sheet, another])
+                .opacity,
+            0.5
+        )
+    }
+
+    func testSelectorPrecedence() {
+        var sheet = StyleSheet()
+        sheet[.element("circle")].opacity = 1
+        sheet[.id("c1")].opacity = 0.5
+        sheet[.class("b")].opacity = 0.1
+        sheet[.class("c")].opacity = 0.2
+
+        XCTAssertEqual(
+            DOM.presentationAttributes(for: .circle(id: "c1", class: "b c"),
+                                       styles: [sheet])
+                .opacity,
+            0.5
+        )
+
+        XCTAssertEqual(
+            DOM.presentationAttributes(for: .circle(id: "c2", class: "b c"),
+                                       styles: [sheet])
+                .opacity,
+            0.2
+        )
+
+        XCTAssertEqual(
+            DOM.presentationAttributes(for: .circle(id: "c2", class: "z"),
+                                       styles: [sheet])
+                .opacity,
+            1
+        )
+    }
+}
+
+private extension DOM.GraphicsElement {
+    static func circle(id: String? = nil, class: String? = nil) -> DOM.Circle {
+        let circle = DOM.Circle(cx: nil, cy: nil, r: 5)
+        circle.id = id
+        circle.class = `class`
+        return circle
+    }
+}
+
+private extension DOM.StyleSheet {
+    subscript(_ selector: Selector) -> DOM.PresentationAttributes {
+        get {
+            attributes[selector] ?? .init()
+        }
+        set {
+            attributes[selector] = newValue
+        }
     }
 }
