@@ -38,13 +38,14 @@ final class ParserXMLStyleSheetTests: XCTestCase {
         let dom = try DOM.SVG.parse(fileNamed: "stylesheet.svg")
 
         XCTAssertEqual(
-            Set(dom.styles.flatMap(\.entries.keys)),
+            Set(dom.styles.flatMap(\.attributes.keys)),
             [.class("s"),
              .class("b"),
              .element("rect"),
              .class("o"),
              .class("g"),
              .element("circle"),
+             .element("g"),
              .id("a")]
         )
     }
@@ -101,7 +102,7 @@ final class ParserXMLStyleSheetTests: XCTestCase {
             }
             /* comment */
             """
-        ).entries
+        ).attributes
 
         XCTAssertEqual(sheet[.class("s")]?.stroke, .color(.keyword(.darkgray)))
         XCTAssertEqual(sheet[.class("s")]?.strokeWidth, 5)

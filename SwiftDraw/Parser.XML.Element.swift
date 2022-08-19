@@ -98,10 +98,10 @@ extension XMLParser {
         default: return nil
         }
 
-        ge.id = e.attributes["id"]
+        ge.attributes = try parsePresentationAttributes(att)
 
-        let presentation = try parsePresentationAttributes(att)
-        ge.updateAttributes(from: presentation)
+        let elementAtt = try parseElementAttributes(att)
+        ge.updateAttributes(from: elementAtt)
 
         return ge
     }
@@ -213,7 +213,7 @@ extension XMLParser {
     }
 
     func parsePresentationAttributes(_ att: AttributeParser) throws -> PresentationAttributes {
-        let el = DOM.GraphicsElement()
+        var el = PresentationAttributes()
 
         el.opacity = try att.parsePercentage("opacity")
         el.display = try att.parseRaw("display")
@@ -251,6 +251,18 @@ extension XMLParser {
         el.filter = try att.parseUrlSelector("filter")
 
         return el
+    }
+
+    func parseElementAttributes(_ att: AttributeParser) throws -> ElementAttributes {
+        var el = ElementAtt()
+        el.id = try? att.parseString("id")
+        el.class = try? att.parseString("class")
+        return el
+    }
+
+    private struct ElementAtt: ElementAttributes {
+        var id: String?
+        var `class`: String?
     }
 
     static func logParsingError(for error: Swift.Error, filename: String?, parsing element: XML.Element? = nil) {
@@ -303,5 +315,12 @@ extension PresentationAttributes {
         mask = attributes.mask
         filter = attributes.filter
     }
-    
+}
+
+extension ElementAttributes {
+
+    mutating func updateAttributes(from attributes: ElementAttributes) {
+        self.id = attributes.id
+        self.class = attributes.class
+    }
 }

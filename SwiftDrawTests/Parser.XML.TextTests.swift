@@ -44,8 +44,8 @@ final class ParserXMLTextTests: XCTestCase {
     node["font-size"] = "12.5"
     
     let expected = DOM.Text(x: 10, y: 25, value: "Simon")
-    expected.fontFamily = "Futura"
-    expected.fontSize = 12.5
+    expected.attributes.fontFamily = "Futura"
+    expected.attributes.fontSize = 12.5
     
     let parsed = try? XMLParser().parseText(node, value: "Simon")
     XCTAssertEqual(parsed, expected)

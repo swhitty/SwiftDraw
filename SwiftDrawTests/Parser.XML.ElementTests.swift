@@ -94,19 +94,19 @@ final class XMLParserElementTests: XCTestCase {
   
   func testPolygonFillRule() {
     let att = ["points": "0,1,2,3;4;5;6;7;8 9"]
-    XCTAssertNil((try! XMLParser().parsePolygon(att)).fillRule)
+    XCTAssertNil((try! XMLParser().parsePolygon(att)).attributes.fillRule)
     
     let node = XML.Element(name: "polygon")
     node.attributes["points"] = "0,1,2,3"
     
     node.attributes["fill-rule"] = "nonzero"
-    XCTAssertEqual(try XMLParser().parseGraphicsElement(node)!.fillRule, .nonzero)
+    XCTAssertEqual(try XMLParser().parseGraphicsElement(node)!.attributes.fillRule, .nonzero)
     
     node.attributes["fill-rule"] = "evenodd"
-    XCTAssertEqual(try XMLParser().parseGraphicsElement(node)!.fillRule, .evenodd)
+    XCTAssertEqual(try XMLParser().parseGraphicsElement(node)!.attributes.fillRule, .evenodd)
     
     node.attributes["fill-rule"] = "asdf"
-    XCTAssertThrowsError(try XMLParser().parseGraphicsElement(node)!.fillRule)
+    XCTAssertThrowsError(try XMLParser().parseGraphicsElement(node)!.attributes.fillRule)
   }
   
   func testElementParserSkipsErrors() {

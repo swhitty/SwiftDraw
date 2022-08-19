@@ -44,10 +44,10 @@ final class DOMElementTests: XCTestCase {
     XCTAssertNotEqual(element, another)
     
     another = DOM.createLine()
-    another.fill = .color(.keyword(.black))
+    another.attributes.fill = .color(.keyword(.black))
     XCTAssertNotEqual(element, another)
     
-    another.fill = nil
+    another.attributes.fill = nil
     XCTAssertEqual(element, another)
   }
   
@@ -61,10 +61,10 @@ final class DOMElementTests: XCTestCase {
     XCTAssertNotEqual(element, another)
     
     another = DOM.createCircle()
-    another.fill = .color(.keyword(.black))
+    another.attributes.fill = .color(.keyword(.black))
     XCTAssertNotEqual(element, another)
     
-    another.fill = nil
+    another.attributes.fill = nil
     XCTAssertEqual(element, another)
   }
   
@@ -78,10 +78,10 @@ final class DOMElementTests: XCTestCase {
     XCTAssertNotEqual(element, another)
     
     another = DOM.createEllipse()
-    another.fill = .color(.keyword(.black))
+    another.attributes.fill = .color(.keyword(.black))
     XCTAssertNotEqual(element, another)
     
-    another.fill = nil
+    another.attributes.fill = nil
     XCTAssertEqual(element, another)
   }
   
@@ -95,10 +95,10 @@ final class DOMElementTests: XCTestCase {
     XCTAssertNotEqual(element, another)
     
     another = DOM.createRect()
-    another.fill = .color(.keyword(.black))
+    another.attributes.fill = .color(.keyword(.black))
     XCTAssertNotEqual(element, another)
     
-    another.fill = nil
+    another.attributes.fill = nil
     XCTAssertEqual(element, another)
   }
   
@@ -112,10 +112,10 @@ final class DOMElementTests: XCTestCase {
     XCTAssertNotEqual(element, another)
     
     another = DOM.createPolygon()
-    another.fill = .color(.keyword(.black))
+    another.attributes.fill = .color(.keyword(.black))
     XCTAssertNotEqual(element, another)
     
-    another.fill = nil
+    another.attributes.fill = nil
     XCTAssertEqual(element, another)
   }
   
@@ -129,10 +129,10 @@ final class DOMElementTests: XCTestCase {
     XCTAssertNotEqual(element, another)
     
     another = DOM.createPolyline()
-    another.fill = .color(.keyword(.black))
+    another.attributes.fill = .color(.keyword(.black))
     XCTAssertNotEqual(element, another)
     
-    another.fill = nil
+    another.attributes.fill = nil
     XCTAssertEqual(element, another)
   }
   
@@ -146,10 +146,10 @@ final class DOMElementTests: XCTestCase {
     XCTAssertNotEqual(element, another)
     
     another = DOM.createText()
-    another.fill = .color(.keyword(.black))
+    another.attributes.fill = .color(.keyword(.black))
     XCTAssertNotEqual(element, another)
     
-    another.fill = nil
+    another.attributes.fill = nil
     XCTAssertEqual(element, another)
   }
   
@@ -163,10 +163,10 @@ final class DOMElementTests: XCTestCase {
     XCTAssertNotEqual(group, another)
     
     another = DOM.createGroup()
-    another.fill = .color(.keyword(.black))
+    another.attributes.fill = .color(.keyword(.black))
     XCTAssertNotEqual(group, another)
     
-    another.fill = nil
+    another.attributes.fill = nil
     XCTAssertEqual(group, another)
   }
 }

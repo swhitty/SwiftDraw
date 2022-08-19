@@ -23,34 +23,47 @@
 	 <style></style>
 	 <g>
 		 <style>
-		 	.o {
-				fill: orange;
-			}
+		 
+		#a {
+			fill: yellow;
+		}
 		
-		 	.g {
-				/* comment */
-				fill: green;
-			}
+		g {
+			stroke-width: 3 /* asd */;
+			stroke: red
+		}
 		
-			circle {
-				fill: peachpuff
-			}
+	 	.g {
+			/* comment */
+			fill: green;
+		}
 		
-			#a {
-				fill: yellow;
-			}
+	 	.o {
+			fill: orange;
+		}
+				
+		circle {
+			fill: red;
+		}
+
 		</style>
 	</g>
 
+    <g id="a">
 	<circle cx="90" cy="70" r="50" class="s b"/>
 	
 	<circle cx="260" cy="70" r="50" class="s o"/>
 		
 	<circle cx="90" cy="220" r="50" class="s g"/>
 	
-	<circle cx="260" cy="220" r="50" class="s g" style="fill: orchid;"/>
+	<circle id="a" cx="260" cy="220" r="50" class="s g h" fill="blue" />
 	
 	<circle cx="90" cy="370" r="50" class="s"/>
 	
-	<circle cx="260" cy="370" r="50" class="s" id="a"/>			
+	<circle cx="260" cy="370" class="s" style="fill: purple; r: 50;"/>
+	
+	<polygon points="40,480 140,480 140,580 40,580" />
+	
+    <polygon points="210,480 310,480 310,580 210,580" fill="blue"/>
+	</g>			
 </svg>

@@ -50,7 +50,7 @@ final class SVGTests: XCTestCase {
     parsed = try parser.parseSVG(node)
     XCTAssertEqual(parsed, expected)
     
-    expected.fill = .color(.keyword(.red))
+    expected.attributes.fill = .color(.keyword(.red))
     XCTAssertNotEqual(parsed, expected)
   }
   

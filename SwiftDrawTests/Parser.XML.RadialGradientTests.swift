@@ -78,8 +78,8 @@ final class ParserXMLRadialGradientTests: XCTestCase {
         XCTAssertNotNil(dom.defs.radialGradients.first(where: { $0.id == "green" }))
 
         XCTAssertGreaterThan(dom.childElements.count, 2)
-        XCTAssertEqual(dom.childElements[0].fill, .url(URL(string: "#snow")!))
-        XCTAssertEqual(dom.childElements[1].fill, .url(URL(string: "#blue")!))
+        XCTAssertEqual(dom.childElements[0].attributes.fill, .url(URL(string: "#snow")!))
+        XCTAssertEqual(dom.childElements[1].attributes.fill, .url(URL(string: "#blue")!))
     }
 }
 

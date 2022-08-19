@@ -59,7 +59,7 @@ final class LayerTreeBuilderTests: XCTestCase {
     let builder = LayerTree.Builder(svg: svg)
     
     let element = DOM.GraphicsElement()
-    element.mask = URL(string: "#mask1")
+    element.attributes.mask = URL(string: "#mask1")
     
     let layer = builder.createMaskLayer(for: element)
     
@@ -73,7 +73,7 @@ final class LayerTreeBuilderTests: XCTestCase {
     let builder = LayerTree.Builder(svg: svg)
     
     let element = DOM.GraphicsElement()
-    element.clipPath = URL(string: "#clip1")
+    element.attributes.clipPath = URL(string: "#clip1")
     
     let shapes = builder.createClipShapes(for: element)
     XCTAssertEqual(shapes, [.ellipse(within: LayerTree.Rect(x: 0, y: 0, width: 10, height: 10))])

@@ -91,9 +91,14 @@ extension XML.Formatter {
         }
 
         func makeGraphicsAttributes(from graphic: DOM.GraphicsElement) -> [String: String] {
+            makeGraphicsAttributes(from: graphic.attributes, element: graphic)
+        }
+
+        func makeGraphicsAttributes(from graphic: PresentationAttributes,
+                                    element: ElementAttributes) -> [String: String] {
             var attributes: [String: String] = [:]
 
-            attributes["id"] = graphic.id
+            attributes["id"] = element.id
             attributes["opacity"] = formatter.format(graphic.opacity)
             attributes["display"] = graphic.display?.rawValue
             attributes["stroke"] = graphic.stroke.map(encodeFill)

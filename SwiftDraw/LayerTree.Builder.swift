@@ -44,7 +44,7 @@ extension LayerTree {
         }
 
         func makeLayer() -> Layer {
-            let state = Builder.createState(for: svg, inheriting: State())
+            let state = Builder.createState(for: svg.attributes, inheriting: State())
             let l = makeLayer(from: svg, inheriting: state)
             l.transform = Builder.makeTransform(for: svg.viewBox,
                                                 width: svg.width,
@@ -76,14 +76,15 @@ extension LayerTree {
         }
 
         func makeLayer(from element: DOM.GraphicsElement, inheriting previousState: State) -> Layer {
-            let state = Builder.createState(for: element, inheriting: previousState)
+            let attributes = element.attributes
+            let state = Builder.createState(for: attributes, inheriting: previousState)
             let l = Layer()
 
             guard state.display == .inline else { return l }
 
-            l.transform = Builder.createTransforms(from: element.transform ?? [])
+            l.transform = Builder.createTransforms(from: attributes.transform ?? [])
             l.clip = createClipShapes(for: element)
-            l.clipRule = element.clipRule
+            l.clipRule = attributes.clipRule
             l.mask = createMaskLayer(for: element)
             l.opacity = state.opacity
             l.contents = makeAllContents(from: element, with: state)
@@ -133,14 +134,14 @@ extension LayerTree {
         }
 
         func createClipShapes(for element: DOM.GraphicsElement) -> [Shape] {
-            guard let clipId = element.clipPath?.fragment,
+            guard let clipId = element.attributes.clipPath?.fragment,
                   let clip = svg.defs.clipPaths.first(where: { $0.id == clipId }) else { return [] }
 
             return clip.childElements.compactMap{ Builder.makeShape(from: $0) }
         }
 
         func createMaskLayer(for element: DOM.GraphicsElement) -> Layer? {
-            guard let maskId = element.mask?.fragment,
+            guard let maskId = element.attributes.mask?.fragment,
                   let mask = svg.defs.masks.first(where: { $0.id == maskId }) else { return nil }
 
             let l = Layer()

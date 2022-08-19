@@ -93,9 +93,9 @@ final class ParserGraphicAttributeTests: XCTestCase {
         let parsed = try XMLParser().parseGraphicsElement(el)
         let circle = parsed as? DOM.Circle
         XCTAssertNotNil(circle)
-        XCTAssertEqual(circle?.clipPath?.fragment, "cp1")
-        XCTAssertEqual(circle?.fill, .color(.keyword(.black)))
-        XCTAssertEqual(circle?.strokeWidth, 2)
+        XCTAssertEqual(circle?.attributes.clipPath?.fragment, "cp1")
+        XCTAssertEqual(circle?.attributes.fill, .color(.keyword(.black)))
+        XCTAssertEqual(circle?.attributes.strokeWidth, 2)
     }
 
     func testDisplayMode() {

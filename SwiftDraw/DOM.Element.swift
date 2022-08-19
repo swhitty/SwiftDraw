@@ -35,62 +35,49 @@ protocol ContainerElement {
     var childElements: [DOM.GraphicsElement] { get set }
 }
 
-protocol PresentationAttributes {
-    var opacity: DOM.Float?  { get set }
-    var display: DOM.DisplayMode?  { get set }
-    var color: DOM.Color?  { get set }
+// PresentationAttributes cascade;
+// attribute --> .element --> .class ---> .id ---> style=
 
-    var stroke: DOM.Fill?  { get set }
-    var strokeWidth: DOM.Float?  { get set }
-    var strokeOpacity: DOM.Float?  { get set }
-    var strokeLineCap: DOM.LineCap?  { get set }
-    var strokeLineJoin: DOM.LineJoin?  { get set }
-    var strokeDashArray: [DOM.Float]?  { get set }
+struct PresentationAttributes {
+    var opacity: DOM.Float?
+    var display: DOM.DisplayMode?
+    var color: DOM.Color?
 
-    var fill: DOM.Fill?  { get set }
-    var fillOpacity: DOM.Float?  { get set }
-    var fillRule: DOM.FillRule?  { get set }
+    var stroke: DOM.Fill?
+    var strokeWidth: DOM.Float?
+    var strokeOpacity: DOM.Float?
+    var strokeLineCap: DOM.LineCap?
+    var strokeLineJoin: DOM.LineJoin?
+    var strokeDashArray: [DOM.Float]?
 
-    var fontFamily: String?  { get set }
-    var fontSize: Float?  { get set }
+    var fill: DOM.Fill?
+    var fillOpacity: DOM.Float?
+    var fillRule: DOM.FillRule?
 
-    var transform: [DOM.Transform]?  { get set }
-    var clipPath: DOM.URL?  { get set }
-    var clipRule: DOM.FillRule? { get set }
-    var mask: DOM.URL?  { get set }
-    var filter: DOM.URL?  { get set }
+    var fontFamily: String?
+    var fontSize: Float?
+
+    var transform: [DOM.Transform]?
+    var clipPath: DOM.URL?
+    var clipRule: DOM.FillRule?
+    var mask: DOM.URL?
+    var filter: DOM.URL?
+}
+
+protocol ElementAttributes {
+    var id: String?  { get set }
+    var `class`: String?  { get set }
 }
 
 extension DOM {
 
     class Element {}
 
-    class GraphicsElement: Element, PresentationAttributes {
+    class GraphicsElement: Element, ElementAttributes {
         var id: String?
+        var `class`: String?
 
-        var opacity: DOM.Float?
-        var display: DOM.DisplayMode?
-        var color: DOM.Color?
-
-        var stroke: DOM.Fill?
-        var strokeWidth: DOM.Float?
-        var strokeOpacity: DOM.Float?
-        var strokeLineCap: DOM.LineCap?
-        var strokeLineJoin: DOM.LineJoin?
-        var strokeDashArray: [DOM.Float]?
-
-        var fill: DOM.Fill?
-        var fillOpacity: DOM.Float?
-        var fillRule: DOM.FillRule?
-
-        var fontFamily: String?
-        var fontSize: Float?
-
-        var transform: [DOM.Transform]?
-        var clipPath: URL?
-        var clipRule: DOM.FillRule?
-        var mask: URL?
-        var filter: URL?
+        var attributes = PresentationAttributes()
     }
 
     final class Line: GraphicsElement {

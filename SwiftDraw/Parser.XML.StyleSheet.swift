@@ -62,7 +62,7 @@ extension XMLParser {
         let entries = try Self.parseEntries(text)
 
         var sheet = DOM.StyleSheet()
-        sheet.entries = try entries.mapValues(parsePresentationAttributes)
+        sheet.attributes = try entries.mapValues(parsePresentationAttributes)
         return sheet
     }
 

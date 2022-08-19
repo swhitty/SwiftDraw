@@ -75,12 +75,13 @@ extension DOM {
     }
 
     struct StyleSheet {
+
         enum Selector: Hashable {
             case element(String)
             case id(String)
             case `class`(String)
         }
 
-        var entries: [Selector: PresentationAttributes] = [:]
+        var attributes: [Selector: PresentationAttributes] = [:]
     }
 }

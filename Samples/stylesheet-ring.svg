@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" id="a" viewBox="0 0 125 125">
+   <defs>
+      <style>.b{fill:#fff;opacity:.1;}.c{fill:#1c0c0c;}</style>
+   </defs>
+   <rect class="c" width="125" height="125" />
+   <rect class="b" x="12.49999" y="56.5" width="100.00001" height="12.00001" transform="translate(-14.04655 18.30582) rotate(-14.99999)" />
+   <rect class="b" x="12.49997" y="56.49996" width="100.00005" height="12.00008" transform="translate(-22.87658 39.62339) rotate(-29.99998)" />
+   <rect class="b" x="12.49999" y="56.49999" width="100.00003" height="12.00002" transform="translate(-25.88835 62.5) rotate(-45)" />
+   <rect class="b" x="12.49997" y="56.49996" width="100.00005" height="12.00008" transform="translate(-22.87658 85.37661) rotate(-60.00002)" />
+   <rect class="b" x="12.49998" y="56.50001" width="100.00003" height="11.99998" transform="translate(-14.04655 106.69419) rotate(-75.00001)" />
+   <rect class="b" x="56.5" y="12.5" width="12" height="100" />
+   <rect class="b" x="56.50001" y="12.49998" width="11.99998" height="100.00003" transform="translate(-14.04655 18.30581) rotate(-14.99999)" />
+   <rect class="b" x="56.49996" y="12.49997" width="12.00008" height="100.00005" transform="translate(-22.87658 39.62339) rotate(-29.99998)" />
+   <rect class="b" x="56.49999" y="12.49999" width="12.00002" height="100.00003" transform="translate(-25.88835 62.50001) rotate(-45)" />
+   <rect class="b" x="56.49996" y="12.49997" width="12.00008" height="100.00005" transform="translate(-22.87658 85.37661) rotate(-60.00002)" />
+   <rect class="b" x="56.49999" y="12.5" width="12.00001" height="100.00001" transform="translate(-14.04655 106.69418) rotate(-75.00001)" />
+   <rect class="b" x="12.5" y="56.5" width="100" height="12" />
+   <rect class="b" x="12.49999" y="56.5" width="100.00001" height="12.00001" transform="translate(-14.04655 18.30582) rotate(-14.99999)" />
+   <rect class="b" x="12.49997" y="56.49996" width="100.00005" height="12.00008" transform="translate(-22.87658 39.62339) rotate(-29.99998)" />
+   <rect class="b" x="12.49999" y="56.49999" width="100.00003" height="12.00002" transform="translate(-25.88835 62.49999) rotate(-44.99999)" />
+   <rect class="b" x="12.49997" y="56.49996" width="100.00005" height="12.00008" transform="translate(-22.87658 85.37661) rotate(-60.00002)" />
+   <rect class="b" x="12.49998" y="56.50001" width="100.00003" height="11.99998" transform="translate(-14.04655 106.69419) rotate(-75.00001)" />
+   <rect class="b" x="56.5" y="12.5" width="12" height="100" />
+   <rect class="b" x="56.50001" y="12.49998" width="11.99998" height="100.00003" transform="translate(-14.04655 18.30581) rotate(-14.99999)" />
+   <rect class="b" x="56.49996" y="12.49997" width="12.00008" height="100.00005" transform="translate(-22.87658 39.62339) rotate(-29.99998)" />
+   <rect class="b" x="56.49999" y="12.49999" width="12.00002" height="100.00003" transform="translate(-25.88835 62.50001) rotate(-45.00001)" />
+   <rect class="b" x="56.49996" y="12.49997" width="12.00008" height="100.00005" transform="translate(-22.87658 85.37661) rotate(-60.00002)" />
+   <rect class="b" x="56.49999" y="12.5" width="12.00001" height="100.00001" transform="translate(-14.04655 106.69418) rotate(-75.00001)" />
+   <rect class="b" x="12.5" y="56.5" width="100" height="12" />
+   <rect class="b" x="12.49999" y="56.5" width="100.00001" height="12.00001" transform="translate(-14.04655 18.30582) rotate(-14.99999)" />
+   <rect class="b" x="12.49997" y="56.49996" width="100.00005" height="12.00008" transform="translate(-22.87658 39.62339) rotate(-29.99998)" />
+   <rect class="b" x="12.49999" y="56.49999" width="100.00003" height="12.00002" transform="translate(-25.88835 62.5) rotate(-45)" />
+   <rect class="b" x="12.49997" y="56.49996" width="100.00005" height="12.00008" transform="translate(-22.87658 85.37661) rotate(-60.00002)" />
+   <rect class="b" x="12.49998" y="56.50001" width="100.00003" height="11.99998" transform="translate(-14.04655 106.69419) rotate(-75.00001)" />
+   <rect class="b" x="56.5" y="12.5" width="12" height="100" />
+   <rect class="b" x="56.50001" y="12.49998" width="11.99998" height="100.00003" transform="translate(-14.04655 18.30581) rotate(-14.99999)" />
+   <rect class="b" x="56.49996" y="12.49997" width="12.00008" height="100.00005" transform="translate(-22.87658 39.62339) rotate(-29.99998)" />
+   <rect class="b" x="56.49999" y="12.49999" width="12.00002" height="100.00003" transform="translate(-25.88835 62.50001) rotate(-45)" />
+   <rect class="b" x="56.49996" y="12.49997" width="12.00008" height="100.00005" transform="translate(-22.87658 85.37661) rotate(-60.00002)" />
+   <rect class="b" x="56.49999" y="12.5" width="12.00001" height="100.00001" transform="translate(-14.04655 106.69418) rotate(-75.00001)" />
+   <rect class="b" x="12.5" y="56.5" width="100" height="12" />
+</svg>

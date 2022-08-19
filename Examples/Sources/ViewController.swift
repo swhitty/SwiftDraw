@@ -65,7 +65,7 @@ class ViewController: UIViewController {
 
     override func loadView() {
         let imageView = UIImageView(frame: UIScreen.main.bounds)
-        imageView.image = Image(named: "angry.svg", in: .samples)?.rasterize()
+        imageView.image = Image(named: "stylesheet-ring.svg", in: .samples)?.rasterize()
         imageView.contentMode = .scaleAspectFit
         imageView.backgroundColor = .white
         self.view = imageView

@@ -61,8 +61,8 @@ extension LayerTree.Builder {
   static func makeTextContents(from text: DOM.Text, with state: State) -> LayerTree.Layer.Contents {
     let point = Point(text.x ?? 0, text.y ?? 0)
     var att = makeTextAttributes(with: state)
-    att.fontName = text.fontFamily ?? att.fontName
-    att.size = text.fontSize ?? att.size
+    att.fontName = text.attributes.fontFamily ?? att.fontName
+      att.size = text.attributes.fontSize ?? att.size
     return .text(text.value, point, att)
   }
   
