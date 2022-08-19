@@ -56,6 +56,7 @@ protocol PresentationAttributes {
 
     var transform: [DOM.Transform]?  { get set }
     var clipPath: DOM.URL?  { get set }
+    var clipRule: DOM.FillRule? { get set }
     var mask: DOM.URL?  { get set }
     var filter: DOM.URL?  { get set }
 }

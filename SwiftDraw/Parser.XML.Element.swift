@@ -299,6 +299,7 @@ extension PresentationAttributes {
         fontSize = attributes.fontSize
         transform = attributes.transform
         clipPath = attributes.clipPath
+        clipRule = attributes.clipRule
         mask = attributes.mask
         filter = attributes.filter
     }
