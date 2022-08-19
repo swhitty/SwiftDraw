@@ -60,7 +60,7 @@
 	
 	<circle cx="90" cy="370" r="50" class="s"/>
 	
-	<circle cx="260" cy="370" class="s" style="fill: purple; r: 50;"/>
+	<circle cx="260" cy="370" class="s" r="50" style="fill: purple;"/>
 	
 	<polygon points="40,480 140,480 140,580 40,580" />
 	

@@ -358,8 +358,7 @@ extension LayerTree.Builder {
     }
 
     func createState(for element: DOM.GraphicsElement, inheriting existing: State) -> State {
-        let attributes = element.attributes
-            .applyingAttributes(element.style)
+        let attributes = DOM.presentationAttributes(for: element, styles: svg.styles)
         return Self.createState(for: attributes, inheriting: existing)
     }
 
