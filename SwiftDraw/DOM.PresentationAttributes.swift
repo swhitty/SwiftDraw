@@ -34,7 +34,7 @@ import Foundation
 extension DOM {
 
     // PresentationAttributes cascade;
-    // attribute --> .element --> .class ---> .id ---> style=
+    // element.attributes --> .element() --> .class() ---> .id() ---> element.style ---> layerTree.state
 
     struct PresentationAttributes {
         var opacity: DOM.Float?
