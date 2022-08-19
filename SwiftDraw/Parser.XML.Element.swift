@@ -212,8 +212,8 @@ extension XMLParser {
                 value.trimmingCharacters(in: .whitespaces))
     }
 
-    func parsePresentationAttributes(_ att: AttributeParser) throws -> PresentationAttributes {
-        var el = PresentationAttributes()
+    func parsePresentationAttributes(_ att: AttributeParser) throws -> DOM.PresentationAttributes {
+        var el = DOM.PresentationAttributes()
 
         el.opacity = try att.parsePercentage("opacity")
         el.display = try att.parseRaw("display")
@@ -292,9 +292,9 @@ extension XMLParser {
     }
 }
 
-extension PresentationAttributes {
+extension DOM.PresentationAttributes {
     
-    mutating func updateAttributes(from attributes: PresentationAttributes) {
+    mutating func updateAttributes(from attributes: Self) {
         opacity = attributes.opacity
         display = attributes.display
         color = attributes.color

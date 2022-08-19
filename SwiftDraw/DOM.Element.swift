@@ -35,35 +35,6 @@ protocol ContainerElement {
     var childElements: [DOM.GraphicsElement] { get set }
 }
 
-// PresentationAttributes cascade;
-// attribute --> .element --> .class ---> .id ---> style=
-
-struct PresentationAttributes {
-    var opacity: DOM.Float?
-    var display: DOM.DisplayMode?
-    var color: DOM.Color?
-
-    var stroke: DOM.Fill?
-    var strokeWidth: DOM.Float?
-    var strokeOpacity: DOM.Float?
-    var strokeLineCap: DOM.LineCap?
-    var strokeLineJoin: DOM.LineJoin?
-    var strokeDashArray: [DOM.Float]?
-
-    var fill: DOM.Fill?
-    var fillOpacity: DOM.Float?
-    var fillRule: DOM.FillRule?
-
-    var fontFamily: String?
-    var fontSize: Float?
-
-    var transform: [DOM.Transform]?
-    var clipPath: DOM.URL?
-    var clipRule: DOM.FillRule?
-    var mask: DOM.URL?
-    var filter: DOM.URL?
-}
-
 protocol ElementAttributes {
     var id: String?  { get set }
     var `class`: String?  { get set }

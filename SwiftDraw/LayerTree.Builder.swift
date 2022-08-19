@@ -370,7 +370,7 @@ extension LayerTree.Builder {
         }
     }
 
-    static func createState(for attributes: PresentationAttributes, inheriting existing: State) -> State {
+    static func createState(for attributes: DOM.PresentationAttributes, inheriting existing: State) -> State {
         var state = State()
 
         state.opacity = attributes.opacity ?? 1.0

@@ -94,7 +94,7 @@ extension XML.Formatter {
             makeGraphicsAttributes(from: graphic.attributes, element: graphic)
         }
 
-        func makeGraphicsAttributes(from graphic: PresentationAttributes,
+        func makeGraphicsAttributes(from graphic: DOM.PresentationAttributes,
                                     element: ElementAttributes) -> [String: String] {
             var attributes: [String: String] = [:]
 
