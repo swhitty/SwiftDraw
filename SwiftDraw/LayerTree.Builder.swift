@@ -44,8 +44,7 @@ extension LayerTree {
         }
 
         func makeLayer() -> Layer {
-            let state = Builder.createState(for: svg.attributes, inheriting: State())
-            let l = makeLayer(from: svg, inheriting: state)
+            let l = makeLayer(from: svg, inheriting: State())
             l.transform = Builder.makeTransform(for: svg.viewBox,
                                                 width: svg.width,
                                                 height: svg.height)
@@ -76,8 +75,8 @@ extension LayerTree {
         }
 
         func makeLayer(from element: DOM.GraphicsElement, inheriting previousState: State) -> Layer {
+            let state = createState(for: element, inheriting: previousState)
             let attributes = element.attributes
-            let state = Builder.createState(for: attributes, inheriting: previousState)
             let l = Layer()
 
             guard state.display == .inline else { return l }
@@ -89,15 +88,6 @@ extension LayerTree {
             l.opacity = state.opacity
             l.contents = makeAllContents(from: element, with: state)
             l.filters = makeFilters(for: state)
-
-            //            // clips the mask to the content
-            //            l.mask?.clip = l.contents.compactMap { (contents: Layer.Contents) -> LayerTree.Shape? in
-            //                switch(contents) {
-            //                case .shape(let s, _, _): return s
-            //                default: return nil
-            //                }
-            //            }
-
             return l
         }
 
@@ -205,12 +195,12 @@ extension LayerTree.Builder {
             let pattern = makePattern(for: element)
             return LayerTree.FillAttributes(pattern: pattern, rule: state.fillRule, opacity: state.fillOpacity)
         } else if case .url(let gradientId) = state.fill,
-                  let element = svg.defs.linearGradients.first(where: { $0.id == gradientId.fragment }) {
-            let gradient = makeGradient(for: element)!
+                  let element = svg.defs.linearGradients.first(where: { $0.id == gradientId.fragment }),
+                  let gradient = makeGradient(for: element) {
             return LayerTree.FillAttributes(linear: gradient, rule: state.fillRule, opacity: state.fillOpacity)
         } else if case .url(let gradientId) = state.fill,
-                  let element = svg.defs.radialGradients.first(where: { $0.id == gradientId.fragment }) {
-            let gradient = makeGradient(for: element)!
+                  let element = svg.defs.radialGradients.first(where: { $0.id == gradientId.fragment }),
+                  let gradient = makeGradient(for: element) {
             return LayerTree.FillAttributes(radial: gradient, rule: state.fillRule, opacity: state.fillOpacity)
         } else {
             return LayerTree.FillAttributes(color: fill, rule: state.fillRule)
@@ -252,13 +242,10 @@ extension LayerTree.Builder {
     }
 
     func makeGradient(for element: DOM.LinearGradient) -> LayerTree.LinearGradient? {
-        guard
-            let x1 = element.x1,
-            let y1 = element.y1,
-            let x2 = element.x2,
-            let y2 = element.y2 else {
-            return nil
-        }
+        let x1 = element.x1 ?? 0
+        let y1 = element.y1 ?? 0
+        let x2 = element.x2 ?? 1
+        let y2 = element.y2 ?? 0
 
         var stops = [LayerTree.Gradient.Stop]()
         if let id = element.href?.fragment,
@@ -368,6 +355,12 @@ extension LayerTree.Builder {
             fontFamily = "Helvetica"
             fontSize = 12.0
         }
+    }
+
+    func createState(for element: DOM.GraphicsElement, inheriting existing: State) -> State {
+        let attributes = element.attributes
+            .applyingAttributes(element.style)
+        return Self.createState(for: attributes, inheriting: existing)
     }
 
     static func createState(for attributes: DOM.PresentationAttributes, inheriting existing: State) -> State {

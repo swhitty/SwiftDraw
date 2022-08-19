@@ -114,7 +114,7 @@ final class XMLFormatterTests: XCTestCase {
                 <path id="right-margin-Regular-M" d="M373,195 l0,120" />
               </g>
               <g id="Regular-M">
-                <path d="M285.85,236.97 L285.85,257.059 C285.85,276.55 301.65,292.35 321.14,292.35 M301.019,252.017 L285.89,236.89 L270.77,252.017 M346.43,272.14 L346.43,252.058 C346.43,232.57 330.63,216.77 311.14,216.77 M331.27,257.059 L346.39,272.18 L361.52,257.059" fill="none" stroke="rgb(33, 33, 33)" stroke-linecap="round" stroke-linejoin="round" stroke-width="10" />
+                <path d="M285.85,236.97 L285.85,257.059 C285.85,276.55 301.65,292.35 321.14,292.35 M301.019,252.017 L285.89,236.89 L270.77,252.017 M346.43,272.14 L346.43,252.058 C346.43,232.57 330.63,216.77 311.14,216.77 M331.27,257.059 L346.39,272.18 L361.52,257.059" style="fill: none; stroke-linecap: round; stroke-linejoin: round; stroke-width: 10; stroke: rgb(33, 33, 33)" />
               </g>
             </svg>
             """

@@ -98,11 +98,12 @@ extension XMLParser {
         default: return nil
         }
 
-        ge.attributes = try parsePresentationAttributes(att)
-
         let elementAtt = try parseElementAttributes(att)
-        ge.updateAttributes(from: elementAtt)
+        ge.id = elementAtt.id
+        ge.class = elementAtt.class
 
+        ge.attributes = try parsePresentationAttributes(e)
+        ge.style = try parseStyleAttributes(e)
         return ge
     }
 
@@ -189,6 +190,19 @@ extension XMLParser {
                           options: options,
                           element: element,
                           style: style)
+    }
+
+    func parsePresentationAttributes(_ e: XML.Element) throws -> DOM.PresentationAttributes {
+        return try parsePresentationAttributes(e.attributes)
+    }
+
+    func parseStyleAttributes(_ e: XML.Element) throws -> DOM.PresentationAttributes {
+        guard let styleText = e.attributes["style"] else {
+            return DOM.PresentationAttributes()
+        }
+
+        let style = try parseStyleAttributes(styleText)
+        return try parsePresentationAttributes(style)
     }
 
     func parseStyleAttributes(_ data: String) throws -> [String: String] {
@@ -314,13 +328,5 @@ extension DOM.PresentationAttributes {
         clipRule = attributes.clipRule
         mask = attributes.mask
         filter = attributes.filter
-    }
-}
-
-extension ElementAttributes {
-
-    mutating func updateAttributes(from attributes: ElementAttributes) {
-        self.id = attributes.id
-        self.class = attributes.class
     }
 }

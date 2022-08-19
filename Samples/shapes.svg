@@ -3,8 +3,8 @@
 	 xmlns:ns="http://www.w3.org/2000/svg" 
 	 xmlns:xlink="http://www.w3.org/1999/xlink" 
 	 width="500" height="700" viewBox="0 0 500 700" >
-	<ellipse cx="250" cy="250" rx="200" ry="120" stroke="green" />
-	<ns:g fill="yellow">
+	<ellipse cx="250" cy="250" rx="200" ry="120" stroke="green" style="stroke-width: 5" />
+	<ns:g style="fill: yellow">
 		<circle cx="250" cy="250" r="100" stroke="blue" stroke-width="2"/>
 	</ns:g>
 	
@@ -18,7 +18,7 @@
           <stop offset="95%" stop-color="darkblue"/>
     </linearGradient>
 	
-	<circle cx="250" cy="250" r="50" fill="darkblue" stroke="purple" style="stroke-width:5;fillno: url(#MyGradient)"/>
+	<circle cx="250" cy="250" r="50" fill="darkblue" stroke="purple" style="stroke-width:8;fill: url(#MyGradient)"/>
 	
 	<g color="green" stroke="hotpink">
 	  <g fill-opacity="0" stroke="red" stroke-width="4">
@@ -41,7 +41,7 @@
 	<path d="m 340 650 a 50 50 0 1 1 50 50  h -50 z" fill="khaki" stroke="black" transform="scale(0.75) rotate(145, 340, 700 )" />
 		
  <polyline points="100,590 120,550"
-  style="fill:none;stroke:black;stroke-width:3" stroke="red" stroke-width="5" />
+  style="fill:none;stroke:black;stroke-width:5" stroke="red" stroke-width="5" />
   
  <polyline points="100,590 120,550 110,600 155,610 125,590 175,600"
   style="fill:none;stroke:green;stroke-width:2" stroke="black" stroke-width="2"/>

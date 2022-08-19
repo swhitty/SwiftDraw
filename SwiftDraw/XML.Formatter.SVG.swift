@@ -91,14 +91,14 @@ extension XML.Formatter {
         }
 
         func makeGraphicsAttributes(from graphic: DOM.GraphicsElement) -> [String: String] {
-            makeGraphicsAttributes(from: graphic.attributes, element: graphic)
+            var attributes = makeGraphicsAttributes(from: graphic.attributes)
+            attributes["id"] = graphic.id
+            attributes["style"] = makeStyleAttribute(from: graphic.style)
+            return attributes
         }
 
-        func makeGraphicsAttributes(from graphic: DOM.PresentationAttributes,
-                                    element: ElementAttributes) -> [String: String] {
+        func makeGraphicsAttributes(from graphic: DOM.PresentationAttributes) -> [String: String] {
             var attributes: [String: String] = [:]
-
-            attributes["id"] = element.id
             attributes["opacity"] = formatter.format(graphic.opacity)
             attributes["display"] = graphic.display?.rawValue
             attributes["stroke"] = graphic.stroke.map(encodeFill)
@@ -123,6 +123,14 @@ extension XML.Formatter {
                                                     .map(encodeTransform)
                                                     .joined(separator: " ")
             return attributes
+        }
+
+        func makeStyleAttribute(from graphic: DOM.PresentationAttributes) -> String? {
+            let style = makeGraphicsAttributes(from: graphic)
+                .map { "\($0): \($1)" }
+                .sorted()
+                .joined(separator: "; ")
+            return style.isEmpty ? nil : style
         }
 
         func makeLinearGradient(_ gradient: DOM.LinearGradient) -> XML.Element {

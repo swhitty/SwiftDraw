@@ -49,6 +49,7 @@ extension DOM {
         var `class`: String?
 
         var attributes = PresentationAttributes()
+        var style = PresentationAttributes()
     }
 
     final class Line: GraphicsElement {

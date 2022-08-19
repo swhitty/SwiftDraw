@@ -62,3 +62,37 @@ extension DOM {
         var filter: DOM.URL?
     }
 }
+
+
+extension DOM.PresentationAttributes {
+
+    func applyingAttributes(_ att: Self) -> Self {
+        var merged = DOM.PresentationAttributes()
+
+        merged.opacity = att.opacity ?? opacity
+        merged.display = att.display ?? display
+        merged.color = att.color ?? color
+
+        merged.stroke = att.stroke ?? stroke
+        merged.strokeWidth = att.strokeWidth ?? strokeWidth
+        merged.strokeOpacity = att.strokeOpacity ?? strokeOpacity
+        merged.strokeLineCap = att.strokeLineCap ?? strokeLineCap
+        merged.strokeLineJoin = att.strokeLineJoin ?? strokeLineJoin
+        merged.strokeDashArray = att.strokeDashArray ?? strokeDashArray
+
+        merged.fill = att.fill ?? fill
+        merged.fillOpacity = att.fillOpacity ?? fillOpacity
+        merged.fillRule = att.fillRule ?? fillRule
+
+        merged.fontFamily = att.fontFamily ?? fontFamily
+        merged.fontSize = att.fontSize ?? fontSize
+
+        merged.transform = att.transform ?? transform
+        merged.clipPath = att.clipPath ?? clipPath
+        merged.clipRule = att.clipRule ?? clipRule
+        merged.mask = att.mask ?? mask
+        merged.filter = att.filter ?? filter
+
+        return merged
+    }
+}

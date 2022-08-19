@@ -162,14 +162,14 @@ extension XMLParser.Scanner {
 }
 
 //Allow Dictionary to become an attribute parser
-extension Dictionary: AttributeParser {
+extension Dictionary: AttributeParser where Key == String, Value == String {
   var parser: AttributeValueParser { return XMLParser.ValueParser() }
   var options: SwiftDraw.XMLParser.Options { return [] }
 
   func parse<T>(_ key: String, _ exp: (String) throws -> T) throws -> T {
-    guard let dict = self as? [String: String],
-      let value = dict[key] else { throw XMLParser.Error.missingAttribute(name: key) }
-
+    guard let value = self[key] else {
+        throw XMLParser.Error.missingAttribute(name: key)
+    }
     return try exp(value)
   }
 }
