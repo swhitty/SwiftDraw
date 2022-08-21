@@ -166,7 +166,7 @@ extension LayerTree.Path {
     }
 }
 
-private extension LayerTree.Point {
+extension LayerTree.Point {
 
     static let maximum = LayerTree.Point(.greatestFiniteMagnitude, .greatestFiniteMagnitude)
     static let minimum = LayerTree.Point(-.greatestFiniteMagnitude, -.greatestFiniteMagnitude)
@@ -178,4 +178,14 @@ private extension LayerTree.Point {
     func maximum(combining other: Self) -> Self {
         LayerTree.Point(max(x, other.x), max(y, other.y))
     }
+}
+
+extension LayerTree.Rect {
+    var minX: LayerTree.Float { origin.x }
+    var minY: LayerTree.Float { origin.y }
+    var maxX: LayerTree.Float { origin.x + size.width }
+    var maxY: LayerTree.Float { origin.y + size.height }
+
+    var midX: LayerTree.Float { origin.x + (size.width / 2) }
+    var midY: LayerTree.Float { origin.y + (size.height / 2) }
 }

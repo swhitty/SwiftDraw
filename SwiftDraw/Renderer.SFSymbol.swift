@@ -87,6 +87,47 @@ extension SFSymbolRenderer {
         return nil
     }
 
+    static func makeBounds(for paths: [LayerTree.Path]) -> LayerTree.Rect {
+        var min = LayerTree.Point.maximum
+        var max = LayerTree.Point.minimum
+        for p in paths {
+            let bounds = p.bounds
+            min = min.minimum(combining: .init(bounds.minX, bounds.minY))
+            max = max.maximum(combining: .init(bounds.maxX, bounds.maxY))
+        }
+        return LayerTree.Rect(
+            x: min.x,
+            y: min.y,
+            width: max.x - min.x,
+            height: max.y - min.y
+        )
+    }
+
+    static func makeTransformation(of source: LayerTree.Rect,
+                                   to bounds: LayerTree.Rect) -> LayerTree.Transform.Matrix {
+        let scale = bounds.height / source.height
+        let scaleMidX = source.midX * scale
+        let scaleMidY = source.midY * scale
+        let tx = bounds.midX - scaleMidX
+        let ty =  bounds.midY - scaleMidY
+        let t = LayerTree.Transform
+            .translate(tx: tx, ty: ty)
+        return LayerTree.Transform
+            .scale(sx: scale, sy: scale)
+            .toMatrix()
+            .concatenated(t.toMatrix())
+    }
+
+    static func convertPaths(_ paths: [LayerTree.Path],
+                             into bounds: LayerTree.Rect) -> [DOM.Path] {
+        let matrix = makeTransformation(
+            of: makeBounds(for: paths),
+            to: bounds
+        )
+        return paths.map { $0.applying(matrix: matrix) }
+            .map(makeDOMPath)
+    }
+
     static func makeDOMPath(for path: LayerTree.Path) -> DOM.Path {
         let dom = DOM.Path(x: 0, y: 0)
         dom.segments = path.segments.map {
@@ -117,31 +158,26 @@ public extension SFSymbolRenderer {
         let source = try DOM.SVG.parse(fileURL: fileURL)
         let layer = LayerTree.Builder(svg: source).makeLayer()
 
-        let t = LayerTree.Transform
-            .translate(tx: 425, ty: 75)
-        
-        let m = LayerTree.Transform
-            .scale(sx: 3.2, sy: 3.2)
-            .toMatrix()
-            .concatenated(t.toMatrix())
-
-        let paths = getPaths(for: layer)
-            .map { $0.applying(matrix: m) }
-            .map(makeDOMPath)
-
         let regular = try svg.group(id: "Symbols").group(id: "Regular-S")
         let ultralight = try svg.group(id: "Symbols").group(id: "Ultralight-S")
         let black = try svg.group(id: "Symbols").group(id: "Black-S")
 
-        regular.childElements.append(contentsOf: paths)
-       // ultralight.childElements.append(contentsOf: paths)
-       // black.childElements.append(contentsOf: paths)
+        let sourcePaths = getPaths(for: layer)
+        regular.childElements.append(
+            contentsOf: convertPaths(sourcePaths, into: .regular)
+        )
+        ultralight.childElements.append(
+            contentsOf: convertPaths(sourcePaths, into: .ultralight)
+        )
+        black.childElements.append(
+            contentsOf: convertPaths(sourcePaths, into: .black)
+        )
 
-        let coordinate = XML.Formatter.CoordinateFormatter(delimeter: .comma, precision: .capped(max: 5))
+        let coordinate = XML.Formatter.CoordinateFormatter(delimeter: .comma,
+                                                           precision: .capped(max: 3))
         let element = try XML.Formatter.SVG(formatter: coordinate).makeElement(from: svg)
         let formatter = XML.Formatter(spaces: 2)
         let result = formatter.encodeRootElement(element)
-       // print(result)
         return result
     }
 
@@ -221,6 +257,11 @@ extension DOM.SVG {
     }
 }
 
+private extension LayerTree.Rect {
+    static let ultralight = Self(x: 221, y: 76, width: 88, height: 70)
+    static let regular = Self(x: 421, y: 76, width: 88, height: 70)
+    static let black = Self(x: 621, y: 76, width: 88, height: 70)
+}
 
 private extension ContainerElement {
 
