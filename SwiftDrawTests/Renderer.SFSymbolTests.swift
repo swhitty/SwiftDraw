@@ -39,7 +39,7 @@ final class RendererSFSymbolTests: XCTestCase {
     }
 
     func testSymbol() throws {
-        let url = try Bundle.test.url(forResource: "key.svg")
+        let url = try Bundle.test.url(forResource: "chart.svg")
         let svg = try SFSymbolRenderer.render(fileURL: url, options: [])
         XCTAssertTrue(svg.contains("Ultralight-S"))
         XCTAssertTrue(svg.contains("Regular-S"))
