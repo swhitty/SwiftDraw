@@ -35,18 +35,16 @@ public extension CGTextRenderer {
 
     typealias Size = (width: Int, height: Int)
 
-    static func render(named name: String, in bundle: Bundle = Bundle.main, size: Size? = nil, options: Image.Options) -> String? {
-        guard let url = bundle.url(forResource: name, withExtension: nil) else { return nil }
-        return render(fileURL: url, size: size, options: options)
+    static func render(named name: String, in bundle: Bundle = Bundle.main, size: Size? = nil, options: Image.Options) throws -> String {
+        guard let url = bundle.url(forResource: name, withExtension: nil) else {
+            throw Error("File not found.")
+        }
+        return try render(fileURL: url, size: size, options: options)
     }
 
-    static func render(fileURL: URL, size: Size? = nil, options: Image.Options) -> String? {
-        guard let svg = try? DOM.SVG.parse(fileURL: fileURL) else {
-            return nil
-        }
-
+    static func render(fileURL: URL, size: Size? = nil, options: Image.Options) throws -> String {
+        let svg = try DOM.SVG.parse(fileURL: fileURL)
         let size = makeSize(svg: svg, size: size)
-
         let identifier = fileURL.lastPathComponent
             .replacingOccurrences(of: ".\(fileURL.pathExtension)", with: "")
             .replacingOccurrences(of: "_", with: " ")
@@ -92,5 +90,13 @@ public extension CGTextRenderer {
         renderer.perform(commands)
 
         return renderer.makeText()
+    }
+
+    private struct Error: LocalizedError {
+        var errorDescription: String?
+
+        init(_ message: String) {
+            self.errorDescription = message
+        }
     }
 }

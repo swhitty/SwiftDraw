@@ -35,17 +35,6 @@ public final class SFSymbolRenderer { }
 
 extension SFSymbolRenderer {
 
-    func makeDOM(for layer: LayerTree.Layer) throws -> DOM.SVG {
-        throw Error.invalid
-    }
-
-    static func firstPath(for layer: LayerTree.Layer) throws -> LayerTree.Path {
-        guard let path = getPaths(for: layer).first else {
-            throw Error.invalid
-        }
-        return path
-    }
-
     static func getPaths(for layer: LayerTree.Layer) -> [LayerTree.Path] {
         guard layer.opacity > 0,
               layer.clip.isEmpty,
@@ -78,11 +67,14 @@ extension SFSymbolRenderer {
                          fill: LayerTree.FillAttributes) -> LayerTree.Path? {
         guard case .path(let p) = shape else { return nil }
 
-        #if canImport(CoreGraphics)
         if stoke.color != .none && stoke.width > 0 {
+        #if canImport(CoreGraphics)
             return expandOutlines(for: p, stroke: stoke)
-        }
+        #else
+            print("Warning:", "expanding stroke outlines requires macOS.", to: &.standardError)
+            return nil
         #endif
+        }
 
         if fill.fill != .none && fill.opacity > 0 {
             return p
@@ -149,8 +141,12 @@ extension SFSymbolRenderer {
         return dom
     }
 
-    enum Error: Swift.Error {
-        case invalid
+    struct Error: LocalizedError {
+        var errorDescription: String?
+
+        init(_ message: String) {
+            self.errorDescription = message
+        }
     }
 }
 
@@ -167,6 +163,9 @@ public extension SFSymbolRenderer {
         let black = try svg.group(id: "Symbols").group(id: "Black-S")
 
         let sourcePaths = getPaths(for: layer)
+        guard !sourcePaths.isEmpty else {
+            throw Error("No valid content found.")
+        }
         regular.childElements.append(
             contentsOf: convertPaths(sourcePaths, into: .regular)
         )

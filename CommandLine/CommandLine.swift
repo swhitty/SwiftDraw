@@ -42,14 +42,19 @@ extension SwiftDraw.CommandLine {
             printHelp()
             return .error
         }
-        
-        guard
-            let data = try? process(with: config) else {
-            print("Failure", to: &.standardError)
+
+        let data: Data
+        do {
+            data = try process(with: config)
+        } catch Error.fileNotFound {
+            print("Failure: File does not exist.", to: &.standardError)
+            return .error
+        } catch {
+            print("Failure:", error.localizedDescription, to: &.standardError)
             printHelp()
             return .error
         }
-        
+
         do {
             try data.write(to: config.output)
             print("Created: \(config.output.path)")
@@ -61,24 +66,32 @@ extension SwiftDraw.CommandLine {
     }
     
     static func process(with config: Configuration) throws -> Data {
-        guard let data = processImage(config: config) else {
+        guard let data = try processImage(config: config) else {
             throw Error.invalid
         }
         
         return data
     }
     
-    static func processImage(config: Configuration) -> Data? {
+    static func processImage(config: Configuration) throws -> Data? {
+        guard FileManager.default.fileExists(atPath: config.input.path) else {
+            throw Error.fileNotFound
+        }
+
         switch config.format {
         case .swift:
-            let code = CGTextRenderer.render(fileURL: config.input, size: config.size.renderSize, options: config.options)
-            return code?.data(using: .utf8)
+            let code = try CGTextRenderer.render(fileURL: config.input, size: config.size.renderSize, options: config.options)
+            return code.data(using: .utf8)
         case .sfsymbol:
             print("[--format sfsymbol] is an experimental feature.")
-            let svg = try? SFSymbolRenderer.render(fileURL: config.input, options: config.options)
-            return svg?.data(using: .utf8)
+            let svg = try SFSymbolRenderer.render(fileURL: config.input, options: config.options)
+            return svg.data(using: .utf8)
         case .jpeg, .pdf, .png:
-            return SwiftDraw.Image(fileURL: config.input, options: config.options).flatMap { processImage($0, with: config) }
+            guard let image = SwiftDraw.Image(fileURL: config.input, options: config.options),
+                  let data = processImage(image, with: config) else {
+                throw Error.invalid
+            }
+            return data
         }
     }
     

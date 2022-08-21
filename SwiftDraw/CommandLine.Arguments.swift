@@ -65,6 +65,7 @@ extension CommandLine {
 
     public enum Error: Swift.Error {
         case invalid
+        case fileNotFound
     }
 }
 
