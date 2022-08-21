@@ -47,6 +47,15 @@ extension LayerTree {
         enum Direction {
             case clockwise
             case anticlockwise
+
+            var opposite: Self {
+                switch self {
+                case .clockwise:
+                    return .anticlockwise
+                case .anticlockwise:
+                    return .clockwise
+                }
+            }
         }
 
         func hash(into hasher: inout Hasher) {
@@ -161,10 +170,5 @@ extension Sequence where Element == LayerTree.Path.Segment {
 }
 
 prefix func !(direction: LayerTree.Path.Direction) -> LayerTree.Path.Direction  {
-    switch direction {
-    case .clockwise:
-        return .anticlockwise
-    case .anticlockwise:
-        return .clockwise
-    }
+    direction.opposite
 }

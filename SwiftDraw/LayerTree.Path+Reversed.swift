@@ -31,6 +31,11 @@
 
 extension LayerTree.Path {
 
+    func makeNonZero() -> LayerTree.Path {
+        let paths = makeNodes().flatMap { $0.windPaths() }
+        return LayerTree.Path(paths.flatMap(\.segments))
+    }
+
     var reversed: LayerTree.Path {
         var reversed = segments
             .reversed()
@@ -52,6 +57,61 @@ extension LayerTree.Path {
         }
 
         return .init(reversed)
+    }
+}
+
+private extension LayerTree.Path {
+
+    func makeNodes() -> [SubPathNode] {
+        var nodes = [SubPathNode]()
+
+        for p in subpaths {
+            let node = SubPathNode(p)
+            if let idx = nodes.firstIndex(where: { $0.bounds.contains(point: node.bounds.center) }) {
+                nodes[idx].append(node)
+            } else {
+                nodes.append(node)
+            }
+        }
+        return nodes
+    }
+}
+
+private struct SubPathNode {
+    let path: LayerTree.Path
+    let bounds: LayerTree.Rect
+    let direction: LayerTree.Path.Direction
+    var children: [SubPathNode] = []
+
+    init(_ path: LayerTree.Path) {
+        self.path = path
+        self.bounds = path.bounds
+        self.direction = path.segments.direction
+    }
+
+    mutating func append(_ node: SubPathNode) {
+        if let idx = children.firstIndex(where: { $0.bounds.contains(point: node.bounds.center) }) {
+            children[idx].append(node)
+        } else {
+            children.append(node)
+        }
+    }
+
+    func windPaths() -> [LayerTree.Path] {
+        windPaths(direction)
+    }
+
+    func windPaths(_ direction: LayerTree.Path.Direction) -> [LayerTree.Path] {
+        var paths = [LayerTree.Path]()
+
+        if self.direction == direction {
+            paths.append(path)
+        } else {
+            paths.append(path.reversed)
+        }
+
+        paths += children.flatMap { $0.windPaths(direction.opposite) }
+        return paths
     }
 }
 

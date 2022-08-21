@@ -57,7 +57,11 @@ extension SFSymbolRenderer {
             switch c {
             case let .shape(shape, stroke, fill):
                 if let path = makePath(for: shape, stoke: stroke, fill: fill) {
-                    paths.append(path)
+                    if fill.rule == .evenodd {
+                        paths.append(path.makeNonZero())
+                    } else {
+                        paths.append(path)
+                    }
                 }
             case .layer(let l):
                 paths.append(contentsOf: getPaths(for: l))

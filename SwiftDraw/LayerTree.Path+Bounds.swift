@@ -188,4 +188,13 @@ extension LayerTree.Rect {
 
     var midX: LayerTree.Float { origin.x + (size.width / 2) }
     var midY: LayerTree.Float { origin.y + (size.height / 2) }
+
+    var center: LayerTree.Point {
+        .init(midX, midY)
+    }
+
+    func contains(point: LayerTree.Point) -> Bool {
+        (minX...maxX).contains(point.x) &&
+        (minY...maxY).contains(point.y)
+    }
 }

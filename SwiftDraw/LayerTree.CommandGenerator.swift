@@ -547,15 +547,6 @@ private func apply(colorConverter: ColorConverter, to stop: LayerTree.Gradient.S
     return stop
 }
 
-private extension LayerTree.Rect {
-    var center: LayerTree.Point {
-        LayerTree.Point(
-            origin.x + (size.width / 2),
-            origin.y + (size.height / 2)
-        )
-    }
-}
-
 private extension LayerTree.Shape {
 
     var endpoints: (start: LayerTree.Point, end: LayerTree.Point)? {
