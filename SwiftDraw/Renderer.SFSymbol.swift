@@ -31,8 +31,9 @@
 
 import Foundation
 
+public final class SFSymbolRenderer { }
 
-public final class SFSymbolRenderer {
+extension SFSymbolRenderer {
 
     func makeDOM(for layer: LayerTree.Layer) throws -> DOM.SVG {
         throw Error.invalid
@@ -46,12 +47,18 @@ public final class SFSymbolRenderer {
     }
 
     static func getPaths(for layer: LayerTree.Layer) -> [LayerTree.Path] {
+        guard layer.opacity > 0,
+              layer.clip.isEmpty,
+              layer.mask == nil else { return [] }
+
         var paths = [LayerTree.Path]()
 
         for c in layer.contents {
             switch c {
-            case .shape(.path(let p), _, _):
-                paths.append(p)
+            case let .shape(shape, stroke, fill):
+                if let path = makePath(for: shape, stoke: stroke, fill: fill) {
+                    paths.append(path)
+                }
             case .layer(let l):
                 paths.append(contentsOf: getPaths(for: l))
             default:
@@ -60,6 +67,24 @@ public final class SFSymbolRenderer {
         }
 
         return paths
+    }
+
+    static func makePath(for shape: LayerTree.Shape,
+                         stoke: LayerTree.StrokeAttributes,
+                         fill: LayerTree.FillAttributes) -> LayerTree.Path? {
+        guard case .path(let p) = shape else { return nil }
+
+        #if canImport(CoreGraphics)
+        if stoke.color != .none && stoke.width > 0 {
+            return expandOutlines(for: p, stroke: stoke)
+        }
+        #endif
+
+        if fill.fill != .none && fill.opacity > 0 {
+            return p
+        }
+
+        return nil
     }
 
     static func makeDOMPath(for path: LayerTree.Path) -> DOM.Path {

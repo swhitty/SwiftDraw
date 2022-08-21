@@ -130,6 +130,8 @@ extension LayerTree {
             case pattern(Pattern)
             case linearGradient(LinearGradient)
             case radialGradient(RadialGradient)
+
+            static let none = Fill.color(.none)
         }
     }
 

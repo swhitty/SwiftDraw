@@ -80,6 +80,38 @@ extension CGPath {
   }
 }
 
+extension CGPath {
+
+    func makePath() -> LayerTree.Path {
+        let s = segments()
+        return LayerTree.Path(
+            s.map(Self.makeSegment)
+        )
+    }
+
+    static func makeSegment(for segment: Segment) -> LayerTree.Path.Segment {
+        switch segment {
+        case .move(let point):
+            return .move(to: .init(point))
+        case .line(let point):
+            return .line(to: .init(point))
+        case .cubic(let control1, let control2, let point):
+            return .cubic(to: .init(point), control1: .init(control1), control2: .init(control2))
+        case .close:
+            return .close
+        case .quad(let control1, let point):
+            return .cubic(to: .init(point), control1: .init(control1), control2: .init(control1))
+        }
+    }
+}
+
+private extension LayerTree.Point {
+    init(_ p: CGPoint) {
+        self.init(LayerTree.Float(p.x),
+                  LayerTree.Float((p.y)))
+    }
+}
+
 extension String {
 
   func toPath(font: CTFont) -> CGPath? {
