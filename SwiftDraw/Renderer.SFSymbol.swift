@@ -116,15 +116,26 @@ public extension SFSymbolRenderer {
 
         let source = try DOM.SVG.parse(fileURL: fileURL)
         let layer = LayerTree.Builder(svg: source).makeLayer()
-        let path = try makeDOMPath(for: firstPath(for: layer))
+
+        let t = LayerTree.Transform
+            .translate(tx: 425, ty: 75)
+        
+        let m = LayerTree.Transform
+            .scale(sx: 3.2, sy: 3.2)
+            .toMatrix()
+            .concatenated(t.toMatrix())
+
+        let paths = getPaths(for: layer)
+            .map { $0.applying(matrix: m) }
+            .map(makeDOMPath)
 
         let regular = try svg.group(id: "Symbols").group(id: "Regular-S")
         let ultralight = try svg.group(id: "Symbols").group(id: "Ultralight-S")
         let black = try svg.group(id: "Symbols").group(id: "Black-S")
 
-        regular.childElements.append(path)
-        ultralight.childElements.append(path)
-        black.childElements.append(path)
+        regular.childElements.append(contentsOf: paths)
+       // ultralight.childElements.append(contentsOf: paths)
+       // black.childElements.append(contentsOf: paths)
 
         let coordinate = XML.Formatter.CoordinateFormatter(delimeter: .comma, precision: .capped(max: 5))
         let element = try XML.Formatter.SVG(formatter: coordinate).makeElement(from: svg)
