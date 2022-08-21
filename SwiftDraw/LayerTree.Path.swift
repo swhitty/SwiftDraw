@@ -88,7 +88,7 @@ extension LayerTree.Path {
     }
 }
 
-private extension LayerTree.Path.Segment {
+extension LayerTree.Path.Segment {
 
     var isClose: Bool {
         guard case .close = self else {
