@@ -29,17 +29,24 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-extension DOM {
-  
-  final class Text: GraphicsElement {
-    var x: Coordinate?
-    var y: Coordinate?
-    var value: String
+import Foundation
 
-    init(x: Coordinate? = nil, y: Coordinate? = nil, value: String) {
-      self.x = x
-      self.y = y
-      self.value = value
+extension DOM {
+
+    final class Text: GraphicsElement {
+        var x: Coordinate?
+        var y: Coordinate?
+        var value: String
+
+        init(x: Coordinate? = nil, y: Coordinate? = nil, value: String) {
+            self.x = x
+            self.y = y
+            self.value = value
+        }
     }
-  }
+
+    final class Anchor: GraphicsElement, ContainerElement {
+        var href: URL?
+        var childElements = [GraphicsElement]()
+    }
 }

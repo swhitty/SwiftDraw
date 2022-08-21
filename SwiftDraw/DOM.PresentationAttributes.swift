@@ -166,6 +166,8 @@ extension DOM.GraphicsElement {
             return "image"
         case is DOM.Group:
             return "g"
+        case is DOM.Anchor:
+            return "a"
         case is DOM.SVG:
             return "svg"
         default:

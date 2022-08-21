@@ -92,6 +92,9 @@ extension XMLParser {
         case "text":
             guard let text = try parseText(att, element: e) else { return nil }
             ge = text
+        case "a":
+            guard let anchor = try parseAnchor(att, element: e) else { return nil }
+            ge = anchor
         case "use": ge = try parseUse(att)
         case "switch": ge = try parseSwitch(e)
         case "image": ge = try parseImage(att)
@@ -114,7 +117,8 @@ extension XMLParser {
                 e.name == "mask" ||
                 e.name == "defs" ||
                 e.name == "switch" ||
-                e.name == "g" else {
+                e.name == "g" ||
+                e.name == "a" else {
             throw Error.invalid
         }
 

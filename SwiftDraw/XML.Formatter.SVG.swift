@@ -173,6 +173,8 @@ extension XML.Formatter {
                 element = makeElement(from: group)
             } else if let text = graphic as? DOM.Text {
                 element = makeElement(from: text)
+            } else if let anchor = graphic as? DOM.Anchor {
+                element = makeElement(from: anchor)
             } else if let path = graphic as? DOM.Path {
                 element = makeElement(from: path)
             } else {
@@ -232,6 +234,15 @@ extension XML.Formatter {
             element.innerText = text.value
             element.attributes["x"] = text.x.map { String($0) }
             element.attributes["y"] = text.y.map { String($0) }
+            return element
+        }
+
+        func makeElement(from anchor: DOM.Anchor) -> XML.Element {
+            let element = XML.Element(
+                name: "a",
+                attributes: makeGraphicsAttributes(from: anchor)
+            )
+            element.attributes["href"] = anchor.href?.absoluteString
             return element
         }
 
