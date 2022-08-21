@@ -121,48 +121,6 @@ final class XMLFormatterTests: XCTestCase {
         )
     }
 
-    func testPairedSequence() {
-        XCTAssertEqual(
-            ["a", "b", "c", "d"].paired(with: .nextSkippingLast).map { "\($0)\($1)" },
-            ["ab", "bc", "cd"]
-        )
-
-        XCTAssertEqual(
-            ["a", "b", "c", "d"].paired(with: .nextWrappingToFirst).map { "\($0)\($1)" },
-            ["ab", "bc", "cd", "da"]
-        )
-
-        XCTAssertEqual(
-            ["a", "b"].paired(with: .nextSkippingLast).map { "\($0)\($1)" },
-            ["ab"]
-        )
-
-        XCTAssertEqual(
-            ["a", "b"].paired(with: .nextWrappingToFirst).map { "\($0)\($1)" },
-            ["ab", "ba"]
-        )
-
-        XCTAssertEqual(
-            ["a"].paired(with: .nextSkippingLast).map { "\($0)\($1)" },
-            []
-        )
-
-        XCTAssertEqual(
-            ["a"].paired(with: .nextWrappingToFirst).map { "\($0)\($1)" },
-            []
-        )
-
-        XCTAssertEqual(
-            [].paired(with: .nextSkippingLast).map { "\($0)\($1)" },
-            []
-        )
-
-        XCTAssertEqual(
-            [].paired(with: .nextWrappingToFirst).map { "\($0)\($1)" },
-            []
-        )
-    }
-
     func testEvenOddPathDirection() throws {
         let pathData = """
         M12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12C22 17.5228 17.5228 22 12 22Z
