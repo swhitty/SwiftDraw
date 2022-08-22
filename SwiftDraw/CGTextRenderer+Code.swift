@@ -86,7 +86,13 @@ public extension CGTextRenderer {
             generator.renderCommands(for: layer)
         )
 
-        let renderer = CGTextRenderer(name: name, size: size, commandSize: commandSize)
+        let formatter = CoordinateFormatter(delimeter: .comma,
+                                            precision: .capped(max: 3))
+
+        let renderer = CGTextRenderer(name: name,
+                                      size: size,
+                                      commandSize: commandSize,
+                                      formatter: formatter)
         renderer.perform(commands)
 
         return renderer.makeText()

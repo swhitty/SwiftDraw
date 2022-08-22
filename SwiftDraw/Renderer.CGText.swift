@@ -120,7 +120,13 @@ struct CGTextProvider: RendererTypeProvider {
     let optimizer = LayerTree.CommandOptimizer<CGTextTypes>(options: [.skipRedundantState, .skipInitialSaveState])
     let contents = optimizer.optimizeCommands(contents)
 
-    let renderer = CGTextRenderer(name: "pattern", size: pattern.frame.size, commandSize: pattern.frame.size)
+    let formatter = CoordinateFormatter(delimeter: .comma,
+                                        precision: .capped(max: 3))
+
+    let renderer = CGTextRenderer(name: "pattern",
+                                  size: pattern.frame.size,
+                                  commandSize: pattern.frame.size,
+                                  formatter: formatter)
     renderer.perform(contents)
     let lines = renderer.lines
       .map { "  \($0)" }
@@ -206,11 +212,16 @@ public final class CGTextRenderer: Renderer {
   private let name: String
   private let size: LayerTree.Size
   private let commandSize: LayerTree.Size
+  private let formatter: CoordinateFormatter
 
-  init(name: String, size: LayerTree.Size, commandSize: LayerTree.Size) {
+    init(name: String,
+         size: LayerTree.Size,
+         commandSize: LayerTree.Size,
+         formatter: CoordinateFormatter) {
     self.name = name
     self.size = size
     self.commandSize = commandSize
+    self.formatter = formatter
   }
 
   private(set) var lines = [String]()
