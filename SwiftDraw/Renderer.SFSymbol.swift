@@ -34,8 +34,11 @@ import Foundation
 public final class SFSymbolRenderer {
 
     public static func render(fileURL: URL, options: Image.Options) throws -> String {
-        let source = try DOM.SVG.parse(fileURL: fileURL)
-        let layer = LayerTree.Builder(svg: source).makeLayer()
+        return try render(svg: .parse(fileURL: fileURL))
+    }
+
+    static func render(svg: DOM.SVG) throws -> String {
+        let layer = LayerTree.Builder(svg: svg).makeLayer()
         let sourcePaths = getPaths(for: layer)
         guard !sourcePaths.isEmpty else {
             throw Error("No valid content found.")

@@ -56,11 +56,26 @@ final class RendererSFSymbolTests: XCTestCase {
     }
 
     func testStrokeText() throws {
-        let url = try Bundle.test.url(forResource: "icon-w.svg")
-        let svg = try SFSymbolRenderer.render(fileURL: url, options: [])
+        let source = try DOM.SVG.parse(text: #"""
+        <?xml version="1.0" encoding="UTF-8"?>
+        <svg width="64" height="64" version="1.1" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="32" cy="32" r="28" fill="none" stroke="black" stroke-width="4" />
+            <text font-size="35" x="14" y="45">W</text>
+        </svg>
+        """#)
+        let svg = try SFSymbolRenderer.render(svg: source)
         XCTAssertTrue(svg.contains("Ultralight-S"))
         XCTAssertTrue(svg.contains("Regular-S"))
         XCTAssertTrue(svg.contains("Black-S"))
     }
     #endif
+}
+
+private extension DOM.SVG {
+
+    static func parse(text: String, filename: String = #file) throws -> DOM.SVG {
+        let element = try XML.SAXParser.parse(data: text.data(using: .utf8)!)
+        let parser = XMLParser(options: [], filename: filename)
+        return try parser.parseSVG(element)
+    }
 }
