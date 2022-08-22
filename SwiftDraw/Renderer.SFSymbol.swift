@@ -122,7 +122,7 @@ extension SFSymbolRenderer {
                          at point: LayerTree.Point,
                          with attributes: LayerTree.TextAttributes) -> LayerTree.Path? {
 #if canImport(CoreGraphics)
-        let cgPath = CGProvider().createPath(from: text, at: point,with: attributes)
+        let cgPath = CGProvider().createPath(from: text, at: point, with: attributes)
         return cgPath?.makePath()
 #else
         print("Warning:", "expanding text outlines requires macOS.", to: &.standardError)
