@@ -30,10 +30,10 @@
 //
 
 extension DOM {
-
+    
     final class RadialGradient: Element {
         typealias Units = LinearGradient.Units
-
+        
         var id: String
         var r: Coordinate?
         var cx: Coordinate?
@@ -41,11 +41,11 @@ extension DOM {
         var fr: Coordinate?
         var fx: Coordinate?
         var fy: Coordinate?
-
+        
         var stops: [Stop]
         var gradientUnits: Units?
         var gradientTransform: [Transform]
-
+        
         //references another RadialGradient element id within defs
         var href: URL?
         
@@ -54,12 +54,12 @@ extension DOM {
             self.stops = []
             self.gradientTransform = []
         }
-
+        
         struct Stop: Equatable {
             var offset: Float
             var color: Color
             var opacity: Float
-
+            
             init(offset: Float, color: Color, opacity: Opacity = 1.0) {
                 self.offset = offset
                 self.color = color

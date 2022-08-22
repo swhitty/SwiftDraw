@@ -32,19 +32,19 @@
 import Foundation
 
 extension DOM {
-
+    
     final class Text: GraphicsElement {
         var x: Coordinate?
         var y: Coordinate?
         var value: String
-
+        
         init(x: Coordinate? = nil, y: Coordinate? = nil, value: String) {
             self.x = x
             self.y = y
             self.value = value
         }
     }
-
+    
     final class Anchor: GraphicsElement, ContainerElement {
         var href: URL?
         var childElements = [GraphicsElement]()

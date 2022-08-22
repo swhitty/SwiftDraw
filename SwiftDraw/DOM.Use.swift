@@ -30,15 +30,15 @@
 //
 
 extension DOM {
-  final class Use: GraphicsElement {
-    var x: Coordinate?
-    var y: Coordinate?
-    
-    //references element ids within defs
-    var href: URL
-    
-    init(href: URL) {
-      self.href = href
+    final class Use: GraphicsElement {
+        var x: Coordinate?
+        var y: Coordinate?
+        
+        //references element ids within defs
+        var href: URL
+        
+        init(href: URL) {
+            self.href = href
+        }
     }
-  }
 }

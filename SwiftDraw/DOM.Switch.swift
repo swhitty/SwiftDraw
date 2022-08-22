@@ -30,7 +30,7 @@
 //
 
 extension DOM {
-  final class Switch: GraphicsElement, ContainerElement {
-    var childElements = [DOM.GraphicsElement]()
-  }
+    final class Switch: GraphicsElement, ContainerElement {
+        var childElements = [DOM.GraphicsElement]()
+    }
 }
