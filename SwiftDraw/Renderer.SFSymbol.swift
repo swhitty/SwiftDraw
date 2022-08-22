@@ -84,6 +84,10 @@ extension SFSymbolRenderer {
                         paths.append(path)
                     }
                 }
+            case let .text(text, point, attributes):
+                if let path = makePath(for: text, at: point, with: attributes) {
+                    paths.append(path)
+                }
             case .layer(let l):
                 paths.append(contentsOf: getPaths(for: l))
             default:
@@ -112,6 +116,18 @@ extension SFSymbolRenderer {
         }
 
         return nil
+    }
+
+    static func makePath(for text: String,
+                         at point: LayerTree.Point,
+                         with attributes: LayerTree.TextAttributes) -> LayerTree.Path? {
+#if canImport(CoreGraphics)
+        let cgPath = CGProvider().createPath(from: text, at: point,with: attributes)
+        return cgPath?.makePath()
+#else
+        print("Warning:", "expanding text outlines requires macOS.", to: &.standardError)
+        return nil
+#endif
     }
 
     static func makeBounds(for paths: [LayerTree.Path]) -> LayerTree.Rect {
