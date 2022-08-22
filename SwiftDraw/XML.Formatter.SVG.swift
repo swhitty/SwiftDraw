@@ -39,9 +39,9 @@ extension XML.Formatter {
 
     struct SVG {
 
-        private let formatter: XML.Formatter.CoordinateFormatter
+        private let formatter: CoordinateFormatter
 
-        init(formatter: XML.Formatter.CoordinateFormatter) {
+        init(formatter: CoordinateFormatter) {
             self.formatter = formatter
         }
 

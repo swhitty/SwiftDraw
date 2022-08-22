@@ -59,8 +59,8 @@ public final class SFSymbolRenderer {
             contentsOf: convertPaths(sourcePaths, into: .black)
         )
 
-        let coordinate = XML.Formatter.CoordinateFormatter(delimeter: .comma,
-                                                           precision: .capped(max: 3))
+        let coordinate = CoordinateFormatter(delimeter: .comma,
+                                             precision: .capped(max: 3))
         let element = try XML.Formatter.SVG(formatter: coordinate).makeElement(from: svg)
         let formatter = XML.Formatter(spaces: 2)
         let result = formatter.encodeRootElement(element)
