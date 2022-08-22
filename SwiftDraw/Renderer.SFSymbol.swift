@@ -31,7 +31,39 @@
 
 import Foundation
 
-public final class SFSymbolRenderer { }
+public final class SFSymbolRenderer {
+
+    public static func render(fileURL: URL, options: Image.Options) throws -> String {
+        let source = try DOM.SVG.parse(fileURL: fileURL)
+        let layer = LayerTree.Builder(svg: source).makeLayer()
+        let sourcePaths = getPaths(for: layer)
+        guard !sourcePaths.isEmpty else {
+            throw Error("No valid content found.")
+        }
+
+        let svg = try DOM.SVG.makeSFSymbolTemplate()
+        let regular = try svg.group(id: "Symbols").group(id: "Regular-S")
+        let ultralight = try svg.group(id: "Symbols").group(id: "Ultralight-S")
+        let black = try svg.group(id: "Symbols").group(id: "Black-S")
+
+        regular.childElements.append(
+            contentsOf: convertPaths(sourcePaths, into: .regular)
+        )
+        ultralight.childElements.append(
+            contentsOf: convertPaths(sourcePaths, into: .ultralight)
+        )
+        black.childElements.append(
+            contentsOf: convertPaths(sourcePaths, into: .black)
+        )
+
+        let coordinate = XML.Formatter.CoordinateFormatter(delimeter: .comma,
+                                                           precision: .capped(max: 3))
+        let element = try XML.Formatter.SVG(formatter: coordinate).makeElement(from: svg)
+        let formatter = XML.Formatter(spaces: 2)
+        let result = formatter.encodeRootElement(element)
+        return result
+    }
+}
 
 extension SFSymbolRenderer {
 
@@ -71,12 +103,12 @@ extension SFSymbolRenderer {
         }
 
         if stoke.color != .none && stoke.width > 0 {
-        #if canImport(CoreGraphics)
+#if canImport(CoreGraphics)
             return expandOutlines(for: shape.path, stroke: stoke)
-        #else
+#else
             print("Warning:", "expanding stroke outlines requires macOS.", to: &.standardError)
             return nil
-        #endif
+#endif
         }
 
         return nil
@@ -146,50 +178,6 @@ extension SFSymbolRenderer {
         init(_ message: String) {
             self.errorDescription = message
         }
-    }
-}
-
-public extension SFSymbolRenderer {
-
-    static func render(fileURL: URL, options: Image.Options) throws -> String {
-        let svg = try DOM.SVG.makeSFSymbolTemplate()
-
-        let source = try DOM.SVG.parse(fileURL: fileURL)
-        let layer = LayerTree.Builder(svg: source).makeLayer()
-
-        let regular = try svg.group(id: "Symbols").group(id: "Regular-S")
-        let ultralight = try svg.group(id: "Symbols").group(id: "Ultralight-S")
-        let black = try svg.group(id: "Symbols").group(id: "Black-S")
-
-        let sourcePaths = getPaths(for: layer)
-        guard !sourcePaths.isEmpty else {
-            throw Error("No valid content found.")
-        }
-        regular.childElements.append(
-            contentsOf: convertPaths(sourcePaths, into: .regular)
-        )
-        ultralight.childElements.append(
-            contentsOf: convertPaths(sourcePaths, into: .ultralight)
-        )
-        black.childElements.append(
-            contentsOf: convertPaths(sourcePaths, into: .black)
-        )
-
-        let coordinate = XML.Formatter.CoordinateFormatter(delimeter: .comma,
-                                                           precision: .capped(max: 3))
-        let element = try XML.Formatter.SVG(formatter: coordinate).makeElement(from: svg)
-        let formatter = XML.Formatter(spaces: 2)
-        let result = formatter.encodeRootElement(element)
-        return result
-    }
-
-    static func template() throws -> String {
-        let svg = try DOM.SVG.makeSFSymbolTemplate()
-        
-        let coordinate = XML.Formatter.CoordinateFormatter(delimeter: .comma, precision: .capped(max: 5))
-        let element = try XML.Formatter.SVG(formatter: coordinate).makeElement(from: svg)
-        let formatter = XML.Formatter(spaces: 2)
-        return formatter.encodeRootElement(element)
     }
 }
 

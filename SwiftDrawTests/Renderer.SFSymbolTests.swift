@@ -38,11 +38,21 @@ final class RendererSFSymbolTests: XCTestCase {
         XCTAssertNoThrow(try DOM.SVG.makeSFSymbolTemplate())
     }
 
-    func testSymbol() throws {
+    func testFillSymbol() throws {
         let url = try Bundle.test.url(forResource: "chart.svg")
         let svg = try SFSymbolRenderer.render(fileURL: url, options: [])
         XCTAssertTrue(svg.contains("Ultralight-S"))
         XCTAssertTrue(svg.contains("Regular-S"))
         XCTAssertTrue(svg.contains("Black-S"))
     }
+
+    #if canImport(CoreGraphics)
+    func testStrokeSymbol() throws {
+        let url = try Bundle.test.url(forResource: "key.svg")
+        let svg = try SFSymbolRenderer.render(fileURL: url, options: [])
+        XCTAssertTrue(svg.contains("Ultralight-S"))
+        XCTAssertTrue(svg.contains("Regular-S"))
+        XCTAssertTrue(svg.contains("Black-S"))
+    }
+    #endif
 }
