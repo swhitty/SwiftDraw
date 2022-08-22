@@ -5,9 +5,9 @@
 	 width="500" height="700" viewBox="0 0 500 700" >
 	<ellipse cx="250" cy="250" rx="200" ry="120" stroke="green" style="stroke-width: 5" />
 	<ns:g style="fill: yellow">
-		<circle cx="250" cy="250" r="100" stroke="blue" stroke-width="2"/>
+		<circle cx="250" cy="250" r="100" stroke="blue" stroke-width="2" fill="url(#goldenGradient)"/>
 	</ns:g>
-	
+
 	<defs>
 	  <polygon id="star" points="100,10 40,198 190,78, 10,78, 160,198" fill-rule="nonzero" />
 	  <image id="dot" width="6" height="6" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg==" />
@@ -18,6 +18,11 @@
           <stop offset="95%" stop-color="darkblue"/>
     </linearGradient>
 	
+	<radialGradient id="goldenGradient" fx="0.4" fy="0.35" fr="0.2" r="0.6">
+		<stop stop-color="gold" />
+		<stop offset="100%" stop-color="yellow" />
+	</radialGradient>
+
 	<circle cx="250" cy="250" r="50" fill="darkblue" stroke="purple" style="stroke-width:8;fill: url(#MyGradient)"/>
 	
 	<g color="green" stroke="hotpink">
