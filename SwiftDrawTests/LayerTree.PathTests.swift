@@ -63,7 +63,6 @@ final class LayerTreePathTests: XCTestCase {
     }
 
     func testMove() {
-
         var m = LayerTree.Builder.createMove(from: .move(x: 10, y: 10, space: .absolute), last: .zero)
         XCTAssertEqual(m, move(10, 10))
 

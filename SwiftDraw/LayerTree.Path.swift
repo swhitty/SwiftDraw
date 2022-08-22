@@ -58,6 +58,24 @@ extension LayerTree {
             }
         }
 
+        func move(to point: LayerTree.Point) {
+            segments.append(.move(to: point))
+        }
+
+        func line(to point: LayerTree.Point) {
+            segments.append(.line(to: point))
+        }
+
+        func curve(to point: LayerTree.Point,
+                   control1: LayerTree.Point,
+                   control2: LayerTree.Point) {
+            segments.append(.cubic(to: point, control1: control1, control2: control2))
+        }
+
+        func close() {
+            segments.append(.close)
+        }
+
         func hash(into hasher: inout Hasher) {
             hasher.combine(self.segments)
         }

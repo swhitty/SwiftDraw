@@ -65,15 +65,14 @@ extension SFSymbolRenderer {
     static func makePath(for shape: LayerTree.Shape,
                          stoke: LayerTree.StrokeAttributes,
                          fill: LayerTree.FillAttributes) -> LayerTree.Path? {
-        guard case .path(let p) = shape else { return nil }
 
         if fill.fill != .none && fill.opacity > 0 {
-            return p
+            return shape.path
         }
 
         if stoke.color != .none && stoke.width > 0 {
         #if canImport(CoreGraphics)
-            return expandOutlines(for: p, stroke: stoke)
+            return expandOutlines(for: shape.path, stroke: stoke)
         #else
             print("Warning:", "expanding stroke outlines requires macOS.", to: &.standardError)
             return nil
