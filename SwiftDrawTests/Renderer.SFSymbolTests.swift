@@ -40,42 +40,94 @@ final class RendererSFSymbolTests: XCTestCase {
 
     func testFillSymbol() throws {
         let url = try Bundle.test.url(forResource: "chart.svg")
-        let svg = try SFSymbolRenderer.render(fileURL: url, options: [])
-        XCTAssertTrue(svg.contains("Ultralight-S"))
-        XCTAssertTrue(svg.contains("Regular-S"))
-        XCTAssertTrue(svg.contains("Black-S"))
+        let symbols = try DOM.SVG.parse(
+            SFSymbolRenderer.render(fileURL: url, options: [])
+        ).group(id: "Symbols")
+
+        XCTAssertEqual(
+            try symbols.group(id: "Ultralight-S").childElements.count,
+            1
+        )
+        XCTAssertEqual(
+            try symbols.group(id: "Regular-S").childElements.count,
+            1
+        )
+        XCTAssertEqual(
+            try symbols.group(id: "Black-S").childElements.count,
+            1
+        )
     }
 
     #if canImport(CoreGraphics)
     func testStrokeSymbol() throws {
         let url = try Bundle.test.url(forResource: "key.svg")
-        let svg = try SFSymbolRenderer.render(fileURL: url, options: [])
-        XCTAssertTrue(svg.contains("Ultralight-S"))
-        XCTAssertTrue(svg.contains("Regular-S"))
-        XCTAssertTrue(svg.contains("Black-S"))
+        let symbols = try DOM.SVG.parse(
+            SFSymbolRenderer.render(fileURL: url, options: [])
+        ).group(id: "Symbols")
+
+        XCTAssertEqual(
+            try symbols.group(id: "Ultralight-S").childElements.count,
+            1
+        )
+        XCTAssertEqual(
+            try symbols.group(id: "Regular-S").childElements.count,
+            1
+        )
+        XCTAssertEqual(
+            try symbols.group(id: "Black-S").childElements.count,
+            1
+        )
     }
 
     func testStrokeText() throws {
-        let source = try DOM.SVG.parse(text: #"""
+        let source = try DOM.SVG.parse(#"""
         <?xml version="1.0" encoding="UTF-8"?>
         <svg width="64" height="64" version="1.1" xmlns="http://www.w3.org/2000/svg">
             <circle cx="32" cy="32" r="28" fill="none" stroke="black" stroke-width="4" />
             <text font-size="35" x="14" y="45">W</text>
         </svg>
         """#)
-        let svg = try SFSymbolRenderer.render(svg: source)
-        XCTAssertTrue(svg.contains("Ultralight-S"))
-        XCTAssertTrue(svg.contains("Regular-S"))
-        XCTAssertTrue(svg.contains("Black-S"))
+        let symbols = try DOM.SVG.parse(
+            SFSymbolRenderer.render(svg: source)
+        ).group(id: "Symbols")
+
+        XCTAssertEqual(
+            try symbols.group(id: "Ultralight-S").childElements.count,
+            2
+        )
+        XCTAssertEqual(
+            try symbols.group(id: "Regular-S").childElements.count,
+            2
+        )
+        XCTAssertEqual(
+            try symbols.group(id: "Black-S").childElements.count,
+            2
+        )
     }
     #endif
 }
 
 private extension DOM.SVG {
 
-    static func parse(text: String, filename: String = #file) throws -> DOM.SVG {
+    static func parse(_ text: String, filename: String = #file) throws -> DOM.SVG {
         let element = try XML.SAXParser.parse(data: text.data(using: .utf8)!)
         let parser = XMLParser(options: [], filename: filename)
         return try parser.parseSVG(element)
     }
+}
+
+private extension ContainerElement {
+
+    func group(id: String) throws -> DOM.Group {
+        for e in childElements {
+            if e.id == id, let group = e as? DOM.Group {
+                return group
+            }
+        }
+        throw ContainerError.missingGroup
+    }
+}
+
+enum ContainerError: Error {
+    case missingGroup
 }
