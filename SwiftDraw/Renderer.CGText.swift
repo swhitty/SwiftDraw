@@ -52,21 +52,34 @@ struct CGTextProvider: RendererTypeProvider {
   typealias Types = CGTextTypes
   
   var supportsTransparencyLayers: Bool = true
-  
+  let formatter: CoordinateFormatter
+
+  init(formatter: CoordinateFormatter) {
+    self.formatter = formatter
+  }
+
   func createFloat(from float: LayerTree.Float) -> LayerTree.Float {
     return float
   }
-  
+
   func createPoint(from point: LayerTree.Point) -> String {
-    return "CGPoint(x: \(point.x), y: \(point.y))"
+    let x = formatter.format(point.x)
+    let y = formatter.format(point.y)
+    return "CGPoint(x: \(x), y: \(y))"
   }
   
   func createSize(from size: LayerTree.Size) -> String {
-    return "CGSize(width: \(size.width), height: \(size.height))"
+    let width = formatter.format(size.width)
+    let height = formatter.format(size.height)
+    return "CGSize(width: \(width), height: \(height))"
   }
   
   func createRect(from rect: LayerTree.Rect) -> String {
-    return "CGRect(x: \(rect.x), y: \(rect.y), width: \(rect.width), height: \(rect.height))"
+    let x = formatter.format(rect.x)
+    let y = formatter.format(rect.y)
+    let width = formatter.format(rect.width)
+    let height = formatter.format(rect.height)
+    return "CGRect(x: \(x), y: \(y), width: \(width), height: \(height))"
   }
 
   func createColor(from color: LayerTree.Color) -> String {
@@ -74,11 +87,11 @@ struct CGTextProvider: RendererTypeProvider {
     case .none:
       return "CGColor(colorSpace: CGColorSpaceCreateDeviceRGB(), components: [0, 0, 0, 0])!"
     case let .rgba(r, g, b, a, .srgb):
-      return "CGColor(colorSpace: CGColorSpaceCreateDeviceRGB(), components: [\(r), \(g), \(b), \(a)])!"
+      return "CGColor(colorSpace: CGColorSpaceCreateDeviceRGB(), components: [\(formatter.format(r, g, b, a))])!"
     case let .rgba(r, g, b, a, .p3):
-      return "CGColor(colorSpace: CGColorSpaceCreateDisplayP3(), components: [\(r), \(g), \(b), \(a)])!"
+      return "CGColor(colorSpace: CGColorSpaceCreateDisplayP3(), components: [\(formatter.format(r, g, b, a))])!"
     case .gray(white: let w, a: let a):
-      return "CGColor(colorSpace: CGColorSpaceCreateExtendedGray(), components: [\(w), \(a)])!"
+      return "CGColor(colorSpace: CGColorSpaceCreateExtendedGray(), components: [\(formatter.format(w, a))])!"
     }
   }
 
@@ -120,7 +133,7 @@ struct CGTextProvider: RendererTypeProvider {
     let optimizer = LayerTree.CommandOptimizer<CGTextTypes>(options: [.skipRedundantState, .skipInitialSaveState])
     let contents = optimizer.optimizeCommands(contents)
 
-    let formatter = CoordinateFormatter(delimeter: .comma,
+    let formatter = CoordinateFormatter(delimeter: .commaSpace,
                                         precision: .capped(max: 3))
 
     let renderer = CGTextRenderer(name: "pattern",
@@ -141,8 +154,8 @@ struct CGTextProvider: RendererTypeProvider {
       info: nil,
       bounds: \(createRect(from: pattern.frame)),
       matrix: ctx.ctm.concatenating(baseCTM.inverted()),
-      xStep: \(pattern.frame.width),
-      yStep: \(pattern.frame.height),
+      xStep: \(formatter.format(pattern.frame.width)),
+      yStep: \(formatter.format(pattern.frame.height)),
       tiling: .constantSpacing,
       isColored: true,
       callbacks: &patternCallback1
@@ -212,7 +225,7 @@ public final class CGTextRenderer: Renderer {
   private let name: String
   private let size: LayerTree.Size
   private let commandSize: LayerTree.Size
-  private let formatter: CoordinateFormatter
+  let formatter: CoordinateFormatter
 
     init(name: String,
          size: LayerTree.Size,
@@ -303,11 +316,11 @@ public final class CGTextRenderer: Renderer {
     case .none:
       return createOrGetColor("CGColor(colorSpace: CGColorSpaceCreateDeviceRGB(), components: [0, 0, 0, 0])!")
     case let .rgba(r, g, b, a, .srgb):
-      return createOrGetColor("CGColor(colorSpace: CGColorSpaceCreateDeviceRGB(), components: [\(r), \(g), \(b), \(a)])!")
+      return createOrGetColor("CGColor(colorSpace: CGColorSpaceCreateDeviceRGB(), components: [\(formatter.format(r, g, b, a))])!")
     case let .rgba(r, g, b, a, .p3):
-      return createOrGetColor("CGColor(colorSpace: CGColorSpaceCreateDisplayP3(), components: [\(r), \(g), \(b), \(a)])!")
+      return createOrGetColor("CGColor(colorSpace: CGColorSpaceCreateDisplayP3(), components: [\(formatter.format(r, g, b, a))])!")
     case .gray(white: let w, a: let a):
-      return createOrGetColor("CGColor(colorSpace: CGColorSpaceCreateExtendedGray(), components: [\(w), \(a)])!")
+      return createOrGetColor("CGColor(colorSpace: CGColorSpaceCreateExtendedGray(), components: [\(formatter.format(w, a))])!")
     }
   }
   
@@ -429,15 +442,15 @@ public final class CGTextRenderer: Renderer {
   }
 
   func translate(tx: LayerTree.Float, ty: LayerTree.Float) {
-    lines.append("ctx.translateBy(x: \(tx), y: \(ty))")
+    lines.append("ctx.translateBy(x: \(formatter.format(tx)), y: \(formatter.format(ty)))")
   }
-  
+
   func rotate(angle: LayerTree.Float) {
-    lines.append("ctx.rotate(by: \(angle))")
+    lines.append("ctx.rotate(by: \(formatter.format(angle)))")
   }
   
   func scale(sx: LayerTree.Float, sy: LayerTree.Float) {
-    lines.append("ctx.scaleBy(x: \(sx), y: \(sy))")
+    lines.append("ctx.scaleBy(x: \(formatter.format(sx)), y: \(formatter.format(sy)))")
   }
   
   func setFill(color: String) {
@@ -459,7 +472,7 @@ public final class CGTextRenderer: Renderer {
   }
   
   func setLine(width: LayerTree.Float) {
-    lines.append("ctx.setLineWidth(\(width))")
+    lines.append("ctx.setLineWidth(\(formatter.format(width)))")
   }
   
   func setLine(cap: String) {
@@ -471,7 +484,7 @@ public final class CGTextRenderer: Renderer {
   }
   
   func setLine(miterLimit: LayerTree.Float) {
-    lines.append("ctx.setMiterLimit(\(miterLimit))")
+    lines.append("ctx.setMiterLimit(\(formatter.format(miterLimit)))")
   }
 
   func setClip(path: [LayerTree.Shape], rule: String) {
@@ -489,7 +502,7 @@ public final class CGTextRenderer: Renderer {
   }
   
   func setAlpha(_ alpha: LayerTree.Float) {
-    lines.append("ctx.setAlpha(\(alpha))")
+    lines.append("ctx.setAlpha(\(formatter.format(alpha)))")
   }
   
   func setBlend(mode: String) {
@@ -547,9 +560,9 @@ public final class CGTextRenderer: Renderer {
     lines.append("""
     ctx.drawRadialGradient(\(identifier),
                            startCenter: \(startCenter),
-                           startRadius: \(startRadius),
+                           startRadius: \(formatter.format(startRadius)),
                            endCenter: \(endCenter),
-                           endRadius: \(endRadius),
+                           endRadius: \(formatter.format(endRadius)),
                            options: [.drawsAfterEndLocation, .drawsBeforeStartLocation])
     """)
   }
@@ -589,7 +602,7 @@ public final class CGTextRenderer: Renderer {
 extension String.StringInterpolation {
   mutating func appendInterpolation(_ points: [LayerTree.Point], indent: Int) {
     let indentation = String(repeating: " ", count: indent)
-    let provider = CGTextProvider()
+    let provider = CGTextProvider(formatter: .init(delimeter: .commaSpace, precision: .capped(max: 3)))
     let elements = points
       .map { "\(indentation)\(provider.createPoint(from: $0))" }
       .joined(separator: ",\n")

@@ -73,15 +73,23 @@ extension CGTextRenderer {
   }
   
   private func renderPoint(from point: LayerTree.Point) -> String {
-    return "CGPoint(x: \(point.x), y: \(point.y))"
+    let x = formatter.format(point.x)
+    let y = formatter.format(point.y)
+    return "CGPoint(x: \(x), y: \(y))"
   }
   
   private func renderSize(from size: LayerTree.Size) -> String {
-    return "CGSize(width: \(size.width), height: \(size.height))"
+    let width = formatter.format(size.width)
+    let height = formatter.format(size.height)
+    return "CGSize(width: \(width), height: \(height))"
   }
-  
+
   private func renderRect(from rect: LayerTree.Rect) -> String {
-    return "CGRect(x: \(rect.x), y: \(rect.y), width: \(rect.width), height: \(rect.height))"
+    let x = formatter.format(rect.x)
+    let y = formatter.format(rect.y)
+    let width = formatter.format(rect.width)
+    let height = formatter.format(rect.height)
+    return "CGRect(x: \(x), y: \(y), width: \(width), height: \(height))"
   }
   
   func renderLinePath(between points: [LayerTree.Point]) -> String {
@@ -125,12 +133,14 @@ extension CGTextRenderer {
   }
 
   func renderPath(from path: LayerTree.Path) -> String {
-      Self.renderPath(from: path)
+      Self.renderPath(from: path, formatter: formatter)
   }
 
-  static func renderPath(from path: LayerTree.Path) -> String {
+  static func renderPath(from path: LayerTree.Path, formatter: CoordinateFormatter) -> String {
     func renderPoint(from point: LayerTree.Point) -> String {
-      return "CGPoint(x: \(point.x), y: \(point.y))"
+      let x = formatter.format(point.x)
+      let y = formatter.format(point.y)
+      return "CGPoint(x: \(x), y: \(y))"
     }
 
     var lines: [String] = ["let path1 = CGMutablePath()"]

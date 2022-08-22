@@ -64,7 +64,8 @@ public extension CGTextRenderer {
     static func renderPath(from svgPath: String) throws -> String {
         let domPath = try XMLParser().parsePath(from: svgPath)
         let layerPath = try LayerTree.Builder.createPath(from: domPath)
-        return renderPath(from: layerPath)
+        let formatter = CoordinateFormatter(delimeter: .commaSpace, precision: .capped(max: 3))
+        return renderPath(from: layerPath, formatter: formatter)
     }
 
     private static func makeSize(svg: DOM.SVG, size: Size?) -> LayerTree.Size {
@@ -77,7 +78,11 @@ public extension CGTextRenderer {
     private static func cgCodeText(name: String, svg: DOM.SVG, size: LayerTree.Size, options: Image.Options) -> String {
         let layer = LayerTree.Builder(svg: svg).makeLayer()
         let commandSize = LayerTree.Size(svg.width, svg.height)
-        let generator = LayerTree.CommandGenerator(provider: CGTextProvider(),
+
+        let formatter = CoordinateFormatter(delimeter: .commaSpace,
+                                            precision: .capped(max: 3))
+
+        let generator = LayerTree.CommandGenerator(provider: CGTextProvider(formatter: formatter),
                                                    size: commandSize,
                                                    options: options)
 
@@ -85,9 +90,6 @@ public extension CGTextRenderer {
         let commands = optimizer.optimizeCommands(
             generator.renderCommands(for: layer)
         )
-
-        let formatter = CoordinateFormatter(delimeter: .comma,
-                                            precision: .capped(max: 3))
 
         let renderer = CGTextRenderer(name: name,
                                       size: size,

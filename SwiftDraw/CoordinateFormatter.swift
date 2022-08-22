@@ -40,9 +40,12 @@ struct CoordinateFormatter {
         case maximum
     }
 
-    enum Delimeter: String {
-        case space = " "
-        case comma = ","
+    struct Delimeter: RawRepresentable {
+        var rawValue: String
+
+        static let space = Delimeter(rawValue: " ")
+        static let comma = Delimeter(rawValue: ",")
+        static let commaSpace = Delimeter(rawValue: ", ")
     }
 
     func formatLength(_ length: DOM.Length) -> String {
