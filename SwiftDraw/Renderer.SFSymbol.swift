@@ -70,17 +70,19 @@ public final class SFSymbolRenderer {
 
 extension SFSymbolRenderer {
 
-    static func getPaths(for layer: LayerTree.Layer) -> [LayerTree.Path] {
+    static func getPaths(for layer: LayerTree.Layer,
+                         ctm: LayerTree.Transform.Matrix = .identity) -> [LayerTree.Path] {
         guard layer.opacity > 0,
               layer.clip.isEmpty,
               layer.mask == nil else { return [] }
 
+        let ctm = ctm.concatenated(layer.transform.toMatrix())
         var paths = [LayerTree.Path]()
 
         for c in layer.contents {
             switch c {
             case let .shape(shape, stroke, fill):
-                if let path = makePath(for: shape, stoke: stroke, fill: fill) {
+                if let path = makePath(for: shape, stoke: stroke, fill: fill)?.applying(matrix: ctm) {
                     if fill.rule == .evenodd {
                         paths.append(path.makeNonZero())
                     } else {
@@ -89,10 +91,10 @@ extension SFSymbolRenderer {
                 }
             case let .text(text, point, attributes):
                 if let path = makePath(for: text, at: point, with: attributes) {
-                    paths.append(path)
+                    paths.append(path.applying(matrix: ctm))
                 }
             case .layer(let l):
-                paths.append(contentsOf: getPaths(for: l))
+                paths.append(contentsOf: getPaths(for: l, ctm: ctm))
             default:
                 ()
             }
