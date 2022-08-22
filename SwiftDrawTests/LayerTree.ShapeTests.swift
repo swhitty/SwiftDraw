@@ -199,6 +199,7 @@ final class LayerTreeShapeTests: XCTestCase {
         )
     }
 
+    #if canImport(Darwin)
     func testEllipse_CreatesPath() {
         let shape = LayerTree.Shape.ellipse(
             within: .init(x: 100, y: 100, width: 100, height: 100)
@@ -209,6 +210,7 @@ final class LayerTreeShapeTests: XCTestCase {
             6
         )
     }
+    #endif
 
     func testRectWithRadii_CreatesPath() {
         let shape = LayerTree.Shape.rect(
