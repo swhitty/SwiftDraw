@@ -45,7 +45,7 @@ extension SwiftDraw.CommandLine {
 
         let data: Data
         do {
-            data = try process(with: config)
+            data = try processImage(with: config)
         } catch Error.fileNotFound {
             print("Failure: File does not exist.", to: &.standardError)
             return .error
@@ -63,39 +63,6 @@ extension SwiftDraw.CommandLine {
         }
         
         return .ok
-    }
-    
-    static func process(with config: Configuration) throws -> Data {
-        guard let data = try processImage(config: config) else {
-            throw Error.invalid
-        }
-        
-        return data
-    }
-    
-    static func processImage(config: Configuration) throws -> Data? {
-        guard FileManager.default.fileExists(atPath: config.input.path) else {
-            throw Error.fileNotFound
-        }
-
-        switch config.format {
-        case .swift:
-            let code = try CGTextRenderer.render(fileURL: config.input,
-                                                 size: config.size.renderSize,
-                                                 options: config.options,
-                                                 precision: config.precision ?? 2)
-            return code.data(using: .utf8)
-        case .sfsymbol:
-            let renderer = SFSymbolRenderer(options: config.options, precision: config.precision ?? 3)
-            let svg = try renderer.render(fileURL: config.input)
-            return svg.data(using: .utf8)
-        case .jpeg, .pdf, .png:
-            guard let image = SwiftDraw.Image(fileURL: config.input, options: config.options),
-                  let data = processImage(image, with: config) else {
-                throw Error.invalid
-            }
-            return data
-        }
     }
     
     static func printHelp() {

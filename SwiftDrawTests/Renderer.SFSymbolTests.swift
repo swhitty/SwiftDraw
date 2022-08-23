@@ -135,12 +135,12 @@ enum ContainerError: Error {
 private extension SFSymbolRenderer {
 
     static func render(fileURL: URL) throws -> String {
-        let renderer = SFSymbolRenderer(options: [], precision: 3)
+        let renderer = SFSymbolRenderer(options: [], insets: .init(), precision: 3)
         return try renderer.render(fileURL: fileURL)
     }
 
     static func render(svg: DOM.SVG) throws -> String {
-        let renderer = SFSymbolRenderer(options: [], precision: 3)
+        let renderer = SFSymbolRenderer(options: [], insets: .init(), precision: 3)
         return try renderer.render(svg: svg)
     }
 }

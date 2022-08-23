@@ -34,10 +34,12 @@ import Foundation
 public struct SFSymbolRenderer {
 
     private let options: Image.Options
+    private let insets: CommandLine.Insets
     private let formatter: CoordinateFormatter
 
-    public init(options: Image.Options, precision: Int) {
+    public init(options: Image.Options, insets: CommandLine.Insets, precision: Int) {
         self.options = options
+        self.insets = insets
         self.formatter = CoordinateFormatter(delimeter: .comma,
                                              precision: .capped(max: precision))
     }

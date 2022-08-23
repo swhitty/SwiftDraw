@@ -33,7 +33,7 @@ import Foundation
 
 public extension CommandLine {
 
-    static func processImage(config: Configuration) throws -> Data {
+    static func processImage(with config: Configuration) throws -> Data {
         guard FileManager.default.fileExists(atPath: config.input.path) else {
             throw Error.fileNotFound
         }
@@ -46,7 +46,9 @@ public extension CommandLine {
                                                  precision: config.precision ?? 2)
             return code.data(using: .utf8)!
         case .sfsymbol:
-            let renderer = SFSymbolRenderer(options: config.options, precision: config.precision ?? 3)
+            let renderer = SFSymbolRenderer(options: config.options,
+                                            insets: config.insets,
+                                            precision: config.precision ?? 3)
             let svg = try renderer.render(fileURL: config.input)
             return svg.data(using: .utf8)!
         case .jpeg, .pdf, .png:
