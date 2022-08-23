@@ -71,7 +71,7 @@ extension SwiftDraw.CommandLine {
 swiftdraw, version 0.12.0
 copyright (c) 2022 Simon Whitty
 
-usage: swiftdraw <file.svg> [--format png | pdf | jpeg | swift] [--size wxh] [--scale 1x | 2x | 3x]
+usage: swiftdraw <file.svg> [--format png | pdf | jpeg | swift | sfsymbol] [--size wxh] [--scale 1x | 2x | 3x]
 
 <file> svg file to be processed
 
