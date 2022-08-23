@@ -35,8 +35,7 @@ import XCTest
 final class CoordinateTests: XCTestCase {
 
     func testPrecisionMax() {
-        var f = CoordinateFormatter()
-        f.precision = .maximum
+        let f = CoordinateFormatter(precision: .maximum)
 
         XCTAssertEqual(f.format(1.0), "1.0")
         XCTAssertEqual(f.format(1.01), "1.01")
@@ -50,9 +49,7 @@ final class CoordinateTests: XCTestCase {
     }
 
     func testPrecisionCapped() {
-
-        var f = CoordinateFormatter()
-        f.precision = .capped(max: 4)
+        let f = CoordinateFormatter(precision: .capped(max: 4))
 
         XCTAssertEqual(f.format(1.0), "1")
         XCTAssertEqual(f.format(1.01), "1.01")
@@ -65,9 +62,24 @@ final class CoordinateTests: XCTestCase {
         XCTAssertEqual(f.format(12e-20), "0")
     }
 
+    func testPrecisionCapped2() {
+        let f = CoordinateFormatter(precision: .capped(max: 2))
+
+        XCTAssertEqual(f.format(1.0), "1")
+        XCTAssertEqual(f.format(1.01), "1.01")
+        XCTAssertEqual(f.format(114.052001953125), "114.05")
+        XCTAssertEqual(f.format(1.001), "1")
+        XCTAssertEqual(f.format(1.0001), "1")
+        XCTAssertEqual(f.format(1.00001), "1")
+        XCTAssertEqual(f.format(1.000001), "1")
+        XCTAssertEqual(f.format(1.0000001), "1")
+        XCTAssertEqual(f.format(1e-20), "0")
+        XCTAssertEqual(f.format(12e-20), "0")
+    }
+
     func testDelimeterSpace() {
-        var f = CoordinateFormatter()
-        f.delimeter = .space
+        let f = CoordinateFormatter(delimeter: .space)
+
 
         XCTAssertEqual(f.format(2.05), "2.05")
         XCTAssertEqual(f.format(2.05, 4.5), "2.05 4.5")
@@ -75,11 +87,18 @@ final class CoordinateTests: XCTestCase {
     }
 
     func testDelimeterComma() {
-        var f = CoordinateFormatter()
-        f.delimeter = .comma
-        
+        let f = CoordinateFormatter(delimeter: .comma)
+
         XCTAssertEqual(f.format(2.05), "2.05")
         XCTAssertEqual(f.format(2.05, 4.5), "2.05,4.5")
         XCTAssertEqual(f.format(2.05, 4.5, 10, 20), "2.05,4.5,10,20")
+    }
+
+    func testDelimeterCommaSpace() {
+        let f = CoordinateFormatter(delimeter: .commaSpace)
+
+        XCTAssertEqual(f.format(2.05), "2.05")
+        XCTAssertEqual(f.format(2.05, 4.5), "2.05, 4.5")
+        XCTAssertEqual(f.format(2.05, 4.5, 10, 20), "2.05, 4.5, 10, 20")
     }
 }

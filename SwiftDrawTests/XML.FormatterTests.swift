@@ -93,7 +93,7 @@ final class XMLFormatterTests: XCTestCase {
             <?xml version="1.0" encoding="UTF-8"?>
             <svg viewBox="0,0,550,550" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
               <defs>
-                <path id="A" d="M0,69.75 L2.68,69.75 L28.37,3.29 L29.052,3.29 L29.052,0 L27.15,0 L0,69.75 Z M10.69,45.54 L46,45.54 L45.26,43.31 L11.47,43.31 L10.69,45.54 Z M54.15,69.75 L56.79,69.75 L29.64,0 L28.47,0 L28.47,3.29 L54.15,69.75 Z" fill="rgb(39, 170, 225)" />
+                <path id="A" d="M0,69.75 L2.68,69.75 L28.37,3.29 L29.05,3.29 L29.05,0 L27.15,0 L0,69.75 Z M10.69,45.54 L46,45.54 L45.26,43.31 L11.47,43.31 L10.69,45.54 Z M54.15,69.75 L56.79,69.75 L29.64,0 L28.47,0 L28.47,3.29 L54.15,69.75 Z" fill="rgb(39, 170, 225)" />
               </defs>
               <g id="Notes" font-family="LucidaGrande, 'Lucida Grande', sans-serif" font-size="13">
                 <text x="18.0" y="126.0">Small</text>
@@ -114,7 +114,7 @@ final class XMLFormatterTests: XCTestCase {
                 <path id="right-margin-Regular-M" d="M373,195 l0,120" />
               </g>
               <g id="Regular-M">
-                <path d="M285.85,236.97 L285.85,257.059 C285.85,276.55 301.65,292.35 321.14,292.35 M301.019,252.017 L285.89,236.89 L270.77,252.017 M346.43,272.14 L346.43,252.058 C346.43,232.57 330.63,216.77 311.14,216.77 M331.27,257.059 L346.39,272.18 L361.52,257.059" style="fill: none; stroke-linecap: round; stroke-linejoin: round; stroke-width: 10; stroke: rgb(33, 33, 33)" />
+                <path d="M285.85,236.97 L285.85,257.06 C285.85,276.55 301.65,292.35 321.14,292.35 M301.02,252.02 L285.89,236.89 L270.77,252.02 M346.43,272.14 L346.43,252.06 C346.43,232.57 330.63,216.77 311.14,216.77 M331.27,257.06 L346.39,272.18 L361.52,257.06" style="fill: none; stroke-linecap: round; stroke-linejoin: round; stroke-width: 10; stroke: rgb(33, 33, 33)" />
               </g>
             </svg>
             """

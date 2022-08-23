@@ -1,9 +1,9 @@
 //
-//  CommandLine.swift
+//  CommandLine+Process.swift
 //  SwiftDraw
 //
-//  Created by Simon Whitty on 23/11/18.
-//  Copyright 2020 Simon Whitty
+//  Created by Simon Whitty on 23/8/22.
+//  Copyright 2022 Simon Whitty
 //
 //  Distributed under the permissive zlib license
 //  Get the latest version from here:
@@ -30,50 +30,10 @@
 //
 
 import Foundation
-import SwiftDraw
 
-extension SwiftDraw.CommandLine {
-    
-    static func run(with args: [String] = Swift.CommandLine.arguments,
-                    baseDirectory: URL = .currentDirectory) -> ExitCode {
-        
-        guard let config = try? parseConfiguration(from: args, baseDirectory: baseDirectory) else {
-            print("Invalid Syntax.", to: &.standardError)
-            printHelp()
-            return .error
-        }
+public extension CommandLine {
 
-        let data: Data
-        do {
-            data = try process(with: config)
-        } catch Error.fileNotFound {
-            print("Failure: File does not exist.", to: &.standardError)
-            return .error
-        } catch {
-            print("Failure:", error.localizedDescription, to: &.standardError)
-            printHelp()
-            return .error
-        }
-
-        do {
-            try data.write(to: config.output)
-            print("Created: \(config.output.path)")
-        } catch _ {
-            print("Failure: \(config.output.path)", to: &.standardError)
-        }
-        
-        return .ok
-    }
-    
-    static func process(with config: Configuration) throws -> Data {
-        guard let data = try processImage(config: config) else {
-            throw Error.invalid
-        }
-        
-        return data
-    }
-    
-    static func processImage(config: Configuration) throws -> Data? {
+    static func processImage(config: Configuration) throws -> Data {
         guard FileManager.default.fileExists(atPath: config.input.path) else {
             throw Error.fileNotFound
         }
@@ -84,58 +44,58 @@ extension SwiftDraw.CommandLine {
                                                  size: config.size.renderSize,
                                                  options: config.options,
                                                  precision: config.precision ?? 2)
-            return code.data(using: .utf8)
+            return code.data(using: .utf8)!
         case .sfsymbol:
             let renderer = SFSymbolRenderer(options: config.options, precision: config.precision ?? 3)
             let svg = try renderer.render(fileURL: config.input)
-            return svg.data(using: .utf8)
+            return svg.data(using: .utf8)!
         case .jpeg, .pdf, .png:
+            #if canImport(CoreGraphics)
             guard let image = SwiftDraw.Image(fileURL: config.input, options: config.options),
                   let data = processImage(image, with: config) else {
                 throw Error.invalid
             }
             return data
+            #else
+            throw Error.unsupported
+            #endif
+
         }
     }
-    
-    static func printHelp() {
-        print("")
-        print("""
-swiftdraw, version 0.12.0
-copyright (c) 2022 Simon Whitty
 
-usage: swiftdraw <file.svg> [--format png | pdf | jpeg | swift] [--size wxh] [--scale 1x | 2x | 3x]
-
-<file> svg file to be processed
-
-Options:
- --format  format to output image with png | pdf | jpeg | swift
- --size    size of output image e.g. 100x200
- --scale   scale of output image with 1x | 2x | 3x
-
- --hideUnsupportedFilters   Hides any elements with unsupported filters. Disabled by default.
-
-""")
+    static func processImage(_ image: SwiftDraw.Image, with config: Configuration) -> Data? {
+        #if canImport(CoreGraphics)
+        switch config.format {
+        case .jpeg:
+            return image.jpegData(size: config.size.cgValue, scale: config.scale.cgValue)
+        case .pdf:
+            return try? Image.pdfData(fileURL: config.input, size: config.size.cgValue)
+        case .png:
+            return image.pngData(size: config.size.cgValue, scale: config.scale.cgValue)
+        case .swift, .sfsymbol:
+            preconditionFailure()
+        }
+        #else
+        return nil
+        #endif
     }
 }
 
-extension SwiftDraw.CommandLine {
-    
-    // Represents the exit codes to the command line. See `man sysexits` for more information.
-    enum ExitCode: Int32 {
-        case ok = 0 // EX_OK
-        case error = 70 // EX_SOFTWARE
-    }
-}
-
-private extension URL {
-    static var currentDirectory: URL {
-        return URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
+#if canImport(CoreGraphics)
+private extension CommandLine.Scale {
+    var cgValue: CGFloat {
+        switch self {
+        case .default:
+            return 1
+        case .retina:
+            return 2
+        case .superRetina:
+            return 3
+        }
     }
 }
 
 private extension CommandLine.Size {
-    
     var cgValue: CGSize? {
         switch self {
         case .default:
@@ -144,7 +104,10 @@ private extension CommandLine.Size {
             return CGSize(width: CGFloat(width), height: CGFloat(height))
         }
     }
-    
+}
+#endif
+
+private extension CommandLine.Size {
     var renderSize: CGTextRenderer.Size? {
         switch self {
         case .default:

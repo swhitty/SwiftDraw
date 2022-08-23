@@ -38,6 +38,7 @@ extension CommandLine {
         case output
         case size
         case scale
+        case precision
         case hideUnsupportedFilters
 
         var hasValue: Bool {
@@ -65,6 +66,7 @@ extension CommandLine {
 
     public enum Error: Swift.Error {
         case invalid
+        case unsupported
         case fileNotFound
     }
 }

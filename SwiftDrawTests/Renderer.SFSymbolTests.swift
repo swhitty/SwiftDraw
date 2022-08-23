@@ -41,7 +41,7 @@ final class RendererSFSymbolTests: XCTestCase {
     func testFillSymbol() throws {
         let url = try Bundle.test.url(forResource: "chart.svg")
         let symbols = try DOM.SVG.parse(
-            SFSymbolRenderer.render(fileURL: url, options: [])
+            SFSymbolRenderer.render(fileURL: url)
         ).group(id: "Symbols")
 
         XCTAssertEqual(
@@ -62,7 +62,7 @@ final class RendererSFSymbolTests: XCTestCase {
     func testStrokeSymbol() throws {
         let url = try Bundle.test.url(forResource: "key.svg")
         let symbols = try DOM.SVG.parse(
-            SFSymbolRenderer.render(fileURL: url, options: [])
+            SFSymbolRenderer.render(fileURL: url)
         ).group(id: "Symbols")
 
         XCTAssertEqual(
@@ -130,4 +130,17 @@ private extension ContainerElement {
 
 enum ContainerError: Error {
     case missingGroup
+}
+
+private extension SFSymbolRenderer {
+
+    static func render(fileURL: URL) throws -> String {
+        let renderer = SFSymbolRenderer(options: [], precision: 3)
+        return try renderer.render(fileURL: fileURL)
+    }
+
+    static func render(svg: DOM.SVG) throws -> String {
+        let renderer = SFSymbolRenderer(options: [], precision: 3)
+        return try renderer.render(svg: svg)
+    }
 }

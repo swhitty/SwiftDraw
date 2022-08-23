@@ -40,6 +40,7 @@ extension CommandLine {
         public var size: Size
         public var scale: Scale
         public var options: Image.Options
+        public var precision: Int?
     }
 
     public enum Format: String {
@@ -77,6 +78,7 @@ extension CommandLine {
 
         let size = try parseSize(from: modifiers[.size])
         let scale = try parseScale(from: modifiers[.scale])
+        let precision = try parsePrecision(from: modifiers[.precision])
         let options = try parseOptions(from: modifiers)
         let result = source.newURL(for: format, scale: scale)
         return Configuration(input: source,
@@ -84,7 +86,8 @@ extension CommandLine {
                              format: format,
                              size: size,
                              scale: scale,
-                             options: options)
+                             options: options,
+                             precision: precision)
     }
 
     static func parseFileURL(file: String, within directory: URL) throws -> URL {
@@ -105,6 +108,18 @@ extension CommandLine {
             throw Error.invalid
         }
         return scale
+    }
+
+    static func parsePrecision(from value: String??) throws -> Int? {
+        guard let value = value,
+              let value = value else {
+            return nil
+        }
+
+        guard let precision = Int(value) else {
+            throw Error.invalid
+        }
+        return precision
     }
 
     static func parseSize(from value: String??) throws -> Size {

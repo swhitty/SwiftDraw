@@ -32,8 +32,16 @@
 import Foundation
 
 struct CoordinateFormatter {
-    var delimeter: Delimeter = .space
-    var precision: Precision = .capped(max: 5)
+    private let delimeter: Delimeter
+    private let precision: Precision
+    private let formatter: NumberFormatter
+
+    init(delimeter: Delimeter = .space, precision: Precision = .capped(max: 5)) {
+        self.delimeter = delimeter
+        self.precision = precision
+        self.formatter = NumberFormatter()
+        self.formatter.locale = .init(identifier: "en_US")
+    }
 
     enum Precision {
         case capped(max: Int)
@@ -87,42 +95,8 @@ struct CoordinateFormatter {
         }
     }
 
-    func format(fraction n: Double, maxDigits: Int) -> String? {
-        assert(n.sign == .plus)
-
-        let min = pow(Double(10), Double(-maxDigits)) - Double.ulpOfOne
-
-        guard n >= min else {
-            return ""
-        }
-
-        let s = String(format: "%.\(maxDigits)g", n)
-        if s == "1" {
-            return nil
-        }
-        let idx = s.index(s.startIndex, offsetBy: 1)
-        return String(s[idx..<s.endIndex])
-    }
-
     func format(_ c: Double, capped: Int) -> String {
-        let sign: String
-        let n: (Double, Double)
-
-        if c.sign == .minus {
-            sign = "-"
-            n = modf(abs(c))
-        } else {
-            sign = ""
-            n = modf(c)
-        }
-
-        let integer = Int(n.0)
-        let fraction = format(fraction: n.1, maxDigits: capped)
-
-        if let fraction = fraction {
-            return "\(sign)\(integer)\(fraction)"
-        } else {
-            return "\(sign)\(integer + 1)"
-        }
+        formatter.maximumFractionDigits = capped
+        return formatter.string(from: c as NSNumber)!
     }
 }

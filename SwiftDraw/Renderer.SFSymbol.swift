@@ -31,15 +31,24 @@
 
 import Foundation
 
-public final class SFSymbolRenderer {
+public struct SFSymbolRenderer {
 
-    public static func render(fileURL: URL, options: Image.Options) throws -> String {
+    private let options: Image.Options
+    private let formatter: CoordinateFormatter
+
+    public init(options: Image.Options, precision: Int) {
+        self.options = options
+        self.formatter = CoordinateFormatter(delimeter: .comma,
+                                             precision: .capped(max: precision))
+    }
+
+    public func render(fileURL: URL) throws -> String {
         return try render(svg: .parse(fileURL: fileURL))
     }
 
-    static func render(svg: DOM.SVG) throws -> String {
-        let layer = LayerTree.Builder(svg: svg).makeLayer()
-        let sourcePaths = getPaths(for: layer)
+    func render(svg image: DOM.SVG) throws -> String {
+        let layer = LayerTree.Builder(svg: image).makeLayer()
+        let sourcePaths = Self.getPaths(for: layer)
         guard !sourcePaths.isEmpty else {
             throw Error("No valid content found.")
         }
@@ -49,20 +58,21 @@ public final class SFSymbolRenderer {
         let ultralight = try svg.group(id: "Symbols").group(id: "Ultralight-S")
         let black = try svg.group(id: "Symbols").group(id: "Black-S")
 
+        let source = Self.makeBounds(for: sourcePaths)
+        Self.printInsets(Self.makeInsets(of: source, in: image))
+
         regular.childElements.append(
-            contentsOf: convertPaths(sourcePaths, into: .regular)
+            contentsOf: Self.convertPaths(sourcePaths, from: source, to: .regular)
         )
         ultralight.childElements.append(
-            contentsOf: convertPaths(sourcePaths, into: .ultralight)
+            contentsOf: Self.convertPaths(sourcePaths, from: source, to: .ultralight)
         )
         black.childElements.append(
-            contentsOf: convertPaths(sourcePaths, into: .black)
+            contentsOf: Self.convertPaths(sourcePaths, from: source, to: .black)
         )
 
-        let coordinate = CoordinateFormatter(delimeter: .comma,
-                                             precision: .capped(max: 3))
-        let element = try XML.Formatter.SVG(formatter: coordinate).makeElement(from: svg)
-        let formatter = XML.Formatter(spaces: 2)
+        let element = try XML.Formatter.SVG(formatter: formatter).makeElement(from: svg)
+        let formatter = XML.Formatter(spaces: 4)
         let result = formatter.encodeRootElement(element)
         return result
     }
@@ -72,9 +82,16 @@ extension SFSymbolRenderer {
 
     static func getPaths(for layer: LayerTree.Layer,
                          ctm: LayerTree.Transform.Matrix = .identity) -> [LayerTree.Path] {
-        guard layer.opacity > 0,
-              layer.clip.isEmpty,
-              layer.mask == nil else { return [] }
+
+        guard layer.opacity > 0 else { return [] }
+        guard layer.clip.isEmpty else {
+            print("Warning:", "clip-path unsupported in SF Symbols.", to: &.standardError)
+            return []
+        }
+        guard layer.mask == nil else {
+            print("Warning:", "mask unsupported in SF Symbols.", to: &.standardError)
+            return []
+        }
 
         let ctm = ctm.concatenated(layer.transform.toMatrix())
         var paths = [LayerTree.Path]()
@@ -151,13 +168,13 @@ extension SFSymbolRenderer {
         )
     }
 
-    static func makeTransformation(of source: LayerTree.Rect,
-                                   to bounds: LayerTree.Rect) -> LayerTree.Transform.Matrix {
-        let scale = bounds.height / source.height
+    static func makeTransformation(from source: LayerTree.Rect,
+                                   to destination: LayerTree.Rect) -> LayerTree.Transform.Matrix {
+        let scale = destination.height / source.height
         let scaleMidX = source.midX * scale
         let scaleMidY = source.midY * scale
-        let tx = bounds.midX - scaleMidX
-        let ty =  bounds.midY - scaleMidY
+        let tx = destination.midX - scaleMidX
+        let ty =  destination.midY - scaleMidY
         let t = LayerTree.Transform
             .translate(tx: tx, ty: ty)
         return LayerTree.Transform
@@ -167,11 +184,9 @@ extension SFSymbolRenderer {
     }
 
     static func convertPaths(_ paths: [LayerTree.Path],
-                             into bounds: LayerTree.Rect) -> [DOM.Path] {
-        let matrix = makeTransformation(
-            of: makeBounds(for: paths),
-            to: bounds
-        )
+                             from source: LayerTree.Rect,
+                             to destination: LayerTree.Rect) -> [DOM.Path] {
+        let matrix = makeTransformation(from: source, to: destination)
         return paths.map { $0.applying(matrix: matrix) }
             .map(makeDOMPath)
     }
@@ -191,6 +206,26 @@ extension SFSymbolRenderer {
             }
         }
         return dom
+    }
+
+    static func makeInsets(of bounds: LayerTree.Rect, in svg: DOM.SVG) -> LayerTree.EdgeInsets {
+        LayerTree.EdgeInsets(
+            top: bounds.minY,
+            left: bounds.minX,
+            bottom: LayerTree.Float(svg.height) - bounds.maxY,
+            right: LayerTree.Float(svg.width) - bounds.maxX
+        )
+    }
+
+    static func printInsets(_ insets: LayerTree.EdgeInsets) {
+        let formatter = NumberFormatter()
+        formatter.locale = .init(identifier: "en_US")
+        formatter.maximumFractionDigits = 4
+        let top = formatter.string(from: insets.top as NSNumber)!
+        let left = formatter.string(from: insets.left as NSNumber)!
+        let bottom = formatter.string(from: insets.bottom as NSNumber)!
+        let right = formatter.string(from: insets.right as NSNumber)!
+        print("Detected: --insets \(top),\(left),\(bottom),\(right)")
     }
 
     struct Error: LocalizedError {
@@ -221,7 +256,7 @@ extension DOM.SVG {
                  <text x="650px" y="30px">Black</text>
                  <text id="template-version" fill="#505050" x="730.0" y="575.0">Template v.3.0</text>
                  <a href="https://github.com/swhitty/SwiftDraw">
-                   <text fill="#505050" x="627.0" y="590.0">https://github.com/swhitty/SwiftDraw</text>
+                    <text fill="#505050" x="627.0" y="590.0">https://github.com/swhitty/SwiftDraw</text>
                  </a>
                 </g>
             </g>
