@@ -75,11 +75,19 @@ final class CoordinateTests: XCTestCase {
         XCTAssertEqual(f.format(1.0000001), "1")
         XCTAssertEqual(f.format(1e-20), "0")
         XCTAssertEqual(f.format(12e-20), "0")
+
+        XCTAssertEqual(
+            f.format(114.052001953125, precision: .capped(max: 4)),
+            "114.052"
+        )
+        XCTAssertEqual(
+            f.format(1.0001, precision: .capped(max: 4)),
+            "1.0001"
+        )
     }
 
     func testDelimeterSpace() {
         let f = CoordinateFormatter(delimeter: .space)
-
 
         XCTAssertEqual(f.format(2.05), "2.05")
         XCTAssertEqual(f.format(2.05, 4.5), "2.05 4.5")

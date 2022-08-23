@@ -132,9 +132,9 @@ final class RendererCGTextTests: XCTestCase {
                 ctx.clip(using: .evenOdd)
                 ctx.setAlpha(1)
                 let rgb = CGColorSpaceCreateDeviceRGB()
-                let color1 = CGColor(colorSpace: rgb, components: [0.64, 0.9, 0.18, 1])!
-                let color2 = CGColor(colorSpace: rgb, components: [0.04, 0.65, 0.43, 1])!
-                let color3 = CGColor(colorSpace: rgb, components: [0, 0.48, 0.31, 1])!
+                let color1 = CGColor(colorSpace: rgb, components: [0.635, 0.902, 0.18, 1])!
+                let color2 = CGColor(colorSpace: rgb, components: [0.035, 0.655, 0.427, 1])!
+                let color3 = CGColor(colorSpace: rgb, components: [0.004, 0.482, 0.306, 1])!
                 var locations: [CGFloat] = [0.0, 0.7542, 1.0]
                 let gradient = CGGradient(
                   colorsSpace: rgb,
@@ -214,9 +214,9 @@ final class RendererCGTextTests: XCTestCase {
                 ctx.addPath(path2)
                 ctx.clip(using: .evenOdd)
                 ctx.setAlpha(1)
-                let color4 = CGColor(colorSpace: rgb, components: [0.65, 0.61, 0.65, 1])!
-                let color5 = CGColor(colorSpace: rgb, components: [0.48, 0.43, 0.47, 1])!
-                let color6 = CGColor(colorSpace: rgb, components: [0.41, 0.37, 0.41, 1])!
+                let color4 = CGColor(colorSpace: rgb, components: [0.655, 0.608, 0.655, 1])!
+                let color5 = CGColor(colorSpace: rgb, components: [0.478, 0.427, 0.475, 1])!
+                let color6 = CGColor(colorSpace: rgb, components: [0.408, 0.369, 0.408, 1])!
                 var locations1: [CGFloat] = [0.0, 0.7487, 1.0]
                 let gradient1 = CGGradient(
                   colorsSpace: rgb,
@@ -276,9 +276,9 @@ final class RendererCGTextTests: XCTestCase {
                 ctx.addPath(path3)
                 ctx.clip(using: .evenOdd)
                 ctx.setAlpha(1)
-                let color7 = CGColor(colorSpace: rgb, components: [1, 0.6, 0.63, 1])!
-                let color8 = CGColor(colorSpace: rgb, components: [1, 0.39, 0.44, 1])!
-                let color9 = CGColor(colorSpace: rgb, components: [0.89, 0.12, 0.18, 1])!
+                let color7 = CGColor(colorSpace: rgb, components: [0.996, 0.6, 0.627, 1])!
+                let color8 = CGColor(colorSpace: rgb, components: [0.996, 0.392, 0.435, 1])!
+                let color9 = CGColor(colorSpace: rgb, components: [0.894, 0.122, 0.176, 1])!
                 var locations2: [CGFloat] = [0.0, 0.593, 1.0]
                 let gradient2 = CGGradient(
                   colorsSpace: rgb,
@@ -352,7 +352,7 @@ final class RendererCGTextTests: XCTestCase {
                 ctx.addPath(path5)
                 ctx.clip(using: .evenOdd)
                 ctx.setAlpha(1)
-                let color10 = CGColor(colorSpace: rgb, components: [0.77, 0.1, 0.15, 1])!
+                let color10 = CGColor(colorSpace: rgb, components: [0.769, 0.098, 0.149, 1])!
                 var locations3: [CGFloat] = [0.0, 0.7043, 1.0]
                 let gradient3 = CGGradient(
                   colorsSpace: rgb,
@@ -383,9 +383,9 @@ final class RendererCGTextTests: XCTestCase {
                 ctx.addPath(path6)
                 ctx.clip(using: .evenOdd)
                 ctx.setAlpha(1)
-                let color11 = CGColor(colorSpace: rgb, components: [1, 0.98, 0.87, 1])!
-                let color12 = CGColor(colorSpace: rgb, components: [1, 0.88, 0.47, 1])!
-                let color13 = CGColor(colorSpace: rgb, components: [1, 0.69, 0.22, 1])!
+                let color11 = CGColor(colorSpace: rgb, components: [1, 0.976, 0.875, 1])!
+                let color12 = CGColor(colorSpace: rgb, components: [1, 0.882, 0.467, 1])!
+                let color13 = CGColor(colorSpace: rgb, components: [0.996, 0.694, 0.216, 1])!
                 var locations4: [CGFloat] = [0.0, 0.593, 1.0]
                 let gradient4 = CGGradient(
                   colorsSpace: rgb,

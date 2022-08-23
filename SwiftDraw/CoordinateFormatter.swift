@@ -74,12 +74,18 @@ struct CoordinateFormatter {
         return formatValue(coordinate)
     }
 
-    func format(_ coordinates: DOM.Coordinate...) -> String {
-        return coordinates.map { formatValue(Double($0)) }.joined(separator: delimeter.rawValue)
+    func format(_ coordinates: DOM.Coordinate..., precision: Precision? = nil) -> String {
+        let precision = precision ?? self.precision
+        return coordinates
+            .map { formatValue(Double($0), precision: precision) }
+            .joined(separator: delimeter.rawValue)
     }
 
-    func format(_ coordinates: Double...) -> String {
-        return coordinates.map { formatValue($0) }.joined(separator: delimeter.rawValue)
+    func format(_ coordinates: Double..., precision: Precision? = nil) -> String {
+        let precision = precision ?? self.precision
+        return coordinates
+            .map { formatValue($0, precision: precision) }
+            .joined(separator: delimeter.rawValue)
     }
 
     func format(_ flag: Bool) -> String {
@@ -87,6 +93,10 @@ struct CoordinateFormatter {
     }
 
     private func formatValue(_ c: Double) -> String {
+        formatValue(c, precision: precision)
+    }
+
+    private func formatValue(_ c: Double, precision: Precision) -> String {
         switch precision {
         case .capped(let max):
             return format(c, capped: max)

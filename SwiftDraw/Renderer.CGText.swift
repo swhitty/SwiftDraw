@@ -83,15 +83,19 @@ struct CGTextProvider: RendererTypeProvider {
   }
 
   func createColor(from color: LayerTree.Color) -> String {
+    let d3 = CoordinateFormatter.Precision.capped(max: 3)
     switch color {
     case .none:
       return "CGColor(colorSpace: CGColorSpaceCreateDeviceRGB(), components: [0, 0, 0, 0])!"
     case let .rgba(r, g, b, a, .srgb):
-      return "CGColor(colorSpace: CGColorSpaceCreateDeviceRGB(), components: [\(formatter.format(r, g, b, a))])!"
+      let comps = formatter.format(r, g, b, a, precision: d3)
+      return "CGColor(colorSpace: CGColorSpaceCreateDeviceRGB(), components: [\(comps)])!"
     case let .rgba(r, g, b, a, .p3):
-      return "CGColor(colorSpace: CGColorSpaceCreateDisplayP3(), components: [\(formatter.format(r, g, b, a))])!"
+      let comps = formatter.format(r, g, b, a, precision: d3)
+      return "CGColor(colorSpace: CGColorSpaceCreateDisplayP3(), components: [\(comps)])!"
     case .gray(white: let w, a: let a):
-      return "CGColor(colorSpace: CGColorSpaceCreateExtendedGray(), components: [\(formatter.format(w, a))])!"
+      let comps = formatter.format(w, a, precision: d3)
+      return "CGColor(colorSpace: CGColorSpaceCreateExtendedGray(), components: [\(comps)])!"
     }
   }
 
@@ -312,15 +316,19 @@ public final class CGTextRenderer: Renderer {
   }
 
   func createOrGetColor(_ color: LayerTree.Color) -> String {
+    let d3 = CoordinateFormatter.Precision.capped(max: 3)
     switch color {
     case .none:
       return createOrGetColor("CGColor(colorSpace: CGColorSpaceCreateDeviceRGB(), components: [0, 0, 0, 0])!")
     case let .rgba(r, g, b, a, .srgb):
-      return createOrGetColor("CGColor(colorSpace: CGColorSpaceCreateDeviceRGB(), components: [\(formatter.format(r, g, b, a))])!")
+      let comps = formatter.format(r, g, b, a, precision: d3)
+      return createOrGetColor("CGColor(colorSpace: CGColorSpaceCreateDeviceRGB(), components: [\(comps)])!")
     case let .rgba(r, g, b, a, .p3):
-      return createOrGetColor("CGColor(colorSpace: CGColorSpaceCreateDisplayP3(), components: [\(formatter.format(r, g, b, a))])!")
+      let comps = formatter.format(r, g, b, a, precision: d3)
+      return createOrGetColor("CGColor(colorSpace: CGColorSpaceCreateDisplayP3(), components: [\(comps)])!")
     case .gray(white: let w, a: let a):
-      return createOrGetColor("CGColor(colorSpace: CGColorSpaceCreateExtendedGray(), components: [\(formatter.format(w, a))])!")
+      let comps = formatter.format(w, a, precision: d3)
+      return createOrGetColor("CGColor(colorSpace: CGColorSpaceCreateExtendedGray(), components: [\(comps)])!")
     }
   }
   
