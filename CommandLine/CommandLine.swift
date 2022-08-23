@@ -79,6 +79,7 @@ Options:
  --format     format to output image with png | pdf | jpeg | swift | sfsymbol
  --size       size of output image e.g. 100x200
  --scale      scale of output image with 1x | 2x | 3x
+ --insets     sfsymbol alignment with top,left,bottom,right | auto
  --precision  maximum number of decimal places
 
  --hideUnsupportedFilters   hides any elements with unsupported filters. Disabled by default.
