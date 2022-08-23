@@ -50,43 +50,37 @@ The command line tool can also convert an SVG image into Swift source code:
 
 ```swift
 extension UIImage {
-  static func svgSimple() -> UIImage {
-    let f = UIGraphicsImageRendererFormat.default()
+  static func svgSimple(size: CGSize = CGSize(width: 160.0, height: 160.0)) -> UIImage {
+    let f = UIGraphicsImageRendererFormat.preferred()
     f.opaque = false
-    f.preferredRange = .standard
-    return UIGraphicsImageRenderer(size: CGSize(width: 160.0, height: 160.0), format: f).image {
-      drawSVG(in: $0.cgContext)
+    let scale = CGSize(width: size.width / 160.0, height: size.height / 160.0)
+    return UIGraphicsImageRenderer(size: size, format: f).image {
+      drawSimple(in: $0.cgContext, scale: scale)
     }
   }
 
-  private static func drawSVG(in ctx: CGContext) {
+  private static func drawSimple(in ctx: CGContext, scale: CGSize) {
+    ctx.scaleBy(x: scale.width, y: scale.height)
     let rgb = CGColorSpaceCreateDeviceRGB()
     let color1 = CGColor(colorSpace: rgb, components: [1.0, 0.98039216, 0.98039216, 1.0])!
     ctx.setFillColor(color1)
-    let path = CGPath(
-      roundedRect: CGRect(x: 0.0, y: 0.0, width: 160.0, height: 160.0),
-      cornerWidth: 0.0,
-      cornerHeight: 0.0,
-      transform: nil
-    )
-    ctx.addPath(path)
-    ctx.fillPath(using: .evenOdd)
+    ctx.fill(CGRect(x: 0.0, y: 0.0, width: 160.0, height: 160.0))
     let color2 = CGColor(colorSpace: rgb, components: [1.0, 0.7529412, 0.79607844, 1.0])!
     ctx.setFillColor(color2)
-    let path1 = CGMutablePath()
-    path1.move(to: CGPoint(x: 80.0, y: 20.0))
-    path1.addCurve(to: CGPoint(x: 30.0, y: 69.99999),
+    let path = CGMutablePath()
+    path.move(to: CGPoint(x: 80.0, y: 20.0))
+    path.addCurve(to: CGPoint(x: 30.0, y: 69.99999),
                    control1: CGPoint(x: 52.38576, y: 20.0),
                    control2: CGPoint(x: 30.000004, y: 42.385757))
-    path1.addCurve(to: CGPoint(x: 79.99998, y: 120.0),
+    path.addCurve(to: CGPoint(x: 79.99998, y: 120.0),
                    control1: CGPoint(x: 29.999992, y: 97.61423),
                    control2: CGPoint(x: 52.385742, y: 119.999985))
-    path1.addCurve(to: CGPoint(x: 130.0, y: 70.00004),
+    path.addCurve(to: CGPoint(x: 130.0, y: 70.00004),
                    control1: CGPoint(x: 107.61421, y: 120.000015),
                    control2: CGPoint(x: 129.99998, y: 97.61427))
-    path1.addLine(to: CGPoint(x: 80.0, y: 70.00004))
-    path1.closeSubpath()
-    ctx.addPath(path1)
+    path.addLine(to: CGPoint(x: 80.0, y: 70.00004))
+    path.closeSubpath()
+    ctx.addPath(path)
     ctx.fillPath(using: .evenOdd)
     ctx.setLineCap(.butt)
     ctx.setLineJoin(.miter)
@@ -94,9 +88,8 @@ extension UIImage {
     ctx.setMiterLimit(4.0)
     let color3 = CGColor(colorSpace: rgb, components: [0.0, 0.0, 0.0, 1.0])!
     ctx.setStrokeColor(color3)
-    ctx.addPath(path1)
+    ctx.addPath(path)
     ctx.strokePath()
   }
 }
 ```
-
