@@ -55,25 +55,15 @@ public struct SFSymbolRenderer {
             throw Error("No valid content found.")
         }
 
-        let svg = try DOM.SVG.makeSFSymbolTemplate()
-        let regular = try svg.group(id: "Symbols").group(id: "Regular-S")
-        let ultralight = try svg.group(id: "Symbols").group(id: "Ultralight-S")
-        let black = try svg.group(id: "Symbols").group(id: "Black-S")
+        let autoBounds = Self.makeBounds(for: sourcePaths)
+        let source = try makeBounds(svg: image, auto: autoBounds)
 
-        let source = Self.makeBounds(for: sourcePaths)
-        Self.printInsets(Self.makeInsets(of: source, in: image))
+        var template = try SFSymbolTemplate.make()
+        template.ultralight.appendPaths(sourcePaths, from: source)
+        template.regular.appendPaths(sourcePaths, from: source)
+        template.black.appendPaths(sourcePaths, from: source)
 
-        regular.childElements.append(
-            contentsOf: Self.convertPaths(sourcePaths, from: source, to: .regular)
-        )
-        ultralight.childElements.append(
-            contentsOf: Self.convertPaths(sourcePaths, from: source, to: .ultralight)
-        )
-        black.childElements.append(
-            contentsOf: Self.convertPaths(sourcePaths, from: source, to: .black)
-        )
-
-        let element = try XML.Formatter.SVG(formatter: formatter).makeElement(from: svg)
+        let element = try XML.Formatter.SVG(formatter: formatter).makeElement(from: template.svg)
         let formatter = XML.Formatter(spaces: 4)
         let result = formatter.encodeRootElement(element)
         return result
@@ -81,6 +71,30 @@ public struct SFSymbolRenderer {
 }
 
 extension SFSymbolRenderer {
+
+    func makeBounds(svg: DOM.SVG, auto: LayerTree.Rect) throws -> LayerTree.Rect {
+        let width = LayerTree.Float(svg.width)
+        let height = LayerTree.Float(svg.height)
+        let top = insets.top ?? Double(auto.minY)
+        let left = insets.left ?? Double(auto.minX)
+        let bottom = insets.bottom ?? Double(height - auto.maxY)
+        let right = insets.right ?? Double(width - auto.maxX)
+
+        Self.printInsets(top: top, left: left, bottom: bottom, right: right)
+        guard !insets.isEmpty else {
+            return auto
+        }
+        let bounds = LayerTree.Rect(
+            x: LayerTree.Float(left),
+            y: LayerTree.Float(top),
+            width: width - LayerTree.Float(left + right),
+            height: height - LayerTree.Float(top + bottom)
+        )
+        guard bounds.width > 0 && bounds.height > 0 else {
+            throw Error("Invalid insets")
+        }
+        return bounds
+    }
 
     static func getPaths(for layer: LayerTree.Layer,
                          ctm: LayerTree.Transform.Matrix = .identity) -> [LayerTree.Path] {
@@ -210,24 +224,15 @@ extension SFSymbolRenderer {
         return dom
     }
 
-    static func makeInsets(of bounds: LayerTree.Rect, in svg: DOM.SVG) -> LayerTree.EdgeInsets {
-        LayerTree.EdgeInsets(
-            top: bounds.minY,
-            left: bounds.minX,
-            bottom: LayerTree.Float(svg.height) - bounds.maxY,
-            right: LayerTree.Float(svg.width) - bounds.maxX
-        )
-    }
-
-    static func printInsets(_ insets: LayerTree.EdgeInsets) {
+    static func printInsets(top: Double, left: Double, bottom: Double, right: Double) {
         let formatter = NumberFormatter()
         formatter.locale = .init(identifier: "en_US")
         formatter.maximumFractionDigits = 4
-        let top = formatter.string(from: insets.top as NSNumber)!
-        let left = formatter.string(from: insets.left as NSNumber)!
-        let bottom = formatter.string(from: insets.bottom as NSNumber)!
-        let right = formatter.string(from: insets.right as NSNumber)!
-        print("Detected: --insets \(top),\(left),\(bottom),\(right)")
+        let top = formatter.string(from: top as NSNumber)!
+        let left = formatter.string(from: left as NSNumber)!
+        let bottom = formatter.string(from: bottom as NSNumber)!
+        let right = formatter.string(from: right as NSNumber)!
+        print("Alignment: --insets \(top),\(left),\(bottom),\(right)")
     }
 
     struct Error: LocalizedError {
@@ -239,9 +244,92 @@ extension SFSymbolRenderer {
     }
 }
 
-extension DOM.SVG {
+struct SFSymbolTemplate {
 
-    static func makeSFSymbolTemplate() throws -> DOM.SVG {
+    let svg: DOM.SVG
+
+    var ultralight: Variant
+    var regular: Variant
+    var black: Variant
+
+    init(svg: DOM.SVG) throws {
+        self.svg = svg
+        self.ultralight = try Variant(svg: svg, kind: "Ultralight")
+        self.regular = try Variant(svg: svg, kind: "Regular")
+        self.black = try Variant(svg: svg, kind: "Black")
+    }
+
+    struct Variant {
+        var left: Guide
+        var contents: Contents
+        var right: Guide
+
+        init(svg: DOM.SVG, kind: String) throws {
+            let guides = try svg.group(id: "Guides")
+            let symbols = try svg.group(id: "Symbols")
+            self.left = try Guide(guides.path(id: "left-margin-\(kind)-S"))
+            self.contents = try Contents(symbols.group(id: "\(kind)-S"))
+            self.right = try Guide(guides.path(id: "right-margin-\(kind)-S"))
+        }
+
+        var bounds: LayerTree.Rect {
+            let minX = left.x
+            let maxX = right.x
+            return .init(x: minX, y: 76, width: maxX - minX, height: 70)
+        }
+    }
+
+    struct Guide {
+        private let path: DOM.Path
+
+        init(_ path: DOM.Path) {
+            self.path = path
+        }
+
+        var x: DOM.Float {
+            get {
+                guard case let .move(x, _, _) = path.segments[0] else {
+                    fatalError()
+                }
+                return x
+            }
+            set {
+                guard case let .move(_, y, space) = path.segments[0] else {
+                    fatalError()
+                }
+                path.segments[0] = .move(x: newValue, y: y, space: space)
+            }
+        }
+    }
+
+    struct Contents {
+        private let group: DOM.Group
+
+        init(_ group: DOM.Group) {
+            self.group = group
+        }
+
+        var paths: [DOM.Path] {
+            get {
+                group.childElements as! [DOM.Path]
+            }
+            set {
+                group.childElements = newValue
+            }
+        }
+    }
+}
+
+extension SFSymbolTemplate {
+
+    static func parse(_ text: String) throws -> Self {
+        let element = try XML.SAXParser.parse(data: text.data(using: .utf8)!)
+        let parser = XMLParser(options: [], filename: "template.svg")
+        let svg = try parser.parseSVG(element)
+        return try SFSymbolTemplate(svg: svg)
+    }
+
+    static func make() throws -> Self {
         let svg = """
         <?xml version="1.0" encoding="UTF-8" standalone="no"?>
         <svg width="800" height="600" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
@@ -301,31 +389,68 @@ extension DOM.SVG {
             </g>
         </svg>
         """
-
-        let element = try XML.SAXParser.parse(data: svg.data(using: .utf8)!)
-        let parser = XMLParser(options: [], filename: "template.svg")
-        return try parser.parseSVG(element)
+        return try .parse(svg)
     }
-}
-
-private extension LayerTree.Rect {
-    static let ultralight = Self(x: 221, y: 76, width: 88, height: 70)
-    static let regular = Self(x: 421, y: 76, width: 88, height: 70)
-    static let black = Self(x: 621, y: 76, width: 88, height: 70)
 }
 
 private extension ContainerElement {
 
     func group(id: String) throws -> DOM.Group {
+        try child(id: id, of: DOM.Group.self)
+    }
+
+    func path(id: String) throws -> DOM.Path {
+        try child(id: id, of: DOM.Path.self)
+    }
+
+    private func child<T>(id: String, of type: T.Type) throws -> T {
         for e in childElements {
-            if e.id == id, let group = e as? DOM.Group {
-                return group
+            if e.id == id, let match = e as? T {
+                return match
             }
         }
-        throw ContainerError.missingGroup
+        throw ContainerError.missingElement(String(describing: T.self))
     }
 }
 
-enum ContainerError: Error {
-    case missingGroup
+private extension SFSymbolTemplate.Variant {
+
+    mutating func appendPaths(_ paths: [LayerTree.Path], from source: LayerTree.Rect) {
+        let matrix = SFSymbolRenderer.makeTransformation(from: source, to: bounds)
+        contents.paths = paths
+            .map { $0.applying(matrix: matrix) }
+            .map(SFSymbolRenderer.makeDOMPath)
+
+        let midX = bounds.midX
+        let newWidth = ((source.width * matrix.a) / 2) + 10
+        left.x = min(left.x, midX - newWidth)
+        right.x = max(right.x, midX + newWidth)
+    }
+}
+
+private enum ContainerError: Error {
+    case missingElement(String)
+}
+
+private extension CommandLine.Insets {
+    var isEmpty: Bool {
+        top == nil && left == nil && bottom == nil && right == nil
+    }
+}
+
+private extension DOM.Path {
+    var x: DOM.Float {
+        get {
+            guard case let .move(x, _, _) = segments[0] else {
+                fatalError()
+            }
+            return x
+        }
+        set {
+            guard case let .move(_, y, space) = segments[0] else {
+                fatalError()
+            }
+            segments[0] = .move(x: newValue, y: y, space: space)
+        }
+    }
 }

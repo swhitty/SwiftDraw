@@ -35,47 +35,41 @@ import XCTest
 final class RendererSFSymbolTests: XCTestCase {
 
     func testTemplateLoads() {
-        XCTAssertNoThrow(try DOM.SVG.makeSFSymbolTemplate())
+        XCTAssertNoThrow(try SFSymbolTemplate.make())
     }
 
     func testFillSymbol() throws {
         let url = try Bundle.test.url(forResource: "chart.svg")
-        let symbols = try DOM.SVG.parse(
+        let template = try SFSymbolTemplate.parse(
             SFSymbolRenderer.render(fileURL: url)
-        ).group(id: "Symbols")
+        )
 
-        XCTAssertEqual(
-            try symbols.group(id: "Ultralight-S").childElements.count,
-            1
+        XCTAssertFalse(
+            template.ultralight.contents.paths.isEmpty
         )
-        XCTAssertEqual(
-            try symbols.group(id: "Regular-S").childElements.count,
-            1
+        XCTAssertFalse(
+            template.regular.contents.paths.isEmpty
         )
-        XCTAssertEqual(
-            try symbols.group(id: "Black-S").childElements.count,
-            1
+        XCTAssertFalse(
+            template.black.contents.paths.isEmpty
         )
     }
 
     #if canImport(CoreGraphics)
     func testStrokeSymbol() throws {
         let url = try Bundle.test.url(forResource: "key.svg")
-        let symbols = try DOM.SVG.parse(
+        let template = try SFSymbolTemplate.parse(
             SFSymbolRenderer.render(fileURL: url)
-        ).group(id: "Symbols")
+        )
 
-        XCTAssertEqual(
-            try symbols.group(id: "Ultralight-S").childElements.count,
-            1
+        XCTAssertFalse(
+            template.ultralight.contents.paths.isEmpty
         )
-        XCTAssertEqual(
-            try symbols.group(id: "Regular-S").childElements.count,
-            1
+        XCTAssertFalse(
+            template.regular.contents.paths.isEmpty
         )
-        XCTAssertEqual(
-            try symbols.group(id: "Black-S").childElements.count,
-            1
+        XCTAssertFalse(
+            template.black.contents.paths.isEmpty
         )
     }
 
@@ -87,20 +81,21 @@ final class RendererSFSymbolTests: XCTestCase {
             <text font-size="35" x="14" y="45">W</text>
         </svg>
         """#)
-        let symbols = try DOM.SVG.parse(
+
+        let template = try SFSymbolTemplate.parse(
             SFSymbolRenderer.render(svg: source)
-        ).group(id: "Symbols")
+        )
 
         XCTAssertEqual(
-            try symbols.group(id: "Ultralight-S").childElements.count,
+            template.ultralight.contents.paths.count,
             2
         )
         XCTAssertEqual(
-            try symbols.group(id: "Regular-S").childElements.count,
+            template.regular.contents.paths.count,
             2
         )
         XCTAssertEqual(
-            try symbols.group(id: "Black-S").childElements.count,
+            template.black.contents.paths.count,
             2
         )
     }
@@ -108,28 +103,11 @@ final class RendererSFSymbolTests: XCTestCase {
 }
 
 private extension DOM.SVG {
-
     static func parse(_ text: String, filename: String = #file) throws -> DOM.SVG {
         let element = try XML.SAXParser.parse(data: text.data(using: .utf8)!)
         let parser = XMLParser(options: [], filename: filename)
         return try parser.parseSVG(element)
     }
-}
-
-private extension ContainerElement {
-
-    func group(id: String) throws -> DOM.Group {
-        for e in childElements {
-            if e.id == id, let group = e as? DOM.Group {
-                return group
-            }
-        }
-        throw ContainerError.missingGroup
-    }
-}
-
-enum ContainerError: Error {
-    case missingGroup
 }
 
 private extension SFSymbolRenderer {
