@@ -37,6 +37,7 @@ extension CommandLine {
         case format
         case output
         case size
+        case insets
         case scale
         case precision
         case hideUnsupportedFilters

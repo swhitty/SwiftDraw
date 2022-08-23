@@ -38,6 +38,7 @@ extension CommandLine {
         public var output: URL
         public var format: Format
         public var size: Size
+        public var insets: Insets
         public var scale: Scale
         public var options: Image.Options
         public var precision: Int?
@@ -62,6 +63,20 @@ extension CommandLine {
         case superRetina
     }
 
+    public struct Insets: Equatable {
+        public var top: Double?
+        public var left: Double?
+        public var bottom: Double?
+        public var right: Double?
+
+        public init(top: Double? = nil, left: Double? = nil, bottom: Double? = nil, right: Double? = nil) {
+            self.top = top
+            self.left = left
+            self.bottom = bottom
+            self.right = right
+        }
+    }
+
     public static func parseConfiguration(from args: [String], baseDirectory: URL) throws -> Configuration {
         guard args.count > 2 else {
             throw Error.invalid
@@ -77,6 +92,7 @@ extension CommandLine {
         }
 
         let size = try parseSize(from: modifiers[.size])
+        let insets = try parseInsets(from: modifiers[.insets])
         let scale = try parseScale(from: modifiers[.scale])
         let precision = try parsePrecision(from: modifiers[.precision])
         let options = try parseOptions(from: modifiers)
@@ -85,6 +101,7 @@ extension CommandLine {
                              output: result,
                              format: format,
                              size: size,
+                             insets: insets,
                              scale: scale,
                              options: options,
                              precision: precision)
@@ -142,6 +159,29 @@ extension CommandLine {
         return .custom(width: Int(width), height: Int(height))
     }
 
+    static func parseInsets(from value: String??) throws -> Insets {
+        guard let value = value,
+              let value = value,
+              value != "auto" else {
+            return Insets()
+        }
+
+        var scanner = XMLParser.Scanner(text: value)
+        let top = try scanner.scanInset()
+        _ = try scanner.scanString(",")
+        let left = try scanner.scanInset()
+        _ = try scanner.scanString(",")
+        let bottom = try scanner.scanInset()
+        _ = try scanner.scanString(",")
+        let right = try  scanner.scanInset()
+        return Insets(
+            top: top,
+            left: left,
+            bottom: bottom,
+            right: right
+        )
+    }
+
     static func parseOptions(from modifiers: [CommandLine.Modifier: String?]) throws -> Image.Options {
         var options: Image.Options = [.default, .commandLine]
 
@@ -150,6 +190,16 @@ extension CommandLine {
         }
 
         return options
+    }
+}
+
+private extension XMLParser.Scanner {
+
+    mutating func scanInset() throws -> Double? {
+        guard !scanStringIfPossible("auto") else {
+            return nil
+        }
+        return try scanDouble()
     }
 }
 

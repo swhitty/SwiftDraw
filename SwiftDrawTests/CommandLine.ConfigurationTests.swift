@@ -34,72 +34,106 @@ import XCTest
 
 final class CommandLineConfigurationTests: XCTestCase {
 
-  func testParseFileURL() throws {
-    let url = try CommandLine.parseFileURL(file: "file", within: URL(directory: "/test"))
-    XCTAssertEqual(url, URL(fileURLWithPath: "/test/file"))
+    func testParseFileURL() throws {
+        let url = try CommandLine.parseFileURL(file: "file", within: URL(directory: "/test"))
+        XCTAssertEqual(url, URL(fileURLWithPath: "/test/file"))
 
-    let url1 = try CommandLine.parseFileURL(file: "file", within: URL(directory: "/test/subfolder"))
-    XCTAssertEqual(url1, URL(fileURLWithPath: "/test/subfolder/file"))
+        let url1 = try CommandLine.parseFileURL(file: "file", within: URL(directory: "/test/subfolder"))
+        XCTAssertEqual(url1, URL(fileURLWithPath: "/test/subfolder/file"))
 
-    let url2 = try CommandLine.parseFileURL(file: "../file", within: URL(directory: "/test/subfolder"))
-    XCTAssertEqual(url2, URL(fileURLWithPath: "/test/file"))
-  }
+        let url2 = try CommandLine.parseFileURL(file: "../file", within: URL(directory: "/test/subfolder"))
+        XCTAssertEqual(url2, URL(fileURLWithPath: "/test/file"))
+    }
 
-  func testNewURLForFormat() throws {
-    let svg = URL(fileURLWithPath: "/test/file.svg")
-    XCTAssertEqual(svg.newURL(for: .jpeg, scale: .default), URL(fileURLWithPath: "/test/file.jpg"))
-    XCTAssertEqual(svg.newURL(for: .png, scale: .default), URL(fileURLWithPath: "/test/file.png"))
-    XCTAssertEqual(svg.newURL(for: .pdf, scale: .default), URL(fileURLWithPath: "/test/file.pdf"))
+    func testNewURLForFormat() throws {
+        let svg = URL(fileURLWithPath: "/test/file.svg")
+        XCTAssertEqual(svg.newURL(for: .jpeg, scale: .default), URL(fileURLWithPath: "/test/file.jpg"))
+        XCTAssertEqual(svg.newURL(for: .png, scale: .default), URL(fileURLWithPath: "/test/file.png"))
+        XCTAssertEqual(svg.newURL(for: .pdf, scale: .default), URL(fileURLWithPath: "/test/file.pdf"))
 
-    let svgExtension = URL(fileURLWithPath: "/test/file")
-    XCTAssertEqual(svgExtension.newURL(for: .jpeg, scale: .default), URL(fileURLWithPath: "/test/file.jpg"))
-  }
+        let svgExtension = URL(fileURLWithPath: "/test/file")
+        XCTAssertEqual(svgExtension.newURL(for: .jpeg, scale: .default), URL(fileURLWithPath: "/test/file.jpg"))
+    }
 
-  func testParseConfiguration() throws {
-    let config = try CommandLine.parseConfiguration(from: ["swiftdraw", "file.svg", "--format", "pdf"],
-                                                    baseDirectory: URL(directory: "/"))
+    func testParseConfiguration() throws {
+        let config = try parseConfiguration("swiftdraw", "file.svg", "--format", "pdf")
 
-    XCTAssertEqual(config.input, URL(fileURLWithPath: "/file.svg"))
-    XCTAssertEqual(config.output, URL(fileURLWithPath: "/file.pdf"))
-    XCTAssertEqual(config.scale, .default)
-    XCTAssertEqual(config.format, .pdf)
-    XCTAssertEqual(config.size, .default)
-  }
+        XCTAssertEqual(config.input, URL(fileURLWithPath: "/file.svg"))
+        XCTAssertEqual(config.output, URL(fileURLWithPath: "/file.pdf"))
+        XCTAssertEqual(config.scale, .default)
+        XCTAssertEqual(config.format, .pdf)
+        XCTAssertEqual(config.size, .default)
+    }
 
-  func testParseConfigurationSize() throws {
-    let config = try CommandLine.parseConfiguration(from: ["swiftdraw", "file.svg", "--format", "png", "--size", "400x300"],
-                                                    baseDirectory: URL(directory: "/"))
+    func testParseConfigurationSize() throws {
+        let config = try parseConfiguration("swiftdraw", "file.svg", "--format", "png", "--size", "400x300")
 
-    XCTAssertEqual(config.input, URL(fileURLWithPath: "/file.svg"))
-    XCTAssertEqual(config.output, URL(fileURLWithPath: "/file.png"))
-    XCTAssertEqual(config.format, .png)
-    XCTAssertEqual(config.size, .custom(width: 400, height: 300))
-  }
+        XCTAssertEqual(config.input, URL(fileURLWithPath: "/file.svg"))
+        XCTAssertEqual(config.output, URL(fileURLWithPath: "/file.png"))
+        XCTAssertEqual(config.format, .png)
+        XCTAssertEqual(config.size, .custom(width: 400, height: 300))
+    }
 
-  func testParseConfigurationScale2x() throws {
-    let config = try CommandLine.parseConfiguration(from: ["swiftdraw", "file.svg", "--format", "png", "--scale", "2x"],
-                                                    baseDirectory: URL(directory: "/"))
+    func testParseConfigurationScale2x() throws {
+        let config = try parseConfiguration("swiftdraw", "file.svg", "--format", "png", "--scale", "2x")
 
-    XCTAssertEqual(config.input, URL(fileURLWithPath: "/file.svg"))
-    XCTAssertEqual(config.output, URL(fileURLWithPath: "/file@2x.png"))
-    XCTAssertEqual(config.scale, .retina)
-    XCTAssertEqual(config.format, .png)
-  }
+        XCTAssertEqual(config.input, URL(fileURLWithPath: "/file.svg"))
+        XCTAssertEqual(config.output, URL(fileURLWithPath: "/file@2x.png"))
+        XCTAssertEqual(config.scale, .retina)
+        XCTAssertEqual(config.format, .png)
+    }
 
-  func testParseConfigurationThrows() {
-    XCTAssertThrowsError(try CommandLine.parseConfiguration(from: [],
-                                                            baseDirectory: URL(directory: "/")))
-    XCTAssertThrowsError(try CommandLine.parseConfiguration(from: ["swiftdraw", "file.svg"],
-                                                            baseDirectory: URL(directory: "/")))
-    XCTAssertThrowsError(try CommandLine.parseConfiguration(from: ["swiftdraw", "file.svg", "--format", "unknown"],
-                                                            baseDirectory: URL(directory: "/")))
+    func testParseConfigurationThrows() {
+        XCTAssertThrowsError(try parseConfiguration())
+        XCTAssertThrowsError(try parseConfiguration("swiftdraw", "file.svg"))
+        XCTAssertThrowsError(try parseConfiguration("swiftdraw", "file.svg", "--format", "unknown"))
+    }
 
-  }
+    func testParseInsets() throws {
+        XCTAssertEqual(
+            try CommandLine.parseInsets(from: nil),
+            .init()
+        )
+        XCTAssertEqual(
+            try CommandLine.parseInsets(from: "auto"),
+            .init()
+        )
+        XCTAssertEqual(
+            try CommandLine.parseInsets(from: "1,2,3,4"),
+            .init(top: 1, left: 2, bottom: 3, right: 4)
+        )
+        XCTAssertEqual(
+            try CommandLine.parseInsets(from: "0.995,auto,2.5,auto"),
+            .init(top: 0.995, left: nil, bottom: 2.5, right: nil)
+        )
+        XCTAssertThrowsError(
+            try CommandLine.parseInsets(from: "cab,1,2,2")
+        )
+        XCTAssertThrowsError(
+            try CommandLine.parseInsets(from: "1,2")
+        )
+        XCTAssertThrowsError(
+            try CommandLine.parseInsets(from: "")
+        )
+    }
+
+    func testParseConfigurationInsets() throws {
+        let config = try parseConfiguration("swiftdraw", "file.svg", "--format", "sfsymbol", "--insets", "1,2,3.5,auto")
+
+        XCTAssertEqual(config.insets.top, 1)
+        XCTAssertEqual(config.insets.left, 2)
+        XCTAssertEqual(config.insets.bottom, 3.5)
+        XCTAssertEqual(config.insets.right, nil)
+    }
+}
+
+private func parseConfiguration(_ args: String...) throws -> CommandLine.Configuration {
+    try CommandLine.parseConfiguration(from: args, baseDirectory: URL(directory: "/"))
 }
 
 private extension URL {
 
-  init(directory: String) {
-    self.init(fileURLWithPath: directory, isDirectory: true)
-  }
+    init(directory: String) {
+        self.init(fileURLWithPath: directory, isDirectory: true)
+    }
 }
