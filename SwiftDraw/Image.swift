@@ -164,14 +164,5 @@ public extension Image {
         public var right: CGFloat
 
         public static let zero = Insets(top: 0, left: 0, bottom: 0, right: 0)
-
-        func applying(scale: CGFloat) -> Self {
-            Insets(
-                top: top * scale,
-                left: left * scale,
-                bottom: bottom * scale,
-                right: right * scale
-            )
-        }
     }
 }

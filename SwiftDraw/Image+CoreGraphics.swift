@@ -90,8 +90,49 @@ public extension Image {
     }
 }
 
-private extension LayerTree.Size {
+extension Image {
 
+    static func makeBounds(size: CGSize?,
+                           defaultSize: CGSize,
+                           scale: CGFloat,
+                           insets: Insets) -> (bounds: CGRect, pixelsWide: Int, pixelsHigh: Int) {
+        let viewport = CGSize(
+            width: defaultSize.width - (insets.left + insets.right),
+            height: defaultSize.height - (insets.top + insets.bottom)
+        )
+
+        let size = size ?? viewport
+
+        let sx = size.width / viewport.width
+        let sy = size.height / viewport.height
+
+        let width = size.width * scale
+        let height = size.height * scale
+        let insets = insets.applying(sx: sx * scale, sy: sy * scale)
+        let bounds = CGRect(x: -insets.left,
+                            y: -insets.top,
+                            width: width + insets.left + insets.right,
+                            height: height + insets.top + insets.bottom)
+        return (
+            bounds: bounds,
+            pixelsWide: Int(width),
+            pixelsHigh: Int(height)
+        )
+    }
+}
+
+private extension Image.Insets {
+    func applying(sx: CGFloat, sy: CGFloat) -> Self {
+        Self(
+            top: top * sy,
+            left: left * sx,
+            bottom: bottom * sy,
+            right: right * sx
+        )
+    }
+}
+
+private extension LayerTree.Size {
     init(_ size: CGSize) {
         self.width = LayerTree.Float(size.width)
         self.height = LayerTree.Float(size.height)

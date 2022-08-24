@@ -137,36 +137,7 @@ extension Image {
 
     func makeBounds(size: CGSize?, scale: CGFloat, insets: Insets) -> (bounds: CGRect, pixelsWide: Int, pixelsHigh: Int) {
         let scale = scale == 0 ? (NSScreen.main?.backingScaleFactor ?? 1.0) : scale
-        let insets = insets.applying(scale: scale)
-        guard insets != .zero else {
-            // no insets, just return size
-            let renderSize = size ?? self.size
-            let bounds = CGRect(x: 0, y: 0, width: renderSize.width * scale, height: renderSize.height * scale)
-            return (
-                bounds: bounds,
-                pixelsWide: Int(bounds.width),
-                pixelsHigh: Int(bounds.height)
-            )
-        }
-
-        guard let size = size else {
-            // no size, inset default size by insets
-            let width = self.size.width * scale
-            let height = self.size.height * scale
-            let bounds = CGRect(x: -insets.left, y: -insets.top, width: width, height: height)
-            print(bounds)
-            return (
-                bounds: bounds,
-                pixelsWide: Int(width - (insets.left + insets.right)),
-                pixelsHigh: Int(height - (insets.top + insets.bottom))
-            )
-        }
-
-        fatalError()
-//
-//        // custom insets AND size provided
-//        let scaleX = self.size.width - (left + right)
-//        let scaleX = size.width / self.size
+        return Self.makeBounds(size: size, defaultSize: self.size, scale: scale, insets: insets)
     }
 
     func makeBitmap(width: Int, height: Int, isOpaque: Bool) -> NSBitmapImageRep? {
