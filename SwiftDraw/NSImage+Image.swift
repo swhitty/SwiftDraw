@@ -88,7 +88,7 @@ public extension Image {
         return image
     }
 
-    func pngData(size: CGSize? = nil, scale: CGFloat = 1, insets: Insets = .zero) throws -> Data {
+    func pngData(size: CGSize? = nil, scale: CGFloat = 0, insets: Insets = .zero) throws -> Data {
         let (bounds, pixelsWide, pixelsHigh) = makeBounds(size: size, scale: scale, insets: insets)
         guard let bitmap = makeBitmap(width: pixelsWide, height: pixelsHigh, isOpaque: false),
               let ctx = NSGraphicsContext(bitmapImageRep: bitmap)?.cgContext else {
@@ -105,7 +105,7 @@ public extension Image {
         return data
     }
 
-    func jpegData(size: CGSize? = nil, scale: CGFloat = 1, compressionQuality quality: CGFloat = 1, insets: Insets = .zero) throws -> Data {
+    func jpegData(size: CGSize? = nil, scale: CGFloat = 0, compressionQuality quality: CGFloat = 1, insets: Insets = .zero) throws -> Data {
         let (bounds, pixelsWide, pixelsHigh) = makeBounds(size: size, scale: scale, insets: insets)
         guard let bitmap = makeBitmap(width: pixelsWide, height: pixelsHigh, isOpaque: true),
               let ctx = NSGraphicsContext(bitmapImageRep: bitmap)?.cgContext else {

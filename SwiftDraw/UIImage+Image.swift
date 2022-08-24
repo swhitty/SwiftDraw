@@ -94,7 +94,7 @@ public extension Image {
         }
     }
 
-    func pngData(size: CGSize? = nil, scale: CGFloat = 1, insets: UIEdgeInsets = .zero) throws -> Data {
+    func pngData(size: CGSize? = nil, scale: CGFloat = 0, insets: UIEdgeInsets = .zero) throws -> Data {
         let image = rasterize(with: size, scale: scale, insets: insets)
         guard let data = image.pngData() else {
             throw Error("Failed to create png data")
@@ -102,7 +102,7 @@ public extension Image {
         return data
     }
 
-    func jpegData(size: CGSize? = nil, scale: CGFloat = 1, compressionQuality quality: CGFloat = 1, insets: UIEdgeInsets = .zero) throws -> Data {
+    func jpegData(size: CGSize? = nil, scale: CGFloat = 0, compressionQuality quality: CGFloat = 1, insets: UIEdgeInsets = .zero) throws -> Data {
         let image = rasterize(with: size, scale: scale, insets: insets)
         guard let data = image.jpegData(compressionQuality: quality) else {
             throw Error("Failed to create jpeg data")
