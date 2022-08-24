@@ -444,13 +444,13 @@ extension LayerTree.CommandGenerator {
 
     func logUnsupportedGradient() {
         guard !hasLoggedGradientWarning else { return }
-        print("Warning:", "Gradients including transparency are unsupported", to: &.standardError)
+        print("Warning:", "PDF does not support gradients with stop-opacity", to: &.standardError)
         hasLoggedGradientWarning = true
     }
 
     func logUnsupportedMask() {
         guard !hasLoggedMaskWarning else { return }
-        print("Warning:", "Masks are unsupported", to: &.standardError)
+        print("Warning:", "PDF does not support transparency masks", to: &.standardError)
         hasLoggedMaskWarning = true
     }
 }
