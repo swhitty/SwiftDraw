@@ -41,7 +41,9 @@ extension LayerTree {
         let scale: LayerTree.Float
         let options: SwiftDraw.Image.Options
 
-        private var hasLoggedFilterWarning: Bool = false
+        private var hasLoggedFilterWarning = false
+        private var hasLoggedGradientWarning = false
+        private var hasLoggedMaskWarning = false
 
         init(provider: P, size: LayerTree.Size, scale: LayerTree.Float = 3.0, options: SwiftDraw.Image.Options) {
             self.provider = provider
@@ -51,14 +53,6 @@ extension LayerTree {
         }
 
         func renderCommands(for layer: Layer, colorConverter: ColorConverter = DefaultColorConverter()) -> [RendererCommand<P.Types>] {
-            if options.contains(.disableTransparencyLayers) {
-                return renderCommandsWithoutTransparency(for: layer, colorConverter: colorConverter)
-            } else {
-                return renderCommandsWithTransparency(for: layer, colorConverter: colorConverter)
-            }
-        }
-
-        func renderCommandsWithTransparency(for layer: Layer, colorConverter: ColorConverter = DefaultColorConverter()) -> [RendererCommand<P.Types>] {
             guard layer.opacity > 0.0 else { return [] }
 
             if !layer.filters.isEmpty {
@@ -72,6 +66,10 @@ extension LayerTree {
             let transformCommands = renderCommands(forTransforms: layer.transform)
             let clipCommands = renderCommands(forClip: layer.clip, using: layer.clipRule)
             let maskCommands = renderCommands(forMask: layer.mask)
+
+            guard canRenderMask(maskCommands) else {
+                return []
+            }
 
             var commands = [RendererCommand<P.Types>]()
 
@@ -109,64 +107,6 @@ extension LayerTree {
                 !transformCommands.isEmpty ||
                 !clipCommands.isEmpty ||
                 !maskCommands.isEmpty {
-                commands.append(.popState)
-            }
-
-            return commands
-        }
-
-        func renderCommandsWithoutTransparency(for layer: Layer, colorConverter: ColorConverter = DefaultColorConverter()) -> [RendererCommand<P.Types>] {
-            guard layer.opacity > 0.0 else { return [] }
-
-            if !layer.filters.isEmpty {
-                guard !options.contains(.hideUnsupportedFilters) else {
-                    return []
-                }
-                logUnsupportedFilters(layer.filters)
-            }
-
-            let opacityCommands = renderCommands(forOpacity: layer.opacity)
-            let transformCommands = renderCommands(forTransforms: layer.transform)
-            let clipCommands = renderCommands(forClip: layer.clip, using: layer.clipRule)
-            let mask = makeMask(forMask: layer.mask)
-
-            var commands = [RendererCommand<P.Types>]()
-
-            if !opacityCommands.isEmpty ||
-                !transformCommands.isEmpty ||
-                !clipCommands.isEmpty ||
-                mask != nil {
-                commands.append(.pushState)
-            }
-
-            commands.append(contentsOf: transformCommands)
-            commands.append(contentsOf: opacityCommands)
-            commands.append(contentsOf: clipCommands)
-
-            if let mask = mask {
-                let bounds = provider.createRect(from: LayerTree.Rect(x: 0, y: 0, width: size.width * scale, height: size.height * scale))
-                commands.append(.setClipMask(mask, frame: bounds))
-
-                //render all of the layer contents
-                for contents in layer.contents {
-                    commands.append(contentsOf: renderCommands(for: contents, colorConverter: colorConverter))
-                }
-
-            } else {
-                //render all of the layer contents
-                for contents in layer.contents {
-                    commands.append(contentsOf: renderCommands(for: contents, colorConverter: colorConverter))
-                }
-            }
-
-            if !opacityCommands.isEmpty {
-                commands.append(.popTransparencyLayer)
-            }
-
-            if !opacityCommands.isEmpty ||
-                !transformCommands.isEmpty ||
-                !clipCommands.isEmpty ||
-                mask != nil {
                 commands.append(.popState)
             }
 
@@ -213,26 +153,30 @@ extension LayerTree {
                 commands.append(.setFillPattern(pattern))
                 commands.append(.fill(path, rule: rule))
             case .linearGradient(let gradient):
-                commands.append(.pushState)
-                let rule = provider.createFillRule(from: fill.rule)
-                commands.append(.setClip(path: path, rule: rule))
+                if canRenderGradient(gradient.gradient) {
+                    commands.append(.pushState)
+                    let rule = provider.createFillRule(from: fill.rule)
+                    commands.append(.setClip(path: path, rule: rule))
 
-                let pathBounds = provider.getBounds(from: shape)
-                commands.append(contentsOf: renderCommands(forLinear: gradient,
-                                                           endpoints: pathBounds.endpoints,
-                                                           opacity: fill.opacity,
-                                                           colorConverter: colorConverter))
-                commands.append(.popState)
+                    let pathBounds = provider.getBounds(from: shape)
+                    commands.append(contentsOf: renderCommands(forLinear: gradient,
+                                                               endpoints: pathBounds.endpoints,
+                                                               opacity: fill.opacity,
+                                                               colorConverter: colorConverter))
+                    commands.append(.popState)
+                }
             case .radialGradient(let gradient):
-                commands.append(.pushState)
-                let rule = provider.createFillRule(from: fill.rule)
-                commands.append(.setClip(path: path, rule: rule))
-                let pathBounds = provider.getBounds(from: shape)
-                commands.append(contentsOf: renderCommands(forRadial: gradient,
-                                                           in: pathBounds,
-                                                           opacity: fill.opacity,
-                                                           colorConverter: colorConverter))
-                commands.append(.popState)
+                if canRenderGradient(gradient.gradient) {
+                    commands.append(.pushState)
+                    let rule = provider.createFillRule(from: fill.rule)
+                    commands.append(.setClip(path: path, rule: rule))
+                    let pathBounds = provider.getBounds(from: shape)
+                    commands.append(contentsOf: renderCommands(forRadial: gradient,
+                                                               in: pathBounds,
+                                                               opacity: fill.opacity,
+                                                               colorConverter: colorConverter))
+                    commands.append(.popState)
+                }
             }
 
             switch stroke.color {
@@ -251,7 +195,7 @@ extension LayerTree {
                 commands.append(.setStroke(color: color))
                 commands.append(.stroke(path))
             case .linearGradient(let gradient):
-                if let endpoints = shape.endpoints {
+                if let endpoints = shape.endpoints, canRenderGradient(gradient.gradient) {
                     let width = provider.createFloat(from: stroke.width)
                     let cap = provider.createLineCap(from: stroke.cap)
                     let join = provider.createLineJoin(from: stroke.join)
@@ -271,7 +215,7 @@ extension LayerTree {
                     commands.append(.popState)
                 }
             case .radialGradient(let gradient):
-                if let pathBounds = shape.bounds {
+                if let pathBounds = shape.bounds, canRenderGradient(gradient.gradient) {
                     let width = provider.createFloat(from: stroke.width)
                     let cap = provider.createLineCap(from: stroke.cap)
                     let join = provider.createLineJoin(from: stroke.join)
@@ -352,18 +296,6 @@ extension LayerTree {
             return [.setClip(path: clipPath, rule: rule)]
         }
 
-        func makeMask(forMask layer: Layer?) -> P.Types.Mask? {
-            guard let layer = layer else { return nil }
-
-            var commands = layer.contents.flatMap {
-                renderCommands(for: $0, colorConverter: GrayscaleMaskColorConverter())
-            }
-            guard commands.isEmpty == false else { return nil }
-
-            commands.append(.scale(sx: provider.createFloat(from: scale), sy: provider.createFloat(from: scale)))
-            return provider.createMask(from: commands, size: LayerTree.Size(size.width*scale, size.height*scale))
-        }
-
         func renderCommands(forMask layer: Layer?) -> [RendererCommand<P.Types>] {
             guard let layer = layer else { return [] }
 
@@ -383,6 +315,27 @@ extension LayerTree {
             return commands
         }
 
+        func canRenderMask(_ commands: [RendererCommand<P.Types>]) -> Bool {
+            guard options.contains(.disableTransparencyLayers) else {
+                return true
+            }
+            guard commands.isEmpty else {
+                logUnsupportedMask()
+                return false
+            }
+            return true
+        }
+
+        func canRenderGradient(_ gradient: LayerTree.Gradient) -> Bool {
+            guard options.contains(.disableTransparencyLayers) else {
+                return true
+            }
+            guard gradient.isOpaque else {
+                logUnsupportedGradient()
+                return false
+            }
+            return true
+        }
 
         func renderCommands(forLinear gradient: LayerTree.LinearGradient,
                             endpoints: (start: LayerTree.Point, end: LayerTree.Point),
@@ -487,6 +440,18 @@ extension LayerTree.CommandGenerator {
 
         print("Warning:", name, "is not supported. Elements with this filter can be hidden with \(hint)", to: &.standardError)
         hasLoggedFilterWarning = true
+    }
+
+    func logUnsupportedGradient() {
+        guard !hasLoggedGradientWarning else { return }
+        print("Warning:", "Gradients including transparency are unsupported", to: &.standardError)
+        hasLoggedGradientWarning = true
+    }
+
+    func logUnsupportedMask() {
+        guard !hasLoggedMaskWarning else { return }
+        print("Warning:", "Masks are unsupported", to: &.standardError)
+        hasLoggedMaskWarning = true
     }
 
     static func logParsingError(for error: Swift.Error, filename: String?, parsing element: XML.Element? = nil) {

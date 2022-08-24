@@ -76,10 +76,6 @@ struct LayerTreeProvider: RendererTypeProvider {
     return gradient
   }
   
-  func createMask(from contents: [RendererCommand<LayerTreeTypes>], size: LayerTree.Size) -> [Any] {
-    return []
-  }
-  
   func createBlendMode(from mode: LayerTree.BlendMode) -> LayerTree.BlendMode {
     return mode
   }

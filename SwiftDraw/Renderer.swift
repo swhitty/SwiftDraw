@@ -59,7 +59,6 @@ protocol RendererTypeProvider {
     func createGradient(from gradient: LayerTree.Gradient) -> Types.Gradient
     func createBlendMode(from mode: LayerTree.BlendMode) -> Types.BlendMode
     func createTransform(from transform: LayerTree.Transform.Matrix) -> Types.Transform
-    func createMask(from contents: [RendererCommand<Types>], size: LayerTree.Size) -> Types.Mask
     func createPath(from shape: LayerTree.Shape) -> Types.Path
     func createPath(from subPaths: [Types.Path]) -> Types.Path
     func createPath(from text: String, at origin: LayerTree.Point, with attributes: LayerTree.TextAttributes) -> Types.Path?

@@ -101,10 +101,6 @@ struct CGTextProvider: RendererTypeProvider {
   func createGradient(from gradient: LayerTree.Gradient) -> LayerTree.Gradient {
     return gradient
   }
-
-  func createMask(from contents: [RendererCommand<CGTextTypes>], size: LayerTree.Size) -> [Any] {
-    return []
-  }
   
   func createBlendMode(from mode: LayerTree.BlendMode) -> String {
     switch mode {

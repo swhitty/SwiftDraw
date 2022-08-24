@@ -54,11 +54,19 @@ extension LayerTree {
                 self.color = color
                 self.opacity = opacity
             }
+
+            var isOpaque: Bool {
+                color.isOpaque && opacity >= 1
+            }
         }
 
         enum Units: Hashable {
             case userSpaceOnUse
             case objectBoundingBox
+        }
+
+        var isOpaque: Bool {
+            stops.allSatisfy(\.isOpaque)
         }
     }
 
