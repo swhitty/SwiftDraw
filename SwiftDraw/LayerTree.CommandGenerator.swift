@@ -453,32 +453,6 @@ extension LayerTree.CommandGenerator {
         print("Warning:", "Masks are unsupported", to: &.standardError)
         hasLoggedMaskWarning = true
     }
-
-    static func logParsingError(for error: Swift.Error, filename: String?, parsing element: XML.Element? = nil) {
-        let elementName = element.map { "<\($0.name)>" } ?? ""
-        let filename = filename ?? ""
-        switch error {
-        case let XMLParser.Error.invalidDocument(error, element, line, column):
-            let element = element.map { "<\($0)>" } ?? ""
-            if let error = error {
-                print("[parsing error]", filename, element, "line:", line, "column:", column, "error:", error, to: &.standardError)
-            } else {
-                print("[parsing error]", filename, element, "line:", line, "column:", column, to: &.standardError)
-            }
-        case let XMLParser.Error.invalidElement(name, error, line, column):
-            if let line = line {
-                print("[parsing error]", filename, "<\(name)>", "line:", line, "column:", column ?? -1, "error:", error, to: &.standardError)
-            } else {
-                print("[parsing error]", filename, "<\(name)>", "error:", error, to: &.standardError)
-            }
-        default:
-            if let location = element?.parsedLocation {
-                print("[parsing error]", filename, elementName, "line:", location.line, "column:", location.column, "error:", error, to: &.standardError)
-            } else {
-                print("[parsing error]", filename, elementName, "error:", error, to: &.standardError)
-            }
-        }
-    }
 }
 
 private extension LayerTree.Rect {
@@ -504,12 +478,6 @@ private extension LayerTree.Gradient {
         }
         return LayerTree.Gradient(stops: stops)
     }
-}
-
-private func apply(colorConverter: ColorConverter, to stop: LayerTree.Gradient.Stop) -> LayerTree.Gradient.Stop {
-    var stop = stop
-    stop.color = colorConverter.createColor(from: stop.color).withMultiplyingAlpha(stop.opacity)
-    return stop
 }
 
 private extension LayerTree.Shape {
