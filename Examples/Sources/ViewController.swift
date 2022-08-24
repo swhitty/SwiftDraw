@@ -78,7 +78,7 @@ private extension Image {
 
   func pdfImage() -> UIImage? {
     guard
-      let data = pdfData(),
+      let data = try? pdfData(),
       let provider = CGDataProvider(data: data as CFData),
       let pdf = CGPDFDocument(provider),
       let page = pdf.page(at: 1) else {

@@ -86,7 +86,6 @@ public extension CommandLine {
         case .pdf:
             let insets = try makeImageInsets(for: config.insets)
             return try image.pdfData(size: config.size.cgValue, insets: insets)
-            //return try Image.pdfData(fileURL: config.input, size: config.size.cgValue)
         case .png:
             let insets = try makeImageInsets(for: config.insets)
             return try image.pngData(size: config.size.cgValue, scale: config.scale.cgValue, insets: insets)
