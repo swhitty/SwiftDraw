@@ -71,6 +71,7 @@ final class ParserSVGImageTests: XCTestCase {
         XCTAssertTrue(c.next()!.element is DOM.Line)
         XCTAssertTrue(c.next()!.element is DOM.Use)
         XCTAssertTrue(c.next()!.element is DOM.Use)
+        XCTAssertTrue(c.next()!.element is DOM.Rect)
         XCTAssertNil(c.next())
     }
 

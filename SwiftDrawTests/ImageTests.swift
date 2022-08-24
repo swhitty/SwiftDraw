@@ -34,46 +34,53 @@ import XCTest
 
 final class ImageTests: XCTestCase {
 
-  func testValidSVGLoads() {
-    XCTAssertNotNil(Image(named: "lines.svg", in: .test))
-  }
+    func testValidSVGLoads() {
+        XCTAssertNotNil(Image(named: "lines.svg", in: .test))
+    }
 
-  func testInvalidSVGReturnsNil() {
-    XCTAssertNil(Image(named: "invalid.svg", in: .test))
-  }
+    func testInvalidSVGReturnsNil() {
+        XCTAssertNil(Image(named: "invalid.svg", in: .test))
+    }
 
-  func testMissingSVGReturnsNil() {
-    XCTAssertNil(Image(named: "missing.svg", in: .test))
-  }
+    func testMissingSVGReturnsNil() {
+        XCTAssertNil(Image(named: "missing.svg", in: .test))
+    }
 
 #if canImport(CoreGraphics)
-  func testImageRasterizes() {
-    let image = Image.makeLines()
-    let rendered = image.rasterize()
-    XCTAssertEqual(rendered.size, image.size)
-    XCTAssertNoThrow(try image.pngData())
-    XCTAssertNoThrow(try image.jpegData())
-    XCTAssertNoThrow(try image.pdfData())
-  }
+    func testImageRasterizes() {
+        let image = Image.makeLines()
+        let rendered = image.rasterize()
+        XCTAssertEqual(rendered.size, image.size)
+        XCTAssertNoThrow(try image.pngData())
+        XCTAssertNoThrow(try image.jpegData())
+        XCTAssertNoThrow(try image.pdfData())
+    }
 
-  func testImageRasterizeAndScales() {
-    let image = Image.makeLines()
-    let doubleSize = CGSize(width: 200, height: 200)
-    let rendered = image.rasterize(with: doubleSize)
-    XCTAssertEqual(rendered.size, doubleSize)
-    XCTAssertNoThrow(try image.pngData(size: doubleSize))
-    XCTAssertNoThrow(try image.jpegData(size: doubleSize))
-  }
+    func testImageRasterizeAndScales() {
+        let image = Image.makeLines()
+        let doubleSize = CGSize(width: 200, height: 200)
+        let rendered = image.rasterize(with: doubleSize)
+        XCTAssertEqual(rendered.size, doubleSize)
+        XCTAssertNoThrow(try image.pngData(size: doubleSize))
+        XCTAssertNoThrow(try image.jpegData(size: doubleSize))
+    }
+
+    func testShapesImageRasterizes() throws {
+        let image = try XCTUnwrap(Image(named: "shapes.svg", in: .test))
+        XCTAssertNoThrow(try image.pngData())
+        XCTAssertNoThrow(try image.jpegData())
+        XCTAssertNoThrow(try image.pdfData())
+    }
 #endif
 
 }
 
 private extension Image {
 
-  static func makeLines() -> Image {
-    let svg = DOM.SVG(width: 100, height: 100)
-    svg.childElements.append(DOM.Line(x1: 0, y1: 0, x2: 100, y2: 100))
-    svg.childElements.append(DOM.Line(x1: 100, y1: 0, x2: 0, y2: 100))
-    return Image(svg: svg, options: .default)
-  }
+    static func makeLines() -> Image {
+        let svg = DOM.SVG(width: 100, height: 100)
+        svg.childElements.append(DOM.Line(x1: 0, y1: 0, x2: 100, y2: 100))
+        svg.childElements.append(DOM.Line(x1: 100, y1: 0, x2: 0, y2: 100))
+        return Image(svg: svg, options: .default)
+    }
 }

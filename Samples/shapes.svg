@@ -11,6 +11,12 @@
 	<defs>
 	  <polygon id="star" points="100,10 40,198 190,78, 10,78, 160,198" fill-rule="nonzero" />
 	  <image id="dot" width="6" height="6" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg==" />
+	  <pattern id="checkerboard" width="64" height="64" patternUnits="userSpaceOnUse">
+		<rect x="0" y="0" width="32" height="32" fill="green" />
+		<rect x="32" y="0" width="32" height="32" fill="red" />
+		<rect x="0" y="32" width="32" height="32" fill="blue" />
+		<rect x="32" y="32" width="32" height="32" fill="pink" />
+	  </pattern>
 	</defs>
 	
     <linearGradient id="MyGradient">
@@ -84,5 +90,7 @@
  
  	<use xlink:href="#dot" transform="translate(150, 50)" />
 	<!-- <use xlink:href="#dot" x="140" y="55" /> -->
+	
+	<rect x="-64" y="-64" width="64" height="64" fill="url(#checkerboard)" transform="translate(128, 170) rotate(45)"/>
 	
 </svg>
