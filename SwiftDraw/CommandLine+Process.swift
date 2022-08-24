@@ -56,11 +56,11 @@ public extension CommandLine {
             return svg.data(using: .utf8)!
         case .jpeg, .pdf, .png:
             #if canImport(CoreGraphics)
-            guard let image = SwiftDraw.Image(fileURL: config.input, options: config.options),
-                  let data = processImage(image, with: config) else {
+            let options = makeImageOptions(for: config)
+            guard let image = SwiftDraw.Image(fileURL: config.input, options: options) else {
                 throw Error.invalid
             }
-            return data
+            return try processImage(image, with: config)
             #else
             throw Error.unsupported
             #endif
@@ -68,21 +68,51 @@ public extension CommandLine {
         }
     }
 
-    static func processImage(_ image: SwiftDraw.Image, with config: Configuration) -> Data? {
+    static func makeImageOptions(for config: Configuration) -> Image.Options {
+        var options = config.options
+        options.insert(.commandLine)
+        if config.format == .pdf {
+            options.insert(.disableTransparencyLayers)
+        }
+        return options
+    }
+
+    static func processImage(_ image: SwiftDraw.Image, with config: Configuration) throws -> Data {
         #if canImport(CoreGraphics)
         switch config.format {
         case .jpeg:
-            return image.jpegData(size: config.size.cgValue, scale: config.scale.cgValue)
+            let insets = try makeImageInsets(for: config.insets)
+            return try image.jpegData(size: config.size.cgValue, scale: config.scale.cgValue, insets: insets)
         case .pdf:
-            return try? Image.pdfData(fileURL: config.input, size: config.size.cgValue)
+            let insets = try makeImageInsets(for: config.insets)
+            return try image.pdfData(size: config.size.cgValue, insets: insets)
+            //return try Image.pdfData(fileURL: config.input, size: config.size.cgValue)
         case .png:
-            return image.pngData(size: config.size.cgValue, scale: config.scale.cgValue)
+            let insets = try makeImageInsets(for: config.insets)
+            return try image.pngData(size: config.size.cgValue, scale: config.scale.cgValue, insets: insets)
         case .swift, .sfsymbol:
-            preconditionFailure()
+            throw Error.unsupported
         }
         #else
-        return nil
+        throw Error.unsupported
         #endif
+    }
+
+    static func makeImageInsets(for insets: CommandLine.Insets) throws -> Image.Insets {
+        guard !insets.isEmpty else { return .zero }
+
+        guard insets.top != nil,
+              insets.left != nil,
+              insets.right != nil,
+              insets.bottom != nil else {
+            throw Error.unsupported
+        }
+        return Image.Insets(
+            top: insets.top!,
+            left: insets.left!,
+            bottom: insets.bottom!,
+            right: insets.right!
+        )
     }
 }
 

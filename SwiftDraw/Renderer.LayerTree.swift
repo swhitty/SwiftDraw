@@ -52,8 +52,6 @@ struct LayerTreeProvider: RendererTypeProvider {
   
   typealias Types = LayerTreeTypes
   
-  var supportsTransparencyLayers: Bool = true
-  
   func createFloat(from float: LayerTree.Float) -> LayerTree.Float {
     return float
   }

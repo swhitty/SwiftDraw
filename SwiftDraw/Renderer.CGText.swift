@@ -51,7 +51,6 @@ struct CGTextTypes: RendererTypes {
 struct CGTextProvider: RendererTypeProvider {
   typealias Types = CGTextTypes
   
-  var supportsTransparencyLayers: Bool = true
   let formatter: CoordinateFormatter
 
   init(formatter: CoordinateFormatter) {

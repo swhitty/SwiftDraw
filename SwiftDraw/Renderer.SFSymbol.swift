@@ -432,12 +432,6 @@ private enum ContainerError: Error {
     case missingElement(String)
 }
 
-private extension CommandLine.Insets {
-    var isEmpty: Bool {
-        top == nil && left == nil && bottom == nil && right == nil
-    }
-}
-
 private extension DOM.Path {
     var x: DOM.Float {
         get {

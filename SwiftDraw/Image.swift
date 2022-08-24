@@ -155,4 +155,23 @@ public extension Image {
 
         self.init(svg: svg, options: options)
     }
+
+
+    struct Insets: Equatable {
+        public var top: CGFloat
+        public var left: CGFloat
+        public var bottom: CGFloat
+        public var right: CGFloat
+
+        public static let zero = Insets(top: 0, left: 0, bottom: 0, right: 0)
+
+        func applying(scale: CGFloat) -> Self {
+            Insets(
+                top: top * scale,
+                left: left * scale,
+                bottom: bottom * scale,
+                right: right * scale
+            )
+        }
+    }
 }

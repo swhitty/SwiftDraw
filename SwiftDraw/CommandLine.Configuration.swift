@@ -75,6 +75,10 @@ extension CommandLine {
             self.bottom = bottom
             self.right = right
         }
+
+        var isEmpty: Bool {
+            top == nil && left == nil && bottom == nil && right == nil
+        }
     }
 
     public static func parseConfiguration(from args: [String], baseDirectory: URL) throws -> Configuration {
@@ -183,7 +187,7 @@ extension CommandLine {
     }
 
     static func parseOptions(from modifiers: [CommandLine.Modifier: String?]) throws -> Image.Options {
-        var options: Image.Options = [.default, .commandLine]
+        var options: Image.Options = .default
 
         if modifiers.keys.contains(.hideUnsupportedFilters) {
             options.insert(.hideUnsupportedFilters)
@@ -204,6 +208,7 @@ private extension XMLParser.Scanner {
 }
 
 extension Image.Options {
+    static let disableTransparencyLayers = Self(rawValue: 1 << 8)
     static let commandLine = Self(rawValue: 1 << 9)
 }
 

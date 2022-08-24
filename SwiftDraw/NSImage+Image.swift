@@ -35,106 +35,154 @@ import CoreGraphics
 
 public extension NSImage {
 
-  convenience init?(svgNamed name: String, in bundle: Bundle = .main, options: Image.Options = .default) {
-    guard let image = Image(named: name, in: bundle, options: options) else { return nil }
-    self.init(image)
-  }
-
-  @objc(initWithSVGData:)
-  convenience init?(_ data: Data) {
-    guard let image = Image(data: data) else { return nil }
-    self.init(image)
-  }
-
-  @objc(initWithContentsOfSVGFile:)
-  convenience init?(contentsOfSVGFile path: String) {
-    guard let image = Image(fileURL: URL(fileURLWithPath: path)) else { return nil }
-    self.init(image)
-  }
-
-  @objc(svgNamed:)
-  static func _svgNamed(_ name: String) -> NSImage? {
-    NSImage(svgNamed: name, in: .main)
-  }
-
-  @objc(svgNamed:inBundle:)
-  static func _svgNamed(_ name: String, in bundle: Bundle) -> NSImage? {
-    NSImage(svgNamed: name, in: bundle)
-  }
-
-  convenience init(_ image: Image) {
-    self.init(size: image.size, flipped: true) { rect in
-      guard let ctx = NSGraphicsContext.current?.cgContext else { return false }
-      ctx.draw(image, in: CGRect(x: 0, y: 0, width: rect.size.width, height: rect.size.height))
-      return true
+    convenience init?(svgNamed name: String, in bundle: Bundle = .main, options: Image.Options = .default) {
+        guard let image = Image(named: name, in: bundle, options: options) else { return nil }
+        self.init(image)
     }
-  }
+
+    @objc(initWithSVGData:)
+    convenience init?(_ data: Data) {
+        guard let image = Image(data: data) else { return nil }
+        self.init(image)
+    }
+
+    @objc(initWithContentsOfSVGFile:)
+    convenience init?(contentsOfSVGFile path: String) {
+        guard let image = Image(fileURL: URL(fileURLWithPath: path)) else { return nil }
+        self.init(image)
+    }
+
+    @objc(svgNamed:)
+    static func _svgNamed(_ name: String) -> NSImage? {
+        NSImage(svgNamed: name, in: .main)
+    }
+
+    @objc(svgNamed:inBundle:)
+    static func _svgNamed(_ name: String, in bundle: Bundle) -> NSImage? {
+        NSImage(svgNamed: name, in: bundle)
+    }
+
+    convenience init(_ image: Image) {
+        self.init(size: image.size, flipped: true) { rect in
+            guard let ctx = NSGraphicsContext.current?.cgContext else { return false }
+            ctx.draw(image, in: CGRect(x: 0, y: 0, width: rect.size.width, height: rect.size.height))
+            return true
+        }
+    }
 }
 
 public extension Image {
-  func rasterize() -> NSImage {
-    return rasterize(with: size)
-  }
-
-  func rasterize(with size: CGSize) -> NSImage {
-    let imageSize = NSSize(width: size.width, height: size.height)
-
-    let image = NSImage(size: imageSize, flipped: true) { rect in
-      guard let ctx = NSGraphicsContext.current?.cgContext else { return false }
-      ctx.draw(self, in: CGRect(x: 0, y: 0, width: rect.size.width, height: rect.size.height))
-      return true
+    func rasterize() -> NSImage {
+        return rasterize(with: size)
     }
 
-    return image
-  }
+    func rasterize(with size: CGSize) -> NSImage {
+        let imageSize = NSSize(width: size.width, height: size.height)
 
-  func createBitmap(size: CGSize? = nil, scale: CGFloat = 1, isOpaque: Bool = false) -> NSBitmapImageRep? {
+        let image = NSImage(size: imageSize, flipped: true) { rect in
+            guard let ctx = NSGraphicsContext.current?.cgContext else { return false }
+            ctx.draw(self, in: CGRect(x: 0, y: 0, width: rect.size.width, height: rect.size.height))
+            return true
+        }
 
-    let defaultScale = NSScreen.main?.backingScaleFactor ?? 1.0
-    let renderScale = scale == 0 ? defaultScale : scale
-    let renderSize = size ?? self.size
+        return image
+    }
 
-    let width = Int(ceil(renderSize.width * renderScale))
-    let height = Int(ceil(renderSize.height * renderScale))
+    func pngData(size: CGSize? = nil, scale: CGFloat = 1, insets: Insets = .zero) throws -> Data {
+        let (bounds, pixelsWide, pixelsHigh) = makeBounds(size: size, scale: scale, insets: insets)
+        guard let bitmap = makeBitmap(width: pixelsWide, height: pixelsHigh, isOpaque: false),
+              let ctx = NSGraphicsContext(bitmapImageRep: bitmap)?.cgContext else {
+            throw Error("Failed to create CGContext")
+        }
 
-    return NSBitmapImageRep(bitmapDataPlanes: nil,
-                            pixelsWide: max(width, 0),
-                            pixelsHigh: max(height, 0),
-                            bitsPerSample: 8,
-                            samplesPerPixel: isOpaque ? 3 : 4,
-                            hasAlpha: !isOpaque,
-                            isPlanar: false,
-                            colorSpaceName: NSColorSpaceName.deviceRGB,
-                            bytesPerRow: 0,
-                            bitsPerPixel: 32)
-  }
+        let flip = CGAffineTransform(a: 1, b: 0, c: 0, d: -1, tx: 0, ty: CGFloat(bitmap.pixelsHigh))
+        ctx.concatenate(flip)
+        ctx.draw(self, in: bounds)
 
-  func pngData(size: CGSize? = nil, scale: CGFloat = 1) -> Data? {
-    guard let bitmap = createBitmap(size: size, scale: scale, isOpaque: false),
-      let ctx = NSGraphicsContext(bitmapImageRep: bitmap)?.cgContext else { return nil }
+        guard let data = bitmap.representation(using: .png, properties: [:]) else {
+            throw Error("Failed to retrieve jpeg data")
+        }
+        return data
+    }
 
-    let rect = CGRect(x: 0, y: 0, width: CGFloat(bitmap.pixelsWide), height: CGFloat(bitmap.pixelsHigh))
-    let flip = CGAffineTransform(a: 1, b: 0, c: 0, d: -1, tx: 0, ty: rect.size.height)
-    ctx.concatenate(flip)
-    ctx.draw(self, in: rect)
+    func jpegData(size: CGSize? = nil, scale: CGFloat = 1, compressionQuality quality: CGFloat = 1, insets: Insets = .zero) throws -> Data {
+        let (bounds, pixelsWide, pixelsHigh) = makeBounds(size: size, scale: scale, insets: insets)
+        guard let bitmap = makeBitmap(width: pixelsWide, height: pixelsHigh, isOpaque: true),
+              let ctx = NSGraphicsContext(bitmapImageRep: bitmap)?.cgContext else {
+            throw Error("Failed to create CGContext")
+        }
 
-    return bitmap.representation(using: .png, properties: [:])
-  }
+        let flip = CGAffineTransform(a: 1, b: 0, c: 0, d: -1, tx: 0, ty: CGFloat(bitmap.pixelsHigh))
+        ctx.concatenate(flip)
+        ctx.setFillColor(.white)
+        ctx.fill(bounds)
+        ctx.draw(self, in: bounds)
 
-  func jpegData(size: CGSize? = nil, scale: CGFloat = 1, compressionQuality quality: CGFloat = 1) -> Data? {
-    guard let bitmap = createBitmap(size: size, scale: scale, isOpaque: true),
-      let ctx = NSGraphicsContext(bitmapImageRep: bitmap)?.cgContext else { return nil }
+        guard let data = bitmap.representation(using: .jpeg, properties: [NSBitmapImageRep.PropertyKey.compressionFactor: quality]) else {
+            throw Error("Failed to retrieve jpeg data")
+        }
+        return data
+    }
 
-    let rect = CGRect(x: 0, y: 0, width: CGFloat(bitmap.pixelsWide), height: CGFloat(bitmap.pixelsHigh))
+    private struct Error: LocalizedError {
+        var errorDescription: String?
 
-    let flip = CGAffineTransform(a: 1, b: 0, c: 0, d: -1, tx: 0, ty: rect.size.height)
-    ctx.concatenate(flip)
-    ctx.setFillColor(.white)
-    ctx.fill(rect)
-    ctx.draw(self, in: rect)
-
-    return bitmap.representation(using: .jpeg, properties: [NSBitmapImageRep.PropertyKey.compressionFactor: quality])
-  }
+        init(_ message: String) {
+            self.errorDescription = message
+        }
+    }
 }
 
+extension Image {
+
+    func makeBounds(size: CGSize?, scale: CGFloat, insets: Insets) -> (bounds: CGRect, pixelsWide: Int, pixelsHigh: Int) {
+        let scale = scale == 0 ? (NSScreen.main?.backingScaleFactor ?? 1.0) : scale
+        let insets = insets.applying(scale: scale)
+        guard insets != .zero else {
+            // no insets, just return size
+            let renderSize = size ?? self.size
+            let bounds = CGRect(x: 0, y: 0, width: renderSize.width * scale, height: renderSize.height * scale)
+            return (
+                bounds: bounds,
+                pixelsWide: Int(bounds.width),
+                pixelsHigh: Int(bounds.height)
+            )
+        }
+
+        guard let size = size else {
+            // no size, inset default size by insets
+            let width = self.size.width * scale
+            let height = self.size.height * scale
+            let bounds = CGRect(x: -insets.left, y: -insets.top, width: width, height: height)
+            print(bounds)
+            return (
+                bounds: bounds,
+                pixelsWide: Int(width - (insets.left + insets.right)),
+                pixelsHigh: Int(height - (insets.top + insets.bottom))
+            )
+        }
+
+        fatalError()
+//
+//        // custom insets AND size provided
+//        let scaleX = self.size.width - (left + right)
+//        let scaleX = size.width / self.size
+    }
+
+    func makeBitmap(width: Int, height: Int, isOpaque: Bool) -> NSBitmapImageRep? {
+        guard width > 0 && height > 0 else { return nil }
+        return NSBitmapImageRep(
+            bitmapDataPlanes: nil,
+            pixelsWide: width,
+            pixelsHigh: height,
+            bitsPerSample: 8,
+            samplesPerPixel: isOpaque ? 3 : 4,
+            hasAlpha: !isOpaque,
+            isPlanar: false,
+            colorSpaceName: NSColorSpaceName.deviceRGB,
+            bytesPerRow: 0,
+            bitsPerPixel: 32
+        )
+    }
+}
 #endif

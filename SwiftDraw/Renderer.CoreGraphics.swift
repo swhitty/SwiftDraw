@@ -79,12 +79,6 @@ final class CGTransformingPattern: Equatable {
 struct CGProvider: RendererTypeProvider {
     typealias Types = CGTypes
 
-    var supportsTransparencyLayers: Bool
-
-    init(supportsTransparencyLayers: Bool = true) {
-        self.supportsTransparencyLayers = supportsTransparencyLayers
-    }
-
     func createFloat(from float: LayerTree.Float) -> CGFloat {
         return CGFloat(float)
     }

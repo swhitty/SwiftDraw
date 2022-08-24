@@ -51,10 +51,10 @@ extension LayerTree {
         }
 
         func renderCommands(for layer: Layer, colorConverter: ColorConverter = DefaultColorConverter()) -> [RendererCommand<P.Types>] {
-            if provider.supportsTransparencyLayers {
-                return renderCommandsWithTransparency(for: layer, colorConverter: colorConverter)
-            } else {
+            if options.contains(.disableTransparencyLayers) {
                 return renderCommandsWithoutTransparency(for: layer, colorConverter: colorConverter)
+            } else {
+                return renderCommandsWithTransparency(for: layer, colorConverter: colorConverter)
             }
         }
 
