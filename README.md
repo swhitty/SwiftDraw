@@ -119,6 +119,8 @@ Optional [variants](https://github.com/swhitty/SwiftDraw/blob/main/Samples/key/k
 $ swiftdraw key.svg --format sfsymbol --ultralight key-ultralight.svg --black key-black.svg
 ```
 
+SwiftDraw automatically expands strokes and wind paths using the [non-zero rule](https://en.wikipedia.org/wiki/Nonzero-rule) creating custom SFSymbols that can be imported directly into Xcode.
+
 #### Alignment
 
 By default, SwiftDraw automatically sizes and aligns the content to the template guides.  SwiftDraw will output the alignment insets used:
