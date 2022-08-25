@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" fill="none" stroke="black" stroke-width="18" stroke-linecap="round" stroke-linejoin="round">
+	<g transform="rotate(-45, 80, 170)">
+		<circle cx="80" cy="170" r="45" />
+		<line x1="125" y1="170" x2="255" y2="170" />
+		<rect x="185" y="170" width="45" height="40" />	
+	</g>
+</svg>
