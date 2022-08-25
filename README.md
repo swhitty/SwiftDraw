@@ -25,7 +25,7 @@ let svg = SVG(named: "sample.svg", in: .main)!
 imageView.image = svg.rasterize(with: CGSize(width: 640, height: 480))
 ```
 
-Or crop the image using insets
+Or crop the image using insets:
 
 ```swift
 let svg = SVG(named: "sample.svg", in: .main)!
@@ -34,7 +34,7 @@ imageView.image = svg.rasterize(insets: .init(top: 10, left: 0, bottom: 10, bott
 
 ## iOS
 
-Create a `UIImage` directly from an SVG within a bundle, `Data` or file `URL`.
+Create a `UIImage` directly from an SVG within a bundle, `Data` or file `URL`:
 
 ```swift
 import SwiftDraw
@@ -43,7 +43,7 @@ let image = UIImage(svgNamed: "sample.svg")
 
 ## macOS
 
-Create an `NSImage` directly from an SVG within a bundle, `Data` or file `URL`.
+Create an `NSImage` directly from an SVG within a bundle, `Data` or file `URL`:
 
 ```swift
 import SwiftDraw
