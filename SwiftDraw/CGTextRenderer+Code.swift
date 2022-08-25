@@ -38,7 +38,7 @@ public extension CGTextRenderer {
     static func render(named name: String,
                        in bundle: Bundle = Bundle.main,
                        size: Size? = nil,
-                       options: Image.Options,
+                       options: SVG.Options,
                        api: CGTextRenderer.API,
                        precision: Int) throws -> String {
         guard let url = bundle.url(forResource: name, withExtension: nil) else {
@@ -47,7 +47,7 @@ public extension CGTextRenderer {
         return try render(fileURL: url, size: size, options: options, api: api, precision: precision)
     }
 
-    static func render(fileURL: URL, size: Size? = nil, options: Image.Options, api: CGTextRenderer.API, precision: Int) throws -> String {
+    static func render(fileURL: URL, size: Size? = nil, options: SVG.Options, api: CGTextRenderer.API, precision: Int) throws -> String {
         let svg = try DOM.SVG.parse(fileURL: fileURL)
         let size = makeSize(svg: svg, size: size)
         let identifier = fileURL.lastPathComponent
@@ -65,7 +65,7 @@ public extension CGTextRenderer {
                           precision: precision)
     }
 
-    static func render(data: Data, options: Image.Options, api: CGTextRenderer.API, precision: Int) throws -> String {
+    static func render(data: Data, options: SVG.Options, api: CGTextRenderer.API, precision: Int) throws -> String {
         let svg = try DOM.SVG.parse(data: data)
         let size = makeSize(svg: svg, size: nil)
         return cgCodeText(api: api,
@@ -94,7 +94,7 @@ public extension CGTextRenderer {
                                    name: String,
                                    svg: DOM.SVG,
                                    size: LayerTree.Size,
-                                   options: Image.Options,
+                                   options: SVG.Options,
                                    precision: Int) -> String {
         let layer = LayerTree.Builder(svg: svg).makeLayer()
         let commandSize = LayerTree.Size(svg.width, svg.height)

@@ -38,192 +38,192 @@ final class ImageCoreGraphicsTests: XCTestCase {
 
     func testPixelWide_WithInsetsZero() {
         XCTAssertEqual(
-            Image.makeBounds(size: nil,
-                             defaultSize: CGSize(width: 100, height: 50),
-                             scale: 1,
-                             insets: .zero).pixelsWide,
+            SVG.makeBounds(size: nil,
+                           defaultSize: CGSize(width: 100, height: 50),
+                           scale: 1,
+                           insets: .zero).pixelsWide,
             100
         )
         XCTAssertEqual(
-            Image.makeBounds(size: nil,
-                             defaultSize: CGSize(width: 100, height: 50),
-                             scale: 2,
-                             insets: .zero).pixelsWide,
+            SVG.makeBounds(size: nil,
+                           defaultSize: CGSize(width: 100, height: 50),
+                           scale: 2,
+                           insets: .zero).pixelsWide,
             200
         )
         XCTAssertEqual(
-            Image.makeBounds(size: CGSize(width: 300, height: 200),
-                             defaultSize: CGSize(width: 100, height: 50),
-                             scale: 1,
-                             insets: .zero).pixelsWide,
+            SVG.makeBounds(size: CGSize(width: 300, height: 200),
+                           defaultSize: CGSize(width: 100, height: 50),
+                           scale: 1,
+                           insets: .zero).pixelsWide,
             300
         )
         XCTAssertEqual(
-            Image.makeBounds(size: CGSize(width: 300, height: 200),
-                             defaultSize: CGSize(width: 100, height: 50),
-                             scale: 2,
-                             insets: .zero).pixelsWide,
+            SVG.makeBounds(size: CGSize(width: 300, height: 200),
+                           defaultSize: CGSize(width: 100, height: 50),
+                           scale: 2,
+                           insets: .zero).pixelsWide,
             600
         )
     }
 
     func testPixelHigh_WithInsetsZero() {
         XCTAssertEqual(
-            Image.makeBounds(size: nil,
-                             defaultSize: CGSize(width: 100, height: 50),
-                             scale: 1,
-                             insets: .zero).pixelsHigh,
+            SVG.makeBounds(size: nil,
+                           defaultSize: CGSize(width: 100, height: 50),
+                           scale: 1,
+                           insets: .zero).pixelsHigh,
             50
         )
         XCTAssertEqual(
-            Image.makeBounds(size: nil,
-                             defaultSize: CGSize(width: 100, height: 50),
-                             scale: 2,
-                             insets: .zero).pixelsHigh,
+            SVG.makeBounds(size: nil,
+                           defaultSize: CGSize(width: 100, height: 50),
+                           scale: 2,
+                           insets: .zero).pixelsHigh,
             100
         )
         XCTAssertEqual(
-            Image.makeBounds(size: CGSize(width: 300, height: 200),
-                             defaultSize: CGSize(width: 100, height: 50),
-                             scale: 1,
-                             insets: .zero).pixelsHigh,
+            SVG.makeBounds(size: CGSize(width: 300, height: 200),
+                           defaultSize: CGSize(width: 100, height: 50),
+                           scale: 1,
+                           insets: .zero).pixelsHigh,
             200
         )
         XCTAssertEqual(
-            Image.makeBounds(size: CGSize(width: 300, height: 200),
-                             defaultSize: CGSize(width: 100, height: 50),
-                             scale: 2,
-                             insets: .zero).pixelsHigh,
+            SVG.makeBounds(size: CGSize(width: 300, height: 200),
+                           defaultSize: CGSize(width: 100, height: 50),
+                           scale: 2,
+                           insets: .zero).pixelsHigh,
             400
         )
     }
 
     func testPixelWide_WithInsets() {
         XCTAssertEqual(
-            Image.makeBounds(size: nil,
-                             defaultSize: CGSize(width: 100, height: 50),
-                             scale: 1,
-                             insets: .make(left: 5, right: 20)).pixelsWide,
+            SVG.makeBounds(size: nil,
+                           defaultSize: CGSize(width: 100, height: 50),
+                           scale: 1,
+                           insets: .make(left: 5, right: 20)).pixelsWide,
             75
         )
         XCTAssertEqual(
-            Image.makeBounds(size: nil,
-                             defaultSize: CGSize(width: 100, height: 50),
-                             scale: 2,
-                             insets: .make(left: 5, right: 20)).pixelsWide,
+            SVG.makeBounds(size: nil,
+                           defaultSize: CGSize(width: 100, height: 50),
+                           scale: 2,
+                           insets: .make(left: 5, right: 20)).pixelsWide,
             150
         )
         XCTAssertEqual(
-            Image.makeBounds(size: CGSize(width: 300, height: 200),
-                             defaultSize: CGSize(width: 100, height: 50),
-                             scale: 1,
-                             insets: .make(left: 5, right: 20)).pixelsWide,
+            SVG.makeBounds(size: CGSize(width: 300, height: 200),
+                           defaultSize: CGSize(width: 100, height: 50),
+                           scale: 1,
+                           insets: .make(left: 5, right: 20)).pixelsWide,
             300
         )
         XCTAssertEqual(
-            Image.makeBounds(size: CGSize(width: 300, height: 200),
-                             defaultSize: CGSize(width: 100, height: 50),
-                             scale: 2,
-                             insets: .make(left: 5, right: 20)).pixelsWide,
+            SVG.makeBounds(size: CGSize(width: 300, height: 200),
+                           defaultSize: CGSize(width: 100, height: 50),
+                           scale: 2,
+                           insets: .make(left: 5, right: 20)).pixelsWide,
             600
         )
     }
 
     func testPixelHigh_WithInsets() {
         XCTAssertEqual(
-            Image.makeBounds(size: nil,
-                             defaultSize: CGSize(width: 100, height: 50),
-                             scale: 1,
-                             insets: .make(top: 15, bottom: 30)).pixelsHigh,
+            SVG.makeBounds(size: nil,
+                           defaultSize: CGSize(width: 100, height: 50),
+                           scale: 1,
+                           insets: .make(top: 15, bottom: 30)).pixelsHigh,
             5
         )
         XCTAssertEqual(
-            Image.makeBounds(size: nil,
-                             defaultSize: CGSize(width: 100, height: 50),
-                             scale: 2,
-                             insets: .make(top: 15, bottom: 30)).pixelsHigh,
+            SVG.makeBounds(size: nil,
+                           defaultSize: CGSize(width: 100, height: 50),
+                           scale: 2,
+                           insets: .make(top: 15, bottom: 30)).pixelsHigh,
             10
         )
         XCTAssertEqual(
-            Image.makeBounds(size: CGSize(width: 300, height: 200),
-                             defaultSize: CGSize(width: 100, height: 50),
-                             scale: 1,
-                             insets: .make(top: 15, bottom: 30)).pixelsHigh,
+            SVG.makeBounds(size: CGSize(width: 300, height: 200),
+                           defaultSize: CGSize(width: 100, height: 50),
+                           scale: 1,
+                           insets: .make(top: 15, bottom: 30)).pixelsHigh,
             200
         )
         XCTAssertEqual(
-            Image.makeBounds(size: CGSize(width: 300, height: 200),
-                             defaultSize: CGSize(width: 100, height: 50),
-                             scale: 2,
-                             insets: .make(top: 15, bottom: 30)).pixelsHigh,
+            SVG.makeBounds(size: CGSize(width: 300, height: 200),
+                           defaultSize: CGSize(width: 100, height: 50),
+                           scale: 2,
+                           insets: .make(top: 15, bottom: 30)).pixelsHigh,
             400
         )
     }
 
     func testBounds_WithInsetsZero() {
         XCTAssertEqual(
-            Image.makeBounds(size: nil,
-                             defaultSize: CGSize(width: 100, height: 50),
-                             scale: 1,
-                             insets: .zero).bounds,
+            SVG.makeBounds(size: nil,
+                           defaultSize: CGSize(width: 100, height: 50),
+                           scale: 1,
+                           insets: .zero).bounds,
             CGRect(x: 0, y: 0, width: 100, height: 50)
         )
         XCTAssertEqual(
-            Image.makeBounds(size: nil,
-                             defaultSize: CGSize(width: 100, height: 50),
-                             scale: 2,
-                             insets: .zero).bounds,
+            SVG.makeBounds(size: nil,
+                           defaultSize: CGSize(width: 100, height: 50),
+                           scale: 2,
+                           insets: .zero).bounds,
             CGRect(x: 0, y: 0, width: 200, height: 100)
         )
         XCTAssertEqual(
-            Image.makeBounds(size: CGSize(width: 300, height: 200),
-                             defaultSize: CGSize(width: 100, height: 50),
-                             scale: 1,
-                             insets: .zero).bounds,
+            SVG.makeBounds(size: CGSize(width: 300, height: 200),
+                           defaultSize: CGSize(width: 100, height: 50),
+                           scale: 1,
+                           insets: .zero).bounds,
             CGRect(x: 0, y: 0, width: 300, height: 200)
         )
         XCTAssertEqual(
-            Image.makeBounds(size: CGSize(width: 300, height: 200),
-                             defaultSize: CGSize(width: 100, height: 50),
-                             scale: 2,
-                             insets: .zero).bounds,
+            SVG.makeBounds(size: CGSize(width: 300, height: 200),
+                           defaultSize: CGSize(width: 100, height: 50),
+                           scale: 2,
+                           insets: .zero).bounds,
             CGRect(x: 0, y: 0, width: 600, height: 400)
         )
     }
 
     func testBounds_WithInsets() {
         XCTAssertEqual(
-            Image.makeBounds(size: nil,
-                             defaultSize: CGSize(width: 100, height: 50),
-                             scale: 1,
-                             insets: .make(top: 5, left: 10, bottom: 15, right: 20)).bounds,
+            SVG.makeBounds(size: nil,
+                           defaultSize: CGSize(width: 100, height: 50),
+                           scale: 1,
+                           insets: .make(top: 5, left: 10, bottom: 15, right: 20)).bounds,
             CGRect(x: -10, y: -5, width: 100, height: 50)
         )
         XCTAssertEqual(
-            Image.makeBounds(size: nil,
-                             defaultSize: CGSize(width: 100, height: 50),
-                             scale: 2,
-                             insets: .make(top: 5, left: 10, bottom: 15, right: 20)).bounds,
+            SVG.makeBounds(size: nil,
+                           defaultSize: CGSize(width: 100, height: 50),
+                           scale: 2,
+                           insets: .make(top: 5, left: 10, bottom: 15, right: 20)).bounds,
             CGRect(x: -20, y: -10, width: 200, height: 100)
         )
         XCTAssertEqual(
-            Image.makeBounds(size: CGSize(width: 200, height: 200),
-                             defaultSize: CGSize(width: 100, height: 100),
-                             scale: 1,
-                             insets: .make(top: 10, left: 10, bottom: 10, right: 10)).bounds,
+            SVG.makeBounds(size: CGSize(width: 200, height: 200),
+                           defaultSize: CGSize(width: 100, height: 100),
+                           scale: 1,
+                           insets: .make(top: 10, left: 10, bottom: 10, right: 10)).bounds,
             CGRect(x: -25, y: -25, width: 250, height: 250)
         )
         XCTAssertEqual(
-            Image.makeBounds(size: CGSize(width: 200, height: 200),
-                             defaultSize: CGSize(width: 100, height: 100),
-                             scale: 2,
-                             insets: .make(top: 10, left: 10, bottom: 10, right: 10)).bounds,
+            SVG.makeBounds(size: CGSize(width: 200, height: 200),
+                           defaultSize: CGSize(width: 100, height: 100),
+                           scale: 2,
+                           insets: .make(top: 10, left: 10, bottom: 10, right: 10)).bounds,
             CGRect(x: -50, y: -50, width: 500, height: 500)
         )
     }
 }
 
-private extension Image.Insets {
+private extension SVG.Insets {
     static func make(top: CGFloat = 0,
                      left: CGFloat = 0,
                      bottom: CGFloat = 0,

@@ -55,7 +55,7 @@ final class NSImageTests: XCTestCase {
 
   func testImageDraws() {
     let canvas = NSBitmapImageRep(pixelsWide: 2, pixelsHigh: 2)
-    let image = Image.makeQuad().rasterize(with: CGSize(width: 2, height: 2))
+    let image = SVG.makeQuad().rasterize(with: CGSize(width: 2, height: 2))
 
     canvas.lockFocus()
     image.draw(in: NSRect(x: 0, y: 0, width: 2, height: 2))
@@ -66,15 +66,15 @@ final class NSImageTests: XCTestCase {
   }
 }
 
-private extension Image {
+private extension SVG {
 
-  static func makeQuad() -> Image {
+  static func makeQuad() -> SVG {
     let svg = DOM.SVG(width: 2, height: 2)
     svg.childElements.append(DOM.Rect(x: 0, y: 0, width: 1, height: 1))
     svg.childElements.append(DOM.Rect(x: 1, y: 1, width: 1, height: 1))
     svg.childElements[0].attributes.fill = .color(DOM.Color.rgbi(255, 0, 0))
     svg.childElements[1].attributes.fill = .color(DOM.Color.rgbi(0, 0, 255))
-    return Image(svg: svg, options: .default)
+    return SVG(dom: svg, options: .default)
   }
 }
 

@@ -35,7 +35,7 @@ import Foundation
 
 public extension CGContext {
 
-    func draw(_ image: Image, in rect: CGRect? = nil)  {
+    func draw(_ image: SVG, in rect: CGRect? = nil)  {
         let defaultRect = CGRect(x: 0, y: 0, width: image.size.width, height: image.size.height)
         let renderer = CGRenderer(context: self)
 
@@ -59,7 +59,7 @@ public extension CGContext {
     }
 }
 
-public extension Image {
+public extension SVG {
 
     func pdfData(size: CGSize? = nil, insets: Insets = .zero) throws -> Data {
         let (bounds, pixelsWide, pixelsHigh) = makeBounds(size: size, scale: 1, insets: insets)
@@ -90,7 +90,7 @@ public extension Image {
     }
 }
 
-extension Image {
+extension SVG {
 
     static func makeBounds(size: CGSize?,
                            defaultSize: CGSize,
@@ -121,7 +121,7 @@ extension Image {
     }
 }
 
-private extension Image.Insets {
+private extension SVG.Insets {
     func applying(sx: CGFloat, sy: CGFloat) -> Self {
         Self(
             top: top * sy,

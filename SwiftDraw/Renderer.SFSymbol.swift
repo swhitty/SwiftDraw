@@ -33,13 +33,13 @@ import Foundation
 
 public struct SFSymbolRenderer {
 
-    private let options: Image.Options
+    private let options: SVG.Options
     private let insets: CommandLine.Insets
     private let insetsUltralight: CommandLine.Insets
     private let insetsBlack: CommandLine.Insets
     private let formatter: CoordinateFormatter
 
-    public init(options: Image.Options,
+    public init(options: SVG.Options,
                 insets: CommandLine.Insets,
                 insetsUltralight: CommandLine.Insets,
                 insetsBlack: CommandLine.Insets,

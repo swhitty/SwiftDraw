@@ -45,7 +45,7 @@ extension CommandLine {
         public var insetsUltralight: Insets?
         public var insetsBlack: Insets?
         public var scale: Scale
-        public var options: Image.Options
+        public var options: SVG.Options
         public var precision: Int?
     }
 
@@ -226,8 +226,8 @@ extension CommandLine {
         )
     }
 
-    static func parseOptions(from modifiers: [CommandLine.Modifier: String?]) throws -> Image.Options {
-        var options: Image.Options = .default
+    static func parseOptions(from modifiers: [CommandLine.Modifier: String?]) throws -> SVG.Options {
+        var options: SVG.Options = .default
 
         if modifiers.keys.contains(.hideUnsupportedFilters) {
             options.insert(.hideUnsupportedFilters)
@@ -247,7 +247,7 @@ private extension XMLParser.Scanner {
     }
 }
 
-extension Image.Options {
+extension SVG.Options {
     static let disableTransparencyLayers = Self(rawValue: 1 << 8)
     static let commandLine = Self(rawValue: 1 << 9)
 }

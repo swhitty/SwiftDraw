@@ -35,24 +35,24 @@ import Foundation
 import CoreGraphics
 
 @objc(SVGImage)
-public final class Image: NSObject {
+public final class SVG: NSObject {
     public let size: CGSize
 
     //An Image is simply an array of CoreGraphics draw commands
     //see: Renderer.swift
     let commands: [RendererCommand<CGTypes>]
 
-    init(svg: DOM.SVG, options: Options) {
-        size = CGSize(width: svg.width, height: svg.height)
+    init(dom: DOM.SVG, options: Options) {
+        self.size = CGSize(width: dom.width, height: dom.height)
 
         //To create the draw commands;
         // - XML is parsed into DOM.SVG
         // - DOM.SVG is converted into a LayerTree
         // - LayerTree is converted into RenderCommands
         // - RenderCommands are performed by Renderer (drawn to CGContext)
-        let layer = LayerTree.Builder(svg: svg).makeLayer()
+        let layer = LayerTree.Builder(svg: dom).makeLayer()
         let generator = LayerTree.CommandGenerator(provider: CGProvider(),
-                                                   size: LayerTree.Size(svg.width, svg.height),
+                                                   size: LayerTree.Size(dom.width, dom.height),
                                                    options: options)
 
         let optimizer = LayerTree.CommandOptimizer<CGTypes>()
@@ -72,13 +72,17 @@ public final class Image: NSObject {
         public static let `default`: Options = []
     }
 }
+
+@available(*, deprecated, renamed: "SVG")
+public typealias Image = SVG
+
 #else
 
-public final class Image: NSObject {
+public final class SVG: NSObject {
     public let size: CGSize
 
-    init(svg: DOM.SVG, options: Options) {
-        size = CGSize(width: svg.width, height: svg.height)
+    init(dom: DOM.SVG, options: Options) {
+        size = CGSize(width: dom.width, height: dom.height)
     }
 
     public struct Options: OptionSet {
@@ -93,7 +97,7 @@ public final class Image: NSObject {
     }
 }
 
-public extension Image {
+public extension SVG {
 
     func pngData(size: CGSize? = nil, scale: CGFloat = 1) -> Data? {
         return nil
@@ -128,19 +132,19 @@ extension DOM.SVG {
     }
 }
 
-public extension Image {
+public extension SVG {
 
-    convenience init?(fileURL url: URL, options: Image.Options = .default) {
+    convenience init?(fileURL url: URL, options: SVG.Options = .default) {
         do {
             let svg = try DOM.SVG.parse(fileURL: url)
-            self.init(svg: svg, options: options)
+            self.init(dom: svg, options: options)
         } catch {
             XMLParser.logParsingError(for: error, filename: url.lastPathComponent, parsing: nil)
             return nil
         }
     }
 
-    convenience init?(named name: String, in bundle: Bundle = Bundle.main, options: Image.Options = .default) {
+    convenience init?(named name: String, in bundle: Bundle = Bundle.main, options: SVG.Options = .default) {
         guard let url = bundle.url(forResource: name, withExtension: nil) else {
             return nil
         }
@@ -148,12 +152,12 @@ public extension Image {
         self.init(fileURL: url, options: options)
     }
 
-    convenience init?(data: Data, options: Image.Options = .default) {
+    convenience init?(data: Data, options: SVG.Options = .default) {
         guard let svg = try? DOM.SVG.parse(data: data) else {
             return nil
         }
 
-        self.init(svg: svg, options: options)
+        self.init(dom: svg, options: options)
     }
 
 

@@ -39,13 +39,13 @@ extension LayerTree {
         let provider: P
         let size: LayerTree.Size
         let scale: LayerTree.Float
-        let options: SwiftDraw.Image.Options
+        let options: SVG.Options
 
         private var hasLoggedFilterWarning = false
         private var hasLoggedGradientWarning = false
         private var hasLoggedMaskWarning = false
 
-        init(provider: P, size: LayerTree.Size, scale: LayerTree.Float = 3.0, options: SwiftDraw.Image.Options) {
+        init(provider: P, size: LayerTree.Size, scale: LayerTree.Float = 3.0, options: SVG.Options) {
             self.provider = provider
             self.size = size
             self.scale = scale

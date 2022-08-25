@@ -65,14 +65,14 @@ class ViewController: UIViewController {
 
     override func loadView() {
         let imageView = UIImageView(frame: UIScreen.main.bounds)
-        imageView.image = Image(named: "stylesheet.svg", in: .samples)?.rasterize()
+        imageView.image = SVG(named: "stylesheet.svg", in: .samples)?.rasterize()
         imageView.contentMode = .scaleAspectFit
         imageView.backgroundColor = .white
         self.view = imageView
     }
 }
 
-private extension Image {
+private extension SVG {
 
   // UIImage backed with PDF preserves vector data.
 

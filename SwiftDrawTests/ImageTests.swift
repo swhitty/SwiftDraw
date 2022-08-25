@@ -35,21 +35,21 @@ import XCTest
 final class ImageTests: XCTestCase {
 
     func testValidSVGLoads() {
-        XCTAssertNotNil(Image(named: "lines.svg", in: .test))
+        XCTAssertNotNil(SVG(named: "lines.svg", in: .test))
     }
 
     func testInvalidSVGReturnsNil() {
-        XCTAssertNil(Image(named: "invalid.svg", in: .test))
+        XCTAssertNil(SVG(named: "invalid.svg", in: .test))
     }
 
     func testMissingSVGReturnsNil() {
-        XCTAssertNil(Image(named: "missing.svg", in: .test))
+        XCTAssertNil(SVG(named: "missing.svg", in: .test))
     }
 
 #if canImport(CoreGraphics)
     func testImageRasterizes() {
-        let image = Image.makeLines()
-        let rendered = image.rasterize()
+        let image = SVG.makeLines()
+        let rendered = image.rasterize(scale: 1)
         XCTAssertEqual(rendered.size, image.size)
         XCTAssertNoThrow(try image.pngData())
         XCTAssertNoThrow(try image.jpegData())
@@ -57,16 +57,16 @@ final class ImageTests: XCTestCase {
     }
 
     func testImageRasterizeAndScales() {
-        let image = Image.makeLines()
+        let image = SVG.makeLines()
         let doubleSize = CGSize(width: 200, height: 200)
-        let rendered = image.rasterize(with: doubleSize)
+        let rendered = image.rasterize(with: doubleSize, scale: 1)
         XCTAssertEqual(rendered.size, doubleSize)
         XCTAssertNoThrow(try image.pngData(size: doubleSize))
         XCTAssertNoThrow(try image.jpegData(size: doubleSize))
     }
 
     func testShapesImageRasterizes() throws {
-        let image = try XCTUnwrap(Image(named: "shapes.svg", in: .test))
+        let image = try XCTUnwrap(SVG(named: "shapes.svg", in: .test))
         XCTAssertNoThrow(try image.pngData())
         XCTAssertNoThrow(try image.jpegData())
         XCTAssertNoThrow(try image.pdfData())
@@ -75,12 +75,12 @@ final class ImageTests: XCTestCase {
 
 }
 
-private extension Image {
+private extension SVG {
 
-    static func makeLines() -> Image {
+    static func makeLines() -> SVG {
         let svg = DOM.SVG(width: 100, height: 100)
         svg.childElements.append(DOM.Line(x1: 0, y1: 0, x2: 100, y2: 100))
         svg.childElements.append(DOM.Line(x1: 100, y1: 0, x2: 0, y2: 100))
-        return Image(svg: svg, options: .default)
+        return SVG(dom: svg, options: .default)
     }
 }

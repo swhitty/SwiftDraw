@@ -30,9 +30,9 @@
 //
 
 @testable import SwiftDraw
-#if canImport(CoreGraphics)
-import CoreGraphics
+#if canImport(AppKit)
 import AppKit
+import CoreGraphics
 import XCTest
 
 final class CGRendererTests: XCTestCase {

@@ -34,20 +34,20 @@ import UIKit
 
 public extension UIImage {
 
-    convenience init?(svgNamed name: String, in bundle: Bundle = .main, options: Image.Options = .default) {
-        guard let image = Image(named: name, in: bundle, options: options) else { return nil }
+    convenience init?(svgNamed name: String, in bundle: Bundle = .main, options: SVG.Options = .default) {
+        guard let image = SVG(named: name, in: bundle, options: options) else { return nil }
         self.init(image)
     }
 
     @objc(initWithSVGData:)
     convenience init?(svgData: Data) {
-        guard let image = Image(data: svgData) else { return nil }
+        guard let image = SVG(data: svgData) else { return nil }
         self.init(image)
     }
 
     @objc(initWithContentsOfSVGFile:)
     convenience init?(contentsOfSVGFile path: String) {
-        guard let image = Image(fileURL: URL(fileURLWithPath: path)) else { return nil }
+        guard let image = SVG(fileURL: URL(fileURLWithPath: path)) else { return nil }
         self.init(image)
     }
 
@@ -61,13 +61,13 @@ public extension UIImage {
         UIImage(svgNamed: name, in: bundle)
     }
 
-    convenience init(_ image: Image) {
+    convenience init(_ image: SVG) {
         let image = image.rasterize()
         self.init(cgImage: image.cgImage!, scale: image.scale, orientation: image.imageOrientation)
     }
 }
 
-public extension Image {
+public extension SVG {
     func rasterize() -> UIImage {
         return rasterize(with: size)
     }
@@ -111,7 +111,7 @@ public extension Image {
     }
 }
 
-extension Image {
+extension SVG {
 
     func jpegData(size: CGSize?, scale: CGFloat, insets: Insets) throws -> Data {
         let insets = UIEdgeInsets(top: insets.top, left: insets.left, bottom: insets.bottom, right: insets.right)

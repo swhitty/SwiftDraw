@@ -62,8 +62,8 @@ public extension CommandLine {
             return svg.data(using: .utf8)!
         case .jpeg, .pdf, .png:
             #if canImport(CoreGraphics)
-            let options = makeImageOptions(for: config)
-            guard let image = SwiftDraw.Image(fileURL: config.input, options: options) else {
+            let options = makeSVGOptions(for: config)
+            guard let image = SVG(fileURL: config.input, options: options) else {
                 throw Error.invalid
             }
             return try processImage(image, with: config)
@@ -74,7 +74,7 @@ public extension CommandLine {
         }
     }
 
-    static func makeImageOptions(for config: Configuration) -> Image.Options {
+    static func makeSVGOptions(for config: Configuration) -> SVG.Options {
         var options = config.options
         options.insert(.commandLine)
         if config.format == .pdf {
@@ -91,7 +91,7 @@ public extension CommandLine {
         }
     }
 
-    static func processImage(_ image: SwiftDraw.Image, with config: Configuration) throws -> Data {
+    static func processImage(_ image: SVG, with config: Configuration) throws -> Data {
         #if canImport(CoreGraphics)
         switch config.format {
         case .jpeg:
@@ -111,7 +111,7 @@ public extension CommandLine {
         #endif
     }
 
-    static func makeImageInsets(for insets: CommandLine.Insets) throws -> Image.Insets {
+    static func makeImageInsets(for insets: CommandLine.Insets) throws -> SVG.Insets {
         guard !insets.isEmpty else { return .zero }
 
         guard insets.top != nil,
@@ -120,7 +120,7 @@ public extension CommandLine {
               insets.bottom != nil else {
             throw Error.unsupported
         }
-        return Image.Insets(
+        return SVG.Insets(
             top: insets.top!,
             left: insets.left!,
             bottom: insets.bottom!,

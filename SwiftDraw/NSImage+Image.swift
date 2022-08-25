@@ -35,20 +35,20 @@ import CoreGraphics
 
 public extension NSImage {
 
-    convenience init?(svgNamed name: String, in bundle: Bundle = .main, options: Image.Options = .default) {
-        guard let image = Image(named: name, in: bundle, options: options) else { return nil }
+    convenience init?(svgNamed name: String, in bundle: Bundle = .main, options: SVG.Options = .default) {
+        guard let image = SVG(named: name, in: bundle, options: options) else { return nil }
         self.init(image)
     }
 
     @objc(initWithSVGData:)
     convenience init?(_ data: Data) {
-        guard let image = Image(data: data) else { return nil }
+        guard let image = SVG(data: data) else { return nil }
         self.init(image)
     }
 
     @objc(initWithContentsOfSVGFile:)
     convenience init?(contentsOfSVGFile path: String) {
-        guard let image = Image(fileURL: URL(fileURLWithPath: path)) else { return nil }
+        guard let image = SVG(fileURL: URL(fileURLWithPath: path)) else { return nil }
         self.init(image)
     }
 
@@ -62,7 +62,7 @@ public extension NSImage {
         NSImage(svgNamed: name, in: bundle)
     }
 
-    convenience init(_ image: Image) {
+    convenience init(_ image: SVG) {
         self.init(size: image.size, flipped: true) { rect in
             guard let ctx = NSGraphicsContext.current?.cgContext else { return false }
             ctx.draw(image, in: CGRect(x: 0, y: 0, width: rect.size.width, height: rect.size.height))
@@ -71,19 +71,22 @@ public extension NSImage {
     }
 }
 
-public extension Image {
+public extension SVG {
     func rasterize() -> NSImage {
         return rasterize(with: size)
     }
 
-    func rasterize(with size: CGSize) -> NSImage {
-        let imageSize = NSSize(width: size.width, height: size.height)
+    func rasterize(with size: CGSize? = nil, scale: CGFloat = 0) -> NSImage {
+        let scale = scale == 0 ? (NSScreen.main?.backingScaleFactor ?? 1.0) : scale
+        let size = size ?? self.size
+        let imageSize = NSSize(width: size.width * scale, height: size.height * scale)
 
         let image = NSImage(size: imageSize, flipped: true) { rect in
             guard let ctx = NSGraphicsContext.current?.cgContext else { return false }
             ctx.draw(self, in: CGRect(x: 0, y: 0, width: rect.size.width, height: rect.size.height))
             return true
         }
+
 
         return image
     }
@@ -133,7 +136,7 @@ public extension Image {
     }
 }
 
-extension Image {
+extension SVG {
 
     func makeBounds(size: CGSize?, scale: CGFloat, insets: Insets) -> (bounds: CGRect, pixelsWide: Int, pixelsHigh: Int) {
         let scale = scale == 0 ? (NSScreen.main?.backingScaleFactor ?? 1.0) : scale
