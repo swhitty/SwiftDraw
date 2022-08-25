@@ -43,16 +43,22 @@ public extension CommandLine {
 
         switch config.format {
         case .swift:
+            let api = makeTextAPI(for: config.api)
             let code = try CGTextRenderer.render(fileURL: config.input,
                                                  size: config.size.renderSize,
                                                  options: config.options,
+                                                 api: api,
                                                  precision: config.precision ?? 2)
             return code.data(using: .utf8)!
         case .sfsymbol:
             let renderer = SFSymbolRenderer(options: config.options,
                                             insets: config.insets,
+                                            insetsUltralight: config.insetsUltralight ?? config.insets,
+                                            insetsBlack: config.insetsBlack ?? config.insets,
                                             precision: config.precision ?? 3)
-            let svg = try renderer.render(fileURL: config.input)
+            let svg = try renderer.render(regular: config.input,
+                                          ultralight: config.inputUltralight,
+                                          black: config.inputBlack)
             return svg.data(using: .utf8)!
         case .jpeg, .pdf, .png:
             #if canImport(CoreGraphics)
@@ -75,6 +81,14 @@ public extension CommandLine {
             options.insert(.disableTransparencyLayers)
         }
         return options
+    }
+
+    static func makeTextAPI(for api: CommandLine.API?) -> CGTextRenderer.API {
+        guard let api = api else { return .uiKit }
+        switch api {
+        case .appkit: return .appKit
+        case .uikit: return .uiKit
+        }
     }
 
     static func processImage(_ image: SwiftDraw.Image, with config: Configuration) throws -> Data {

@@ -135,7 +135,8 @@ struct CGTextProvider: RendererTypeProvider {
     let formatter = CoordinateFormatter(delimeter: .commaSpace,
                                         precision: .capped(max: 3))
 
-    let renderer = CGTextRenderer(name: "pattern",
+    let renderer = CGTextRenderer(api: .appKit,
+                                  name: "pattern",
                                   size: pattern.frame.size,
                                   commandSize: pattern.frame.size,
                                   formatter: formatter)
@@ -221,15 +222,23 @@ struct CGTextProvider: RendererTypeProvider {
 public final class CGTextRenderer: Renderer {
   typealias Types = CGTextTypes
 
+  private let api: API
   private let name: String
   private let size: LayerTree.Size
   private let commandSize: LayerTree.Size
   let formatter: CoordinateFormatter
 
-    init(name: String,
-         size: LayerTree.Size,
-         commandSize: LayerTree.Size,
-         formatter: CoordinateFormatter) {
+  public enum API {
+    case uiKit
+    case appKit
+  }
+
+  init(api: API,
+       name: String,
+       size: LayerTree.Size,
+       commandSize: LayerTree.Size,
+       formatter: CoordinateFormatter) {
+    self.api = api
     self.name = name
     self.size = size
     self.commandSize = commandSize
@@ -570,8 +579,8 @@ public final class CGTextRenderer: Renderer {
     """)
   }
 
-  func makeText() -> String {
-    var template = """
+  func makeUIKit() -> String {
+    """
     import CoreGraphics
     import UIKit
 
@@ -588,6 +597,40 @@ public final class CGTextRenderer: Renderer {
       private static func draw\(name)(in ctx: CGContext, scale: CGSize) {
 
     """
+  }
+
+  func makeAppKit() -> String {
+    """
+    import Cocoa
+    import CoreGraphics
+
+    
+    extension NSImage {
+      static func svgKey(size: NSSize = NSSize(width: \(size.width), height: \(size.height))) -> NSImage {
+        NSImage(size: size, flipped: true) { rect in
+            guard let ctx = NSGraphicsContext.current?.cgContext else { return false }
+            let scale = CGSize(width: rect.width / \(commandSize.width), height: rect.height / \(commandSize.height))
+            draw\(name)(in: ctx, scale: scale)
+            return true
+        }
+      }
+
+    private static func draw\(name)(in ctx: CGContext, scale: CGSize) {
+
+    """
+  }
+
+  func makeTemplate() -> String {
+    switch api {
+    case .appKit:
+      return makeAppKit()
+    case .uiKit:
+      return makeUIKit()
+    }
+  }
+
+  func makeText() -> String {
+    var template = makeTemplate()
 
     lines.insert("ctx.scaleBy(x: scale.width, y: scale.height)", at: 0)
     if !patterns.isEmpty {

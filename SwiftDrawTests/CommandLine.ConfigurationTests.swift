@@ -125,6 +125,26 @@ final class CommandLineConfigurationTests: XCTestCase {
         XCTAssertEqual(config.insets.bottom, 3.5)
         XCTAssertEqual(config.insets.right, nil)
     }
+
+    func testParseConfigurationAppKit() throws {
+        let config = try parseConfiguration("swiftdraw", "file.svg", "--format", "swift", "--api", "appkit")
+
+        XCTAssertEqual(config.format, .swift)
+        XCTAssertEqual(config.api, .appkit)
+    }
+
+    func testParseConfigurationUIKit() throws {
+        let config = try parseConfiguration("swiftdraw", "file.svg", "--format", "swift", "--api", "uikit")
+
+        XCTAssertEqual(config.format, .swift)
+        XCTAssertEqual(config.api, .uikit)
+    }
+
+    func testAPIConversion() {
+        XCTAssertEqual(CommandLine.makeTextAPI(for: nil), .uiKit)
+        XCTAssertEqual(CommandLine.makeTextAPI(for: .appkit), .appKit)
+        XCTAssertEqual(CommandLine.makeTextAPI(for: .uikit), .uiKit)
+    }
 }
 
 private func parseConfiguration(_ args: String...) throws -> CommandLine.Configuration {

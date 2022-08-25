@@ -35,33 +35,56 @@ public struct SFSymbolRenderer {
 
     private let options: Image.Options
     private let insets: CommandLine.Insets
+    private let insetsUltralight: CommandLine.Insets
+    private let insetsBlack: CommandLine.Insets
     private let formatter: CoordinateFormatter
 
-    public init(options: Image.Options, insets: CommandLine.Insets, precision: Int) {
+    public init(options: Image.Options,
+                insets: CommandLine.Insets,
+                insetsUltralight: CommandLine.Insets,
+                insetsBlack: CommandLine.Insets,
+                precision: Int) {
         self.options = options
         self.insets = insets
+        self.insetsUltralight = insetsUltralight
+        self.insetsBlack = insetsBlack
         self.formatter = CoordinateFormatter(delimeter: .comma,
                                              precision: .capped(max: precision))
     }
 
-    public func render(fileURL: URL) throws -> String {
-        return try render(svg: .parse(fileURL: fileURL))
+    public func render(regular: URL, ultralight: URL?, black: URL?) throws -> String {
+        let regular = try DOM.SVG.parse(fileURL: regular)
+        let ultralight = try ultralight.map { try DOM.SVG.parse(fileURL: $0) }
+        let black = try black.map { try DOM.SVG.parse(fileURL: $0) }
+        return try render(default: regular, ultralight: ultralight, black: black)
     }
 
-    func render(svg image: DOM.SVG) throws -> String {
-        let layer = LayerTree.Builder(svg: image).makeLayer()
-        let sourcePaths = Self.getPaths(for: layer)
-        guard !sourcePaths.isEmpty else {
+    func render(default image: DOM.SVG, ultralight: DOM.SVG?, black: DOM.SVG?) throws -> String {
+        guard let pathsRegular = Self.getPaths(for: image) else {
             throw Error("No valid content found.")
         }
-
-        let autoBounds = Self.makeBounds(for: sourcePaths)
-        let source = try makeBounds(svg: image, auto: autoBounds)
-
         var template = try SFSymbolTemplate.make()
-        template.ultralight.appendPaths(sourcePaths, from: source)
-        template.regular.appendPaths(sourcePaths, from: source)
-        template.black.appendPaths(sourcePaths, from: source)
+
+        let boundsRegular = try makeBounds(svg: image, auto: Self.makeBounds(for: pathsRegular), for: .regular)
+        template.regular.appendPaths(pathsRegular, from: boundsRegular)
+
+        if let ultralight = ultralight,
+           let paths = Self.getPaths(for: ultralight) {
+            let bounds = try makeBounds(svg: ultralight, auto: Self.makeBounds(for: paths), for: .ultralight)
+            template.ultralight.appendPaths(paths, from: bounds)
+        } else {
+            let bounds = try makeBounds(svg: image, auto: Self.makeBounds(for: pathsRegular), for: .ultralight)
+            template.ultralight.appendPaths(pathsRegular, from: bounds)
+        }
+
+        if let black = black,
+           let paths = Self.getPaths(for: black) {
+            let bounds = try makeBounds(svg: black, auto: Self.makeBounds(for: paths), for: .black)
+            template.black.appendPaths(paths, from: bounds)
+        } else {
+            let bounds = try makeBounds(svg: image, auto: Self.makeBounds(for: pathsRegular), for: .black)
+            template.black.appendPaths(pathsRegular, from: bounds)
+        }
 
         let element = try XML.Formatter.SVG(formatter: formatter).makeElement(from: template.svg)
         let formatter = XML.Formatter(spaces: 4)
@@ -72,7 +95,26 @@ public struct SFSymbolRenderer {
 
 extension SFSymbolRenderer {
 
-    func makeBounds(svg: DOM.SVG, auto: LayerTree.Rect) throws -> LayerTree.Rect {
+    enum Variant: String {
+        case regular
+        case ultralight
+        case black
+    }
+
+
+    func getInsets(for variant: Variant) -> CommandLine.Insets {
+        switch variant {
+        case .regular:
+            return insets
+        case .ultralight:
+            return insetsUltralight
+        case .black:
+            return insetsBlack
+        }
+    }
+
+    func makeBounds(svg: DOM.SVG, auto: LayerTree.Rect, for variant: Variant) throws -> LayerTree.Rect {
+        let insets = getInsets(for: variant)
         let width = LayerTree.Float(svg.width)
         let height = LayerTree.Float(svg.height)
         let top = insets.top ?? Double(auto.minY)
@@ -80,7 +122,7 @@ extension SFSymbolRenderer {
         let bottom = insets.bottom ?? Double(height - auto.maxY)
         let right = insets.right ?? Double(width - auto.maxX)
 
-        Self.printInsets(top: top, left: left, bottom: bottom, right: right)
+        Self.printInsets(top: top, left: left, bottom: bottom, right: right, variant: variant)
         guard !insets.isEmpty else {
             return auto
         }
@@ -94,6 +136,12 @@ extension SFSymbolRenderer {
             throw Error("Invalid insets")
         }
         return bounds
+    }
+
+    static func getPaths(for svg: DOM.SVG) -> [LayerTree.Path]? {
+        let layer = LayerTree.Builder(svg: svg).makeLayer()
+        let paths = getPaths(for: layer)
+        return paths.isEmpty ? nil : paths
     }
 
     static func getPaths(for layer: LayerTree.Layer,
@@ -224,7 +272,7 @@ extension SFSymbolRenderer {
         return dom
     }
 
-    static func printInsets(top: Double, left: Double, bottom: Double, right: Double) {
+    static func printInsets(top: Double, left: Double, bottom: Double, right: Double, variant: Variant) {
         let formatter = NumberFormatter()
         formatter.locale = .init(identifier: "en_US")
         formatter.maximumFractionDigits = 4
@@ -232,7 +280,15 @@ extension SFSymbolRenderer {
         let left = formatter.string(from: left as NSNumber)!
         let bottom = formatter.string(from: bottom as NSNumber)!
         let right = formatter.string(from: right as NSNumber)!
-        print("Alignment: --insets \(top),\(left),\(bottom),\(right)")
+
+        switch variant {
+        case .regular:
+            print("Alignment: --insets \(top),\(left),\(bottom),\(right)")
+        case .ultralight:
+            print("Alignment: --ultralightInsets \(top),\(left),\(bottom),\(right)")
+        case .black:
+            print("Alignment: --blackInsets \(top),\(left),\(bottom),\(right)")
+        }
     }
 
     struct Error: LocalizedError {

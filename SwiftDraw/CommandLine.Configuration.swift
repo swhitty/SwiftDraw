@@ -35,10 +35,15 @@ extension CommandLine {
 
     public struct Configuration {
         public var input: URL
+        public var inputUltralight: URL?
+        public var inputBlack: URL?
         public var output: URL
         public var format: Format
         public var size: Size
+        public var api: API?
         public var insets: Insets
+        public var insetsUltralight: Insets?
+        public var insetsBlack: Insets?
         public var scale: Scale
         public var options: Image.Options
         public var precision: Int?
@@ -50,6 +55,11 @@ extension CommandLine {
         case png
         case swift
         case sfsymbol
+    }
+
+    public enum API: String {
+        case appkit
+        case uikit
     }
 
     public enum Size: Equatable {
@@ -96,16 +106,26 @@ extension CommandLine {
         }
 
         let size = try parseSize(from: modifiers[.size])
-        let insets = try parseInsets(from: modifiers[.insets])
         let scale = try parseScale(from: modifiers[.scale])
         let precision = try parsePrecision(from: modifiers[.precision])
+        let insets = try parseInsets(from: modifiers[.insets])
+        let api = try parseAPI(from: modifiers[.api])
+        let ultralight = try parseFileURL(file: modifiers[.ultralight], within: baseDirectory)
+        let ultralightInsets = try parseInsets(from: modifiers[.ultralightInsets])
+        let black = try parseFileURL(file: modifiers[.black], within: baseDirectory)
+        let blackInsets = try parseInsets(from: modifiers[.blackInsets])
         let options = try parseOptions(from: modifiers)
         let result = source.newURL(for: format, scale: scale)
         return Configuration(input: source,
+                             inputUltralight: ultralight,
+                             inputBlack: black,
                              output: result,
                              format: format,
                              size: size,
+                             api: api,
                              insets: insets,
+                             insetsUltralight: ultralightInsets,
+                             insetsBlack: blackInsets,
                              scale: scale,
                              options: options,
                              precision: precision)
@@ -117,6 +137,14 @@ extension CommandLine {
         }
 
         return URL(fileURLWithPath: file, relativeTo: directory).standardizedFileURL
+    }
+
+    static func parseFileURL(file: String??, within directory: URL) throws -> URL? {
+        guard let file = file,
+              let file = file else {
+            return nil
+        }
+        return try parseFileURL(file: file, within: directory)
     }
 
     static func parseScale(from value: String??) throws -> Scale {
@@ -161,6 +189,18 @@ extension CommandLine {
         }
 
         return .custom(width: Int(width), height: Int(height))
+    }
+
+    static func parseAPI(from value: String??) throws -> API? {
+        guard let value = value,
+              let value = value else {
+            return nil
+        }
+
+        guard let api = API(rawValue: value) else {
+            throw Error.invalid
+        }
+        return api
     }
 
     static func parseInsets(from value: String??) throws -> Insets {

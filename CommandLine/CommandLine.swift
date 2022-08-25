@@ -68,7 +68,7 @@ extension SwiftDraw.CommandLine {
     static func printHelp() {
         print("")
         print("""
-swiftdraw, version 0.12.0
+swiftdraw, version 0.13.0
 copyright (c) 2022 Simon Whitty
 
 usage: swiftdraw <file.svg> [--format png | pdf | jpeg | swift | sfsymbol] [--size wxh] [--scale 1x | 2x | 3x]
@@ -76,13 +76,24 @@ usage: swiftdraw <file.svg> [--format png | pdf | jpeg | swift | sfsymbol] [--si
 <file> svg file to be processed
 
 Options:
- --format     format to output image with png | pdf | jpeg | swift | sfsymbol
- --size       size of output image e.g. 100x200
- --scale      scale of output image with 1x | 2x | 3x
- --insets     sfsymbol alignment with top,left,bottom,right | auto
- --precision  maximum number of decimal places
+ --format      format to output image: png | pdf | jpeg | swift | sfsymbol
+ --size        size of output image: 100x200
+ --scale       scale of output image: 1x | 2x | 3x
+ --insets      crop inset of output image: top,left,bottom,right
+ --precision   maximum number of decimal places
 
- --hideUnsupportedFilters   hides any elements with unsupported filters. Disabled by default.
+ --hideUnsupportedFilters   hide elements with unsupported filters.
+
+Available keys for --format swift:
+ --api                api of generated code:  appkit | uikit
+
+Available keys for --format sfymbol:
+ --insets             alignment of regular variant: top,left,bottom,right | auto
+ --ultralight         svg file of ultralight variant
+ --ultralightInsets   alignment of ultralight variant: top,left,bottom,right | auto
+ --black              svg file of black variant
+ --blackInsets        alignment of black variant: top,left,bottom,right | auto
+
 
 """)
     }

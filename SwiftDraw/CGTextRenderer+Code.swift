@@ -35,14 +35,19 @@ public extension CGTextRenderer {
 
     typealias Size = (width: Int, height: Int)
 
-    static func render(named name: String, in bundle: Bundle = Bundle.main, size: Size? = nil, options: Image.Options, precision: Int) throws -> String {
+    static func render(named name: String,
+                       in bundle: Bundle = Bundle.main,
+                       size: Size? = nil,
+                       options: Image.Options,
+                       api: CGTextRenderer.API,
+                       precision: Int) throws -> String {
         guard let url = bundle.url(forResource: name, withExtension: nil) else {
             throw Error("File not found.")
         }
-        return try render(fileURL: url, size: size, options: options, precision: precision)
+        return try render(fileURL: url, size: size, options: options, api: api, precision: precision)
     }
 
-    static func render(fileURL: URL, size: Size? = nil, options: Image.Options, precision: Int) throws -> String {
+    static func render(fileURL: URL, size: Size? = nil, options: Image.Options, api: CGTextRenderer.API, precision: Int) throws -> String {
         let svg = try DOM.SVG.parse(fileURL: fileURL)
         let size = makeSize(svg: svg, size: size)
         let identifier = fileURL.lastPathComponent
@@ -52,17 +57,19 @@ public extension CGTextRenderer {
             .capitalized
             .replacingOccurrences(of: " ", with: "")
 
-        return cgCodeText(name: identifier,
+        return cgCodeText(api: api,
+                          name: identifier,
                           svg: svg,
                           size: size,
                           options: options,
                           precision: precision)
     }
 
-    static func render(data: Data, options: Image.Options, precision: Int) throws -> String {
+    static func render(data: Data, options: Image.Options, api: CGTextRenderer.API, precision: Int) throws -> String {
         let svg = try DOM.SVG.parse(data: data)
         let size = makeSize(svg: svg, size: nil)
-        return cgCodeText(name: "Image",
+        return cgCodeText(api: api,
+                          name: "Image",
                           svg: svg,
                           size: size,
                           options: options,
@@ -83,7 +90,8 @@ public extension CGTextRenderer {
         return LayerTree.Size(LayerTree.Float(size.width), LayerTree.Float(size.height))
     }
 
-    private static func cgCodeText(name: String,
+    private static func cgCodeText(api: CGTextRenderer.API,
+                                   name: String,
                                    svg: DOM.SVG,
                                    size: LayerTree.Size,
                                    options: Image.Options,
@@ -103,7 +111,8 @@ public extension CGTextRenderer {
             generator.renderCommands(for: layer)
         )
 
-        let renderer = CGTextRenderer(name: name,
+        let renderer = CGTextRenderer(api: api,
+                                      name: name,
                                       size: size,
                                       commandSize: commandSize,
                                       formatter: formatter)

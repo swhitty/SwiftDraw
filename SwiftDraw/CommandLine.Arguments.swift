@@ -40,6 +40,11 @@ extension CommandLine {
         case insets
         case scale
         case precision
+        case api
+        case ultralight
+        case ultralightInsets
+        case black
+        case blackInsets
         case hideUnsupportedFilters
 
         var hasValue: Bool {

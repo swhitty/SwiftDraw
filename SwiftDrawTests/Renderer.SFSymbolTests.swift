@@ -113,12 +113,18 @@ private extension DOM.SVG {
 private extension SFSymbolRenderer {
 
     static func render(fileURL: URL) throws -> String {
-        let renderer = SFSymbolRenderer(options: [], insets: .init(), precision: 3)
-        return try renderer.render(fileURL: fileURL)
+        let renderer = SFSymbolRenderer(options: [], insets: .init(),
+                                        insetsUltralight: .init(),
+                                        insetsBlack: .init(),
+                                        precision: 3)
+        return try renderer.render(regular: fileURL, ultralight: nil, black: nil)
     }
 
     static func render(svg: DOM.SVG) throws -> String {
-        let renderer = SFSymbolRenderer(options: [], insets: .init(), precision: 3)
-        return try renderer.render(svg: svg)
+        let renderer = SFSymbolRenderer(options: [], insets: .init(),
+                                        insetsUltralight: .init(),
+                                        insetsBlack: .init(),
+                                        precision: 3)
+        return try renderer.render(default: svg, ultralight: nil, black: nil)
     }
 }
