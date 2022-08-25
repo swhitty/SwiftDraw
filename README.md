@@ -114,7 +114,7 @@ Alternatively download the latest command line tool [here](https://github.com/sw
 
 ### SF Symbol
 
-Custom SF Symbols can be easily created from a single SVG.  SwiftDraw automatically expands strokes and winds paths using the [non-zero rule](https://en.wikipedia.org/wiki/Nonzero-rule) creating custom symbols that can be imported directly into Xcode.
+Custom SF Symbols can be create from a single SVG.  SwiftDraw expands strokes and winds paths using the [non-zero rule](https://en.wikipedia.org/wiki/Nonzero-rule) outputting symbols that can be imported directly into Xcode.
 
 ```bash
 $ swiftdraw key.svg --format sfsymbol
@@ -137,7 +137,7 @@ $ swiftdraw simple.svg --format sfsymbol --insets auto
 Alignment: --insets 30,30,30,30
 ```
 
-Insets can be provided in the form `--insets top,left,bottom,right` specifying an `Double` or `auto` for each inset.
+Insets can be provided in the form `--insets top,left,bottom,right` specifying a `Double` or `auto` for each inset.
 
 ```bash
 $ swiftdraw simple.svg --format sfsymbol --insets 40,auto,40,auto
@@ -195,7 +195,7 @@ extension UIImage {
     path.addLine(to: CGPoint(x: 80, y: 80))
     path.closeSubpath()
     ctx.addPath(path)
-    ctx.fillPath(using: .evenOdd)
+    ctx.fillPath()
     ctx.setLineCap(.butt)
     ctx.setLineJoin(.miter)
     ctx.setLineWidth(2)
