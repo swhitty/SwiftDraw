@@ -25,11 +25,18 @@ let svg = SVG(named: "sample.svg", in: .main)!
 imageView.image = svg.rasterize(with: CGSize(width: 640, height: 480))
 ```
 
-Or crop the image using insets:
+Crop the image using insets:
 
 ```swift
 let svg = SVG(named: "sample.svg", in: .main)!
 imageView.image = svg.rasterize(insets: .init(top: 10, left: 0, bottom: 10, bottom: 0))
+```
+
+Add padding using negative insets:
+
+```swift
+let svg = SVG(named: "sample.svg", in: .main)!
+imageView.image = svg.rasterize(insets: .init(top: -10, left: -10, bottom: -10, bottom: -10))
 ```
 
 ## iOS
@@ -107,52 +114,52 @@ Alternatively download the latest command line tool [here](https://github.com/sw
 
 ### SF Symbol
 
-Custom SF Symbols can be generated from a [single](https://github.com/swhitty/SwiftDraw/blob/main/Samples/key/key-single.svg) SVG:
+Custom SF Symbols can be easily created from a single SVG.  SwiftDraw automatically expands strokes and winds paths using the [non-zero rule](https://en.wikipedia.org/wiki/Nonzero-rule) creating custom symbols that can be imported directly into Xcode.
 
 ```bash
 $ swiftdraw key.svg --format sfsymbol
 ```
+<img src="https://github.com/swhitty/SwiftDraw/blob/main/Samples/key/key-single.svg" width="400" />
 
-Optional [variants](https://github.com/swhitty/SwiftDraw/blob/main/Samples/key/key-symbol.svg)  `--ultralight` and `--black` can also be provided:
+Optional variants `--ultralight` and `--black` can also be provided:
 
 ```bash
 $ swiftdraw key.svg --format sfsymbol --ultralight key-ultralight.svg --black key-black.svg
 ```
-
-SwiftDraw automatically expands strokes and wind paths using the [non-zero rule](https://en.wikipedia.org/wiki/Nonzero-rule) creating custom SFSymbols that can be imported directly into Xcode.
+<img src="https://github.com/swhitty/SwiftDraw/blob/main/Samples/key/key-symbol.svg" width="400" />
 
 #### Alignment
 
-By default, SwiftDraw automatically sizes and aligns the content to the template guides.  SwiftDraw will output the alignment insets used:
+By default, SwiftDraw automatically sizes and aligns the content to the template guides.  The auto alignment insets are output by the tool:
 
 ```bash
 $ swiftdraw simple.svg --format sfsymbol --insets auto
 Alignment: --insets 30,30,30,30
 ```
 
-Values can be provided in the form `--insets top,left,bottom,right` specifying an `Double` or `auto` for each inset.
+Insets can be provided in the form `--insets top,left,bottom,right` specifying an `Double` or `auto` for each inset.
 
 ```bash
 $ swiftdraw simple.svg --format sfsymbol --insets 40,auto,40,auto
 Alignment: --insets 40,30,40,30
 ```
 
+Variants can also be aligned using `--ultralightInsets` and `--blackInsets`.
+
 ### Source code generation
 
-Source code can be generated using [www.whileloop.com/swiftdraw](https://www.whileloop.com/swiftdraw).
+Swift source code can also be generated from an SVG using the tool:
 
-The command line tool can also convert an SVG image into Swift source code:
+```bash
+$ swiftdraw simple.svg --format swift
+```
 
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="160" height="160">
   <rect width="160" height="160" fill="snow" />
-  <path d="m 80 20 a 50 50 0 1 0 50 50 h -50 z" fill="pink" stroke="black" stroke-width="2"/>
+  <path d="m 80 30 a 50 50 0 1 0 50 50 h -50 z" fill="pink" stroke="black" stroke-width="2"/>
 </svg>
-```
-
-```bash
-$ swiftdraw simple.svg --format swift
 ```
 
 ```swift
@@ -200,3 +207,5 @@ extension UIImage {
   }
 }
 ```
+
+Source code can be generated using [www.whileloop.com/swiftdraw](https://www.whileloop.com/swiftdraw).
