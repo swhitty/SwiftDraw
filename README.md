@@ -107,13 +107,13 @@ Alternatively download the latest command line tool [here](https://github.com/sw
 
 ### SF Symbol
 
-Custom SF Symbols can be generated from a single SVG:
+Custom SF Symbols can be generated from a [single](https://github.com/swhitty/SwiftDraw/blob/main/Samples/key/key-single.svg) SVG:
 
 ```bash
 $ swiftdraw key.svg --format sfsymbol
 ```
 
-Optional variants `--ultralight` and `--black` can also be provided:
+Optional [variants](https://github.com/swhitty/SwiftDraw/blob/main/Samples/key/key-symbol.svg)  `--ultralight` and `--black` can also be provided:
 
 ```bash
 $ swiftdraw key.svg --format sfsymbol --ultralight key-ultralight.svg --black key-black.svg
