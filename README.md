@@ -114,7 +114,7 @@ Alternatively download the latest command line tool [here](https://github.com/sw
 
 ### SF Symbol
 
-Custom SF Symbols can be create from a single SVG.  SwiftDraw expands strokes and winds paths using the [non-zero rule](https://en.wikipedia.org/wiki/Nonzero-rule) outputting symbols that can be imported directly into Xcode.
+Custom SF Symbols can be created from a single SVG.  SwiftDraw expands strokes and winds paths using the [non-zero rule](https://en.wikipedia.org/wiki/Nonzero-rule) outputting symbols that can be imported directly into Xcode.
 
 ```bash
 $ swiftdraw key.svg --format sfsymbol
