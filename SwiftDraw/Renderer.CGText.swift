@@ -541,7 +541,6 @@ public final class CGTextRenderer: Renderer {
   }
 
   func fill(path: [LayerTree.Shape], rule: String) {
-    
     if let frame = getSimpleRect(from: path) {
       lines.append("ctx.fill(\(frame))")
     } else if let frame = getSimpleEllipse(from: path) {
@@ -549,7 +548,11 @@ public final class CGTextRenderer: Renderer {
     } else {
       let identifier = createOrGetPath(path)
       lines.append("ctx.addPath(\(identifier))")
-      lines.append("ctx.fillPath(using: \(rule))")
+      if rule == ".winding" {
+        lines.append("ctx.fillPath()")
+      } else {
+        lines.append("ctx.fillPath(using: \(rule))")
+      }
     }
   }
   

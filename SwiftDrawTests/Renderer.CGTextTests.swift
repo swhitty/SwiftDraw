@@ -61,7 +61,7 @@ final class RendererCGTextTests: XCTestCase {
                   CGPoint(x: 100, y: 100)
                 ])
                 ctx.addPath(path)
-                ctx.fillPath(using: .evenOdd)
+                ctx.fillPath()
                 ctx.setLineCap(.butt)
                 ctx.setLineJoin(.miter)
                 ctx.setLineWidth(1)
@@ -75,7 +75,7 @@ final class RendererCGTextTests: XCTestCase {
                   CGPoint(x: 0, y: 100)
                 ])
                 ctx.addPath(path1)
-                ctx.fillPath(using: .evenOdd)
+                ctx.fillPath()
                 ctx.addPath(path1)
                 ctx.strokePath()
               }
@@ -129,7 +129,7 @@ final class RendererCGTextTests: XCTestCase {
                                control2: CGPoint(x: 384.72, y: 13.59))
                 path.closeSubpath()
                 ctx.addPath(path)
-                ctx.clip(using: .evenOdd)
+                ctx.clip()
                 ctx.setAlpha(1)
                 let rgb = CGColorSpaceCreateDeviceRGB()
                 let color1 = CGColor(colorSpace: rgb, components: [0.635, 0.902, 0.18, 1])!
@@ -175,7 +175,7 @@ final class RendererCGTextTests: XCTestCase {
                                control2: CGPoint(x: 475.84, y: -0.2))
                 path1.closeSubpath()
                 ctx.addPath(path1)
-                ctx.clip(using: .evenOdd)
+                ctx.clip()
                 ctx.setAlpha(1)
                 ctx.drawLinearGradient(gradient,
                                    start: CGPoint(x: 189.12, y: 84.82),
@@ -212,7 +212,7 @@ final class RendererCGTextTests: XCTestCase {
                                control2: CGPoint(x: 327.68, y: 194.55))
                 path2.closeSubpath()
                 ctx.addPath(path2)
-                ctx.clip(using: .evenOdd)
+                ctx.clip()
                 ctx.setAlpha(1)
                 let color4 = CGColor(colorSpace: rgb, components: [0.655, 0.608, 0.655, 1])!
                 let color5 = CGColor(colorSpace: rgb, components: [0.478, 0.427, 0.475, 1])!
@@ -274,7 +274,7 @@ final class RendererCGTextTests: XCTestCase {
                                control2: CGPoint(x: 515.79, y: 216.98))
                 path3.closeSubpath()
                 ctx.addPath(path3)
-                ctx.clip(using: .evenOdd)
+                ctx.clip()
                 ctx.setAlpha(1)
                 let color7 = CGColor(colorSpace: rgb, components: [0.996, 0.6, 0.627, 1])!
                 let color8 = CGColor(colorSpace: rgb, components: [0.996, 0.392, 0.435, 1])!
@@ -309,7 +309,7 @@ final class RendererCGTextTests: XCTestCase {
                                control2: CGPoint(x: 308.18, y: 455.12))
                 path4.closeSubpath()
                 ctx.addPath(path4)
-                ctx.clip(using: .evenOdd)
+                ctx.clip()
                 ctx.setAlpha(1)
                 ctx.drawLinearGradient(gradient2,
                                    start: CGPoint(x: 67, y: 392.05),
@@ -350,7 +350,7 @@ final class RendererCGTextTests: XCTestCase {
                                control2: CGPoint(x: 494.15, y: 174.25))
                 path5.closeSubpath()
                 ctx.addPath(path5)
-                ctx.clip(using: .evenOdd)
+                ctx.clip()
                 ctx.setAlpha(1)
                 let color10 = CGColor(colorSpace: rgb, components: [0.769, 0.098, 0.149, 1])!
                 var locations3: [CGFloat] = [0.0, 0.7043, 1.0]
@@ -381,7 +381,7 @@ final class RendererCGTextTests: XCTestCase {
                                control2: CGPoint(x: 74.54, y: 246.48))
                 path6.closeSubpath()
                 ctx.addPath(path6)
-                ctx.clip(using: .evenOdd)
+                ctx.clip()
                 ctx.setAlpha(1)
                 let color11 = CGColor(colorSpace: rgb, components: [1, 0.976, 0.875, 1])!
                 let color12 = CGColor(colorSpace: rgb, components: [1, 0.882, 0.467, 1])!
@@ -432,7 +432,7 @@ final class RendererCGTextTests: XCTestCase {
                                control2: CGPoint(x: 283.17, y: 455.12))
                 path7.closeSubpath()
                 ctx.addPath(path7)
-                ctx.clip(using: .evenOdd)
+                ctx.clip()
                 ctx.setAlpha(1)
                 var locations5: [CGFloat] = [0.0, 1.0]
                 let gradient5 = CGGradient(
@@ -462,7 +462,7 @@ final class RendererCGTextTests: XCTestCase {
                                control2: CGPoint(x: 131.56, y: 353.09))
                 path8.closeSubpath()
                 ctx.addPath(path8)
-                ctx.clip(using: .evenOdd)
+                ctx.clip()
                 ctx.setAlpha(1)
                 ctx.drawLinearGradient(gradient1,
                                    start: CGPoint(x: 112.42, y: 341.87),

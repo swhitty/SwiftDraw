@@ -350,7 +350,7 @@ extension LayerTree.Builder {
 
             fill = .color(.keyword(.black))
             fillOpacity = 1.0
-            fillRule = .evenodd
+            fillRule = .nonzero
 
             fontFamily = "Helvetica"
             fontSize = 12.0
