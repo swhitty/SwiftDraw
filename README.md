@@ -137,7 +137,7 @@ $ swiftdraw simple.svg --format sfsymbol --insets auto
 Alignment: --insets 30,30,30,30
 ```
 
-Insets can be provided in the form `--insets top,left,bottom,right` specifying a `Double` or `auto` for each edge.
+Insets can be provided in the form `--insets top,left,bottom,right` specifying a `Double` or `auto` for each edge:
 
 ```bash
 $ swiftdraw simple.svg --format sfsymbol --insets 40,auto,40,auto
