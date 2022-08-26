@@ -54,7 +54,8 @@ extension DOM {
         
         var fontFamily: String?
         var fontSize: Float?
-        
+        var textAnchor: TextAnchor?
+    
         var transform: [DOM.Transform]?
         var clipPath: DOM.URL?
         var clipRule: DOM.FillRule?
@@ -131,6 +132,7 @@ extension DOM.PresentationAttributes {
         
         merged.fontFamily = att.fontFamily ?? fontFamily
         merged.fontSize = att.fontSize ?? fontSize
+        merged.textAnchor = att.textAnchor ?? textAnchor
         
         merged.transform = att.transform ?? transform
         merged.clipPath = att.clipPath ?? clipPath

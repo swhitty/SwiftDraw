@@ -400,9 +400,9 @@ extension SFSymbolTemplate {
                     <text x="250px" y="30px">Ultralight</text>
                     <text x="450px" y="30px">Regular</text>
                  <text x="650px" y="30px">Black</text>
-                 <text id="template-version" fill="#505050" x="730.0" y="575.0">Template v.3.0</text>
+                 <text id="template-version" fill="#505050" x="790.0" y="575.0" text-anchor="end">Template v.3.0</text>
                  <a href="https://github.com/swhitty/SwiftDraw">
-                    <text fill="#505050" x="627.0" y="590.0">https://github.com/swhitty/SwiftDraw</text>
+                    <text fill="#505050" x="790.0" y="590.0" text-anchor="end">https://github.com/swhitty/SwiftDraw</text>
                  </a>
                 </g>
             </g>

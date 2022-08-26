@@ -88,7 +88,13 @@ extension DOM {
         case round
         case bevel
     }
-    
+
+    enum TextAnchor: String {
+        case start
+        case middle
+        case end
+    }
+
     enum Transform: Equatable {
         case matrix(a: Float, b: Float, c: Float, d: Float, e: Float, f: Float)
         case translate(tx: Float, ty: Float)

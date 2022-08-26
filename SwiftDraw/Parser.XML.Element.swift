@@ -258,6 +258,7 @@ extension XMLParser {
 
         el.fontFamily = (try att.parseString("font-family"))?.trimmingCharacters(in: .whitespacesAndNewlines)
         el.fontSize = try att.parseFloat("font-size")
+        el.textAnchor = try att.parseRaw("text-anchor")
 
         if let val = try? att.parseString("transform") {
             el.transform = try parseTransform(val)

@@ -33,38 +33,31 @@ import XCTest
 @testable import SwiftDraw
 
 final class ParserXMLTextTests: XCTestCase {
-  
-  func testParseText() {
-    XCTAssertEqual(try XMLParser().parseText([:], value: "Simon").value, "Simon")
-    
-    var node = ["x": "10", "y": "25"]
-    XCTAssertNotNil(try? XMLParser().parseText(node, value: "Simon"))
-    
-    node["font-family"] = "Futura"
-    node["font-size"] = "12.5"
-    
-    let expected = DOM.Text(x: 10, y: 25, value: "Simon")
-    expected.attributes.fontFamily = "Futura"
-    expected.attributes.fontSize = 12.5
-    
-    let parsed = try? XMLParser().parseText(node, value: "Simon")
-    XCTAssertEqual(parsed, expected)
-  }
-  
-  func testTextNodeParses() throws {
-    let el = XML.Element(name: "text", attributes: [:])
-    el.innerText = "Simon"
-    
-    let node = try XMLParser().parseText(["x": "1", "y": "1"], element: el)
-    XCTAssertEqual(node?.value, "Simon")
-  }
-  
-  func testEmptyTextNodeReturnsNil() {
-    let el = XML.Element(name: "text", attributes: [:])
-    XCTAssertNil(try XMLParser().parseText(["x": "1", "y": "1"], element: el))
-    el.innerText = "    "
-    XCTAssertNil(try XMLParser().parseText(["x": "1", "y": "1"], element: el))
-  }
+
+    func testTextNodeParses() throws {
+        let el = XML.Element(name: "text", attributes: [:])
+        el.innerText = "Simon"
+        el.attributes["x"] = "1"
+        el.attributes["y"] = "2"
+        el.attributes["font-family"] = "Futura"
+        el.attributes["font-size"] = "12.5"
+        el.attributes["text-anchor"] = "end"
+
+        let text = try XCTUnwrap(XMLParser().parseGraphicsElement(el) as? DOM.Text)
+        XCTAssertEqual(text.x, 1)
+        XCTAssertEqual(text.y, 2)
+        XCTAssertEqual(text.value, "Simon")
+        XCTAssertEqual(text.attributes.fontFamily, "Futura")
+        XCTAssertEqual(text.attributes.fontSize, 12.5)
+        XCTAssertEqual(text.attributes.textAnchor, .end)
+    }
+
+    func testEmptyTextNodeReturnsNil() {
+        let el = XML.Element(name: "text", attributes: [:])
+        XCTAssertNil(try XMLParser().parseText(["x": "1", "y": "1"], element: el))
+        el.innerText = "    "
+        XCTAssertNil(try XMLParser().parseText(["x": "1", "y": "1"], element: el))
+    }
 }
 
 

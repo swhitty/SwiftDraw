@@ -101,7 +101,8 @@ extension LayerTree.TextAttributes {
         LayerTree.TextAttributes(
             color: .black,
             fontName: "Helvetica",
-            size: 12.0
+            size: 12.0,
+            anchor: .start
         )
     }
 }

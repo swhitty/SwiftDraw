@@ -230,7 +230,8 @@ extension LayerTree.Builder {
         return LayerTree.TextAttributes(
             color: fill,
             fontName: state.fontFamily,
-            size: state.fontSize
+            size: state.fontSize,
+            anchor: state.textAnchor
         )
     }
 
@@ -333,6 +334,7 @@ extension LayerTree.Builder {
 
         var fontFamily: String
         var fontSize: DOM.Float
+        var textAnchor: DOM.TextAnchor
 
         init() {
             //default root SVG element state
@@ -351,6 +353,7 @@ extension LayerTree.Builder {
             fill = .color(.keyword(.black))
             fillOpacity = 1.0
             fillRule = .nonzero
+            textAnchor = .start
 
             fontFamily = "Helvetica"
             fontSize = 12.0
@@ -384,6 +387,7 @@ extension LayerTree.Builder {
 
         state.fontFamily = attributes.fontFamily ?? existing.fontFamily
         state.fontSize = attributes.fontSize ?? existing.fontSize
+        state.textAnchor = attributes.textAnchor ?? existing.textAnchor
 
         return state
     }

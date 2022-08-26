@@ -116,6 +116,7 @@ extension XML.Formatter {
 
             attributes["font-family"] = graphic.fontFamily
             attributes["font-size"] = formatter.format(graphic.fontSize)
+            attributes["text-anchor"] = graphic.textAnchor?.rawValue
 
             attributes["clip-path"] = graphic.clipPath.map(encodeURL)
             attributes["mask"] = graphic.mask.map(encodeURL)

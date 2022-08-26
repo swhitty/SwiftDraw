@@ -54,8 +54,6 @@ extension XMLParser {
         let element = DOM.Text(value: value)
         element.x = try att.parseCoordinate("x")
         element.y = try att.parseCoordinate("y")
-        element.attributes.fontFamily = (try att.parseString("font-family"))?.trimmingCharacters(in: .whitespacesAndNewlines)
-        element.attributes.fontSize = try att.parseFloat("font-size")
         return element
     }
 }
