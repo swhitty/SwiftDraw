@@ -116,16 +116,16 @@ Alternatively download the latest command line tool [here](https://github.com/sw
 
 Custom SF Symbols can be created from a single SVG.  SwiftDraw expands strokes, winds paths using the [non-zero rule](https://en.wikipedia.org/wiki/Nonzero-rule) and aligns elements generating a symbol that can be imported directly into Xcode.
 
-```bash
-$ swiftdraw key.svg --format sfsymbol
-```
+<big><pre>
+$ swiftdraw [key.svg](https://github.com/swhitty/SwiftDraw/blob/main/Samples/key/key.svg) --format sfsymbol
+</pre></big>
 <img src="https://github.com/swhitty/SwiftDraw/blob/main/Samples/key/key-single.svg" width="400" />
 
 Optional variants `--ultralight` and `--black` can also be provided:
 
-```bash
-$ swiftdraw key.svg --format sfsymbol --ultralight key-ultralight.svg --black key-black.svg
-```
+<big><pre>
+$ swiftdraw [key.svg](https://github.com/swhitty/SwiftDraw/blob/main/Samples/key/key.svg) --format sfsymbol --ultralight [key-ultralight.svg](https://github.com/swhitty/SwiftDraw/blob/main/Samples/key/key-ultralight.svg) --black [key-black.svg](https://github.com/swhitty/SwiftDraw/blob/main/Samples/key/key-black.svg)
+</pre></big>
 <img src="https://github.com/swhitty/SwiftDraw/blob/main/Samples/key/key-symbol.svg" width="400" />
 
 #### Alignment
