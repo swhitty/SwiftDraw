@@ -114,12 +114,14 @@ extension CommandLine {
         let ultralightInsets = try parseInsets(from: modifiers[.ultralightInsets])
         let black = try parseFileURL(file: modifiers[.black], within: baseDirectory)
         let blackInsets = try parseInsets(from: modifiers[.blackInsets])
+        let output = try parseFileURL(file: modifiers[.output], within: baseDirectory)
+
         let options = try parseOptions(from: modifiers)
         let result = source.newURL(for: format, scale: scale)
         return Configuration(input: source,
                              inputUltralight: ultralight,
                              inputBlack: black,
-                             output: result,
+                             output: output ?? result,
                              format: format,
                              size: size,
                              api: api,
