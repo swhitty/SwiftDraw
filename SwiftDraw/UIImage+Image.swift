@@ -85,8 +85,9 @@ public extension SVG {
 
     func rasterize(with size: CGSize? = nil, scale: CGFloat = 0, insets: UIEdgeInsets = .zero) -> UIImage {
         let insets = Insets(top: insets.top, left: insets.left, bottom: insets.bottom, right: insets.right)
-        let (bounds, pixelsWide, pixelsHigh) = makeBounds(size: size, scale: scale, insets: insets)
+        let (bounds, pixelsWide, pixelsHigh) = makeBounds(size: size, scale: 1, insets: insets)
         let f = makeFormat()
+        f.scale = scale
         f.opaque = false
         let r = UIGraphicsImageRenderer(size: CGSize(width: pixelsWide, height: pixelsHigh), format: f)
         return r.image{

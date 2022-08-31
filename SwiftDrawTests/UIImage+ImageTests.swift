@@ -37,15 +37,56 @@ import UIKit
 
 final class UIImageTests: XCTestCase {
 
-  func testImageLoads() {
-    let image = UIImage(svgNamed: "lines.svg", in: .test)
-    XCTAssertNotNil(image)
-  }
+    func testImageLoads() {
+        let image = UIImage(svgNamed: "lines.svg", in: .test)
+        XCTAssertNotNil(image)
+    }
 
-  func testMissingImageDoesNotLoad() {
-    let image = UIImage(svgNamed: "missing.svg", in: .test)
-    XCTAssertNil(image)
-  }
+    func testMissingImageDoesNotLoad() {
+        let image = UIImage(svgNamed: "missing.svg", in: .test)
+        XCTAssertNil(image)
+    }
+
+    func testImageSize() throws {
+        let image = try SVG.parse(#"""
+            <?xml version="1.0" encoding="UTF-8"?>
+            <svg width="64" height="64" version="1.1" xmlns="http://www.w3.org/2000/svg">
+            </svg>
+            """#
+        )
+    
+        XCTAssertEqual(
+            image.rasterize(scale: 1).size,
+            CGSize(width: 64, height: 64)
+        )
+        XCTAssertEqual(
+            image.rasterize(scale: 1).scale,
+            1
+        )
+        XCTAssertEqual(
+            image.rasterize(scale: 2).size,
+            CGSize(width: 64, height: 64)
+        )
+        XCTAssertEqual(
+            image.rasterize(scale: 2).scale,
+            2
+        )
+    }
 }
 
 #endif
+
+private extension SVG {
+
+    static func parse(_ code: String) throws -> SVG {
+        guard let data = code.data(using: .utf8),
+              let svg = SVG(data: data)  else {
+            throw InvalidSVG()
+        }
+        return svg
+    }
+
+    private struct InvalidSVG: LocalizedError {
+        var errorDescription: String? = "Invalid SVG"
+    }
+}
