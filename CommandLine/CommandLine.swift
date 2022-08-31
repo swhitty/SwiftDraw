@@ -81,6 +81,7 @@ Options:
  --scale       scale of output image: 1x | 2x | 3x
  --insets      crop inset of output image: top,left,bottom,right
  --precision   maximum number of decimal places
+ --output      optional path of output file
 
  --hideUnsupportedFilters   hide elements with unsupported filters.
 
