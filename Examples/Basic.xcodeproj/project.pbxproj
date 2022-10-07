@@ -28,6 +28,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		014F853028F0BC3100B4BE96 /* Basic.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = Basic.entitlements; path = Basic/Basic.entitlements; sourceTree = "<group>"; };
 		D9618462220FDD1100C59D9B /* Basic.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Basic.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D9618465220FDD1100C59D9B /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		D9618467220FDD1100C59D9B /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -54,6 +55,7 @@
 		D9618459220FDD1100C59D9B = {
 			isa = PBXGroup;
 			children = (
+				014F853028F0BC3100B4BE96 /* Basic.entitlements */,
 				D9742E1C27D4875100E02FFD /* SwiftDraw */,
 				D9BA1AAC2894A32A007A6033 /* Samples.bundle */,
 				D9618464220FDD1100C59D9B /* Sources */,
@@ -306,6 +308,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Basic/Basic.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = C8TWBM2E6Q;
 				INFOPLIST_FILE = Sources/Info.plist;
@@ -315,6 +318,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.whiloop.Basic;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTS_MACCATALYST = YES;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
@@ -323,6 +327,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Basic/Basic.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = C8TWBM2E6Q;
 				INFOPLIST_FILE = Sources/Info.plist;
@@ -332,6 +337,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.whiloop.Basic;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTS_MACCATALYST = YES;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
