@@ -5,9 +5,17 @@
 [![License](https://img.shields.io/badge/license-zlib-lightgrey.svg)](https://opensource.org/licenses/Zlib)
 [![Twitter](https://img.shields.io/badge/twitter-@simonwhitty-blue.svg)](http://twitter.com/simonwhitty)
 
-# SwiftDraw
+# Introduction
+**SwiftDraw** is Swift library for parsing and drawing SVG images and includes a command line tool to convert SVGs into SFSymbol, PNG, PDF and Swift source code.
 
-A Swift library for parsing and drawing SVG images. SwiftDraw can also convert SVGs into SFSymbol, PNG, PDF and Swift source code.
+- [Usage](#usage)
+  - [iOS](#ios)
+  - [macOS](#macos)
+- [Command Line Tool](#command-line-tool)
+  - [Installation](#installation)
+  - [Alignment](#alignment)
+  - [Swift Code Generation](#swift-code-generation)
+- [Credits](#credits)
 
 ## Usage
 
@@ -39,7 +47,7 @@ let svg = SVG(named: "sample.svg", in: .main)!
 imageView.image = svg.rasterize(insets: .init(top: -10, left: -10, bottom: -10, bottom: -10))
 ```
 
-## iOS
+### iOS
 
 Create a `UIImage` directly from an SVG within a bundle, `Data` or file `URL`:
 
@@ -48,7 +56,7 @@ import SwiftDraw
 let image = UIImage(svgNamed: "sample.svg")
 ```
 
-## macOS
+### macOS
 
 Create an `NSImage` directly from an SVG within a bundle, `Data` or file `URL`:
 
@@ -97,7 +105,7 @@ $ swiftdraw simple.svg --format png --scale 3x
 $ swiftdraw simple.svg --format pdf
 ```
 
-**Installation:**
+### Installation
 
 You can install the `swiftdraw` command-line tool on macOS using [Homebrew](http://brew.sh/). Assuming you already have Homebrew installed, just type:
 
@@ -147,7 +155,7 @@ Alignment: --insets 40,30,40,30
 
 Variants can also be aligned using `--ultralightInsets` and `--blackInsets`.
 
-### Source code generation
+### Swift Code Generation
 
 Swift source code can also be generated from an SVG using the tool:
 
