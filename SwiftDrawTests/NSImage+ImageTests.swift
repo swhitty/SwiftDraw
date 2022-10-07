@@ -31,7 +31,8 @@
 
 import XCTest
 @testable import SwiftDraw
-#if canImport(AppKit)
+#if canImport(UIKit)
+#elseif canImport(AppKit)
 
 final class NSImageTests: XCTestCase {
 
