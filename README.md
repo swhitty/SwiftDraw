@@ -210,3 +210,10 @@ extension UIImage {
 ```
 
 Source code can be generated using [www.whileloop.com/swiftdraw](https://www.whileloop.com/swiftdraw).
+
+
+# Credits
+
+SwiftDraw is primarily the work of [Simon Whitty](https://github.com/swhitty).
+
+([Full list of contributors](https://github.com/swhitty/SwiftDraw/graphs/contributors))
