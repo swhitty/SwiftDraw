@@ -29,8 +29,7 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-#if canImport(UIKit)
-#elseif canImport(AppKit)
+#if canImport(AppKit)
 import AppKit
 import CoreGraphics
 

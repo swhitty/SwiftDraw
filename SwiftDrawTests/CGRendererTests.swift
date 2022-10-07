@@ -31,8 +31,7 @@
 
 @testable import SwiftDraw
 
-#if canImport(UIKit)
-#elseif canImport(AppKit)
+#if canImport(AppKit) && !targetEnvironment(macCatalyst)
 import AppKit
 import CoreGraphics
 import XCTest
