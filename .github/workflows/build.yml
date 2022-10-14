@@ -10,13 +10,13 @@ jobs:
     runs-on: macos-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Build and Test
         run: swift test --enable-code-coverage
       - name: Gather code coverage
         run: xcrun llvm-cov export -format="lcov" .build/debug/SwiftDrawPackageTests.xctest/Contents/MacOS/SwiftDrawPackageTests -instr-profile .build/debug/codecov/default.profdata > coverage_report.lcov
       - name: Upload Coverage
-        uses: codecov/codecov-action@v2
+        uses: codecov/codecov-action@v3
         with:
           fail_ci_if_error: true
           files: ./coverage_report.lcov
