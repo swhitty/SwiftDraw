@@ -195,7 +195,7 @@ extension LayerTree {
                 commands.append(.setStroke(color: color))
                 commands.append(.stroke(path))
             case .linearGradient(let gradient):
-                if let endpoints = shape.endpoints, canRenderGradient(gradient.gradient) {
+                if let endpoints = shape.gradientEndpoints, canRenderGradient(gradient.gradient) {
                     let width = provider.createFloat(from: stroke.width)
                     let cap = provider.createLineCap(from: stroke.cap)
                     let join = provider.createLineJoin(from: stroke.join)
@@ -482,14 +482,29 @@ private extension LayerTree.Gradient {
 
 private extension LayerTree.Shape {
 
-    var endpoints: (start: LayerTree.Point, end: LayerTree.Point)? {
-        guard case .path(let p) = self else { return nil }
-        return p.endpoints
+    var gradientEndpoints: (start: LayerTree.Point, end: LayerTree.Point)? {
+        switch self {
+        case .path(let p):
+            return p.endpoints
+        case .ellipse(within: let rect):
+            return rect.gradientEndpoints
+        case .rect(within: let rect, _):
+            return rect.gradientEndpoints
+        case .polygon(between: let points):
+            guard points.count > 1 else { return nil }
+            return (points[0], points[points.count / 2])
+        default:
+            return nil
+        }
     }
 
     var bounds: LayerTree.Rect? {
-        guard case .path(let p) = self else { return nil }
-        return p.bounds
+        switch self {
+        case .path(let p):
+            return p.bounds
+        default:
+            return nil
+        }
     }
 }
 
@@ -499,5 +514,14 @@ private extension LayerTree.Filter {
         case .gaussianBlur:
             return "<feGaussianBlur>"
         }
+    }
+}
+
+private extension LayerTree.Rect {
+
+    var gradientEndpoints: (start: LayerTree.Point, end: LayerTree.Point) {
+        let start = LayerTree.Point(midX, minY)
+        let end = LayerTree.Point(midX, maxY)
+        return (start, end)
     }
 }

@@ -1,0 +1,19 @@
+<?xml version="1.0" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 20010904//EN" "http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd">
+<svg xmlns="http://www.w3.org/2000/svg"
+    xmlns:xlink="http://www.w3.org/1999/xlink"
+    xmlns:krita="http://krita.org/namespaces/svg/krita"
+    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+    width="150"
+    height="150">
+<defs>
+  <linearGradient id="grad1" x1="0" y1="0" x2="0" y2="1" spreadMethod="pad">
+    <stop stop-color="#ff0000" offset="0%" stop-opacity="1"/>
+    <stop stop-color="#ffff00" offset="34%" stop-opacity="1"/>
+    <stop stop-color="#00ff00" offset="50%" stop-opacity="1"/>
+    <stop stop-color="#00ffff" offset="66%" stop-opacity="1"/>
+    <stop stop-color="#0000ff" offset="100%" stop-opacity="1"/>
+  </linearGradient>
+</defs>
+<circle cx="50" cy="50" r="40" stroke="url(#grad1)" stroke-width="10" fill="none"/>
+</svg>

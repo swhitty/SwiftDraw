@@ -65,7 +65,7 @@ class ViewController: UIViewController {
 
     override func loadView() {
         let imageView = UIImageView(frame: UIScreen.main.bounds)
-        imageView.image = SVG(named: "stylesheet.svg", in: .samples)?.rasterize()
+        imageView.image = SVG(named: "gradient-stroke.svg", in: .samples)?.rasterize()
         imageView.contentMode = .scaleAspectFit
         imageView.backgroundColor = .white
         self.view = imageView
