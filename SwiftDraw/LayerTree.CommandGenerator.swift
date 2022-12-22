@@ -483,27 +483,19 @@ private extension LayerTree.Gradient {
 private extension LayerTree.Shape {
 
     var gradientEndpoints: (start: LayerTree.Point, end: LayerTree.Point)? {
-        switch self {
-        case .path(let p):
-            return p.endpoints
-        case .ellipse(within: let rect):
-            return rect.gradientEndpoints
-        case .rect(within: let rect, _):
-            return rect.gradientEndpoints
-        case .polygon(between: let points):
-            guard points.count > 1 else { return nil }
-            return (points[0], points[points.count / 2])
-        default:
-            return nil
-        }
+        bounds?.gradientEndpoints
     }
 
     var bounds: LayerTree.Rect? {
         switch self {
         case .path(let p):
             return p.bounds
-        default:
-            return nil
+        case .rect(within: let rect, _),
+             .ellipse(within: let rect):
+            return rect
+        case .polygon(between: let points),
+             .line(between: let points):
+            return .makeBounds(between: points)
         }
     }
 }
@@ -523,5 +515,20 @@ private extension LayerTree.Rect {
         let start = LayerTree.Point(midX, minY)
         let end = LayerTree.Point(midX, maxY)
         return (start, end)
+    }
+
+    static func makeBounds(between points: [LayerTree.Point]) -> Self? {
+        var min = LayerTree.Point.maximum
+        var max = LayerTree.Point.minimum
+        for point in points {
+            min = min.minimum(combining: point)
+            max = max.maximum(combining: point)
+        }
+        return LayerTree.Rect(
+            x: min.x,
+            y: min.y,
+            width: max.x - min.x,
+            height: max.y - min.y
+        )
     }
 }
