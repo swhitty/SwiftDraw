@@ -6,20 +6,39 @@ on:
   workflow_dispatch:
 
 jobs:
-  macos:
-    runs-on: macos-latest
+  xcode_14_3:
+    runs-on: macos-13
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_14.3.app/Contents/Developer
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-      - name: Build and Test
+      - name: Version
+        run: swift --version
+      - name: Build
+        run: swift build --build-tests
+      - name: Test
         run: swift test --enable-code-coverage
       - name: Gather code coverage
         run: xcrun llvm-cov export -format="lcov" .build/debug/SwiftDrawPackageTests.xctest/Contents/MacOS/SwiftDrawPackageTests -instr-profile .build/debug/codecov/default.profdata > coverage_report.lcov
       - name: Upload Coverage
         uses: codecov/codecov-action@v3
         with:
-          fail_ci_if_error: true
           files: ./coverage_report.lcov
+
+  xcode_14_2:
+    runs-on: macos-12
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_14.2.app/Contents/Developer
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Version
+        run: swift --version
+      - name: Build
+        run: swift build --build-tests
+      - name: Test
+        run: swift test --skip-build
 
   linux:
     runs-on: ubuntu-latest
