@@ -16,9 +16,9 @@ jobs:
       - name: Version
         run: swift --version
       - name: Build
-        run: swift build --build-tests
+        run: swift test --enable-code-coverage --filter do_not_test
       - name: Test
-        run: swift test --enable-code-coverage
+        run: swift test --enable-code-coverage --skip-build
       - name: Gather code coverage
         run: xcrun llvm-cov export -format="lcov" .build/debug/SwiftDrawPackageTests.xctest/Contents/MacOS/SwiftDrawPackageTests -instr-profile .build/debug/codecov/default.profdata > coverage_report.lcov
       - name: Upload Coverage
@@ -36,9 +36,9 @@ jobs:
       - name: Version
         run: swift --version
       - name: Build
-        run: swift build --build-tests
+        run: swift test --enable-code-coverage --filter do_not_test
       - name: Test
-        run: swift test --skip-build
+        run: swift test --enable-code-coverage --skip-build
 
   linux:
     runs-on: ubuntu-latest
@@ -46,5 +46,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-      - name: Build and Test
-        run: swift test
+      - name: Version
+        run: swift --version
+      - name: Build
+        run: swift test --enable-code-coverage --filter do_not_test
+      - name: Test
+        run: swift test --enable-code-coverage --skip-build
