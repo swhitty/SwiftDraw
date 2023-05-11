@@ -138,14 +138,19 @@ extension SFSymbolRenderer {
         return bounds
     }
 
-    static func getPaths(for svg: DOM.SVG) -> [LayerTree.Path]? {
+    static func getPaths(for svg: DOM.SVG) -> [SymbolPath]? {
         let layer = LayerTree.Builder(svg: svg).makeLayer()
-        let paths = getPaths(for: layer)
+        let paths = getSymbolPaths(for: layer)
         return paths.isEmpty ? nil : paths
     }
 
-    static func getPaths(for layer: LayerTree.Layer,
-                         ctm: LayerTree.Transform.Matrix = .identity) -> [LayerTree.Path] {
+    struct SymbolPath {
+        var `class`: String?
+        var path: LayerTree.Path
+    }
+
+    static func getSymbolPaths(for layer: LayerTree.Layer,
+                               ctm: LayerTree.Transform.Matrix = .identity) -> [SymbolPath] {
 
         guard layer.opacity > 0 else { return [] }
         guard layer.clip.isEmpty else {
@@ -158,24 +163,24 @@ extension SFSymbolRenderer {
         }
 
         let ctm = ctm.concatenated(layer.transform.toMatrix())
-        var paths = [LayerTree.Path]()
+        var paths = [SymbolPath]()
 
         for c in layer.contents {
             switch c {
             case let .shape(shape, stroke, fill):
                 if let path = makePath(for: shape, stoke: stroke, fill: fill)?.applying(matrix: ctm) {
                     if fill.rule == .evenodd {
-                        paths.append(path.makeNonZero())
+                        paths.append(SymbolPath(class: layer.class, path: path.makeNonZero()))
                     } else {
-                        paths.append(path)
+                        paths.append(SymbolPath(class: layer.class, path: path))
                     }
                 }
             case let .text(text, point, attributes):
                 if let path = makePath(for: text, at: point, with: attributes) {
-                    paths.append(path.applying(matrix: ctm))
+                    paths.append(SymbolPath(class: layer.class, path: path.applying(matrix: ctm)))
                 }
             case .layer(let l):
-                paths.append(contentsOf: getPaths(for: l, ctm: ctm))
+                paths.append(contentsOf: getSymbolPaths(for: l, ctm: ctm))
             default:
                 ()
             }
@@ -216,11 +221,11 @@ extension SFSymbolRenderer {
 #endif
     }
 
-    static func makeBounds(for paths: [LayerTree.Path]) -> LayerTree.Rect {
+    static func makeBounds(for paths: [SymbolPath]) -> LayerTree.Rect {
         var min = LayerTree.Point.maximum
         var max = LayerTree.Point.minimum
         for p in paths {
-            let bounds = p.bounds
+            let bounds = p.path.bounds
             min = min.minimum(combining: .init(bounds.minX, bounds.minY))
             max = max.maximum(combining: .init(bounds.maxX, bounds.maxY))
         }
@@ -471,11 +476,15 @@ private extension ContainerElement {
 
 private extension SFSymbolTemplate.Variant {
 
-    mutating func appendPaths(_ paths: [LayerTree.Path], from source: LayerTree.Rect) {
+    mutating func appendPaths(_ paths: [SFSymbolRenderer.SymbolPath], from source: LayerTree.Rect) {
         let matrix = SFSymbolRenderer.makeTransformation(from: source, to: bounds)
         contents.paths = paths
-            .map { $0.applying(matrix: matrix) }
-            .map(SFSymbolRenderer.makeDOMPath)
+            .map {
+                let transformed = $0.path.applying(matrix: matrix)
+                let dom = SFSymbolRenderer.makeDOMPath(for: transformed)
+                dom.class = $0.class
+                return dom
+            }
 
         let midX = bounds.midX
         let newWidth = ((source.width * matrix.a) / 2) + 10

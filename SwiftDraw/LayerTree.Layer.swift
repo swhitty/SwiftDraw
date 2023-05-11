@@ -28,6 +28,7 @@
 
 extension LayerTree {
     final class Layer: Equatable {
+        var `class`: String? = nil
         var contents: [Contents] = []
         var opacity: Float = 1.0
         var transform: [Transform] = []

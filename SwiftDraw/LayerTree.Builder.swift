@@ -78,7 +78,7 @@ extension LayerTree {
             let state = createState(for: element, inheriting: previousState)
             let attributes = element.attributes
             let l = Layer()
-
+            l.class = element.class
             guard state.display == .inline else { return l }
 
             l.transform = Builder.createTransforms(from: attributes.transform ?? [])

@@ -94,6 +94,7 @@ extension XML.Formatter {
             var attributes = makeGraphicsAttributes(from: graphic.attributes)
             attributes["id"] = graphic.id
             attributes["style"] = makeStyleAttribute(from: graphic.style)
+            attributes["class"] = graphic.class
             return attributes
         }
 
