@@ -60,6 +60,8 @@ extension XML.Formatter {
                 element.attributes["height"] = formatter.formatLength(svg.height)
             }
 
+            try element.children.append(contentsOf: makeStyles(svg.styles))
+
             if let defs = try makeDefs(svg.defs) {
                 element.children.append(defs)
             }
@@ -88,6 +90,21 @@ extension XML.Formatter {
             )
 
             return element.children.isEmpty ? nil : element
+        }
+
+        func makeStyles(_ sheets: [DOM.StyleSheet]) throws -> [XML.Element] {
+            try sheets.compactMap(makeStyle)
+        }
+
+        func makeStyle(_ sheet: DOM.StyleSheet) throws -> XML.Element? {
+            let element = XML.Element(name: "style")
+
+            element.innerText = "\n" + sortSelectors(sheet.attributes.keys)
+                .compactMap { encodeSelector($0, attributes: sheet.attributes[$0]!) }
+                .joined(separator: "\n")
+                .indenting(spaces: 8) + "\n    "
+
+            return element.innerText?.isEmpty == false ? element : nil
         }
 
         func makeGraphicsAttributes(from graphic: DOM.GraphicsElement) -> [String: String] {
@@ -370,5 +387,39 @@ extension XML.Formatter {
                 return "\(cmd.rawValue)"
             }
         }
+
+        func sortSelectors<S: Sequence>(_ selectors: S) -> [DOM.StyleSheet.Selector] where S.Element == DOM.StyleSheet.Selector {
+            let previews = selectors.filter { encodeSelector($0).contains("SFSymbolsPreview") }
+            let other = selectors.filter { !encodeSelector($0).contains("SFSymbolsPreview") }
+            return other.sorted() + previews.sorted()
+        }
+
+        func encodeSelector(_ selector: DOM.StyleSheet.Selector, attributes: DOM.PresentationAttributes) -> String? {
+            guard let style = makeStyleAttribute(from: attributes) else {
+                return nil
+            }
+            let name = encodeSelector(selector)
+            return "\(name) { \(style) }"
+        }
+
+        func encodeSelector(_ selector: DOM.StyleSheet.Selector) -> String {
+            switch selector {
+            case .class(let name):
+                return ".\(name)"
+            case .element(let name):
+                return name
+            case .id(let name):
+                return "#\(name)"
+            }
+        }
+    }
+}
+
+private extension String {
+    func indenting(spaces: Int = 0) -> String {
+        let pad = String(repeating: " ", count: spaces)
+        return components(separatedBy: "\n")
+          .map { "\(pad)\($0)" }
+          .joined(separator: "\n")
     }
 }

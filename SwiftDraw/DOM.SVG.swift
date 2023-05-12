@@ -76,9 +76,9 @@ extension DOM {
     
     struct StyleSheet {
         
-        enum Selector: Hashable {
-            case element(String)
+        enum Selector: Hashable, Comparable {
             case id(String)
+            case element(String)
             case `class`(String)
         }
         

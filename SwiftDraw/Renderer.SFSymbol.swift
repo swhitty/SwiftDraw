@@ -65,6 +65,8 @@ public struct SFSymbolRenderer {
         }
         var template = try SFSymbolTemplate.make()
 
+        template.svg.styles = image.styles.map(makeSymbolStyleSheet)
+
         let boundsRegular = try makeBounds(svg: image, auto: Self.makeBounds(for: pathsRegular), for: .regular)
         template.regular.appendPaths(pathsRegular, from: boundsRegular)
 
@@ -90,6 +92,29 @@ public struct SFSymbolRenderer {
         let formatter = XML.Formatter(spaces: 4)
         let result = formatter.encodeRootElement(element)
         return result
+    }
+
+    func makeSymbolStyleSheet(from stylesheet: DOM.StyleSheet) -> DOM.StyleSheet {
+        var copy = stylesheet
+        for selector in stylesheet.attributes.keys {
+            switch selector {
+            case .class(let name):
+                if SFSymbolRenderer.containsAcceptedName(name) {
+                    copy.attributes[selector] = stylesheet.attributes[selector]
+                }
+            case .id, .element:
+                ()
+            }
+        }
+        return copy
+    }
+
+    static func containsAcceptedName(_ string: String?) -> Bool {
+        guard let string = string else { return false }
+        return string.contains("hierarchical-") ||
+        string.contains("monochrome-") ||
+        string.contains("multicolor-") ||
+        string.contains("SFSymbolsPreview")
     }
 }
 
@@ -165,19 +190,21 @@ extension SFSymbolRenderer {
         let ctm = ctm.concatenated(layer.transform.toMatrix())
         var paths = [SymbolPath]()
 
+        let symbolClass = containsAcceptedName(layer.class) ? layer.class : nil
+
         for c in layer.contents {
             switch c {
             case let .shape(shape, stroke, fill):
                 if let path = makePath(for: shape, stoke: stroke, fill: fill)?.applying(matrix: ctm) {
                     if fill.rule == .evenodd {
-                        paths.append(SymbolPath(class: layer.class, path: path.makeNonZero()))
+                        paths.append(SymbolPath(class: symbolClass, path: path.makeNonZero()))
                     } else {
-                        paths.append(SymbolPath(class: layer.class, path: path))
+                        paths.append(SymbolPath(class: symbolClass, path: path))
                     }
                 }
             case let .text(text, point, attributes):
                 if let path = makePath(for: text, at: point, with: attributes) {
-                    paths.append(SymbolPath(class: layer.class, path: path.applying(matrix: ctm)))
+                    paths.append(SymbolPath(class: symbolClass, path: path.applying(matrix: ctm)))
                 }
             case .layer(let l):
                 paths.append(contentsOf: getSymbolPaths(for: l, ctm: ctm))
