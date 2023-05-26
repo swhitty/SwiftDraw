@@ -54,6 +54,23 @@ final class RendererSFSymbolTests: XCTestCase {
             template.black.contents.paths.isEmpty
         )
     }
+    
+    func testWidthGreaterThanHeightSymbol() throws {
+        // This svg has a width of 24, but a height of 4. When scaling in SFSymbolRenderer makeTransformation
+        // the height was being used to create scale causing the width to be 440 instead of 108.
+        let url = try Bundle.test.url(forResource: "dash.svg")
+        let template = try SFSymbolTemplate.parse(
+            SFSymbolRenderer.render(fileURL: url)
+        )
+
+        XCTAssertTrue(
+            template.regular.bounds.size.width == 108.0
+        )
+        XCTAssertTrue(
+            template.regular.bounds.size.height == 70.0
+        )
+
+    }
 
     #if canImport(CoreGraphics)
     func testStrokeSymbol() throws {
