@@ -266,7 +266,7 @@ extension SFSymbolRenderer {
 
     static func makeTransformation(from source: LayerTree.Rect,
                                    to destination: LayerTree.Rect) -> LayerTree.Transform.Matrix {
-        let scale = destination.height / source.height
+        let scale = min(destination.width / source.width, destination.height / source.height)
         let scaleMidX = source.midX * scale
         let scaleMidY = source.midY * scale
         let tx = destination.midX - scaleMidX
