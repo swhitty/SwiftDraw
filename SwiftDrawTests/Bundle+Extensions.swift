@@ -33,15 +33,9 @@
 import Foundation
 
 extension Bundle {
-  
-  static var test: Bundle {
-#if SWIFT_PACKAGE
-      return .module
-#else
-      return Bundle(for: Marker.self)
-#endif
-  }
-  
+
+  static let test = Bundle(url: Bundle.module.url(forResource: "Test", withExtension: "bundle")!)!
+
   func url(forResource named: String) throws -> URL {
     guard let url = self.url(forResource: named, withExtension: nil) else {
       throw Error.invalid

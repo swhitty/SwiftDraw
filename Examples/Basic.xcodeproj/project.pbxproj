@@ -12,7 +12,7 @@
 		D961846D220FDD1200C59D9B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D961846C220FDD1200C59D9B /* Assets.xcassets */; };
 		D9618470220FDD1200C59D9B /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = D961846E220FDD1200C59D9B /* LaunchScreen.storyboard */; };
 		D9742E1E27D4877300E02FFD /* SwiftDraw in Frameworks */ = {isa = PBXBuildFile; productRef = D9742E1D27D4877300E02FFD /* SwiftDraw */; };
-		D9BA1AAD2894A33C007A6033 /* Samples.bundle in Resources */ = {isa = PBXBuildFile; fileRef = D9BA1AAC2894A32A007A6033 /* Samples.bundle */; };
+		D9EE86AF2A4EC94E00C7CAE1 /* Samples.bundle in Resources */ = {isa = PBXBuildFile; fileRef = D94D5BE22A4EC906001DCD83 /* Samples.bundle */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -29,6 +29,7 @@
 
 /* Begin PBXFileReference section */
 		014F853028F0BC3100B4BE96 /* Basic.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = Basic.entitlements; path = Basic/Basic.entitlements; sourceTree = "<group>"; };
+		D94D5BE22A4EC906001DCD83 /* Samples.bundle */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.plug-in"; name = Samples.bundle; path = ../Samples.bundle; sourceTree = "<group>"; };
 		D9618462220FDD1100C59D9B /* Basic.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Basic.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D9618465220FDD1100C59D9B /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		D9618467220FDD1100C59D9B /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -37,7 +38,6 @@
 		D9618471220FDD1200C59D9B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		D9742E1C27D4875100E02FFD /* SwiftDraw */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = SwiftDraw; path = ..; sourceTree = "<group>"; };
 		D9ACD7A0220FDE04009717CF /* SwiftDraw.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = SwiftDraw.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		D9BA1AAC2894A32A007A6033 /* Samples.bundle */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.plug-in"; path = Samples.bundle; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -57,7 +57,7 @@
 			children = (
 				014F853028F0BC3100B4BE96 /* Basic.entitlements */,
 				D9742E1C27D4875100E02FFD /* SwiftDraw */,
-				D9BA1AAC2894A32A007A6033 /* Samples.bundle */,
+				D94D5BE22A4EC906001DCD83 /* Samples.bundle */,
 				D9618464220FDD1100C59D9B /* Sources */,
 				D9618463220FDD1100C59D9B /* Products */,
 				D9ACD79F220FDE04009717CF /* Frameworks */,
@@ -155,7 +155,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				D9618470220FDD1200C59D9B /* LaunchScreen.storyboard in Resources */,
-				D9BA1AAD2894A33C007A6033 /* Samples.bundle in Resources */,
+				D9EE86AF2A4EC94E00C7CAE1 /* Samples.bundle in Resources */,
 				D961846D220FDD1200C59D9B /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

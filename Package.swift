@@ -31,7 +31,7 @@ let package = Package(
             dependencies: ["SwiftDraw"],
             path: "SwiftDrawTests",
             resources: [
-                .process("Samples")
+                .copy("Test.bundle")
             ]
 		)
     ]

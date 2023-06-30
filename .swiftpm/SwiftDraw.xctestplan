@@ -1,0 +1,24 @@
+{
+  "configurations" : [
+    {
+      "id" : "1AF01B10-5ADB-4F60-8B2E-FB30A2CC2F79",
+      "name" : "Test Scheme Action",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "codeCoverage" : false
+  },
+  "testTargets" : [
+    {
+      "target" : {
+        "containerPath" : "container:",
+        "identifier" : "SwiftDrawTests",
+        "name" : "SwiftDrawTests"
+      }
+    }
+  ],
+  "version" : 1
+}

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 550 550" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+	<defs>
+		<path id="A" d="M0,69.755 L2.685,69.755 L28.369,3.287 L29.052,3.287 L29.052,0 L27.148,0 L0,69.755 Z 
+						M10.693,45.536 L45.996,45.536 L45.263,43.313 L11.474,43.313 L10.693,45.536 Z 
+						M54.15,69.755 L56.787,69.755 L29.638,0 L28.466,0 L28.466,3.287 L54.15,69.755 Z" fill="rgb(39,170,225)" />
+	</defs>
+
+    <g id="Notes" font-family="LucidaGrande, 'Lucida Grande', sans-serif" font-size="13px">
+        <text x="18px" y="126px">Small</text>
+        <text x="18px" y="320px">Medium</text>
+        <text x="18px" y="517px">Large</text>
+    </g>
+
+    <g id="Guides" stroke="rgb(39,170,225)" stroke-width="0.5px">
+		<path id="Capline-S" d="M18,26 l500,0" />
+		<use xlink:href="#A" x="95" y="26" />		
+		<path id="Baseline-S" d="M18,96 l500,0" />
+		
+		<path id="Capline-M" d="M18,220 l500,0" />
+		<use xlink:href="#A" x="95" y="220" />		
+		<path id="Baseline-M" d="M18,290 l500,0" />
+	
+		<path id="Capline-L" d="M18,417 l500,0" />
+		<use xlink:href="#A" x="95" y="417" />		
+		<path id="Baseline-L" d="M18,487 l500,0" />
+	
+ 	    <path id="left-margin-Regular-M" d="M256,195 l0,120" />
+        <path id="right-margin-Regular-M" d="M373,195 l0,120" />
+    </g>
+
+    <g id="Regular-M">
+		<path d="M285.854,236.968 L285.854,257.0591 C285.854,276.55 301.654,292.351 321.145,292.351 M301.019,252.0174 L285.894,236.892 L270.769,252.0174 M346.434,272.144 L346.434,252.0577 C346.434,232.567 330.634,216.766 311.143,216.766 M331.269,257.0591 L346.394,272.184 L361.519,257.0591" style="fill:none;stroke:rgb(33,33,33);stroke-width:10px;stroke-linecap:round;stroke-linejoin:round;"/>
+    </g>
+</svg>

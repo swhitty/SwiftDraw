@@ -39,7 +39,7 @@ final class ImageTests: XCTestCase {
     }
 
     func testInvalidSVGReturnsNil() {
-        XCTAssertNil(SVG(named: "invalid.svg", in: .test))
+        XCTAssertNil(SVG(named: "invalids.svg", in: .test))
     }
 
     func testMissingSVGReturnsNil() {

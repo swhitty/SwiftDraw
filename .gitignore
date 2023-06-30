@@ -90,8 +90,8 @@ fastlane/test_output
 iOSInjectionProject/
 
 # Samples Folder
-Samples/*.pdf
-Samples/*.png
-Samples/*.jpg
-Samples/*.jpeg
-Samples/*.swift
+Samples.bundle/*.pdf
+Samples.bundle/*.png
+Samples.bundle/*.jpg
+Samples.bundle/*.jpeg
+Samples.bundle/*.swift
