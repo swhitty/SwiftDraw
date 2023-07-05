@@ -133,7 +133,7 @@ $ swiftdraw [key.svg](https://github.com/swhitty/SwiftDraw/blob/main/Samples.bun
 Optional variants `--ultralight` and `--black` can also be provided:
 
 <big><pre>
-$ swiftdraw [key.svg](https://github.com/swhitty/SwiftDraw/blob/main/Samples.bundle/key/key.svg) --format sfsymbol --ultralight [key-ultralight.svg](https://github.com/swhitty/SwiftDraw/blob/main/Samples/key/key-ultralight.svg) --black [key-black.svg](https://github.com/swhitty/SwiftDraw/blob/main/Samples/key/key-black.svg)
+$ swiftdraw [key.svg](https://github.com/swhitty/SwiftDraw/blob/main/Samples.bundle/key/key.svg) --format sfsymbol --ultralight [key-ultralight.svg](https://github.com/swhitty/SwiftDraw/blob/main/Samples.bundle/key/key-ultralight.svg) --black [key-black.svg](https://github.com/swhitty/SwiftDraw/blob/main/Samples.bundle/key/key-black.svg)
 </pre></big>
 <img src="https://github.com/swhitty/SwiftDraw/blob/main/Samples.bundle/key/key-symbol.svg" width="400" />
 
