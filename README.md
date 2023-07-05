@@ -70,7 +70,7 @@ let image = NSImage(svgNamed: "sample.svg")
 The command line tool converts SVGs to other formats: PNG, JPEG, SFSymbol and Swift source code.
 
 ```
-copyright (c) 2022 Simon Whitty
+copyright (c) 2023 Simon Whitty
 
 usage: swiftdraw <file.svg> [--format png | pdf | jpeg | swift | sfsymbol] [--size wxh] [--scale 1x | 2x | 3x]
 
@@ -126,16 +126,16 @@ Alternatively download the latest command line tool [here](https://github.com/sw
 Custom SF Symbols can be created from a single SVG.  SwiftDraw expands strokes, winds paths using the [non-zero rule](https://en.wikipedia.org/wiki/Nonzero-rule) and aligns elements generating a symbol that can be imported directly into Xcode.
 
 <big><pre>
-$ swiftdraw [key.svg](https://github.com/swhitty/SwiftDraw/blob/main/Samples/key/key.svg) --format sfsymbol
+$ swiftdraw [key.svg](https://github.com/swhitty/SwiftDraw/blob/main/Samples.bundle/key/key.svg) --format sfsymbol
 </pre></big>
-<img src="https://github.com/swhitty/SwiftDraw/blob/main/Samples/key/key-single.svg" width="400" />
+<img src="https://github.com/swhitty/SwiftDraw/blob/main/Samples.bundle/key/key-single.svg" width="400" />
 
 Optional variants `--ultralight` and `--black` can also be provided:
 
 <big><pre>
-$ swiftdraw [key.svg](https://github.com/swhitty/SwiftDraw/blob/main/Samples/key/key.svg) --format sfsymbol --ultralight [key-ultralight.svg](https://github.com/swhitty/SwiftDraw/blob/main/Samples/key/key-ultralight.svg) --black [key-black.svg](https://github.com/swhitty/SwiftDraw/blob/main/Samples/key/key-black.svg)
+$ swiftdraw [key.svg](https://github.com/swhitty/SwiftDraw/blob/main/Samples.bundle/key/key.svg) --format sfsymbol --ultralight [key-ultralight.svg](https://github.com/swhitty/SwiftDraw/blob/main/Samples/key/key-ultralight.svg) --black [key-black.svg](https://github.com/swhitty/SwiftDraw/blob/main/Samples/key/key-black.svg)
 </pre></big>
-<img src="https://github.com/swhitty/SwiftDraw/blob/main/Samples/key/key-symbol.svg" width="400" />
+<img src="https://github.com/swhitty/SwiftDraw/blob/main/Samples.bundle/key/key-symbol.svg" width="400" />
 
 #### Alignment
 
