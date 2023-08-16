@@ -88,7 +88,7 @@ Options:
 Available keys for --format swift:
  --api                api of generated code:  appkit | uikit
 
-Available keys for --format sfymbol:
+Available keys for --format sfsymbol:
  --insets             alignment of regular variant: top,left,bottom,right | auto
  --ultralight         svg file of ultralight variant
  --ultralightInsets   alignment of ultralight variant: top,left,bottom,right | auto
