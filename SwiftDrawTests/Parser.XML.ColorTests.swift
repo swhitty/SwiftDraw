@@ -70,7 +70,7 @@ final class ParserColorTests: XCTestCase {
   }
   
   func testColorHex() {
-    XCTAssertEqual(try XMLParser().parseColor("#a06"), .hex(160, 0, 96))
+    XCTAssertEqual(try XMLParser().parseColor("#a06"), .hex(170, 0, 102))
     XCTAssertEqual(try XMLParser().parseColor("#123456"), .hex(18, 52, 86))
     XCTAssertEqual(try XMLParser().parseColor("#FF11DD"), .hex(255, 17, 221))
     XCTAssertThrowsError(try XMLParser().parseColor("#invalid"))
