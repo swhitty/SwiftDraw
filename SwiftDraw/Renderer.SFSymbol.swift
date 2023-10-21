@@ -126,7 +126,6 @@ extension SFSymbolRenderer {
         case black
     }
 
-
     func getInsets(for variant: Variant) -> CommandLine.Insets {
         switch variant {
         case .regular:
@@ -177,7 +176,8 @@ extension SFSymbolRenderer {
     static func getSymbolPaths(for layer: LayerTree.Layer,
                                ctm: LayerTree.Transform.Matrix = .identity) -> [SymbolPath] {
 
-        guard layer.opacity > 0 else { return [] }
+        let isSFSymbolLayer = containsAcceptedName(layer.class)
+        guard isSFSymbolLayer || layer.opacity > 0 else { return [] }
         guard layer.clip.isEmpty else {
             print("Warning:", "clip-path unsupported in SF Symbols.", to: &.standardError)
             return []
@@ -190,17 +190,22 @@ extension SFSymbolRenderer {
         let ctm = ctm.concatenated(layer.transform.toMatrix())
         var paths = [SymbolPath]()
 
-        let symbolClass = containsAcceptedName(layer.class) ? layer.class : nil
+        let symbolClass = isSFSymbolLayer ? layer.class : nil
 
         for c in layer.contents {
             switch c {
             case let .shape(shape, stroke, fill):
-                if let path = makePath(for: shape, stoke: stroke, fill: fill)?.applying(matrix: ctm) {
+                if let path = makePath(for: shape, 
+                                       stoke: stroke,
+                                       fill: fill,
+                                       preserve: isSFSymbolLayer)?.applying(matrix: ctm) {
                     if fill.rule == .evenodd {
                         paths.append(SymbolPath(class: symbolClass, path: path.makeNonZero()))
                     } else {
                         paths.append(SymbolPath(class: symbolClass, path: path))
                     }
+                } else {
+                  print("skippibng")
                 }
             case let .text(text, point, attributes):
                 if let path = makePath(for: text, at: point, with: attributes) {
@@ -218,13 +223,14 @@ extension SFSymbolRenderer {
 
     static func makePath(for shape: LayerTree.Shape,
                          stoke: LayerTree.StrokeAttributes,
-                         fill: LayerTree.FillAttributes) -> LayerTree.Path? {
+                         fill: LayerTree.FillAttributes,
+                         preserve: Bool) -> LayerTree.Path? {
 
-        if fill.fill != .none && fill.opacity > 0 {
+        if preserve || (fill.fill != .none && fill.opacity > 0) {
             return shape.path
         }
 
-        if stoke.color != .none && stoke.width > 0 {
+        if preserve || (stoke.color != .none && stoke.width > 0) {
 #if canImport(CoreGraphics)
             return expandOutlines(for: shape.path, stroke: stoke)
 #else
