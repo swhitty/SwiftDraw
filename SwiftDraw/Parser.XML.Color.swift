@@ -152,7 +152,7 @@ extension XMLParser {
     let chars = data.unicodeScalars.map({ $0 })
     guard chars.count == 3 else { return data }
     
-    return "\(chars[0])0\(chars[1])0\(chars[2])0"
+    return "\(chars[0])\(chars[0])\(chars[1])\(chars[1])\(chars[2])\(chars[2])"
   }
   
   private func parseColorHex(data: String) throws -> DOM.Color? {
