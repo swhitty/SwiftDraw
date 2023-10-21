@@ -77,6 +77,7 @@ final class CGTransformingPattern: Equatable {
 }
 
 struct CGProvider: RendererTypeProvider {
+  
     typealias Types = CGTypes
 
     func createFloat(from float: LayerTree.Float) -> CGFloat {
@@ -412,8 +413,12 @@ struct CGRenderer: Renderer {
     }
 
     func draw(image: CGImage) {
-        let rect = CGRect(x: 0, y: 0, width: image.width, height: image.height)
-        ctx.draw(image, in: rect)
+      let rect = CGRect(x: 0, y: 0, width: image.width, height: image.height)
+      pushState()
+      translate(tx: 0, ty: rect.height)
+      scale(sx: 1, sy: -1)
+      ctx.draw(image, in: rect)
+      popState()
     }
 
     func draw(linear gradient: CGGradient, from start: CGPoint, to end: CGPoint) {
