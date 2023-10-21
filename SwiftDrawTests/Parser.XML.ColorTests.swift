@@ -40,6 +40,12 @@ final class ParserColorTests: XCTestCase {
     XCTAssertEqual(try XMLParser().parseColor("\t none \t"), .none)
   }
 
+  func testColorTransparent() {
+    XCTAssertEqual(try XMLParser().parseColor("transparent"), .none)
+    XCTAssertEqual(try XMLParser().parseColor(" transparent"), .none)
+    XCTAssertEqual(try XMLParser().parseColor("\t transparent \t"), .none)
+  }
+
   func testColorCurrent() {
     XCTAssertEqual(try XMLParser().parseColor("currentColor"), .currentColor)
     XCTAssertEqual(try XMLParser().parseColor(" currentColor"), .currentColor)

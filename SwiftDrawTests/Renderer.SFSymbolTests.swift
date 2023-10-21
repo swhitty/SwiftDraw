@@ -72,6 +72,62 @@ final class RendererSFSymbolTests: XCTestCase {
 
     }
 
+    func testTransparentLayers_Are_Removed() throws {
+        let source = try DOM.SVG.parse(#"""
+        <?xml version="1.0" encoding="UTF-8"?>
+        <svg width="64" height="64" version="1.1" xmlns="http://www.w3.org/2000/svg">
+            <rect width="100" height="100" fill="currentColor" />
+            <rect width="100" height="100" fill="transparent" />
+            <rect width="100" height="100" fill="currentColor" opacity="0" />
+        </svg>
+        """#)
+
+        let template = try SFSymbolTemplate.parse(
+            SFSymbolRenderer.render(svg: source)
+        )
+
+        XCTAssertEqual(
+            template.ultralight.contents.paths.count,
+            1
+        )
+        XCTAssertEqual(
+            template.regular.contents.paths.count,
+            1
+        )
+        XCTAssertEqual(
+            template.black.contents.paths.count,
+            1
+        )
+    }
+
+    func testTransparentSFSymboleLayers_AreNot_Removed() throws {
+        let source = try DOM.SVG.parse(#"""
+        <?xml version="1.0" encoding="UTF-8"?>
+        <svg width="64" height="64" version="1.1" xmlns="http://www.w3.org/2000/svg">
+            <rect width="100" height="100" fill="currentColor" />
+            <rect width="100" height="100" fill="transparent" class="multicolor-0:custom" />
+            <rect width="100" height="100" fill="currentColor" opacity="0" class="SFSymbolsPreview" />
+        </svg>
+        """#)
+
+        let template = try SFSymbolTemplate.parse(
+            SFSymbolRenderer.render(svg: source)
+        )
+
+        XCTAssertEqual(
+            template.ultralight.contents.paths.count,
+            3
+        )
+        XCTAssertEqual(
+            template.regular.contents.paths.count,
+            3
+        )
+        XCTAssertEqual(
+            template.black.contents.paths.count,
+            3
+        )
+    }
+
     #if canImport(CoreGraphics)
     func testStrokeSymbol() throws {
         let url = try Bundle.test.url(forResource: "key.svg")
