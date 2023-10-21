@@ -55,7 +55,8 @@ extension XMLParser {
   }
   
   private func parseColorNone(data: String) -> DOM.Color? {
-    if data.trimmingCharacters(in: .whitespaces) == "none" {
+    let trimmed = data.trimmingCharacters(in: .whitespaces)
+    if trimmed == "none" || trimmed == "transparent" {
       return DOM.Color.none // .none resolves to Optional.none
     }
     return nil
