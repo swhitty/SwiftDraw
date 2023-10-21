@@ -204,8 +204,6 @@ extension SFSymbolRenderer {
                     } else {
                         paths.append(SymbolPath(class: symbolClass, path: path))
                     }
-                } else {
-                  print("skippibng")
                 }
             case let .text(text, point, attributes):
                 if let path = makePath(for: text, at: point, with: attributes) {
