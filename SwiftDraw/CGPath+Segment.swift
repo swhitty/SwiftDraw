@@ -41,9 +41,11 @@ import UIKit
 extension CGPath {
   func doApply(action: @escaping (CGPathElement)->()) {
     var action = action
-    apply(info: &action) {
-      let action = $0!.bindMemory(to: ((CGPathElement)->()).self, capacity: 1).pointee
-      action($1.pointee)
+    withUnsafeMutablePointer(to: &action) { action in
+      apply(info: action) {
+        let action = $0!.bindMemory(to: ((CGPathElement)->()).self, capacity: 1).pointee
+        action($1.pointee)
+      }
     }
   }
 }
