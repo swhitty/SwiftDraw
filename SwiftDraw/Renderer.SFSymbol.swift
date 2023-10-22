@@ -202,9 +202,7 @@ extension SFSymbolRenderer {
                     } else {
                         paths.append(SymbolPath(class: symbolClass, path: fillPath.applying(matrix: ctm)))
                     }
-                }
-
-                if let strokePath = makeStrokePath(for: shape, stroke: stroke, preserve: isSFSymbolLayer) {
+                } else if let strokePath = makeStrokePath(for: shape, stroke: stroke, preserve: isSFSymbolLayer) {
                     paths.append(SymbolPath(class: symbolClass, path: strokePath.applying(matrix: ctm)))
                 }
 
