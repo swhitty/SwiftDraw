@@ -195,16 +195,19 @@ extension SFSymbolRenderer {
         for c in layer.contents {
             switch c {
             case let .shape(shape, stroke, fill):
-                if let path = makePath(for: shape, 
-                                       stoke: stroke,
-                                       fill: fill,
-                                       preserve: isSFSymbolLayer)?.applying(matrix: ctm) {
+
+                if let fillPath = makeFillPath(for: shape, fill: fill, preserve: isSFSymbolLayer) {
                     if fill.rule == .evenodd {
-                        paths.append(SymbolPath(class: symbolClass, path: path.makeNonZero()))
+                        paths.append(SymbolPath(class: symbolClass, path: fillPath.applying(matrix: ctm).makeNonZero()))
                     } else {
-                        paths.append(SymbolPath(class: symbolClass, path: path))
+                        paths.append(SymbolPath(class: symbolClass, path: fillPath.applying(matrix: ctm)))
                     }
                 }
+
+                if let strokePath = makeStrokePath(for: shape, stroke: stroke, preserve: isSFSymbolLayer) {
+                    paths.append(SymbolPath(class: symbolClass, path: strokePath.applying(matrix: ctm)))
+                }
+
             case let .text(text, point, attributes):
                 if let path = makePath(for: text, at: point, with: attributes) {
                     paths.append(SymbolPath(class: symbolClass, path: path.applying(matrix: ctm)))
@@ -219,18 +222,21 @@ extension SFSymbolRenderer {
         return paths
     }
 
-    static func makePath(for shape: LayerTree.Shape,
-                         stoke: LayerTree.StrokeAttributes,
-                         fill: LayerTree.FillAttributes,
-                         preserve: Bool) -> LayerTree.Path? {
-
+    static func makeFillPath(for shape: LayerTree.Shape,
+                             fill: LayerTree.FillAttributes,
+                             preserve: Bool) -> LayerTree.Path? {
         if preserve || (fill.fill != .none && fill.opacity > 0) {
             return shape.path
         }
+        return nil
+    }
 
-        if preserve || (stoke.color != .none && stoke.width > 0) {
+    static func makeStrokePath(for shape: LayerTree.Shape,
+                               stroke: LayerTree.StrokeAttributes,
+                               preserve: Bool) -> LayerTree.Path? {
+        if preserve || (stroke.color != .none && stroke.width > 0) {
 #if canImport(CoreGraphics)
-            return expandOutlines(for: shape.path, stroke: stoke)
+            return expandOutlines(for: shape.path, stroke: stroke)
 #else
             print("Warning:", "expanding stroke outlines requires macOS.", to: &.standardError)
             return nil
