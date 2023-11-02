@@ -13,6 +13,7 @@
   - [macOS](#macos)
 - [Command Line Tool](#command-line-tool)
   - [Installation](#installation)
+  - [SF Symbol](#sf-symbol)
   - [Alignment](#alignment)
   - [Swift Code Generation](#swift-code-generation)
 - [Credits](#credits)
