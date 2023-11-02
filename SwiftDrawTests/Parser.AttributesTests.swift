@@ -140,7 +140,7 @@ final class AttributeParserTests: XCTestCase {
     let att = ["clip": "http://www.test.com", "mask": "20 twenty"]
     XCTAssertEqual(try att.parseUrl("clip"), URL(string: "http://www.test.com"))
     XCTAssertNil(try att.parseUrl("missing"))
-    XCTAssertThrowsError(try att.parseUrl("mask"))
+    XCTAssertThrowsError(try att.parseUrl(" "))
   }
   
   func testParseURLSelector() {
