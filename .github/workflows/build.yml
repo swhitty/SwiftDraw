@@ -45,7 +45,7 @@ jobs:
     container: swift:5.7
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Version
         run: swift --version
       - name: Build
@@ -58,7 +58,7 @@ jobs:
     container: swift:5.9
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Version
         run: swift --version
       - name: Build
