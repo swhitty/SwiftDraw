@@ -67,7 +67,7 @@ private extension LayerTree.Path {
 
         for p in subpaths {
             let node = SubPathNode(p)
-            if let idx = nodes.firstIndex(where: { $0.bounds.contains(point: node.bounds.center) }) {
+            if let idx = nodes.firstIndex(where: { $0.containsNode(node) }) {
                 nodes[idx].append(node)
             } else {
                 nodes.append(node)
@@ -77,8 +77,16 @@ private extension LayerTree.Path {
     }
 }
 
+#if canImport(CoreGraphics)
+import CoreGraphics
+#endif
+
 private struct SubPathNode {
     let path: LayerTree.Path
+#if canImport(CoreGraphics)
+    let cgPath: CGPath
+#endif
+
     let bounds: LayerTree.Rect
     let direction: LayerTree.Path.Direction
     var children: [SubPathNode] = []
@@ -87,10 +95,14 @@ private struct SubPathNode {
         self.path = path
         self.bounds = path.bounds
         self.direction = path.segments.direction
+
+        #if canImport(CoreGraphics)
+        self.cgPath = CGProvider().createPath(from: .path(path))
+        #endif
     }
 
     mutating func append(_ node: SubPathNode) {
-        if let idx = children.firstIndex(where: { $0.bounds.contains(point: node.bounds.center) }) {
+        if let idx = children.firstIndex(where: { $0.containsNode(node) }) {
             children[idx].append(node)
         } else {
             children.append(node)
@@ -99,6 +111,20 @@ private struct SubPathNode {
 
     func windPaths() -> [LayerTree.Path] {
         windPaths(direction)
+    }
+
+    func containsNode(_ node: SubPathNode) -> Bool {
+        #if canImport(CoreGraphics)
+        let provider = CGProvider()
+        for point in node.path.segments.compactMap(\.location) {
+            if cgPath.contains(provider.createPoint(from: point)) {
+                return true
+            }
+        }
+        return false
+        #else
+        return bounds.contains(point: node.bounds.center)
+        #endif
     }
 
     func windPaths(_ direction: LayerTree.Path.Direction) -> [LayerTree.Path] {
