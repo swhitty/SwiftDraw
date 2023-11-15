@@ -66,11 +66,17 @@ private extension LayerTree.Path {
         var nodes = [SubPathNode]()
 
         for p in subpaths {
-            let node = SubPathNode(p)
+            var node = SubPathNode(p)
             if let idx = nodes.firstIndex(where: { $0.containsNode(node) }) {
                 nodes[idx].append(node)
             } else {
-                nodes.append(node)
+                if let idx = nodes.firstIndex(where: { node.containsNode($0) }) {
+                    // existing node is inside new node
+                    node.append(nodes[idx])
+                    nodes[idx] = node
+                } else {
+                    nodes.append(node)
+                }
             }
         }
         return nodes
@@ -105,7 +111,14 @@ private struct SubPathNode {
         if let idx = children.firstIndex(where: { $0.containsNode(node) }) {
             children[idx].append(node)
         } else {
-            children.append(node)
+            if let idx = children.firstIndex(where: { node.containsNode($0) }) {
+                // existing node is inside new node
+                var node = node
+                node.append(children[idx])
+                children[idx] = node
+            } else {
+                children.append(node)
+            }
         }
     }
 
