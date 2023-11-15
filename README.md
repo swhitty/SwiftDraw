@@ -120,7 +120,7 @@ To update to the latest version once installed:
 $ brew upgrade swiftdraw
 ```
 
-Alternatively download the latest command line tool [here](https://github.com/swhitty/SwiftDraw/releases/latest/download/SwiftDraw.dmg).
+Alternatively download the latest command line tool [here](https://github.com/swhitty/SwiftDraw/releases/latest/download/SwiftDraw.dmg.zip).
 
 ### SF Symbol
 
