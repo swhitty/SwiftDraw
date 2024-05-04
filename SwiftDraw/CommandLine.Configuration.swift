@@ -180,12 +180,10 @@ extension CommandLine {
         }
 
         let scanner = Scanner(string: value)
-        var width: Int32 = 0
-        var height: Int32 = 0
         guard
-            scanner.scanInt32(&width),
-            scanner.scanString("x", into: nil),
-            scanner.scanInt32(&height),
+            let width = scanner.scanInt32(),
+            let _ = scanner.scanString("x"),
+            let height = scanner.scanInt32(),
             width > 0, height > 0 else {
             throw Error.invalid
         }
