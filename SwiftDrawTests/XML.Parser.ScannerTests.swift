@@ -141,7 +141,7 @@ final class ScannerTests: XCTestCase {
     
     var scanner = XMLParser.Scanner(text: "-29")
     XCTAssertThrowsError(try scanner.scanBool())
-    XCTAssertEqual(scanner.scanLocation, 0)
+    XCTAssertEqual(scanner.currentIndex, "".startIndex)
   }
   
   func testScanPercentageFloat() {
