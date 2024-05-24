@@ -243,7 +243,31 @@ extension LayerTree {
 
         func renderCommands(for image: Image) -> [RendererCommand<P.Types>] {
             guard let renderImage = provider.createImage(from: image) else { return  [] }
-            return [.draw(image: renderImage)]
+            let size = provider.createSize(from: renderImage)
+            guard size.width > 0 && size.height > 0 else { return [] }
+
+            let frame = makeImageFrame(for: image, bitmapSize: size)
+            let rect = provider.createRect(from: frame)
+            return [.draw(image: renderImage, in: rect)]
+        }
+
+        func makeImageFrame(for image: Image, bitmapSize: LayerTree.Size) -> LayerTree.Rect {
+            var frame = LayerTree.Rect(
+                x: image.origin.x,
+                y: image.origin.y,
+                width: image.width ?? bitmapSize.width,
+                height: image.height ?? bitmapSize.height
+            )
+
+            let aspectRatio = bitmapSize.width / bitmapSize.height
+
+            if let height = image.height, image.width == nil {
+                frame.size.width = height * aspectRatio
+            }
+            if let width = image.width, image.height == nil {
+                frame.size.height = width / aspectRatio
+            }
+            return frame
         }
 
         func renderCommands(for text: String, at point: Point, attributes: TextAttributes, colorConverter: ColorConverter = DefaultColorConverter()) -> [RendererCommand<P.Types>] {

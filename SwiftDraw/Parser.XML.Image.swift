@@ -33,13 +33,13 @@ extension XMLParser {
   
   func parseImage(_ att: AttributeParser) throws -> DOM.Image {
     let href: DOM.URL = try att.parseUrl("xlink:href")
-    let width: DOM.Coordinate = try att.parseCoordinate("width")
-    let height: DOM.Coordinate = try att.parseCoordinate("height")
-    
-    let use = DOM.Image(href: href, width: width, height: height)
-    use.x = try att.parseCoordinate("x")
-    use.y = try att.parseCoordinate("y")
-    
-    return use
+
+    let image = DOM.Image(href: href)
+    image.x = try att.parseCoordinate("x")
+    image.y = try att.parseCoordinate("y")
+    image.width = try att.parseCoordinate("width")
+    image.height = try att.parseCoordinate("height")
+
+    return image
   }
 }

@@ -115,7 +115,14 @@ struct LayerTreeProvider: RendererTypeProvider {
   func createImage(from image: LayerTree.Image) -> LayerTree.Image? {
     return image
   }
-  
+
+  func createSize(from image: LayerTree.Image) -> LayerTree.Size {
+      LayerTree.Size(
+        image.width ?? 0,
+        image.height ?? 0
+      )
+  }
+
   func getBounds(from shape: LayerTree.Shape) -> LayerTree.Rect {
     return LayerTree.Rect(x: 0, y: 0, width: 0, height: 0)
   }

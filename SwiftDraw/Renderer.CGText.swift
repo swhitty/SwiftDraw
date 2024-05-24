@@ -209,7 +209,11 @@ struct CGTextProvider: RendererTypeProvider {
   func createImage(from image: LayerTree.Image) -> LayerTree.Image? {
     return image
   }
-  
+
+  func createSize(from image: LayerTree.Image) -> LayerTree.Size {
+    LayerTree.Size(image.width ?? 0, image.height ?? 0)
+  }
+
   func getBounds(from shape: LayerTree.Shape) -> LayerTree.Rect {
 #if canImport(CoreGraphics)
     return CGProvider().getBounds(from: shape)
@@ -556,7 +560,7 @@ public final class CGTextRenderer: Renderer {
     }
   }
   
-  func draw(image: LayerTree.Image) {
+  func draw(image: LayerTree.Image, in rect: String) {
     lines.append("ctx.saveGState()")
     lines.append("ctx.translateBy(x: 0, y: image.height)")
     lines.append("ctx.scaleBy(x: 1, y: -1)")

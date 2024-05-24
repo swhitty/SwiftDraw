@@ -32,23 +32,35 @@
 import Foundation
 
 extension LayerTree {
-  enum Image: Equatable {
-    case jpeg(data: Data)
-    case png(data: Data)
-    
-    init?(mimeType: String, data: Data) {
-      guard data.count > 0 else { return nil }
-      
-      switch mimeType {
-      case "image/png":
-        self = .png(data: data)
-      case "image/jpeg":
-        self = .jpeg(data: data)
-      case "image/jpg":
-        self = .jpeg(data: data)
-      default:
-        return nil
-      }
+    struct Image: Equatable {
+
+        var bitmap: Bitmap
+        var origin: Point = .zero
+        var width: LayerTree.Float?
+        var height: LayerTree.Float?
+
+        enum Bitmap: Equatable {
+            case jpeg(Data)
+            case png(Data)
+        }
+
+        init(bitmap: Bitmap) {
+            self.bitmap = bitmap
+        }
+
+        init?(mimeType: String, data: Data) {
+            guard data.count > 0 else { return nil }
+
+            switch mimeType {
+            case "image/png":
+                self.bitmap = .png(data)
+            case "image/jpeg":
+                self.bitmap = .jpeg(data)
+            case "image/jpg":
+                self.bitmap = .jpeg(data)
+            default:
+                return nil
+            }
+        }
     }
-  }
 }

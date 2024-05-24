@@ -268,12 +268,19 @@ struct CGProvider: RendererTypeProvider {
     }
 
     func createImage(from image: LayerTree.Image) -> CGImage? {
-        switch image {
-        case .jpeg(data: let d):
+        switch image.bitmap {
+        case .jpeg(let d):
             return CGImage.from(data: d)
-        case .png(data: let d):
+        case .png(let d):
             return CGImage.from(data: d)
         }
+    }
+
+    func createSize(from image: CGImage) -> LayerTree.Size {
+        LayerTree.Size(
+            LayerTree.Float(image.width),
+            LayerTree.Float(image.height)
+        )
     }
 
     func getBounds(from shape: LayerTree.Shape) -> LayerTree.Rect {
@@ -412,12 +419,13 @@ struct CGRenderer: Renderer {
         ctx.fillPath(using: rule)
     }
 
-    func draw(image: CGImage) {
-      let rect = CGRect(x: 0, y: 0, width: image.width, height: image.height)
+    func draw(image: CGImage, in rect: CGRect) {
       pushState()
-      translate(tx: 0, ty: rect.height)
+      translate(tx: rect.minX, ty: rect.maxY)
       scale(sx: 1, sy: -1)
-      ctx.draw(image, in: rect)
+      pushState()
+      ctx.draw(image, in: CGRect(origin: .zero, size: rect.size))
+      popState()
       popState()
     }
 
