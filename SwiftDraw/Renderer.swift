@@ -67,6 +67,7 @@ protocol RendererTypeProvider {
     func createLineCap(from cap: LayerTree.LineCap) -> Types.LineCap
     func createLineJoin(from join: LayerTree.LineJoin) -> Types.LineJoin
     func createImage(from image: LayerTree.Image) -> Types.Image?
+    func createSize(from image: Types.Image) -> LayerTree.Size
 
     func getBounds(from shape: LayerTree.Shape) -> LayerTree.Rect
 }
@@ -99,7 +100,7 @@ protocol Renderer {
     func stroke(path: Types.Path)
     func clipStrokeOutline(path: Types.Path)
     func fill(path: Types.Path, rule: Types.FillRule)
-    func draw(image: Types.Image)
+    func draw(image: Types.Image, in rect: Types.Rect)
     func draw(linear gradient: Types.Gradient, from start: Types.Point, to end: Types.Point)
     func draw(radial gradient: Types.Gradient, startCenter: Types.Point, startRadius: Types.Float, endCenter: Types.Point, endRadius: Types.Float)
 }
@@ -151,8 +152,8 @@ extension Renderer {
             clipStrokeOutline(path: p)
         case .fill(let p, let r):
             fill(path: p, rule: r)
-        case .draw(image: let i):
-            draw(image: i)
+        case .draw(image: let i, in: let r):
+            draw(image: i, in: r)
         case .drawLinearGradient(let g, let start, let end):
             draw(linear: g, from: start, to: end)
         case let .drawRadialGradient(g, startCenter, startRadius, endCenter, endRadius):
@@ -192,7 +193,7 @@ enum RendererCommand<Types: RendererTypes> {
     case clipStrokeOutline(Types.Path)
     case fill(Types.Path, rule: Types.FillRule)
 
-    case draw(image: Types.Image)
+    case draw(image: Types.Image, in: Types.Rect)
     case drawLinearGradient(Types.Gradient, from: Types.Point, to: Types.Point)
     case drawRadialGradient(Types.Gradient, startCenter: Types.Point, startRadius: Types.Float, endCenter: Types.Point, endRadius: Types.Float)
 

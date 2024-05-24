@@ -71,9 +71,15 @@ extension LayerTree.Builder {
     static func makeImageContents(from image: DOM.Image) throws -> LayerTree.Layer.Contents {
         guard
             let decoded = image.href.decodedData,
-            let im = LayerTree.Image(mimeType: decoded.mimeType, data: decoded.data) else {
+            var im = LayerTree.Image(mimeType: decoded.mimeType, data: decoded.data) else {
             throw LayerTree.Error.invalid("Cannot decode image")
         }
+
+        im.origin.x = LayerTree.Float(image.x ?? 0)
+        im.origin.y = LayerTree.Float(image.y ?? 0)
+        im.width = image.width.map { LayerTree.Float($0) }
+        im.height = image.height.map { LayerTree.Float($0) }
+
         return .image(im)
     }
 }

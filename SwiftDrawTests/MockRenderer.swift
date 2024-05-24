@@ -126,10 +126,10 @@ final class MockRenderer: Renderer {
     operations.append("fillPath")
   }
   
-  func draw(image: LayerTree.Image) {
+  func draw(image: LayerTree.Image, in rect: LayerTree.Rect) {
     operations.append("drawImage")
   }
-  
+
   func draw(linear gradient: LayerTree.Gradient, from start: LayerTree.Point, to end: LayerTree.Point) {
     operations.append("drawLinearGradient")
   }

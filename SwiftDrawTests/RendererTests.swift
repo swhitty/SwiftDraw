@@ -59,7 +59,7 @@ final class RendererTests: XCTestCase {
       .clipStrokeOutline(.mock),
       .setAlpha(0.5),
       .setBlend(mode: .sourceIn),
-      .draw(image: .mock),
+      .draw(image: .mock, in: .zero),
       .drawLinearGradient(.mock, from: .zero, to: .zero),
       .drawRadialGradient(.mock, startCenter: .zero, startRadius: 0, endCenter: .zero, endRadius: 0)
     ])

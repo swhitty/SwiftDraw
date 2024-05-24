@@ -43,14 +43,12 @@ final class LayerTreeBuilderLayerTests: XCTestCase {
   }
   
   func testMakeImageContentsFromDOM() throws {
-    let image = DOM.Image(href: URL(maybeData: "data:image/png;base64,f00d")!,
-                          width: 50,
-                          height: 50)
+    let image = DOM.Image(href: URL(maybeData: "data:image/png;base64,f00d")!)
     
     let contents = try LayerTree.Builder.makeImageContents(from: image)
     XCTAssertEqual(contents, .image(.png(data: Data(base64Encoded: "f00d")!)))
     
-    let invalid = DOM.Image(href: URL(string: "aa")!, width: 10, height: 20)
+    let invalid = DOM.Image(href: URL(string: "aa")!)
     XCTAssertThrowsError(try LayerTree.Builder.makeImageContents(from: invalid))
   }
   
@@ -85,4 +83,15 @@ final class LayerTreeBuilderLayerTests: XCTestCase {
     XCTAssertEqual(l2.contents.count, 1)
     XCTAssertEqual(l2.transform, [.translate(tx: 0, ty: 20)])
   }
+}
+
+extension LayerTree.Image {
+
+    static func png(data: Data) -> Self {
+        Self(bitmap: .png(data))
+    }
+
+    static func jpeg(data: Data) -> Self {
+        Self(bitmap: .jpeg(data))
+    }
 }
