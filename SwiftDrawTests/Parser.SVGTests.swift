@@ -115,5 +115,22 @@ final class SVGTests: XCTestCase {
     let elements = try SwiftDraw.XMLParser().parseSVGDefs(svg).elements
     XCTAssertEqual(elements.count, 2)
   }
-  
+
+    func testUse() throws {
+        let svg = try DOM.SVG.parse(xml: #"""
+        <?xml version="1.0" encoding="UTF-8"?>
+        <svg width="64" height="64" version="1.1" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <rect id="a" x="10" y="20" width="30" height="40" />
+            </defs>
+            <circle id="b" cx="50" cy="60" r="70" />
+        </svg>
+        """#)
+
+        let rect = try XCTUnwrap(svg.firstGraphicsElement(with: "a") as? DOM.Rect)
+        XCTAssertEqual(rect.id, "a")
+
+        let circle = try XCTUnwrap(svg.firstGraphicsElement(with: "b") as? DOM.Circle)
+        XCTAssertEqual(circle.id, "b")
+    }
 }

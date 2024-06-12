@@ -128,20 +128,28 @@ extension XML.Element {
   }
 }
 
-
 extension DOM.SVG {
-  
-  static func parse(fileNamed name: String, in bundle: Bundle = .test) throws -> DOM.SVG {
-    guard let url = bundle.url(forResource: name, withExtension: nil) else {
-      throw Error.missing
+
+    static func parse(fileNamed name: String, in bundle: Bundle = .test) throws -> DOM.SVG {
+        guard let url = bundle.url(forResource: name, withExtension: nil) else {
+            throw Error.missing
+        }
+
+        let parser = XMLParser(options: [.skipInvalidElements], filename: url.lastPathComponent)
+        let element = try XML.SAXParser.parse(contentsOf: url)
+        return try parser.parseSVG(element)
     }
-    
-    let parser = XMLParser(options: [.skipInvalidElements], filename: url.lastPathComponent)
-    let element = try XML.SAXParser.parse(contentsOf: url)
-    return try parser.parseSVG(element)
-  }
-  
-  enum Error: Swift.Error {
-    case missing
-  }
+
+    static func parse(
+        xml: String,
+        options: SwiftDraw.XMLParser.Options = [.skipInvalidElements]
+    ) throws -> DOM.SVG {
+        let element = try XML.SAXParser.parse(data: xml.data(using: .utf8)!)
+        let parser = XMLParser(options: options)
+        return try parser.parseSVG(element)
+    }
+
+    enum Error: Swift.Error {
+        case missing
+    }
 }

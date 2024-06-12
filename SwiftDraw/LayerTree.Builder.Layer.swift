@@ -42,7 +42,7 @@ extension LayerTree.Builder {
     func makeUseLayerContents(from use: DOM.Use, with state: State) throws -> LayerTree.Layer.Contents {
         guard
             let id = use.href.fragment,
-            let element = svg.defs.elements[id] else {
+            let element = svg.firstGraphicsElement(with: id) else {
             throw LayerTree.Error.invalid("missing referenced element: \(use.href)")
         }
 

@@ -42,3 +42,29 @@ extension DOM {
         }
     }
 }
+
+extension DOM.SVG {
+    
+    func firstGraphicsElement(with id: String) -> DOM.GraphicsElement? {
+        if let def = defs.elements[id] {
+            return def
+        }
+
+        return childElements.firstGraphicsElement(with: id)
+    }
+}
+
+extension Array<DOM.GraphicsElement> {
+
+    func firstGraphicsElement(with id: String) -> DOM.GraphicsElement? {
+        for element in self {
+            if element.id == id {
+                return element
+            }
+            if let container = element as? ContainerElement {
+                return container.childElements.firstGraphicsElement(with: id)
+            }
+        }
+        return nil
+    }
+}
