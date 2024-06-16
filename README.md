@@ -1,7 +1,7 @@
 [![Build](https://github.com/swhitty/SwiftDraw/actions/workflows/build.yml/badge.svg)](https://github.com/swhitty/SwiftDraw/actions/workflows/build.yml)
 [![CodeCov](https://codecov.io/gh/swhitty/SwiftDraw/graphs/badge.svg)](https://codecov.io/gh/swhitty/SwiftDraw)
 [![Platforms](https://img.shields.io/badge/platforms-iOS%20|%20Mac%20|%20Linux-lightgray.svg)](https://github.com/swhitty/SwiftDraw/blob/main/Package.swift)
-[![Swift 5.7 — 5.9](https://img.shields.io/badge/swift-5.7-red.svg?style=flat)](https://developer.apple.com/swift)
+[![Swift 5.7 — 5.10](https://img.shields.io/badge/swift-5.7—5.10-red.svg?style=flat)](https://developer.apple.com/swift)
 [![License](https://img.shields.io/badge/license-zlib-lightgrey.svg)](https://opensource.org/licenses/Zlib)
 [![Twitter](https://img.shields.io/badge/twitter-@simonwhitty-blue.svg)](http://twitter.com/simonwhitty)
 
@@ -71,7 +71,7 @@ let image = NSImage(svgNamed: "sample.svg")
 The command line tool converts SVGs to other formats: PNG, JPEG, SFSymbol and Swift source code.
 
 ```
-copyright (c) 2023 Simon Whitty
+copyright (c) 2024 Simon Whitty
 
 usage: swiftdraw <file.svg> [--format png | pdf | jpeg | swift | sfsymbol] [--size wxh] [--scale 1x | 2x | 3x]
 
