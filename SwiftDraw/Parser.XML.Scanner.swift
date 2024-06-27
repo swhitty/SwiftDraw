@@ -155,7 +155,34 @@ extension XMLParser {
             currentIndex = scanner.currentIndex
             return val
         }
-        
+
+        mutating func scanUnit(_ unit: DOM.Unit) -> Bool {
+            scanner.currentIndex = currentIndex
+            guard scanner.scanString(unit.rawValue) != nil else {
+                return false
+            }
+            currentIndex = scanner.currentIndex
+            return true
+        }
+
+        mutating func scanUnit() -> DOM.Unit? {
+            if scanUnit(.pixel) {
+                return .pixel
+            } else if scanUnit(.inch) {
+                return .inch
+            } else if scanUnit(.centimeter) {
+                return .centimeter
+            } else if scanUnit(.millimeter) {
+                return .millimeter
+            } else if scanUnit(.point) {
+                return .point
+            } else if scanUnit(.pica) {
+                return .pica
+            } else {
+                return nil
+            }
+        }
+
         mutating func scanLength() throws -> DOM.Length {
             scanner.currentIndex = currentIndex
             guard
@@ -173,7 +200,9 @@ extension XMLParser {
         }
         
         mutating func scanCoordinate() throws -> DOM.Coordinate {
-            return DOM.Coordinate(try scanDouble())
+            let double = try scanDouble()
+            let unit = scanUnit() ?? .pixel
+            return DOM.Coordinate(double.apply(unit: unit))
         }
         
         mutating func scanPercentageFloat() throws -> Float {

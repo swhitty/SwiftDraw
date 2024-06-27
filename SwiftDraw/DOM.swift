@@ -104,8 +104,55 @@ extension DOM {
         case skewX(angle: Float)
         case skewY(angle: Float)
     }
-    
+
+    enum Unit {
+        case pixel
+        case inch
+        case centimeter
+        case millimeter
+        case point
+        case pica
+    }
+
     enum Error: Swift.Error {
         case missing(String)
+    }
+}
+
+extension DOM.Unit {
+    var rawValue: String {
+        switch self {
+        case .pixel:
+            return "px"
+        case .inch:
+            return "in"
+        case .centimeter:
+            return "cm"
+        case .millimeter:
+            return "mm"
+        case .point:
+            return "pt"
+        case .pica:
+            return "pc"
+        }
+    }
+}
+
+extension Double {
+    func apply(unit: DOM.Unit) -> Double {
+        switch unit {
+        case .pixel:
+            return self
+        case .inch:
+            return self * 96
+        case .centimeter:
+            return self * 37.795
+        case .millimeter:
+            return self * 3.7795
+        case .point:
+            return self * 1.3333
+        case .pica:
+            return self * 16
+        }
     }
 }

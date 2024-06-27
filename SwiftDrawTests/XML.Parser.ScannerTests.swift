@@ -181,6 +181,22 @@ final class ScannerTests: XCTestCase {
     _ = try? scanner.scanString(",")
     XCTAssertEqual(try scanner.scanCoordinate(), -10)
   }
+
+    func testScanCoordinate_Units() throws {
+        var scanner = XMLParser.Scanner(text: "1, 2px, 1cm, 2mm, 1pt, 5pc")
+
+        XCTAssertEqual(try scanner.scanCoordinate(), 1)
+        _ = try? scanner.scanString(",")
+        XCTAssertEqual(try scanner.scanCoordinate(), 2)
+        _ = try? scanner.scanString(",")
+        XCTAssertEqual(try scanner.scanCoordinate(), 37.795)
+        _ = try? scanner.scanString(",")
+        XCTAssertEqual(try scanner.scanCoordinate(), 2 * 3.7795)
+        _ = try? scanner.scanString(",")
+        XCTAssertEqual(try scanner.scanCoordinate(), 1 * 1.3333)
+        _ = try? scanner.scanString(",")
+        XCTAssertEqual(try scanner.scanCoordinate(), 5 * 16)
+    }
 }
 
 private func AssertScanUInt8(_ text: String, _ expected: UInt8?, file: StaticString = #file, line: UInt = #line) {
