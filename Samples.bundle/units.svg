@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>	 
+<svg height="17pc" width="5in" xmlns="http://www.w3.org/2000/svg">
+
+ 	<rect width="5in" height="17pc" fill="snow" />
+	
+	<rect x="2cm" y="3cm" width="2in" height="7.5pc" fill="red" />
+	
+	<rect x="35" y="1.5cm" width="200" height="2pc" fill="blue" />
+
+</svg>
