@@ -110,14 +110,14 @@ extension LayerTree.Color {
     switch self {
     case .none:
       return .none
-    case let .rgba(r: r, g: g, b: b, a: _, space):
+    case let .rgba(r: r, g: g, b: b, a: a, space):
       return .rgba(r: r,
                    g: g,
                    b: b,
-                   a: alpha,
+                   a: alpha * a,
                    space: space)
-    case .gray(white: let w, a: _):
-      return .gray(white: w, a: alpha)
+    case .gray(white: let w, a: let a):
+      return .gray(white: w, a: alpha * a)
     }
   }
   
