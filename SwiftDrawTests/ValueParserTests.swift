@@ -111,8 +111,10 @@ final class ValueParserTests: XCTestCase {
     XCTAssertEqual(try parser.parseFill("black"), .color(.keyword(.black)))
     XCTAssertEqual(try parser.parseFill("red"), .color(.keyword(.red)))
     
-    XCTAssertEqual(try parser.parseFill("rgb(10,20,30)"), .color(.rgbi(10, 20, 30)))
-    XCTAssertEqual(try parser.parseFill("rgb(10%,20%,100%)"), .color(.rgbf(0.1, 0.2, 1.0)))
+    XCTAssertEqual(try parser.parseFill("rgb(10,20,30)"), .color(.rgbi(10, 20, 30, 1.0)))
+    XCTAssertEqual(try parser.parseFill("rgb(10%,20%,100%)"), .color(.rgbf(0.1, 0.2, 1.0, 1.0)))
+    XCTAssertEqual(try parser.parseFill("rgba(10, 20, 30, 0.5)"), .color(.rgbi(10, 20, 30, 0.5)))
+    XCTAssertEqual(try parser.parseFill("rgba(10%,20%,100%,0.6)"), .color(.rgbf(0.1, 0.2, 1.0, 0.6)))
     XCTAssertEqual(try parser.parseFill("#AAFF00"), .color(.hex(170, 255, 0)))
     
     XCTAssertEqual(try parser.parseFill("url(#test)"), .url(URL(string: "#test")!))

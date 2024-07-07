@@ -72,8 +72,8 @@ private extension SVG {
     let svg = DOM.SVG(width: 2, height: 2)
     svg.childElements.append(DOM.Rect(x: 0, y: 0, width: 1, height: 1))
     svg.childElements.append(DOM.Rect(x: 1, y: 1, width: 1, height: 1))
-    svg.childElements[0].attributes.fill = .color(DOM.Color.rgbi(255, 0, 0))
-    svg.childElements[1].attributes.fill = .color(DOM.Color.rgbi(0, 0, 255))
+    svg.childElements[0].attributes.fill = .color(DOM.Color.rgbi(255, 0, 0, 1.0))
+    svg.childElements[1].attributes.fill = .color(DOM.Color.rgbi(0, 0, 255, 1.0))
     return SVG(dom: svg, options: .default)
   }
 }

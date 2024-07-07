@@ -58,15 +58,15 @@ extension LayerTree.Color {
     case let .keyword(c):
       let rgbi = c.rgbi
       return LayerTree.Color(rgbi.0, rgbi.1, rgbi.2)
-    case let .rgbi(r, g, b):
-      return LayerTree.Color(r, g, b)
+    case let .rgbi(r, g, b, a):
+      return LayerTree.Color(r, g, b, Float(a))
     case let .hex(r, g, b):
       return LayerTree.Color(r, g, b)
-    case let .rgbf(r, g, b):
+    case let .rgbf(r, g, b, a):
       return .rgba(r: Float(r),
                    g: Float(g),
                    b: Float(b),
-                   a: 1.0,
+                   a: Float(a),
                    space: .srgb)
     case let .p3(r, g, b):
       return .rgba(r: Float(r),
@@ -82,6 +82,14 @@ extension LayerTree.Color {
                  g: Float(g)/255.0,
                  b: Float(b)/255.0,
                  a: 1.0,
+                 space: .srgb)
+  }
+  
+  init(_ r: UInt8, _ g: UInt8, _ b: UInt8, _ a: DOM.Float) {
+    self = .rgba(r: Float(r)/255.0,
+                 g: Float(g)/255.0,
+                 b: Float(b)/255.0,
+                 a: a,
                  space: .srgb)
   }
 
@@ -100,14 +108,14 @@ extension LayerTree.Color {
     switch self {
     case .none:
       return .none
-    case let .rgba(r: r, g: g, b: b, a: _, space):
+    case let .rgba(r: r, g: g, b: b, a: a, space):
       return .rgba(r: r,
                    g: g,
                    b: b,
-                   a: alpha,
+                   a: alpha * a,
                    space: space)
-    case .gray(white: let w, a: _):
-      return .gray(white: w, a: alpha)
+    case .gray(white: let w, a: let a):
+      return .gray(white: w, a: alpha * a)
     }
   }
   

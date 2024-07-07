@@ -35,8 +35,8 @@ extension DOM {
         case none
         case currentColor
         case keyword(Keyword)
-        case rgbi(UInt8, UInt8, UInt8)
-        case rgbf(DOM.Float, DOM.Float, DOM.Float)
+        case rgbi(UInt8, UInt8, UInt8, DOM.Float)
+        case rgbf(DOM.Float, DOM.Float, DOM.Float, DOM.Float)
         case p3(DOM.Float, DOM.Float, DOM.Float)
         case hex(UInt8, UInt8, UInt8)
         
