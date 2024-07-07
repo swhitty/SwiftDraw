@@ -296,14 +296,22 @@ extension XML.Formatter {
             case let .keyword(k):
                 return k.rawValue
             case let .rgbi(r, g, b, a):
-                let aa = String(format: "%.2f", a)
-                return "rgb(\(r), \(g), \(b), \(aa)"
+                if a == 1.0 {
+                    return "rgb(\(r), \(g), \(b))"
+                } else {
+                    let aa = String(format: "%.2f", a)
+                    return "rgba(\(r), \(g), \(b), \(aa))"
+                }
             case let .rgbf(r, g, b, a):
                 let rr = String(format: "%.0f", r * 100)
                 let gg = String(format: "%.0f", g * 100)
                 let bb = String(format: "%.0f", b * 100)
-                let aa = String(format: "%.2f", a)
-                return "rgb(\(rr)%, \(gg)%, \(bb)%, \(aa)"
+                if a == 1.0 {
+                    return "rgb(\(rr)%, \(gg)%, \(bb)%)"
+                } else {
+                    let aa = String(format: "%.2f", a)
+                    return "rgba(\(rr)%, \(gg)%, \(bb)%, \(aa))"
+                }
             case let .p3(r, g, b):
                 return "color(display-p3 \(r), \(g), \(b))"
             case let .hex(r, g, b):
