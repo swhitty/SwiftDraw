@@ -58,15 +58,15 @@ extension LayerTree.Color {
     case let .keyword(c):
       let rgbi = c.rgbi
       return LayerTree.Color(rgbi.0, rgbi.1, rgbi.2)
-    case let .rgbi(r, g, b):
-      return LayerTree.Color(r, g, b)
+    case let .rgbi(r, g, b, a):
+      return LayerTree.Color(r, g, b, Float(a))
     case let .hex(r, g, b):
       return LayerTree.Color(r, g, b)
-    case let .rgbf(r, g, b):
+    case let .rgbf(r, g, b, a):
       return .rgba(r: Float(r),
                    g: Float(g),
                    b: Float(b),
-                   a: 1.0,
+                   a: Float(a),
                    space: .srgb)
     case let .p3(r, g, b):
       return .rgba(r: Float(r),
@@ -74,8 +74,6 @@ extension LayerTree.Color {
                    b: Float(b),
                    a: 1.0,
                    space: .p3)
-    case let .rgba(r, g, b, a):
-      return LayerTree.Color(r, g, b, a)
     }
   }
 

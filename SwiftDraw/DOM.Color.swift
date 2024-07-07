@@ -35,11 +35,10 @@ extension DOM {
         case none
         case currentColor
         case keyword(Keyword)
-        case rgbi(UInt8, UInt8, UInt8)
-        case rgbf(DOM.Float, DOM.Float, DOM.Float)
+        case rgbi(UInt8, UInt8, UInt8, DOM.Float)
+        case rgbf(DOM.Float, DOM.Float, DOM.Float, DOM.Float)
         case p3(DOM.Float, DOM.Float, DOM.Float)
         case hex(UInt8, UInt8, UInt8)
-        case rgba(UInt8, UInt8, UInt8, DOM.Float)
         
         // see: https://www.w3.org/TR/SVG11/types.html#ColorKeywords
         enum Keyword: String {
