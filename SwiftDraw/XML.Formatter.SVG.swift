@@ -309,6 +309,9 @@ extension XML.Formatter {
                 let gg = String(format: "%02X", g)
                 let bb = String(format: "%02X", b)
                 return "#\(rr)\(gg)\(bb)"
+            case let .rgba(r, g, b, a):
+              let aa = String(format: "%.2f", a)
+              return "rgba(\(r), \(g), \(b), \(aa))"
             }
         }
 

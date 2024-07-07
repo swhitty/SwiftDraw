@@ -49,6 +49,8 @@ extension XMLParser {
       return .color(c)
     } else if let url = try parseURLSelector(data: data) {
       return .url(url)
+    } else if let c = try parseColorRGBA(data: data) {
+      return .color(c)
     }
     
     throw Error.invalid
@@ -172,5 +174,21 @@ extension XMLParser {
     let b = UInt8(hex & 0xff)
     
     return .hex(r, g, b)
+  }
+  
+  private func parseColorRGBA(data: String) throws -> DOM.Color? {
+    var scanner = XMLParser.Scanner(text: data)
+    try scanner.scanString("rgba(")
+    
+    let r = try scanner.scanUInt8()
+    scanner.scanStringIfPossible(",")
+    let g = try scanner.scanUInt8()
+    scanner.scanStringIfPossible(",")
+    let b = try scanner.scanUInt8()
+    scanner.scanStringIfPossible(",")
+    let a = try scanner.scanFloat()  // Opacity
+    try scanner.scanString(")")
+    
+    return .rgba(r, g, b, a)
   }
 }

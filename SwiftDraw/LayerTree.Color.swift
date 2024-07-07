@@ -74,6 +74,8 @@ extension LayerTree.Color {
                    b: Float(b),
                    a: 1.0,
                    space: .p3)
+    case let .rgba(r, g, b, a):
+      return LayerTree.Color(r, g, b, a)
     }
   }
 
@@ -82,6 +84,14 @@ extension LayerTree.Color {
                  g: Float(g)/255.0,
                  b: Float(b)/255.0,
                  a: 1.0,
+                 space: .srgb)
+  }
+  
+  init(_ r: UInt8, _ g: UInt8, _ b: UInt8, _ a: DOM.Float) {
+    self = .rgba(r: Float(r)/255.0,
+                 g: Float(g)/255.0,
+                 b: Float(b)/255.0,
+                 a: a,
                  space: .srgb)
   }
 
