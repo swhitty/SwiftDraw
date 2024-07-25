@@ -47,7 +47,7 @@ struct StandardErrorStream: TextOutputStream {
     fileprivate static var shared = StandardErrorStream()
 
     func write(_ string: String) {
-        if #available(macOS 10.15.4, iOS 13.4, *) {
+        if #available(macOS 10.15.4, iOS 13.4, tvOS 13.4, watchOS 6.2, *) {
             try! FileHandle.standardError.write(contentsOf: string.data(using: .utf8)!)
         } else {
             FileHandle.standardError.write(string.data(using: .utf8)!)
