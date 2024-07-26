@@ -20,12 +20,20 @@
   },
   "source_files": "SwiftDraw/**/*.swift",
   "ios": {
-	  "exclude_files": "SwiftDraw/NSImage+Image.swift",
-	  "frameworks": ["UIKit", "Foundation"]
+    "exclude_files": "SwiftDraw/NSImage+Image.swift",
+    "frameworks": ["UIKit", "Foundation"]
   },
   "osx": {
-	  "exclude_files": "SwiftDraw/UIImage+Image.swift",
-	  "frameworks": ["AppKit", "Foundation"]
+    "exclude_files": "SwiftDraw/UIImage+Image.swift",
+    "frameworks": ["AppKit", "Foundation"]
+  },
+  "tvos": {
+    "exclude_files": "SwiftDraw/NSImage+Image.swift",
+    "frameworks": ["UIKit", "Foundation"]
+  },
+  "watchos": {
+    "exclude_files": "SwiftDraw/NSImage+Image.swift",
+    "frameworks": ["UIKit", "WatchKit", "Foundation"]
   },
   "swift_version": "5.0"
 }

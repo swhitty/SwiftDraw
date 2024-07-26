@@ -31,6 +31,9 @@
 
 #if canImport(UIKit)
 import UIKit
+#if canImport(WatchKit)
+import WatchKit
+#endif
 
 public extension UIImage {
 
@@ -72,6 +75,22 @@ public extension SVG {
         return rasterize(with: size)
     }
 
+#if os(watchOS)
+    func rasterize(with size: CGSize? = nil, scale: CGFloat = 0, insets: UIEdgeInsets = .zero) -> UIImage {
+        let insets = Insets(top: insets.top, left: insets.left, bottom: insets.bottom, right: insets.right)
+        let (bounds, pixelsWide, pixelsHigh) = makeBounds(size: size, scale: 1, insets: insets)
+        
+        let actualScale = scale <= 0 ? WKInterfaceDevice.current().screenScale : scale
+        UIGraphicsBeginImageContextWithOptions(CGSize(width: pixelsWide, height: pixelsHigh), false, actualScale)
+        defer { UIGraphicsEndImageContext() }
+        
+        if let context = UIGraphicsGetCurrentContext() {
+            context.draw(self, in: bounds)
+        }
+        
+        return UIGraphicsGetImageFromCurrentImageContext() ?? UIImage()
+    }
+#else
     private func makeFormat() -> UIGraphicsImageRendererFormat {
         guard #available(iOS 12.0, *) else {
             let f = UIGraphicsImageRendererFormat.default()
@@ -87,13 +106,14 @@ public extension SVG {
         let insets = Insets(top: insets.top, left: insets.left, bottom: insets.bottom, right: insets.right)
         let (bounds, pixelsWide, pixelsHigh) = makeBounds(size: size, scale: 1, insets: insets)
         let f = makeFormat()
-        f.scale = scale
+        f.scale = scale <= 0 ? UIScreen.main.scale : scale
         f.opaque = false
         let r = UIGraphicsImageRenderer(size: CGSize(width: pixelsWide, height: pixelsHigh), format: f)
         return r.image{
             $0.cgContext.draw(self, in: bounds)
         }
     }
+#endif
 
     func pngData(size: CGSize? = nil, scale: CGFloat = 0, insets: UIEdgeInsets = .zero) throws -> Data {
         let image = rasterize(with: size, scale: scale, insets: insets)
@@ -125,8 +145,14 @@ extension SVG {
     }
 
     func makeBounds(size: CGSize?, scale: CGFloat, insets: Insets) -> (bounds: CGRect, pixelsWide: Int, pixelsHigh: Int) {
-        let scale = scale == 0 ? UIScreen.main.scale : scale
-        return Self.makeBounds(size: size, defaultSize: self.size, scale: scale, insets: insets)
+        let newScale: CGFloat = {
+#if os(watchOS)
+            return scale <= 0 ? WKInterfaceDevice.current().screenScale : scale
+#else
+            return scale <= 0 ? UIScreen.main.scale : scale
+#endif
+        }()
+        return Self.makeBounds(size: size, defaultSize: self.size, scale: newScale, insets: insets)
     }
 
     private struct Error: LocalizedError {
