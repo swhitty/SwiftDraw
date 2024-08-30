@@ -39,9 +39,9 @@ import CoreGraphics
 
 extension CGImage {
   static func from(data: Data) -> CGImage? {
-    #if os(iOS)
+    #if canImport(UIKit)
     return UIImage(data: data)?.cgImage
-    #elseif os(macOS)
+    #elseif canImport(AppKit)
     guard let image = NSImage(data: data) else { return nil }
     var rect = NSRect(x: 0, y: 0, width: image.size.width, height: image.size.height)
     return image.cgImage(forProposedRect: &rect, context: nil, hints: nil)
