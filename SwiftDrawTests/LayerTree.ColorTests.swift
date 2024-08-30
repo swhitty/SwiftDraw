@@ -55,14 +55,14 @@ final class LayerTreeColorTests: XCTestCase {
     XCTAssertEqual(noColor.withAlpha(0.3).maybeNone(), .none)
     XCTAssertEqual(noColor.withAlpha(0.0).maybeNone(), .none)
     
-    XCTAssertEqual(someColor.withAlpha(1.0).maybeNone(), .srgb(r: 0.1, g: 0.2, b: 0.3, a: 1.0))
-    XCTAssertEqual(someColor.withAlpha(0.5).maybeNone(), .srgb(r: 0.1, g: 0.2, b: 0.3, a: 0.5))
-    XCTAssertEqual(someColor.withAlpha(0.3).maybeNone(), .srgb(r: 0.1, g: 0.2, b: 0.3, a: 0.3))
+    XCTAssertEqual(someColor.withAlpha(1.0).maybeNone(), .srgb(r: 0.1, g: 0.2, b: 0.3, a: 0.4 * 1))
+    XCTAssertEqual(someColor.withAlpha(0.5).maybeNone(), .srgb(r: 0.1, g: 0.2, b: 0.3, a: 0.4 * 0.5))
+    XCTAssertEqual(someColor.withAlpha(0.3).maybeNone(), .srgb(r: 0.1, g: 0.2, b: 0.3, a: 0.4 * 0.3))
     XCTAssertEqual(someColor.withAlpha(0.0).maybeNone(), .none)
     
-    XCTAssertEqual(anotherColor.withAlpha(1.0).maybeNone(), .srgb(r: 0.4, g: 0.3, b: 0.2, a: 1.0))
-    XCTAssertEqual(anotherColor.withAlpha(0.5).maybeNone(), .srgb(r: 0.4, g: 0.3, b: 0.2, a: 0.5))
-    XCTAssertEqual(anotherColor.withAlpha(0.3).maybeNone(), .srgb(r: 0.4, g: 0.3, b: 0.2, a: 0.3))
+    XCTAssertEqual(anotherColor.withAlpha(1.0).maybeNone(), .srgb(r: 0.4, g: 0.3, b: 0.2, a: 0.1 * 1))
+    XCTAssertEqual(anotherColor.withAlpha(0.5).maybeNone(), .srgb(r: 0.4, g: 0.3, b: 0.2, a: 0.1 * 0.5))
+    XCTAssertEqual(anotherColor.withAlpha(0.3).maybeNone(), .srgb(r: 0.4, g: 0.3, b: 0.2, a: 0.1 * 0.3))
     XCTAssertEqual(anotherColor.withAlpha(0.0).maybeNone(), .none)
   }
   
