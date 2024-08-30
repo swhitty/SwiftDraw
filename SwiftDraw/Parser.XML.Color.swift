@@ -49,6 +49,8 @@ extension XMLParser {
       return .color(c)
     } else if let url = try parseURLSelector(data: data) {
       return .url(url)
+    } else if let c = try parseColorRGBA(data: data) {
+      return .color(c)
     }
     
     throw Error.invalid
@@ -89,6 +91,17 @@ extension XMLParser {
     return try parseColorRGBi(data: data)
   }
   
+  private func parseColorRGBA(data: String) throws -> DOM.Color? {
+    var scanner = XMLParser.Scanner(text: data)
+    guard scanner.scanStringIfPossible("rgba(") else { return nil }
+    
+    if let c = try? parseColorRGBAf(data: data) {
+      return c
+    }
+    
+    return try parseColorRGBAi(data: data)
+  }
+  
   private func parseURLSelector(data: String) throws -> DOM.URL? {
     var scanner = XMLParser.Scanner(text: data)
     guard (try? scanner.scanString("url(")) == true else {
@@ -107,32 +120,63 @@ extension XMLParser {
     return url
   }
   
-  private func parseColorRGBi(data: String) throws -> DOM.Color {
+  private func parseIntColor(data: String, withAlpha: Bool) throws -> DOM.Color {
     var scanner = XMLParser.Scanner(text: data)
-    try scanner.scanString("rgb(")
+    try scanner.scanString(withAlpha ? "rgba(" : "rgb(")
     
     let r = try scanner.scanUInt8()
     scanner.scanStringIfPossible(",")
     let g = try scanner.scanUInt8()
     scanner.scanStringIfPossible(",")
     let b = try scanner.scanUInt8()
+    var a: Float = 1.0
+    
+    if withAlpha {
+      scanner.scanStringIfPossible(",")
+      a = try scanner.scanFloat()  // Opacity
+    }
+    
     try scanner.scanString(")")
-    return .rgbi(r, g, b)
+    return .rgbi(r, g, b, a)
   }
   
-  private func parseColorRGBf(data: String) throws -> DOM.Color {
+  private func parseColorRGBi(data: String) throws -> DOM.Color {
+    return try parseIntColor(data: data, withAlpha: false)
+  }
+  
+  private func parseColorRGBAi(data: String) throws -> DOM.Color {
+    return try parseIntColor(data: data, withAlpha: true)
+  }
+  
+  private func parsePercentageColor(data: String, withAlpha: Bool) throws -> DOM.Color {
     var scanner = XMLParser.Scanner(text: data)
-    try scanner.scanString("rgb(")
+    try scanner.scanString(withAlpha ? "rgba(" : "rgb(")
     
     let r = try scanner.scanPercentage()
     scanner.scanStringIfPossible(",")
     let g = try scanner.scanPercentage()
     scanner.scanStringIfPossible(",")
     let b = try scanner.scanPercentage()
+    
+    var a: Float = 1.0
+    if withAlpha {
+      scanner.scanStringIfPossible(",")
+      a = try scanner.scanFloat()  // Opacity
+    }
+    
     try scanner.scanString(")")
     
-    return .rgbf(r, g, b)
+    return .rgbf(r, g, b, a)
   }
+  
+  private func parseColorRGBf(data: String) throws -> DOM.Color {
+    return try parsePercentageColor(data: data, withAlpha: false)
+  }
+  
+  private func parseColorRGBAf(data: String) throws -> DOM.Color {
+    return try parsePercentageColor(data: data, withAlpha: true)
+  }
+
   
   private func parseColorP3(data: String) throws -> DOM.Color? {
     var scanner = XMLParser.Scanner(text: data)

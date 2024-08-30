@@ -119,9 +119,9 @@ final class LayerTreeColorTests: XCTestCase {
     let none = DOM.Color.none
     let black = DOM.Color.keyword(.black)
     let white = DOM.Color.keyword(.white)
-    let red = DOM.Color.rgbi(255, 0, 0)
-    let green = DOM.Color.rgbi(0, 255, 0)
-    let blue = DOM.Color.rgbi(0, 0, 255)
+    let red = DOM.Color.rgbi(255, 0, 0, 1.0)
+    let green = DOM.Color.rgbi(0, 255, 0, 1.0)
+    let blue = DOM.Color.rgbi(0, 0, 255, 1.0)
     
     XCTAssertEqual(Color(none), .none)
     XCTAssertEqual(Color(black), .srgb(r: 0.0, g: 0.0, b: 0.0, a: 1.0))

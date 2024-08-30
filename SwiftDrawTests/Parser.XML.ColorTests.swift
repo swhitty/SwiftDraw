@@ -63,16 +63,27 @@ final class ParserColorTests: XCTestCase {
   
   func testColorRGBi() {
     // integer 0-255
-    XCTAssertEqual(try XMLParser().parseColor("rgb(0,1,2)"), .rgbi(0, 1, 2))
-    XCTAssertEqual(try XMLParser().parseColor(" rgb( 0 , 1 , 2) "), .rgbi(0, 1, 2))
-    XCTAssertEqual(try XMLParser().parseColor("rgb(255,100,78)"), .rgbi(255, 100, 78))
+    XCTAssertEqual(try XMLParser().parseColor("rgb(0,1,2)"), .rgbi(0, 1, 2, 1.0))
+    XCTAssertEqual(try XMLParser().parseColor(" rgb( 0 , 1 , 2) "), .rgbi(0, 1, 2, 1.0))
+    XCTAssertEqual(try XMLParser().parseColor("rgb(255,100,78)"), .rgbi(255, 100, 78, 1.0))
   }
   
   func testColorRGBf() {
     // percentage 0-100%
-    XCTAssertEqual(try XMLParser().parseColor("rgb(0,1%,99%)"), .rgbf(0.0, 0.01, 0.99))
-    XCTAssertEqual(try XMLParser().parseColor("rgb( 0%, 52% , 100%) "), .rgbf(0.0, 0.52, 1.0))
-    XCTAssertEqual(try XMLParser().parseColor("rgb(75%,25%,7%)"), .rgbf(0.75, 0.25, 0.07))
+    XCTAssertEqual(try XMLParser().parseColor("rgb(0,1%,99%)"), .rgbf(0.0, 0.01, 0.99, 1.0))
+    XCTAssertEqual(try XMLParser().parseColor("rgb( 0%, 52% , 100%) "), .rgbf(0.0, 0.52, 1.0, 1.0))
+    XCTAssertEqual(try XMLParser().parseColor("rgb(75%,25%,7%)"), .rgbf(0.75, 0.25, 0.07, 1.0))
+  }
+  
+  func testColorRGBA() {
+    // integer 0-255
+    XCTAssertEqual(try XMLParser().parseColor("rgba(0,1,2,0.5)"), .rgbi(0, 1, 2, 0.5))
+    XCTAssertEqual(try XMLParser().parseColor(" rgba( 0 , 1 , 2, 0.6) "), .rgbi(0, 1, 2, 0.6))
+    XCTAssertEqual(try XMLParser().parseColor("rgba(255,100,78,0.7)"), .rgbi(255, 100, 78, 0.7))
+    // percentage 0-100%
+    XCTAssertEqual(try XMLParser().parseColor("rgba(0,1%,99%,0.5)"), .rgbf(0.0, 0.01, 0.99, 0.5))
+    XCTAssertEqual(try XMLParser().parseColor("rgba( 0%, 52% , 100%, 0.6) "), .rgbf(0.0, 0.52, 1.0, 0.6))
+    XCTAssertEqual(try XMLParser().parseColor("rgba(75%,25%,7%,0.7)"), .rgbf(0.75, 0.25, 0.07, 0.7))
   }
   
   func testColorHex() {

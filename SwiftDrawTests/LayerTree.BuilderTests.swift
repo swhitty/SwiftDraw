@@ -106,7 +106,7 @@ final class LayerTreeBuilderTests: XCTestCase {
   
   func testStrokeAttributes() {
     var state = LayerTree.Builder.State()
-      state.stroke = .color(.rgbf(1.0, 0.0, 0.0))
+    state.stroke = .color(.rgbf(1.0, 0.0, 0.0, 1.0))
     state.strokeOpacity = 0.5
     state.strokeWidth = 5.0
     state.strokeLineCap = .square
