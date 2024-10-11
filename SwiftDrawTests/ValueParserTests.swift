@@ -126,15 +126,16 @@ final class ValueParserTests: XCTestCase {
   }
   
   func testUrl() {
-    XCTAssertEqual(try parser.parseUrl("#testingId").fragment, "testingId")
+#if compiler(>=5.9) && canImport(Darwin)
+    XCTAssertEqual(try parser.parseUrl("#testing🐟").fragmentID, "testing🐟")
+#else
+      XCTAssertEqual(try parser.parseUrl("#testing").fragmentID, "testing")
+#endif
     XCTAssertEqual(try parser.parseUrl("http://www.google.com").host, "www.google.com")
-    
-    //XCTAssertThrowsError(try parser.parseUrl("www.google.com"))
-    //XCTAssertThrowsError(try parser.parseUrl("sd"))
   }
   
   func testUrlSelector() {
-    XCTAssertEqual(try parser.parseUrlSelector("url(#testingId)").fragment, "testingId")
+    XCTAssertEqual(try parser.parseUrlSelector("url(#testingId)").fragmentID, "testingId")
     XCTAssertEqual(try parser.parseUrlSelector("url(http://www.google.com)").host, "www.google.com")
     
     XCTAssertThrowsError(try parser.parseUrlSelector("url(#testingId) other"))

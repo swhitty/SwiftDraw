@@ -82,9 +82,9 @@ final class ParserGraphicAttributeTests: XCTestCase {
         XCTAssertEqual(parsed.fillOpacity, 0.25)
         XCTAssertEqual(parsed.fillRule, .evenodd)
         XCTAssertEqual(parsed.transform!, [.scale(sx: 15, sy: 15)])
-        XCTAssertEqual(parsed.clipPath?.fragment, "circlePath")
-        XCTAssertEqual(parsed.mask?.fragment, "fancyMask")
-        XCTAssertEqual(parsed.filter?.fragment, "blur")
+        XCTAssertEqual(parsed.clipPath?.fragmentID, "circlePath")
+        XCTAssertEqual(parsed.mask?.fragmentID, "fancyMask")
+        XCTAssertEqual(parsed.filter?.fragmentID, "blur")
     }
 
     func testCircle() throws {
@@ -93,7 +93,7 @@ final class ParserGraphicAttributeTests: XCTestCase {
         let parsed = try XMLParser().parseGraphicsElement(el)
         let circle = parsed as? DOM.Circle
         XCTAssertNotNil(circle)
-        XCTAssertEqual(circle?.style.clipPath?.fragment, "cp1")
+        XCTAssertEqual(circle?.style.clipPath?.fragmentID, "cp1")
         XCTAssertEqual(circle?.style.fill, .color(.keyword(.black)))
         XCTAssertEqual(circle?.style.strokeWidth, 2)
     }
