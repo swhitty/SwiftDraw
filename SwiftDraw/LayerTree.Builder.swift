@@ -124,14 +124,14 @@ extension LayerTree {
         }
 
         func createClipShapes(for element: DOM.GraphicsElement) -> [Shape] {
-            guard let clipId = element.attributes.clipPath?.fragment,
+            guard let clipId = element.attributes.clipPath?.fragmentID,
                   let clip = svg.defs.clipPaths.first(where: { $0.id == clipId }) else { return [] }
 
             return clip.childElements.compactMap{ Builder.makeShape(from: $0) }
         }
 
         func createMaskLayer(for element: DOM.GraphicsElement) -> Layer? {
-            guard let maskId = element.attributes.mask?.fragment,
+            guard let maskId = element.attributes.mask?.fragmentID,
                   let mask = svg.defs.masks.first(where: { $0.id == maskId }) else { return nil }
 
             let l = Layer()
@@ -145,7 +145,7 @@ extension LayerTree {
         }
 
         func makeFilters(for state: State) -> [Filter] {
-            guard let filterId = state.filter?.fragment,
+            guard let filterId = state.filter?.fragmentID,
                   let filter = svg.defs.filters.first(where: { $0.id == filterId }) else { return [] }
             return filter.effects
         }
@@ -191,15 +191,15 @@ extension LayerTree.Builder {
             .withAlpha(state.fillOpacity).maybeNone()
 
         if case .url(let patternId) = state.fill,
-           let element = svg.defs.patterns.first(where: { $0.id == patternId.fragment }) {
+           let element = svg.defs.patterns.first(where: { $0.id == patternId.fragmentID }) {
             let pattern = makePattern(for: element)
             return LayerTree.FillAttributes(pattern: pattern, rule: state.fillRule, opacity: state.fillOpacity)
         } else if case .url(let gradientId) = state.fill,
-                  let element = svg.defs.linearGradients.first(where: { $0.id == gradientId.fragment }),
+                  let element = svg.defs.linearGradients.first(where: { $0.id == gradientId.fragmentID }),
                   let gradient = makeGradient(for: element) {
             return LayerTree.FillAttributes(linear: gradient, rule: state.fillRule, opacity: state.fillOpacity)
         } else if case .url(let gradientId) = state.fill,
-                  let element = svg.defs.radialGradients.first(where: { $0.id == gradientId.fragment }),
+                  let element = svg.defs.radialGradients.first(where: { $0.id == gradientId.fragmentID }),
                   let gradient = makeGradient(for: element) {
             return LayerTree.FillAttributes(radial: gradient, rule: state.fillRule, opacity: state.fillOpacity)
         } else {
@@ -208,7 +208,7 @@ extension LayerTree.Builder {
     }
 
     func makeLinearGradient(for gradientId: URL) -> LayerTree.LinearGradient? {
-        guard let element = svg.defs.linearGradients.first(where: { $0.id == gradientId.fragment }),
+        guard let element = svg.defs.linearGradients.first(where: { $0.id == gradientId.fragmentID }),
               let gradient = makeGradient(for: element) else {
             return nil
         }
@@ -216,7 +216,7 @@ extension LayerTree.Builder {
     }
 
     func makeRadialGradient(for gradientId: URL) -> LayerTree.RadialGradient? {
-        guard let element = svg.defs.radialGradients.first(where: { $0.id == gradientId.fragment }),
+        guard let element = svg.defs.radialGradients.first(where: { $0.id == gradientId.fragmentID }),
               let gradient = makeGradient(for: element) else {
             return nil
         }
@@ -249,7 +249,7 @@ extension LayerTree.Builder {
         let y2 = element.y2 ?? 0
 
         var stops = [LayerTree.Gradient.Stop]()
-        if let id = element.href?.fragment,
+        if let id = element.href?.fragmentID,
            let reference = svg.defs.linearGradients.first(where: { $0.id == id }) {
             stops = makeGradientStops(for: reference)
         } else {
@@ -272,7 +272,7 @@ extension LayerTree.Builder {
 
     func makeGradient(for element: DOM.RadialGradient) -> LayerTree.RadialGradient? {
         var stops = [LayerTree.Gradient.Stop]()
-        if let id = element.href?.fragment,
+        if let id = element.href?.fragmentID,
            let reference = svg.defs.radialGradients.first(where: { $0.id == id }) {
             stops = makeGradientStops(for: reference)
         } else {

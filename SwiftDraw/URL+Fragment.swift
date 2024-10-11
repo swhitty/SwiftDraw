@@ -1,9 +1,9 @@
 //
-//  UseTests.swift
+//  URL+Fragment.swift
 //  SwiftDraw
 //
-//  Created by Simon Whitty on 27/2/17.
-//  Copyright 2020 Simon Whitty
+//  Created by Simon Whitty on 12/10/24.
+//  Copyright 2024 Simon Whitty
 //
 //  Distributed under the permissive zlib license
 //  Get the latest version from here:
@@ -29,25 +29,20 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-import XCTest
-@testable import SwiftDraw
+import Foundation
 
-final class UseTests: XCTestCase {
-  
-  func testUse() throws {
-    var node = ["xlink:href": "#line2", "href": "#line1"]
-    
-    var parsed = try XMLParser().parseUse(node)
-    XCTAssertEqual(parsed.href.fragmentID, "line2")
-    XCTAssertNil(parsed.x)
-    XCTAssertNil(parsed.y)
-    
-    node["x"] = "20"
-    node["y"] = "30"
-    
-    parsed = try XMLParser().parseUse(node)
-    XCTAssertEqual(parsed.href.fragmentID, "line2")
-    XCTAssertEqual(parsed.x, 20)
-    XCTAssertEqual(parsed.y, 30)
-  }
+extension URL {
+
+    var fragmentID: String? {
+        #if compiler(>=5.7) && canImport(Darwin)
+        if #available(macOS 13.0, iOS 16.0, tvOS 16.0, watchOS 9.0, *) {
+            return fragment(percentEncoded: false)
+        } else {
+            return fragment
+        }
+        #else
+        return fragment
+        #endif
+    }
+
 }
