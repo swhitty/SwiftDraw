@@ -78,9 +78,9 @@ public extension SVG {
 #if os(watchOS)
     func rasterize(with size: CGSize? = nil, scale: CGFloat = 0, insets: UIEdgeInsets = .zero) -> UIImage {
         let insets = Insets(top: insets.top, left: insets.left, bottom: insets.bottom, right: insets.right)
-        let (bounds, pixelsWide, pixelsHigh) = makeBounds(size: size, scale: 1, insets: insets)
-        
         let actualScale = scale <= 0 ? WKInterfaceDevice.current().screenScale : scale
+        let (bounds, pixelsWide, pixelsHigh) = makeBounds(size: size, scale: actualScale, insets: insets)
+        
         UIGraphicsBeginImageContextWithOptions(CGSize(width: pixelsWide, height: pixelsHigh), false, actualScale)
         defer { UIGraphicsEndImageContext() }
         
@@ -104,9 +104,11 @@ public extension SVG {
 
     func rasterize(with size: CGSize? = nil, scale: CGFloat = 0, insets: UIEdgeInsets = .zero) -> UIImage {
         let insets = Insets(top: insets.top, left: insets.left, bottom: insets.bottom, right: insets.right)
-        let (bounds, pixelsWide, pixelsHigh) = makeBounds(size: size, scale: 1, insets: insets)
+        let actualScale = scale <= 0 ? UIScreen.main.scale : scale
+        let (bounds, pixelsWide, pixelsHigh) = makeBounds(size: size, scale: actualScale, insets: insets)
+
         let f = makeFormat()
-        f.scale = scale <= 0 ? UIScreen.main.scale : scale
+        f.scale = actualScale
         f.opaque = false
         let r = UIGraphicsImageRenderer(size: CGSize(width: pixelsWide, height: pixelsHigh), format: f)
         return r.image{
