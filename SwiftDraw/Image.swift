@@ -167,6 +167,18 @@ public extension SVG {
         public var bottom: CGFloat
         public var right: CGFloat
 
+        public init(
+            top: CGFloat = 0,
+            left: CGFloat = 0, 
+            bottom: CGFloat = 0,
+            right: CGFloat = 0
+        ) {
+            self.top = top
+            self.left = left
+            self.bottom = bottom
+            self.right = right
+        }
+
         public static let zero = Insets(top: 0, left: 0, bottom: 0, right: 0)
     }
 }
