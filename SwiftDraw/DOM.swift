@@ -75,6 +75,7 @@ extension DOM {
     enum DisplayMode: String {
         case none
         case inline
+        case block
     }
     
     enum LineCap: String {

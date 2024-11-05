@@ -79,7 +79,7 @@ extension LayerTree {
             let attributes = element.attributes
             let l = Layer()
             l.class = element.class
-            guard state.display == .inline else { return l }
+            guard state.display != .none else { return l }
 
             l.transform = Builder.createTransforms(from: attributes.transform ?? [])
             l.clip = createClipShapes(for: element)
