@@ -315,9 +315,9 @@ extension LayerTree {
             guard !shapes.isEmpty else { return [] }
             let paths = shapes.map { clip in
                 if clip.transform == .identity {
-                    provider.createPath(from: clip.shape)
+                    return provider.createPath(from: clip.shape)
                 } else {
-                    provider.createPath(from: .path(clip.shape.path.applying(matrix: clip.transform)))
+                    return provider.createPath(from: .path(clip.shape.path.applying(matrix: clip.transform)))
                 }
             }
             let clipPath = provider.createPath(from: paths)
