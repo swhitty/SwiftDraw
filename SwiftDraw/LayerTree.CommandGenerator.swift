@@ -311,10 +311,9 @@ extension LayerTree {
             }
         }
 
-        func renderCommands(forClip shapes: [Shape], using rule: FillRule?) -> [RendererCommand<P.Types>] {
+        func renderCommands(forClip shapes: [ClipShape], using rule: FillRule?) -> [RendererCommand<P.Types>] {
             guard !shapes.isEmpty else { return [] }
-
-            let paths = shapes.map { provider.createPath(from: $0) }
+            let paths = shapes.map { provider.createPath(from: .path($0.makePath())) }
             let clipPath = provider.createPath(from: paths)
             let rule = provider.createFillRule(from: rule ?? .nonzero)
             return [.setClip(path: clipPath, rule: rule)]

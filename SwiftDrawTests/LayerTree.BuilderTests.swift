@@ -147,4 +147,9 @@ private extension LayerTree.Builder {
         let builder = LayerTree.Builder(svg: DOM.SVG(width: 10, height: 10))
         return builder.makeStrokeAttributes(with: state)
     }
+
+    func createClipShapes(for element: DOM.GraphicsElement) -> [LayerTree.Shape] {
+        makeClipShapes(for: element).map(\.shape)
+    }
 }
+

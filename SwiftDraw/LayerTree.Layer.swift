@@ -32,7 +32,7 @@ extension LayerTree {
         var contents: [Contents] = []
         var opacity: Float = 1.0
         var transform: [Transform] = []
-        var clip: [Shape] = []
+        var clip: [ClipShape] = []
         var clipRule: FillRule?
         var mask: Layer?
         var filters: [Filter] = []

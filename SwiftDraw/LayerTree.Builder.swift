@@ -82,7 +82,7 @@ extension LayerTree {
             guard state.display != .none else { return l }
 
             l.transform = Builder.createTransforms(from: attributes.transform ?? [])
-            l.clip = createClipShapes(for: element)
+            l.clip = makeClipShapes(for: element)
             l.clipRule = attributes.clipRule
             l.mask = createMaskLayer(for: element)
             l.opacity = state.opacity
@@ -123,11 +123,22 @@ extension LayerTree {
             return nil
         }
 
-        func createClipShapes(for element: DOM.GraphicsElement) -> [Shape] {
+        func makeClipShapes(for element: DOM.GraphicsElement) -> [ClipShape] {
             guard let clipId = element.attributes.clipPath?.fragmentID,
                   let clip = svg.defs.clipPaths.first(where: { $0.id == clipId }) else { return [] }
 
-            return clip.childElements.compactMap{ Builder.makeShape(from: $0) }
+            return clip.childElements.compactMap(makeClipShape)
+        }
+
+        func makeClipShape(for element: DOM.GraphicsElement) -> ClipShape? {
+            guard let shape = Builder.makeShape(from: element) else {
+                return nil
+            }
+
+            let transform = Self.createTransforms(from: element.attributes.transform ?? [])
+                .toMatrix()
+
+            return ClipShape(shape: shape, transform: transform)
         }
 
         func createMaskLayer(for element: DOM.GraphicsElement) -> Layer? {
