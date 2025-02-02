@@ -74,6 +74,6 @@ final class LayerTreeCommandGeneratorTests: XCTestCase {
 private extension LayerTree.CommandGenerator {
 
     func renderCommands(forClip shapes: [LayerTree.Shape], using rule: LayerTree.FillRule?) -> [RendererCommand<P.Types>] {
-        renderCommands(forClip: shapes.map { LayerTree.ClipShape(shape: $0) }, using: rule)
+        renderCommands(forClip: shapes.map { LayerTree.ClipShape(shape: $0, transform: .identity) }, using: rule)
     }
 }

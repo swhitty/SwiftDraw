@@ -41,14 +41,7 @@ extension LayerTree {
 
     struct ClipShape: Hashable {
         var shape: Shape
-        var transform: Transform.Matrix?
-
-        func makePath() -> LayerTree.Path {
-            guard let transform else {
-                return shape.path
-            }
-            return shape.path.applying(matrix: transform)
-        }
+        var transform: Transform.Matrix
     }
 }
 
