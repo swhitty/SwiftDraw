@@ -8,13 +8,11 @@ on:
 jobs:
   xcode_16:
     runs-on: macos-15
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_16.2.app/Contents/Developer
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: 🔍 Xcode Select
-        run: |
-          XCODE_PATH=`mdfind "kMDItemCFBundleIdentifier == 'com.apple.dt.Xcode' && kMDItemVersion = '16.*'" -onlyin /Applications | head -1`
-          echo "DEVELOPER_DIR=$XCODE_PATH/Contents/Developer" >> $GITHUB_ENV
       - name: Version
         run: swift --version
       - name: Build
