@@ -1,9 +1,7 @@
 [![Build](https://github.com/swhitty/SwiftDraw/actions/workflows/build.yml/badge.svg)](https://github.com/swhitty/SwiftDraw/actions/workflows/build.yml)
 [![CodeCov](https://codecov.io/gh/swhitty/SwiftDraw/graphs/badge.svg)](https://codecov.io/gh/swhitty/SwiftDraw)
 [![Platforms](https://img.shields.io/badge/platforms-iOS%20|%20Mac%20|%20Linux-lightgray.svg)](https://github.com/swhitty/SwiftDraw/blob/main/Package.swift)
-[![Swift 5.7 — 5.10](https://img.shields.io/badge/swift-5.7—5.10-red.svg?style=flat)](https://developer.apple.com/swift)
-[![License](https://img.shields.io/badge/license-zlib-lightgrey.svg)](https://opensource.org/licenses/Zlib)
-[![Twitter](https://img.shields.io/badge/twitter-@simonwhitty-blue.svg)](http://twitter.com/simonwhitty)
+[![Swift 5.7 — 5.0](https://img.shields.io/badge/swift-5.7—6.0-red.svg?style=flat)](https://developer.apple.com/swift)
 
 # Introduction
 **SwiftDraw** is Swift library for parsing and drawing SVG images and includes a command line tool to convert SVGs into SFSymbol, PNG, PDF and Swift source code.
