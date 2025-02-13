@@ -182,10 +182,8 @@ extension LayerTree.Builder {
         let cp1 = Point(origin.x + (controlPoint.x - origin.x) * ratio,
                         origin.y + (controlPoint.y - origin.y) * ratio)
 
-        let cpX = (final.x - origin.x)*Float(1.0/3.0)
-
-        let cp2 = Point(cp1.x + cpX,
-                        cp1.y)
+        let cp2 = Point(final.x + (controlPoint.x - final.x) * ratio,
+                        final.y + (controlPoint.y - final.y) * ratio)
 
         return .cubic(to: final, control1: cp1, control2: cp2)
     }
@@ -201,8 +199,10 @@ extension LayerTree.Builder {
 
         let final = space == .absolute ? Point(x, y) : Point(x, y).absolute(from: point)
         let cpX = (final.x - point.x)*Float(1.0/3.0)
+        let cpY = (final.y - point.y)*Float(1.0/3.0)
+
         let cp2 = Point(cp1.x + cpX,
-                        cp1.y)
+                        cp1.y + cpY)
 
         return .cubic(to: final, control1: cp1, control2: cp2)
     }
