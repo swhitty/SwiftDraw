@@ -33,9 +33,9 @@ import Foundation
 
 //converts DOM.Path.Arc -> LayerTree.Path.Cubic
 
-private extension Comparable {
+extension Comparable {
     func clamped(to limits: ClosedRange<Self>) -> Self {
-        return min(max(self, limits.lowerBound), limits.upperBound)
+        return min(limits.upperBound, max(limits.lowerBound, self))
     }
 }
 
@@ -43,7 +43,7 @@ private func almostEqual<T: FloatingPoint>(_ a: T, _ b: T) -> Bool {
     return a >= b.nextDown && a <= b.nextUp
 }
 
-private func vectorAngle(ux: LayerTree.Float, uy: LayerTree.Float, vx: LayerTree.Float, vy: LayerTree.Float) -> LayerTree.Float {
+func vectorAngle(ux: LayerTree.Float, uy: LayerTree.Float, vx: LayerTree.Float, vy: LayerTree.Float) -> LayerTree.Float {
     let sign: LayerTree.Float = (ux * vy - uy * vx) < 0.0 ? -1.0 : 1.0
     let dot  = (ux * vx + uy * vy).clamped(to: -1.0...1.0)
     return sign * acos(dot)
