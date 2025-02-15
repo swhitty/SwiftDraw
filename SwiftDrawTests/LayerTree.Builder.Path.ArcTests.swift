@@ -49,5 +49,6 @@ final class LayerTreeBuilderPathArcTests: XCTestCase {
         XCTAssertEqual(vectorAngle(ux: 1, uy: 1, vx: 1, vy: 1), 0)
         XCTAssertEqual(vectorAngle(ux: 1, uy: 1, vx: -1, vy: 1), 1.5707964, accuracy: 0.001)
         XCTAssertEqual(vectorAngle(ux: 1, uy: 1, vx: .nan, vy: 1), 3.1415925, accuracy: 0.001)
+        XCTAssertEqual(vectorAngle(ux: 1, uy: 1, vx: .infinity, vy: 1), 0.0)
     }
 }
