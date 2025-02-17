@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="360" height="450">
+	 
+ 	<rect width="360" height="450" fill="snow" />
+
+	<g transform="translate(170, 30) scale(800)">
+		<polygon fill="orange" fill-opacity="0.5" points="-0.1,0.01 -0.04,0.198 -0.190,0.078, -0.010,0.078, -0.160,0.198" stroke="black" stroke-width="0.002" fill-rule="nonzero" />
+	</g>
+
+	<svg x="180" y="28" width="165" height="165" viewBox="-0.2 0 0.2 0.2" >
+	   <polygon fill="green" fill-opacity="0.5" points="-0.1,0.01 -0.04,0.198 -0.190,0.078, -0.010,0.078, -0.160,0.198" stroke="black" stroke-width="0.002" fill-rule="nonzero" />
+	</svg>
+	
+	<g transform="rotate(28)" stroke="blue">
+	<svg x="220" y="120" width="165" height="165" viewBox="-0.2 0 0.2 0.2">
+	   <polygon fill="red" fill-opacity="0.4" points="-0.1,0.01 -0.04,0.198 -0.190,0.078, -0.010,0.078, -0.160,0.198" stroke="currentColor" stroke-width="0.002" fill-rule="nonzero" />
+	</svg>
+	</g>
+
+</svg>
