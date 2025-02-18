@@ -31,16 +31,20 @@
 
 extension DOM {
     final class SVG: GraphicsElement, ContainerElement {
+        var x: Coordinate?
+        var y: Coordinate?
         var width: Length
         var height: Length
         var viewBox: ViewBox?
-        
+
         var childElements = [GraphicsElement]()
         
         var styles = [StyleSheet]()
         var defs = Defs()
         
-        init(width: Length, height: Length) {
+        init(x: Coordinate? = nil, y: Coordinate? = nil, width: Length, height: Length) {
+            self.x = x
+            self.y = y
             self.width = width
             self.height = height
         }

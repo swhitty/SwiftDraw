@@ -56,6 +56,8 @@ extension XMLParser {
         guard let h = height else { throw XMLParser.Error.missingAttribute(name: "height") }
 
         let svg = DOM.SVG(width: DOM.Length(w), height: DOM.Length(h))
+        svg.x = try att.parseCoordinate("x")
+        svg.y = try att.parseCoordinate("y")
         svg.childElements = try parseContainerChildren(e)
         svg.viewBox = try parseViewBox(try att.parseString("viewBox"))
 

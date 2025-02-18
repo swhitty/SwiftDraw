@@ -55,7 +55,6 @@ extension LayerTree.Builder {
         }
 
         return .layer(l)
-
     }
 
     static func makeTextContents(from text: DOM.Text, with state: State) -> LayerTree.Layer.Contents {
