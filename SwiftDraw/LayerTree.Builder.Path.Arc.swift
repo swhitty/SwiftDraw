@@ -163,7 +163,10 @@ func makeCubic(from origin: LayerTree.Point, to destination: LayerTree.Point,
 
     var result = [[LayerTree.Float]]()
 
-    let segments = max(Int(ceil(abs(cc.deltaT) / (LayerTree.Float.tau / 4.0))), 1)
+    guard let totalSegments = Int(exactly: ceil(abs(cc.deltaT) / (LayerTree.Float.tau / 4.0))) else {
+        return []
+    }
+    let segments = max(totalSegments, 1)
     let deltaT = cc.deltaT / LayerTree.Float(segments)
 
     var theta1 = cc.theta
