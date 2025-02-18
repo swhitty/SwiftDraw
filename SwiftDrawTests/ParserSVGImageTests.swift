@@ -110,4 +110,10 @@ final class ParserSVGImageTests: XCTestCase {
         XCTAssertEqual(svg.width, 550)
         XCTAssertEqual(svg.height, 350)
     }
+
+    func testNested() throws {
+        let svg = try DOM.SVG.parse(fileNamed: "nested-svg.svg", in: .test)
+        XCTAssertEqual(svg.width, 360)
+        XCTAssertEqual(svg.height, 450)
+    }
 }

@@ -98,6 +98,7 @@ extension XMLParser {
         case "use": ge = try parseUse(att)
         case "switch": ge = try parseSwitch(e)
         case "image": ge = try parseImage(att)
+        case "svg": ge = try parseSVG(e)
         default: return nil
         }
 
@@ -161,6 +162,16 @@ extension XMLParser {
 
     func parseGroup(_ e: XML.Element) throws -> DOM.Group {
         guard e.name == "g" else {
+            throw Error.invalid
+        }
+
+        let group = DOM.Group()
+        group.childElements = try parseContainerChildren(e)
+        return group
+    }
+
+    func parseGroupA(_ e: XML.Element) throws -> DOM.Group {
+        guard e.name == "svg" else {
             throw Error.invalid
         }
 

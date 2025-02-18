@@ -38,15 +38,15 @@ final class LayerTreeBuilderTests: XCTestCase {
   typealias Contents = LayerTree.Layer.Contents
   
   func testMakeViewBoxTransform() {
-    var transform = LayerTree.Builder.makeTransform(for: nil, width: 100, height: 200)
+    var transform = LayerTree.Builder.makeTransform(viewBox: nil, width: 100, height: 200)
     XCTAssertEqual(transform, [])
     
     let viewbox = DOM.SVG.ViewBox(x: 0, y: 0, width: 200, height: 200)
-    transform = LayerTree.Builder.makeTransform(for: viewbox, width: 100, height: 100)
+    transform = LayerTree.Builder.makeTransform(viewBox: viewbox, width: 100, height: 100)
     XCTAssertEqual(transform, [.scale(sx: 0.5, sy: 0.5)])
     
     let viewbox1 = DOM.SVG.ViewBox(x: 10, y: -10, width: 100, height: 100)
-    transform = LayerTree.Builder.makeTransform(for: viewbox1, width: 100, height: 100)
+    transform = LayerTree.Builder.makeTransform(viewBox: viewbox1, width: 100, height: 100)
     XCTAssertEqual(transform, [.translate(tx: -10, ty: 10)])
   }
   
@@ -141,7 +141,7 @@ private extension LayerTree.FillAttributes {
   }
 }
 
-private extension LayerTree.Builder {
+extension LayerTree.Builder {
 
     static func makeStrokeAttributes(with state: State) -> LayerTree.StrokeAttributes {
         let builder = LayerTree.Builder(svg: DOM.SVG(width: 10, height: 10))
@@ -150,6 +150,20 @@ private extension LayerTree.Builder {
 
     func createClipShapes(for element: DOM.GraphicsElement) -> [LayerTree.Shape] {
         makeClipShapes(for: element).map(\.shape)
+    }
+
+    static func makeTransform(
+        viewBox: DOM.SVG.ViewBox?,
+        width: DOM.Length,
+        height: DOM.Length
+    ) -> [LayerTree.Transform] {
+        makeTransform(
+            x: nil,
+            y: nil,
+            viewBox: viewBox,
+            width: width,
+            height: height
+        )
     }
 }
 

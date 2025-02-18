@@ -44,24 +44,41 @@ extension LayerTree {
         }
 
         func makeLayer() -> Layer {
-            let l = makeLayer(from: svg, inheriting: State())
-            l.transform = Builder.makeTransform(for: svg.viewBox,
-                                                width: svg.width,
-                                                height: svg.height)
+            makeLayer(svg: svg, inheriting: State())
+        }
+
+        func makeLayer(svg: DOM.SVG, inheriting previousState: State) -> Layer {
+            let l = makeLayer(from: svg, inheriting: previousState)
+            l.transform = Builder.makeTransform(
+                x: svg.x,
+                y: svg.y,
+                viewBox: svg.viewBox,
+                width: svg.width,
+                height: svg.height
+            )
             return l
         }
 
-        static func makeTransform(for viewBox: DOM.SVG.ViewBox?, width: DOM.Length, height: DOM.Length) -> [LayerTree.Transform] {
-            guard let viewBox = viewBox else {
-                return []
-            }
+        static func makeTransform(
+            x: DOM.Coordinate?,
+            y: DOM.Coordinate?,
+            viewBox: DOM.SVG.ViewBox?,
+            width: DOM.Length,
+            height: DOM.Length
+        ) -> [LayerTree.Transform] {
+            let position = LayerTree.Transform.translate(tx: x ?? 0, ty: y ?? 0)
+            let viewBox = viewBox ?? DOM.SVG.ViewBox(x: 0, y: 0, width: .init(width), height: .init(height))
 
             let sx = LayerTree.Float(width) / viewBox.width
             let sy = LayerTree.Float(height) / viewBox.height
             let scale = LayerTree.Transform.scale(sx: sx, sy: sy)
             let translate = LayerTree.Transform.translate(tx: -viewBox.x, ty: -viewBox.y)
 
-            var transform = [LayerTree.Transform]()
+            var transform: [LayerTree.Transform] = []
+
+            if position != .translate(tx: 0, ty: 0) {
+                transform.append(position)
+            }
 
             if scale != .scale(sx: 1, sy: 1) {
                 transform.append(scale)
@@ -91,6 +108,18 @@ extension LayerTree {
             return l
         }
 
+        func makeChildLayer(from element: DOM.GraphicsElement, inheriting previousState: State) -> Layer {
+            if let svg = element as? DOM.SVG {
+                let layer = makeLayer(svg: svg, inheriting: previousState)
+                let viewBox = svg.viewBox ?? DOM.SVG.ViewBox(x: 0, y: 0, width: .init(svg.width), height: .init(svg.height))
+                let bounds = LayerTree.Rect(x: viewBox.x, y: viewBox.y, width: viewBox.width, height: viewBox.height)
+                layer.clip = [ClipShape(shape: .rect(within: bounds, radii: .zero), transform: .identity)]
+                return layer
+            } else {
+                return makeLayer(from: element, inheriting: previousState)
+            }
+        }
+
         func makeAllContents(from element: DOM.GraphicsElement, with state: State) -> [Layer.Contents] {
             var all = [Layer.Contents]()
             if let contents = makeContents(from: element, with: state) {
@@ -98,7 +127,7 @@ extension LayerTree {
             }
             else if let container = element as? ContainerElement {
                 container.childElements.forEach{
-                    let contents = Layer.Contents.layer(makeLayer(from: $0, inheriting: state))
+                    let contents = Layer.Contents.layer(makeChildLayer(from: $0, inheriting: state))
                     all.append(contents)
                 }
             }
