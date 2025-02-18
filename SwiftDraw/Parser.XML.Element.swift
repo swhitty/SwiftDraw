@@ -170,16 +170,6 @@ extension XMLParser {
         return group
     }
 
-    func parseGroupA(_ e: XML.Element) throws -> DOM.Group {
-        guard e.name == "svg" else {
-            throw Error.invalid
-        }
-
-        let group = DOM.Group()
-        group.childElements = try parseContainerChildren(e)
-        return group
-    }
-
     func parseSwitch(_ e: XML.Element) throws -> DOM.Switch {
         guard e.name == "switch" else {
             throw Error.invalid
