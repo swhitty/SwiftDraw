@@ -73,8 +73,8 @@ public final class SVG: NSObject {
     }
 }
 
-@available(*, deprecated, renamed: "SVG")
-public typealias Image = SVG
+@available(*, unavailable, renamed: "SVG")
+public enum Image { }
 
 #else
 

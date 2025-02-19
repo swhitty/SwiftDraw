@@ -1,8 +1,8 @@
 //
-//  AppDelegate.swift
+//  GalleryView.swift
 //  SwiftDraw
 //
-//  Created by Simon Whitty on 10/2/19.
+//  Created by Simon Whitty on 19/2/25.
 //  Copyright 2019 Simon Whitty
 //
 //  Distributed under the permissive zlib license
@@ -29,25 +29,41 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-import UIKit
+import SwiftDraw
 import SwiftUI
 
-@UIApplicationMain
-class AppDelegate: UIResponder, UIApplicationDelegate {
+struct GalleryView: View {
 
-    var window: UIWindow?
+    var imageNames: [String] = [
+        "avocado.svg",
+        "angry.svg",
+        "dish.svg",
+        "mouth-open.svg",
+        "sleepy.svg",
+        "smile.svg",
+        "snake.svg",
+        "spider.svg",
+        "star-struck.svg",
+        "worried.svg",
+        "yawning.svg",
+        "thats-no-moon.svg",
+        "alert.svg"
+    ]
 
+    var body: some View {
+        if #available(iOS 15.0, *) {
+            ScrollView {
+                LazyVStack(spacing: 20) {
+                    ForEach(imageNames, id: \.self) { name in
+                        SVGView(name, bundle: .samples)
+                            .aspectRatio(contentMode: .fit)
+                            .padding([.leading, .trailing], 10)
+                           // .frame(maxWidth: 320)
+                    }
+                }
+                .background(Color.white)
+            }
 
-    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-
-        let window = UIWindow()
-        window.rootViewController = UINavigationController(rootViewController: UIHostingController(rootView: GalleryView()))
-        window.makeKeyAndVisible()
-        self.window = window
-
-        return true
+        }
     }
-
-
 }
-
