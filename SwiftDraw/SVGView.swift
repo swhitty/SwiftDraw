@@ -1,8 +1,8 @@
 //
-//  AppDelegate.swift
+//  SVGView.swift
 //  SwiftDraw
 //
-//  Created by Simon Whitty on 10/2/19.
+//  Created by Simon Whitty on 19/2/25.
 //  Copyright 2019 Simon Whitty
 //
 //  Distributed under the permissive zlib license
@@ -29,25 +29,43 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-import UIKit
+#if canImport(SwiftUI)
 import SwiftUI
 
-@UIApplicationMain
-class AppDelegate: UIResponder, UIApplicationDelegate {
+@available(iOS 15.0, macOS 12.0, tvOS 15.0, watchOS 8.0, *)
+public struct SVGView: View {
 
-    var window: UIWindow?
-
-
-    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-
-        let window = UIWindow()
-        window.rootViewController = UINavigationController(rootViewController: UIHostingController(rootView: GalleryView()))
-        window.makeKeyAndVisible()
-        self.window = window
-
-        return true
+    public init(_ name: String, bundle: Bundle = .main) {
+        self.svg = SVG(named: name, in: bundle)
     }
 
+    public init(svg: SVG) {
+        self.svg = svg
+    }
 
+    private let svg: SVG?
+
+    public var body: some View {
+        if let svg {
+            Canvas(
+                 opaque: false,
+                 colorMode: .linear,
+                 rendersAsynchronously: false
+             ) { ctx, size in
+                 ctx.draw(svg, in: CGRect(origin: .zero, size: size))
+             }
+             .frame(idealWidth: svg.size.width, idealHeight: svg.size.height)
+        }
+    }
 }
 
+@available(iOS 15.0, macOS 12.0, tvOS 15.0, watchOS 8.0, *)
+public extension GraphicsContext {
+
+    func draw(_ image: SVG, in rect: CGRect? = nil)  {
+        withCGContext {
+            $0.draw(image, in: rect)
+        }
+    }
+}
+#endif

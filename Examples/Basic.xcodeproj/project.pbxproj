@@ -12,6 +12,7 @@
 		D961846D220FDD1200C59D9B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D961846C220FDD1200C59D9B /* Assets.xcassets */; };
 		D9618470220FDD1200C59D9B /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = D961846E220FDD1200C59D9B /* LaunchScreen.storyboard */; };
 		D9742E1E27D4877300E02FFD /* SwiftDraw in Frameworks */ = {isa = PBXBuildFile; productRef = D9742E1D27D4877300E02FFD /* SwiftDraw */; };
+		D9AC57BF2D65E86A005ACBFF /* GalleryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9AC57BE2D65E86A005ACBFF /* GalleryView.swift */; };
 		D9EE86AF2A4EC94E00C7CAE1 /* Samples.bundle in Resources */ = {isa = PBXBuildFile; fileRef = D94D5BE22A4EC906001DCD83 /* Samples.bundle */; };
 /* End PBXBuildFile section */
 
@@ -37,6 +38,7 @@
 		D961846F220FDD1200C59D9B /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		D9618471220FDD1200C59D9B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		D9742E1C27D4875100E02FFD /* SwiftDraw */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = SwiftDraw; path = ..; sourceTree = "<group>"; };
+		D9AC57BE2D65E86A005ACBFF /* GalleryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GalleryView.swift; sourceTree = "<group>"; };
 		D9ACD7A0220FDE04009717CF /* SwiftDraw.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = SwiftDraw.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -75,6 +77,7 @@
 		D9618464220FDD1100C59D9B /* Sources */ = {
 			isa = PBXGroup;
 			children = (
+				D9AC57BE2D65E86A005ACBFF /* GalleryView.swift */,
 				D9618465220FDD1100C59D9B /* AppDelegate.swift */,
 				D9618467220FDD1100C59D9B /* ViewController.swift */,
 				D961846C220FDD1200C59D9B /* Assets.xcassets */,
@@ -169,6 +172,7 @@
 			files = (
 				D9618468220FDD1100C59D9B /* ViewController.swift in Sources */,
 				D9618466220FDD1100C59D9B /* AppDelegate.swift in Sources */,
+				D9AC57BF2D65E86A005ACBFF /* GalleryView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
