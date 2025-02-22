@@ -1,5 +1,5 @@
 //
-//  ScannerTests.swift
+//  SVGTests.swift
 //  SwiftDraw
 //
 //  Created by Simon Whitty on 19/11/18.
@@ -32,7 +32,7 @@
 import XCTest
 @testable import SwiftDraw
 
-final class ImageTests: XCTestCase {
+final class SVGTests: XCTestCase {
 
     func testValidSVGLoads() {
         XCTAssertNotNil(SVG(named: "lines.svg", in: .test))
@@ -70,6 +70,20 @@ final class ImageTests: XCTestCase {
         XCTAssertNoThrow(try image.pngData())
         XCTAssertNoThrow(try image.jpegData())
         XCTAssertNoThrow(try image.pdfData())
+    }
+#endif
+
+#if canImport(UIKit)
+    func testRasterize() {
+        let svg = SVG(named: "gradient-apple.svg", in: .test)!
+        let image = svg.rasterize(with: CGSize(width: 100, height: 100), scale: 3)
+        XCTAssertEqual(image.size, CGSize(width: 100, height: 100))
+        XCTAssertEqual(image.scale, 3)
+
+        let data = image.pngData()!
+        let reloaded = UIImage(data: data)!
+        XCTAssertEqual(reloaded.size, CGSize(width: 300, height: 300))
+        XCTAssertEqual(reloaded.scale, 1)
     }
 #endif
 
