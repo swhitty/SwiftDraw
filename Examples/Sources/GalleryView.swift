@@ -51,19 +51,23 @@ struct GalleryView: View {
     ]
 
     var body: some View {
-        if #available(iOS 15.0, *) {
-            ScrollView {
-                LazyVStack(spacing: 20) {
-                    ForEach(imageNames, id: \.self) { name in
-                        SVGView(name, bundle: .samples)
-                            .aspectRatio(contentMode: .fit)
-                            .padding([.leading, .trailing], 10)
-                           // .frame(maxWidth: 320)
-                    }
+        ScrollView {
+            LazyVStack(spacing: 20) {
+                ForEach(imageNames, id: \.self) { name in
+                    SVGView(name, bundle: .samples)
+                        .aspectRatio(contentMode: .fit)
+                        .padding([.leading, .trailing], 10)
+                    // .frame(maxWidth: 320)
                 }
-                .background(Color.white)
             }
-
+            .background(Color.white)
         }
     }
+}
+
+extension Bundle {
+    static let samples: Bundle = {
+        let url = Bundle.main.url(forResource: "Samples.bundle", withExtension: nil)!
+        return Bundle(url: url)!
+    }()
 }

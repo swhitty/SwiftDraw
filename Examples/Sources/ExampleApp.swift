@@ -29,25 +29,15 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-import UIKit
 import SwiftUI
 
-@UIApplicationMain
-class AppDelegate: UIResponder, UIApplicationDelegate {
-
-    var window: UIWindow?
-
-
-    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-
-        let window = UIWindow()
-        window.rootViewController = UINavigationController(rootViewController: UIHostingController(rootView: GalleryView()))
-        window.makeKeyAndVisible()
-        self.window = window
-
-        return true
+@main
+struct ExampleApp: App {
+    var body: some Scene {
+        WindowGroup {
+            NavigationStack {
+                GalleryView()
+            }
+        }
     }
-
-
 }
-
