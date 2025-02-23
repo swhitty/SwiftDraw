@@ -1,5 +1,5 @@
 //
-//  NSImage+ImageTests.swift
+//  NSImage+SVGTests.swift
 //  SwiftDraw
 //
 //  Created by Simon Whitty on 27/11/18.
@@ -33,7 +33,7 @@ import XCTest
 @testable import SwiftDraw
 #if canImport(AppKit) && !targetEnvironment(macCatalyst)
 
-final class NSImageTests: XCTestCase {
+final class NSImageSVGTests: XCTestCase {
 
   func testImageLoads() {
     let image = NSImage(svgNamed: "lines.svg", in: .test)
