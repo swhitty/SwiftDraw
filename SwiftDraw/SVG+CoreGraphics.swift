@@ -38,31 +38,25 @@ public extension CGContext {
     func draw(_ image: SVG, in rect: CGRect? = nil)  {
         let defaultRect = CGRect(x: 0, y: 0, width: image.size.width, height: image.size.height)
         let renderer = CGRenderer(context: self)
-
-        guard let rect = rect, rect != defaultRect else {
-            renderer.perform(image.commands)
-            return
-        }
-
-        let scale = CGSize(width: rect.width / image.size.width,
-                           height: rect.height / image.size.height)
-        draw(image.commands, in: rect, scale: scale)
-    }
-
-    fileprivate func draw(_ commands: [RendererCommand<CGTypes>], in rect: CGRect, scale: CGSize = CGSize(width: 1.0, height: 1.0)) {
-        let renderer = CGRenderer(context: self)
         saveGState()
-        translateBy(x: rect.origin.x, y: rect.origin.y)
-        scaleBy(x: scale.width, y: scale.height)
-        renderer.perform(commands)
+
+        if let rect = rect, rect != defaultRect {
+            translateBy(x: rect.origin.x, y: rect.origin.y)
+            scaleBy(
+                x: rect.width / image.size.width,
+                y: rect.height / image.size.height
+            )
+        }
+        renderer.perform(image.commands)
+
         restoreGState()
     }
 }
 
 public extension SVG {
 
-    func pdfData(size: CGSize? = nil, insets: Insets = .zero) throws -> Data {
-        let (bounds, pixelsWide, pixelsHigh) = makeBounds(size: size, scale: 1, insets: insets)
+    func pdfData() throws -> Data {
+        let (bounds, pixelsWide, pixelsHigh) = Self.makeBounds(size: size, scale: 1)
         var mediaBox = CGRect(x: 0.0, y: 0.0, width: CGFloat(pixelsWide), height: CGFloat(pixelsHigh))
 
         let data = NSMutableData()
@@ -92,31 +86,18 @@ public extension SVG {
 
 extension SVG {
 
-    static func makeBounds(size: CGSize?,
-                           defaultSize: CGSize,
-                           scale: CGFloat,
-                           insets: Insets) -> (bounds: CGRect, pixelsWide: Int, pixelsHigh: Int) {
-        let viewport = CGSize(
-            width: defaultSize.width - (insets.left + insets.right),
-            height: defaultSize.height - (insets.top + insets.bottom)
+    static func makeBounds(size: CGSize, scale: CGFloat) -> (bounds: CGRect, pixelsWide: Int, pixelsHigh: Int) {
+        let bounds = CGRect(
+            x: 0,
+            y: 0,
+            width: size.width * scale,
+            height: size.height * scale
         )
 
-        let size = size ?? viewport
-
-        let sx = size.width / viewport.width
-        let sy = size.height / viewport.height
-
-        let width = size.width * scale
-        let height = size.height * scale
-        let insets = insets.applying(sx: sx * scale, sy: sy * scale)
-        let bounds = CGRect(x: -insets.left,
-                            y: -insets.top,
-                            width: width + insets.left + insets.right,
-                            height: height + insets.top + insets.bottom)
         return (
             bounds: bounds,
-            pixelsWide: Int(width),
-            pixelsHigh: Int(height)
+            pixelsWide: Int(exactly: ceil(bounds.width)) ?? 0,
+            pixelsHigh: Int(exactly: ceil(bounds.height)) ?? 0
         )
     }
 }

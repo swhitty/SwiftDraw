@@ -1,5 +1,5 @@
 //
-//  UIImage+Image.swift
+//  UIImage+SVG.swift
 //  SwiftDraw
 //
 //  Created by Simon Whitty on 24/5/17.
@@ -71,16 +71,11 @@ public extension UIImage {
 }
 
 public extension SVG {
-    func rasterize() -> UIImage {
-        return rasterize(with: size)
-    }
 
 #if os(watchOS)
-    func rasterize(with size: CGSize? = nil, scale: CGFloat = 0, insets: UIEdgeInsets = .zero) -> UIImage {
-        let insets = Insets(top: insets.top, left: insets.left, bottom: insets.bottom, right: insets.right)
-        let (bounds, pixelsWide, pixelsHigh) = makeBounds(size: size, scale: 1, insets: insets)
-        
-        let actualScale = scale <= 0 ? WKInterfaceDevice.current().screenScale : scale
+    func rasterize(scale: CGFloat = 0) -> UIImage {
+        let (bounds, pixelsWide, pixelsHigh) = SVG.makeBounds(size: size, scale: 1)
+        let actualScale = scale <= 0 ? SVG.defaultScale : scale
         UIGraphicsBeginImageContextWithOptions(CGSize(width: pixelsWide, height: pixelsHigh), false, actualScale)
         defer { UIGraphicsEndImageContext() }
         
@@ -91,40 +86,29 @@ public extension SVG {
         return UIGraphicsGetImageFromCurrentImageContext() ?? UIImage()
     }
 #else
-    private func makeFormat() -> UIGraphicsImageRendererFormat {
-        guard #available(iOS 12.0, *) else {
-            let f = UIGraphicsImageRendererFormat.default()
-            f.prefersExtendedRange = true
-            return f
-        }
+    func rasterize(scale: CGFloat = 0) -> UIImage {
+        let (bounds, pixelsWide, pixelsHigh) = SVG.makeBounds(size: size, scale: 1)
         let f = UIGraphicsImageRendererFormat.preferred()
         f.preferredRange = .automatic
-        return f
-    }
-
-    func rasterize(with size: CGSize? = nil, scale: CGFloat = 0, insets: UIEdgeInsets = .zero) -> UIImage {
-        let insets = Insets(top: insets.top, left: insets.left, bottom: insets.bottom, right: insets.right)
-        let (bounds, pixelsWide, pixelsHigh) = makeBounds(size: size, scale: 1, insets: insets)
-        let f = makeFormat()
-        f.scale = scale <= 0 ? UIScreen.main.scale : scale
+        f.scale = scale <= 0 ? SVG.defaultScale : scale
         f.opaque = false
         let r = UIGraphicsImageRenderer(size: CGSize(width: pixelsWide, height: pixelsHigh), format: f)
-        return r.image{
+        return r.image {
             $0.cgContext.draw(self, in: bounds)
         }
     }
 #endif
 
-    func pngData(size: CGSize? = nil, scale: CGFloat = 0, insets: UIEdgeInsets = .zero) throws -> Data {
-        let image = rasterize(with: size, scale: scale, insets: insets)
+    func pngData(scale: CGFloat = 0) throws -> Data {
+        let image = rasterize(scale: scale)
         guard let data = image.pngData() else {
             throw Error("Failed to create png data")
         }
         return data
     }
 
-    func jpegData(size: CGSize? = nil, scale: CGFloat = 0, compressionQuality quality: CGFloat = 1, insets: UIEdgeInsets = .zero) throws -> Data {
-        let image = rasterize(with: size, scale: scale, insets: insets)
+    func jpegData(scale: CGFloat = 0, compressionQuality quality: CGFloat = 1) throws -> Data {
+        let image = rasterize(scale: scale)
         guard let data = image.jpegData(compressionQuality: quality) else {
             throw Error("Failed to create jpeg data")
         }
@@ -134,25 +118,12 @@ public extension SVG {
 
 extension SVG {
 
-    func jpegData(size: CGSize?, scale: CGFloat, insets: Insets) throws -> Data {
-        let insets = UIEdgeInsets(top: insets.top, left: insets.left, bottom: insets.bottom, right: insets.right)
-        return try jpegData(size: size, scale: scale, insets: insets)
-    }
-
-    func pngData(size: CGSize?, scale: CGFloat, insets: Insets) throws -> Data {
-        let insets = UIEdgeInsets(top: insets.top, left: insets.left, bottom: insets.bottom, right: insets.right)
-        return try pngData(size: size, scale: scale, insets: insets)
-    }
-
-    func makeBounds(size: CGSize?, scale: CGFloat, insets: Insets) -> (bounds: CGRect, pixelsWide: Int, pixelsHigh: Int) {
-        let newScale: CGFloat = {
+    static var defaultScale: CGFloat {
 #if os(watchOS)
-            return scale <= 0 ? WKInterfaceDevice.current().screenScale : scale
+        WKInterfaceDevice.current().screenScale
 #else
-            return scale <= 0 ? UIScreen.main.scale : scale
+        UIScreen.main.scale
 #endif
-        }()
-        return Self.makeBounds(size: size, defaultSize: self.size, scale: newScale, insets: insets)
     }
 
     private struct Error: LocalizedError {

@@ -35,11 +35,11 @@ import Foundation
 import CoreGraphics
 
 public struct SVG: Hashable {
-    public let size: CGSize
+    public private(set) var size: CGSize
 
     // Array of commands that render the image
     // see: Renderer.swift
-    let commands: [RendererCommand<CGTypes>]
+    var commands: [RendererCommand<CGTypes>]
 
     public init?(fileURL url: URL, options: SVG.Options = .default) {
         do {
@@ -78,8 +78,56 @@ public struct SVG: Hashable {
     }
 }
 
-@available(*, unavailable, renamed: "SVG")
-public enum Image { }
+public extension SVG {
+
+    func size(_ s: CGSize) -> SVG {
+        guard size != s else { return self }
+
+        let sx = s.width / size.width
+        let sy = s.height / size.height
+
+        var copy = self
+        copy.commands.insert(.scale(sx: sx, sy: sy), at: 0)
+        copy.size = s
+        return copy
+    }
+
+    func scale(_ factor: CGFloat) -> SVG {
+        scale(x: factor, y: factor)
+    }
+
+    func scale(x: CGFloat, y: CGFloat) -> SVG {
+        var copy = self
+
+        copy.commands.insert(.scale(sx: x, sy: y), at: 0)
+        copy.size = CGSize(
+            width: size.width * x,
+            height: size.height * y
+        )
+        return copy
+    }
+
+    func translate(tx: CGFloat, ty: CGFloat) -> SVG {
+        var copy = self
+        copy.commands.insert(.translate(tx: tx, ty: ty), at: 0)
+        return copy
+    }
+
+    func expand(_ padding: CGFloat) -> SVG {
+        expand(top: padding, left: padding, bottom: padding, right: padding)
+    }
+
+    func expand(top: CGFloat = 0,
+                left: CGFloat = 0,
+                bottom: CGFloat = 0,
+                right: CGFloat = 0) -> SVG {
+        var copy = self
+        copy.commands.insert(.translate(tx: left, ty: top), at: 0)
+        copy.size.width += left + right
+        copy.size.height += top + bottom
+        return copy
+    }
+}
 
 extension SVG {
 
@@ -102,6 +150,9 @@ extension SVG {
         )
     }
 }
+
+@available(*, unavailable, renamed: "SVG")
+public enum Image { }
 
 #else
 
@@ -141,5 +192,50 @@ public extension SVG {
     static func pdfData(fileURL url: URL, size: CGSize? = nil) throws -> Data {
         throw DOM.Error.missing("not implemented")
     }
+
+    func size(_ s: CGSize) -> SVG { self }
+
+    func scale(_ factor: CGFloat) -> SVG { self }
+
+    func scale(x: CGFloat, y: CGFloat) -> SVG { self }
+
+    func translate(tx: CGFloat, ty: CGFloat) -> SVG { self }
+
+    func expand(_ padding: CGFloat) -> SVG { self }
+
+    func expand(top: CGFloat = 0,
+                left: CGFloat = 0,
+                bottom: CGFloat = 0,
+                right: CGFloat = 0) -> SVG { self }
 }
 #endif
+
+public extension SVG {
+
+    mutating func sized(_ s: CGSize) {
+        self = size(s)
+    }
+
+    mutating func scaled(_ factor: CGFloat) {
+        self = scale(factor)
+    }
+
+    mutating func scaled(x: CGFloat, y: CGFloat) {
+        self = scale(x: x, y: y)
+    }
+
+    mutating func translated(tx: CGFloat, ty: CGFloat) {
+        self = translate(tx: tx, ty: ty)
+    }
+
+    mutating func expanded(_ padding: CGFloat) {
+        self = expand(padding)
+    }
+
+    mutating func expanded(top: CGFloat = 0,
+                           left: CGFloat = 0,
+                           bottom: CGFloat = 0,
+                           right: CGFloat = 0) {
+        self = expand(top: top, left: left, bottom: bottom, right: right)
+    }
+}

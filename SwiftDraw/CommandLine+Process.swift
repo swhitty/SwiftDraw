@@ -95,14 +95,20 @@ public extension CommandLine {
         #if canImport(CoreGraphics)
         switch config.format {
         case .jpeg:
-            let insets = try makeImageInsets(for: config.insets)
-            return try image.jpegData(size: config.size.cgValue, scale: config.scale.cgValue, insets: insets)
+            return try image
+                .inset(makeImageInsets(for: config.insets))
+                .size(config.size.cgValue)
+                .jpegData(scale: config.scale.cgValue)
         case .pdf:
-            let insets = try makeImageInsets(for: config.insets)
-            return try image.pdfData(size: config.size.cgValue, insets: insets)
+            return try image
+                .inset(makeImageInsets(for: config.insets))
+                .size(config.size.cgValue)
+                .pdfData()
         case .png:
-            let insets = try makeImageInsets(for: config.insets)
-            return try image.pngData(size: config.size.cgValue, scale: config.scale.cgValue, insets: insets)
+            return try image
+                .inset(makeImageInsets(for: config.insets))
+                .size(config.size.cgValue)
+                .pngData(scale: config.scale.cgValue)
         case .swift, .sfsymbol:
             throw Error.unsupported
         }
@@ -126,6 +132,18 @@ public extension CommandLine {
             bottom: insets.bottom!,
             right: insets.right!
         )
+    }
+}
+
+private extension SVG {
+
+    func size(_ s: CGSize?) -> SVG {
+        guard let s else { return self }
+        return size(s)
+    }
+
+    func inset(_ insets: Insets) -> SVG {
+        expand(top: -insets.top, left: -insets.left, bottom: -insets.bottom, right: -insets.right)
     }
 }
 
