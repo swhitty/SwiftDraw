@@ -32,6 +32,7 @@
 import XCTest
 @testable import SwiftDraw
 
+#if canImport(CoreGraphics)
 final class SVGTests: XCTestCase {
 
     func testValidSVGLoads() {
@@ -46,7 +47,6 @@ final class SVGTests: XCTestCase {
         XCTAssertNil(SVG(named: "missing.svg", in: .test))
     }
 
-#if canImport(CoreGraphics)
     func testImageRasterizes() {
         let image = SVG.makeLines()
         let rendered = image.rasterize(scale: 1)
@@ -71,7 +71,6 @@ final class SVGTests: XCTestCase {
         XCTAssertNoThrow(try image.jpegData())
         XCTAssertNoThrow(try image.pdfData())
     }
-#endif
 
 #if canImport(UIKit)
     func testRasterize() {
@@ -86,7 +85,6 @@ final class SVGTests: XCTestCase {
         XCTAssertEqual(reloaded.scale, 1)
     }
 #endif
-
 }
 
 private extension SVG {
@@ -98,3 +96,4 @@ private extension SVG {
         return SVG(dom: svg, options: .default)
     }
 }
+#endif
