@@ -81,7 +81,7 @@ let image = NSImage(svgNamed: "sample.svg")
 The command line tool converts SVGs to other formats: PNG, JPEG, SFSymbol and Swift source code.
 
 ```
-copyright (c) 2024 Simon Whitty
+copyright (c) 2025 Simon Whitty
 
 usage: swiftdraw <file.svg> [--format png | pdf | jpeg | swift | sfsymbol] [--size wxh] [--scale 1x | 2x | 3x]
 
