@@ -1,5 +1,5 @@
 //
-//  Image.swift
+//  SVG.swift
 //  SwiftDraw
 //
 //  Created by Simon Whitty on 24/5/17.
