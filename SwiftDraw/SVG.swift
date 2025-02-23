@@ -78,9 +78,9 @@ public struct SVG: Hashable {
     }
 }
 
-extension SVG {
+public extension SVG {
 
-    public func size(_ s: CGSize) -> SVG {
+    func size(_ s: CGSize) -> SVG {
         guard size != s else { return self }
 
         let sx = s.width / size.width
@@ -92,11 +92,11 @@ extension SVG {
         return copy
     }
 
-    public func scale(_ factor: CGFloat) -> SVG {
+    func scale(_ factor: CGFloat) -> SVG {
         scale(x: factor, y: factor)
     }
 
-    public func scale(x: CGFloat, y: CGFloat) -> SVG {
+    func scale(x: CGFloat, y: CGFloat) -> SVG {
         var copy = self
 
         copy.commands.insert(.scale(sx: x, sy: y), at: 0)
@@ -107,55 +107,25 @@ extension SVG {
         return copy
     }
 
-    public func translate(tx: CGFloat, ty: CGFloat) -> SVG {
+    func translate(tx: CGFloat, ty: CGFloat) -> SVG {
         var copy = self
         copy.commands.insert(.translate(tx: tx, ty: ty), at: 0)
         return copy
     }
 
-    public func expand(_ padding: CGFloat) -> SVG {
+    func expand(_ padding: CGFloat) -> SVG {
         expand(top: padding, left: padding, bottom: padding, right: padding)
     }
 
-    public func expand(top: CGFloat = 0,
-                       left: CGFloat = 0,
-                       bottom: CGFloat = 0,
-                       right: CGFloat = 0) -> SVG {
+    func expand(top: CGFloat = 0,
+                left: CGFloat = 0,
+                bottom: CGFloat = 0,
+                right: CGFloat = 0) -> SVG {
         var copy = self
         copy.commands.insert(.translate(tx: left, ty: top), at: 0)
         copy.size.width += left + right
         copy.size.height += top + bottom
         return copy
-    }
-}
-
-extension SVG {
-
-    public mutating func sized(_ s: CGSize) {
-        self = size(s)
-    }
-
-    public mutating func scaled(_ factor: CGFloat) {
-        self = scale(factor)
-    }
-
-    public mutating func scaled(x: CGFloat, y: CGFloat) {
-        self = scale(x: x, y: y)
-    }
-
-    public mutating func translated(tx: CGFloat, ty: CGFloat) {
-        self = translate(tx: tx, ty: ty)
-    }
-
-    public mutating func expanded(_ padding: CGFloat) {
-        self = expand(padding)
-    }
-
-    public mutating func expanded(top: CGFloat = 0,
-                                  left: CGFloat = 0,
-                                  bottom: CGFloat = 0,
-                                  right: CGFloat = 0) {
-        self = expand(top: top, left: left, bottom: bottom, right: right)
     }
 }
 
@@ -222,5 +192,50 @@ public extension SVG {
     static func pdfData(fileURL url: URL, size: CGSize? = nil) throws -> Data {
         throw DOM.Error.missing("not implemented")
     }
+
+    func size(_ s: CGSize) -> SVG { self }
+
+    func scale(_ factor: CGFloat) -> SVG { self }
+
+    func scale(x: CGFloat, y: CGFloat) -> SVG { self }
+
+    func translate(tx: CGFloat, ty: CGFloat) -> SVG { self }
+
+    func expand(_ padding: CGFloat) -> SVG { self }
+
+    func expand(top: CGFloat = 0,
+                left: CGFloat = 0,
+                bottom: CGFloat = 0,
+                right: CGFloat = 0) -> SVG { self }
 }
 #endif
+
+public extension SVG {
+
+    mutating func sized(_ s: CGSize) {
+        self = size(s)
+    }
+
+    mutating func scaled(_ factor: CGFloat) {
+        self = scale(factor)
+    }
+
+    mutating func scaled(x: CGFloat, y: CGFloat) {
+        self = scale(x: x, y: y)
+    }
+
+    mutating func translated(tx: CGFloat, ty: CGFloat) {
+        self = translate(tx: tx, ty: ty)
+    }
+
+    mutating func expanded(_ padding: CGFloat) {
+        self = expand(padding)
+    }
+
+    mutating func expanded(top: CGFloat = 0,
+                           left: CGFloat = 0,
+                           bottom: CGFloat = 0,
+                           right: CGFloat = 0) {
+        self = expand(top: top, left: left, bottom: bottom, right: right)
+    }
+}
