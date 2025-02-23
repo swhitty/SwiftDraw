@@ -132,6 +132,22 @@ final class SVGTests: XCTestCase {
         copy.expand(-10)
         XCTAssertEqual(copy.size, CGSize(width: 80, height: 80))
     }
+
+    func testHashable() {
+        var images = Set<SVG>()
+        let lines = SVG.makeLines()
+
+        XCTAssertFalse(images.contains(lines))
+
+        images.insert(SVG.makeLines())
+        XCTAssertTrue(images.contains(lines))
+
+        let linesResized = lines.sized(CGSize(width: 10, height: 10))
+        XCTAssertFalse(images.contains(linesResized))
+
+        images.remove(lines)
+        XCTAssertFalse(images.contains(SVG.makeLines()))
+    }
 }
 
 private extension SVG {
