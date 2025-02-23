@@ -37,8 +37,8 @@ import CoreGraphics
 public struct SVG: Hashable {
     public let size: CGSize
 
-    //An Image is simply an array of CoreGraphics draw commands
-    //see: Renderer.swift
+    // Array of commands that render the image
+    // see: Renderer.swift
     let commands: [RendererCommand<CGTypes>]
 
     public init?(fileURL url: URL, options: SVG.Options = .default) {
@@ -52,18 +52,17 @@ public struct SVG: Hashable {
     }
 
     public init?(named name: String, in bundle: Bundle = Bundle.main, options: SVG.Options = .default) {
-        guard let url = bundle.url(forResource: name, withExtension: nil) else {
-            return nil
-        }
-
+        guard let url = bundle.url(forResource: name, withExtension: nil) else { return nil }
         self.init(fileURL: url, options: options)
     }
 
-    public init?(data: Data, options: SVG.Options = .default) {
-        guard let svg = try? DOM.SVG.parse(data: data) else {
-            return nil
-        }
+    public init?(xml: String, options: SVG.Options = .default) {
+        guard let data = xml.data(using: .utf8) else { return nil }
+        self.init(data: data)
+    }
 
+    public init?(data: Data, options: SVG.Options = .default) {
+        guard let svg = try? DOM.SVG.parse(data: data) else { return nil }
         self.init(dom: svg, options: options)
     }
 
