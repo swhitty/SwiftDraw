@@ -25,28 +25,39 @@ let svg = SVG(named: "sample.svg", in: .main)!
 imageView.image = svg.rasterize()
 ```
 
-Rasterize to any size:
+Transformations can be added before rasterizing: 
 
 ```swift
-let svg = SVG(named: "sample.svg", in: .main)!
-imageView.image = svg.rasterize(with: CGSize(width: 640, height: 480))
+let svg = SVG(name: "fish.svg")!  // 100x100 
+    .expand(left: 10, right: 10)  // 120x100
+    .scale(2)                     // 240x200
+
+imageView.image = svg.rasterize() // 240x200
 ```
 
-Crop the image using insets:
+### SwiftUI
+
+Display an image within `SVGView`:
 
 ```swift
-let svg = SVG(named: "sample.svg", in: .main)!
-imageView.image = svg.rasterize(insets: .init(top: 10, left: 0, bottom: 10, bottom: 0))
+var body: some View {
+    SVGView(named: "sample.svg")
+        .aspectRatio(contentMode: .fit)
+        .padding()
+}
 ```
 
-Add padding using negative insets:
+Pass a `SVG` instance for better performance:
 
 ```swift
-let svg = SVG(named: "sample.svg", in: .main)!
-imageView.image = svg.rasterize(insets: .init(top: -10, left: -10, bottom: -10, bottom: -10))
+var image: SVG
+
+var body: some View {
+    SVGView(svg: image)
+}
 ```
 
-### iOS
+### UIKit
 
 Create a `UIImage` directly from an SVG within a bundle, `Data` or file `URL`:
 
@@ -55,7 +66,7 @@ import SwiftDraw
 let image = UIImage(svgNamed: "sample.svg")
 ```
 
-### macOS
+### AppKit
 
 Create an `NSImage` directly from an SVG within a bundle, `Data` or file `URL`:
 
