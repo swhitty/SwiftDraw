@@ -75,7 +75,7 @@ final class SVGTests: XCTestCase {
 #if canImport(UIKit)
     func testRasterize() {
         let svg = SVG(named: "gradient-apple.svg", in: .test)!
-            .size(CGSize(width: 100, height: 100))
+            .sized(CGSize(width: 100, height: 100))
         let image = svg.rasterize(scale: 3)
         XCTAssertEqual(image.size, CGSize(width: 100, height: 100))
         XCTAssertEqual(image.scale, 3)
@@ -91,10 +91,10 @@ final class SVGTests: XCTestCase {
         let image = SVG.makeLines()
 
         XCTAssertEqual(image.size, CGSize(width: 100, height: 100))
-        XCTAssertEqual(image.size(CGSize(width: 200, height: 200)).size, CGSize(width: 200, height: 200))
+        XCTAssertEqual(image.sized(CGSize(width: 200, height: 200)).size, CGSize(width: 200, height: 200))
 
         var copy = image
-        copy.sized(CGSize(width: 20, height: 20))
+        copy.size(CGSize(width: 20, height: 20))
         XCTAssertEqual(copy.size, CGSize(width: 20, height: 20))
     }
 
@@ -102,12 +102,12 @@ final class SVGTests: XCTestCase {
         let image = SVG.makeLines()
 
         XCTAssertEqual(image.size, CGSize(width: 100, height: 100))
-        XCTAssertEqual(image.scale(2).size, CGSize(width: 200, height: 200))
-        XCTAssertEqual(image.scale(0.5).size, CGSize(width: 50, height: 50))
-        XCTAssertEqual(image.scale(x: 2, y: 3).size, CGSize(width: 200, height: 300))
+        XCTAssertEqual(image.scaled(2).size, CGSize(width: 200, height: 200))
+        XCTAssertEqual(image.scaled(0.5).size, CGSize(width: 50, height: 50))
+        XCTAssertEqual(image.scaled(x: 2, y: 3).size, CGSize(width: 200, height: 300))
 
         var copy = image
-        copy.scaled(5)
+        copy.scale(5)
         XCTAssertEqual(copy.size, CGSize(width: 500, height: 500))
     }
 
@@ -115,10 +115,10 @@ final class SVGTests: XCTestCase {
         let image = SVG.makeLines()
 
         XCTAssertEqual(image.size, CGSize(width: 100, height: 100))
-        XCTAssertEqual(image.translate(tx: 10, ty: 10).size, CGSize(width: 100, height: 100))
+        XCTAssertEqual(image.translated(tx: 10, ty: 10).size, CGSize(width: 100, height: 100))
 
         var copy = image
-        copy.translated(tx: 50, ty: 50)
+        copy.translate(tx: 50, ty: 50)
         XCTAssertEqual(copy.size, CGSize(width: 100, height: 100))
     }
 
@@ -126,10 +126,10 @@ final class SVGTests: XCTestCase {
         let image = SVG.makeLines()
 
         XCTAssertEqual(image.size, CGSize(width: 100, height: 100))
-        XCTAssertEqual(image.expand(top: 50, right: 30).size, CGSize(width: 130, height: 150))
+        XCTAssertEqual(image.expanded(top: 50, right: 30).size, CGSize(width: 130, height: 150))
 
         var copy = image
-        copy.expanded(-10)
+        copy.expand(-10)
         XCTAssertEqual(copy.size, CGSize(width: 80, height: 80))
     }
 }

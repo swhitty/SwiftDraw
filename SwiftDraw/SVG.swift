@@ -80,7 +80,7 @@ public struct SVG: Hashable {
 
 public extension SVG {
 
-    func size(_ s: CGSize) -> SVG {
+    func sized(_ s: CGSize) -> SVG {
         guard size != s else { return self }
 
         let sx = s.width / size.width
@@ -92,11 +92,11 @@ public extension SVG {
         return copy
     }
 
-    func scale(_ factor: CGFloat) -> SVG {
-        scale(x: factor, y: factor)
+    func scaled(_ factor: CGFloat) -> SVG {
+        scaled(x: factor, y: factor)
     }
 
-    func scale(x: CGFloat, y: CGFloat) -> SVG {
+    func scaled(x: CGFloat, y: CGFloat) -> SVG {
         var copy = self
 
         copy.commands.insert(.scale(sx: x, sy: y), at: 0)
@@ -107,20 +107,20 @@ public extension SVG {
         return copy
     }
 
-    func translate(tx: CGFloat, ty: CGFloat) -> SVG {
+    func translated(tx: CGFloat, ty: CGFloat) -> SVG {
         var copy = self
         copy.commands.insert(.translate(tx: tx, ty: ty), at: 0)
         return copy
     }
 
-    func expand(_ padding: CGFloat) -> SVG {
-        expand(top: padding, left: padding, bottom: padding, right: padding)
+    func expanded(_ padding: CGFloat) -> SVG {
+        expanded(top: padding, left: padding, bottom: padding, right: padding)
     }
 
-    func expand(top: CGFloat = 0,
-                left: CGFloat = 0,
-                bottom: CGFloat = 0,
-                right: CGFloat = 0) -> SVG {
+    func expanded(top: CGFloat = 0,
+                  left: CGFloat = 0,
+                  bottom: CGFloat = 0,
+                  right: CGFloat = 0) -> SVG {
         var copy = self
         copy.commands.insert(.translate(tx: left, ty: top), at: 0)
         copy.size.width += left + right
@@ -212,30 +212,30 @@ public extension SVG {
 
 public extension SVG {
 
-    mutating func sized(_ s: CGSize) {
-        self = size(s)
+    mutating func size(_ s: CGSize) {
+        self = sized(s)
     }
 
-    mutating func scaled(_ factor: CGFloat) {
-        self = scale(factor)
+    mutating func scale(_ factor: CGFloat) {
+        self = scaled(factor)
     }
 
-    mutating func scaled(x: CGFloat, y: CGFloat) {
-        self = scale(x: x, y: y)
+    mutating func scale(x: CGFloat, y: CGFloat) {
+        self = scaled(x: x, y: y)
     }
 
-    mutating func translated(tx: CGFloat, ty: CGFloat) {
-        self = translate(tx: tx, ty: ty)
+    mutating func translate(tx: CGFloat, ty: CGFloat) {
+        self = translated(tx: tx, ty: ty)
     }
 
-    mutating func expanded(_ padding: CGFloat) {
-        self = expand(padding)
+    mutating func expand(_ padding: CGFloat) {
+        self = expanded(padding)
     }
 
-    mutating func expanded(top: CGFloat = 0,
-                           left: CGFloat = 0,
-                           bottom: CGFloat = 0,
-                           right: CGFloat = 0) {
-        self = expand(top: top, left: left, bottom: bottom, right: right)
+    mutating func expand(top: CGFloat = 0,
+                         left: CGFloat = 0,
+                         bottom: CGFloat = 0,
+                         right: CGFloat = 0) {
+        self = expanded(top: top, left: left, bottom: bottom, right: right)
     }
 }

@@ -29,11 +29,11 @@ imageView.image = svg.rasterize()
 Transformations can be added before rasterizing: 
 
 ```swift
-let svg = SVG(name: "fish.svg")!  // 100x100 
-    .expand(left: 10, right: 10)  // 120x100
-    .scale(2)                     // 240x200
+let svg = SVG(name: "fish.svg")!   // 100x100 
+    .expanded(left: 10, right: 10) // 120x100
+    .scaled(2)                      // 240x200
 
-imageView.image = svg.rasterize() // 240x200
+imageView.image = svg.rasterize()  // 240x200
 ```
 
 ### SwiftUI

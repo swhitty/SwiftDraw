@@ -139,11 +139,11 @@ private extension SVG {
 
     func size(_ s: CGSize?) -> SVG {
         guard let s else { return self }
-        return size(s)
+        return sized(s)
     }
 
     func inset(_ insets: Insets) -> SVG {
-        expand(top: -insets.top, left: -insets.left, bottom: -insets.bottom, right: -insets.right)
+        expanded(top: -insets.top, left: -insets.left, bottom: -insets.bottom, right: -insets.right)
     }
 }
 
