@@ -102,7 +102,7 @@ final class MockRenderer: Renderer {
     operations.append("setClip")
   }
   
-  func setClip(mask: [Any], frame: LayerTree.Rect) {
+  func setClip(mask: [AnyHashable], frame: LayerTree.Rect) {
     operations.append("setClipMask")
   }
   

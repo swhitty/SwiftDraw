@@ -37,7 +37,7 @@ struct LayerTreeTypes: RendererTypes {
   typealias Rect = LayerTree.Rect
   typealias Color = LayerTree.Color
   typealias Gradient = LayerTree.Gradient
-  typealias Mask = [Any]
+  typealias Mask = [AnyHashable]
   typealias Path = [LayerTree.Shape]
   typealias Pattern = LayerTree.Pattern
   typealias Transform = LayerTree.Transform

@@ -37,7 +37,7 @@ struct CGTextTypes: RendererTypes {
   typealias Rect = String
   typealias Color = String
   typealias Gradient = LayerTree.Gradient
-  typealias Mask = [Any]
+  typealias Mask = [AnyHashable]
   typealias Path = [LayerTree.Shape]
   typealias Pattern = String
   typealias Transform = String
@@ -513,7 +513,7 @@ public final class CGTextRenderer: Renderer {
     }
   }
 
-  func setClip(mask: [Any], frame: String) {
+  func setClip(mask: [AnyHashable], frame: String) {
     lines.append("ctx.clip(to: \(frame), mask: \(mask))")
   }
   
