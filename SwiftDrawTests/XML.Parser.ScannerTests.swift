@@ -235,7 +235,7 @@ private func AssertScanPercentageFloat(_ text: String, _ expected: Float?, file:
 }
 
 
-extension Foundation.CharacterSet: ExpressibleByStringLiteral {
+extension Foundation.CharacterSet: Swift.ExpressibleByStringLiteral {
   
   static let hexadecimal: Foundation.CharacterSet = "0123456789ABCDEFabcdef"
   

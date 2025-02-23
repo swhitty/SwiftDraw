@@ -83,7 +83,7 @@ extension DOM {
 
 // Equatable just for tests
 
-extension DOM.GraphicsElement: Equatable {
+extension DOM.GraphicsElement: Swift.Equatable {
   public static func ==(lhs: DOM.GraphicsElement, rhs: DOM.GraphicsElement) -> Bool {
     let toString: (Any) -> String = { var text = ""; dump($0, to: &text); return text }
     return toString(lhs) == toString(rhs)
