@@ -74,8 +74,6 @@ final class UIImageTests: XCTestCase {
     }
 }
 
-#endif
-
 private extension SVG {
 
     static func parse(_ code: String) throws -> SVG {
@@ -90,3 +88,5 @@ private extension SVG {
         var errorDescription: String? = "Invalid SVG"
     }
 }
+
+#endif
