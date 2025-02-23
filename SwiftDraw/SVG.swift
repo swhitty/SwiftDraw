@@ -35,11 +35,11 @@ import Foundation
 import CoreGraphics
 
 public struct SVG: Hashable {
-    public let size: CGSize
+    public private(set) var size: CGSize
 
     // Array of commands that render the image
     // see: Renderer.swift
-    let commands: [RendererCommand<CGTypes>]
+    var commands: [RendererCommand<CGTypes>]
 
     public init?(fileURL url: URL, options: SVG.Options = .default) {
         do {
@@ -78,8 +78,34 @@ public struct SVG: Hashable {
     }
 }
 
-@available(*, unavailable, renamed: "SVG")
-public enum Image { }
+extension SVG {
+
+    public func scale(_ factor: CGFloat) -> SVG {
+        scale(x: factor, y: factor)
+    }
+
+    public func scale(x: CGFloat, y: CGFloat) -> SVG {
+        var copy = self
+
+        copy.commands.insert(.scale(sx: x, sy: y), at: 0)
+        copy.size = CGSize(
+            width: size.width * x,
+            height: size.height * y
+        )
+        return copy
+    }
+}
+
+extension SVG {
+
+    public mutating func scaled(_ factor: CGFloat) {
+        self = scale(factor)
+    }
+
+    public mutating func scaled(x: CGFloat, y: CGFloat) {
+        self = scale(x: x, y: y)
+    }
+}
 
 extension SVG {
 
@@ -102,6 +128,9 @@ extension SVG {
         )
     }
 }
+
+@available(*, unavailable, renamed: "SVG")
+public enum Image { }
 
 #else
 
