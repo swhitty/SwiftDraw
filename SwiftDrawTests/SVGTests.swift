@@ -86,6 +86,17 @@ final class SVGTests: XCTestCase {
     }
 #endif
 
+    func testSize() {
+        let image = SVG.makeLines()
+
+        XCTAssertEqual(image.size, CGSize(width: 100, height: 100))
+        XCTAssertEqual(image.size(CGSize(width: 200, height: 200)).size, CGSize(width: 200, height: 200))
+
+        var copy = image
+        copy.sized(CGSize(width: 20, height: 20))
+        XCTAssertEqual(copy.size, CGSize(width: 20, height: 20))
+    }
+
     func testScale() {
         let image = SVG.makeLines()
 

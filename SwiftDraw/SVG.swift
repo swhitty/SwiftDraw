@@ -80,6 +80,18 @@ public struct SVG: Hashable {
 
 extension SVG {
 
+    public func size(_ s: CGSize) -> SVG {
+        guard size != s else { return self }
+
+        let sx = s.width / size.width
+        let sy = s.height / size.height
+
+        var copy = self
+        copy.commands.insert(.scale(sx: sx, sy: sy), at: 0)
+        copy.size = s
+        return copy
+    }
+
     public func scale(_ factor: CGFloat) -> SVG {
         scale(x: factor, y: factor)
     }
@@ -118,6 +130,10 @@ extension SVG {
 }
 
 extension SVG {
+
+    public mutating func sized(_ s: CGSize) {
+        self = size(s)
+    }
 
     public mutating func scaled(_ factor: CGFloat) {
         self = scale(factor)

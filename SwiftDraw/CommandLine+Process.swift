@@ -97,15 +97,18 @@ public extension CommandLine {
         case .jpeg:
             return try image
                 .inset(makeImageInsets(for: config.insets))
-                .jpegData(size: config.size.cgValue, scale: config.scale.cgValue)
+                .size(config.size.cgValue)
+                .jpegData(scale: config.scale.cgValue)
         case .pdf:
             return try image
                 .inset(makeImageInsets(for: config.insets))
-                .pdfData(size: config.size.cgValue)
+                .size(config.size.cgValue)
+                .pdfData()
         case .png:
             return try image
                 .inset(makeImageInsets(for: config.insets))
-                .pngData(size: config.size.cgValue, scale: config.scale.cgValue)
+                .size(config.size.cgValue)
+                .pngData(scale: config.scale.cgValue)
         case .swift, .sfsymbol:
             throw Error.unsupported
         }
@@ -133,6 +136,12 @@ public extension CommandLine {
 }
 
 private extension SVG {
+
+    func size(_ s: CGSize?) -> SVG {
+        guard let s else { return self }
+        return size(s)
+    }
+
     func inset(_ insets: Insets) -> SVG {
         expand(top: -insets.top, left: -insets.left, bottom: -insets.bottom, right: -insets.right)
     }
