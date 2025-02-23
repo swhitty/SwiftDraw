@@ -193,20 +193,20 @@ public extension SVG {
         throw DOM.Error.missing("not implemented")
     }
 
-    func size(_ s: CGSize) -> SVG { self }
+    func sized(_ s: CGSize) -> SVG { self }
 
-    func scale(_ factor: CGFloat) -> SVG { self }
+    func scaled(_ factor: CGFloat) -> SVG { self }
 
-    func scale(x: CGFloat, y: CGFloat) -> SVG { self }
+    func scaled(x: CGFloat, y: CGFloat) -> SVG { self }
 
-    func translate(tx: CGFloat, ty: CGFloat) -> SVG { self }
+    func translated(tx: CGFloat, ty: CGFloat) -> SVG { self }
 
-    func expand(_ padding: CGFloat) -> SVG { self }
+    func expanded(_ padding: CGFloat) -> SVG { self }
 
-    func expand(top: CGFloat = 0,
-                left: CGFloat = 0,
-                bottom: CGFloat = 0,
-                right: CGFloat = 0) -> SVG { self }
+    func expanded(top: CGFloat = 0,
+                  left: CGFloat = 0,
+                  bottom: CGFloat = 0,
+                  right: CGFloat = 0) -> SVG { self }
 }
 #endif
 
