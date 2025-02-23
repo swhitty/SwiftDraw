@@ -72,6 +72,7 @@ public extension NSImage {
 }
 
 public extension SVG {
+
     func rasterize() -> NSImage {
         return rasterize(with: size)
     }
@@ -91,8 +92,9 @@ public extension SVG {
         return image
     }
 
-    func pngData(size: CGSize? = nil, scale: CGFloat = 0, insets: Insets = .zero) throws -> Data {
-        let (bounds, pixelsWide, pixelsHigh) = makeBounds(size: size, scale: scale, insets: insets)
+    func pngData(scale: CGFloat = 0) throws -> Data {
+        let scale = scale == 0 ? SVG.defaultScale : scale
+        let (bounds, pixelsWide, pixelsHigh) = Self.makeBounds(size: size, scale: scale)
         guard let bitmap = makeBitmap(width: pixelsWide, height: pixelsHigh, isOpaque: false),
               let ctx = NSGraphicsContext(bitmapImageRep: bitmap)?.cgContext else {
             throw Error("Failed to create CGContext")
@@ -108,8 +110,9 @@ public extension SVG {
         return data
     }
 
-    func jpegData(size: CGSize? = nil, scale: CGFloat = 0, compressionQuality quality: CGFloat = 1, insets: Insets = .zero) throws -> Data {
-        let (bounds, pixelsWide, pixelsHigh) = makeBounds(size: size, scale: scale, insets: insets)
+    func jpegData(scale: CGFloat = 0, compressionQuality quality: CGFloat = 1) throws -> Data {
+        let scale = scale == 0 ? SVG.defaultScale : scale
+        let (bounds, pixelsWide, pixelsHigh) = Self.makeBounds(size: size, scale: scale)
         guard let bitmap = makeBitmap(width: pixelsWide, height: pixelsHigh, isOpaque: true),
               let ctx = NSGraphicsContext(bitmapImageRep: bitmap)?.cgContext else {
             throw Error("Failed to create CGContext")
@@ -127,6 +130,10 @@ public extension SVG {
         return data
     }
 
+    internal static var defaultScale: CGFloat {
+        NSScreen.main?.backingScaleFactor ?? 1.0
+    }
+
     private struct Error: LocalizedError {
         var errorDescription: String?
 
@@ -137,11 +144,6 @@ public extension SVG {
 }
 
 extension SVG {
-
-    func makeBounds(size: CGSize?, scale: CGFloat, insets: Insets) -> (bounds: CGRect, pixelsWide: Int, pixelsHigh: Int) {
-        let scale = scale == 0 ? (NSScreen.main?.backingScaleFactor ?? 1.0) : scale
-        return Self.makeBounds(size: size, defaultSize: self.size, scale: scale, insets: insets)
-    }
 
     func makeBitmap(width: Int, height: Int, isOpaque: Bool) -> NSBitmapImageRep? {
         guard width > 0 && height > 0 else { return nil }
