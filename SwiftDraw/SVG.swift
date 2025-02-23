@@ -94,6 +94,27 @@ extension SVG {
         )
         return copy
     }
+
+    public func translate(tx: CGFloat, ty: CGFloat) -> SVG {
+        var copy = self
+        copy.commands.insert(.translate(tx: tx, ty: ty), at: 0)
+        return copy
+    }
+
+    public func expand(_ padding: CGFloat) -> SVG {
+        expand(top: padding, left: padding, bottom: padding, right: padding)
+    }
+
+    public func expand(top: CGFloat = 0,
+                       left: CGFloat = 0,
+                       bottom: CGFloat = 0,
+                       right: CGFloat = 0) -> SVG {
+        var copy = self
+        copy.commands.insert(.translate(tx: left, ty: top), at: 0)
+        copy.size.width += left + right
+        copy.size.height += top + bottom
+        return copy
+    }
 }
 
 extension SVG {
@@ -104,6 +125,21 @@ extension SVG {
 
     public mutating func scaled(x: CGFloat, y: CGFloat) {
         self = scale(x: x, y: y)
+    }
+
+    public mutating func translated(tx: CGFloat, ty: CGFloat) {
+        self = translate(tx: tx, ty: ty)
+    }
+
+    public mutating func expanded(_ padding: CGFloat) {
+        self = expand(padding)
+    }
+
+    public mutating func expanded(top: CGFloat = 0,
+                                  left: CGFloat = 0,
+                                  bottom: CGFloat = 0,
+                                  right: CGFloat = 0) {
+        self = expand(top: top, left: left, bottom: bottom, right: right)
     }
 }
 

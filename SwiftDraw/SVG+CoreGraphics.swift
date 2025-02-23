@@ -38,23 +38,17 @@ public extension CGContext {
     func draw(_ image: SVG, in rect: CGRect? = nil)  {
         let defaultRect = CGRect(x: 0, y: 0, width: image.size.width, height: image.size.height)
         let renderer = CGRenderer(context: self)
-
-        guard let rect = rect, rect != defaultRect else {
-            renderer.perform(image.commands)
-            return
-        }
-
-        let scale = CGSize(width: rect.width / image.size.width,
-                           height: rect.height / image.size.height)
-        draw(image.commands, in: rect, scale: scale)
-    }
-
-    fileprivate func draw(_ commands: [RendererCommand<CGTypes>], in rect: CGRect, scale: CGSize = CGSize(width: 1.0, height: 1.0)) {
-        let renderer = CGRenderer(context: self)
         saveGState()
-        translateBy(x: rect.origin.x, y: rect.origin.y)
-        scaleBy(x: scale.width, y: scale.height)
-        renderer.perform(commands)
+
+        if let rect = rect, rect != defaultRect {
+            translateBy(x: rect.origin.x, y: rect.origin.y)
+            scaleBy(
+                x: rect.width / image.size.width,
+                y: rect.height / image.size.height
+            )
+        }
+        renderer.perform(image.commands)
+
         restoreGState()
     }
 }

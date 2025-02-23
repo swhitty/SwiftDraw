@@ -98,6 +98,28 @@ final class SVGTests: XCTestCase {
         copy.scaled(5)
         XCTAssertEqual(copy.size, CGSize(width: 500, height: 500))
     }
+
+    func testTranslate() {
+        let image = SVG.makeLines()
+
+        XCTAssertEqual(image.size, CGSize(width: 100, height: 100))
+        XCTAssertEqual(image.translate(tx: 10, ty: 10).size, CGSize(width: 100, height: 100))
+
+        var copy = image
+        copy.translated(tx: 50, ty: 50)
+        XCTAssertEqual(copy.size, CGSize(width: 100, height: 100))
+    }
+
+    func testExpand() {
+        let image = SVG.makeLines()
+
+        XCTAssertEqual(image.size, CGSize(width: 100, height: 100))
+        XCTAssertEqual(image.expand(top: 50, right: 30).size, CGSize(width: 130, height: 150))
+
+        var copy = image
+        copy.expanded(-10)
+        XCTAssertEqual(copy.size, CGSize(width: 80, height: 80))
+    }
 }
 
 private extension SVG {
