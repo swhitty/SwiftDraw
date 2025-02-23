@@ -41,7 +41,7 @@ extension DOM {
             self.effects = []
         }
         
-        enum Effect: Equatable {
+        enum Effect: Hashable {
             case gaussianBlur(stdDeviation: DOM.Float)
         }
     }

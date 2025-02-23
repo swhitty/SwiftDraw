@@ -27,7 +27,7 @@
 //
 
 extension LayerTree {
-    final class Layer: Equatable {
+    final class Layer: Hashable {
         var `class`: String? = nil
         var contents: [Contents] = []
         var opacity: Float = 1.0
@@ -37,7 +37,7 @@ extension LayerTree {
         var mask: Layer?
         var filters: [Filter] = []
 
-        enum Contents: Equatable {
+        enum Contents: Hashable {
             case shape(Shape, StrokeAttributes, FillAttributes)
             case image(Image)
             case text(String, Point, TextAttributes)
@@ -72,24 +72,35 @@ extension LayerTree {
             return first
         }
 
+        func hash(into hasher: inout Hasher) {
+            `class`.hash(into: &hasher)
+            opacity.hash(into: &hasher)
+            transform.hash(into: &hasher)
+            clip.hash(into: &hasher)
+            mask.hash(into: &hasher)
+            filters.hash(into: &hasher)
+        }
+
         static func ==(lhs: Layer, rhs: Layer) -> Bool {
-            return lhs.contents == rhs.contents &&
+            return lhs.class == rhs.class &&
+            lhs.contents == rhs.contents &&
             lhs.opacity == rhs.opacity &&
             lhs.transform == rhs.transform &&
             lhs.clip == rhs.clip &&
+            lhs.clipRule == rhs.clipRule &&
             lhs.mask == rhs.mask &&
             lhs.filters == rhs.filters
         }
     }
 
-    struct StrokeAttributes: Equatable {
+    struct StrokeAttributes: Hashable {
         var color: Stroke
         var width: Float
         var cap: LineCap
         var join: LineJoin
         var miterLimit: Float
 
-        enum Stroke: Equatable {
+        enum Stroke: Hashable {
             case color(Color)
             case linearGradient(LinearGradient)
             case radialGradient(RadialGradient)
@@ -98,7 +109,7 @@ extension LayerTree {
         }
     }
 
-    struct FillAttributes: Equatable {
+    struct FillAttributes: Hashable {
         var fill: Fill = .color(.none)
         var opacity: Float = 1.0
         var rule: FillRule
@@ -126,7 +137,7 @@ extension LayerTree {
             self.opacity = opacity
         }
         
-        enum Fill: Equatable {
+        enum Fill: Hashable {
             case color(Color)
             case pattern(Pattern)
             case linearGradient(LinearGradient)
@@ -136,7 +147,7 @@ extension LayerTree {
         }
     }
 
-    struct TextAttributes: Equatable {
+    struct TextAttributes: Hashable {
         var color: Color
         var fontName: String
         var size: Float

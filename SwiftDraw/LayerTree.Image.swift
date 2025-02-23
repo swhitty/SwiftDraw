@@ -32,14 +32,14 @@
 import Foundation
 
 extension LayerTree {
-    struct Image: Equatable {
+    struct Image: Hashable {
 
         var bitmap: Bitmap
         var origin: Point = .zero
         var width: LayerTree.Float?
         var height: LayerTree.Float?
 
-        enum Bitmap: Equatable {
+        enum Bitmap: Hashable {
             case jpeg(Data)
             case png(Data)
         }
