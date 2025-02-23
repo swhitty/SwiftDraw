@@ -37,7 +37,7 @@ protocol RendererTypes {
     associatedtype Rect: Equatable
     associatedtype Color: Equatable
     associatedtype Gradient: Equatable
-    associatedtype Mask
+    associatedtype Mask: Equatable
     associatedtype Path: Equatable
     associatedtype Pattern: Equatable
     associatedtype Transform: Equatable
@@ -200,3 +200,11 @@ enum RendererCommand<Types: RendererTypes> {
     case pushTransparencyLayer
     case popTransparencyLayer
 }
+
+
+#if canImport(CoreGraphics)
+import CoreGraphics
+
+extension RendererCommand<CGTypes>: Equatable { }
+extension RendererCommand<CGTypes>: Hashable { }
+#endif

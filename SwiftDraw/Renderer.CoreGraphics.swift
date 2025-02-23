@@ -56,7 +56,7 @@ struct CGTypes: RendererTypes {
     typealias Image = CGImage
 }
 
-final class CGTransformingPattern: Equatable {
+struct CGTransformingPattern: Hashable {
 
     let bounds: CGRect
     let contents: [RendererCommand<CGTypes>]
@@ -69,10 +69,6 @@ final class CGTransformingPattern: Equatable {
     func draw(_ ctx: CGContext) {
         let renderer = CGRenderer(context: ctx)
         renderer.perform(contents)
-    }
-
-    static func == (lhs: CGTransformingPattern, rhs: CGTransformingPattern) -> Bool {
-        lhs === rhs
     }
 }
 

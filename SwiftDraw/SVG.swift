@@ -34,7 +34,7 @@ import Foundation
 #if canImport(CoreGraphics)
 import CoreGraphics
 
-public struct SVG {
+public struct SVG: Hashable {
     public let size: CGSize
 
     //An Image is simply an array of CoreGraphics draw commands
