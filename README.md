@@ -48,7 +48,7 @@ var body: some View {
 }
 ```
 
-Pass a `SVG` instance for better performance:
+Pass an `SVG` instance for better performance:
 
 ```swift
 var image: SVG
