@@ -45,7 +45,7 @@ extension XML {
 #endif
 
         private let parser: FoundationXMLParser
-        private let namespaceURI = "http://www.w3.org/2000/svg"
+        private let validNamespaces = Set(["http://www.w3.org/2000/svg", ""])
 
         private var rootNode: Element?
         private var elements: [Element]
@@ -84,10 +84,13 @@ extension XML {
             return try parse(data: data)
         }
 
+        func isValidNamespaceURI(_ uri: String?) -> Bool {
+            validNamespaces.contains(uri ?? "")
+        }
+
         func parser(_ parser: FoundationXMLParser, didStartElement elementName: String, namespaceURI: String?, qualifiedName _: String?, attributes attributeDict: [String: String] = [:]) {
             guard
-                self.parser === parser,
-                namespaceURI == self.namespaceURI else {
+                self.parser === parser, isValidNamespaceURI(namespaceURI) else {
                 return
             }
 
@@ -103,9 +106,7 @@ extension XML {
         }
 
         func parser(_ parser: FoundationXMLParser, didEndElement elementName: String, namespaceURI: String?, qualifiedName _: String?) {
-            guard
-                namespaceURI == self.namespaceURI,
-                currentElement.name == elementName else {
+            guard isValidNamespaceURI(namespaceURI), currentElement.name == elementName else {
                 return
             }
 
