@@ -58,7 +58,7 @@ struct GalleryView: View {
         ScrollView {
             LazyVStack(spacing: 20) {
                 ForEach(images, id: \.self) { image in
-                    SVGView(svg: image.scale(x: 3, y: 1))
+                    SVGView(svg: image)
                         .aspectRatio(contentMode: .fit)
                         .padding([.leading, .trailing], 10)
                 }
