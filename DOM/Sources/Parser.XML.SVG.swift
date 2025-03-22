@@ -29,7 +29,7 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-extension XMLParser {
+package extension XMLParser {
 
     func parseSVG(_ e: XML.Element) throws -> DOM.SVG {
         guard e.name == "svg" else {

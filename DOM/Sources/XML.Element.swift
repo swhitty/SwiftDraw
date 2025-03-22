@@ -1,8 +1,8 @@
 //
-//  DOM.Swift.swift
+//  XML.swift
 //  SwiftDraw
 //
-//  Created by Simon Whitty on 27/2/17.
+//  Created by Simon Whitty on 31/12/16.
 //  Copyright 2020 Simon Whitty
 //
 //  Distributed under the permissive zlib license
@@ -29,8 +29,22 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-extension DOM {
-    final class Switch: GraphicsElement, ContainerElement {
-        var childElements = [DOM.GraphicsElement]()
+package enum XML { /* namespace */ }
+
+package extension XML {
+    final class Element {
+
+        package let name: String
+        package var attributes: [String: String]
+        package var children = [Element]()
+        package var innerText: String?
+
+        package var parsedLocation: (line: Int, column: Int)?
+
+        package init(name: String, attributes: [String: String] = [:]) {
+            self.name = name
+            self.attributes = attributes
+            self.innerText = nil
+        }
     }
 }

@@ -31,20 +31,20 @@
 
 import Foundation
 
-extension DOM {
-    
+package extension DOM {
+
     final class Path: GraphicsElement {
         
         // segments[0] should always be a .move
-        var segments: [Segment]
-        
-        init(x: Coordinate, y: Coordinate) {
+        package var segments: [Segment]
+
+        package init(x: Coordinate, y: Coordinate) {
             let s = Segment.move(x: x, y: y, space: .absolute)
             segments = [s]
             super.init()
         }
         
-        enum Segment {
+        package enum Segment {
             case move(x: Coordinate, y: Coordinate, space: CoordinateSpace)
             case line(x: Coordinate, y: Coordinate, space: CoordinateSpace)
             case horizontal(x: Coordinate, space: CoordinateSpace)
@@ -62,13 +62,13 @@ extension DOM {
                      x: Coordinate, y: Coordinate, space: CoordinateSpace)
             case close
             
-            enum CoordinateSpace {
+            package enum CoordinateSpace {
                 case absolute
                 case relative
             }
         }
         
-        enum Command: UnicodeScalar {
+        package enum Command: UnicodeScalar {
             case move = "M"
             case moveRelative = "m"
             case line = "L"
@@ -90,7 +90,7 @@ extension DOM {
             case close = "Z"
             case closeAlias = "z"
             
-            var coordinateSpace: Segment.CoordinateSpace {
+            package var coordinateSpace: Segment.CoordinateSpace {
                 switch self {
                 case .move, .line,
                         .horizontal, .vertical,

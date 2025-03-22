@@ -31,36 +31,36 @@
 
 import Foundation
 
-extension DOM {
-    
+package extension DOM {
+
     // PresentationAttributes cascade;
     // element.attributes --> .element() --> .class() ---> .id() ---> element.style ---> layerTree.state
     
     struct PresentationAttributes {
-        var opacity: DOM.Float?
-        var display: DOM.DisplayMode?
-        var color: DOM.Color?
-        
-        var stroke: DOM.Fill?
-        var strokeWidth: DOM.Float?
-        var strokeOpacity: DOM.Float?
-        var strokeLineCap: DOM.LineCap?
-        var strokeLineJoin: DOM.LineJoin?
-        var strokeDashArray: [DOM.Float]?
-        
-        var fill: DOM.Fill?
-        var fillOpacity: DOM.Float?
-        var fillRule: DOM.FillRule?
-        
-        var fontFamily: String?
-        var fontSize: Float?
-        var textAnchor: TextAnchor?
-    
-        var transform: [DOM.Transform]?
-        var clipPath: DOM.URL?
-        var clipRule: DOM.FillRule?
-        var mask: DOM.URL?
-        var filter: DOM.URL?
+        package var opacity: DOM.Float?
+        package var display: DOM.DisplayMode?
+        package var color: DOM.Color?
+
+        package var stroke: DOM.Fill?
+        package var strokeWidth: DOM.Float?
+        package var strokeOpacity: DOM.Float?
+        package var strokeLineCap: DOM.LineCap?
+        package var strokeLineJoin: DOM.LineJoin?
+        package var strokeDashArray: [DOM.Float]?
+
+        package var fill: DOM.Fill?
+        package var fillOpacity: DOM.Float?
+        package var fillRule: DOM.FillRule?
+
+        package var fontFamily: String?
+        package var fontSize: Float?
+        package var textAnchor: TextAnchor?
+
+        package var transform: [DOM.Transform]?
+        package var clipPath: DOM.URL?
+        package var clipRule: DOM.FillRule?
+        package var mask: DOM.URL?
+        package var filter: DOM.URL?
     }
     
     static func presentationAttributes(for element: DOM.GraphicsElement,

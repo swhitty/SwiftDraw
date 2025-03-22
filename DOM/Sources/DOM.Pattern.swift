@@ -31,22 +31,22 @@
 
 import Foundation
 
-extension DOM {
-    
+package extension DOM {
+
     struct Pattern: ContainerElement {
         
-        var id: String
-        var x: Coordinate?
-        var y: Coordinate?
-        var width: Coordinate
-        var height: Coordinate
-        
-        var patternUnits: Units?
-        var patternContentUnits: Units?
-        
-        var childElements: [DOM.GraphicsElement] = []
-        
-        init(id: String, width: Coordinate, height: Coordinate) {
+        package var id: String
+        package var x: Coordinate?
+        package var y: Coordinate?
+        package var width: Coordinate
+        package var height: Coordinate
+
+        package var patternUnits: Units?
+        package var patternContentUnits: Units?
+
+        package var childElements: [DOM.GraphicsElement] = []
+
+        package init(id: String, width: Coordinate, height: Coordinate) {
             self.id = id
             self.width = width
             self.height = height
@@ -54,7 +54,7 @@ extension DOM {
     }
 }
 
-extension DOM.Pattern {
+package extension DOM.Pattern {
     
     enum Units: String {
         case userSpaceOnUse

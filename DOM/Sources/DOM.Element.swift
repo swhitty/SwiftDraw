@@ -31,34 +31,34 @@
 
 import Foundation
 
-protocol ContainerElement {
+package protocol ContainerElement {
     var childElements: [DOM.GraphicsElement] { get set }
 }
 
-protocol ElementAttributes {
+package protocol ElementAttributes {
     var id: String?  { get set }
     var `class`: String?  { get set }
 }
 
-extension DOM {
-    
+package extension DOM {
+
     class Element {}
     
     class GraphicsElement: Element, ElementAttributes {
-        var id: String?
-        var `class`: String?
-        
-        var attributes = PresentationAttributes()
-        var style = PresentationAttributes()
+        package var id: String?
+        package var `class`: String?
+
+        package var attributes = PresentationAttributes()
+        package var style = PresentationAttributes()
     }
     
     final class Line: GraphicsElement {
-        var x1: Coordinate
-        var y1: Coordinate
-        var x2: Coordinate
-        var y2: Coordinate
-        
-        init(x1: Coordinate, y1: Coordinate, x2: Coordinate, y2: Coordinate) {
+        package var x1: Coordinate
+        package var y1: Coordinate
+        package var x2: Coordinate
+        package var y2: Coordinate
+
+        package init(x1: Coordinate, y1: Coordinate, x2: Coordinate, y2: Coordinate) {
             self.x1 = x1
             self.y1 = y1
             self.x2 = x2
@@ -68,11 +68,11 @@ extension DOM {
     }
     
     final class Circle: GraphicsElement {
-        var cx: Coordinate?
-        var cy: Coordinate?
-        var r: Coordinate
-        
-        init(cx: Coordinate?, cy: Coordinate?, r: Coordinate) {
+        package var cx: Coordinate?
+        package var cy: Coordinate?
+        package var r: Coordinate
+
+        package init(cx: Coordinate?, cy: Coordinate?, r: Coordinate) {
             self.cx = cx
             self.cy = cy
             self.r = r
@@ -81,12 +81,12 @@ extension DOM {
     }
     
     final class Ellipse: GraphicsElement {
-        var cx: Coordinate?
-        var cy: Coordinate?
-        var rx: Coordinate
-        var ry: Coordinate
-        
-        init(cx: Coordinate?, cy: Coordinate?, rx: Coordinate, ry: Coordinate) {
+        package var cx: Coordinate?
+        package var cy: Coordinate?
+        package var rx: Coordinate
+        package var ry: Coordinate
+
+        package init(cx: Coordinate?, cy: Coordinate?, rx: Coordinate, ry: Coordinate) {
             self.cx = cx
             self.cy = cy
             self.rx = rx
@@ -96,15 +96,15 @@ extension DOM {
     }
     
     final class Rect: GraphicsElement {
-        var x: Coordinate?
-        var y: Coordinate?
-        var width: Coordinate
-        var height: Coordinate
-        
-        var rx: Coordinate?
-        var ry: Coordinate?
-        
-        init(x: Coordinate? = nil, y: Coordinate? = nil, width: Coordinate, height: Coordinate) {
+        package var x: Coordinate?
+        package var y: Coordinate?
+        package var width: Coordinate
+        package var height: Coordinate
+
+        package var rx: Coordinate?
+        package var ry: Coordinate?
+
+        package init(x: Coordinate? = nil, y: Coordinate? = nil, width: Coordinate, height: Coordinate) {
             self.x = x
             self.y = y
             self.width = width
@@ -114,24 +114,24 @@ extension DOM {
     }
     
     final class Polyline: GraphicsElement {
-        var points: [Point]
-        
-        init(points: [Point]) {
+        package var points: [Point]
+
+        package init(points: [Point]) {
             self.points = points
             super.init()
         }
     }
     
     final class Polygon: GraphicsElement {
-        var points: [Point]
-        
-        init(points: [Point]) {
+        package var points: [Point]
+
+        package init(points: [Point]) {
             self.points = points
             super.init()
         }
     }
     
     final class Group: GraphicsElement, ContainerElement {
-        var childElements = [GraphicsElement]()
+        package var childElements = [GraphicsElement]()
     }
 }

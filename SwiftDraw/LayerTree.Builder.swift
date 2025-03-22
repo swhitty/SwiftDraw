@@ -31,6 +31,7 @@
 
 // Convert a DOM.SVG into a layer tree
 
+import DOM
 import Foundation
 
 extension LayerTree {

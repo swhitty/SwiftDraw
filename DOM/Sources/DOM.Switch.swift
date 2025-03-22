@@ -1,8 +1,8 @@
 //
-//  DOM.Text.swift
+//  DOM.Swift.swift
 //  SwiftDraw
 //
-//  Created by Simon Whitty on 31/12/16.
+//  Created by Simon Whitty on 27/2/17.
 //  Copyright 2020 Simon Whitty
 //
 //  Distributed under the permissive zlib license
@@ -29,24 +29,8 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-import Foundation
-
-extension DOM {
-    
-    final class Text: GraphicsElement {
-        var x: Coordinate?
-        var y: Coordinate?
-        var value: String
-        
-        init(x: Coordinate? = nil, y: Coordinate? = nil, value: String) {
-            self.x = x
-            self.y = y
-            self.value = value
-        }
-    }
-    
-    final class Anchor: GraphicsElement, ContainerElement {
-        var href: URL?
-        var childElements = [GraphicsElement]()
+package extension DOM {
+    final class Switch: GraphicsElement, ContainerElement {
+        package var childElements = [DOM.GraphicsElement]()
     }
 }

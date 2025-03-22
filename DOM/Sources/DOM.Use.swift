@@ -1,9 +1,9 @@
 //
-//  DOM.Filter.swift
+//  DOM.Use.swift
 //  SwiftDraw
 //
-//  Created by Simon Whitty on 16/8/22.
-//  Copyright 2022 Simon Whitty
+//  Created by Simon Whitty on 27/2/17.
+//  Copyright 2020 Simon Whitty
 //
 //  Distributed under the permissive zlib license
 //  Get the latest version from here:
@@ -29,20 +29,42 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-extension DOM {
-    
-    final class Filter: Element {
-        var id: String
-        
-        var effects: [Effect]
-        
-        init(id: String) {
-            self.id = id
-            self.effects = []
+package extension DOM {
+    final class Use: GraphicsElement {
+        package var x: Coordinate?
+        package var y: Coordinate?
+
+        //references element ids within defs
+        package var href: URL
+
+        package init(href: URL) {
+            self.href = href
         }
-        
-        enum Effect: Hashable {
-            case gaussianBlur(stdDeviation: DOM.Float)
+    }
+}
+
+package extension DOM.SVG {
+
+    func firstGraphicsElement(with id: String) -> DOM.GraphicsElement? {
+        if let def = defs.elements[id] {
+            return def
         }
+
+        return childElements.firstGraphicsElement(with: id)
+    }
+}
+
+package extension Array<DOM.GraphicsElement> {
+
+    func firstGraphicsElement(with id: String) -> DOM.GraphicsElement? {
+        for element in self {
+            if element.id == id {
+                return element
+            }
+            if let container = element as? ContainerElement {
+                return container.childElements.firstGraphicsElement(with: id)
+            }
+        }
+        return nil
     }
 }

@@ -285,7 +285,7 @@ extension XMLParser {
         var `class`: String?
     }
 
-    static func logParsingError(for error: Swift.Error, filename: String?, parsing element: XML.Element? = nil) {
+    package static func logParsingError(for error: Swift.Error, filename: String?, parsing element: XML.Element? = nil) {
         let elementName = element.map { "<\($0.name)>" } ?? ""
         let filename = filename ?? ""
         switch error {

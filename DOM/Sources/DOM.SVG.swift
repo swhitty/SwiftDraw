@@ -29,63 +29,70 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-extension DOM {
+package extension DOM {
     final class SVG: GraphicsElement, ContainerElement {
-        var x: Coordinate?
-        var y: Coordinate?
-        var width: Length
-        var height: Length
-        var viewBox: ViewBox?
+        package var x: Coordinate?
+        package var y: Coordinate?
+        package var width: Length
+        package var height: Length
+        package var viewBox: ViewBox?
 
-        var childElements = [GraphicsElement]()
-        
-        var styles = [StyleSheet]()
-        var defs = Defs()
-        
-        init(x: Coordinate? = nil, y: Coordinate? = nil, width: Length, height: Length) {
+        package var childElements = [GraphicsElement]()
+
+        package var styles = [StyleSheet]()
+        package var defs = Defs()
+
+        package init(x: Coordinate? = nil, y: Coordinate? = nil, width: Length, height: Length) {
             self.x = x
             self.y = y
             self.width = width
             self.height = height
         }
         
-        struct ViewBox: Equatable {
-            var x: Coordinate
-            var y: Coordinate
-            var width: Coordinate
-            var height: Coordinate
+        package struct ViewBox: Equatable {
+            package var x: Coordinate
+            package var y: Coordinate
+            package var width: Coordinate
+            package var height: Coordinate
+
+            package init(x: Coordinate, y: Coordinate, width: Coordinate, height: Coordinate) {
+                self.x = x
+                self.y = y
+                self.width = width
+                self.height = height
+            }
         }
         
-        struct Defs {
-            var clipPaths = [ClipPath]()
-            var linearGradients = [LinearGradient]()
-            var radialGradients = [RadialGradient]()
-            var masks = [Mask]()
-            var patterns = [Pattern]()
-            var filters = [Filter]()
-            
-            var elements = [String: GraphicsElement]()
+        package struct Defs {
+            package var clipPaths = [ClipPath]()
+            package var linearGradients = [LinearGradient]()
+            package var radialGradients = [RadialGradient]()
+            package var masks = [Mask]()
+            package var patterns = [Pattern]()
+            package var filters = [Filter]()
+
+            package var elements = [String: GraphicsElement]()
         }
     }
     
     struct ClipPath: ContainerElement {
-        var id: String
-        var childElements = [GraphicsElement]()
+        package var id: String
+        package var childElements = [GraphicsElement]()
     }
     
     struct Mask: ContainerElement {
-        var id: String
-        var childElements = [GraphicsElement]()
+        package var id: String
+        package var childElements = [GraphicsElement]()
     }
     
     struct StyleSheet {
-        
-        enum Selector: Hashable, Comparable {
+
+        package enum Selector: Hashable, Comparable {
             case id(String)
             case element(String)
             case `class`(String)
         }
         
-        var attributes: [Selector: PresentationAttributes] = [:]
+        package var attributes: [Selector: PresentationAttributes] = [:]
     }
 }

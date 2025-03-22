@@ -1,9 +1,9 @@
 //
-//  DOM.SVG+Parse.swift
+//  TextOutputStream+StandardError.swift
 //  SwiftDraw
 //
-//  Created by Simon Whitty on 23/2/25.
-//  Copyright 2025 Simon Whitty
+//  Created by Simon Whitty on 17/8/22.
+//  Copyright 2022 Simon Whitty
 //
 //  Distributed under the permissive zlib license
 //  Get the latest version from here:
@@ -31,17 +31,26 @@
 
 import Foundation
 
-extension DOM.SVG {
-
-    static func parse(fileURL url: URL, options: XMLParser.Options = .skipInvalidElements) throws -> DOM.SVG {
-        let element = try XML.SAXParser.parse(contentsOf: url)
-        let parser = XMLParser(options: options, filename: url.lastPathComponent)
-        return try parser.parseSVG(element)
+extension TextOutputStream where Self == StandardErrorStream {
+    static var standardError: Self {
+        get {
+            StandardErrorStream.shared
+        }
+        set {
+            StandardErrorStream.shared = newValue
+        }
     }
+}
 
-    static func parse(data: Data, options: XMLParser.Options = .skipInvalidElements) throws -> DOM.SVG {
-        let element = try XML.SAXParser.parse(data: data)
-        let parser = XMLParser(options: options)
-        return try parser.parseSVG(element)
+struct StandardErrorStream: TextOutputStream {
+
+    fileprivate static var shared = StandardErrorStream()
+
+    func write(_ string: String) {
+        if #available(macOS 10.15.4, iOS 13.4, tvOS 13.4, watchOS 6.2, *) {
+            try! FileHandle.standardError.write(contentsOf: string.data(using: .utf8)!)
+        } else {
+            FileHandle.standardError.write(string.data(using: .utf8)!)
+        }
     }
 }

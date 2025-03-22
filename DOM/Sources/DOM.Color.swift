@@ -29,8 +29,8 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-extension DOM {
-    
+package extension DOM {
+
     enum Color: Equatable {
         case none
         case currentColor
@@ -41,7 +41,7 @@ extension DOM {
         case hex(UInt8, UInt8, UInt8)
         
         // see: https://www.w3.org/TR/SVG11/types.html#ColorKeywords
-        enum Keyword: String {
+        package enum Keyword: String {
             case aliceblue
             case antiquewhite
             case aqua
@@ -193,7 +193,7 @@ extension DOM {
     }
 }
 
-extension DOM.Color.Keyword {
+package extension DOM.Color.Keyword {
     
     // each color keyword maps to an rgbi
     var rgbi: (UInt8, UInt8, UInt8) {
