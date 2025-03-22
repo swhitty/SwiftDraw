@@ -34,14 +34,14 @@ import Foundation
 import FoundationXML
 #endif
 
-extension XML {
+package extension XML {
 
     final class SAXParser: NSObject, XMLParserDelegate {
 
 #if canImport(FoundationXML)
-        typealias FoundationXMLParser = FoundationXML.XMLParser
+        package typealias FoundationXMLParser = FoundationXML.XMLParser
 #else
-        typealias FoundationXMLParser = Foundation.XMLParser
+        package typealias FoundationXMLParser = Foundation.XMLParser
 #endif
 
         private let parser: FoundationXMLParser
@@ -63,7 +63,7 @@ extension XML {
             self.parser.shouldProcessNamespaces = true
         }
 
-        static func parse(data: Data) throws -> Element {
+        package static func parse(data: Data) throws -> Element {
             let parser = SAXParser(data: data)
 
             guard
@@ -79,16 +79,16 @@ extension XML {
             return rootNode
         }
 
-        static func parse(contentsOf url: URL) throws -> Element {
+        package static func parse(contentsOf url: URL) throws -> Element {
             let data = try Data(contentsOf: url)
             return try parse(data: data)
         }
 
-        func isValidNamespaceURI(_ uri: String?) -> Bool {
+        package func isValidNamespaceURI(_ uri: String?) -> Bool {
             validNamespaces.contains(uri ?? "")
         }
 
-        func parser(_ parser: FoundationXMLParser, didStartElement elementName: String, namespaceURI: String?, qualifiedName _: String?, attributes attributeDict: [String: String] = [:]) {
+        package func parser(_ parser: FoundationXMLParser, didStartElement elementName: String, namespaceURI: String?, qualifiedName _: String?, attributes attributeDict: [String: String] = [:]) {
             guard
                 self.parser === parser, isValidNamespaceURI(namespaceURI) else {
                 return
@@ -105,7 +105,7 @@ extension XML {
             }
         }
 
-        func parser(_ parser: FoundationXMLParser, didEndElement elementName: String, namespaceURI: String?, qualifiedName _: String?) {
+        package func parser(_ parser: FoundationXMLParser, didEndElement elementName: String, namespaceURI: String?, qualifiedName _: String?) {
             guard isValidNamespaceURI(namespaceURI), currentElement.name == elementName else {
                 return
             }
@@ -113,7 +113,7 @@ extension XML {
             elements.removeLast()
         }
 
-        func parser(_ parser: FoundationXMLParser, foundCharacters string: String) {
+        package func parser(_ parser: FoundationXMLParser, foundCharacters string: String) {
             guard let element = elements.last else { return }
             let text = element.innerText.map { $0.appending(string) }
             element.innerText = text ?? string

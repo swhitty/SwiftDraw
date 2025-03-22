@@ -31,32 +31,32 @@
 
 import Foundation
 
-extension XMLParser {
-    
+package extension XMLParser {
+
     struct Scanner {
         
         private let scanner: Foundation.Scanner
-        var currentIndex: String.Index
+        package var currentIndex: String.Index
 
-        init(text: String) {
+        package init(text: String) {
             self.scanner = Foundation.Scanner(string: text)
             self.currentIndex = self.scanner.currentIndex
             self.scanner.charactersToBeSkipped = Foundation.CharacterSet.whitespacesAndNewlines
         }
         
-        var isEOF: Bool { return scanner.isAtEnd }
-        
+        package var isEOF: Bool { return scanner.isAtEnd }
+
         @discardableResult
-        mutating func scanString(_ token: String) throws -> Bool {
+        package mutating func scanString(_ token: String) throws -> Bool {
             return try self.scanString(matchingAny: [token]) == token
         }
         
         @discardableResult
-        mutating func scanStringIfPossible(_ token: String) -> Bool {
+        package mutating func scanStringIfPossible(_ token: String) -> Bool {
             return (try? self.scanString(token)) == true
         }
         
-        mutating func scanString(matchingAny tokens: Set<String>) throws -> String {
+        package mutating func scanString(matchingAny tokens: Set<String>) throws -> String {
             scanner.currentIndex = currentIndex
             guard let match = tokens.first(where: { scanner.scanString($0) != nil }) else {
                 throw Error.invalid
@@ -65,7 +65,7 @@ extension XMLParser {
             return match
         }
         
-        mutating func scanCase<T: RawRepresentable & CaseIterable>(from type: T.Type) throws -> T where T.RawValue == String {
+        package mutating func scanCase<T: RawRepresentable & CaseIterable>(from type: T.Type) throws -> T where T.RawValue == String {
             scanner.currentIndex = currentIndex
             
             guard let match = type.allCases.first(where: { scanner.scanString($0.rawValue) != nil }) else {
@@ -75,7 +75,7 @@ extension XMLParser {
             return match
         }
         
-        mutating func scanString(matchingAny characters: Foundation.CharacterSet) throws -> String {
+        package mutating func scanString(matchingAny characters: Foundation.CharacterSet) throws -> String {
             scanner.currentIndex = currentIndex
             guard
                 let match = scanner.scanCharacters(from: characters),
@@ -87,7 +87,7 @@ extension XMLParser {
             return match
         }
 
-        mutating func doScanString(_ string: String) -> Bool {
+        package mutating func doScanString(_ string: String) -> Bool {
             scanner.currentIndex = currentIndex
             guard scanner.scanString(string) != nil else {
                 return false
@@ -96,7 +96,7 @@ extension XMLParser {
             return true
         }
 
-        mutating func scanString(upTo token: String) throws -> String {
+        package mutating func scanString(upTo token: String) throws -> String {
             scanner.currentIndex = currentIndex
             guard let match = scanner.scanUpToString(token) else {
                 throw Error.invalid
@@ -106,7 +106,7 @@ extension XMLParser {
             return match
         }
         
-        mutating func scanString(upTo characters: Foundation.CharacterSet) throws -> String {
+        package mutating func scanString(upTo characters: Foundation.CharacterSet) throws -> String {
             let location = currentIndex
             guard let match = scanner.scanUpToCharacters(from: characters) else {
                 scanner.currentIndex = location
@@ -116,7 +116,7 @@ extension XMLParser {
             return match
         }
         
-        mutating func scanCharacter(matchingAny characters: Foundation.CharacterSet) throws -> Character {
+        package mutating func scanCharacter(matchingAny characters: Foundation.CharacterSet) throws -> Character {
             let location = currentIndex
             guard let scalar = scanner.scan(first: characters) else {
                 scanner.currentIndex = location
@@ -126,7 +126,7 @@ extension XMLParser {
             return Character(scalar)
         }
 
-        mutating func scanUInt8() throws -> UInt8 {
+        package mutating func scanUInt8() throws -> UInt8 {
             scanner.currentIndex = currentIndex
             var longVal: UInt64 = 0
             guard
@@ -138,7 +138,7 @@ extension XMLParser {
             return val
         }
         
-        mutating func scanFloat() throws -> Float {
+        package mutating func scanFloat() throws -> Float {
             scanner.currentIndex = currentIndex
             guard let val = scanner.scanFloat() else {
                 throw Error.invalid
@@ -147,7 +147,7 @@ extension XMLParser {
             return val
         }
         
-        mutating func scanDouble() throws -> Double {
+        package mutating func scanDouble() throws -> Double {
             scanner.currentIndex = currentIndex
             guard let val = scanner.scanDouble() else {
                 throw Error.invalid
@@ -156,7 +156,7 @@ extension XMLParser {
             return val
         }
 
-        mutating func scanUnit(_ unit: DOM.Unit) -> Bool {
+        package mutating func scanUnit(_ unit: DOM.Unit) -> Bool {
             scanner.currentIndex = currentIndex
             guard scanner.scanString(unit.rawValue) != nil else {
                 return false
@@ -165,7 +165,7 @@ extension XMLParser {
             return true
         }
 
-        mutating func scanUnit() -> DOM.Unit? {
+        package mutating func scanUnit() -> DOM.Unit? {
             if scanUnit(.pixel) {
                 return .pixel
             } else if scanUnit(.inch) {
@@ -183,7 +183,7 @@ extension XMLParser {
             }
         }
 
-        mutating func scanLength() throws -> DOM.Length {
+        package mutating func scanLength() throws -> DOM.Length {
             scanner.currentIndex = currentIndex
             guard
                 let int64 = scanner.scanInt64(),
@@ -195,17 +195,17 @@ extension XMLParser {
             return val
         }
         
-        mutating func scanBool() throws -> Bool {
+        package mutating func scanBool() throws -> Bool {
             return try self.scanCase(from: Boolean.self).boolValue
         }
         
-        mutating func scanCoordinate() throws -> DOM.Coordinate {
+        package mutating func scanCoordinate() throws -> DOM.Coordinate {
             let double = try scanDouble()
             let unit = scanUnit() ?? .pixel
             return DOM.Coordinate(double.apply(unit: unit))
         }
         
-        mutating func scanPercentageFloat() throws -> Float {
+        package mutating func scanPercentageFloat() throws -> Float {
             scanner.currentIndex = currentIndex
             let val = try scanFloat()
             guard val >= 0.0, val <= 1.0 else {
@@ -215,7 +215,7 @@ extension XMLParser {
             return val
         }
         
-        mutating func scanPercentage() throws -> Float {
+        package mutating func scanPercentage() throws -> Float {
             let initialLocation = currentIndex
             scanner.currentIndex = currentIndex
             
@@ -253,7 +253,7 @@ private enum Boolean: String, CaseIterable {
     }
 }
 
-extension Scanner {
+package extension Scanner {
     
     enum Error: Swift.Error {
         case invalid

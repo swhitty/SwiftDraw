@@ -1,4 +1,4 @@
-// swift-tools-version:5.8
+// swift-tools-version:5.9
 
 import PackageDescription
 
@@ -18,8 +18,13 @@ let package = Package(
     targets: [
         .target(
             name: "SwiftDraw",
-            dependencies: [],
+            dependencies: ["DOM"],
             path: "SwiftDraw"
+        ),
+        .target(
+            name: "DOM",
+            dependencies: [],
+            path: "DOM/Sources"
         ),
         .executableTarget(
             name: "CommandLine",

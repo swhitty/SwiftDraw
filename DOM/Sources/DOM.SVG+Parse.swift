@@ -1,9 +1,9 @@
 //
-//  XML.swift
+//  DOM.SVG+Parse.swift
 //  SwiftDraw
 //
-//  Created by Simon Whitty on 31/12/16.
-//  Copyright 2020 Simon Whitty
+//  Created by Simon Whitty on 23/2/25.
+//  Copyright 2025 Simon Whitty
 //
 //  Distributed under the permissive zlib license
 //  Get the latest version from here:
@@ -29,22 +29,19 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-enum XML { /* namespace */ }
+import Foundation
 
-extension XML {
-  final class Element {
-    
-    let name: String
-    var attributes: [String: String]
-    var children = [Element]()
-    var innerText: String?
-    
-    var parsedLocation: (line: Int, column: Int)?
-    
-    init(name: String, attributes: [String: String] = [:]) {
-      self.name = name
-      self.attributes = attributes
-      self.innerText = nil
+package extension DOM.SVG {
+
+    static func parse(fileURL url: URL, options: XMLParser.Options = .skipInvalidElements) throws -> DOM.SVG {
+        let element = try XML.SAXParser.parse(contentsOf: url)
+        let parser = XMLParser(options: options, filename: url.lastPathComponent)
+        return try parser.parseSVG(element)
     }
-  }
+
+    static func parse(data: Data, options: XMLParser.Options = .skipInvalidElements) throws -> DOM.SVG {
+        let element = try XML.SAXParser.parse(data: data)
+        let parser = XMLParser(options: options)
+        return try parser.parseSVG(element)
+    }
 }

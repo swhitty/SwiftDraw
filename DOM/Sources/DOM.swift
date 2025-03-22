@@ -31,9 +31,9 @@
 
 import Foundation
 
-public enum DOM { /* namespace */ }
+package enum DOM { /* namespace */ }
 
-public extension DOM {
+package extension DOM {
     typealias Float = Swift.Float
     typealias Coordinate = Swift.Float
     typealias Length = Swift.Int
@@ -43,21 +43,21 @@ public extension DOM {
 }
 
 extension DOM {
-    struct Point: Equatable {
-        var x: Coordinate
-        var y: Coordinate
-        
-        init(_ x: Coordinate, _ y: Coordinate) {
+    package struct Point: Equatable {
+        package var x: Coordinate
+        package var y: Coordinate
+
+        package init(_ x: Coordinate, _ y: Coordinate) {
             self.x = x
             self.y = y
         }
     }
     
-    enum Fill: Equatable {
+    package enum Fill: Equatable {
         case url(URL)
         case color(DOM.Color)
         
-        func getColor() throws -> DOM.Color {
+        package func getColor() throws -> DOM.Color {
             switch self {
             case .url:
                 throw Error.missing("Color")
@@ -67,36 +67,36 @@ extension DOM {
         }
     }
     
-    enum FillRule: String {
+    package enum FillRule: String {
         case nonzero
         case evenodd
     }
     
-    enum DisplayMode: String {
+    package enum DisplayMode: String {
         case none
         case inline
         case block
     }
     
-    enum LineCap: String {
+    package enum LineCap: String {
         case butt
         case round
         case square
     }
     
-    enum LineJoin: String {
+    package enum LineJoin: String {
         case miter
         case round
         case bevel
     }
 
-    enum TextAnchor: String {
+    package enum TextAnchor: String {
         case start
         case middle
         case end
     }
 
-    enum Transform: Equatable {
+    package enum Transform: Equatable {
         case matrix(a: Float, b: Float, c: Float, d: Float, e: Float, f: Float)
         case translate(tx: Float, ty: Float)
         case scale(sx: Float, sy: Float)
@@ -106,7 +106,7 @@ extension DOM {
         case skewY(angle: Float)
     }
 
-    enum Unit {
+    package enum Unit {
         case pixel
         case inch
         case centimeter
@@ -115,12 +115,12 @@ extension DOM {
         case pica
     }
 
-    enum Error: Swift.Error {
+    package enum Error: Swift.Error {
         case missing(String)
     }
 }
 
-extension DOM.Unit {
+package extension DOM.Unit {
     var rawValue: String {
         switch self {
         case .pixel:
@@ -139,7 +139,7 @@ extension DOM.Unit {
     }
 }
 
-extension Double {
+package extension Double {
     func apply(unit: DOM.Unit) -> Double {
         switch unit {
         case .pixel:
