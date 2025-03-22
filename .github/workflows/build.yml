@@ -69,9 +69,9 @@ jobs:
       - name: Test
         run: swift test --skip-build
 
-  linux_5_7:
+  linux_5_8:
     runs-on: ubuntu-latest
-    container: swift:5.7
+    container: swift:5.8
     steps:
       - name: Checkout
         uses: actions/checkout@v4

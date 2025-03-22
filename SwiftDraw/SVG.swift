@@ -31,6 +31,10 @@
 
 import Foundation
 
+#if compiler(<5.9)
+#warning("SwiftDraw will soon remove support for Swift 5.8")
+#endif
+
 #if canImport(CoreGraphics)
 import CoreGraphics
 
