@@ -31,6 +31,8 @@
 
 #if canImport(Darwin)
 import Darwin.POSIX
+#elseif canImport(Android)
+import Android
 #else
 import Glibc
 #endif
