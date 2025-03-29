@@ -31,6 +31,8 @@
 
 #if canImport(Darwin)
 import Darwin
+#elseif canImport(Android)
+import Android
 #else
 import Glibc
 #endif
@@ -114,3 +116,15 @@ extension Array where Element == LayerTree.Transform {
         }
     }
 }
+
+#if os(Android)
+// The Android module does not have Float overloads for the various math functions
+func tan(_ value: Float) -> Float { tanf(value) }
+func atan(_ value: Float) -> Float { atanf(value) }
+func cos(_ value: Float) -> Float { cosf(value) }
+func acos(_ value: Float) -> Float { acosf(value) }
+func sin(_ value: Float) -> Float { sinf(value) }
+func asin(_ value: Float) -> Float { asinf(value) }
+func ceil(_ value: Float) -> Float { ceilf(value) }
+#endif
+

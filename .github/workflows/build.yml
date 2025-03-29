@@ -120,3 +120,11 @@ jobs:
         run: swift build --build-tests
       - name: Test
         run: swift test --skip-build
+
+  android:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Build and Test
+        uses: skiptools/swift-android-action@v2
