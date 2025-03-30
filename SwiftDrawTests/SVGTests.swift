@@ -72,6 +72,13 @@ final class SVGTests: XCTestCase {
         XCTAssertNoThrow(try image.pdfData())
     }
 
+    func testDeepNestingParsesBackgroundThread() async throws {
+        let svg = await Task {
+            SVG(named: "empire.svg", in: .test)
+        }.value
+        XCTAssertNotNil(svg)
+    }
+
 #if canImport(UIKit)
     func testRasterize() {
         let svg = SVG(named: "gradient-apple.svg", in: .test)!
