@@ -91,47 +91,60 @@ extension LayerTree {
             return transform
         }
 
-        func makeLayer(from element: DOM.GraphicsElement, inheriting previousState: State) -> Layer {
+        func makeLayer(from root: DOM.GraphicsElement, inheriting previousState: State) -> Layer {
+            var stack: [(DOM.GraphicsElement, State, Layer?)] = [(root, previousState, nil)]
+            var resultLayer: Layer? = nil
+
+            while let (currentElement, currentState, parentLayer) = stack.popLast() {
+                let (layer, newState) = makeBaseLayer(from: currentElement, inheriting: currentState)
+
+                if let contents = makeContents(from: currentElement, with: newState) {
+                    layer.appendContents(contents)
+                } else if let container = currentElement as? ContainerElement {
+                    // Push children in reverse so they are processed in the original order
+                    for child in container.childElements.reversed() {
+                        stack.append((child, newState, layer))
+                    }
+                }
+
+                if let parent = parentLayer {
+                    parent.appendContents(.layer(layer))
+
+                    if let svg = currentElement as? DOM.SVG {
+                        let viewBox = svg.viewBox ?? DOM.SVG.ViewBox(x: 0, y: 0, width: .init(svg.width), height: .init(svg.height))
+                        let bounds = LayerTree.Rect(x: viewBox.x, y: viewBox.y, width: viewBox.width, height: viewBox.height)
+                        layer.clip = [ClipShape(shape: .rect(within: bounds, radii: .zero), transform: .identity)]
+                        layer.transform = Builder.makeTransform(
+                            x: svg.x,
+                            y: svg.y,
+                            viewBox: svg.viewBox,
+                            width: svg.width,
+                            height: svg.height
+                        )
+                    }
+                } else {
+                    // This must be the top-level root layer
+                    resultLayer = layer
+                }
+            }
+
+            return resultLayer!
+        }
+
+        func makeBaseLayer(from element: DOM.GraphicsElement, inheriting previousState: State) -> (Layer, State) {
             let state = createState(for: element, inheriting: previousState)
             let attributes = element.attributes
             let l = Layer()
             l.class = element.class
-            guard state.display != .none else { return l }
+            guard state.display != .none else { return (l, state) }
 
             l.transform = Builder.createTransforms(from: attributes.transform ?? [])
             l.clip = makeClipShapes(for: element)
             l.clipRule = attributes.clipRule
             l.mask = createMaskLayer(for: element)
             l.opacity = state.opacity
-            l.contents = makeAllContents(from: element, with: state)
             l.filters = makeFilters(for: state)
-            return l
-        }
-
-        func makeChildLayer(from element: DOM.GraphicsElement, inheriting previousState: State) -> Layer {
-            if let svg = element as? DOM.SVG {
-                let layer = makeLayer(svg: svg, inheriting: previousState)
-                let viewBox = svg.viewBox ?? DOM.SVG.ViewBox(x: 0, y: 0, width: .init(svg.width), height: .init(svg.height))
-                let bounds = LayerTree.Rect(x: viewBox.x, y: viewBox.y, width: viewBox.width, height: viewBox.height)
-                layer.clip = [ClipShape(shape: .rect(within: bounds, radii: .zero), transform: .identity)]
-                return layer
-            } else {
-                return makeLayer(from: element, inheriting: previousState)
-            }
-        }
-
-        func makeAllContents(from element: DOM.GraphicsElement, with state: State) -> [Layer.Contents] {
-            var all = [Layer.Contents]()
-            if let contents = makeContents(from: element, with: state) {
-                all.append(contents)
-            }
-            else if let container = element as? ContainerElement {
-                container.childElements.forEach{
-                    let contents = Layer.Contents.layer(makeChildLayer(from: $0, inheriting: state))
-                    all.append(contents)
-                }
-            }
-            return all
+            return (l, state)
         }
 
         func makeContents(from element: DOM.GraphicsElement, with state: State) -> Layer.Contents? {

@@ -47,8 +47,6 @@ extension LayerTree {
         func appendContents(_ contents: Contents) {
             switch contents {
             case .layer(let l):
-                guard l.contents.isEmpty == false else { return }
-
                 //if layer is simple, we can ignore all other properties
                 if let simple = l.simpleContents {
                     self.contents.append(simple)
@@ -63,6 +61,7 @@ extension LayerTree {
         var simpleContents: Contents? {
             guard self.contents.count == 1,
                   let first = self.contents.first,
+                  `class` == nil,
                   opacity == 1.0,
                   transform == [],
                   clip == [],
@@ -152,5 +151,34 @@ extension LayerTree {
         var fontName: String
         var size: Float
         var anchor: DOM.TextAnchor
+    }
+}
+
+extension LayerTree.Layer.Contents: CustomDebugStringConvertible {
+
+    var debugDescription: String {
+        switch self {
+        case .image:
+            return "image"
+        case .layer(let l): 
+            return "layer-\(l.contents.map(\.debugDescription).joined(separator: ", "))"
+        case .shape(let s, _, _):
+            return "shape-\(s.debugDescription)"
+        case .text:
+            return "text"
+        }
+    }
+}
+
+extension LayerTree.Shape: CustomDebugStringConvertible {
+
+    var debugDescription: String {
+        switch self {
+            case .ellipse: return "ellipse"
+            case .rect: return "rect"
+            case .line: return "line"
+            case .path: return "path"
+            case .polygon: return "polygon"
+        }
     }
 }
