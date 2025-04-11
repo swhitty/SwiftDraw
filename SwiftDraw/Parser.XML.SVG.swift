@@ -58,7 +58,7 @@ extension XMLParser {
         let svg = DOM.SVG(width: DOM.Length(w), height: DOM.Length(h))
         svg.x = try att.parseCoordinate("x")
         svg.y = try att.parseCoordinate("y")
-        svg.childElements = try parseContainerChildren(e)
+        svg.childElements = try parseGraphicsElements(e.children)
         svg.viewBox = try parseViewBox(try att.parseString("viewBox"))
 
         svg.defs = try parseSVGDefs(e)
@@ -121,7 +121,7 @@ extension XMLParser {
         }
 
         var defs = Dictionary<String, DOM.GraphicsElement>()
-        let elements = try parseContainerChildren(e)
+        let elements = try parseGraphicsElements(e.children)
 
         for e in elements {
             guard let id = e.id else {
@@ -153,7 +153,7 @@ extension XMLParser {
         let att = try parseAttributes(e)
         let id: String = try att.parseString("id")
 
-        let children = try parseContainerChildren(e)
+        let children = try parseGraphicsElements(e.children)
         return DOM.ClipPath(id: id, childElements: children)
     }
 
@@ -176,7 +176,7 @@ extension XMLParser {
         let att = try parseAttributes(e)
         let id: String = try att.parseString("id")
 
-        let children = try parseContainerChildren(e)
+        let children = try parseGraphicsElements(e.children)
         return DOM.Mask(id: id, childElements: children)
     }
 
@@ -198,7 +198,7 @@ extension XMLParser {
 
         let att = try parseAttributes(e)
         var pattern = try parsePattern(att)
-        pattern.childElements = try parseContainerChildren(e)
+        pattern.childElements = try parseGraphicsElements(e.children)
         return pattern
     }
 }
