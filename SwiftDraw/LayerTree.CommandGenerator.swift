@@ -53,38 +53,26 @@ extension LayerTree {
         }
 
         func renderCommands(for layer: Layer, colorConverter: ColorConverter = DefaultColorConverter()) -> [RendererCommand<P.Types>] {
-            guard layer.opacity > 0.0 else { return [] }
 
-            if !layer.filters.isEmpty {
-                guard !options.contains(.hideUnsupportedFilters) else {
-                    return []
-                }
+            let state = makeCommandState(for: layer)
+
+            guard state.hasContents else { return [] }
+
+            if state.hasFilters {
                 logUnsupportedFilters(layer.filters)
-            }
-
-            let opacityCommands = renderCommands(forOpacity: layer.opacity)
-            let transformCommands = renderCommands(forTransforms: layer.transform)
-            let clipCommands = renderCommands(forClip: layer.clip, using: layer.clipRule)
-            let maskCommands = renderCommands(forMask: layer.mask)
-
-            guard canRenderMask(maskCommands) else {
-                return []
             }
 
             var commands = [RendererCommand<P.Types>]()
 
-            if !opacityCommands.isEmpty ||
-                !transformCommands.isEmpty ||
-                !clipCommands.isEmpty ||
-                !maskCommands.isEmpty {
+            if state.hasOpacity || state.hasTransform || state.hasClip || state.hasMask {
                 commands.append(.pushState)
             }
 
-            commands.append(contentsOf: transformCommands)
-            commands.append(contentsOf: opacityCommands)
-            commands.append(contentsOf: clipCommands)
+            commands.append(contentsOf: renderCommands(forTransforms: layer.transform))
+            commands.append(contentsOf: renderCommands(forOpacity: layer.opacity))
+            commands.append(contentsOf: renderCommands(forClip: layer.clip, using: layer.clipRule))
 
-            if !maskCommands.isEmpty {
+            if state.hasMask {
                 commands.append(.pushTransparencyLayer)
             }
 
@@ -94,23 +82,52 @@ extension LayerTree {
             }
 
             //render apply mask
-            if !maskCommands.isEmpty {
-                commands.append(contentsOf: maskCommands)
+            if state.hasMask {
+                commands.append(contentsOf: renderCommands(forMask: layer.mask))
                 commands.append(.popTransparencyLayer)
             }
 
-            if !opacityCommands.isEmpty {
+            if state.hasOpacity {
                 commands.append(.popTransparencyLayer)
             }
 
-            if !opacityCommands.isEmpty ||
-                !transformCommands.isEmpty ||
-                !clipCommands.isEmpty ||
-                !maskCommands.isEmpty {
+            if state.hasOpacity || state.hasTransform || state.hasClip || state.hasMask {
                 commands.append(.popState)
             }
 
             return commands
+        }
+
+        struct CommandState {
+            var hasOpacity: Bool
+            var hasTransform: Bool
+            var hasClip: Bool
+            var hasContents: Bool
+            var hasMask: Bool
+            var hasFilters: Bool
+        }
+
+        func makeCommandState(for layer: Layer) -> CommandState {
+            var hasMask = layer.mask != nil
+            var hasContents = !layer.contents.isEmpty && layer.opacity > 0.0
+            var hasFilters = !layer.filters.isEmpty
+
+            if hasMask && options.contains(.disableTransparencyLayers) {
+                hasContents = false
+            }
+
+            if hasFilters && options.contains(.hideUnsupportedFilters) {
+                hasContents = false
+            }
+
+            return CommandState(
+                hasOpacity: layer.opacity < 1.0,
+                hasTransform: !layer.transform.isEmpty,
+                hasClip: !layer.clip.isEmpty,
+                hasContents: hasContents,
+                hasMask: hasMask,
+                hasFilters: hasFilters
+            )
         }
 
         func renderCommands(for contents: Layer.Contents, colorConverter: ColorConverter) -> [RendererCommand<P.Types>] {
