@@ -38,7 +38,7 @@ import UIKit
 import AppKit
 #endif
 
-struct CGTypes: RendererTypes {
+struct CGTypes: RendererTypes, Sendable {
     typealias Float = CGFloat
     typealias Point = CGPoint
     typealias Size = CGSize

@@ -44,7 +44,7 @@ extension DOM {
     
     class Element {}
     
-    class GraphicsElement: Element, ElementAttributes {
+    class GraphicsElement: Element, ElementAttributes, @unchecked Sendable {
         var id: String?
         var `class`: String?
         
@@ -52,7 +52,7 @@ extension DOM {
         var style = PresentationAttributes()
     }
     
-    final class Line: GraphicsElement {
+    final class Line: GraphicsElement, @unchecked Sendable {
         var x1: Coordinate
         var y1: Coordinate
         var x2: Coordinate
@@ -67,7 +67,7 @@ extension DOM {
         }
     }
     
-    final class Circle: GraphicsElement {
+    final class Circle: GraphicsElement, @unchecked Sendable {
         var cx: Coordinate?
         var cy: Coordinate?
         var r: Coordinate
@@ -80,7 +80,7 @@ extension DOM {
         }
     }
     
-    final class Ellipse: GraphicsElement {
+    final class Ellipse: GraphicsElement, @unchecked Sendable {
         var cx: Coordinate?
         var cy: Coordinate?
         var rx: Coordinate
@@ -95,7 +95,7 @@ extension DOM {
         }
     }
     
-    final class Rect: GraphicsElement {
+    final class Rect: GraphicsElement, @unchecked Sendable {
         var x: Coordinate?
         var y: Coordinate?
         var width: Coordinate
@@ -113,7 +113,7 @@ extension DOM {
         }
     }
     
-    final class Polyline: GraphicsElement {
+    final class Polyline: GraphicsElement, @unchecked Sendable {
         var points: [Point]
         
         init(points: [Point]) {
@@ -122,7 +122,7 @@ extension DOM {
         }
     }
     
-    final class Polygon: GraphicsElement {
+    final class Polygon: GraphicsElement, @unchecked Sendable {
         var points: [Point]
         
         init(points: [Point]) {
@@ -131,7 +131,7 @@ extension DOM {
         }
     }
     
-    final class Group: GraphicsElement, ContainerElement {
+    final class Group: GraphicsElement, ContainerElement, @unchecked Sendable {
         var childElements = [GraphicsElement]()
     }
 }

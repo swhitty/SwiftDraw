@@ -39,7 +39,7 @@ extension XMLParser {
   typealias Command = DOM.Path.Command
   typealias CoordinateSpace = DOM.Path.Segment.CoordinateSpace
   
-  func parsePath(_ att: AttributeParser) throws -> DOM.Path {
+  func parsePath(_ att: any AttributeParser) throws -> DOM.Path {
     return try parsePath(from: att.parseString("d"))
   }
 

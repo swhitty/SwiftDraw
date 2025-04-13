@@ -49,7 +49,7 @@ extension XMLParser {
             throw Error.invalid
         }
 
-        let nodeAtt: AttributeParser = try parseAttributes(e)
+        let nodeAtt: any AttributeParser = try parseAttributes(e)
         let node = DOM.RadialGradient(id: try nodeAtt.parseString("id"))
         node.r = try? nodeAtt.parseCoordinate("r")
         node.cx = try? nodeAtt.parseCoordinate("cx")
@@ -59,7 +59,7 @@ extension XMLParser {
         node.fy = try? nodeAtt.parseCoordinate("fy")
 
         for n in e.children where n.name == "stop" {
-            let att: AttributeParser = try parseAttributes(n)
+            let att: any AttributeParser = try parseAttributes(n)
             node.stops.append(try parseRadialGradientStop(att))
         }
 
@@ -73,7 +73,7 @@ extension XMLParser {
         return node
     }
 
-    func parseRadialGradientStop(_ att: AttributeParser) throws -> DOM.RadialGradient.Stop {
+    func parseRadialGradientStop(_ att: any AttributeParser) throws -> DOM.RadialGradient.Stop {
         let offset: DOM.Float? = try? att.parsePercentage("offset")
         let color: DOM.Color? = try? att.parseFill("stop-color").getColor()
         let opacity: DOM.Float? = try att.parsePercentage("stop-opacity")

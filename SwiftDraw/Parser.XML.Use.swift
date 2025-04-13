@@ -31,7 +31,7 @@
 
 extension XMLParser {
   
-  func parseUse(_ att: AttributeParser) throws -> DOM.Use {
+  func parseUse(_ att: any AttributeParser) throws -> DOM.Use {
     let use = DOM.Use(href: try att.parseUrl("xlink:href"))
     use.x = try att.parseCoordinate("x")
     use.y = try att.parseCoordinate("y")

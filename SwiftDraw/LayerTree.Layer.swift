@@ -142,7 +142,7 @@ extension LayerTree {
             case linearGradient(LinearGradient)
             case radialGradient(RadialGradient)
 
-            static let none = Fill.color(.none)
+            static var none: Fill { .color(.none) }
         }
     }
 

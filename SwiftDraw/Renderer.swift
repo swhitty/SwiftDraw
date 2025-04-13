@@ -168,7 +168,7 @@ extension Renderer {
     }
 }
 
-enum RendererCommand<Types: RendererTypes> {
+enum RendererCommand<Types: RendererTypes>: @unchecked Sendable {
     case pushState
     case popState
 

@@ -200,7 +200,7 @@ extension XML.Formatter {
                 throw Error.unsupportedGraphicsElement(graphic)
             }
 
-            if let container = graphic as? ContainerElement {
+            if let container = graphic as? any ContainerElement {
                 try element.children.append(
                     contentsOf: makeElements(from: container.childElements)
                 )

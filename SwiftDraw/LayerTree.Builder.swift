@@ -100,7 +100,7 @@ extension LayerTree {
 
                 if let contents = makeContents(from: currentElement, with: newState) {
                     layer.appendContents(contents)
-                } else if let container = currentElement as? ContainerElement {
+                } else if let container = currentElement as? any ContainerElement {
                     // Push children in reverse so they are processed in the original order
                     for child in container.childElements.reversed() {
                         stack.append((child, newState, layer))

@@ -49,7 +49,7 @@ extension XMLParser {
             throw Error.invalid
         }
 
-        let nodeAtt: AttributeParser = try parseAttributes(e)
+        let nodeAtt: any AttributeParser = try parseAttributes(e)
         let node = DOM.LinearGradient(id: try nodeAtt.parseString("id"))
         node.x1 = try nodeAtt.parseCoordinate("x1")
         node.y1 = try nodeAtt.parseCoordinate("y1")
@@ -57,7 +57,7 @@ extension XMLParser {
         node.y2 = try nodeAtt.parseCoordinate("y2")
 
         for n in e.children where n.name == "stop" {
-            let att: AttributeParser = try parseAttributes(n)
+            let att: any AttributeParser = try parseAttributes(n)
             node.stops.append(try parseLinearGradientStop(att))
         }
 
@@ -71,7 +71,7 @@ extension XMLParser {
         return node
     }
 
-    func parseLinearGradientStop(_ att: AttributeParser) throws -> DOM.LinearGradient.Stop {
+    func parseLinearGradientStop(_ att: any AttributeParser) throws -> DOM.LinearGradient.Stop {
         let offset: DOM.Float? = try? att.parsePercentage("offset")
         let color: DOM.Color? = try? att.parseFill("stop-color").getColor()
         let opacity: DOM.Float? = try att.parsePercentage("stop-opacity")

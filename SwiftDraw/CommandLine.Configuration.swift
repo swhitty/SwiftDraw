@@ -248,8 +248,8 @@ private extension XMLParser.Scanner {
 }
 
 extension SVG.Options {
-    static let disableTransparencyLayers = Self(rawValue: 1 << 8)
-    static let commandLine = Self(rawValue: 1 << 9)
+    static var disableTransparencyLayers: SVG.Options { Self(rawValue: 1 << 8) }
+    static var commandLine: SVG.Options { Self(rawValue: 1 << 9) }
 }
 
 extension URL {

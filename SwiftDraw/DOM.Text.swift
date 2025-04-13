@@ -33,7 +33,7 @@ import Foundation
 
 extension DOM {
     
-    final class Text: GraphicsElement {
+    final class Text: GraphicsElement, @unchecked Sendable {
         var x: Coordinate?
         var y: Coordinate?
         var value: String
@@ -45,7 +45,7 @@ extension DOM {
         }
     }
     
-    final class Anchor: GraphicsElement, ContainerElement {
+    final class Anchor: GraphicsElement, ContainerElement, @unchecked Sendable {
         var href: URL?
         var childElements = [GraphicsElement]()
     }

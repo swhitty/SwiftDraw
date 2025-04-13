@@ -39,13 +39,13 @@ extension XMLParser {
   // attributes["fill"] == "red"
   final class Attributes: AttributeParser {
     
-    let parser: AttributeValueParser
+    let parser: any AttributeValueParser
     let options: XMLParser.Options
     
     let element: [String: String]
     let style: [String: String]
     
-    init(parser: AttributeValueParser,
+    init(parser: any AttributeValueParser,
          options: XMLParser.Options = [],
          element: [String: String],
          style: [String: String]) {
