@@ -175,7 +175,7 @@ extension LayerTree.Builder {
     }
 }
 
-private extension DOM.Group {
+extension DOM.Group {
 
     static func make(child: DOM.GraphicsElement, nestedLevels: Int) -> DOM.Group {
         var group = DOM.Group()
