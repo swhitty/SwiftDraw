@@ -46,7 +46,6 @@ extension XMLParser {
     func parseAnchor(_ att: AttributeParser, element: XML.Element) throws -> DOM.Anchor? {
         let anchor = DOM.Anchor()
         anchor.href = try att.parseUrl("href")
-        anchor.childElements = try parseContainerChildren(element)
         return anchor
     }
 

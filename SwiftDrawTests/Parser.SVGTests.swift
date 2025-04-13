@@ -151,4 +151,20 @@ final class ParserSVGTests: XCTestCase {
         let circle = try XCTUnwrap(svg.firstGraphicsElement(with: "b") as? DOM.Circle)
         XCTAssertEqual(circle.id, "b")
     }
+
+    func testDeepNestingParses() async {
+        let groupOpen = String(repeating: "<g>", count: 500)
+        let groupClose = String(repeating: "</g>", count: 500)
+
+        XCTAssertNoThrow(
+            try DOM.SVG.parse(xml: #"""
+            <?xml version="1.0" encoding="UTF-8"?>
+            <svg width="64" height="64" version="1.1">
+                \#(groupOpen)
+                <circle id="b" cx="50" cy="60" r="70" />
+                \#(groupClose)
+            </svg>
+            """#)
+        )
+    }
 }

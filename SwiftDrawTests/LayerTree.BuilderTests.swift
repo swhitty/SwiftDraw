@@ -124,6 +124,14 @@ final class LayerTreeBuilderTests: XCTestCase {
     let att2 = LayerTree.Builder.makeStrokeAttributes(with: state)
     XCTAssertEqual(att2.color, .none)
   }
+
+  func testDeepNestedSVGBuildLayers() async {
+    let circle = DOM.Circle(cx: 50, cy: 50, r: 10)
+    let svg = DOM.SVG(width: 50, height: 50)
+    svg.childElements.append(DOM.Group.make(child: circle, nestedLevels: 500))
+
+    let _ = LayerTree.Builder(svg: svg).makeLayer()
+  }
 }
 
 private extension LayerTree.StrokeAttributes {
@@ -167,3 +175,18 @@ extension LayerTree.Builder {
     }
 }
 
+extension DOM.Group {
+
+    static func make(child: DOM.GraphicsElement, nestedLevels: Int) -> DOM.Group {
+        var group = DOM.Group()
+        group.childElements.append(child)
+
+        for _ in 0..<nestedLevels {
+            let outerGroup = DOM.Group()
+            outerGroup.childElements.append(group)
+            group = outerGroup
+        }
+
+        return group
+    }
+}

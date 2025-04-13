@@ -148,6 +148,14 @@ final class SVGTests: XCTestCase {
         images.remove(lines)
         XCTAssertFalse(images.contains(SVG.makeLines()))
     }
+
+    func testDeepNestedSVG() async {
+        let circle = DOM.Circle(cx: 50, cy: 50, r: 10)
+        let dom = DOM.SVG(width: 50, height: 50)
+        dom.childElements.append(DOM.Group.make(child: circle, nestedLevels: 500))
+
+        _ = SVG(dom: dom, options: .default)
+    }
 }
 
 private extension SVG {

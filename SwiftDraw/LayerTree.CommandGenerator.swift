@@ -52,54 +52,74 @@ extension LayerTree {
             self.options = options
         }
 
-        func renderCommands(for layer: Layer, colorConverter: any ColorConverter) -> [RendererCommand<P.Types>] {
+        func renderCommands(for l: Layer, colorConverter c: any ColorConverter) -> [RendererCommand<P.Types>] {
             var commands = [RendererCommand<P.Types>]()
 
-            let state = makeCommandState(for: layer, colorConverter: colorConverter)
+            var stack: [RenderStep] = [
+                .beginLayer(l, c)
+            ]
 
-            guard state.hasContents else { return commands }
+            while let step = stack.popLast() {
+                switch step {
+                case let .beginLayer(layer, colorConverter):
+                    let state = makeCommandState(for: layer, colorConverter: colorConverter)
 
-            if state.hasFilters {
-                logUnsupportedFilters(layer.filters)
-            }
+                    //guard state.hasContents else { continue }
+                    stack.append(.endLayer(layer, state))
 
-            if state.hasOpacity || state.hasTransform || state.hasClip || state.hasMask {
-                commands.append(.pushState)
-            }
+                    if state.hasFilters {
+                        logUnsupportedFilters(layer.filters)
+                    }
 
-            commands.append(contentsOf: renderCommands(forTransforms: layer.transform))
-            commands.append(contentsOf: renderCommands(forOpacity: layer.opacity))
-            commands.append(contentsOf: renderCommands(forClip: layer.clip, using: layer.clipRule))
+                    if state.hasOpacity || state.hasTransform || state.hasClip || state.hasMask {
+                        commands.append(.pushState)
+                    }
 
-            if state.hasMask {
-                commands.append(.pushTransparencyLayer)
-            }
+                    commands.append(contentsOf: renderCommands(forTransforms: layer.transform))
+                    commands.append(contentsOf: renderCommands(forOpacity: layer.opacity))
+                    commands.append(contentsOf: renderCommands(forClip: layer.clip, using: layer.clipRule))
 
-            //render all of the layer contents
-            for contents in layer.contents {
-                switch makeRenderContents(for: contents, colorConverter: state.colorConverter) {
-                case let .simple(cmd):
+                    if state.hasMask {
+                        commands.append(.pushTransparencyLayer)
+                    }
+
+                    //push render of all of the layer contents in reverse order
+                    for contents in layer.contents.reversed() {
+                        switch makeRenderContents(for: contents, colorConverter: colorConverter) {
+                        case let .simple(cmd):
+                            stack.append(.contents(cmd))
+                        case let .layer(layer):
+                            stack.append(.beginLayer(layer, colorConverter))
+                        }
+                    }
+
+                case let .contents(cmd):
                     commands.append(contentsOf: cmd)
-                case let .layer(layer):
-                    commands.append(contentsOf: renderCommands(for: layer, colorConverter: colorConverter))
+
+                case let .endLayer(layer, state):
+                    //render apply mask
+                    if state.hasMask {
+                        commands.append(contentsOf: renderCommands(forMask: layer.mask))
+                        commands.append(.popTransparencyLayer)
+                    }
+
+                    if state.hasOpacity {
+                        commands.append(.popTransparencyLayer)
+                    }
+
+                    if state.hasOpacity || state.hasTransform || state.hasClip || state.hasMask {
+                        commands.append(.popState)
+                    }
                 }
             }
 
-            //render apply mask
-            if state.hasMask {
-                commands.append(contentsOf: renderCommands(forMask: layer.mask))
-                commands.append(.popTransparencyLayer)
-            }
-
-            if state.hasOpacity {
-                commands.append(.popTransparencyLayer)
-            }
-
-            if state.hasOpacity || state.hasTransform || state.hasClip || state.hasMask {
-                commands.append(.popState)
-            }
-
             return commands
+        }
+
+        enum RenderStep {
+            case beginLayer(LayerTree.Layer, any ColorConverter)
+            case contents([RendererCommand<P.Types>])
+            case endLayer(LayerTree.Layer, CommandState)
         }
 
         struct CommandState {

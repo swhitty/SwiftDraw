@@ -111,33 +111,30 @@ extension XMLParser {
         return ge
     }
 
-    func parseContainerChildren(_ e: XML.Element) throws -> [DOM.GraphicsElement] {
-        guard e.name == "svg" ||
-                e.name == "clipPath" ||
-                e.name == "pattern" ||
-                e.name == "mask" ||
-                e.name == "defs" ||
-                e.name == "switch" ||
-                e.name == "g" ||
-                e.name == "a" else {
-            throw Error.invalid
-        }
+    func parseGraphicsElements(_ elements: [XML.Element]) throws -> [DOM.GraphicsElement] {
+        var result = [DOM.GraphicsElement]()
+        var stack: [(XML.Element, parent: ContainerElement?)] = elements
+            .reversed()
+            .map { ($0, parent: nil) }
 
-        var children = [DOM.GraphicsElement]()
-
-        for n in e.children {
-            do {
-                if let ge = try parseGraphicsElement(n) {
-                    children.append(ge)
-                }
-            } catch let error {
-                if let parseError = parseError(for: error, parsing: n, with: options) {
-                    throw parseError
-                }
+        while let (element, parent) = stack.popLast() {
+            guard let ge = try parseGraphicsElement(element) else {
+                continue
             }
+
+            if var parent {
+                parent.childElements.append(ge)
+            } else {
+                result.append(ge)
+            }
+
+            if let container = ge as? ContainerElement {
+                stack.append(contentsOf: element.children.reversed().map { ($0, container) })
+            }
+
         }
 
-        return children
+        return result
     }
 
     func parseError(for error: Swift.Error, parsing element: XML.Element, with options: Options) -> XMLParser.Error? {
@@ -165,9 +162,7 @@ extension XMLParser {
             throw Error.invalid
         }
 
-        let group = DOM.Group()
-        group.childElements = try parseContainerChildren(e)
-        return group
+        return DOM.Group()
     }
 
     func parseSwitch(_ e: XML.Element) throws -> DOM.Switch {
@@ -175,9 +170,7 @@ extension XMLParser {
             throw Error.invalid
         }
 
-        let node = DOM.Switch()
-        node.childElements = try parseContainerChildren(e)
-        return node
+        return DOM.Switch()
     }
 
     func parseAttributes(_ e: XML.Element) throws -> Attributes {
