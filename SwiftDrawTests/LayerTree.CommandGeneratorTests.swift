@@ -35,7 +35,7 @@ final class LayerTreeCommandGeneratorTests: XCTestCase {
         let svg = try DOM.SVG.parse(fileNamed: "shapes.svg", in: .test)
         let layer = LayerTree.Builder(svg: svg).makeLayer()
         let generator = LayerTree.CommandGenerator(provider: LayerTreeProvider(), size: .zero, options: .default)
-        let commands = generator.renderCommands(for: layer)
+        let commands = generator.renderCommands(for: layer, colorConverter: .default)
 
         XCTAssertEqual(
             commands.count,

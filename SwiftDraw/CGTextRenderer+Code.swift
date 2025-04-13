@@ -108,7 +108,7 @@ public extension CGTextRenderer {
 
         let optimizer = LayerTree.CommandOptimizer<CGTextTypes>(options: [.skipRedundantState, .skipInitialSaveState])
         let commands = optimizer.optimizeCommands(
-            generator.renderCommands(for: layer)
+            generator.renderCommands(for: layer, colorConverter: .default)
         )
 
         let renderer = CGTextRenderer(api: api,

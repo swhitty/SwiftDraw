@@ -158,6 +158,10 @@ struct DefaultColorConverter: ColorConverter {
   }
 }
 
+extension ColorConverter where Self == DefaultColorConverter {
+    static var `default`: DefaultColorConverter { DefaultColorConverter() }
+}
+
 struct LuminanceColorConverter: ColorConverter {
   func createColor(from color: LayerTree.Color) -> LayerTree.Color {
     switch color {
@@ -169,4 +173,8 @@ struct LuminanceColorConverter: ColorConverter {
       return color
     }
   }
+}
+
+extension ColorConverter where Self == LuminanceColorConverter {
+    static var luminance: LuminanceColorConverter { LuminanceColorConverter() }
 }

@@ -52,17 +52,16 @@ extension LayerTree {
             self.options = options
         }
 
-        func renderCommands(for layer: Layer, colorConverter: ColorConverter = DefaultColorConverter()) -> [RendererCommand<P.Types>] {
+        func renderCommands(for layer: Layer, colorConverter: any ColorConverter) -> [RendererCommand<P.Types>] {
+            var commands = [RendererCommand<P.Types>]()
 
             let state = makeCommandState(for: layer, colorConverter: colorConverter)
 
-            guard state.hasContents else { return [] }
+            guard state.hasContents else { return commands }
 
             if state.hasFilters {
                 logUnsupportedFilters(layer.filters)
             }
-
-            var commands = [RendererCommand<P.Types>]()
 
             if state.hasOpacity || state.hasTransform || state.hasClip || state.hasMask {
                 commands.append(.pushState)
@@ -137,7 +136,7 @@ extension LayerTree {
             )
         }
 
-        func renderCommands(for contents: Layer.Contents, colorConverter: ColorConverter) -> [RendererCommand<P.Types>] {
+        func renderCommands(for contents: Layer.Contents, colorConverter: any ColorConverter) -> [RendererCommand<P.Types>] {
             switch makeRenderContents(for: contents, colorConverter: colorConverter) {
             case .simple(let commands):
                 return commands
@@ -379,7 +378,7 @@ extension LayerTree {
             commands.append(.setBlend(mode: copy))
             //commands.append(contentsOf: renderCommands(forClip: layer.clip))
             let drawMask = layer.contents.flatMap{
-                renderCommands(for: $0, colorConverter: LuminanceColorConverter())
+                renderCommands(for: $0, colorConverter: .luminance)
             }
             commands.append(contentsOf: drawMask)
             commands.append(.popTransparencyLayer)

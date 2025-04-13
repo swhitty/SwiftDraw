@@ -150,7 +150,7 @@ extension SVG {
 
         let optimizer = LayerTree.CommandOptimizer<CGTypes>()
         commands = optimizer.optimizeCommands(
-            generator.renderCommands(for: layer)
+            generator.renderCommands(for: layer, colorConverter: .default)
         )
     }
 }
