@@ -54,7 +54,7 @@ extension LayerTree {
 
         func renderCommands(for layer: Layer, colorConverter: ColorConverter = DefaultColorConverter()) -> [RendererCommand<P.Types>] {
 
-            let state = makeCommandState(for: layer)
+            let state = makeCommandState(for: layer, colorConverter: colorConverter)
 
             guard state.hasContents else { return [] }
 
@@ -78,7 +78,12 @@ extension LayerTree {
 
             //render all of the layer contents
             for contents in layer.contents {
-                commands.append(contentsOf: renderCommands(for: contents, colorConverter: colorConverter))
+                switch makeRenderContents(for: contents, colorConverter: state.colorConverter) {
+                case let .simple(cmd):
+                    commands.append(contentsOf: cmd)
+                case let .layer(layer):
+                    commands.append(contentsOf: renderCommands(for: layer, colorConverter: colorConverter))
+                }
             }
 
             //render apply mask
@@ -105,9 +110,10 @@ extension LayerTree {
             var hasContents: Bool
             var hasMask: Bool
             var hasFilters: Bool
+            var colorConverter: any ColorConverter
         }
 
-        func makeCommandState(for layer: Layer) -> CommandState {
+        func makeCommandState(for layer: Layer, colorConverter: any ColorConverter) -> CommandState {
             var hasContents = !layer.contents.isEmpty && layer.opacity > 0.0
             let hasMask = layer.mask != nil
             let hasFilters = !layer.filters.isEmpty
@@ -126,20 +132,38 @@ extension LayerTree {
                 hasClip: !layer.clip.isEmpty,
                 hasContents: hasContents,
                 hasMask: hasMask,
-                hasFilters: hasFilters
+                hasFilters: hasFilters,
+                colorConverter: colorConverter
             )
         }
 
         func renderCommands(for contents: Layer.Contents, colorConverter: ColorConverter) -> [RendererCommand<P.Types>] {
-            switch contents {
-            case .shape(let shape, let stroke, let fill):
-                return renderCommands(for: shape, stroke: stroke, fill: fill, colorConverter: colorConverter)
-            case .image(let image):
-                return renderCommands(for: image)
-            case .text(let text, let point, let att):
-                return renderCommands(for: text, at: point, attributes: att, colorConverter: colorConverter)
+            switch makeRenderContents(for: contents, colorConverter: colorConverter) {
+            case .simple(let commands):
+                return commands
             case .layer(let layer):
                 return renderCommands(for: layer, colorConverter: colorConverter)
+            }
+        }
+
+        enum RenderContents {
+            // simple contents create array of commands
+            case simple([RendererCommand<P.Types>])
+
+            // layer contents requires recursion
+            case layer(LayerTree.Layer)
+        }
+
+        func makeRenderContents(for contents: Layer.Contents, colorConverter: ColorConverter) -> RenderContents  {
+            switch contents {
+            case .shape(let shape, let stroke, let fill):
+                return .simple(renderCommands(for: shape, stroke: stroke, fill: fill, colorConverter: colorConverter))
+            case .image(let image):
+                return .simple(renderCommands(for: image))
+            case .text(let text, let point, let att):
+                return .simple(renderCommands(for: text, at: point, attributes: att, colorConverter: colorConverter))
+            case .layer(let layer):
+                return .layer(layer)
             }
         }
 
