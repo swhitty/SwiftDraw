@@ -34,7 +34,7 @@ import Foundation
 
 extension XMLParser {
   
-  func parsePattern(_ att: AttributeParser) throws -> DOM.Pattern {
+  func parsePattern(_ att: any AttributeParser) throws -> DOM.Pattern {
     
     let id: String = try att.parseString("id")
     let width: DOM.Coordinate = try att.parseCoordinate("width")

@@ -31,7 +31,7 @@
 
 extension XMLParser {
   
-  func parseImage(_ att: AttributeParser) throws -> DOM.Image {
+  func parseImage(_ att: any AttributeParser) throws -> DOM.Image {
     let href: DOM.URL = try att.parseUrl("xlink:href")
 
     let image = DOM.Image(href: href)

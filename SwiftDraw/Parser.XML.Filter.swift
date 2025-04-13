@@ -49,7 +49,7 @@ extension XMLParser {
             throw Error.invalid
         }
 
-        let nodeAtt: AttributeParser = try parseAttributes(e)
+        let nodeAtt: any AttributeParser = try parseAttributes(e)
         let node = DOM.Filter(id: try nodeAtt.parseString("id"))
 
         for n in e.children {
@@ -64,7 +64,7 @@ extension XMLParser {
     func parseEffect(_ e: XML.Element) throws -> DOM.Filter.Effect? {
         switch e.name {
         case "feGaussianBlur":
-            let att: AttributeParser = try parseAttributes(e)
+            let att: any AttributeParser = try parseAttributes(e)
             return try .gaussianBlur(stdDeviation: att.parseFloat("stdDeviation"))
         default:
             return nil

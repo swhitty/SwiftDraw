@@ -199,37 +199,37 @@ final class ScannerTests: XCTestCase {
     }
 }
 
-private func AssertScanUInt8(_ text: String, _ expected: UInt8?, file: StaticString = #file, line: UInt = #line) {
+private func AssertScanUInt8(_ text: String, _ expected: UInt8?, file: StaticString = #filePath, line: UInt = #line) {
   var scanner = XMLParser.Scanner(text: text)
   XCTAssertEqual(try? scanner.scanUInt8(), expected, file: file, line: line)
 }
 
-private func AssertScanFloat(_ text: String, _ expected: Float?, file: StaticString = #file, line: UInt = #line) {
+private func AssertScanFloat(_ text: String, _ expected: Float?, file: StaticString = #filePath, line: UInt = #line) {
   var scanner = XMLParser.Scanner(text: text)
   XCTAssertEqual(try? scanner.scanFloat(), expected, file: file, line: line)
 }
 
-private func AssertScanDouble(_ text: String, _ expected: Double?, file: StaticString = #file, line: UInt = #line) {
+private func AssertScanDouble(_ text: String, _ expected: Double?, file: StaticString = #filePath, line: UInt = #line) {
   var scanner = XMLParser.Scanner(text: text)
   XCTAssertEqual(try? scanner.scanDouble(), expected, file: file, line: line)
 }
 
-private func AssertScanLength(_ text: String, _ expected: DOM.Length?, file: StaticString = #file, line: UInt = #line) {
+private func AssertScanLength(_ text: String, _ expected: DOM.Length?, file: StaticString = #filePath, line: UInt = #line) {
   var scanner = XMLParser.Scanner(text: text)
   XCTAssertEqual(try? scanner.scanLength(), expected, file: file, line: line)
 }
 
-private func AssertScanBool(_ text: String, _ expected: Bool?, file: StaticString = #file, line: UInt = #line) {
+private func AssertScanBool(_ text: String, _ expected: Bool?, file: StaticString = #filePath, line: UInt = #line) {
   var scanner = XMLParser.Scanner(text: text)
   XCTAssertEqual(try? scanner.scanBool(), expected, file: file, line: line)
 }
 
-private func AssertScanPercentage(_ text: String, _ expected: Float?, file: StaticString = #file, line: UInt = #line) {
+private func AssertScanPercentage(_ text: String, _ expected: Float?, file: StaticString = #filePath, line: UInt = #line) {
   var scanner = XMLParser.Scanner(text: text)
   XCTAssertEqual(try? scanner.scanPercentage(), expected, file: file, line: line)
 }
 
-private func AssertScanPercentageFloat(_ text: String, _ expected: Float?, file: StaticString = #file, line: UInt = #line) {
+private func AssertScanPercentageFloat(_ text: String, _ expected: Float?, file: StaticString = #filePath, line: UInt = #line) {
   var scanner = XMLParser.Scanner(text: text)
   XCTAssertEqual(try? scanner.scanPercentageFloat(), expected, file: file, line: line)
 }

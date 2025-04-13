@@ -173,7 +173,7 @@ extension LayerTree {
             case layer(LayerTree.Layer)
         }
 
-        func makeRenderContents(for contents: Layer.Contents, colorConverter: ColorConverter) -> RenderContents  {
+        func makeRenderContents(for contents: Layer.Contents, colorConverter: any ColorConverter) -> RenderContents  {
             switch contents {
             case .shape(let shape, let stroke, let fill):
                 return .simple(renderCommands(for: shape, stroke: stroke, fill: fill, colorConverter: colorConverter))
@@ -189,7 +189,7 @@ extension LayerTree {
         func renderCommands(for shape: Shape,
                             stroke: StrokeAttributes,
                             fill: FillAttributes,
-                            colorConverter: ColorConverter) -> [RendererCommand<P.Types>] {
+                            colorConverter: any ColorConverter) -> [RendererCommand<P.Types>] {
             var commands = [RendererCommand<P.Types>]()
             let path = provider.createPath(from: shape)
 
@@ -330,7 +330,7 @@ extension LayerTree {
             return frame
         }
 
-        func renderCommands(for text: String, at point: Point, attributes: TextAttributes, colorConverter: ColorConverter = DefaultColorConverter()) -> [RendererCommand<P.Types>] {
+        func renderCommands(for text: String, at point: Point, attributes: TextAttributes, colorConverter: any ColorConverter = .default) -> [RendererCommand<P.Types>] {
             guard let path = provider.createPath(from: text, at: point, with: attributes) else { return [] }
 
             let converted = colorConverter.createColor(from: attributes.color)
@@ -430,7 +430,7 @@ extension LayerTree {
         func renderCommands(forLinear gradient: LayerTree.LinearGradient,
                             endpoints: (start: LayerTree.Point, end: LayerTree.Point),
                             opacity: LayerTree.Float,
-                            colorConverter: ColorConverter) -> [RendererCommand<P.Types>] {
+                            colorConverter: any ColorConverter) -> [RendererCommand<P.Types>] {
             let pathStart: LayerTree.Point
             let pathEnd: LayerTree.Point
             switch gradient.units  {
@@ -464,7 +464,7 @@ extension LayerTree {
         func renderCommands(forRadial gradient: RadialGradient,
                             in bounds: LayerTree.Rect,
                             opacity: LayerTree.Float,
-                            colorConverter: ColorConverter) -> [RendererCommand<P.Types>] {
+                            colorConverter: any ColorConverter) -> [RendererCommand<P.Types>] {
             let startCenter: LayerTree.Point
             let startRadius: LayerTree.Float
             let endCenter: LayerTree.Point
@@ -560,7 +560,7 @@ private extension LayerTree.Rect {
 
 
 private extension LayerTree.Gradient {
-    func convertColor(using converter: ColorConverter) -> LayerTree.Gradient {
+    func convertColor(using converter: any ColorConverter) -> LayerTree.Gradient {
         let stops: [LayerTree.Gradient.Stop] = stops.map { stop in
             var stop = stop
             stop.color = converter.createColor(from: stop.color).withMultiplyingAlpha(stop.opacity)

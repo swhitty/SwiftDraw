@@ -76,9 +76,9 @@ public struct SVG: Hashable, Sendable {
             self.rawValue = rawValue
         }
 
-        public static let hideUnsupportedFilters = Options(rawValue: 1 << 0)
+        public static var hideUnsupportedFilters: Options { Options(rawValue: 1 << 0) }
 
-        public static let `default`: Options = []
+        public static var `default`: Options { [] }
     }
 }
 
@@ -173,9 +173,9 @@ public struct SVG: Sendable {
             self.rawValue = rawValue
         }
 
-        public static let hideUnsupportedFilters = Options(rawValue: 1 << 0)
+        public static var hideUnsupportedFilters: Options { Options(rawValue: 1 << 0) }
 
-        public static let `default`: Options = []
+        public static var `default`: Options { [] }
     }
 }
 

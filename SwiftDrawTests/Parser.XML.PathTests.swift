@@ -201,13 +201,13 @@ final class ParserXMLPathTests: XCTestCase {
   }
 }
 
-private func AssertSegmentEquals(_ text: String, _ expected: Segment, file: StaticString = #file, line: UInt = #line) {
+private func AssertSegmentEquals(_ text: String, _ expected: Segment, file: StaticString = #filePath, line: UInt = #line) {
   let parsed = try? XMLParser().parsePathSegments(text)
   XCTAssertEqual(parsed?.count, 1)
   XCTAssertEqual(parsed![0], expected, file: file, line: line)
 }
 
-private func AssertSegmentsEquals(_ text: String, _ expected: [Segment], file: StaticString = #file, line: UInt = #line) {
+private func AssertSegmentsEquals(_ text: String, _ expected: [Segment], file: StaticString = #filePath, line: UInt = #line) {
   guard let parsed = try? XMLParser().parsePathSegments(text) else {
     XCTFail("could not parse segments", file: file, line: line)
     return

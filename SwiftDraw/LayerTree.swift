@@ -40,7 +40,7 @@ extension LayerTree {
     typealias Filter = DOM.Filter.Effect
 
     enum Error: Swift.Error {
-        case unsupported(Any)
+        case unsupported(any Sendable)
         case invalid(String)
     }
 

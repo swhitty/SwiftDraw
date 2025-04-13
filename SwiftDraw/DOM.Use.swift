@@ -30,7 +30,7 @@
 //
 
 extension DOM {
-    final class Use: GraphicsElement {
+    final class Use: GraphicsElement, @unchecked Sendable {
         var x: Coordinate?
         var y: Coordinate?
         
@@ -61,7 +61,7 @@ extension Array<DOM.GraphicsElement> {
             if element.id == id {
                 return element
             }
-            if let container = element as? ContainerElement {
+            if let container = element as? any ContainerElement {
                 return container.childElements.firstGraphicsElement(with: id)
             }
         }

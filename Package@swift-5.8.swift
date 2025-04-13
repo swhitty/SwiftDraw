@@ -1,4 +1,4 @@
-// swift-tools-version:6.0
+// swift-tools-version:5.8
 
 import PackageDescription
 
@@ -19,14 +19,12 @@ let package = Package(
         .target(
             name: "SwiftDraw",
             dependencies: [],
-            path: "SwiftDraw",
-            swiftSettings: .upcomingFeatures
+            path: "SwiftDraw"
         ),
         .executableTarget(
             name: "CommandLine",
             dependencies: ["SwiftDraw"],
-            path: "CommandLine",
-            swiftSettings: .upcomingFeatures
+            path: "CommandLine"
         ),
         .testTarget(
             name: "SwiftDrawTests",
@@ -34,18 +32,7 @@ let package = Package(
             path: "SwiftDrawTests",
             resources: [
                 .copy("Test.bundle")
-            ],
-            swiftSettings: .upcomingFeatures
+            ]
         )
     ]
 )
-
-extension Array where Element == SwiftSetting {
-
-    static var upcomingFeatures: [SwiftSetting] {
-        [
-            .enableUpcomingFeature("ExistentialAny"),
-            .swiftLanguageMode(.v6)
-        ]
-    }
-}

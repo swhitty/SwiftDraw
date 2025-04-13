@@ -33,9 +33,9 @@ struct XMLParser {
   enum Error: Swift.Error {
     case invalid
     case missingAttribute(name: String)
-    case invalidAttribute(name: String, value: Any)
-    case invalidElement(name: String, error: Swift.Error, line: Int?, column: Int?)
-    case invalidDocument(error: Swift.Error?, element: String?, line: Int, column: Int)
+    case invalidAttribute(name: String, value: any Sendable)
+    case invalidElement(name: String, error: any Swift.Error, line: Int?, column: Int?)
+    case invalidDocument(error: (any Swift.Error)?, element: String?, line: Int, column: Int)
   }
   
   var options: Options = []
@@ -68,7 +68,7 @@ protocol AttributeValueParser {
 }
 
 protocol AttributeParser {
-  var parser: AttributeValueParser { get }
+  var parser: any AttributeValueParser { get }
   var options: XMLParser.Options { get }
 
   // either parse and return T or

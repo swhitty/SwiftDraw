@@ -30,7 +30,7 @@
 //
 
 extension DOM {
-    final class SVG: GraphicsElement, ContainerElement {
+    final class SVG: GraphicsElement, ContainerElement, @unchecked Sendable {
         var x: Coordinate?
         var y: Coordinate?
         var width: Length

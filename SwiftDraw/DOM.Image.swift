@@ -29,7 +29,7 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 extension DOM {
-    final class Image: GraphicsElement {
+    final class Image: GraphicsElement, @unchecked Sendable {
         var href: URL
         var width: Coordinate?
         var height: Coordinate?

@@ -31,7 +31,7 @@
 
 extension XMLParser {
 
-    func parseLine(_ att: AttributeParser) throws -> DOM.Line {
+    func parseLine(_ att: any AttributeParser) throws -> DOM.Line {
         let x1: DOM.Coordinate = try att.parseCoordinate("x1")
         let y1: DOM.Coordinate = try att.parseCoordinate("y1")
         let x2: DOM.Coordinate = try att.parseCoordinate("x2")
@@ -39,14 +39,14 @@ extension XMLParser {
         return DOM.Line(x1: x1, y1: y1, x2: x2, y2: y2)
     }
 
-    func parseCircle(_ att: AttributeParser) throws -> DOM.Circle {
+    func parseCircle(_ att: any AttributeParser) throws -> DOM.Circle {
         let cx: DOM.Coordinate? = try att.parseCoordinate("cx")
         let cy: DOM.Coordinate? = try att.parseCoordinate("cy")
         let r: DOM.Coordinate = try att.parseCoordinate("r")
         return DOM.Circle(cx: cx, cy: cy, r: r)
     }
 
-    func parseEllipse(_ att: AttributeParser) throws -> DOM.Ellipse {
+    func parseEllipse(_ att: any AttributeParser) throws -> DOM.Ellipse {
         let cx: DOM.Coordinate? = try att.parseCoordinate("cx")
         let cy: DOM.Coordinate? = try att.parseCoordinate("cy")
         let rx: DOM.Coordinate = try att.parseCoordinate("rx")
@@ -54,7 +54,7 @@ extension XMLParser {
         return DOM.Ellipse(cx: cx, cy: cy, rx: rx, ry: ry)
     }
 
-    func parseRect(_ att: AttributeParser) throws -> DOM.Rect {
+    func parseRect(_ att: any AttributeParser) throws -> DOM.Rect {
         let width: DOM.Coordinate = try att.parseCoordinate("width")
         let height: DOM.Coordinate = try att.parseCoordinate("height")
         let rect = DOM.Rect(width: width, height: height)
@@ -67,11 +67,11 @@ extension XMLParser {
         return rect
     }
 
-    func parsePolyline(_ att: AttributeParser) throws -> DOM.Polyline {
+    func parsePolyline(_ att: any AttributeParser) throws -> DOM.Polyline {
         return DOM.Polyline(points: try att.parsePoints("points"))
     }
 
-    func parsePolygon(_ att: AttributeParser) throws -> DOM.Polygon {
+    func parsePolygon(_ att: any AttributeParser) throws -> DOM.Polygon {
         return DOM.Polygon(points: try att.parsePoints("points"))
     }
 
@@ -113,7 +113,7 @@ extension XMLParser {
 
     func parseGraphicsElements(_ elements: [XML.Element]) throws -> [DOM.GraphicsElement] {
         var result = [DOM.GraphicsElement]()
-        var stack: [(XML.Element, parent: ContainerElement?)] = elements
+        var stack: [(XML.Element, parent: (any ContainerElement)?)] = elements
             .reversed()
             .map { ($0, parent: nil) }
 
@@ -128,7 +128,7 @@ extension XMLParser {
                 result.append(ge)
             }
 
-            if let container = ge as? ContainerElement {
+            if let container = ge as? any ContainerElement {
                 stack.append(contentsOf: element.children.reversed().map { ($0, container) })
             }
 
@@ -137,7 +137,7 @@ extension XMLParser {
         return result
     }
 
-    func parseError(for error: Swift.Error, parsing element: XML.Element, with options: Options) -> XMLParser.Error? {
+    func parseError(for error: any Swift.Error, parsing element: XML.Element, with options: Options) -> XMLParser.Error? {
         guard options.contains(.skipInvalidElements) == false else {
             Self.logParsingError(for: error, filename: filename, parsing: element)
             return nil
@@ -224,7 +224,7 @@ extension XMLParser {
                 value.trimmingCharacters(in: .whitespaces))
     }
 
-    func parsePresentationAttributes(_ att: AttributeParser) throws -> DOM.PresentationAttributes {
+    func parsePresentationAttributes(_ att: any AttributeParser) throws -> DOM.PresentationAttributes {
         var el = DOM.PresentationAttributes()
 
         el.opacity = try att.parsePercentage("opacity")
@@ -266,7 +266,7 @@ extension XMLParser {
         return el
     }
 
-    func parseElementAttributes(_ att: AttributeParser) throws -> ElementAttributes {
+    func parseElementAttributes(_ att: any AttributeParser) throws -> any ElementAttributes {
         var el = ElementAtt()
         el.id = try? att.parseString("id")
         el.class = try? att.parseString("class")
@@ -278,7 +278,7 @@ extension XMLParser {
         var `class`: String?
     }
 
-    static func logParsingError(for error: Swift.Error, filename: String?, parsing element: XML.Element? = nil) {
+    static func logParsingError(for error: any Swift.Error, filename: String?, parsing element: XML.Element? = nil) {
         let elementName = element.map { "<\($0.name)>" } ?? ""
         let filename = filename ?? ""
         switch error {

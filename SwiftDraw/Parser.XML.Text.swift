@@ -33,7 +33,7 @@ import Foundation
 
 extension XMLParser {
 
-    func parseText(_ att: AttributeParser, element: XML.Element) throws -> DOM.Text? {
+    func parseText(_ att: any AttributeParser, element: XML.Element) throws -> DOM.Text? {
         guard
             let text = element.innerText?.trimmingCharacters(in: .whitespacesAndNewlines),
             !text.isEmpty else {
@@ -43,13 +43,13 @@ extension XMLParser {
         return try parseText(att, value: text)
     }
 
-    func parseAnchor(_ att: AttributeParser, element: XML.Element) throws -> DOM.Anchor? {
+    func parseAnchor(_ att: any AttributeParser, element: XML.Element) throws -> DOM.Anchor? {
         let anchor = DOM.Anchor()
         anchor.href = try att.parseUrl("href")
         return anchor
     }
 
-    func parseText(_ att: AttributeParser, value: String) throws -> DOM.Text {
+    func parseText(_ att: any AttributeParser, value: String) throws -> DOM.Text {
         let element = DOM.Text(value: value)
         element.x = try att.parseCoordinate("x")
         element.y = try att.parseCoordinate("y")
