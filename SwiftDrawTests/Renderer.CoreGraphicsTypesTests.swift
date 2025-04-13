@@ -109,7 +109,8 @@ final class RendererCoreGraphicsTypesTests: XCTestCase {
     let segments: [CGPath.Segment] = [.move(CGPoint(0, 0)), .line(CGPoint(10, 20)), .line(CGPoint(30, 40))]
     XCTAssertEqual(path.segments(), segments)
   }
-  
+
+  @MainActor
   func testShapeRect() {
     let path = CGProvider().createPath(from: .rect(within: Rect(x: 10, y: 20, width: 30, height: 40),
                                                    radii: Size(2, 4)))
