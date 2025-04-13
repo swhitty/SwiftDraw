@@ -144,6 +144,11 @@ extension SVG {
 
 private extension MainActor {
 
+#if compiler(<6.0)
+    nonisolated static func syncIsolated<T>(operation: () -> T) -> T {
+        operation()
+    }
+#else
     static func syncIsolated<T: Sendable>(operation: @MainActor () -> T) -> T {
         if Thread.isMainThread {
             return MainActor.assumeIsolated { operation() }
@@ -151,4 +156,5 @@ private extension MainActor {
             return DispatchQueue.main.sync { operation() }
         }
     }
+#endif
 }
