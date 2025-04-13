@@ -29,6 +29,7 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
+import Foundation
 #if canImport(UIKit)
 import UIKit
 #if canImport(WatchKit)
@@ -126,7 +127,7 @@ extension SVG {
 #if os(watchOS)
         WKInterfaceDevice.current().screenScale
 #else
-        UIScreen.main.scale
+        MainActor.syncIsolated { UIScreen.main.scale }
 #endif
     }
 
@@ -140,3 +141,14 @@ extension SVG {
 }
 
 #endif
+
+private extension MainActor {
+
+    static func syncIsolated<T: Sendable>(operation: @MainActor () -> T) -> T {
+        if Thread.isMainThread {
+            return MainActor.assumeIsolated { operation() }
+        } else {
+            return DispatchQueue.main.sync { operation() }
+        }
+    }
+}
