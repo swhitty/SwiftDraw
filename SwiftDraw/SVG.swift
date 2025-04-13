@@ -38,7 +38,7 @@ import Foundation
 #if canImport(CoreGraphics)
 import CoreGraphics
 
-public struct SVG: Hashable {
+public struct SVG: Hashable, Sendable {
     public private(set) var size: CGSize
 
     // Array of commands that render the image
@@ -160,7 +160,7 @@ public enum Image { }
 
 #else
 
-public struct SVG {
+public struct SVG: Sendable {
     public let size: CGSize
 
     init(dom: DOM.SVG, options: Options) {
