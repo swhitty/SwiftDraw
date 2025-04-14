@@ -38,6 +38,9 @@ struct GalleryView: View {
         [
             "avocado.svg",
             "angry.svg",
+            "ogre.svg",
+            "monkey.svg",
+            "fuji.svg",
             "dish.svg",
             "mouth-open.svg",
             "sleepy.svg",
