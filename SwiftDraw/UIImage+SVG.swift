@@ -126,6 +126,8 @@ extension SVG {
     static var defaultScale: CGFloat {
 #if os(watchOS)
         WKInterfaceDevice.current().screenScale
+#elseif os(visionOS)
+        1.0
 #else
         MainActor.syncIsolated { UIScreen.main.scale }
 #endif
