@@ -29,6 +29,7 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
+import DOM
 import Foundation
 
 extension CommandLine {
@@ -237,7 +238,7 @@ extension CommandLine {
     }
 }
 
-private extension XMLParser.Scanner {
+private extension DOMXMLParser.Scanner {
 
     mutating func scanInset() throws -> Double? {
         guard !scanStringIfPossible("auto") else {

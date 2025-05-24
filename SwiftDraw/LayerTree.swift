@@ -29,6 +29,8 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
+import DOM
+
 enum LayerTree { /* namespace */ }
 
 extension LayerTree {

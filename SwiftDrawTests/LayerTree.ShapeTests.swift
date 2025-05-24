@@ -26,6 +26,7 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
+import DOM
 import XCTest
 @testable import SwiftDraw
 

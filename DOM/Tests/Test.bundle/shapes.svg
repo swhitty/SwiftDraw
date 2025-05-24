@@ -1,0 +1,96 @@
+<?xml version="1.0"?>
+<svg xmlns="http://www.w3.org/2000/svg"
+	 xmlns:ns="http://www.w3.org/2000/svg" 
+	 xmlns:xlink="http://www.w3.org/1999/xlink" 
+	 width="500" height="700" viewBox="0 0 500 700" >
+	<ellipse cx="250" cy="250" rx="200" ry="120" stroke="green" style="stroke-width: 5" />
+	<ns:g style="fill: yellow">
+		<circle cx="250" cy="250" r="100" stroke="blue" stroke-width="2" fill="url(#goldenGradient)"/>
+	</ns:g>
+
+	<defs>
+	  <polygon id="star" points="100,10 40,198 190,78, 10,78, 160,198" fill-rule="nonzero" />
+	  <image id="dot" width="6" height="6" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg==" />
+	  <pattern id="checkerboard" width="64" height="64" patternUnits="userSpaceOnUse">
+		<rect x="0" y="0" width="32" height="32" fill="green" />
+		<rect x="32" y="0" width="32" height="32" fill="red" />
+		<rect x="0" y="32" width="32" height="32" fill="blue" />
+		<rect x="32" y="32" width="32" height="32" fill="pink" />
+	  </pattern>
+	</defs>
+	
+    <linearGradient id="MyGradient">
+          <stop offset="5%"  stop-color="purple"/>
+          <stop offset="95%" stop-color="darkblue"/>
+    </linearGradient>
+	
+	<radialGradient id="goldenGradient" fx="0.4" fy="0.35" fr="0.2" r="0.6">
+		<stop stop-color="gold" />
+		<stop offset="100%" stop-color="yellow" />
+	</radialGradient>
+
+	<circle cx="250" cy="250" r="50" fill="darkblue" stroke="purple" style="stroke-width:8;fill: url(#MyGradient)"/>
+	
+	<g color="green" stroke="hotpink">
+	  <g fill-opacity="0" stroke="red" stroke-width="4">
+		<rect x="70" y="420" width="75" height="75" />	
+		<rect x="215" y="445" width="75" height="50" fill="blue" fill-opacity="0.5" />	
+		<rect x="355" y="420" width="75" height="75" fill="currentColor" fill-opacity="0.2" />	
+	  </g>
+	</g>
+	
+	<line x1="0" y1="0" x2="250" y2="250" stroke="fuchsia" stroke-width="2" />
+	
+	<path d="M 400 350 h 50 v 50 h -50 z m 10 10 v 30 h 30 v -30 z" stroke="black" fill="mediumaquamarine" />
+	
+	<path d="M0,0 l20,30 l20,-30 l20,30 l20,-30 l20,30 l20,-30 l20,30 l20,-30 l20,30 l20,-30 l10,15 L500,15" fill-opacity="0" stroke="red" stroke-width="2"/>
+	
+	
+	<path d="M 0,90 q 50 50 100 0 q 50 -50 100 0 t 100 0 t 100 0 t 100 0" stroke="blue"
+	  stroke-width="5" fill="none" />
+	  
+	<path d="m 340 650 a 50 50 0 1 1 50 50  h -50 z" fill="khaki" stroke="black" transform="scale(0.75) rotate(145, 340, 700 )" />
+		
+ <polyline points="100,590 120,550"
+  style="fill:none;stroke:black;stroke-width:5" stroke="red" stroke-width="5" />
+  
+ <polyline points="100,590 120,550 110,600 155,610 125,590 175,600"
+  style="fill:none;stroke:green;stroke-width:2" stroke="black" stroke-width="2"/>
+  
+   <polygon points="400,500 470,590 370,620" fill="lime" stroke="purple" stroke-width="1" />
+   
+	<clipPath id="cp">
+		<rect x="440" y="55" width="20" height="20" />	
+	</clipPath>
+	
+	<g>
+	<clipPath id="cp2">
+		<circle cx="250" cy="65" r="10" fill="none"/>
+	</clipPath>
+	</g>
+   
+	<circle cx="450" cy="75" r="20" fill="purple" clip-path="url(#cp)"/>
+	
+	<switch transform="scale(2)" >
+		<circle cx="105" cy="100" r="2" fill="#FF00FF"/>
+		<circle cx="125" cy="110" r="5" fill="#00FFFF"/>
+	</switch>
+	
+	<rect x="230" y="55" width="40" height="40" fill="purple" clip-path="url(#cp2)" />	
+	
+	<text font-family="GillSans-Light" font-size="20" transform="translate(200, 650)" >
+		 Madeleine Whitty 😀
+	</text>
+	
+	<text x="0" y="13.5" font-family="GillSans-Light" font-size="20">Test</text>
+	
+	<line x1="200" y1="650" x2="400" y2="650" stroke="fuchsia" stroke-width="2" />
+	
+	<use xlink:href="#star" x="0" y="0" fill="gold" stroke="orange" transform="translate(100, 300)  scale(0.5) rotate(50, 80, 80)" />
+ 
+ 	<use xlink:href="#dot" transform="translate(150, 50)" />
+	<!-- <use xlink:href="#dot" x="140" y="55" /> -->
+	
+	<rect x="-64" y="-64" width="64" height="64" fill="url(#checkerboard)" transform="translate(128, 170) rotate(45)"/>
+	
+</svg>

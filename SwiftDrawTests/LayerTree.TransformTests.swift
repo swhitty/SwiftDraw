@@ -27,6 +27,7 @@
 //
 
 import XCTest
+import DOM
 @testable import SwiftDraw
 
 final class LayerTreeTransformTests: XCTestCase {

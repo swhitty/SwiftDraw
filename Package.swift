@@ -17,14 +17,28 @@ let package = Package(
     targets: [
         .target(
             name: "SwiftDraw",
-            dependencies: [],
+            dependencies: ["DOM"],
             path: "SwiftDraw",
             swiftSettings: .upcomingFeatures
+        ),
+        .target(
+            name: "DOM",
+            dependencies: [],
+            path: "DOM/Sources"
         ),
         .executableTarget(
             name: "CommandLine",
             dependencies: ["SwiftDraw"],
             path: "CommandLine",
+            swiftSettings: .upcomingFeatures
+        ),
+        .testTarget(
+            name: "DOMTests",
+            dependencies: ["DOM"],
+            path: "DOM/Tests",
+            resources: [
+                .copy("Test.bundle")
+            ],
             swiftSettings: .upcomingFeatures
         ),
         .testTarget(
