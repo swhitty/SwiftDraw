@@ -29,6 +29,8 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
+import DOM
+
 public struct SVGRenderer {
 
     /// Expand a Path by applying the supplied transformation

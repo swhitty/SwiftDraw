@@ -26,8 +26,10 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
+import DOM
 import XCTest
 @testable import SwiftDraw
+import Foundation
 
 final class LayerTreeCommandGeneratorTests: XCTestCase {
 
@@ -75,5 +77,31 @@ private extension LayerTree.CommandGenerator {
 
     func renderCommands(forClip shapes: [LayerTree.Shape], using rule: LayerTree.FillRule?) -> [RendererCommand<P.Types>] {
         renderCommands(forClip: shapes.map { LayerTree.ClipShape(shape: $0, transform: .identity) }, using: rule)
+    }
+}
+
+extension DOM.SVG {
+
+    static func parse(fileNamed name: String, in bundle: Bundle = .test) throws -> DOM.SVG {
+        guard let url = bundle.url(forResource: name, withExtension: nil) else {
+            throw Error.missing
+        }
+
+        let parser = XMLParser(options: [.skipInvalidElements], filename: url.lastPathComponent)
+        let element = try XML.SAXParser.parse(contentsOf: url)
+        return try parser.parseSVG(element)
+    }
+
+    static func parse(
+        xml: String,
+        options: DOMXMLParser.Options = [.skipInvalidElements]
+    ) throws -> DOM.SVG {
+        let element = try XML.SAXParser.parse(data: xml.data(using: .utf8)!)
+        let parser = XMLParser(options: options)
+        return try parser.parseSVG(element)
+    }
+
+    enum Error: Swift.Error {
+        case missing
     }
 }

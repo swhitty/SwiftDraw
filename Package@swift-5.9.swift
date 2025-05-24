@@ -5,10 +5,9 @@ import PackageDescription
 let package = Package(
     name: "SwiftDraw",
     platforms: [
-        .macOS(.v10_15), .iOS(.v13), .tvOS(.v13), .watchOS(.v6)
+        .macOS(.v10_15), .iOS(.v13), .tvOS(.v13), .watchOS(.v6), .visionOS(.v1)
     ],
     products: [
-        // Products define the executables and libraries produced by a package, and make them visible to other packages.
         .executable(name: "swiftdrawcli", targets: ["CommandLine"]),
         .library(
             name: "SwiftDraw",
@@ -18,13 +17,29 @@ let package = Package(
     targets: [
         .target(
             name: "SwiftDraw",
+            dependencies: ["DOM"],
+            path: "SwiftDraw",
+            swiftSettings: .upcomingFeatures
+        ),
+        .target(
+            name: "DOM",
             dependencies: [],
-            path: "SwiftDraw"
+            path: "DOM/Sources"
         ),
         .executableTarget(
             name: "CommandLine",
             dependencies: ["SwiftDraw"],
-            path: "CommandLine"
+            path: "CommandLine",
+            swiftSettings: .upcomingFeatures
+        ),
+        .testTarget(
+            name: "DOMTests",
+            dependencies: ["DOM"],
+            path: "DOM/Tests",
+            resources: [
+                .copy("Test.bundle")
+            ],
+            swiftSettings: .upcomingFeatures
         ),
         .testTarget(
             name: "SwiftDrawTests",
@@ -32,7 +47,17 @@ let package = Package(
             path: "SwiftDrawTests",
             resources: [
                 .copy("Test.bundle")
-            ]
+            ],
+            swiftSettings: .upcomingFeatures
         )
     ]
 )
+
+extension Array where Element == SwiftSetting {
+
+    static var upcomingFeatures: [SwiftSetting] {
+        [
+            .enableUpcomingFeature("ExistentialAny")
+        ]
+    }
+}

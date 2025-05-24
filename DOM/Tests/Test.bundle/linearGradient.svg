@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:ns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="256" height="256">
+
+	 <defs>
+		<linearGradient id="snow" x1="0" x2="1" y1="0" y2="1">
+			<stop offset="0%" stop-color="ivory" />
+			<stop offset="100%" stop-color="snow" />
+		</linearGradient>
+				
+		<linearGradient id="blue" x1="1" x2="0" y1="1" y2="0">
+			<stop offset="0%" stop-color="#312452" />
+			<stop offset="30%" stop-color="#4733AE" />
+			<stop offset="100%" stop-color="#34D3F2" />
+		</linearGradient>
+		
+		<linearGradient id="purple" x1="0.5" x2="0.5" y1="0" y2="1">
+			<stop offset="0%" stop-color="#4733AE" />
+			<stop offset="80%" stop-color="#9f64c8" />
+		</linearGradient>
+		
+		<linearGradient id="salmon" x1="0" x2="1" y1="1" y2="0">
+			<stop offset="10%" stop-color="#EC6053" />
+			<stop offset="80%" stop-color="#EC63A9" />
+		</linearGradient>
+		
+		<linearGradient id="green" x1="1" x2="0" y1="1" y2="1">
+			<stop offset="0%" stop-color="#28DE8B" />
+			<stop offset="100%" stop-color="#006939" />
+		</linearGradient>
+	 </defs>
+
+	 <rect x="0" y="0" width="256" height="256" fill="url(#snow)" />
+	 
+	 <rect x="32" y="32" width="64" height="64" fill="url(#blue)" stroke="black" stroke-width="2.5" />
+	 <circle cx="192" cy="64" r="32" fill="url(#purple)" stroke="black" stroke-width="2.5" />
+	 
+	 <circle cx="64" cy="196" r="5" />
+	 <polygon points="64,152, 40,232, 102,180, 26,180, 88,232" fill-rule="nonzero" fill="url(#green)" fill-opacity="0.8" />
+
+	 <path d="M 160 192 a 32 32 0 1 1 32 32 v -32 z" stroke="black" stroke-width="2.5" fill="url(#salmon)" />
+</svg>

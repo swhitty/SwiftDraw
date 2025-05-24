@@ -30,6 +30,7 @@
 //
 
 import XCTest
+@testable import DOM
 @testable import SwiftDraw
 
 final class GradientTests: XCTestCase {
@@ -48,7 +49,7 @@ final class GradientTests: XCTestCase {
     expected.stops.append(DOM.LinearGradient.Stop(offset: 0.5, color: .keyword(.black)))
     expected.stops.append(DOM.LinearGradient.Stop(offset: 1, color: .keyword(.red)))
     
-    let parsed = try? XMLParser().parseLinearGradient(node)
+    let parsed = try? DOMXMLParser().parseLinearGradient(node)
     XCTAssertEqual(expected, parsed)
     XCTAssertEqual(expected.stops.count, parsed?.stops.count)
   }
@@ -57,31 +58,31 @@ final class GradientTests: XCTestCase {
     
     var node = ["offset": "25.5%", "stop-color": "black"]
     
-    var parsed = try? XMLParser().parseLinearGradientStop(node)
+    var parsed = try? DOMXMLParser().parseLinearGradientStop(node)
     XCTAssertEqual(parsed?.offset, 0.255)
     XCTAssertEqual(parsed?.color, .keyword(.black))
     XCTAssertEqual(parsed?.opacity, 1.0)
     
     node["stop-opacity"] = "99%"
-    parsed = try? XMLParser().parseLinearGradientStop(node)
+    parsed = try? DOMXMLParser().parseLinearGradientStop(node)
     XCTAssertEqual(parsed?.opacity, 0.99)
   }
 
   func testGradientUnits() throws {
     let node = XML.Element(name: "linearGradient", attributes: ["id": "abc"])
 
-    var gradient = try XMLParser().parseLinearGradient(node)
+    var gradient = try DOMXMLParser().parseLinearGradient(node)
     XCTAssertNil(gradient.gradientUnits)
 
     node.attributes["gradientUnits"] = "userSpaceOnUse"
-    gradient = try XMLParser().parseLinearGradient(node)
+    gradient = try DOMXMLParser().parseLinearGradient(node)
     XCTAssertEqual(gradient.gradientUnits, .userSpaceOnUse)
 
     node.attributes["gradientUnits"] = "objectBoundingBox"
-    gradient = try XMLParser().parseLinearGradient(node)
+    gradient = try DOMXMLParser().parseLinearGradient(node)
     XCTAssertEqual(gradient.gradientUnits, .objectBoundingBox)
 
     node.attributes["gradientUnits"] = "invalid"
-    XCTAssertThrowsError(try XMLParser().parseLinearGradient(node))
+    XCTAssertThrowsError(try DOMXMLParser().parseLinearGradient(node))
   }
 }
