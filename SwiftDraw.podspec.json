@@ -16,7 +16,8 @@
     "ios": "13.0",
     "osx": "10.15",
     "tvos": "13.0",
-    "watchos": "6.0"
+    "watchos": "6.0",
+    "visionos": "1.0"
   },
   "source_files": "SwiftDraw/**/*.swift",
   "ios": {
@@ -34,6 +35,10 @@
   "watchos": {
     "exclude_files": "SwiftDraw/NSImage+Image.swift",
     "frameworks": ["UIKit", "WatchKit", "Foundation"]
+  },
+  "visionos": {
+    "exclude_files": "SwiftDraw/NSImage+Image.swift",
+    "frameworks": ["UIKit", "Foundation"]
   },
   "swift_version": "5.0"
 }
