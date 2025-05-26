@@ -1,6 +1,6 @@
 {
   "name": "SwiftDraw",
-  "version": "0.21.0",
+  "version": "0.22.0",
   "summary": "A Swift library that adds support for SVG files to UIImage and NSImage.",
   "homepage": "https://github.com/swhitty/SwiftDraw",
   "authors": "Simon Whitty",
@@ -40,5 +40,8 @@
     "exclude_files": "SwiftDraw/NSImage+Image.swift",
     "frameworks": ["UIKit", "Foundation"]
   },
-  "swift_version": "5.0"
+  "swift_version": "5.9",
+  "dependencies": {
+    "SwiftDrawDOM": "~> 0.22.0"
+  },
 }
