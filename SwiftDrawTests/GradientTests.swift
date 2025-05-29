@@ -30,7 +30,7 @@
 //
 
 import XCTest
-@testable import DOM
+@testable import SwiftDrawDOM
 @testable import SwiftDraw
 
 final class GradientTests: XCTestCase {

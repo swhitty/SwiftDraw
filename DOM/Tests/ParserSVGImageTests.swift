@@ -30,7 +30,7 @@
 //
 
 import XCTest
-@testable import DOM
+@testable import SwiftDrawDOM
 import Foundation
 
 final class ParserSVGImageTests: XCTestCase {

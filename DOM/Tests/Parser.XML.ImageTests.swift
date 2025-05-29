@@ -33,7 +33,7 @@
 import Foundation
 
 import XCTest
-@testable import DOM
+@testable import SwiftDrawDOM
 #if canImport(CoreGraphics)
 import CoreGraphics
 

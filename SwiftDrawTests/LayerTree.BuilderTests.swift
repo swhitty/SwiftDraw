@@ -29,7 +29,7 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-@testable import DOM
+@testable import SwiftDrawDOM
 import XCTest
 @testable import SwiftDraw
 

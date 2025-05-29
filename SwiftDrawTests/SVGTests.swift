@@ -30,7 +30,7 @@
 //
 
 import XCTest
-import DOM
+import SwiftDrawDOM
 @testable import SwiftDraw
 
 #if canImport(CoreGraphics)
