@@ -17,12 +17,12 @@ let package = Package(
     targets: [
         .target(
             name: "SwiftDraw",
-            dependencies: ["DOM"],
+            dependencies: ["SwiftDrawDOM"],
             path: "SwiftDraw",
             swiftSettings: .upcomingFeatures
         ),
         .target(
-            name: "DOM",
+            name: "SwiftDrawDOM",
             dependencies: [],
             path: "DOM/Sources"
         ),
@@ -33,8 +33,8 @@ let package = Package(
             swiftSettings: .upcomingFeatures
         ),
         .testTarget(
-            name: "DOMTests",
-            dependencies: ["DOM"],
+            name: "SwiftDrawDOMTests",
+            dependencies: ["SwiftDrawDOM"],
             path: "DOM/Tests",
             resources: [
                 .copy("Test.bundle")

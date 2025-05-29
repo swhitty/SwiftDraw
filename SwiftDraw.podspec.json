@@ -46,5 +46,5 @@
   },
   "dependencies": {
     "SwiftDrawDOM": "~> 0.22.0"
-  },
+  }
 }

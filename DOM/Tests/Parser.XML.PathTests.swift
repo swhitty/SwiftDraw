@@ -29,9 +29,9 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-import DOM
+import SwiftDrawDOM
 import XCTest
-@testable import DOM
+@testable import SwiftDrawDOM
 
 private typealias Coordinate = DOM.Coordinate
 private typealias Segment = DOM.Path.Segment

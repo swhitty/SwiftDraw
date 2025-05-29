@@ -31,7 +31,7 @@
 
 
 import XCTest
-@testable import DOM
+@testable import SwiftDrawDOM
 
 final class ValueParserTests: XCTestCase {
   

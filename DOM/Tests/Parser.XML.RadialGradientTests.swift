@@ -33,7 +33,7 @@
 import Foundation
 
 import XCTest
-@testable import DOM
+@testable import SwiftDrawDOM
 
 final class ParserXMLRadialGradientTests: XCTestCase {
 

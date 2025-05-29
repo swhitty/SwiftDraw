@@ -31,7 +31,7 @@
 
 // Convert a DOM.SVG into a layer tree
 
-import DOM
+import SwiftDrawDOM
 import Foundation
 
 extension LayerTree {
