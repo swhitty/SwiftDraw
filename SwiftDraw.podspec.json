@@ -41,6 +41,9 @@
     "frameworks": ["UIKit", "Foundation"]
   },
   "swift_version": "5.9",
+  "pod_target_xcconfig": {
+    "OTHER_SWIFT_FLAGS": "-package-name SwiftDraw"
+  },
   "dependencies": {
     "SwiftDrawDOM": "~> 0.22.0"
   },
