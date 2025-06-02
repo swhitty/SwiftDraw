@@ -30,7 +30,7 @@
 //
 
 package extension DOM {
-    final class Use: GraphicsElement, @unchecked Sendable {
+    final class Use: GraphicsElement {
         package var x: Coordinate?
         package var y: Coordinate?
 

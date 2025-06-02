@@ -35,7 +35,7 @@ import Foundation
 extension XML.Formatter {
 
     enum Error: Swift.Error {
-        case unsupportedGraphicsElement(DOM.GraphicsElement)
+        case unsupportedGraphicsElement(name: String)
     }
 
     struct SVG {
@@ -198,7 +198,7 @@ extension XML.Formatter {
             } else if let path = graphic as? DOM.Path {
                 element = makeElement(from: path)
             } else {
-                throw Error.unsupportedGraphicsElement(graphic)
+                throw Error.unsupportedGraphicsElement(name: String(describing: type(of: graphic)))
             }
 
             if let container = graphic as? any ContainerElement {

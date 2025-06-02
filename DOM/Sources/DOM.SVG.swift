@@ -30,7 +30,7 @@
 //
 
 package extension DOM {
-    final class SVG: GraphicsElement, ContainerElement, @unchecked Sendable {
+    final class SVG: GraphicsElement, ContainerElement {
         package var x: Coordinate?
         package var y: Coordinate?
         package var width: Length

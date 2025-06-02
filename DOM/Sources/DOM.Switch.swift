@@ -30,7 +30,7 @@
 //
 
 package extension DOM {
-    final class Switch: GraphicsElement, ContainerElement, @unchecked Sendable {
+    final class Switch: GraphicsElement, ContainerElement {
         package var childElements = [DOM.GraphicsElement]()
     }
 }

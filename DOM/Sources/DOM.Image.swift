@@ -29,7 +29,7 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 package extension DOM {
-    final class Image: GraphicsElement, @unchecked Sendable {
+    final class Image: GraphicsElement {
         package var href: URL
         package var width: Coordinate?
         package var height: Coordinate?

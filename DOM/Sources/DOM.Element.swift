@@ -44,7 +44,7 @@ package extension DOM {
 
     class Element {}
     
-    class GraphicsElement: Element, ElementAttributes, @unchecked Sendable {
+    class GraphicsElement: Element, ElementAttributes {
         package var id: String?
         package var `class`: String?
 
@@ -52,7 +52,7 @@ package extension DOM {
         package var style = PresentationAttributes()
     }
     
-    final class Line: GraphicsElement, @unchecked Sendable {
+    final class Line: GraphicsElement {
         package var x1: Coordinate
         package var y1: Coordinate
         package var x2: Coordinate
@@ -67,7 +67,7 @@ package extension DOM {
         }
     }
     
-    final class Circle: GraphicsElement, @unchecked Sendable {
+    final class Circle: GraphicsElement {
         package var cx: Coordinate?
         package var cy: Coordinate?
         package var r: Coordinate
@@ -80,7 +80,7 @@ package extension DOM {
         }
     }
     
-    final class Ellipse: GraphicsElement, @unchecked Sendable {
+    final class Ellipse: GraphicsElement {
         package var cx: Coordinate?
         package var cy: Coordinate?
         package var rx: Coordinate
@@ -95,7 +95,7 @@ package extension DOM {
         }
     }
     
-    final class Rect: GraphicsElement, @unchecked Sendable {
+    final class Rect: GraphicsElement {
         package var x: Coordinate?
         package var y: Coordinate?
         package var width: Coordinate
@@ -113,7 +113,7 @@ package extension DOM {
         }
     }
     
-    final class Polyline: GraphicsElement, @unchecked Sendable {
+    final class Polyline: GraphicsElement {
         package var points: [Point]
 
         package init(points: [Point]) {
@@ -122,7 +122,7 @@ package extension DOM {
         }
     }
     
-    final class Polygon: GraphicsElement, @unchecked Sendable {
+    final class Polygon: GraphicsElement {
         package var points: [Point]
 
         package init(points: [Point]) {
@@ -131,7 +131,7 @@ package extension DOM {
         }
     }
     
-    final class Group: GraphicsElement, ContainerElement, @unchecked Sendable {
+    final class Group: GraphicsElement, ContainerElement {
         package var childElements = [GraphicsElement]()
     }
 }

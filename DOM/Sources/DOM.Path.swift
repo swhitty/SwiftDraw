@@ -33,7 +33,7 @@ import Foundation
 
 package extension DOM {
 
-    final class Path: GraphicsElement, @unchecked Sendable {
+    final class Path: GraphicsElement {
         
         // segments[0] should always be a .move
         package var segments: [Segment]
