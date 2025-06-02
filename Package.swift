@@ -18,7 +18,7 @@ let package = Package(
         .target(
             name: "SwiftDraw",
             dependencies: ["SwiftDrawDOM"],
-            path: "SwiftDraw",
+            path: "SwiftDraw/Sources",
             swiftSettings: .upcomingFeatures
         ),
         .target(
@@ -44,7 +44,7 @@ let package = Package(
         .testTarget(
             name: "SwiftDrawTests",
             dependencies: ["SwiftDraw"],
-            path: "SwiftDrawTests",
+            path: "SwiftDraw/Tests",
             resources: [
                 .copy("Test.bundle")
             ],
