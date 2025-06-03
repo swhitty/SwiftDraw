@@ -97,7 +97,7 @@ jobs:
 
   linux_6:
     runs-on: ubuntu-latest
-    container: swift:6.0
+    container: swift:6.0.3
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -110,7 +110,7 @@ jobs:
 
   linux_6_1:
     runs-on: ubuntu-latest
-    container: swift:6.1
+    container: swift:6.1.2
     steps:
       - name: Checkout
         uses: actions/checkout@v4
