@@ -40,7 +40,7 @@
     "exclude_files": "SwiftDraw/NSImage+Image.swift",
     "frameworks": ["UIKit", "Foundation"]
   },
-  "swift_version": "5.9",
+  "swift_version": "5.10",
   "pod_target_xcconfig": {
     "OTHER_SWIFT_FLAGS": "-package-name SwiftDraw"
   },
