@@ -50,6 +50,7 @@ package extension XMLParser {
     }
 
     func parsePathSegments(_ data: String) throws -> [Segment] {
+        guard !data.isEmpty else { return [] }
 
         var segments = Array<Segment>()
 
