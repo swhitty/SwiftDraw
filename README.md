@@ -95,7 +95,7 @@ Options:
  --precision   maximum number of decimal places
  --output      optional path of output file
 
- --hideUnsupportedFilters   hide elements with unsupported filters.
+ --hide-unsupported-filters   hide elements with unsupported filters.
 
 Available keys for --format swift:
  --api                api of generated code:  appkit | uikit
@@ -103,9 +103,10 @@ Available keys for --format swift:
 Available keys for --format sfsymbol:
  --insets             alignment of regular variant: top,left,bottom,right | auto
  --ultralight         svg file of ultralight variant
- --ultralightInsets   alignment of ultralight variant: top,left,bottom,right | auto
+ --ultralight-insets  alignment of ultralight variant: top,left,bottom,right | auto
  --black              svg file of black variant
- --blackInsets        alignment of black variant: top,left,bottom,right | auto
+ --black-insets       alignment of black variant: top,left,bottom,right | auto
+ --legacy             use the original, less precise alignment logic from earlier swiftdraw versions.
 ```
 
 ```bash

@@ -56,6 +56,23 @@ extension CommandLine {
                 return true
             }
         }
+
+        static func make(from text: String) -> Self? {
+            if let modifier = Modifier(rawValue: text) {
+                return modifier
+            }
+
+            switch text {
+            case "ultralight-insets":
+                return .ultralightInsets
+            case "black-insets":
+                return .blackInsets
+            case "hide-unsupported-filters":
+                return .hideUnsupportedFilters
+            default:
+                return nil
+            }
+        }
     }
 
     static func parseModifiers(from args: [String]) throws -> [Modifier: String?] {
@@ -91,7 +108,7 @@ private extension Array where Element == String {
         }
 
         guard self[0].hasPrefix("--"),
-              let modifier = CommandLine.Modifier(rawValue: String(self[0].dropFirst(2))) else {
+              let modifier = CommandLine.Modifier.make(from: String(self[0].dropFirst(2))) else {
             throw CommandLine.Error.invalid
         }
 

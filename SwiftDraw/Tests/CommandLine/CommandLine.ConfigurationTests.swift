@@ -90,9 +90,8 @@ final class CommandLineConfigurationTests: XCTestCase {
     }
 
     func testParseInsets() throws {
-        XCTAssertEqual(
-            try CommandLine.parseInsets(from: nil),
-            .init()
+        XCTAssertNil(
+            try CommandLine.parseInsets(from: nil)
         )
         XCTAssertEqual(
             try CommandLine.parseInsets(from: "auto"),

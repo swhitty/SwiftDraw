@@ -144,7 +144,7 @@ extension SFSymbolRenderer {
     }
 
     func makeBounds(svg: DOM.SVG, isRegularSVG: Bool = true, auto: LayerTree.Rect, for variant: Variant) throws -> LayerTree.Rect {
-        let insets = getInsets(for: isRegularSVG ? .regular : variant)
+        let insets = getInsets(for: variant)
         let width = LayerTree.Float(svg.width)
         let height = LayerTree.Float(svg.height)
         let top = insets.top ?? Double(auto.minY)
@@ -337,9 +337,9 @@ extension SFSymbolRenderer {
         case .regular:
             print("Alignment: --insets \(top),\(left),\(bottom),\(right)")
         case .ultralight:
-            print("Alignment: --ultralightInsets \(top),\(left),\(bottom),\(right)")
+            print("Alignment: --ultralight-insets \(top),\(left),\(bottom),\(right)")
         case .black:
-            print("Alignment: --blackInsets \(top),\(left),\(bottom),\(right)")
+            print("Alignment: --black-insets \(top),\(left),\(bottom),\(right)")
         }
     }
 
