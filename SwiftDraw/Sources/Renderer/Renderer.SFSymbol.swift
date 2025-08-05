@@ -68,24 +68,24 @@ public struct SFSymbolRenderer {
 
         template.svg.styles = image.styles.map(makeSymbolStyleSheet)
 
-        let boundsRegular = try makeBounds(svg: image, auto: Self.makeBounds(for: pathsRegular), for: .regular)
+        let boundsRegular = try makeBounds(svg: image, auto: Self.makeAutoBounds(for: pathsRegular), for: .regular)
         template.regular.appendPaths(pathsRegular, from: boundsRegular)
 
         if let ultralight = ultralight,
            let paths = Self.getPaths(for: ultralight) {
-            let bounds = try makeBounds(svg: ultralight, auto: Self.makeBounds(for: paths), for: .ultralight)
+            let bounds = try makeBounds(svg: ultralight, isRegularSVG: false, auto: Self.makeAutoBounds(for: paths), for: .ultralight)
             template.ultralight.appendPaths(paths, from: bounds)
         } else {
-            let bounds = try makeBounds(svg: image, auto: Self.makeBounds(for: pathsRegular), for: .ultralight)
+            let bounds = try makeBounds(svg: image, auto: Self.makeAutoBounds(for: pathsRegular), for: .ultralight)
             template.ultralight.appendPaths(pathsRegular, from: bounds)
         }
 
         if let black = black,
            let paths = Self.getPaths(for: black) {
-            let bounds = try makeBounds(svg: black, auto: Self.makeBounds(for: paths), for: .black)
+            let bounds = try makeBounds(svg: black, isRegularSVG: false, auto: Self.makeAutoBounds(for: paths), for: .black)
             template.black.appendPaths(paths, from: bounds)
         } else {
-            let bounds = try makeBounds(svg: image, auto: Self.makeBounds(for: pathsRegular), for: .black)
+            let bounds = try makeBounds(svg: image, auto: Self.makeAutoBounds(for: pathsRegular), for: .black)
             template.black.appendPaths(pathsRegular, from: bounds)
         }
 
@@ -138,8 +138,8 @@ extension SFSymbolRenderer {
         }
     }
 
-    func makeBounds(svg: DOM.SVG, auto: LayerTree.Rect, for variant: Variant) throws -> LayerTree.Rect {
-        let insets = getInsets(for: variant)
+    func makeBounds(svg: DOM.SVG, isRegularSVG: Bool = true, auto: LayerTree.Rect, for variant: Variant) throws -> LayerTree.Rect {
+        let insets = getInsets(for: isRegularSVG ? .regular : variant)
         let width = LayerTree.Float(svg.width)
         let height = LayerTree.Float(svg.height)
         let top = insets.top ?? Double(auto.minY)
@@ -257,7 +257,7 @@ extension SFSymbolRenderer {
 #endif
     }
 
-    static func makeBounds(for paths: [SymbolPath]) -> LayerTree.Rect {
+    static func makeAutoBounds(for paths: [SymbolPath]) -> LayerTree.Rect {
         var min = LayerTree.Point.maximum
         var max = LayerTree.Point.minimum
         for p in paths {
@@ -265,6 +265,10 @@ extension SFSymbolRenderer {
             min = min.minimum(combining: .init(bounds.minX, bounds.minY))
             max = max.maximum(combining: .init(bounds.maxX, bounds.maxY))
         }
+
+        min.x -= 10
+        max.x += 10
+
         return LayerTree.Rect(
             x: min.x,
             y: min.y,
@@ -523,9 +527,9 @@ private extension SFSymbolTemplate.Variant {
             }
 
         let midX = bounds.midX
-        let newWidth = ((source.width * matrix.a) / 2) + 10
-        left.x = min(left.x, midX - newWidth)
-        right.x = max(right.x, midX + newWidth)
+        let newWidth = ((source.width * matrix.a) / 2)
+        left.x = midX - newWidth
+        right.x = midX + newWidth
     }
 }
 
