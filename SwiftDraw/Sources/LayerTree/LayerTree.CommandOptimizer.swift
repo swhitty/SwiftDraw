@@ -144,8 +144,8 @@ struct OptimizerOptions: OptionSet {
         self.rawValue = rawValue
     }
 
-    static let skipRedundantState = OptimizerOptions(rawValue: 1)
-    static let skipInitialSaveState = OptimizerOptions(rawValue: 2)
+    static let skipRedundantState = OptimizerOptions(rawValue: 1 << 0)
+    static let skipInitialSaveState = OptimizerOptions(rawValue: 1 << 1)
 }
 
 extension RendererCommand {

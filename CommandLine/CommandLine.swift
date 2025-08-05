@@ -94,6 +94,7 @@ Available keys for --format sfsymbol:
  --ultralightInsets   alignment of ultralight variant: top,left,bottom,right | auto
  --black              svg file of black variant
  --blackInsets        alignment of black variant: top,left,bottom,right | auto
+ --legacy             use the original, less precise alignment logic from earlier swiftdraw versions.
 
 
 """)
