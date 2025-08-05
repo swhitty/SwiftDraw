@@ -67,7 +67,13 @@ final class ParserXMLPathTests: XCTestCase {
     XCTAssertNotEqual(Segment.move(x: 10, y: 20, space: .relative),
                       move(10, 20, .absolute))
   }
-  
+
+  func testEmpty() throws {
+    let parser = SwiftDrawDOM.XMLParser()
+    XCTAssertEqual(try parser.parsePathSegments(""), [])
+    XCTAssertEqual(try parser.parsePathSegments("       "), [])
+  }
+
   func testMove() {
     AssertSegmentEquals("M 10 20", move(10, 20, .absolute))
     AssertSegmentEquals("m 10 20", move(10, 20, .relative))
