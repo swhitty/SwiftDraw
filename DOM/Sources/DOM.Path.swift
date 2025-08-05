@@ -44,7 +44,7 @@ package extension DOM {
             super.init()
         }
         
-        package enum Segment {
+        package enum Segment: Equatable {
             case move(x: Coordinate, y: Coordinate, space: CoordinateSpace)
             case line(x: Coordinate, y: Coordinate, space: CoordinateSpace)
             case horizontal(x: Coordinate, space: CoordinateSpace)
