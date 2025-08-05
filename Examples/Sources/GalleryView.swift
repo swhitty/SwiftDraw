@@ -51,7 +51,8 @@ struct GalleryView: View {
             "worried.svg",
             "yawning.svg",
             "thats-no-moon.svg",
-            "alert.svg"
+            "alert.svg",
+            "effigy.svg"
         ].compactMap {
             SVG(named: $0, in: .samples)
         }

@@ -120,10 +120,10 @@ extension XMLParser {
     return url
   }
   
-  private func parseIntColor(data: String, withAlpha: Bool) throws -> DOM.Color {
+  private func parseIntColor(data: String, requireAlpha: Bool) throws -> DOM.Color {
     var scanner = XMLParser.Scanner(text: data)
-    try scanner.scanString(withAlpha ? "rgba(" : "rgb(")
-    
+    try scanner.scanString(requireAlpha ? "rgba(" : "rgb(")
+
     let r = try scanner.scanUInt8()
     scanner.scanStringIfPossible(",")
     let g = try scanner.scanUInt8()
@@ -131,21 +131,23 @@ extension XMLParser {
     let b = try scanner.scanUInt8()
     var a: Float = 1.0
     
-    if withAlpha {
+    if requireAlpha {
       scanner.scanStringIfPossible(",")
-      a = try scanner.scanFloat()  // Opacity
+      a = try scanner.scanAlpha()
+    } else if scanner.scanStringIfPossible(",") {
+      a = try scanner.scanAlpha()
     }
-    
+
     try scanner.scanString(")")
-    return .rgbi(r, g, b, a)
+    return .rgbi(r, g, b, min(1, a))
   }
   
   private func parseColorRGBi(data: String) throws -> DOM.Color {
-    return try parseIntColor(data: data, withAlpha: false)
+    return try parseIntColor(data: data, requireAlpha: false)
   }
   
   private func parseColorRGBAi(data: String) throws -> DOM.Color {
-    return try parseIntColor(data: data, withAlpha: true)
+    return try parseIntColor(data: data, requireAlpha: true)
   }
   
   private func parsePercentageColor(data: String, withAlpha: Bool) throws -> DOM.Color {

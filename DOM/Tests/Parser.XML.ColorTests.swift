@@ -66,6 +66,11 @@ final class ParserColorTests: XCTestCase {
     XCTAssertEqual(try XMLParser().parseColor("rgb(0,1,2)"), .rgbi(0, 1, 2, 1.0))
     XCTAssertEqual(try XMLParser().parseColor(" rgb( 0 , 1 , 2) "), .rgbi(0, 1, 2, 1.0))
     XCTAssertEqual(try XMLParser().parseColor("rgb(255,100,78)"), .rgbi(255, 100, 78, 1.0))
+
+    XCTAssertEqual(try XMLParser().parseColor("rgb(0,1,2,255)"), .rgbi(0, 1, 2, 1.0))
+    XCTAssertEqual(try XMLParser().parseColor("rgb(0,1,2,25%)"), .rgbi(0, 1, 2, 0.25))
+    XCTAssertEqual(try XMLParser().parseColor(" rgb( 0 , 1 , 2, 0.5) "), .rgbi(0, 1, 2, 0.5))
+    XCTAssertEqual(try XMLParser().parseColor("rgb(255,100, 78, 0)"), .rgbi(255, 100, 78, 0))
   }
   
   func testColorRGBf() {
