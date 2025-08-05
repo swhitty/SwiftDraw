@@ -65,7 +65,7 @@ final class RendererSFSymbolTests: XCTestCase {
         )
 
         XCTAssertTrue(
-            template.regular.bounds.size.width == 108.0
+            template.regular.bounds.size.width == 88.0
         )
         XCTAssertTrue(
             template.regular.bounds.size.height == 70.0
