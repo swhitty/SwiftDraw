@@ -39,18 +39,23 @@ public struct SFSymbolRenderer {
     private let insetsUltralight: CommandLine.Insets
     private let insetsBlack: CommandLine.Insets
     private let formatter: CoordinateFormatter
+    private let isLegacyInsets: Bool
 
     public init(options: SVG.Options,
                 insets: CommandLine.Insets,
                 insetsUltralight: CommandLine.Insets,
                 insetsBlack: CommandLine.Insets,
-                precision: Int) {
+                precision: Int,
+                isLegacyInsets: Bool) {
         self.options = options
         self.insets = insets
         self.insetsUltralight = insetsUltralight
         self.insetsBlack = insetsBlack
-        self.formatter = CoordinateFormatter(delimeter: .comma,
-                                             precision: .capped(max: precision))
+        self.formatter = CoordinateFormatter(
+            delimeter: .comma,
+            precision: .capped(max: precision)
+        )
+        self.isLegacyInsets = isLegacyInsets
     }
 
     public func render(regular: URL, ultralight: URL?, black: URL?) throws -> String {
@@ -68,25 +73,25 @@ public struct SFSymbolRenderer {
 
         template.svg.styles = image.styles.map(makeSymbolStyleSheet)
 
-        let boundsRegular = try makeBounds(svg: image, auto: Self.makeAutoBounds(for: pathsRegular), for: .regular)
-        template.regular.appendPaths(pathsRegular, from: boundsRegular)
+        let boundsRegular = try makeBounds(svg: image, auto: Self.makeAutoBounds(for: pathsRegular, isLegacy: isLegacyInsets), for: .regular)
+        template.regular.appendPaths(pathsRegular, from: boundsRegular, isLegacy: isLegacyInsets)
 
         if let ultralight = ultralight,
            let paths = Self.getPaths(for: ultralight) {
-            let bounds = try makeBounds(svg: ultralight, isRegularSVG: false, auto: Self.makeAutoBounds(for: paths), for: .ultralight)
-            template.ultralight.appendPaths(paths, from: bounds)
+            let bounds = try makeBounds(svg: ultralight, isRegularSVG: false, auto: Self.makeAutoBounds(for: paths, isLegacy: isLegacyInsets), for: .ultralight)
+            template.ultralight.appendPaths(paths, from: bounds, isLegacy: isLegacyInsets)
         } else {
-            let bounds = try makeBounds(svg: image, auto: Self.makeAutoBounds(for: pathsRegular), for: .ultralight)
-            template.ultralight.appendPaths(pathsRegular, from: bounds)
+            let bounds = try makeBounds(svg: image, auto: Self.makeAutoBounds(for: pathsRegular, isLegacy: isLegacyInsets), for: .ultralight)
+            template.ultralight.appendPaths(pathsRegular, from: bounds, isLegacy: isLegacyInsets)
         }
 
         if let black = black,
            let paths = Self.getPaths(for: black) {
-            let bounds = try makeBounds(svg: black, isRegularSVG: false, auto: Self.makeAutoBounds(for: paths), for: .black)
-            template.black.appendPaths(paths, from: bounds)
+            let bounds = try makeBounds(svg: black, isRegularSVG: false, auto: Self.makeAutoBounds(for: paths, isLegacy: isLegacyInsets), for: .black)
+            template.black.appendPaths(paths, from: bounds, isLegacy: isLegacyInsets)
         } else {
-            let bounds = try makeBounds(svg: image, auto: Self.makeAutoBounds(for: pathsRegular), for: .black)
-            template.black.appendPaths(pathsRegular, from: bounds)
+            let bounds = try makeBounds(svg: image, auto: Self.makeAutoBounds(for: pathsRegular, isLegacy: isLegacyInsets), for: .black)
+            template.black.appendPaths(pathsRegular, from: bounds, isLegacy: isLegacyInsets)
         }
 
         let element = try XML.Formatter.SVG(formatter: formatter).makeElement(from: template.svg)
@@ -257,7 +262,7 @@ extension SFSymbolRenderer {
 #endif
     }
 
-    static func makeAutoBounds(for paths: [SymbolPath]) -> LayerTree.Rect {
+    static func makeAutoBounds(for paths: [SymbolPath], isLegacy: Bool = false) -> LayerTree.Rect {
         var min = LayerTree.Point.maximum
         var max = LayerTree.Point.minimum
         for p in paths {
@@ -266,8 +271,10 @@ extension SFSymbolRenderer {
             max = max.maximum(combining: .init(bounds.maxX, bounds.maxY))
         }
 
-        min.x -= 10
-        max.x += 10
+        if !isLegacy {
+            min.x -= 10
+            max.x += 10
+        }
 
         return LayerTree.Rect(
             x: min.x,
@@ -516,7 +523,7 @@ private extension ContainerElement {
 
 private extension SFSymbolTemplate.Variant {
 
-    mutating func appendPaths(_ paths: [SFSymbolRenderer.SymbolPath], from source: LayerTree.Rect) {
+    mutating func appendPaths(_ paths: [SFSymbolRenderer.SymbolPath], from source: LayerTree.Rect, isLegacy: Bool = false) {
         let matrix = SFSymbolRenderer.makeTransformation(from: source, to: bounds)
         contents.paths = paths
             .map {
@@ -527,9 +534,16 @@ private extension SFSymbolTemplate.Variant {
             }
 
         let midX = bounds.midX
-        let newWidth = ((source.width * matrix.a) / 2)
-        left.x = midX - newWidth
-        right.x = midX + newWidth
+        if isLegacy {
+            // preserve behaviour from earlier SwiftDraw versions with --legacy option
+            let newWidth = ((source.width * matrix.a) / 2) + 10
+            left.x = min(left.x, midX - newWidth)
+            right.x = max(right.x, midX + newWidth)
+        } else {
+            let newWidth = ((source.width * matrix.a) / 2)
+            left.x = midX - newWidth
+            right.x = midX + newWidth
+        }
     }
 }
 

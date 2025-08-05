@@ -51,14 +51,19 @@ public extension CommandLine {
                                                  precision: config.precision ?? 2)
             return code.data(using: .utf8)!
         case .sfsymbol:
-            let renderer = SFSymbolRenderer(options: config.options,
-                                            insets: config.insets,
-                                            insetsUltralight: config.insetsUltralight ?? config.insets,
-                                            insetsBlack: config.insetsBlack ?? config.insets,
-                                            precision: config.precision ?? 3)
-            let svg = try renderer.render(regular: config.input,
-                                          ultralight: config.inputUltralight,
-                                          black: config.inputBlack)
+            let renderer = SFSymbolRenderer(
+                options: config.options,
+                insets: config.insets,
+                insetsUltralight: config.insetsUltralight ?? config.insets,
+                insetsBlack: config.insetsBlack ?? config.insets,
+                precision: config.precision ?? 3,
+                isLegacyInsets: config.isLegacyInsetsEnabled
+            )
+            let svg = try renderer.render(
+                regular: config.input,
+                ultralight: config.inputUltralight,
+                black: config.inputBlack
+            )
             return svg.data(using: .utf8)!
         case .jpeg, .pdf, .png:
             #if canImport(CoreGraphics)

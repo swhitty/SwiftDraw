@@ -49,8 +49,8 @@ package struct XMLParser {
             self.rawValue = rawValue
         }
 
-        package static let skipInvalidAttributes = Options(rawValue: 1)
-        package static let skipInvalidElements = Options(rawValue: 2)
+        package static let skipInvalidAttributes = Options(rawValue: 1 << 0)
+        package static let skipInvalidElements = Options(rawValue: 1 << 1)
     }
 
     package init(options: Options = [], filename: String? = nil) {

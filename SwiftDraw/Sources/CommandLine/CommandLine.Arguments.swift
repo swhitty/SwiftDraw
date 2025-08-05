@@ -46,9 +46,15 @@ extension CommandLine {
         case black
         case blackInsets
         case hideUnsupportedFilters
+        case legacy
 
         var hasValue: Bool {
-            self != .hideUnsupportedFilters
+            switch self {
+            case .hideUnsupportedFilters, .legacy:
+                return false
+            default:
+                return true
+            }
         }
     }
 

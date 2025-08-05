@@ -48,6 +48,7 @@ extension CommandLine {
         public var scale: Scale
         public var options: SVG.Options
         public var precision: Int?
+        public var isLegacyInsetsEnabled: Bool
     }
 
     public enum Format: String {
@@ -119,19 +120,22 @@ extension CommandLine {
 
         let options = try parseOptions(from: modifiers)
         let result = source.newURL(for: format, scale: scale)
-        return Configuration(input: source,
-                             inputUltralight: ultralight,
-                             inputBlack: black,
-                             output: output ?? result,
-                             format: format,
-                             size: size,
-                             api: api,
-                             insets: insets,
-                             insetsUltralight: ultralightInsets,
-                             insetsBlack: blackInsets,
-                             scale: scale,
-                             options: options,
-                             precision: precision)
+        return Configuration(
+            input: source,
+            inputUltralight: ultralight,
+            inputBlack: black,
+            output: output ?? result,
+            format: format,
+            size: size,
+            api: api,
+            insets: insets,
+            insetsUltralight: ultralightInsets,
+            insetsBlack: blackInsets,
+            scale: scale,
+            options: options,
+            precision: precision,
+            isLegacyInsetsEnabled: modifiers.keys.contains(.legacy)
+        )
     }
 
     static func parseFileURL(file: String, within directory: URL) throws -> URL {
