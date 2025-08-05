@@ -42,7 +42,7 @@ final class CommandLineArgumentsTests: XCTestCase {
         XCTAssertEqual(modifiers, [.ultralightInsets: "a", .blackInsets: "b", .hideUnsupportedFilters: nil, .legacy: nil])
 
         modifiers = try CommandLine.parseModifiers(from: ["--ultralight-insets", "a", "--black-insets", "b", "--hide-unsupported-filters", "--legacy"])
-        XCTAssertEqual(modifiers, [.ultralightInsets: "a", .blackInsets: "b", .hideUnsupportedFilters: nil, .legacy: nil])"
+        XCTAssertEqual(modifiers, [.ultralightInsets: "a", .blackInsets: "b", .hideUnsupportedFilters: nil, .legacy: nil])
 
     }
 

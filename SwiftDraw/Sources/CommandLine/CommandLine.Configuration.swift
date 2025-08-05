@@ -210,9 +210,12 @@ extension CommandLine {
 
     static func parseInsets(from value: String??) throws -> Insets? {
         guard let value = value,
-              let value = value,
-              value != "auto" else {
+              let value = value else {
             return nil
+        }
+
+        guard value != "auto" else {
+            return Insets()
         }
 
         var scanner = XMLParser.Scanner(text: value)
