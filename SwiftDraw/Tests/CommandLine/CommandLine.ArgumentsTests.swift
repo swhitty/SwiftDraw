@@ -34,29 +34,36 @@ import XCTest
 
 final class CommandLineArgumentsTests: XCTestCase {
 
-  func testParseModifiers() throws {
-    let modifiers = try CommandLine.parseModifiers(from: ["--format", "some", "--output", "more", "--scale", "magnify", "--size", "huge"])
-    XCTAssertEqual(modifiers, [.format: "some", .output: "more", .scale: "magnify", .size: "huge"])
-  }
+    func testParseModifiers() throws {
+        var modifiers = try CommandLine.parseModifiers(from: ["--format", "some", "--output", "more", "--scale", "magnify", "--size", "huge"])
+        XCTAssertEqual(modifiers, [.format: "some", .output: "more", .scale: "magnify", .size: "huge"])
 
-  func testParseModifiersThrowsForOddPairs() {
-    XCTAssertThrowsError(try CommandLine.parseModifiers(from: ["--format"]))
-    XCTAssertThrowsError(try CommandLine.parseModifiers(from: ["--format", "png", "--output"]))
-  }
+        modifiers = try CommandLine.parseModifiers(from: ["--ultralightInsets", "a", "--blackInsets", "b", "--hideUnsupportedFilters", "--legacy"])
+        XCTAssertEqual(modifiers, [.ultralightInsets: "a", .blackInsets: "b", .hideUnsupportedFilters: nil, .legacy: nil])
 
-  func testParseModifiersThrowsForDuplicateModifiers() {
-    XCTAssertThrowsError(try CommandLine.parseModifiers(from: ["--format", "png", "--format", "jpg"]))
-    XCTAssertThrowsError(try CommandLine.parseModifiers(from:  ["--format", "png", "--output", "more", "--output", "evenmore"]))
-  }
+        modifiers = try CommandLine.parseModifiers(from: ["--ultralight-insets", "a", "--black-insets", "b", "--hide-unsupported-filters", "--legacy"])
+        XCTAssertEqual(modifiers, [.ultralightInsets: "a", .blackInsets: "b", .hideUnsupportedFilters: nil, .legacy: nil])"
 
-  func testParseModifiersThrowsForUnknownModifiers() {
-    XCTAssertThrowsError(try CommandLine.parseModifiers(from: ["--unknown", "png"]))
-    XCTAssertThrowsError(try CommandLine.parseModifiers(from: ["--format", "png", "--unknown", "more"]))
-  }
+    }
 
-  func testParseModifiersThrowsForMissingPrefix() {
-    XCTAssertThrowsError(try CommandLine.parseModifiers(from: ["format", "png"]))
-    XCTAssertThrowsError(try CommandLine.parseModifiers(from: ["--format", "png", "output", "more"]))
-  }
+    func testParseModifiersThrowsForOddPairs() {
+        XCTAssertThrowsError(try CommandLine.parseModifiers(from: ["--format"]))
+        XCTAssertThrowsError(try CommandLine.parseModifiers(from: ["--format", "png", "--output"]))
+    }
+
+    func testParseModifiersThrowsForDuplicateModifiers() {
+        XCTAssertThrowsError(try CommandLine.parseModifiers(from: ["--format", "png", "--format", "jpg"]))
+        XCTAssertThrowsError(try CommandLine.parseModifiers(from:  ["--format", "png", "--output", "more", "--output", "evenmore"]))
+    }
+
+    func testParseModifiersThrowsForUnknownModifiers() {
+        XCTAssertThrowsError(try CommandLine.parseModifiers(from: ["--unknown", "png"]))
+        XCTAssertThrowsError(try CommandLine.parseModifiers(from: ["--format", "png", "--unknown", "more"]))
+    }
+
+    func testParseModifiersThrowsForMissingPrefix() {
+        XCTAssertThrowsError(try CommandLine.parseModifiers(from: ["format", "png"]))
+        XCTAssertThrowsError(try CommandLine.parseModifiers(from: ["--format", "png", "output", "more"]))
+    }
 
 }

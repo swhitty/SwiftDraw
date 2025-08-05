@@ -110,7 +110,7 @@ extension CommandLine {
         let size = try parseSize(from: modifiers[.size])
         let scale = try parseScale(from: modifiers[.scale])
         let precision = try parsePrecision(from: modifiers[.precision])
-        let insets = try parseInsets(from: modifiers[.insets])
+        let insets = try parseInsets(from: modifiers[.insets]) ?? Insets()
         let api = try parseAPI(from: modifiers[.api])
         let ultralight = try parseFileURL(file: modifiers[.ultralight], within: baseDirectory)
         let ultralightInsets = try parseInsets(from: modifiers[.ultralightInsets])
@@ -208,11 +208,11 @@ extension CommandLine {
         return api
     }
 
-    static func parseInsets(from value: String??) throws -> Insets {
+    static func parseInsets(from value: String??) throws -> Insets? {
         guard let value = value,
               let value = value,
               value != "auto" else {
-            return Insets()
+            return nil
         }
 
         var scanner = XMLParser.Scanner(text: value)
