@@ -214,7 +214,15 @@ package extension XMLParser {
             currentIndex = scanner.currentIndex
             return val
         }
-        
+
+        package mutating func scanAlpha() throws -> Float {
+            if let pc = try? scanPercentage() {
+                return pc
+            } else {
+                return try scanFloat()
+            }
+        }
+
         package mutating func scanPercentage() throws -> Float {
             let initialLocation = currentIndex
             scanner.currentIndex = currentIndex
