@@ -48,6 +48,7 @@ extension CommandLine {
         public var scale: Scale
         public var options: SVG.Options
         public var precision: Int?
+        public var symbolSize: SFSymbolRenderer.SizeCategory?
         public var isLegacyInsetsEnabled: Bool
     }
 
@@ -107,7 +108,7 @@ extension CommandLine {
             throw Error.invalid
         }
 
-        let size = try parseSize(from: modifiers[.size])
+        let size = try parseSize(from: modifiers[.size], format: format)
         let scale = try parseScale(from: modifiers[.scale])
         let precision = try parsePrecision(from: modifiers[.precision])
         let insets = try parseInsets(from: modifiers[.insets]) ?? Insets()
@@ -117,6 +118,7 @@ extension CommandLine {
         let black = try parseFileURL(file: modifiers[.black], within: baseDirectory)
         let blackInsets = try parseInsets(from: modifiers[.blackInsets])
         let output = try parseFileURL(file: modifiers[.output], within: baseDirectory)
+        let symbolSize = try parseSymbolSize(from: modifiers[.size], format: format)
 
         let options = try parseOptions(from: modifiers)
         let result = source.newURL(for: format, scale: scale)
@@ -134,6 +136,7 @@ extension CommandLine {
             scale: scale,
             options: options,
             precision: precision,
+            symbolSize: symbolSize,
             isLegacyInsetsEnabled: modifiers.keys.contains(.legacy)
         )
     }
@@ -178,8 +181,9 @@ extension CommandLine {
         return precision
     }
 
-    static func parseSize(from value: String??) throws -> Size {
-        guard let value = value,
+    static func parseSize(from value: String??, format: Format) throws -> Size {
+        guard format != .sfsymbol,
+              let value = value,
               let value = value else {
             return .default
         }
@@ -194,6 +198,26 @@ extension CommandLine {
         }
 
         return .custom(width: Int(width), height: Int(height))
+    }
+
+    static func parseSymbolSize(from value: String??, format: Format) throws -> SFSymbolRenderer.SizeCategory? {
+        guard format == .sfsymbol,
+              let value = value,
+              let value = value else {
+            return nil
+        }
+
+        switch value {
+        case "small":
+            return .small
+        case "medium":
+            return .medium
+        case "large":
+            return .large
+        default:
+            throw Error.invalid
+
+        }
     }
 
     static func parseAPI(from value: String??) throws -> API? {
