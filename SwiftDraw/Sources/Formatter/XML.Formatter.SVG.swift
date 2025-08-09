@@ -328,17 +328,17 @@ extension XML.Formatter {
             case let .matrix(a: a, b: b, c: c, d: d, e: e, f: f):
                 return "matrix(\(formatter.format(a,b,c,d,e,f)))"
             case let .translate(tx: tx, ty: ty):
-                return "translate(\(formatter.format(tx, ty))"
+                return "translate(\(formatter.format(tx, ty)))"
             case let .scale(sx: sx, sy: sy):
-                return "scale(\(formatter.format(sx, sy))"
+                return "scale(\(formatter.format(sx, sy)))"
             case let .rotate(angle: angle):
-                return "rotate(\(formatter.format(angle))"
+                return "rotate(\(formatter.format(angle)))"
             case let .rotatePoint(angle: angle, cx: cx, cy: cy):
-                return "rotate(\(formatter.format(angle, cx, cy))"
+                return "rotate(\(formatter.format(angle, cx, cy)))"
             case let .skewX(angle: angle):
-                return "skewX(\(formatter.format(angle))"
+                return "skewX(\(formatter.format(angle)))"
             case let .skewY(angle: angle):
-                return "skewY(\(formatter.format(angle))"
+                return "skewY(\(formatter.format(angle)))"
             }
         }
 

@@ -52,6 +52,7 @@ public extension CommandLine {
             return code.data(using: .utf8)!
         case .sfsymbol:
             let renderer = SFSymbolRenderer(
+                size: config.symbolSize ?? .small,
                 options: config.options,
                 insets: config.insets,
                 insetsUltralight: config.insetsUltralight ?? config.insets,

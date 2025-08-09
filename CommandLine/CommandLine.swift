@@ -90,6 +90,7 @@ Available keys for --format swift:
 
 Available keys for --format sfsymbol:
  --insets             alignment of regular variant: top,left,bottom,right | auto
+ --size               size category to generate: small, medium large. (default is small)
  --ultralight         svg file of ultralight variant
  --ultralight-insets  alignment of ultralight variant: top,left,bottom,right | auto
  --black              svg file of black variant

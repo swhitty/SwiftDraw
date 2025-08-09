@@ -34,6 +34,7 @@ import Foundation
 
 public struct SFSymbolRenderer {
 
+    private let size: SizeCategory
     private let options: SVG.Options
     private let insets: CommandLine.Insets
     private let insetsUltralight: CommandLine.Insets
@@ -41,12 +42,22 @@ public struct SFSymbolRenderer {
     private let formatter: CoordinateFormatter
     private let isLegacyInsets: Bool
 
-    public init(options: SVG.Options,
-                insets: CommandLine.Insets,
-                insetsUltralight: CommandLine.Insets,
-                insetsBlack: CommandLine.Insets,
-                precision: Int,
-                isLegacyInsets: Bool) {
+    public enum SizeCategory {
+        case small
+        case medium
+        case large
+    }
+
+    public init(
+        size: SizeCategory,
+        options: SVG.Options,
+        insets: CommandLine.Insets,
+        insetsUltralight: CommandLine.Insets,
+        insetsBlack: CommandLine.Insets,
+        precision: Int,
+        isLegacyInsets: Bool
+    ) {
+        self.size = size
         self.options = options
         self.insets = insets
         self.insetsUltralight = insetsUltralight
@@ -93,6 +104,8 @@ public struct SFSymbolRenderer {
             let bounds = try makeBounds(svg: image, auto: Self.makeAutoBounds(for: pathsRegular, isLegacy: isLegacyInsets), for: .black)
             template.black.appendPaths(pathsRegular, from: bounds, isLegacy: isLegacyInsets)
         }
+
+        template.setSize(size)
 
         let element = try XML.Formatter.SVG(formatter: formatter).makeElement(from: template.svg)
         let formatter = XML.Formatter(spaces: 4)
@@ -356,25 +369,36 @@ struct SFSymbolTemplate {
 
     let svg: DOM.SVG
 
+    var typeReference: DOM.Path
     var ultralight: Variant
     var regular: Variant
     var black: Variant
 
     init(svg: DOM.SVG) throws {
         self.svg = svg
+        self.typeReference = try svg.group(id: "Guides").path(id: "H-reference")
         self.ultralight = try Variant(svg: svg, kind: "Ultralight")
         self.regular = try Variant(svg: svg, kind: "Regular")
         self.black = try Variant(svg: svg, kind: "Black")
+    }
+
+    mutating func setSize(_ size: SFSymbolRenderer.SizeCategory) {
+        typeReference.attributes.transform = [.translate(tx: 0, ty: size.yOffset)]
+        ultralight.setSize(size)
+        regular.setSize(size)
+        black.setSize(size)
     }
 
     struct Variant {
         var left: Guide
         var contents: Contents
         var right: Guide
+        private var kind: String
 
         init(svg: DOM.SVG, kind: String) throws {
             let guides = try svg.group(id: "Guides")
             let symbols = try svg.group(id: "Symbols")
+            self.kind = kind
             self.left = try Guide(guides.path(id: "left-margin-\(kind)-S"))
             self.contents = try Contents(symbols.group(id: "\(kind)-S"))
             self.right = try Guide(guides.path(id: "right-margin-\(kind)-S"))
@@ -385,6 +409,15 @@ struct SFSymbolTemplate {
             let maxX = right.x
             return .init(x: minX, y: 76, width: maxX - minX, height: 70)
         }
+
+        mutating func setSize(_ size: SFSymbolRenderer.SizeCategory) {
+            left.setID("left-margin-\(kind)-\(size.name)")
+            left.y += size.yOffset
+            contents.setID("\(kind)-\(size.name)")
+            contents.setTransform(.translate(tx: 0, ty: size.yOffset))
+            right.setID("right-margin-\(kind)-\(size.name)")
+            right.y += size.yOffset
+        }
     }
 
     struct Guide {
@@ -392,6 +425,10 @@ struct SFSymbolTemplate {
 
         init(_ path: DOM.Path) {
             self.path = path
+        }
+
+        func setID(_ id: String) {
+            path.id = id
         }
 
         var x: DOM.Float {
@@ -408,6 +445,21 @@ struct SFSymbolTemplate {
                 path.segments[0] = .move(x: newValue, y: y, space: space)
             }
         }
+
+        var y: DOM.Float {
+            get {
+                guard case let .move(_, y, _) = path.segments[0] else {
+                    fatalError()
+                }
+                return y
+            }
+            set {
+                guard case let .move(x, _, space) = path.segments[0] else {
+                    fatalError()
+                }
+                path.segments[0] = .move(x: x, y: newValue, space: space)
+            }
+        }
     }
 
     struct Contents {
@@ -417,6 +469,10 @@ struct SFSymbolTemplate {
             self.group = group
         }
 
+        func setID(_ id: String) {
+            group.id = id
+        }
+
         var paths: [DOM.Path] {
             get {
                 group.childElements as! [DOM.Path]
@@ -424,6 +480,35 @@ struct SFSymbolTemplate {
             set {
                 group.childElements = newValue
             }
+        }
+
+        func setTransform(_ transform: DOM.Transform) {
+            group.attributes.transform = [transform]
+        }
+    }
+}
+
+extension SFSymbolRenderer.SizeCategory {
+
+    var name: String {
+        switch self {
+        case .small: 
+            return "S"
+        case .medium:
+            return "M"
+        case .large:
+            return "L"
+        }
+    }
+
+    var yOffset: Float {
+        switch self {
+        case .small:
+            return 0
+        case .medium:
+            return 200
+        case .large:
+            return 400
         }
     }
 }

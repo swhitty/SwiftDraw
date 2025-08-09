@@ -188,6 +188,7 @@ private extension SFSymbolRenderer {
 
     static func render(fileURL: URL) throws -> String {
         let renderer = SFSymbolRenderer(
+            size: .small,
             options: [],
             insets: .init(),
             insetsUltralight: .init(),
@@ -200,6 +201,7 @@ private extension SFSymbolRenderer {
 
     static func render(svg: DOM.SVG) throws -> String {
         let renderer = SFSymbolRenderer(
+            size: .small,
             options: [],
             insets: .init(),
             insetsUltralight: .init(),
