@@ -55,7 +55,14 @@ package extension XMLParser {
         package mutating func scanStringIfPossible(_ token: String) -> Bool {
             return (try? self.scanString(token)) == true
         }
-        
+
+        @discardableResult
+        package mutating func nextScanString(_ token: String) -> Bool {
+            scanner.currentIndex = currentIndex
+            defer { scanner.currentIndex  = currentIndex }
+            return scanStringIfPossible(token)
+        }
+
         package mutating func scanString(matchingAny tokens: Set<String>) throws -> String {
             scanner.currentIndex = currentIndex
             guard let match = tokens.first(where: { scanner.scanString($0) != nil }) else {

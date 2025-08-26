@@ -71,13 +71,15 @@ extension XMLParser {
         var scanner = XMLParser.Scanner(text: removeCSSComments(from: text))
         var entries = [DOM.StyleSheet.Selector: [String: String]]()
 
-        var last: (DOM.StyleSheet.Selector, [String: String])?
-        repeat {
-            last = try scanner.scanNextSelector()
-            if let last = last {
-                entries[last.0] = last.1
+        while let (selectors, attributes) = try scanner.scanNextSelectorDecl() {
+            for selector in selectors {
+                var copy = entries[selector] ?? [:]
+                for (key, value) in attributes {
+                    copy[key] = value
+                }
+                entries[selector] = copy
             }
-        } while last != nil
+        }
 
         return entries
     }
@@ -91,15 +93,10 @@ extension XMLParser {
 
 extension XMLParser.Scanner {
 
-    mutating func scanNextSelector() throws -> (DOM.StyleSheet.Selector, [String: String])? {
-        if let c = try scanNextClass() {
-            return (.class(c), try scanAtttributes())
-        } else if let id = try scanNextID() {
-            return (.id(id), try scanAtttributes())
-        } else if let e = try scanNextElement() {
-            return (.element(e), try scanAtttributes())
-        }
-        return nil
+    mutating func scanNextSelectorDecl() throws -> ([DOM.StyleSheet.Selector], [String: String])? {
+        let selectorTypes = try scanSelectorTypes()
+        guard !selectorTypes.isEmpty else { return nil }
+        return (selectorTypes, try scanAtttributes())
     }
 
     private mutating func scanNextClass() throws -> String? {
@@ -124,7 +121,30 @@ extension XMLParser.Scanner {
     }
 
     private mutating func scanSelectorName() throws -> String? {
-        try scanString(upTo: "{").trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !nextScanString("{") else { return nil }
+        let name = try scanString(upTo: .init(charactersIn: "{,")).trimmingCharacters(in: .whitespacesAndNewlines)
+        scanStringIfPossible(",")
+        return name
+    }
+
+     mutating func scanSelectorTypes() throws -> [DOM.StyleSheet.Selector] {
+        var selectors: [DOM.StyleSheet.Selector] = []
+        while let next = try scanNextSelectorType() {
+            selectors.append(next)
+        }
+        return selectors
+    }
+
+    private mutating func scanNextSelectorType() throws -> DOM.StyleSheet.Selector? {
+        if let name = try scanNextClass() {
+            return .class(name)
+        } else if let name = try scanNextID() {
+            return .id(name)
+        } else if let name = try scanNextElement() {
+            return .element(name)
+        } else {
+            return nil
+        }
     }
 
     private mutating func scanAtttributes() throws -> [String: String] {
