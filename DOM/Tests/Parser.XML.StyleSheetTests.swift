@@ -110,4 +110,43 @@ final class ParserXMLStyleSheetTests: XCTestCase {
         XCTAssertEqual(sheet[.class("b")]?.fill, .color(.keyword(.blue)))
         XCTAssertEqual(sheet[.element("rect")]?.fill, .color(.keyword(.pink)))
     }
+
+    func testMergesSelectors() throws {
+        let entries = try XMLParser.parseEntries(
+            """
+            .a {
+               fill: red;
+            }
+            .a {
+               stroke: blue;
+            }
+            .a {
+               fill: purple;
+            }
+            """
+        )
+
+        XCTAssertEqual(
+            entries,
+            [.class("a"): ["fill": "purple", "stroke": "blue"]]
+        )
+    }
+
+    func testMutlipleSelectors() throws {
+        let entries = try XMLParser.parseEntries(
+            """
+            .a, .b {
+               fill: red;
+            }
+            """
+        )
+
+        XCTAssertEqual(
+            entries,
+            [
+                .class("a"): ["fill": "red"],
+                .class("b"): ["fill": "red"]
+            ]
+        )
+    }
 }
