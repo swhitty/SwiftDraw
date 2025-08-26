@@ -71,15 +71,30 @@ final class LayerTreeBuilderTests: XCTestCase {
     let circle = DOM.Circle(cx: 5, cy: 5, r: 5)
     let svg = DOM.SVG(width: 10, height: 10)
     svg.defs.clipPaths.append(DOM.ClipPath(id: "clip1", childElements: [circle]))
+
+    var attributes = DOM.PresentationAttributes()
+    attributes.clipPath = URL(string: "#clip1")
+    svg.styles = [DOM.StyleSheet(attributes: [.class("a"): attributes])]
+
     let builder = LayerTree.Builder(svg: svg)
     
-    let element = DOM.GraphicsElement()
+    var element = DOM.GraphicsElement()
     element.attributes.clipPath = URL(string: "#clip1")
     
-    let shapes = builder.createClipShapes(for: element)
-    XCTAssertEqual(shapes, [.ellipse(within: LayerTree.Rect(x: 0, y: 0, width: 10, height: 10))])
+    var shapes = builder.createClipShapes(for: element)
+    XCTAssertEqual(
+        builder.createClipShapes(for: element),
+        [.ellipse(within: LayerTree.Rect(x: 0, y: 0, width: 10, height: 10))]
+    )
+
+    element = DOM.GraphicsElement()
+    element.class = "a"
+      XCTAssertEqual(
+          builder.createClipShapes(for: element),
+          [.ellipse(within: LayerTree.Rect(x: 0, y: 0, width: 10, height: 10))]
+      )
   }
-  
+
   func testDOMGroupMakesChildContents() {
     let builder = LayerTree.Builder(svg: DOM.SVG(width: 10, height: 10))
     

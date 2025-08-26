@@ -167,9 +167,9 @@ extension LayerTree {
         }
 
         func makeClipShapes(for element: DOM.GraphicsElement) -> [ClipShape] {
-            guard let clipId = element.attributes.clipPath?.fragmentID,
-                  let clip = svg.defs.clipPaths.first(where: { $0.id == clipId }) else { return [] }
-
+            let attributes = DOM.presentationAttributes(for: element, styles: svg.styles)
+            guard let clipID = attributes.clipPath?.fragmentID,
+                  let clip = svg.defs.clipPaths.first(where: { $0.id == clipID }) else { return [] }
             return clip.childElements.compactMap(makeClipShape)
         }
 
