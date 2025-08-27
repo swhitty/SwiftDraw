@@ -54,17 +54,20 @@ final class LayerTreeBuilderTests: XCTestCase {
   func testDOMMaskMakesLayer() {
     let circle = DOM.Circle(cx: 5, cy: 5, r: 5)
     let line = DOM.Line(x1: 0, y1: 0, x2: 10, y2: 0)
+    let mask = DOM.Mask(id: "mask1", childElements: [circle, line])
+    mask.attributes.fill = .color(.keyword(.white))
+
     let svg = DOM.SVG(width: 10, height: 10)
-    svg.defs.masks.append(DOM.Mask(id: "mask1", childElements: [circle, line]))
-    
+    svg.defs.masks.append(mask)
+
     let builder = LayerTree.Builder(svg: svg)
     
     let element = DOM.GraphicsElement()
     element.attributes.mask = URL(string: "#mask1")
     
     let layer = builder.createMaskLayer(for: element)
-    
     XCTAssertEqual(layer?.contents.count, 2)
+    XCTAssertEqual(layer?.contents[0].shape?.fill.fill, .color(.white))
   }
   
   func testDOMClipMakesShape() {
@@ -204,5 +207,12 @@ extension DOM.Group {
         }
 
         return group
+    }
+}
+
+private extension LayerTree.Layer.Contents {
+    var shape: (shape: LayerTree.Shape, stroke: LayerTree.StrokeAttributes, fill: LayerTree.FillAttributes)? {
+        guard case let .shape(shape, stroke, fill) = self else { return nil }
+        return (shape, stroke, fill)
     }
 }

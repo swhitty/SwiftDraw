@@ -190,8 +190,9 @@ extension LayerTree {
 
             let l = Layer()
 
+            let maskState = createState(for: mask, inheriting: State())
             mask.childElements.forEach {
-                let contents = Layer.Contents.layer(makeLayer(from: $0, inheriting: State()))
+                let contents = Layer.Contents.layer(makeLayer(from: $0, inheriting: maskState))
                 l.appendContents(contents)
             }
 
