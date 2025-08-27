@@ -80,9 +80,14 @@ package extension DOM {
         package var childElements = [GraphicsElement]()
     }
     
-    struct Mask: ContainerElement {
-        package var id: String
+    final class Mask: GraphicsElement, ContainerElement {
         package var childElements = [GraphicsElement]()
+
+        init(id: String, childElements: [GraphicsElement] = []) {
+            super.init()
+            self.id = id
+            self.childElements = childElements
+        }
     }
     
     struct StyleSheet {

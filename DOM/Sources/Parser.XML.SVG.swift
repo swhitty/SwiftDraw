@@ -176,8 +176,12 @@ package extension XMLParser {
         let att = try parseAttributes(e)
         let id: String = try att.parseString("id")
 
-        let children = try parseGraphicsElements(e.children)
-        return DOM.Mask(id: id, childElements: children)
+        let mask = DOM.Mask(id: id)
+        mask.class = try att.parseString("class")
+        mask.attributes = try parsePresentationAttributes(e)
+        mask.style = try parseStyleAttributes(e)
+        mask.childElements = try parseGraphicsElements(e.children)
+        return mask
     }
 
     func parsePatterns(_ e: XML.Element) throws -> [DOM.Pattern] {
