@@ -58,14 +58,14 @@ final class ParserXMLStyleSheetTests: XCTestCase {
                 stroke-width: 5 /* asd */;
                 fill-opacity: 0.3
             }
-
+            
             /* comment */
             /* another */
-
+            
              .b {
                 fill: blue;
             }
-
+            
             rect {
                 fill: pink;
             }
@@ -89,14 +89,14 @@ final class ParserXMLStyleSheetTests: XCTestCase {
                 stroke-width: 5 /* asd */;
                 fill-opacity: 30%
             }
-
+            
             /* comment */
             /* another */
-
+            
              .b {
                 fill: blue;
             }
-
+            
             rect {
                 fill: pink;
             }

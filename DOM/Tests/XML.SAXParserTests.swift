@@ -33,51 +33,52 @@ import XCTest
 @testable import SwiftDrawDOM
 
 final class SAXParserTests: XCTestCase {
-  
-  func testMissingFileThrows() {
-    let missingFile = URL(fileURLWithPath: "/user/tmp/SWIFTDraw/SwiftDraw/missing")
-    //let missingFile = URL(string: "http://www.test.com")!
-    XCTAssertThrowsError(try XML.SAXParser.parse(contentsOf: missingFile))
-  }
-  
-  func testInvalidXMLThrows() {
-    let xml = "hi"
-    XCTAssertThrowsError(try XML.SAXParser.parse(data: xml.data(using: .utf8)!))
-  }
-  
-  func testValidSVGParses() throws {
-    let xml = """
-<svg xmlns="http://www.w3.org/2000/svg">
-</svg>
-"""
-    
-    let root = try XML.SAXParser.parse(data: xml.data(using: .utf8)!)
-    XCTAssertEqual(root.name, "svg")
-    XCTAssertTrue(root.children.isEmpty)
-  }
+
+    func testMissingFileThrows() {
+        let missingFile = URL(fileURLWithPath: "/user/tmp/SWIFTDraw/SwiftDraw/missing")
+        //let missingFile = URL(string: "http://www.test.com")!
+        XCTAssertThrowsError(try XML.SAXParser.parse(contentsOf: missingFile))
+    }
+
+    func testInvalidXMLThrows() {
+        let xml = "hi"
+        XCTAssertThrowsError(try XML.SAXParser.parse(data: xml.data(using: .utf8)!))
+    }
+
+    func testValidSVGParses() throws {
+        let xml = """
+        <svg xmlns="http://www.w3.org/2000/svg">
+        </svg>
+        """
+
+        let root = try XML.SAXParser.parse(data: xml.data(using: .utf8)!)
+        XCTAssertEqual(root.name, "svg")
+        XCTAssertTrue(root.children.isEmpty)
+    }
 
 
-  func testUnexpectedElementsThrows() throws {
-    let xml = """
-<svg xmlns="http://www.w3.org/2000/svg">
-    </b>
-</svg>
-"""
 #if canImport(Darwin)
-    XCTAssertThrowsError(try XML.SAXParser.parse(data: xml.data(using: .utf8)!))
+    func testUnexpectedElementsThrows() throws {
+        let xml = """
+        <svg xmlns="http://www.w3.org/2000/svg">
+            </b>
+        </svg>
+        """
+
+        XCTAssertThrowsError(try XML.SAXParser.parse(data: xml.data(using: .utf8)!))
+    }
 #endif
-  }
-  
-  func testUnexpectedNamespaceElementsSkipped() throws {
-    let xml = """
-<svg xmlns="http://www.w3.org/2000/svg">
-<a xmlns="http://another.com" />
-<b />
-</svg>
-"""
-    let root = try XML.SAXParser.parse(data: xml.data(using: .utf8)!)
-    XCTAssertEqual(root.name, "svg")
-    XCTAssertEqual(root.children.count, 1)
-    XCTAssertEqual(root.children[0].name, "b")
-  }
+
+    func testUnexpectedNamespaceElementsSkipped() throws {
+        let xml = """
+        <svg xmlns="http://www.w3.org/2000/svg">
+        <a xmlns="http://another.com" />
+        <b />
+        </svg>
+        """
+        let root = try XML.SAXParser.parse(data: xml.data(using: .utf8)!)
+        XCTAssertEqual(root.name, "svg")
+        XCTAssertEqual(root.children.count, 1)
+        XCTAssertEqual(root.children[0].name, "b")
+    }
 }

@@ -163,21 +163,21 @@ final class PresentationAttributesTests: XCTestCase {
         XCTAssertEqual(
             DOM.presentationAttributes(for: .circle(id: "c1", class: "b c"),
                                        styles: [sheet])
-                .opacity,
+            .opacity,
             0.5
         )
 
         XCTAssertEqual(
             DOM.presentationAttributes(for: .circle(id: "c2", class: "b c"),
                                        styles: [sheet])
-                .opacity,
+            .opacity,
             0.2
         )
 
         XCTAssertEqual(
             DOM.presentationAttributes(for: .circle(id: "c2", class: "z"),
                                        styles: [sheet])
-                .opacity,
+            .opacity,
             1
         )
     }
