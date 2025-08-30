@@ -38,6 +38,8 @@ import UIKit
 import AppKit
 #endif
 
+import SwiftDrawDOM
+
 struct CGTypes: RendererTypes, Sendable {
     typealias Float = CGFloat
     typealias Point = CGPoint
@@ -70,20 +72,6 @@ struct CGTransformingPattern: Hashable {
         let renderer = CGRenderer(context: ctx)
         renderer.perform(contents)
     }
-
-#if compiler(<6.0)
-    func hash(into hasher: inout Hasher) {
-        bounds.origin.x.hash(into: &hasher)
-        bounds.origin.y.hash(into: &hasher)
-        bounds.size.width.hash(into: &hasher)
-        bounds.size.height.hash(into: &hasher)
-        contents.hash(into: &hasher)
-    }
-
-    static func == (lhs: CGTransformingPattern, rhs: CGTransformingPattern) -> Bool {
-        lhs.bounds == rhs.bounds && lhs.contents == rhs.contents
-    }
-#endif
 }
 
 struct CGProvider: RendererTypeProvider {

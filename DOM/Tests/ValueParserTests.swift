@@ -126,7 +126,7 @@ final class ValueParserTests: XCTestCase {
   }
   
   func testUrl() {
-#if compiler(>=5.9) && canImport(Darwin)
+#if canImport(Darwin)
     XCTAssertEqual(try parser.parseUrl("#testing🐟").fragmentID, "testing🐟")
 #else
       XCTAssertEqual(try parser.parseUrl("#testing").fragmentID, "testing")

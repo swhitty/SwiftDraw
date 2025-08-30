@@ -31,6 +31,7 @@
 
 import Foundation
 import SwiftDraw
+import SwiftDrawDOM
 
 extension SwiftDraw.CommandLine {
     
