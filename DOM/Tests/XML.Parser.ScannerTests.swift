@@ -29,6 +29,7 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
+public import Foundation
 import XCTest
 @testable import SwiftDrawDOM
 
@@ -234,9 +235,10 @@ private func AssertScanPercentageFloat(_ text: String, _ expected: Float?, file:
   XCTAssertEqual(try? scanner.scanPercentageFloat(), expected, file: file, line: line)
 }
 
+extension CharacterSet: @retroactive ExpressibleByExtendedGraphemeClusterLiteral {}
+extension CharacterSet: @retroactive ExpressibleByUnicodeScalarLiteral {}
+extension CharacterSet: @retroactive ExpressibleByStringLiteral {
 
-extension Foundation.CharacterSet: Swift.ExpressibleByStringLiteral {
-  
   static let hexadecimal: Foundation.CharacterSet = "0123456789ABCDEFabcdef"
   
   public init(stringLiteral value: String) {
