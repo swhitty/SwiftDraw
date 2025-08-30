@@ -33,7 +33,7 @@ import SwiftDrawDOM
 public import Foundation
 
 #if compiler(<6.0)
-#warning("SwiftDraw will soon remove support for Swift 6.0")
+// #warning("SwiftDraw will soon remove support for Swift 6.0")
 #endif
 
 #if canImport(CoreGraphics)
