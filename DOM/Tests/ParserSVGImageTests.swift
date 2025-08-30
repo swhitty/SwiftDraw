@@ -29,64 +29,67 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-import XCTest
+import Testing
 @testable import SwiftDrawDOM
 import Foundation
 
-final class ParserSVGImageTests: XCTestCase {
+@Suite("Parser SVG Image Tests")
+struct ParserSVGImageTests {
 
-    func testShapes() throws {
+    @Test
+    func shapes() throws {
         let svg = try DOM.SVG.parse(fileNamed: "shapes.svg", in: .test)
 
-        XCTAssertEqual(svg.width, 500)
-        XCTAssertEqual(svg.height, 700)
-        XCTAssertEqual(svg.viewBox?.width, 500)
-        XCTAssertEqual(svg.viewBox?.height, 700)
-        XCTAssertEqual(svg.defs.clipPaths.count, 2)
-        XCTAssertEqual(svg.defs.linearGradients.count, 1)
-        XCTAssertEqual(svg.defs.radialGradients.count, 1)
-        XCTAssertNotNil(svg.defs.elements["star"])
-        XCTAssertEqual(svg.defs.elements.count, 2)
+        #expect(svg.width == 500)
+        #expect(svg.height == 700)
+        #expect(svg.viewBox?.width == 500)
+        #expect(svg.viewBox?.height == 700)
+        #expect(svg.defs.clipPaths.count == 2)
+        #expect(svg.defs.linearGradients.count == 1)
+        #expect(svg.defs.radialGradients.count == 1)
+        #expect(svg.defs.elements["star"] != nil)
+        #expect(svg.defs.elements.count == 2)
 
         var c = svg.childElements.enumerated().makeIterator()
 
-        XCTAssertTrue(c.next()!.element is DOM.Ellipse)
-        XCTAssertTrue(c.next()!.element is DOM.Group)
-        XCTAssertTrue(c.next()!.element is DOM.Circle)
-        XCTAssertTrue(c.next()!.element is DOM.Group)
-        XCTAssertTrue(c.next()!.element is DOM.Line)
-        XCTAssertTrue(c.next()!.element is DOM.Path)
-        XCTAssertTrue(c.next()!.element is DOM.Path)
-        XCTAssertTrue(c.next()!.element is DOM.Path)
-        XCTAssertTrue(c.next()!.element is DOM.Path)
-        XCTAssertTrue(c.next()!.element is DOM.Polyline)
-        XCTAssertTrue(c.next()!.element is DOM.Polyline)
-        XCTAssertTrue(c.next()!.element is DOM.Polygon)
-        XCTAssertTrue(c.next()!.element is DOM.Group)
-        XCTAssertTrue(c.next()!.element is DOM.Circle)
-        XCTAssertTrue(c.next()!.element is DOM.Switch)
-        XCTAssertTrue(c.next()!.element is DOM.Rect)
-        XCTAssertTrue(c.next()!.element is DOM.Text)
-        XCTAssertTrue(c.next()!.element is DOM.Text)
-        XCTAssertTrue(c.next()!.element is DOM.Line)
-        XCTAssertTrue(c.next()!.element is DOM.Use)
-        XCTAssertTrue(c.next()!.element is DOM.Use)
-        XCTAssertTrue(c.next()!.element is DOM.Rect)
-        XCTAssertNil(c.next())
+        #expect(c.next()!.element is DOM.Ellipse)
+        #expect(c.next()!.element is DOM.Group)
+        #expect(c.next()!.element is DOM.Circle)
+        #expect(c.next()!.element is DOM.Group)
+        #expect(c.next()!.element is DOM.Line)
+        #expect(c.next()!.element is DOM.Path)
+        #expect(c.next()!.element is DOM.Path)
+        #expect(c.next()!.element is DOM.Path)
+        #expect(c.next()!.element is DOM.Path)
+        #expect(c.next()!.element is DOM.Polyline)
+        #expect(c.next()!.element is DOM.Polyline)
+        #expect(c.next()!.element is DOM.Polygon)
+        #expect(c.next()!.element is DOM.Group)
+        #expect(c.next()!.element is DOM.Circle)
+        #expect(c.next()!.element is DOM.Switch)
+        #expect(c.next()!.element is DOM.Rect)
+        #expect(c.next()!.element is DOM.Text)
+        #expect(c.next()!.element is DOM.Text)
+        #expect(c.next()!.element is DOM.Line)
+        #expect(c.next()!.element is DOM.Use)
+        #expect(c.next()!.element is DOM.Use)
+        #expect(c.next()!.element is DOM.Rect)
+        #expect(c.next() == nil)
     }
 
-    func testStarry() throws {
+    @Test
+    func starry() throws {
         let svg = try DOM.SVG.parse(fileNamed: "starry.svg", in: .test)
         guard let g = svg.childElements.first as? DOM.Group,
               let g1 = g.childElements.first as? DOM.Group else {
-            XCTFail("missing group")
+            Issue.record("missing group")
             return
         }
 
-        XCTAssertEqual(svg.width, 500)
-        XCTAssertEqual(svg.height, 500)
+        #expect(svg.width == 500)
+        #expect(svg.height == 500)
 
-        XCTAssertEqual(g1.childElements.count, 9323)
+        #expect(g1.childElements.count == 9323)
 
         var counter = [String: Int]()
 
@@ -95,25 +98,28 @@ final class ParserSVGImageTests: XCTestCase {
             counter[key] = (counter[key] ?? 0) + 1
         }
 
-        XCTAssertEqual(counter["Path"], 9314)
-        XCTAssertEqual(counter["Polygon"], 9)
+        #expect(counter["Path"] == 9314)
+        #expect(counter["Polygon"] == 9)
     }
 
-    func testQuad() throws {
+    @Test
+    func quad() throws {
         let svg = try DOM.SVG.parse(fileNamed: "quad.svg", in: .test)
-        XCTAssertEqual(svg.width, 1000)
-        XCTAssertEqual(svg.height, 500)
+        #expect(svg.width == 1000)
+        #expect(svg.height == 500)
     }
 
-    func testCurves() throws {
+    @Test
+    func curves() throws {
         let svg = try DOM.SVG.parse(fileNamed: "curves.svg", in: .test)
-        XCTAssertEqual(svg.width, 550)
-        XCTAssertEqual(svg.height, 350)
+        #expect(svg.width == 550)
+        #expect(svg.height == 350)
     }
 
-    func testNested() throws {
+    @Test
+    func nested() throws {
         let svg = try DOM.SVG.parse(fileNamed: "nested-svg.svg", in: .test)
-        XCTAssertEqual(svg.width, 360)
-        XCTAssertEqual(svg.height, 450)
+        #expect(svg.width == 360)
+        #expect(svg.height == 450)
     }
 }

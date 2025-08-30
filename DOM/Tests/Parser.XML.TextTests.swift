@@ -30,12 +30,14 @@
 //
 
 
-import XCTest
+import Testing
 @testable import SwiftDrawDOM
 
-final class ParserXMLTextTests: XCTestCase {
+@Suite("Parser XML Text Tests")
+struct ParserXMLTextTests {
 
-    func testTextNodeParses() throws {
+    @Test
+    func textNodeParses() throws {
         let el = XML.Element(name: "text", attributes: [:])
         el.innerText = "Simon"
         el.attributes["x"] = "1"
@@ -44,21 +46,25 @@ final class ParserXMLTextTests: XCTestCase {
         el.attributes["font-size"] = "12.5"
         el.attributes["text-anchor"] = "end"
 
-        let text = try XCTUnwrap(XMLParser().parseGraphicsElement(el) as? DOM.Text)
-        XCTAssertEqual(text.x, 1)
-        XCTAssertEqual(text.y, 2)
-        XCTAssertEqual(text.value, "Simon")
-        XCTAssertEqual(text.attributes.fontFamily, "Futura")
-        XCTAssertEqual(text.attributes.fontSize, 12.5)
-        XCTAssertEqual(text.attributes.textAnchor, .end)
+        let parsed = try XMLParser().parseGraphicsElement(el) as? DOM.Text
+        let text = try #require(parsed)
+
+        #expect(text.x == 1)
+        #expect(text.y == 2)
+        #expect(text.value == "Simon")
+        #expect(text.attributes.fontFamily == "Futura")
+        #expect(text.attributes.fontSize == 12.5)
+        #expect(text.attributes.textAnchor == .end)
     }
 
-    func testEmptyTextNodeReturnsNil() {
+    @Test
+    func emptyTextNodeReturnsNil() throws {
         let el = XML.Element(name: "text", attributes: [:])
-        XCTAssertNil(try XMLParser().parseText(["x": "1", "y": "1"], element: el))
+        let first = try XMLParser().parseText(["x": "1", "y": "1"], element: el)
+        #expect(first == nil)
+
         el.innerText = "    "
-        XCTAssertNil(try XMLParser().parseText(["x": "1", "y": "1"], element: el))
+        let second = try XMLParser().parseText(["x": "1", "y": "1"], element: el)
+        #expect(second == nil)
     }
 }
-
-

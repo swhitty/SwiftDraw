@@ -32,23 +32,26 @@
 
 import Foundation
 
-import XCTest
+import Testing
 @testable import SwiftDrawDOM
 
-final class ParserXMLRadialGradientTests: XCTestCase {
+@Suite("Parser XML Radial Gradient Tests")
+struct ParserXMLRadialGradientTests {
 
-    func testParseGradients() throws {
+    @Test
+    func parseGradients() throws {
         let child = XML.Element(name: "child")
         child.children = [XML.Element.makeMockGradient(), XML.Element.makeMockGradient()]
 
         let parent = XML.Element(name: "parent")
         parent.children = [XML.Element.makeMockGradient(), child]
 
-        XCTAssertEqual(try XMLParser().parseRadialGradients(child).count, 2)
-        XCTAssertEqual(try XMLParser().parseRadialGradients(parent).count, 3)
+        #expect(try XMLParser().parseRadialGradients(child).count == 2)
+        #expect(try XMLParser().parseRadialGradients(parent).count == 3)
     }
 
-    func testParseCoordinates() throws {
+    @Test
+    func parseCoordinates() throws {
         let element = XML.Element.makeMockGradient()
         element.attributes["r"] = "0.1"
         element.attributes["cx"] = "0.2"
@@ -58,28 +61,29 @@ final class ParserXMLRadialGradientTests: XCTestCase {
         element.attributes["fy"] = "0.6"
 
         let gradient = try XMLParser().parseRadialGradient(element)
-        XCTAssertEqual(gradient.r, 0.1)
-        XCTAssertEqual(gradient.cx, 0.2)
-        XCTAssertEqual(gradient.cy, 0.3)
-        XCTAssertEqual(gradient.fr, 0.4)
-        XCTAssertEqual(gradient.fx, 0.5)
-        XCTAssertEqual(gradient.fy, 0.6)
+        #expect(gradient.r == 0.1)
+        #expect(gradient.cx == 0.2)
+        #expect(gradient.cy == 0.3)
+        #expect(gradient.fr == 0.4)
+        #expect(gradient.fx == 0.5)
+        #expect(gradient.fy == 0.6)
     }
 
-    func testParseFile() throws {
+    @Test
+    func parseFile() throws {
 
         let dom = try DOM.SVG.parse(fileNamed: "radialGradient.svg", in: .test)
 
-        XCTAssertEqual(dom.defs.radialGradients.count, 5)
-        XCTAssertNotNil(dom.defs.radialGradients.first(where: { $0.id == "snow" }))
-        XCTAssertNotNil(dom.defs.radialGradients.first(where: { $0.id == "blue" }))
-        XCTAssertNotNil(dom.defs.radialGradients.first(where: { $0.id == "purple" }))
-        XCTAssertNotNil(dom.defs.radialGradients.first(where: { $0.id == "salmon" }))
-        XCTAssertNotNil(dom.defs.radialGradients.first(where: { $0.id == "green" }))
+        #expect(dom.defs.radialGradients.count == 5)
+        #expect(dom.defs.radialGradients.first(where: { $0.id == "snow" }) != nil)
+        #expect(dom.defs.radialGradients.first(where: { $0.id == "blue" }) != nil)
+        #expect(dom.defs.radialGradients.first(where: { $0.id == "purple" }) != nil)
+        #expect(dom.defs.radialGradients.first(where: { $0.id == "salmon" }) != nil)
+        #expect(dom.defs.radialGradients.first(where: { $0.id == "green" }) != nil)
 
-        XCTAssertGreaterThan(dom.childElements.count, 2)
-        XCTAssertEqual(dom.childElements[0].attributes.fill, .url(URL(string: "#snow")!))
-        XCTAssertEqual(dom.childElements[1].attributes.fill, .url(URL(string: "#blue")!))
+        #expect(dom.childElements.count > 2)
+        #expect(dom.childElements[0].attributes.fill == .url(URL(string: "#snow")!))
+        #expect(dom.childElements[1].attributes.fill == .url(URL(string: "#blue")!))
     }
 }
 
