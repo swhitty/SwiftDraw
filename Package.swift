@@ -58,6 +58,8 @@ extension Array where Element == SwiftSetting {
     static var upcomingFeatures: [SwiftSetting] {
         [
             .enableUpcomingFeature("ExistentialAny"),
+            .enableUpcomingFeature("InternalImportsByDefault"),
+            .enableUpcomingFeature("MemberImportVisibility"),
             .swiftLanguageMode(.v6)
         ]
     }

@@ -20,7 +20,7 @@
     "visionos": "1.0"
   },
   "source_files": "DOM/Sources/*.swift",
-  "swift_version": "5.10",
+  "swift_version": "6.0",
   "pod_target_xcconfig": {
     "OTHER_SWIFT_FLAGS": "-package-name SwiftDraw"
   }

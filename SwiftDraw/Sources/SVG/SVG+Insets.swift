@@ -29,10 +29,10 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-import Foundation
-
 #if canImport(CoreGraphics)
-import CoreGraphics
+public import struct CoreGraphics.CGFloat
+#else
+public import typealias Foundation.CGFloat
 #endif
 
 public extension SVG {

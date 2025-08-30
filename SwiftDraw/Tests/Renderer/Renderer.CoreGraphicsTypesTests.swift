@@ -30,6 +30,7 @@ import XCTest
 #if canImport(CoreGraphics)
 import CoreGraphics
 @testable import SwiftDraw
+import SwiftDrawDOM
 
 final class RendererCoreGraphicsTypesTests: XCTestCase {
   

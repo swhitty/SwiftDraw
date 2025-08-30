@@ -272,7 +272,7 @@ private func arc(_ rx: Coordinate, _ ry: Coordinate, _ rotate: Coordinate,
 
 
 extension DOM.Path.Segment: Swift.Equatable {
-  public static func ==(lhs: DOM.Path.Segment, rhs: DOM.Path.Segment) -> Bool {
+  static func ==(lhs: DOM.Path.Segment, rhs: DOM.Path.Segment) -> Bool {
     let toString: (Any) -> String = { var text = ""; dump($0, to: &text); return text }
     return toString(lhs) == toString(rhs)
   }

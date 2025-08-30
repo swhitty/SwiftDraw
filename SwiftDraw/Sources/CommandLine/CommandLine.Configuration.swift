@@ -30,7 +30,7 @@
 //
 
 import SwiftDrawDOM
-import Foundation
+public import Foundation
 
 extension CommandLine {
 

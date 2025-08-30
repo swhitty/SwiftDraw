@@ -30,8 +30,7 @@
 //
 
 #if canImport(AppKit) && !targetEnvironment(macCatalyst)
-import AppKit
-import CoreGraphics
+public import AppKit
 
 public extension NSImage {
 

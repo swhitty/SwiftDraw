@@ -31,6 +31,7 @@
 
 import XCTest
 @testable import SwiftDraw
+import SwiftDrawDOM
 
 final class LayerTreeLayerTests: XCTestCase {
 

@@ -44,12 +44,8 @@ package extension TextOutputStream where Self == StandardErrorStream {
 
 package struct StandardErrorStream: TextOutputStream {
 
-#if compiler(<6.0)
-    fileprivate static var shared = StandardErrorStream()
-#else
     nonisolated(unsafe)
     fileprivate static var shared = StandardErrorStream()
-#endif
 
     package func write(_ string: String) {
         if #available(macOS 10.15.4, iOS 13.4, tvOS 13.4, watchOS 6.2, *) {

@@ -31,6 +31,7 @@
 
 // Convert a DOM.SVG into a layer tree
 
+import SwiftDrawDOM
 import Foundation
 #if canImport(CoreText)
 import CoreText

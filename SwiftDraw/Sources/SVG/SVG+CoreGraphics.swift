@@ -30,8 +30,8 @@
 //
 
 #if canImport(CoreGraphics)
-import CoreGraphics
-import Foundation
+public import CoreGraphics
+public import Foundation
 
 public extension CGContext {
 
