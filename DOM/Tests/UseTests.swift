@@ -29,25 +29,27 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-import XCTest
+import Testing
 @testable import SwiftDrawDOM
 
-final class UseTests: XCTestCase {
+@Suite("Use Tests")
+struct UseTests {
 
-    func testUse() throws {
+    @Test
+    func use() throws {
         var node = ["xlink:href": "#line2", "href": "#line1"]
 
         var parsed = try XMLParser().parseUse(node)
-        XCTAssertEqual(parsed.href.fragmentID, "line2")
-        XCTAssertNil(parsed.x)
-        XCTAssertNil(parsed.y)
+        #expect(parsed.href.fragmentID == "line2")
+        #expect(parsed.x == nil)
+        #expect(parsed.y == nil)
 
         node["x"] = "20"
         node["y"] = "30"
 
         parsed = try XMLParser().parseUse(node)
-        XCTAssertEqual(parsed.href.fragmentID, "line2")
-        XCTAssertEqual(parsed.x, 20)
-        XCTAssertEqual(parsed.y, 30)
+        #expect(parsed.href.fragmentID == "line2")
+        #expect(parsed.x == 20)
+        #expect(parsed.y == 30)
     }
 }
