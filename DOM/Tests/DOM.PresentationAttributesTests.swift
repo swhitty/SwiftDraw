@@ -29,100 +29,97 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-import XCTest
+import Testing
 @testable import SwiftDrawDOM
 
-final class PresentationAttributesTests: XCTestCase {
+struct PresentationAttributesTests {
 
     typealias Attributes = DOM.PresentationAttributes
     typealias StyleSheet = DOM.StyleSheet
 
-    func testOpacityIsApplied() {
-        XCTAssertNil(
+    @Test
+    func opacityIsApplied() {
+        #expect(
             Attributes(opacity: nil)
                 .applyingAttributes(Attributes(opacity: nil))
-                .opacity
+                .opacity == nil
         )
 
-        XCTAssertEqual(
+        #expect(
             Attributes(opacity: 5)
                 .applyingAttributes(Attributes(opacity: nil))
-                .opacity,
-            5
+                .opacity == 5
         )
 
-        XCTAssertEqual(
+        #expect(
             Attributes(opacity: 5)
                 .applyingAttributes(Attributes(opacity: 10))
-                .opacity,
-            10
+                .opacity == 10
         )
     }
 
-    func testDisplayIsApplied() {
-        XCTAssertNil(
+    @Test
+    func displayIsApplied() {
+        #expect(
             Attributes(display: nil)
                 .applyingAttributes(Attributes(display: nil))
-                .display
+                .display == nil
         )
 
-        XCTAssertEqual(
+        #expect(
             Attributes(display: DOM.DisplayMode.none)
                 .applyingAttributes(Attributes(display: nil))
-                .display,
-            DOM.DisplayMode.none
+                .display == DOM.DisplayMode.none
         )
 
-        XCTAssertEqual(
+        #expect(
             Attributes(display: DOM.DisplayMode.none)
                 .applyingAttributes(Attributes(display: .inline))
-                .display,
-            .inline
+                .display == .inline
         )
     }
 
-    func testColorIsApplied() {
-        XCTAssertNil(
+    @Test
+    func colorIsApplied() {
+        #expect(
             Attributes(color: nil)
                 .applyingAttributes(Attributes(color: nil))
-                .color
+                .color == nil
         )
 
-        XCTAssertEqual(
+        #expect(
             Attributes(color: .keyword(.green))
                 .applyingAttributes(Attributes(color: nil))
-                .color,
-            .keyword(.green)
+                .color == .keyword(.green)
         )
 
-        XCTAssertEqual(
+        #expect(
             Attributes(color: .keyword(.green))
                 .applyingAttributes(Attributes(color: .currentColor))
-                .color,
-            .currentColor
+                .color == .currentColor
         )
     }
 
-    func testSelectors() {
-        XCTAssertEqual(
-            DOM.makeSelectors(for: .circle()),
-            [.element("circle")]
+    @Test
+    func selectors() {
+        #expect(
+            DOM.makeSelectors(for: .circle()) == [.element("circle")]
         )
 
-        XCTAssertEqual(
-            DOM.makeSelectors(for: .circle(id: "c1")),
+        #expect(
+            DOM.makeSelectors(for: .circle(id: "c1")) ==
             [.element("circle"),
              .id("c1")]
         )
 
-        XCTAssertEqual(
-            DOM.makeSelectors(for: .circle(class: "c")),
+        #expect(
+            DOM.makeSelectors(for: .circle(class: "c")) ==
             [.element("circle"),
              .class("c")]
         )
 
-        XCTAssertEqual(
-            DOM.makeSelectors(for: .circle(id: "c1 ", class: "a  b c")),
+        #expect(
+            DOM.makeSelectors(for: .circle(id: "c1 ", class: "a  b c")) ==
             [.element("circle"),
              .class("a"),
              .class("b"),
@@ -131,7 +128,8 @@ final class PresentationAttributesTests: XCTestCase {
         )
     }
 
-    func testLastSheetAttributesAreUsed() {
+    @Test
+    func lastSheetAttributesAreUsed() {
         var sheet = StyleSheet()
         sheet[.id("b")].opacity = 0
         sheet[.id("a")].opacity = 1
@@ -140,45 +138,41 @@ final class PresentationAttributesTests: XCTestCase {
         another[.id("b")].opacity = 0.1
         another[.id("a")].opacity = 0.5
 
-        XCTAssertEqual(
+        #expect(
             DOM.makeAttributes(for: .id("a"), styles: [sheet])
-                .opacity,
-            1
+                .opacity == 1
         )
 
-        XCTAssertEqual(
+        #expect(
             DOM.makeAttributes(for: .id("a"), styles: [sheet, another])
-                .opacity,
-            0.5
+                .opacity == 0.5
         )
     }
 
-    func testSelectorPrecedence() {
+    @Test
+    func selectorPrecedence() {
         var sheet = StyleSheet()
         sheet[.element("circle")].opacity = 1
         sheet[.id("c1")].opacity = 0.5
         sheet[.class("b")].opacity = 0.1
         sheet[.class("c")].opacity = 0.2
 
-        XCTAssertEqual(
+        #expect(
             DOM.presentationAttributes(for: .circle(id: "c1", class: "b c"),
                                        styles: [sheet])
-                .opacity,
-            0.5
+            .opacity == 0.5
         )
 
-        XCTAssertEqual(
+        #expect(
             DOM.presentationAttributes(for: .circle(id: "c2", class: "b c"),
                                        styles: [sheet])
-                .opacity,
-            0.2
+            .opacity == 0.2
         )
 
-        XCTAssertEqual(
+        #expect(
             DOM.presentationAttributes(for: .circle(id: "c2", class: "z"),
                                        styles: [sheet])
-                .opacity,
-            1
+            .opacity == 1
         )
     }
 }

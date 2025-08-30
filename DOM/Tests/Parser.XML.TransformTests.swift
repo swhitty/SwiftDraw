@@ -29,111 +29,120 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-import XCTest
+import Testing
 @testable import SwiftDrawDOM
 
-final class ParserTransformTests: XCTestCase {
-  
-  func testMatrix() {
-    XCTAssertEqual(try XMLParser().parseTransform("matrix(0 1 2 3 4 5)"),
-                   [.matrix(a: 0, b: 1, c: 2, d: 3, e: 4, f: 5)])
-    XCTAssertEqual(try XMLParser().parseTransform("matrix(0,1,2,3,4,5)"),
-                   [.matrix(a: 0, b: 1, c: 2, d: 3, e: 4, f: 5)])
-    XCTAssertEqual(try XMLParser().parseTransform("matrix(1.1,1.2,1.3,1.4,1.5,1.6)"),
-                   [.matrix(a: 1.1, b: 1.2, c: 1.3, d: 1.4, e: 1.5, f: 1.6)])
-    
-    XCTAssertThrowsError(try XMLParser().parseTransform("matrix(0 1 a b 4 5)"))
-    XCTAssertThrowsError(try XMLParser().parseTransform("matrix(0 1 2)"))
-    XCTAssertThrowsError(try XMLParser().parseTransform("matrix(0 1 2 3 4 5"))
-    XCTAssertThrowsError(try XMLParser().parseTransform("matrix 0 1 2 3 4 5)"))
-  }
-  
-  func testTranslate() {
-    XCTAssertEqual(try XMLParser().parseTransform("translate(5)"),
-                   [.translate(tx: 5, ty: 0)])
-    XCTAssertEqual(try XMLParser().parseTransform("translate(5, 6)"),
-                   [.translate(tx: 5, ty: 6)])
-    XCTAssertEqual(try XMLParser().parseTransform("translate(5 6)"),
-                   [.translate(tx: 5, ty: 6)])
-    XCTAssertEqual(try XMLParser().parseTransform("translate(1.3, 4.5)"),
-                   [.translate(tx: 1.3, ty: 4.5)])
-    
-    XCTAssertThrowsError(try XMLParser().parseTransform("translate(5 a)"))
-    XCTAssertThrowsError(try XMLParser().parseTransform("translate(0 1 2)"))
-    XCTAssertThrowsError(try XMLParser().parseTransform("translate(0 1"))
-    XCTAssertThrowsError(try XMLParser().parseTransform("translate 0 1)"))
-  }
-  
-  func testScale() {
-    XCTAssertEqual(try XMLParser().parseTransform("scale(5)"),
-                   [.scale(sx: 5, sy: 5)])
-    XCTAssertEqual(try XMLParser().parseTransform("scale(5, 6)"),
-                   [.scale(sx: 5, sy: 6)])
-    XCTAssertEqual(try XMLParser().parseTransform("scale(5 6)"),
-                   [.scale(sx: 5, sy: 6)])
-    XCTAssertEqual(try XMLParser().parseTransform("scale(1.3, 4.5)"),
-                   [.scale(sx: 1.3, sy: 4.5)])
-    
-    XCTAssertThrowsError(try XMLParser().parseTransform("scale(5 a)"))
-    XCTAssertThrowsError(try XMLParser().parseTransform("scale(0 1 2)"))
-    XCTAssertThrowsError(try XMLParser().parseTransform("scale(0 1"))
-    XCTAssertThrowsError(try XMLParser().parseTransform("scale 0 1)"))
-  }
-  
-  func testRotate() {
-    XCTAssertEqual(try XMLParser().parseTransform("rotate(5)"),
-                   [.rotate(angle: 5)])
-    
-    XCTAssertThrowsError(try XMLParser().parseTransform("rotate(a)"))
-    XCTAssertThrowsError(try XMLParser().parseTransform("rotate()"))
-    XCTAssertThrowsError(try XMLParser().parseTransform("rotate(1"))
-    XCTAssertThrowsError(try XMLParser().parseTransform("rotate 1)"))
-  }
-  
-  func testRotatePoint() {
-    XCTAssertEqual(try XMLParser().parseTransform("rotate(5, 10, 20)"),
-                   [.rotatePoint(angle: 5, cx: 10, cy: 20)])
-    XCTAssertEqual(try XMLParser().parseTransform("rotate(5 10 20)"),
-                   [.rotatePoint(angle: 5, cx: 10, cy: 20)])
-    
-    XCTAssertThrowsError(try XMLParser().parseTransform("rotate(5 10 a)"))
-    XCTAssertThrowsError(try XMLParser().parseTransform("rotate(5 10)"))
-    XCTAssertThrowsError(try XMLParser().parseTransform("rotate(5 10 20"))
-    XCTAssertThrowsError(try XMLParser().parseTransform("rotate 5 10 20)"))
-  }
-  
-  func testSkewX() {
-    XCTAssertEqual(try XMLParser().parseTransform("skewX(5)"),
-                   [.skewX(angle: 5)])
-    XCTAssertEqual(try XMLParser().parseTransform("skewX(6.7)"),
-                   [.skewX(angle: 6.7)])
-    XCTAssertEqual(try XMLParser().parseTransform("skewX(0)"),
-                   [.skewX(angle: 0)])
-    
-    XCTAssertThrowsError(try XMLParser().parseTransform("skewX(a)"))
-    XCTAssertThrowsError(try XMLParser().parseTransform("skewX()"))
-    XCTAssertThrowsError(try XMLParser().parseTransform("skewX(1"))
-    XCTAssertThrowsError(try XMLParser().parseTransform("skewX 1)"))
-  }
-  
-  func testSkewY() {
-    XCTAssertEqual(try XMLParser().parseTransform("skewY(5)"),
-                   [.skewY(angle: 5)])
-    XCTAssertEqual(try XMLParser().parseTransform("skewY(6.7)"),
-                   [.skewY(angle: 6.7)])
-    XCTAssertEqual(try XMLParser().parseTransform("skewY(0)"),
-                   [.skewY(angle: 0)])
-    
-    XCTAssertThrowsError(try XMLParser().parseTransform("skewY(a)"))
-    XCTAssertThrowsError(try XMLParser().parseTransform("skewY()"))
-    XCTAssertThrowsError(try XMLParser().parseTransform("skewY(1"))
-    XCTAssertThrowsError(try XMLParser().parseTransform("skewY 1)"))
-  }
-  
-  func testTransform() {
-    XCTAssertEqual(try XMLParser().parseTransform("scale(2) translate(4) scale(5, 5) "),
-                   [.scale(sx: 2, sy: 2),
-                    .translate(tx: 4, ty: 0),
-                    .scale(sx: 5, sy: 5)])
-  }
+@Suite("Parser Transform Tests")
+struct ParserTransformTests {
+
+    @Test
+    func matrix() throws {
+        #expect(try XMLParser().parseTransform("matrix(0 1 2 3 4 5)") ==
+                [.matrix(a: 0, b: 1, c: 2, d: 3, e: 4, f: 5)])
+        #expect(try XMLParser().parseTransform("matrix(0,1,2,3,4,5)") ==
+                [.matrix(a: 0, b: 1, c: 2, d: 3, e: 4, f: 5)])
+        #expect(try XMLParser().parseTransform("matrix(1.1,1.2,1.3,1.4,1.5,1.6)") ==
+                [.matrix(a: 1.1, b: 1.2, c: 1.3, d: 1.4, e: 1.5, f: 1.6)])
+
+        #expect(throws: (any Error).self) { _ = try XMLParser().parseTransform("matrix(0 1 a b 4 5)") }
+        #expect(throws: (any Error).self) { _ = try XMLParser().parseTransform("matrix(0 1 2)") }
+        #expect(throws: (any Error).self) { _ = try XMLParser().parseTransform("matrix(0 1 2 3 4 5") }
+        #expect(throws: (any Error).self) { _ = try XMLParser().parseTransform("matrix 0 1 2 3 4 5)") }
+    }
+
+    @Test
+    func translate() throws {
+        #expect(try XMLParser().parseTransform("translate(5)") ==
+                [.translate(tx: 5, ty: 0)])
+        #expect(try XMLParser().parseTransform("translate(5, 6)") ==
+                [.translate(tx: 5, ty: 6)])
+        #expect(try XMLParser().parseTransform("translate(5 6)") ==
+                [.translate(tx: 5, ty: 6)])
+        #expect(try XMLParser().parseTransform("translate(1.3, 4.5)") ==
+                [.translate(tx: 1.3, ty: 4.5)])
+
+        #expect(throws: (any Error).self) { _ = try XMLParser().parseTransform("translate(5 a)") }
+        #expect(throws: (any Error).self) { _ = try XMLParser().parseTransform("translate(0 1 2)") }
+        #expect(throws: (any Error).self) { _ = try XMLParser().parseTransform("translate(0 1") }
+        #expect(throws: (any Error).self) { _ = try XMLParser().parseTransform("translate 0 1)") }
+    }
+
+    @Test
+    func scale() throws {
+        #expect(try XMLParser().parseTransform("scale(5)") ==
+                [.scale(sx: 5, sy: 5)])
+        #expect(try XMLParser().parseTransform("scale(5, 6)") ==
+                [.scale(sx: 5, sy: 6)])
+        #expect(try XMLParser().parseTransform("scale(5 6)") ==
+                [.scale(sx: 5, sy: 6)])
+        #expect(try XMLParser().parseTransform("scale(1.3, 4.5)") ==
+                [.scale(sx: 1.3, sy: 4.5)])
+
+        #expect(throws: (any Error).self) { _ = try XMLParser().parseTransform("scale(5 a)") }
+        #expect(throws: (any Error).self) { _ = try XMLParser().parseTransform("scale(0 1 2)") }
+        #expect(throws: (any Error).self) { _ = try XMLParser().parseTransform("scale(0 1") }
+        #expect(throws: (any Error).self) { _ = try XMLParser().parseTransform("scale 0 1)") }
+    }
+
+    @Test
+    func rotate() throws {
+        #expect(try XMLParser().parseTransform("rotate(5)") ==
+                [.rotate(angle: 5)])
+
+        #expect(throws: (any Error).self) { _ = try XMLParser().parseTransform("rotate(a)") }
+        #expect(throws: (any Error).self) { _ = try XMLParser().parseTransform("rotate()") }
+        #expect(throws: (any Error).self) { _ = try XMLParser().parseTransform("rotate(1") }
+        #expect(throws: (any Error).self) { _ = try XMLParser().parseTransform("rotate 1)") }
+    }
+
+    @Test
+    func rotatePoint() throws {
+        #expect(try XMLParser().parseTransform("rotate(5, 10, 20)") ==
+                [.rotatePoint(angle: 5, cx: 10, cy: 20)])
+        #expect(try XMLParser().parseTransform("rotate(5 10 20)") ==
+                [.rotatePoint(angle: 5, cx: 10, cy: 20)])
+
+        #expect(throws: (any Error).self) { _ = try XMLParser().parseTransform("rotate(5 10 a)") }
+        #expect(throws: (any Error).self) { _ = try XMLParser().parseTransform("rotate(5 10)") }
+        #expect(throws: (any Error).self) { _ = try XMLParser().parseTransform("rotate(5 10 20") }
+        #expect(throws: (any Error).self) { _ = try XMLParser().parseTransform("rotate 5 10 20)") }
+    }
+
+    @Test
+    func skewX() throws {
+        #expect(try XMLParser().parseTransform("skewX(5)") ==
+                [.skewX(angle: 5)])
+        #expect(try XMLParser().parseTransform("skewX(6.7)") ==
+                [.skewX(angle: 6.7)])
+        #expect(try XMLParser().parseTransform("skewX(0)") ==
+                [.skewX(angle: 0)])
+
+        #expect(throws: (any Error).self) { _ = try XMLParser().parseTransform("skewX(a)") }
+        #expect(throws: (any Error).self) { _ = try XMLParser().parseTransform("skewX()") }
+        #expect(throws: (any Error).self) { _ = try XMLParser().parseTransform("skewX(1") }
+        #expect(throws: (any Error).self) { _ = try XMLParser().parseTransform("skewX 1)") }
+    }
+
+    @Test
+    func skewY() throws {
+        #expect(try XMLParser().parseTransform("skewY(5)") ==
+                [.skewY(angle: 5)])
+        #expect(try XMLParser().parseTransform("skewY(6.7)") ==
+                [.skewY(angle: 6.7)])
+        #expect(try XMLParser().parseTransform("skewY(0)") ==
+                [.skewY(angle: 0)])
+
+        #expect(throws: (any Error).self) { _ = try XMLParser().parseTransform("skewY(a)") }
+        #expect(throws: (any Error).self) { _ = try XMLParser().parseTransform("skewY()") }
+        #expect(throws: (any Error).self) { _ = try XMLParser().parseTransform("skewY(1") }
+        #expect(throws: (any Error).self) { _ = try XMLParser().parseTransform("skewY 1)") }
+    }
+
+    @Test
+    func transform() throws {
+        #expect(try XMLParser().parseTransform("scale(2) translate(4) scale(5, 5) ") ==
+                [.scale(sx: 2, sy: 2),
+                 .translate(tx: 4, ty: 0),
+                 .scale(sx: 5, sy: 5)])
+    }
 }

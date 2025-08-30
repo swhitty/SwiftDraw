@@ -29,86 +29,96 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-import XCTest
 @testable import SwiftDrawDOM
+import Testing
 
-final class ParserColorTests: XCTestCase {
-  
-  func testColorNone() {
-    XCTAssertEqual(try XMLParser().parseColor("none"), .none)
-    XCTAssertEqual(try XMLParser().parseColor(" none"), .none)
-    XCTAssertEqual(try XMLParser().parseColor("\t none \t"), .none)
-  }
+struct ParserColorTests {
 
-  func testColorTransparent() {
-    XCTAssertEqual(try XMLParser().parseColor("transparent"), .none)
-    XCTAssertEqual(try XMLParser().parseColor(" transparent"), .none)
-    XCTAssertEqual(try XMLParser().parseColor("\t transparent \t"), .none)
-  }
+    @Test
+    func colorNone() throws {
+        #expect(try XMLParser().parseColor("none") == .none)
+        #expect(try XMLParser().parseColor(" none") == .none)
+        #expect(try XMLParser().parseColor("\t none \t") == .none)
+    }
 
-  func testColorCurrent() {
-    XCTAssertEqual(try XMLParser().parseColor("currentColor"), .currentColor)
-    XCTAssertEqual(try XMLParser().parseColor(" currentColor"), .currentColor)
-    XCTAssertEqual(try XMLParser().parseColor("\t currentColor \t"), .currentColor)
-  }
+    @Test
+    func colorTransparent() throws {
+        #expect(try XMLParser().parseColor("transparent") == .none)
+        #expect(try XMLParser().parseColor(" transparent") == .none)
+        #expect(try XMLParser().parseColor("\t transparent \t") == .none)
+    }
 
-  func testColorKeyword() {
-    XCTAssertEqual(try XMLParser().parseColor("aliceblue"), .keyword(.aliceblue))
-    XCTAssertEqual(try XMLParser().parseColor("wheat"), .keyword(.wheat))
-    XCTAssertEqual(try XMLParser().parseColor("cornflowerblue"), .keyword(.cornflowerblue))
-    XCTAssertEqual(try XMLParser().parseColor(" magenta"), .keyword(.magenta))
-    XCTAssertEqual(try XMLParser().parseColor("black "), .keyword(.black))
-    XCTAssertEqual(try XMLParser().parseColor("\t red  \t"), .keyword(.red))
-  }
-  
-  func testColorRGBi() {
-    // integer 0-255
-    XCTAssertEqual(try XMLParser().parseColor("rgb(0,1,2)"), .rgbi(0, 1, 2, 1.0))
-    XCTAssertEqual(try XMLParser().parseColor(" rgb( 0 , 1 , 2) "), .rgbi(0, 1, 2, 1.0))
-    XCTAssertEqual(try XMLParser().parseColor("rgb(255,100,78)"), .rgbi(255, 100, 78, 1.0))
+    @Test
+    func colorCurrent() throws {
+        #expect(try XMLParser().parseColor("currentColor") == .currentColor)
+        #expect(try XMLParser().parseColor(" currentColor") == .currentColor)
+        #expect(try XMLParser().parseColor("\t currentColor \t") == .currentColor)
+    }
 
-    XCTAssertEqual(try XMLParser().parseColor("rgb(0,1,2,255)"), .rgbi(0, 1, 2, 1.0))
-    XCTAssertEqual(try XMLParser().parseColor("rgb(0,1,2,25%)"), .rgbi(0, 1, 2, 0.25))
-    XCTAssertEqual(try XMLParser().parseColor(" rgb( 0 , 1 , 2, 0.5) "), .rgbi(0, 1, 2, 0.5))
-    XCTAssertEqual(try XMLParser().parseColor("rgb(255,100, 78, 0)"), .rgbi(255, 100, 78, 0))
-  }
-  
-  func testColorRGBf() {
-    // percentage 0-100%
-    XCTAssertEqual(try XMLParser().parseColor("rgb(0,1%,99%)"), .rgbf(0.0, 0.01, 0.99, 1.0))
-    XCTAssertEqual(try XMLParser().parseColor("rgb( 0%, 52% , 100%) "), .rgbf(0.0, 0.52, 1.0, 1.0))
-    XCTAssertEqual(try XMLParser().parseColor("rgb(75%,25%,7%)"), .rgbf(0.75, 0.25, 0.07, 1.0))
-  }
-  
-  func testColorRGBA() {
-    // integer 0-255
-    XCTAssertEqual(try XMLParser().parseColor("rgba(0,1,2,0.5)"), .rgbi(0, 1, 2, 0.5))
-    XCTAssertEqual(try XMLParser().parseColor(" rgba( 0 , 1 , 2, 0.6) "), .rgbi(0, 1, 2, 0.6))
-    XCTAssertEqual(try XMLParser().parseColor("rgba(255,100,78,0.7)"), .rgbi(255, 100, 78, 0.7))
-    // percentage 0-100%
-    XCTAssertEqual(try XMLParser().parseColor("rgba(0,1%,99%,0.5)"), .rgbf(0.0, 0.01, 0.99, 0.5))
-    XCTAssertEqual(try XMLParser().parseColor("rgba( 0%, 52% , 100%, 0.6) "), .rgbf(0.0, 0.52, 1.0, 0.6))
-    XCTAssertEqual(try XMLParser().parseColor("rgba(75%,25%,7%,0.7)"), .rgbf(0.75, 0.25, 0.07, 0.7))
-  }
-  
-  func testColorHex() {
-    XCTAssertEqual(try XMLParser().parseColor("#a06"), .hex(170, 0, 102))
-    XCTAssertEqual(try XMLParser().parseColor("#123456"), .hex(18, 52, 86))
-    XCTAssertEqual(try XMLParser().parseColor("#FF11DD"), .hex(255, 17, 221))
-    XCTAssertThrowsError(try XMLParser().parseColor("#invalid"))
-  }
-  
-  func testColorP3() {
-    // percentage 0-100%
-    XCTAssertEqual(try XMLParser().parseColor("color(display-p3 0 0.5 0.9)"), .p3(0, 0.5, 0.9))
-    XCTAssertEqual(try XMLParser().parseColor("color(display-p3 0.1, 0.2, 0)"), .p3(0.1, 0.2, 0))
-    XCTAssertEqual(try XMLParser().parseColor("color(display-p3 1,0.3,0.5)"), .p3(1, 0.3, 0.5))
-  }
+    @Test
+    func colorKeyword() throws {
+        #expect(try XMLParser().parseColor("aliceblue") == .keyword(.aliceblue))
+        #expect(try XMLParser().parseColor("wheat") == .keyword(.wheat))
+        #expect(try XMLParser().parseColor("cornflowerblue") == .keyword(.cornflowerblue))
+        #expect(try XMLParser().parseColor(" magenta") == .keyword(.magenta))
+        #expect(try XMLParser().parseColor("black ") == .keyword(.black))
+        #expect(try XMLParser().parseColor("\t red  \t") == .keyword(.red))
+    }
+
+    @Test
+    func colorRGBi() throws {
+        // integer 0-255
+        #expect(try XMLParser().parseColor("rgb(0,1,2)") == .rgbi(0, 1, 2, 1.0))
+        #expect(try XMLParser().parseColor(" rgb( 0 , 1 , 2) ") == .rgbi(0, 1, 2, 1.0))
+        #expect(try XMLParser().parseColor("rgb(255,100,78)") == .rgbi(255, 100, 78, 1.0))
+
+        #expect(try XMLParser().parseColor("rgb(0,1,2,255)") == .rgbi(0, 1, 2, 1.0))
+        #expect(try XMLParser().parseColor("rgb(0,1,2,25%)") == .rgbi(0, 1, 2, 0.25))
+        #expect(try XMLParser().parseColor(" rgb( 0 , 1 , 2, 0.5) ") == .rgbi(0, 1, 2, 0.5))
+        #expect(try XMLParser().parseColor("rgb(255,100, 78, 0)") == .rgbi(255, 100, 78, 0))
+    }
+
+    @Test
+    func colorRGBf() throws {
+        // percentage 0-100%
+        #expect(try XMLParser().parseColor("rgb(0,1%,99%)") == .rgbf(0.0, 0.01, 0.99, 1.0))
+        #expect(try XMLParser().parseColor("rgb( 0%, 52% , 100%) ") == .rgbf(0.0, 0.52, 1.0, 1.0))
+        #expect(try XMLParser().parseColor("rgb(75%,25%,7%)") == .rgbf(0.75, 0.25, 0.07, 1.0))
+    }
+
+    @Test
+    func colorRGBA() throws {
+        // integer 0-255
+        #expect(try XMLParser().parseColor("rgba(0,1,2,0.5)") == .rgbi(0, 1, 2, 0.5))
+        #expect(try XMLParser().parseColor(" rgba( 0 , 1 , 2, 0.6) ") == .rgbi(0, 1, 2, 0.6))
+        #expect(try XMLParser().parseColor("rgba(255,100,78,0.7)") == .rgbi(255, 100, 78, 0.7))
+        // percentage 0-100%
+        #expect(try XMLParser().parseColor("rgba(0,1%,99%,0.5)") == .rgbf(0.0, 0.01, 0.99, 0.5))
+        #expect(try XMLParser().parseColor("rgba( 0%, 52% , 100%, 0.6) ") == .rgbf(0.0, 0.52, 1.0, 0.6))
+        #expect(try XMLParser().parseColor("rgba(75%,25%,7%,0.7)") == .rgbf(0.75, 0.25, 0.07, 0.7))
+    }
+
+    @Test
+    func colorHex() throws {
+        #expect(try XMLParser().parseColor("#a06") == .hex(170, 0, 102))
+        #expect(try XMLParser().parseColor("#123456") == .hex(18, 52, 86))
+        #expect(try XMLParser().parseColor("#FF11DD") == .hex(255, 17, 221))
+        #expect(throws: (any Error).self) {
+            try XMLParser().parseColor("#invalid")
+        }
+    }
+
+    @Test
+    func colorP3() throws {
+        // percentage 0-100%
+        #expect(try XMLParser().parseColor("color(display-p3 0 0.5 0.9)") == .p3(0, 0.5, 0.9))
+        #expect(try XMLParser().parseColor("color(display-p3 0.1, 0.2, 0)") == .p3(0.1, 0.2, 0))
+        #expect(try XMLParser().parseColor("color(display-p3 1,0.3,0.5)") == .p3(1, 0.3, 0.5))
+    }
 }
 
 private extension DOMXMLParser {
-  
-  func parseColor(_ value: String) throws -> DOM.Color {
-    return try parseFill(value).getColor()
-  }
+    func parseColor(_ value: String) throws -> DOM.Color {
+        return try parseFill(value).getColor()
+    }
 }

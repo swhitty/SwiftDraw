@@ -29,133 +29,144 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-
-import XCTest
+import Foundation
+import Testing
 @testable import SwiftDrawDOM
 
-final class ValueParserTests: XCTestCase {
-  
-  var parser = XMLParser.ValueParser()
-  
-  func testFloat() {
-    XCTAssertEqual(try parser.parseFloat("10"), 10)
-    XCTAssertEqual(try parser.parseFloat("10.0"), 10.0)
-    
-    XCTAssertThrowsError(try parser.parseFloat(""))
-    //XCTAssertThrowsError(try parser.parseFloat("10a"))
-  }
-  
-  func testFloats() {
-    XCTAssertEqual(try parser.parseFloats("10 20 30.5"), [10, 20, 30.5])
-    XCTAssertEqual(try parser.parseFloats("10.0"), [10.0])
-    XCTAssertEqual(try parser.parseFloats("5 10 1 5"), [5, 10, 1, 5])
-    XCTAssertEqual(try parser.parseFloats(" 1, 2.5, 3.5 "), [1, 2.5, 3.5])
-    XCTAssertEqual(try parser.parseFloats(" "), [])
-    XCTAssertEqual(try parser.parseFloats(""), [])
-    
-    //XCTAssertThrowsError(try parser.parseFloats(""))
-    //XCTAssertThrowsError(try parser.parseFloat("10a"))
-  }
-  
-  func testPercentage() {
-    XCTAssertEqual(try parser.parsePercentage("0"), 0)
-    XCTAssertEqual(try parser.parsePercentage("1"), 1)
-    XCTAssertEqual(try parser.parsePercentage("0.45"), 0.45)
-    XCTAssertEqual(try parser.parsePercentage("0.0%"), 0)
-    XCTAssertEqual(try parser.parsePercentage("100%"), 1)
-    XCTAssertEqual(try parser.parsePercentage("55%"), 0.55)
-    XCTAssertEqual(try parser.parsePercentage("10.25%"), 0.1025)
-    
-    XCTAssertThrowsError(try parser.parsePercentage("100"))
-    XCTAssertThrowsError(try parser.parsePercentage("asd"))
-    XCTAssertThrowsError(try parser.parsePercentage(" "))
-    //XCTAssertThrowsError(try parser.parseFloat("10a"))
-  }
-  
-  func testCoordinate() {
-    XCTAssertEqual(try parser.parseCoordinate("0"), 0)
-    XCTAssertEqual(try parser.parseCoordinate("0.0"), 0)
-    XCTAssertEqual(try parser.parseCoordinate("100"), 100)
-    XCTAssertEqual(try parser.parseCoordinate("25.0"), 25.0)
-    XCTAssertEqual(try parser.parseCoordinate("-25.0"), -25.0)
-    
-    XCTAssertThrowsError(try parser.parseCoordinate("asd"))
-    XCTAssertThrowsError(try parser.parseCoordinate(" "))
-  }
-  
-  func testLength() {
-    XCTAssertEqual(try parser.parseLength("0"), 0)
-    XCTAssertEqual(try parser.parseLength("100"), 100)
-    XCTAssertEqual(try parser.parseLength("25"), 25)
-    XCTAssertEqual(try parser.parseLength("1.3"), 1) //should error?
-    
-    XCTAssertThrowsError(try parser.parseLength("asd"))
-    XCTAssertThrowsError(try parser.parseLength(" "))
-    XCTAssertThrowsError(try parser.parseLength("-25"))
-  }
-  
-  func testBool() {
-    XCTAssertEqual(try parser.parseBool("false"), false)
-    XCTAssertEqual(try parser.parseBool("FALSE"), false)
-    XCTAssertEqual(try parser.parseBool("true"), true)
-    XCTAssertEqual(try parser.parseBool("TRUE"), true)
-    XCTAssertEqual(try parser.parseBool("1"), true)
-    XCTAssertEqual(try parser.parseBool("0"), false)
-    
-    XCTAssertThrowsError(try parser.parseBool("asd"))
-    XCTAssertThrowsError(try parser.parseBool("yes"))
-  }
-  
-  func testFill() {
-    XCTAssertEqual(try parser.parseFill("none"), .color(.none))
-    XCTAssertEqual(try parser.parseFill("black"), .color(.keyword(.black)))
-    XCTAssertEqual(try parser.parseFill("red"), .color(.keyword(.red)))
-    
-    XCTAssertEqual(try parser.parseFill("rgb(10,20,30)"), .color(.rgbi(10, 20, 30, 1.0)))
-    XCTAssertEqual(try parser.parseFill("rgb(10%,20%,100%)"), .color(.rgbf(0.1, 0.2, 1.0, 1.0)))
-    XCTAssertEqual(try parser.parseFill("rgba(10, 20, 30, 0.5)"), .color(.rgbi(10, 20, 30, 0.5)))
-    XCTAssertEqual(try parser.parseFill("rgba(10%,20%,100%,0.6)"), .color(.rgbf(0.1, 0.2, 1.0, 0.6)))
-    XCTAssertEqual(try parser.parseFill("#AAFF00"), .color(.hex(170, 255, 0)))
-    
-    XCTAssertEqual(try parser.parseFill("url(#test)"), .url(URL(string: "#test")!))
-    
-    XCTAssertThrowsError(try parser.parseFill("Ns "))
-    XCTAssertThrowsError(try parser.parseFill("d"))
-    XCTAssertThrowsError(try parser.parseFill("url()"))
-    //XCTAssertThrowsError(try parser.parseFill("url(asdf"))
-  }
-  
-  func testUrl() {
-#if canImport(Darwin)
-    XCTAssertEqual(try parser.parseUrl("#testing🐟").fragmentID, "testing🐟")
-#else
-      XCTAssertEqual(try parser.parseUrl("#testing").fragmentID, "testing")
-#endif
-    XCTAssertEqual(try parser.parseUrl("http://www.google.com").host, "www.google.com")
-  }
-  
-  func testUrlSelector() {
-    XCTAssertEqual(try parser.parseUrlSelector("url(#testingId)").fragmentID, "testingId")
-    XCTAssertEqual(try parser.parseUrlSelector("url(http://www.google.com)").host, "www.google.com")
-    
-    XCTAssertThrowsError(try parser.parseUrlSelector("url(#testingId) other"))
-  }
-  
-  func testPoints() {
-    XCTAssertEqual(try parser.parsePoints("0 1 2 3"), [DOM.Point(0, 1), DOM.Point(2, 3)])
-    XCTAssertEqual(try parser.parsePoints("0,1 2,3"), [DOM.Point(0, 1), DOM.Point(2, 3)])
-    XCTAssertEqual(try parser.parsePoints("0 1.5 1e4 2.4"), [DOM.Point(0, 1.5), DOM.Point(1e4, 2.4)])
-    //  XCTAssertEqual(try parser.parsePoints("0 1 2 3 5.0 6.5"), [0, 1 ,2])
-  }
-  
-  func testRaw() {
-    XCTAssertEqual(try parser.parseRaw("evenodd"), DOM.FillRule.evenodd)
-    XCTAssertEqual(try parser.parseRaw("round"), DOM.LineCap.round)
-    XCTAssertEqual(try parser.parseRaw("miter"), DOM.LineJoin.miter)
-    
-    XCTAssertThrowsError((try parser.parseRaw("sd")) as DOM.LineJoin)
-  }
+@Suite("Value Parser Tests")
+struct ValueParserTests {
+
+    var parser = XMLParser.ValueParser()
+
+    @Test
+    func float() throws {
+        #expect(try parser.parseFloat("10") == 10)
+        #expect(try parser.parseFloat("10.0") == 10.0)
+
+        #expect(throws: (any Error).self) { _ = try parser.parseFloat("") }
+        // #expect(throws: (any Error).self) { _ = try parser.parseFloat("10a") }
+    }
+
+    @Test
+    func floats() throws {
+        #expect(try parser.parseFloats("10 20 30.5") == [10, 20, 30.5])
+        #expect(try parser.parseFloats("10.0") == [10.0])
+        #expect(try parser.parseFloats("5 10 1 5") == [5, 10, 1, 5])
+        #expect(try parser.parseFloats(" 1, 2.5, 3.5 ") == [1, 2.5, 3.5])
+        #expect(try parser.parseFloats(" ") == [])
+        #expect(try parser.parseFloats("") == [])
+
+        // #expect(throws: (any Error).self) { _ = try parser.parseFloats("") }
+        // #expect(throws: (any Error).self) { _ = try parser.parseFloat("10a") }
+    }
+
+    @Test
+    func percentage() throws {
+        #expect(try parser.parsePercentage("0") == 0)
+        #expect(try parser.parsePercentage("1") == 1)
+        #expect(try parser.parsePercentage("0.45") == 0.45)
+        #expect(try parser.parsePercentage("0.0%") == 0)
+        #expect(try parser.parsePercentage("100%") == 1)
+        #expect(try parser.parsePercentage("55%") == 0.55)
+        #expect(try parser.parsePercentage("10.25%") == 0.1025)
+
+        #expect(throws: (any Error).self) { _ = try parser.parsePercentage("100") }
+        #expect(throws: (any Error).self) { _ = try parser.parsePercentage("asd") }
+        #expect(throws: (any Error).self) { _ = try parser.parsePercentage(" ") }
+        // #expect(throws: (any Error).self) { _ = try parser.parseFloat("10a") }
+    }
+
+    @Test
+    func coordinate() throws {
+        #expect(try parser.parseCoordinate("0") == 0)
+        #expect(try parser.parseCoordinate("0.0") == 0)
+        #expect(try parser.parseCoordinate("100") == 100)
+        #expect(try parser.parseCoordinate("25.0") == 25.0)
+        #expect(try parser.parseCoordinate("-25.0") == -25.0)
+
+        #expect(throws: (any Error).self) { _ = try parser.parseCoordinate("asd") }
+        #expect(throws: (any Error).self) { _ = try parser.parseCoordinate(" ") }
+    }
+
+    @Test
+    func length() throws {
+        #expect(try parser.parseLength("0") == 0)
+        #expect(try parser.parseLength("100") == 100)
+        #expect(try parser.parseLength("25") == 25)
+        #expect(try parser.parseLength("1.3") == 1) // should error?
+
+        #expect(throws: (any Error).self) { _ = try parser.parseLength("asd") }
+        #expect(throws: (any Error).self) { _ = try parser.parseLength(" ") }
+        #expect(throws: (any Error).self) { _ = try parser.parseLength("-25") }
+    }
+
+    @Test
+    func bools() throws {
+        #expect(try parser.parseBool("false") == false)
+        #expect(try parser.parseBool("FALSE") == false)
+        #expect(try parser.parseBool("true") == true)
+        #expect(try parser.parseBool("TRUE") == true)
+        #expect(try parser.parseBool("1") == true)
+        #expect(try parser.parseBool("0") == false)
+
+        #expect(throws: (any Error).self) { _ = try parser.parseBool("asd") }
+        #expect(throws: (any Error).self) { _ = try parser.parseBool("yes") }
+    }
+
+    @Test
+    func fill() throws {
+        #expect(try parser.parseFill("none") == .color(.none))
+        #expect(try parser.parseFill("black") == .color(.keyword(.black)))
+        #expect(try parser.parseFill("red") == .color(.keyword(.red)))
+
+        #expect(try parser.parseFill("rgb(10,20,30)") == .color(.rgbi(10, 20, 30, 1.0)))
+        #expect(try parser.parseFill("rgb(10%,20%,100%)") == .color(.rgbf(0.1, 0.2, 1.0, 1.0)))
+        #expect(try parser.parseFill("rgba(10, 20, 30, 0.5)") == .color(.rgbi(10, 20, 30, 0.5)))
+        #expect(try parser.parseFill("rgba(10%,20%,100%,0.6)") == .color(.rgbf(0.1, 0.2, 1.0, 0.6)))
+        #expect(try parser.parseFill("#AAFF00") == .color(.hex(170, 255, 0)))
+
+        #expect(try parser.parseFill("url(#test)") == .url(URL(string: "#test")!))
+
+        #expect(throws: (any Error).self) { _ = try parser.parseFill("Ns ") }
+        #expect(throws: (any Error).self) { _ = try parser.parseFill("d") }
+        #expect(throws: (any Error).self) { _ = try parser.parseFill("url()") }
+        // #expect(throws: (any Error).self) { _ = try parser.parseFill("url(asdf") }
+    }
+
+    @Test
+    func url() throws {
+        #if canImport(Darwin)
+        #expect(try parser.parseUrl("#testing🐟").fragmentID == "testing🐟")
+        #else
+        #expect(try parser.parseUrl("#testing").fragmentID == "testing")
+        #endif
+        #expect(try parser.parseUrl("http://www.google.com").host == "www.google.com")
+    }
+
+    @Test
+    func urlSelector() throws {
+        #expect(try parser.parseUrlSelector("url(#testingId)").fragmentID == "testingId")
+        #expect(try parser.parseUrlSelector("url(http://www.google.com)").host == "www.google.com")
+
+        #expect(throws: (any Error).self) { _ = try parser.parseUrlSelector("url(#testingId) other") }
+    }
+
+    @Test
+    func points() throws {
+        #expect(try parser.parsePoints("0 1 2 3") == [DOM.Point(0, 1), DOM.Point(2, 3)])
+        #expect(try parser.parsePoints("0,1 2,3") == [DOM.Point(0, 1), DOM.Point(2, 3)])
+        #expect(try parser.parsePoints("0 1.5 1e4 2.4") == [DOM.Point(0, 1.5), DOM.Point(1e4, 2.4)])
+        //  #expect(try parser.parsePoints("0 1 2 3 5.0 6.5") == [0, 1 ,2])
+    }
+
+    @Test
+    func raw() throws {
+        #expect(try parser.parseRaw("evenodd") as DOM.FillRule == .evenodd)
+        #expect(try parser.parseRaw("round") as DOM.LineCap == .round)
+        #expect(try parser.parseRaw("miter") as DOM.LineJoin == .miter)
+
+        #expect(throws: (any Error).self) {
+            let _: DOM.LineJoin = try parser.parseRaw("sd")
+        }
+    }
 }
-
-
-
