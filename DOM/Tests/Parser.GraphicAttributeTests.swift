@@ -30,27 +30,28 @@
 //
 
 
-import XCTest
 @testable import SwiftDrawDOM
+import Testing
 
-final class ParserGraphicAttributeTests: XCTestCase {
+struct ParserGraphicAttributeTests {
 
-    func testPresentationAttributes() throws {
+    @Test
+    func presentationAttributes() throws {
         var parsed = try XMLParser().parsePresentationAttributes([:])
-        XCTAssertNil(parsed.opacity)
-        XCTAssertNil(parsed.display)
-        XCTAssertNil(parsed.stroke)
-        XCTAssertNil(parsed.strokeWidth)
-        XCTAssertNil(parsed.strokeOpacity)
-        XCTAssertNil(parsed.strokeLineCap)
-        XCTAssertNil(parsed.strokeLineJoin)
-        XCTAssertNil(parsed.strokeDashArray)
-        XCTAssertNil(parsed.fill)
-        XCTAssertNil(parsed.fillOpacity)
-        XCTAssertNil(parsed.fillRule)
-        XCTAssertNil(parsed.transform)
-        XCTAssertNil(parsed.clipPath)
-        XCTAssertNil(parsed.mask)
+        #expect(parsed.opacity == nil)
+        #expect(parsed.display == nil)
+        #expect(parsed.stroke == nil)
+        #expect(parsed.strokeWidth == nil)
+        #expect(parsed.strokeOpacity == nil)
+        #expect(parsed.strokeLineCap == nil)
+        #expect(parsed.strokeLineJoin == nil)
+        #expect(parsed.strokeDashArray == nil)
+        #expect(parsed.fill == nil)
+        #expect(parsed.fillOpacity == nil)
+        #expect(parsed.fillRule == nil)
+        #expect(parsed.transform == nil)
+        #expect(parsed.clipPath == nil)
+        #expect(parsed.mask == nil)
 
         let att = ["opacity": "95%",
                    "display": "none",
@@ -66,60 +67,70 @@ final class ParserGraphicAttributeTests: XCTestCase {
                    "transform": "scale(15)",
                    "clip-path": "url(#circlePath)",
                    "mask": "url(#fancyMask)",
-                   "filter": "url(#blur)"]
+                   "filter": "url(#blur)"
+        ]
 
         parsed = try XMLParser().parsePresentationAttributes(att)
 
-        XCTAssertEqual(parsed.opacity, 0.95)
-        XCTAssertEqual(parsed.display!, .none)
-        XCTAssertEqual(parsed.stroke, .color(.keyword(.green)))
-        XCTAssertEqual(parsed.strokeWidth, 15)
-        XCTAssertEqual(parsed.strokeOpacity, 0.756)
-        XCTAssertEqual(parsed.strokeLineCap, .butt)
-        XCTAssertEqual(parsed.strokeLineJoin, .miter)
-        XCTAssertEqual(parsed.strokeDashArray!, [1, 5, 10])
-        XCTAssertEqual(parsed.fill, .color(.keyword(.purple)))
-        XCTAssertEqual(parsed.fillOpacity, 0.25)
-        XCTAssertEqual(parsed.fillRule, .evenodd)
-        XCTAssertEqual(parsed.transform!, [.scale(sx: 15, sy: 15)])
-        XCTAssertEqual(parsed.clipPath?.fragmentID, "circlePath")
-        XCTAssertEqual(parsed.mask?.fragmentID, "fancyMask")
-        XCTAssertEqual(parsed.filter?.fragmentID, "blur")
+        #expect(parsed.opacity == 0.95)
+        #expect(parsed.display == DOM.DisplayMode.none)
+        #expect(parsed.stroke == .color(.keyword(.green)))
+        #expect(parsed.strokeWidth == 15)
+        #expect(parsed.strokeOpacity == 0.756)
+        #expect(parsed.strokeLineCap == .butt)
+        #expect(parsed.strokeLineJoin == .miter)
+        #expect(parsed.strokeDashArray == [1, 5, 10])
+        #expect(parsed.fill == .color(.keyword(.purple)))
+        #expect(parsed.fillOpacity == 0.25)
+        #expect(parsed.fillRule == .evenodd)
+        #expect(parsed.transform == [.scale(sx: 15, sy: 15)])
+        #expect(parsed.clipPath?.fragmentID == "circlePath")
+        #expect(parsed.mask?.fragmentID == "fancyMask")
+        #expect(parsed.filter?.fragmentID == "blur")
     }
 
-    func testCircle() throws {
+    @Test
+    func circle() throws {
         let el = XML.Element("circle", style: "clip-path: url(#cp1); cx:10;cy:10;r:10; fill:black; stroke-width:2")
 
         let parsed = try XMLParser().parseGraphicsElement(el)
         let circle = parsed as? DOM.Circle
-        XCTAssertNotNil(circle)
-        XCTAssertEqual(circle?.style.clipPath?.fragmentID, "cp1")
-        XCTAssertEqual(circle?.style.fill, .color(.keyword(.black)))
-        XCTAssertEqual(circle?.style.strokeWidth, 2)
+        #expect(circle != nil)
+        #expect(circle?.style.clipPath?.fragmentID == "cp1")
+        #expect(circle?.style.fill == .color(.keyword(.black)))
+        #expect(circle?.style.strokeWidth == 2)
     }
 
-    func testDisplayMode() {
+    @Test
+    func displayMode() throws {
         let parser = XMLParser.ValueParser()
 
-        XCTAssertEqual(try parser.parseRaw("none"), DOM.DisplayMode.none)
-        XCTAssertEqual(try parser.parseRaw("  none  "), DOM.DisplayMode.none)
-        XCTAssertThrowsError(try parser.parseRaw("ds") as DOM.DisplayMode )
+        #expect(try parser.parseRaw("none") == DOM.DisplayMode.none)
+        #expect(try parser.parseRaw("  none  ") == DOM.DisplayMode.none)
+        #expect(throws: (any Error).self) {
+            try parser.parseRaw("ds") as DOM.DisplayMode
+        }
     }
 
-    func testStrokeLineCap() {
+    @Test
+    func strokeLineCap() throws {
         let parser = XMLParser.ValueParser()
 
-        XCTAssertEqual(try parser.parseRaw("butt"), DOM.LineCap.butt)
-        XCTAssertEqual(try parser.parseRaw("  round"), DOM.LineCap.round)
-        XCTAssertThrowsError(try parser.parseRaw("squdare") as DOM.LineCap)
+        #expect(try parser.parseRaw("butt") == DOM.LineCap.butt)
+        #expect(try parser.parseRaw("  round") == DOM.LineCap.round)
+        #expect(throws: (any Error).self) {
+            try parser.parseRaw("squdare") as DOM.LineCap
+        }
     }
 
-    func testStrokeLineJoin() {
+    @Test
+    func strokeLineJoin() throws {
         let parser = XMLParser.ValueParser()
 
-        XCTAssertEqual(try parser.parseRaw("miter"), DOM.LineJoin.miter)
-        XCTAssertEqual(try parser.parseRaw("  bevel"), DOM.LineJoin.bevel)
-        XCTAssertThrowsError(try parser.parseRaw("ds") as DOM.LineJoin)
+        #expect(try parser.parseRaw("miter") == DOM.LineJoin.miter)
+        #expect(try parser.parseRaw("  bevel") == DOM.LineJoin.bevel)
+        #expect(throws: (any Error).self) {
+            try parser.parseRaw("ds") as DOM.LineJoin
+        }
     }
 }
-

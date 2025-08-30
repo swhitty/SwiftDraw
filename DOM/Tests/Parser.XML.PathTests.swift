@@ -268,12 +268,3 @@ private func arc(_ rx: Coordinate, _ ry: Coordinate, _ rotate: Coordinate,
                 large: large, sweep: sweep,
                 x: x, y: y, space: space)
 }
-
-
-
-extension DOM.Path.Segment: Swift.Equatable {
-    static func ==(lhs: DOM.Path.Segment, rhs: DOM.Path.Segment) -> Bool {
-        let toString: (Any) -> String = { var text = ""; dump($0, to: &text); return text }
-        return toString(lhs) == toString(rhs)
-    }
-}
