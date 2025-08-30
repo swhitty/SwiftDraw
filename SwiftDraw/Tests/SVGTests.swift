@@ -29,128 +29,179 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-import XCTest
 import SwiftDrawDOM
 @testable import SwiftDraw
+import Testing
 
-#if canImport(CoreGraphics)
-final class SVGTests: XCTestCase {
+#if canImport(AppKit)
+import AppKit
+#endif
 
-    func testValidSVGLoads() {
-        XCTAssertNotNil(SVG(named: "lines.svg", in: .test))
+#if canImport(UIKit)
+import UIKit
+#endif
+
+#if canImport(AppKit) || canImport(UIKit)
+struct SVGTests {
+
+    @Test
+    func validSVGLoads() {
+        #expect(SVG(named: "lines.svg", in: .test) != nil)
     }
 
-    func testInvalidSVGReturnsNil() {
-        XCTAssertNil(SVG(named: "invalids.svg", in: .test))
+    @Test
+    func invalidSVGReturnsNil() {
+        #expect(SVG(named: "invalids.svg", in: .test) == nil)
     }
 
-    func testMissingSVGReturnsNil() {
-        XCTAssertNil(SVG(named: "missing.svg", in: .test))
+    @Test
+    func missingSVGReturnsNil() {
+        #expect(SVG(named: "missing.svg", in: .test) == nil)
     }
 
-    func testImageRasterizes() {
+    @Test
+    func imageRasterizes() {
         let image = SVG.makeLines()
         let rendered = image.rasterize(scale: 1)
-        XCTAssertEqual(rendered.size, image.size)
-        XCTAssertNoThrow(try image.pngData())
-        XCTAssertNoThrow(try image.jpegData())
-        XCTAssertNoThrow(try image.pdfData())
+        #expect(rendered.size == image.size)
+        #expect(throws: Never.self) {
+            try image.pngData()
+        }
+        #expect(throws: Never.self) {
+            try image.jpegData()
+        }
+        #expect(throws: Never.self) {
+            try image.pdfData()
+        }
     }
 
-//    func testImageRasterizeAndScales() {
-//        let image = SVG.makeLines()
-//        let doubleSize = CGSize(width: 200, height: 200)
-//        let rendered = image.rasterize(with: doubleSize, scale: 1)
-//        XCTAssertEqual(rendered.size, doubleSize)
-//        XCTAssertNoThrow(try image.pngData(size: doubleSize))
-//        XCTAssertNoThrow(try image.jpegData(size: doubleSize))
-//    }
-
-    func testShapesImageRasterizes() throws {
-        let image = try XCTUnwrap(SVG(named: "shapes.svg", in: .test))
-        XCTAssertNoThrow(try image.pngData())
-        XCTAssertNoThrow(try image.jpegData())
-        XCTAssertNoThrow(try image.pdfData())
+    @Test
+    func shapesImageRasterizes() throws {
+        let image = try #require(SVG(named: "shapes.svg", in: .test))
+        #expect(throws: Never.self) {
+            try image.pngData()
+        }
+        #expect(throws: Never.self) {
+            try image.jpegData()
+        }
+        #expect(throws: Never.self) {
+            try image.pdfData()
+        }
     }
 
 #if canImport(UIKit)
-    func testRasterize() {
+    @Test
+    func rasterize() {
         let svg = SVG(named: "gradient-apple.svg", in: .test)!
             .sized(CGSize(width: 100, height: 100))
         let image = svg.rasterize(scale: 3)
-        XCTAssertEqual(image.size, CGSize(width: 100, height: 100))
-        XCTAssertEqual(image.scale, 3)
+        #expect(image.size == CGSize(width: 100, height: 100))
+        #expect(image.scale == 3)
 
         let data = image.pngData()!
         let reloaded = UIImage(data: data)!
-        XCTAssertEqual(reloaded.size, CGSize(width: 300, height: 300))
-        XCTAssertEqual(reloaded.scale, 1)
+        #expect(reloaded.size == CGSize(width: 300, height: 300))
+        #expect(reloaded.scale == 1)
     }
 #endif
 
-    func testSize() {
+    @Test
+    func size() {
         let image = SVG.makeLines()
 
-        XCTAssertEqual(image.size, CGSize(width: 100, height: 100))
-        XCTAssertEqual(image.sized(CGSize(width: 200, height: 200)).size, CGSize(width: 200, height: 200))
+        #expect(
+            image.size == CGSize(width: 100, height: 100)
+        )
+        #expect(
+            image.sized(CGSize(width: 200, height: 200)).size == CGSize(width: 200, height: 200)
+        )
 
         var copy = image
         copy.size(CGSize(width: 20, height: 20))
-        XCTAssertEqual(copy.size, CGSize(width: 20, height: 20))
+        #expect(
+            copy.size == CGSize(width: 20, height: 20)
+        )
     }
 
-    func testScale() {
+    @Test
+    func scale() {
         let image = SVG.makeLines()
 
-        XCTAssertEqual(image.size, CGSize(width: 100, height: 100))
-        XCTAssertEqual(image.scaled(2).size, CGSize(width: 200, height: 200))
-        XCTAssertEqual(image.scaled(0.5).size, CGSize(width: 50, height: 50))
-        XCTAssertEqual(image.scaled(x: 2, y: 3).size, CGSize(width: 200, height: 300))
+        #expect(
+            image.size == CGSize(width: 100, height: 100)
+        )
+        #expect(
+            image.scaled(2).size == CGSize(width: 200, height: 200)
+        )
+        #expect(
+            image.scaled(0.5).size == CGSize(width: 50, height: 50)
+        )
+        #expect(
+            image.scaled(x: 2, y: 3).size == CGSize(width: 200, height: 300)
+        )
 
         var copy = image
         copy.scale(5)
-        XCTAssertEqual(copy.size, CGSize(width: 500, height: 500))
+        #expect(
+            copy.size == CGSize(width: 500, height: 500)
+        )
     }
 
-    func testTranslate() {
+    @Test
+    func translate() {
         let image = SVG.makeLines()
 
-        XCTAssertEqual(image.size, CGSize(width: 100, height: 100))
-        XCTAssertEqual(image.translated(tx: 10, ty: 10).size, CGSize(width: 100, height: 100))
+        #expect(
+            image.size == CGSize(width: 100, height: 100)
+        )
+        #expect(
+            image.translated(tx: 10, ty: 10).size == CGSize(width: 100, height: 100)
+        )
 
         var copy = image
         copy.translate(tx: 50, ty: 50)
-        XCTAssertEqual(copy.size, CGSize(width: 100, height: 100))
+        #expect(
+            copy.size == CGSize(width: 100, height: 100)
+        )
     }
 
-    func testExpand() {
+    @Test
+    func expand() {
         let image = SVG.makeLines()
 
-        XCTAssertEqual(image.size, CGSize(width: 100, height: 100))
-        XCTAssertEqual(image.expanded(top: 50, right: 30).size, CGSize(width: 130, height: 150))
+        #expect(
+            image.size == CGSize(width: 100, height: 100)
+        )
+        #expect(
+            image.expanded(top: 50, right: 30).size == CGSize(width: 130, height: 150)
+        )
 
         var copy = image
         copy.expand(-10)
-        XCTAssertEqual(copy.size, CGSize(width: 80, height: 80))
+        #expect(
+            copy.size == CGSize(width: 80, height: 80)
+        )
     }
 
-    func testHashable() {
+    @Test
+    func hashable() {
         var images = Set<SVG>()
         let lines = SVG.makeLines()
 
-        XCTAssertFalse(images.contains(lines))
+        #expect(!images.contains(lines))
 
         images.insert(SVG.makeLines())
-        XCTAssertTrue(images.contains(lines))
+        #expect(images.contains(lines))
 
         let linesResized = lines.sized(CGSize(width: 10, height: 10))
-        XCTAssertFalse(images.contains(linesResized))
+        #expect(!images.contains(linesResized))
 
         images.remove(lines)
-        XCTAssertFalse(images.contains(SVG.makeLines()))
+        #expect(!images.contains(SVG.makeLines()))
     }
 
-    func testDeepNestedSVG() async {
+    @Test
+    func deepNestedSVG() async {
         let circle = DOM.Circle(cx: 50, cy: 50, r: 10)
         let dom = DOM.SVG(width: 50, height: 50)
         dom.childElements.append(DOM.Group.make(child: circle, nestedLevels: 500))

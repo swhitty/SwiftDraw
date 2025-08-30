@@ -29,47 +29,46 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-import XCTest
 @testable import SwiftDraw
+import Testing
 
 #if canImport(UIKit)
 import UIKit
 
-final class UIImageSVGTests: XCTestCase {
+struct UIImageSVGTests {
 
-    func testImageLoads() {
+    @Test
+    func imageLoads() {
         let image = UIImage(svgNamed: "lines.svg", in: .test)
-        XCTAssertNotNil(image)
+        #expect(image != nil)
     }
 
-    func testMissingImageDoesNotLoad() {
+    @Test
+    func missingImageDoesNotLoad() {
         let image = UIImage(svgNamed: "missing.svg", in: .test)
-        XCTAssertNil(image)
+        #expect(image == nil)
     }
 
-    func testImageSize() throws {
+    @Test
+    func imageSize() throws {
         let image = try SVG.parseXML(#"""
             <?xml version="1.0" encoding="UTF-8"?>
             <svg width="64" height="64" version="1.1" xmlns="http://www.w3.org/2000/svg">
             </svg>
             """#
         )
-    
-        XCTAssertEqual(
-            image.rasterize(scale: 1).size,
-            CGSize(width: 64, height: 64)
+
+        #expect(
+            image.rasterize(scale: 1).size == CGSize(width: 64, height: 64)
         )
-        XCTAssertEqual(
-            image.rasterize(scale: 1).scale,
-            1
+        #expect(
+            image.rasterize(scale: 1).scale == 1
         )
-        XCTAssertEqual(
-            image.rasterize(scale: 2).size,
-            CGSize(width: 64, height: 64)
+        #expect(
+            image.rasterize(scale: 2).size == CGSize(width: 64, height: 64)
         )
-        XCTAssertEqual(
-            image.rasterize(scale: 2).scale,
-            2
+        #expect(
+            image.rasterize(scale: 2).scale == 2
         )
     }
 }

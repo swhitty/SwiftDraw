@@ -31,9 +31,9 @@
 
 import Foundation
 #if canImport(UIKit)
-import UIKit
+public import UIKit
 #if canImport(WatchKit)
-import WatchKit
+public import WatchKit
 #endif
 
 public extension UIImage {

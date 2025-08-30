@@ -84,7 +84,6 @@ final class LayerTreeBuilderTests: XCTestCase {
     var element = DOM.GraphicsElement()
     element.attributes.clipPath = URL(string: "#clip1")
     
-    var shapes = builder.createClipShapes(for: element)
     XCTAssertEqual(
         builder.createClipShapes(for: element),
         [.ellipse(within: LayerTree.Rect(x: 0, y: 0, width: 10, height: 10))]

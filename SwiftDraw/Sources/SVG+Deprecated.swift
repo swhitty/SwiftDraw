@@ -34,7 +34,7 @@ public import CoreGraphics
 public import Foundation
 
 #if canImport(UIKit)
-import UIKit
+public import UIKit
 #endif
 
 public extension SVG {
