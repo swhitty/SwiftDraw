@@ -32,23 +32,25 @@
 
 import Foundation
 
-import XCTest
 @testable import SwiftDrawDOM
+import Testing
 
-final class ParserXMLFilterTests: XCTestCase {
+struct ParserXMLFilterTests {
 
-    func testParseFilters() throws {
+    @Test
+    func parseFilters() throws {
         let child = XML.Element(name: "child")
         child.children = [XML.Element.makeMockFilter(), XML.Element.makeMockFilter()]
 
         let parent = XML.Element(name: "parent")
         parent.children = [XML.Element.makeMockFilter(), child]
 
-        XCTAssertEqual(try XMLParser().parseFilters(child).count, 2)
-        XCTAssertEqual(try XMLParser().parseFilters(parent).count, 3)
+        #expect(try XMLParser().parseFilters(child).count == 2)
+        #expect(try XMLParser().parseFilters(parent).count == 3)
     }
 
-    func testParseEffect() throws {
+    @Test
+    func parseEffect() throws {
         let element = XML.Element.makeMockFilter(id: "blur")
 
         element.children = [
@@ -57,8 +59,8 @@ final class ParserXMLFilterTests: XCTestCase {
         ]
 
         let filter = try XMLParser().parseFilter(element)
-        XCTAssertEqual(filter.id, "blur")
-        XCTAssertEqual(filter.effects, [.gaussianBlur(stdDeviation: 0.5)])
+        #expect(filter.id == "blur")
+        #expect(filter.effects == [.gaussianBlur(stdDeviation: 0.5)])
     }
 }
 

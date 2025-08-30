@@ -32,36 +32,37 @@
 
 import Foundation
 
-import XCTest
 @testable import SwiftDrawDOM
+import Testing
 
-final class ParserXMLLinearGradientTests: XCTestCase {
+struct ParserXMLLinearGradientTests {
 
-    func testParseGradients() throws {
+    @Test
+    func parseGradients() throws {
         let child = XML.Element(name: "child")
         child.children = [XML.Element.makeMockGradient(), XML.Element.makeMockGradient()]
 
         let parent = XML.Element(name: "parent")
         parent.children = [XML.Element.makeMockGradient(), child]
 
-        XCTAssertEqual(try XMLParser().parseLinearGradients(child).count, 2)
-        XCTAssertEqual(try XMLParser().parseLinearGradients(parent).count, 3)
+        #expect(try XMLParser().parseLinearGradients(child).count == 2)
+        #expect(try XMLParser().parseLinearGradients(parent).count == 3)
     }
 
-    func testParseFile() throws {
-
+    @Test
+    func parseFile() throws {
         let dom = try DOM.SVG.parse(fileNamed: "linearGradient.svg", in: .test)
 
-        XCTAssertEqual(dom.defs.linearGradients.count, 5)
-        XCTAssertNotNil(dom.defs.linearGradients.first(where: { $0.id == "snow" }))
-        XCTAssertNotNil(dom.defs.linearGradients.first(where: { $0.id == "blue" }))
-        XCTAssertNotNil(dom.defs.linearGradients.first(where: { $0.id == "purple" }))
-        XCTAssertNotNil(dom.defs.linearGradients.first(where: { $0.id == "salmon" }))
-        XCTAssertNotNil(dom.defs.linearGradients.first(where: { $0.id == "green" }))
+        #expect(dom.defs.linearGradients.count == 5)
+        #expect(dom.defs.linearGradients.first(where: { $0.id == "snow" }) != nil)
+        #expect(dom.defs.linearGradients.first(where: { $0.id == "blue" }) != nil)
+        #expect(dom.defs.linearGradients.first(where: { $0.id == "purple" }) != nil)
+        #expect(dom.defs.linearGradients.first(where: { $0.id == "salmon" }) != nil)
+        #expect(dom.defs.linearGradients.first(where: { $0.id == "green" }) != nil)
 
-        XCTAssertGreaterThan(dom.childElements.count, 2)
-        XCTAssertEqual(dom.childElements[0].attributes.fill, .url(URL(string: "#snow")!))
-        XCTAssertEqual(dom.childElements[1].attributes.fill, .url(URL(string: "#blue")!))
+        #expect(dom.childElements.count > 2)
+        #expect(dom.childElements[0].attributes.fill == .url(URL(string: "#snow")!))
+        #expect(dom.childElements[1].attributes.fill == .url(URL(string: "#blue")!))
     }
 }
 

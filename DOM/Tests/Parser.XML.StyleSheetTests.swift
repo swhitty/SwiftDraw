@@ -29,28 +29,33 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-import XCTest
+import Testing
 @testable import SwiftDrawDOM
 
-final class ParserXMLStyleSheetTests: XCTestCase {
+@Suite("Parser XML StyleSheet Tests")
+struct ParserXMLStyleSheetTests {
 
-    func testParsesStyleSheetsSelectors() throws {
+    @Test
+    func parsesStyleSheetsSelectors() throws {
         let dom = try DOM.SVG.parse(fileNamed: "stylesheet.svg", in: .test)
 
-        XCTAssertEqual(
-            Set(dom.styles.flatMap(\.attributes.keys)),
-            [.class("s"),
-             .class("b"),
-             .element("rect"),
-             .class("o"),
-             .class("g"),
-             .element("circle"),
-             .element("g"),
-             .id("a")]
+        let keys = Set(dom.styles.flatMap(\.attributes.keys))
+        #expect(
+            keys == [
+                .class("s"),
+                .class("b"),
+                .element("rect"),
+                .class("o"),
+                .class("g"),
+                .element("circle"),
+                .element("g"),
+                .id("a")
+            ]
         )
     }
 
-    func testParsesSelectors() throws {
+    @Test
+    func parsesSelectors() throws {
         let entries = try XMLParser.parseEntries(
             """
              .s {
@@ -58,14 +63,14 @@ final class ParserXMLStyleSheetTests: XCTestCase {
                 stroke-width: 5 /* asd */;
                 fill-opacity: 0.3
             }
-
+            
             /* comment */
             /* another */
-
+            
              .b {
                 fill: blue;
             }
-
+            
             rect {
                 fill: pink;
             }
@@ -73,15 +78,17 @@ final class ParserXMLStyleSheetTests: XCTestCase {
             """
         )
 
-        XCTAssertEqual(
-            entries,
-            [.class("s"): ["stroke": "darkgray", "stroke-width": "5", "fill-opacity": "0.3"],
-             .class("b"): ["fill": "blue"],
-             .element("rect"): ["fill": "pink"]]
+        #expect(
+            entries == [
+                .class("s"): ["stroke": "darkgray", "stroke-width": "5", "fill-opacity": "0.3"],
+                .class("b"): ["fill": "blue"],
+                .element("rect"): ["fill": "pink"]
+            ]
         )
     }
 
-    func testParsesStyleSheet() throws {
+    @Test
+    func parsesStyleSheet() throws {
         let sheet = try XMLParser().parseStyleSheetElement(
             """
              .s {
@@ -89,14 +96,14 @@ final class ParserXMLStyleSheetTests: XCTestCase {
                 stroke-width: 5 /* asd */;
                 fill-opacity: 30%
             }
-
+            
             /* comment */
             /* another */
-
+            
              .b {
                 fill: blue;
             }
-
+            
             rect {
                 fill: pink;
             }
@@ -104,14 +111,15 @@ final class ParserXMLStyleSheetTests: XCTestCase {
             """
         ).attributes
 
-        XCTAssertEqual(sheet[.class("s")]?.stroke, .color(.keyword(.darkgray)))
-        XCTAssertEqual(sheet[.class("s")]?.strokeWidth, 5)
-        XCTAssertEqual(sheet[.class("s")]?.fillOpacity, 0.3)
-        XCTAssertEqual(sheet[.class("b")]?.fill, .color(.keyword(.blue)))
-        XCTAssertEqual(sheet[.element("rect")]?.fill, .color(.keyword(.pink)))
+        #expect(sheet[.class("s")]?.stroke == .color(.keyword(.darkgray)))
+        #expect(sheet[.class("s")]?.strokeWidth == 5)
+        #expect(sheet[.class("s")]?.fillOpacity == 0.3)
+        #expect(sheet[.class("b")]?.fill == .color(.keyword(.blue)))
+        #expect(sheet[.element("rect")]?.fill == .color(.keyword(.pink)))
     }
 
-    func testMergesSelectors() throws {
+    @Test
+    func mergesSelectors() throws {
         let entries = try XMLParser.parseEntries(
             """
             .a {
@@ -126,13 +134,11 @@ final class ParserXMLStyleSheetTests: XCTestCase {
             """
         )
 
-        XCTAssertEqual(
-            entries,
-            [.class("a"): ["fill": "purple", "stroke": "blue"]]
-        )
+        #expect(entries == [.class("a"): ["fill": "purple", "stroke": "blue"]])
     }
 
-    func testMutlipleSelectors() throws {
+    @Test
+    func mutlipleSelectors() throws {
         let entries = try XMLParser.parseEntries(
             """
             .a, .b {
@@ -141,9 +147,8 @@ final class ParserXMLStyleSheetTests: XCTestCase {
             """
         )
 
-        XCTAssertEqual(
-            entries,
-            [
+        #expect(
+            entries == [
                 .class("a"): ["fill": "red"],
                 .class("b"): ["fill": "red"]
             ]
