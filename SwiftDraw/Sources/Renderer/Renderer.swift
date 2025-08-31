@@ -37,7 +37,6 @@ protocol RendererTypes {
     associatedtype Rect: Equatable
     associatedtype Color: Equatable
     associatedtype Gradient: Equatable
-    associatedtype Mask: Equatable
     associatedtype Path: Equatable
     associatedtype Pattern: Equatable
     associatedtype Transform: Equatable
@@ -93,7 +92,6 @@ protocol Renderer {
     func setLine(join: Types.LineJoin)
     func setLine(miterLimit: Types.Float)
     func setClip(path: Types.Path, rule: Types.FillRule)
-    func setClip(mask: Types.Mask, frame: Types.Rect)
     func setAlpha(_ alpha: Types.Float)
     func setBlend(mode: Types.BlendMode)
 
@@ -140,8 +138,6 @@ extension Renderer {
             setLine(miterLimit: l)
         case .setClip(path: let p, rule: let r):
             setClip(path: p, rule: r)
-        case .setClipMask(let m, frame: let f):
-            setClip(mask: m, frame: f)
         case .setAlpha(let a):
             setAlpha(a)
         case .setBlend(mode: let m):
@@ -185,7 +181,6 @@ enum RendererCommand<Types: RendererTypes>: @unchecked Sendable {
     case setLineJoin(Types.LineJoin)
     case setLineMiter(limit: Types.Float)
     case setClip(path: Types.Path, rule: Types.FillRule)
-    case setClipMask(Types.Mask, frame: Types.Rect)
     case setAlpha(Types.Float)
     case setBlend(mode: Types.BlendMode)
 
