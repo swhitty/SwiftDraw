@@ -47,12 +47,17 @@ public struct SVG: Hashable, Sendable {
     var commands: [RendererCommand<CGTypes>]
 
     public init?(fileURL url: URL, options: SVG.Options = .default) {
-        do {
-            let svg = try DOM.SVG.parse(fileURL: url)
-            self.init(dom: svg, options: options)
-        } catch {
-            XMLParser.logParsingError(for: error, filename: url.lastPathComponent, parsing: nil)
-            return nil
+        if let svg = SVGGCache.shared.svg(fileURL: url) {
+            self = svg
+        } else {
+            do {
+                let svg = try DOM.SVG.parse(fileURL: url)
+                self.init(dom: svg, options: options)
+                SVGGCache.shared.setSVG(self, for: url)
+            } catch {
+                XMLParser.logParsingError(for: error, filename: url.lastPathComponent, parsing: nil)
+                return nil
+            }
         }
     }
 

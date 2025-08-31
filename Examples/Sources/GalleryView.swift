@@ -34,37 +34,33 @@ import SwiftUI
 
 struct GalleryView: View {
 
-    var images: [SVG] = {
-        [
-            "thats-no-moon.svg",
-            "avocado.svg",
-            "angry.svg",
-            "ogre.svg",
-            "monkey.svg",
-            "fuji.svg",
-            "dish.svg",
-            "mouth-open.svg",
-            "sleepy.svg",
-            "smile.svg",
-            "snake.svg",
-            "spider.svg",
-            "star-struck.svg",
-            "worried.svg",
-            "yawning.svg",
-            "thats-no-moon.svg",
-            "alert.svg",
-            "effigy.svg",
-            "stylesheet-multiple.svg"
-        ].compactMap {
-            SVG(named: $0, in: .samples)
-        }
-    }()
+    var images = [
+        "thats-no-moon.svg",
+        "avocado.svg",
+        "angry.svg",
+        "ogre.svg",
+        "monkey.svg",
+        "fuji.svg",
+        "dish.svg",
+        "mouth-open.svg",
+        "sleepy.svg",
+        "smile.svg",
+        "snake.svg",
+        "spider.svg",
+        "star-struck.svg",
+        "worried.svg",
+        "yawning.svg",
+        "thats-no-moon.svg",
+        "alert.svg",
+        "effigy.svg",
+        "stylesheet-multiple.svg"
+    ]
 
     var body: some View {
         ScrollView {
             LazyVStack(spacing: 20) {
                 ForEach(images, id: \.self) { image in
-                    SVGView(svg: image)
+                    SVGView(image, bundle: .samples)
                         .aspectRatio(contentMode: .fit)
                         .padding([.leading, .trailing], 10)
                 }
