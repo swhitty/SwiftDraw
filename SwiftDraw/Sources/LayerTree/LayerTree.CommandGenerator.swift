@@ -46,6 +46,9 @@ extension LayerTree {
         private var hasLoggedGradientWarning = false
         private var hasLoggedMaskWarning = false
 
+        private var paths: [LayerTree.Shape: P.Types.Path] = [:]
+        private var images: [LayerTree.Image: P.Types.Image] = [:]
+
         init(provider: P, size: LayerTree.Size, scale: LayerTree.Float = 3.0, options: SVG.Options) {
             self.provider = provider
             self.size = size
@@ -192,7 +195,7 @@ extension LayerTree {
                             fill: FillAttributes,
                             colorConverter: any ColorConverter) -> [RendererCommand<P.Types>] {
             var commands = [RendererCommand<P.Types>]()
-            let path = provider.createPath(from: shape)
+            let path = makeCachedPath(from: shape)
 
             switch fill.fill {
             case .color(let color):
@@ -303,13 +306,33 @@ extension LayerTree {
         }
 
         func renderCommands(for image: Image) -> [RendererCommand<P.Types>] {
-            guard let renderImage = provider.createImage(from: image) else { return  [] }
+            guard let renderImage = makeCachedImage(from: image) else { return  [] }
             let size = provider.createSize(from: renderImage)
             guard size.width > 0 && size.height > 0 else { return [] }
 
             let frame = makeImageFrame(for: image, bitmapSize: size)
             let rect = provider.createRect(from: frame)
             return [.draw(image: renderImage, in: rect)]
+        }
+
+        private func makeCachedPath(from shape: LayerTree.Shape) -> P.Types.Path {
+            if let existing = paths[shape] {
+                return existing
+            }
+            let new = provider.createPath(from: shape)
+            paths[shape] = new
+            return new
+        }
+
+        private func makeCachedImage(from image: Image) -> P.Types.Image? {
+            if let existing = images[image] {
+                return existing
+            }
+            guard let new = provider.createImage(from: image) else {
+                return nil
+            }
+            images[image] = new
+            return new
         }
 
         func makeImageFrame(for image: Image, bitmapSize: LayerTree.Size) -> LayerTree.Rect {
@@ -376,14 +399,20 @@ extension LayerTree {
             guard !shapes.isEmpty else { return [] }
             let paths = shapes.map { clip in
                 if clip.transform == .identity {
-                    return provider.createPath(from: clip.shape)
+                    return makeCachedPath(from: clip.shape)
                 } else {
-                    return provider.createPath(from: .path(clip.shape.path.applying(matrix: clip.transform)))
+                    return makeCachedPath(from: .path(clip.shape.path.applying(matrix: clip.transform)))
                 }
             }
-            let clipPath = provider.createPath(from: paths)
+
             let rule = provider.createFillRule(from: rule ?? .nonzero)
-            return [.setClip(path: clipPath, rule: rule)]
+
+            if paths.count == 1 {
+                return [.setClip(path: paths[0], rule: rule)]
+            } else {
+                let clipPath = provider.createPath(from: paths)
+                return [.setClip(path: clipPath, rule: rule)]
+            }
         }
 
 
