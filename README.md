@@ -42,13 +42,14 @@ Display an image within `SVGView`:
 
 ```swift
 var body: some View {
-    SVGView(named: "sample.svg")
+    SVGView("sample.svg")
         .aspectRatio(contentMode: .fit)
         .padding()
 }
 ```
 
-Pass an `SVG` instance for better performance:
+When you load by name, SVGView uses an internal cache so repeated lookups are efficient.
+For more predictable performance (avoiding any cache lookup or parsing), you can pass an already-created SVG instance:
 
 ```swift
 var image: SVG

@@ -59,8 +59,8 @@ struct CGTypes: RendererTypes, Sendable {
 
 struct CGTransformingPattern: Hashable {
 
-    let bounds: CGRect
-    let contents: [RendererCommand<CGTypes>]
+    var bounds: CGRect
+    var contents: [RendererCommand<CGTypes>]
 
     init(bounds: CGRect, contents: [RendererCommand<CGTypes>]) {
         self.bounds = bounds
