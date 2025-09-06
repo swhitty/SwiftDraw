@@ -35,21 +35,43 @@ public import Foundation
 
 public extension CGContext {
 
-    func draw(_ image: SVG, in rect: CGRect? = nil)  {
-        let defaultRect = CGRect(x: 0, y: 0, width: image.size.width, height: image.size.height)
+    func draw(_ svg: SVG, in rect: CGRect? = nil)  {
+        let defaultRect = CGRect(x: 0, y: 0, width: svg.size.width, height: svg.size.height)
         let renderer = CGRenderer(context: self)
         saveGState()
 
         if let rect = rect, rect != defaultRect {
             translateBy(x: rect.origin.x, y: rect.origin.y)
             scaleBy(
-                x: rect.width / image.size.width,
-                y: rect.height / image.size.height
+                x: rect.width / svg.size.width,
+                y: rect.height / svg.size.height
             )
         }
-        renderer.perform(image.commands)
+        renderer.perform(svg.commands)
 
         restoreGState()
+    }
+
+    func draw(_ svg: SVG, in rect: CGRect, byTiling: Bool) {
+        guard byTiling else {
+            draw(svg, in: rect)
+            return
+        }
+
+        let cols = Int(ceil(rect.size.width / svg.size.width))
+        let rows = Int(ceil(rect.size.height / svg.size.height))
+
+        for r in 0..<rows {
+            for c in 0..<cols {
+                let tile = CGRect(
+                    x: rect.minX + CGFloat(r) * svg.size.width,
+                    y: rect.minY + CGFloat(c) * svg.size.height,
+                    width: svg.size.width,
+                    height: svg.size.height
+                )
+                draw(svg, in: tile)
+            }
+        }
     }
 }
 

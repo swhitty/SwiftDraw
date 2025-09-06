@@ -61,7 +61,8 @@ struct GalleryView: View {
             LazyVStack(spacing: 20) {
                 ForEach(images, id: \.self) { image in
                     SVGView(image, bundle: .samples)
-                        .aspectRatio(contentMode: .fit)
+                        .resizable()
+                        .scaledToFit()
                         .padding([.leading, .trailing], 10)
                 }
             }
