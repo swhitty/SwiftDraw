@@ -44,7 +44,7 @@ imageView.image = svg.rasterize()   // 240x200
 SVGView("sample.svg")
 ```
 
-By default, the SVG is rendered at its intrinsic size. To make it flexible within layouts, mark it as resizable — just like `Image`:
+By default, the SVG is rendered at its intrinsic size. To make it flexible within layouts, mark it as resizable:
 
 ```swift
 SVGView("sample.svg")
@@ -52,9 +52,11 @@ SVGView("sample.svg")
     .scaledToFit()
 ```
 
-- Use `.scaledToFit()` to scale proportionally so the SVG fits inside its container.  
-- Use `.scaledToFill()` to fill the entire container, cropping if necessary.  
-- Use `.resizable(resizingMode: .tile)` to repeat the SVG as tiles across the available space.
+`SVGView` works just like `Image`:
+
+- `.scaledToFit()` to scale proportionally so the SVG fits inside its container.  
+- `.scaledToFill()` to fill the entire container, cropping if necessary.  
+- `.resizable(resizingMode: .tile)` to repeat the SVG as tiles across the available space.
 
 When loading by name, `SVGView` maintains an internal cache for efficient repeated lookups.  
 For more predictable performance (avoiding cache lookups or parsing), you can pass in an already-constructed `SVG` instance:
