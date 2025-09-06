@@ -38,24 +38,26 @@ imageView.image = svg.rasterize()   // 240x200
 
 ### SwiftUI
 
-SVGs can be displayed within `SVGView` just like using SwiftUI's built-in `Image`:
+`SVGView` works much like SwiftUI’s built-in `Image` view:
 
 ```swift
 SVGView("sample.svg")
 ```
 
-By default, SVGs are rendered at their original (intrinsic) size. To make them flexible within layouts, mark them as resizable — exactly like `Image`:    
+By default, the SVG is rendered at its intrinsic size. To make it flexible within layouts, mark it as resizable — just like `Image`:
 
 ```swift
 SVGView("sample.svg")
-   .resizable()
-   .scaledToFit()
+    .resizable()
+    .scaledToFit()
 ```
 
-This allows the SVG to scale proportionally to fit within its container.  Use `.scaledToFill()` to completely cover the container and use `.resizable(resizingMode: .tile)` to draw the SVG in repeating tiles filling the available space.
+- Use `.scaledToFit()` to scale proportionally so the SVG fits inside its container.  
+- Use `.scaledToFill()` to fill the entire container, cropping if necessary.  
+- Use `.resizable(resizingMode: .tile)` to repeat the SVG as tiles across the available space.
 
-When you load by name, SVGView uses an internal cache so repeated lookups are efficient.
-For more predictable performance (avoiding any cache lookup or parsing), you can pass an already-created SVG instance:
+When loading by name, `SVGView` maintains an internal cache for efficient repeated lookups.  
+For more predictable performance (avoiding cache lookups or parsing), you can pass in an already-constructed `SVG` instance:
 
 ```swift
 var image: SVG
