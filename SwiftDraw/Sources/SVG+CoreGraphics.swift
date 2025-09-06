@@ -64,8 +64,8 @@ public extension CGContext {
         for r in 0..<rows {
             for c in 0..<cols {
                 let tile = CGRect(
-                    x: rect.minX + CGFloat(r) * svg.size.width,
-                    y: rect.minY + CGFloat(c) * svg.size.height,
+                    x: rect.minX + CGFloat(c) * svg.size.width,
+                    y: rect.minY + CGFloat(r) * svg.size.height,
                     width: svg.size.width,
                     height: svg.size.height
                 )
