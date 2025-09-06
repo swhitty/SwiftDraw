@@ -44,17 +44,52 @@ public struct SVGView: View {
     }
 
     private let svg: SVG?
+    private var resizingMode: ResizingMode?
 
     public var body: some View {
         if let svg {
-            Canvas(
-                 opaque: false,
-                 colorMode: .linear,
-                 rendersAsynchronously: false
-             ) { ctx, size in
-                 ctx.draw(svg, in: CGRect(origin: .zero, size: size))
-             }
-             .frame(idealWidth: svg.size.width, idealHeight: svg.size.height)
+            if let resizingMode {
+                SVGView.makeCanvas(svg: svg, resizingMode: resizingMode)
+                    .frame(idealWidth: svg.size.width, idealHeight: svg.size.height)
+            } else {
+                SVGView.makeCanvas(svg: svg, resizingMode: .stretch)
+                    .frame(width: svg.size.width, height: svg.size.height)
+            }
+        }
+    }
+
+    public enum ResizingMode: Sendable, Hashable {
+        /// A mode to repeat the image at its original size, as many
+        /// times as necessary to fill the available space.
+        case tile
+
+        /// A mode to enlarge or reduce the size of an image so that it
+        /// fills the available space.
+        case stretch
+    }
+
+    /// Sets the mode by which SwiftUI resizes an SVG to fit its space.
+    /// - Parameters:
+    ///   - resizingMode: The mode by which SwiftUI resizes the image.
+    /// - Returns: An SVGView, with the new resizing behavior set.
+    public func resizable(resizingMode: ResizingMode = .stretch) -> Self {
+        var copy = self
+        copy.resizingMode = resizingMode
+        return copy
+    }
+
+    private static func makeCanvas(svg: SVG, resizingMode: ResizingMode) -> some View {
+        Canvas(
+            opaque: false,
+            colorMode: .linear,
+            rendersAsynchronously: false
+        ) { ctx, size in
+            switch resizingMode {
+            case .tile:
+                ctx.draw(svg, in: CGRect(origin: .zero, size: size), byTiling: true)
+            case .stretch:
+                ctx.draw(svg, in: CGRect(origin: .zero, size: size))
+            }
         }
     }
 }
@@ -62,10 +97,41 @@ public struct SVGView: View {
 @available(iOS 15.0, macOS 12.0, tvOS 15.0, watchOS 8.0, *)
 public extension GraphicsContext {
 
-    func draw(_ image: SVG, in rect: CGRect? = nil)  {
+    func draw(_ svg: SVG, in rect: CGRect? = nil)  {
         withCGContext {
-            $0.draw(image, in: rect)
+            $0.draw(svg, in: rect)
+        }
+    }
+
+    func draw(_ svg: SVG, in rect: CGRect, byTiling: Bool)  {
+        withCGContext {
+            $0.draw(svg, in: rect, byTiling: byTiling)
         }
     }
 }
+
+@available(iOS 15.0, macOS 12.0, tvOS 15.0, watchOS 8.0, *)
+#Preview {
+    SVGView(svg: .circle)
+
+    SVGView(svg: .circle)
+        .resizable(resizingMode: .stretch)
+
+    SVGView(svg: .circle)
+        .resizable(resizingMode: .tile)
+}
+
+#if DEBUG
+private extension SVG {
+
+    static var circle: SVG {
+        SVG(xml: """
+        <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="100" height="100">
+          <circle cx="50" cy="50" r="50" fill="orange" />
+        </svg>
+        """)!
+    }
+}
+#endif
+
 #endif
