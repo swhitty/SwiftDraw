@@ -98,11 +98,13 @@ public struct SVGView: View {
                 )
             }
         } else {
+            #if !os(watchOS)
             CanvasFallbackView(
                 svg: svg,
                 capInsets: capInsets,
                 resizingMode: resizingMode
             )
+            #endif
         }
     }
 }
@@ -128,6 +130,8 @@ public extension GraphicsContext {
     }
 }
 
+#if DEBUG
+
 @available(iOS 15.0, macOS 12.0, tvOS 15.0, watchOS 8.0, *)
 #Preview {
     SVGView(svg: .circle)
@@ -139,7 +143,6 @@ public extension GraphicsContext {
         .resizable(resizingMode: .tile)
 }
 
-#if DEBUG
 private extension SVG {
 
     static var circle: SVG {
