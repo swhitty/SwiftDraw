@@ -32,7 +32,6 @@
 #if canImport(SwiftUI)
 public import SwiftUI
 
-@available(iOS 15.0, macOS 12.0, tvOS 15.0, watchOS 8.0, *)
 public struct SVGView: View {
 
     public init(_ name: String, bundle: Bundle = .main) {
@@ -44,12 +43,12 @@ public struct SVGView: View {
     }
 
     private let svg: SVG?
-    private var resizingMode: ResizingMode?
+    private var resizable: (capInsets: EdgeInsets, mode: ResizingMode)?
 
     public var body: some View {
         if let svg {
-            if let resizingMode {
-                SVGView.makeCanvas(svg: svg, resizingMode: resizingMode)
+            if let resizable {
+                SVGView.makeCanvas(svg: svg, capInsets: resizable.capInsets, resizingMode: resizable.mode)
                     .frame(idealWidth: svg.size.width, idealHeight: svg.size.height)
             } else {
                 SVGView.makeCanvas(svg: svg, resizingMode: .stretch)
@@ -70,26 +69,40 @@ public struct SVGView: View {
 
     /// Sets the mode by which SwiftUI resizes an SVG to fit its space.
     /// - Parameters:
+    ///   - capInsets: Inset values that indicate a portion of the image that
+    ///   SwiftUI doesn't resize.
     ///   - resizingMode: The mode by which SwiftUI resizes the image.
     /// - Returns: An SVGView, with the new resizing behavior set.
-    public func resizable(resizingMode: ResizingMode = .stretch) -> Self {
+    public func resizable(
+        capInsets: EdgeInsets = EdgeInsets(),
+        resizingMode: ResizingMode = .stretch
+    ) -> Self {
         var copy = self
-        copy.resizingMode = resizingMode
+        copy.resizable = (capInsets, resizingMode)
         return copy
     }
 
-    private static func makeCanvas(svg: SVG, resizingMode: ResizingMode) -> some View {
-        Canvas(
-            opaque: false,
-            colorMode: .linear,
-            rendersAsynchronously: false
-        ) { ctx, size in
-            switch resizingMode {
-            case .tile:
-                ctx.draw(svg, in: CGRect(origin: .zero, size: size), byTiling: true)
-            case .stretch:
-                ctx.draw(svg, in: CGRect(origin: .zero, size: size))
+    @ViewBuilder
+    private static func makeCanvas(svg: SVG, capInsets: EdgeInsets = .init(), resizingMode: ResizingMode) -> some View {
+        if #available(iOS 15.0, macOS 12.0, tvOS 15.0, watchOS 8.0, *) {
+            Canvas(
+                opaque: false,
+                colorMode: .linear,
+                rendersAsynchronously: false
+            ) { ctx, size in
+                ctx.draw(
+                    svg,
+                    in: CGRect(origin: .zero, size: size),
+                    capInsets: capInsets,
+                    byTiling: resizingMode == .tile
+                )
             }
+        } else {
+            CanvasFallbackView(
+                svg: svg,
+                capInsets: capInsets,
+                resizingMode: resizingMode
+            )
         }
     }
 }
@@ -103,9 +116,14 @@ public extension GraphicsContext {
         }
     }
 
-    func draw(_ svg: SVG, in rect: CGRect, byTiling: Bool)  {
+    func draw(_ svg: SVG, in rect: CGRect, capInsets: EdgeInsets, byTiling: Bool = false)  {
         withCGContext {
-            $0.draw(svg, in: rect, byTiling: byTiling)
+            $0.draw(
+                svg,
+                in: rect,
+                capInsets: (capInsets.top, capInsets.leading, capInsets.bottom, capInsets.trailing),
+                byTiling: byTiling
+            )
         }
     }
 }
