@@ -32,7 +32,6 @@
 #if canImport(SwiftUI)
 public import SwiftUI
 
-@available(iOS 15.0, macOS 12.0, tvOS 15.0, watchOS 8.0, *)
 public struct SVGView: View {
 
     public init(_ name: String, bundle: Bundle = .main) {
@@ -83,17 +82,26 @@ public struct SVGView: View {
         return copy
     }
 
+    @ViewBuilder
     private static func makeCanvas(svg: SVG, capInsets: EdgeInsets = .init(), resizingMode: ResizingMode) -> some View {
-        Canvas(
-            opaque: false,
-            colorMode: .linear,
-            rendersAsynchronously: false
-        ) { ctx, size in
-            ctx.draw(
-                svg,
-                in: CGRect(origin: .zero, size: size),
+        if #available(iOS 15.0, macOS 12.0, tvOS 15.0, watchOS 8.0, *) {
+            Canvas(
+                opaque: false,
+                colorMode: .linear,
+                rendersAsynchronously: false
+            ) { ctx, size in
+                ctx.draw(
+                    svg,
+                    in: CGRect(origin: .zero, size: size),
+                    capInsets: capInsets,
+                    byTiling: resizingMode == .tile
+                )
+            }
+        } else {
+            CanvasFallbackView(
+                svg: svg,
                 capInsets: capInsets,
-                byTiling: resizingMode == .tile
+                resizingMode: resizingMode
             )
         }
     }
