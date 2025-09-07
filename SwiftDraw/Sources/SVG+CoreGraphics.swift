@@ -73,6 +73,63 @@ public extension CGContext {
             }
         }
     }
+
+    func draw(
+        _ svg: SVG,
+        in rect: CGRect,
+        capInsets: (top: CGFloat, left: CGFloat, bottom: CGFloat, right: CGFloat),
+        byTiling: Bool
+    ) {
+        guard capInsets != (0, 0, 0, 0) else {
+            draw(svg, in: rect, byTiling: byTiling)
+            return
+        }
+
+        let source = Slice9(source: CGRect(origin: .zero, size: svg.size), capInsets: capInsets)
+        let dest = Slice9(source: rect, capInsets: capInsets)
+
+        draw(svg, from: source.topLeft, in: dest.topLeft, byTiling: false)
+        draw(svg, from: source.topMid, in: dest.topMid, byTiling: byTiling)
+        draw(svg, from: source.topRight, in: dest.topRight, byTiling: false)
+        draw(svg, from: source.midLeft, in: dest.midLeft, byTiling: byTiling)
+        draw(svg, from: source.center, in: dest.center, byTiling: byTiling)
+        draw(svg, from: source.midRight, in: dest.midRight, byTiling: byTiling)
+        draw(svg, from: source.bottomLeft, in: dest.bottomLeft, byTiling: false)
+        draw(svg, from: source.bottomMid, in: dest.bottomMid, byTiling: byTiling)
+        draw(svg, from: source.bottomRight, in: dest.bottomRight, byTiling: false)
+    }
+
+    private func draw(_ svg: SVG, from source: CGRect, in rect: CGRect, byTiling: Bool = false) {
+        saveGState()
+        clip(to: [rect])
+
+        if byTiling {
+            let cols = Int(ceil(rect.width / source.width))
+            let rows = Int(ceil(rect.height / source.height))
+            for r in 0..<rows {
+                for c in 0..<cols {
+                    let tile = CGRect(
+                        x: rect.minX + source.width * CGFloat(c),
+                        y: rect.minY + source.height * CGFloat(r),
+                        width: source.width,
+                        height: source.height
+                    )
+                    draw(svg, from: source, in: tile)
+                }
+            }
+        } else {
+            // stretch
+            translateBy(x: rect.origin.x, y: rect.origin.y)
+            scaleBy(
+                x: rect.width / source.width,
+                y: rect.height / source.height
+            )
+            translateBy(x: -source.minX, y: -source.minY)
+            CGRenderer(context: self).perform(svg.commands)
+        }
+
+        restoreGState()
+    }
 }
 
 public extension SVG {
@@ -139,6 +196,47 @@ private extension LayerTree.Size {
     init(_ size: CGSize) {
         self.width = LayerTree.Float(size.width)
         self.height = LayerTree.Float(size.height)
+    }
+}
+
+struct Slice9 {
+    var source: CGRect
+    var capInsets: (top: CGFloat, left: CGFloat, bottom: CGFloat, right: CGFloat)
+
+    var topLeft: CGRect {
+        CGRect(x: source.minX, y: source.minY, width: capInsets.left, height: capInsets.top)
+    }
+
+    var bottomLeft: CGRect {
+        CGRect(x: source.minX, y: source.height - capInsets.bottom, width: capInsets.left, height: capInsets.bottom)
+    }
+
+    var topRight: CGRect {
+        CGRect(x: source.maxX - capInsets.right, y: source.minY, width: capInsets.right, height: capInsets.top)
+    }
+
+    var bottomRight: CGRect {
+        CGRect(x: source.maxX - capInsets.right, y: source.maxY - capInsets.bottom, width: capInsets.right, height: capInsets.bottom)
+    }
+
+    var midLeft: CGRect {
+        CGRect(x: source.minX, y: capInsets.top, width: capInsets.left, height: source.maxY - capInsets.top - capInsets.bottom)
+    }
+
+    var midRight: CGRect {
+        CGRect(x: source.maxX - capInsets.right, y: capInsets.top, width: capInsets.right, height: source.maxY - capInsets.top - capInsets.bottom)
+    }
+
+    var topMid: CGRect {
+        CGRect(x: capInsets.left, y: source.minY, width: source.maxX - capInsets.left - capInsets.right, height: capInsets.top)
+    }
+
+    var bottomMid: CGRect {
+        CGRect(x: capInsets.left, y: source.maxY - capInsets.bottom, width: source.maxX - capInsets.left - capInsets.right, height: capInsets.bottom)
+    }
+
+    var center: CGRect {
+        CGRect(x: capInsets.left, y: capInsets.top, width: source.maxX - capInsets.left - capInsets.right, height: source.maxY - capInsets.top - capInsets.bottom)
     }
 }
 
