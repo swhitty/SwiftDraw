@@ -31,6 +31,7 @@
 
 import Foundation
 import SwiftDraw
+import SwiftDrawDOM
 
 extension SwiftDraw.CommandLine {
     
@@ -68,8 +69,8 @@ extension SwiftDraw.CommandLine {
     static func printHelp() {
         print("")
         print("""
-swiftdraw, version 0.16.0
-copyright (c) 2023 Simon Whitty
+swiftdraw, version 0.25.0
+copyright (c) 2025 Simon Whitty
 
 usage: swiftdraw <file.svg> [--format png | pdf | jpeg | swift | sfsymbol] [--size wxh] [--scale 1x | 2x | 3x]
 
@@ -83,17 +84,19 @@ Options:
  --precision   maximum number of decimal places
  --output      optional path of output file
 
- --hideUnsupportedFilters   hide elements with unsupported filters.
+ --hide-unsupported-filters   hide elements with unsupported filters.
 
 Available keys for --format swift:
  --api                api of generated code:  appkit | uikit
 
 Available keys for --format sfsymbol:
  --insets             alignment of regular variant: top,left,bottom,right | auto
+ --size               size category to generate: small, medium large. (default is small)
  --ultralight         svg file of ultralight variant
- --ultralightInsets   alignment of ultralight variant: top,left,bottom,right | auto
+ --ultralight-insets  alignment of ultralight variant: top,left,bottom,right | auto
  --black              svg file of black variant
- --blackInsets        alignment of black variant: top,left,bottom,right | auto
+ --black-insets       alignment of black variant: top,left,bottom,right | auto
+ --legacy             use the original, less precise alignment logic from earlier swiftdraw versions.
 
 
 """)

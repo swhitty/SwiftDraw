@@ -6,19 +6,19 @@ on:
   workflow_dispatch:
 
 jobs:
-  xcode_15_3:
-    runs-on: macos-14
+  xcode_16_4:
+    runs-on: macos-15
     env:
-      DEVELOPER_DIR: /Applications/Xcode_15.3.app/Contents/Developer
+      DEVELOPER_DIR: /Applications/Xcode_16.4.app/Contents/Developer
     steps:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Version
         run: swift --version
       - name: Build
-        run: swift test --enable-code-coverage --filter do_not_test
+        run: swift build --build-tests --enable-code-coverage
       - name: Test
-        run: swift test --enable-code-coverage --skip-build
+        run: swift test --skip-build --enable-code-coverage
       - name: Gather code coverage
         run: xcrun llvm-cov export -format="lcov" .build/debug/SwiftDrawPackageTests.xctest/Contents/MacOS/SwiftDrawPackageTests -instr-profile .build/debug/codecov/default.profdata > coverage_report.lcov
       - name: Upload Coverage
@@ -27,10 +27,10 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage_report.lcov
 
-  xcode_15_2:
-    runs-on: macos-14
+  xcode_26:
+    runs-on: macos-15
     env:
-      DEVELOPER_DIR: /Applications/Xcode_15.2.app/Contents/Developer
+      DEVELOPER_DIR: /Applications/Xcode_26.0.app/Contents/Developer
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -41,10 +41,10 @@ jobs:
       - name: Test
         run: swift test --skip-build
 
-  xcode_14_3:
-    runs-on: macos-13
+  xcode_16_3:
+    runs-on: macos-15
     env:
-      DEVELOPER_DIR: /Applications/Xcode_14.3.app/Contents/Developer
+      DEVELOPER_DIR: /Applications/Xcode_16.2.app/Contents/Developer
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -55,9 +55,10 @@ jobs:
       - name: Test
         run: swift test --skip-build
 
-  linux_5_7:
+
+  linux_6:
     runs-on: ubuntu-latest
-    container: swift:5.7
+    container: swift:6.0.3
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -68,9 +69,9 @@ jobs:
       - name: Test
         run: swift test --skip-build
 
-  linux_5_9:
+  linux_6_1:
     runs-on: ubuntu-latest
-    container: swift:5.9
+    container: swift:6.1.2
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -81,9 +82,9 @@ jobs:
       - name: Test
         run: swift test --skip-build
 
-  linux_5_10:
+  linux_swift_6_2:
     runs-on: ubuntu-latest
-    container: swift:5.10
+    container: swiftlang/swift:nightly-6.2-noble
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -93,3 +94,11 @@ jobs:
         run: swift build --build-tests
       - name: Test
         run: swift test --skip-build
+
+  android:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Build and Test
+        uses: skiptools/swift-android-action@v2

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="360" height="450" stroke="black" fill-opacity="0.5">
+  <defs>
+    <polygon id="star" points="100,10 40,198 190,78, 10,78, 160,198" fill-rule="nonzero" />
+  </defs>
+	 
+ 	<rect width="360" height="450" fill="snow" />
+
+	<g transform="translate(170, 30) scale(800)" fill="orange">
+		<polygon points="-0.1,0.01 -0.04,0.198 -0.190,0.078, -0.010,0.078, -0.160,0.198" stroke="black" stroke-width="0.002" fill-rule="nonzero" />
+	</g>
+
+	<svg x="180" y="28" width="165" height="165" viewBox="-0.2 0 0.2 0.2" >
+	   <polygon fill="green" points="-0.1,0.01 -0.04,0.198 -0.190,0.078, -0.010,0.078, -0.160,0.198" stroke-width="0.002" fill-rule="nonzero" />
+	</svg>
+	
+	<g transform="rotate(28)" stroke="blue">
+	<svg x="130" y="130" width="165" height="165" viewBox="-0.2 0 0.2 0.2">
+	   <polygon fill="red" fill-opacity="0.4" points="-0.1,0.01 -0.04,0.198 -0.190,0.078, -0.010,0.078, -0.160,0.198" stroke="currentColor" stroke-width="0.002" fill-rule="nonzero" />
+	</svg>
+	</g>
+	
+	<svg x="0" y="210" width="200" height="200">
+	     <use xlink:href="#star" fill="blue" stroke-width="2" transform="scale(0.85)" />
+	</svg>
+	
+	<g transform="scale(0.85)">
+	<svg x="200" y="240" width="200" height="200">
+	    <defs>
+	        <circle id="star" cx="100" cy="110" r="50" fill="purple" stroke-width="2" />
+	        <circle id="round" cx="100" cy="110" r="50" fill="purple" stroke-width="2" />
+	     </defs>
+	     <use xlink:href="#round" />
+	     <use xlink:href="#star" />
+	     <circle cx="100" cy="120" r="160" fill="none" stroke-width="2" />
+	</svg>
+	</g>
+</svg>

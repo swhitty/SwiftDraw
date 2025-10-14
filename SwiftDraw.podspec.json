@@ -1,6 +1,6 @@
 {
   "name": "SwiftDraw",
-  "version": "0.16.1",
+  "version": "0.25.0",
   "summary": "A Swift library that adds support for SVG files to UIImage and NSImage.",
   "homepage": "https://github.com/swhitty/SwiftDraw",
   "authors": "Simon Whitty",
@@ -10,20 +10,37 @@
   },
   "source": {
     "git": "https://github.com/swhitty/SwiftDraw.git",
-    "tag": "0.16.1"
+    "tag": "0.25.0"
   },
   "platforms": {
-    "ios": "12.0",
-    "osx": "10.14"
+    "ios": "13.0",
+    "osx": "10.15",
+    "tvos": "13.0",
+    "watchos": "6.0",
+    "visionos": "1.0"
   },
-  "source_files": "SwiftDraw/**/*.swift",
+  "source_files": "SwiftDraw/Sources/**/*.swift",
   "ios": {
-	  "exclude_files": "SwiftDraw/NSImage+Image.swift",
-	  "frameworks": ["UIKit", "Foundation"]
+    "exclude_files": "SwiftDraw/Sources/NSImage+Image.swift",
+    "frameworks": ["UIKit", "Foundation"]
   },
   "osx": {
-	  "exclude_files": "SwiftDraw/UIImage+Image.swift",
-	  "frameworks": ["AppKit", "Foundation"]
+    "exclude_files": "SwiftDraw/Sources/UIImage+Image.swift",
+    "frameworks": ["AppKit", "Foundation"]
   },
-  "swift_version": "5.0"
+  "tvos": {
+    "exclude_files": "SwiftDraw/Sources/NSImage+Image.swift",
+    "frameworks": ["UIKit", "Foundation"]
+  },
+  "watchos": {
+    "exclude_files": "SwiftDraw/Sources/NSImage+Image.swift",
+    "frameworks": ["UIKit", "WatchKit", "Foundation"]
+  },
+  "swift_version": "6.0",
+  "pod_target_xcconfig": {
+    "OTHER_SWIFT_FLAGS": "-package-name SwiftDraw"
+  },
+  "dependencies": {
+    "SwiftDrawDOM": "~> 0.25.0"
+  }
 }

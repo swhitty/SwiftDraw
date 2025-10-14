@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="360" height="660">
+	 
+	 <style>
+	 	.s {
+			stroke: darkgray;
+			stroke-width: 5 /* asd */;
+			fill-opacity: 0.3
+		}
+		
+		/* comment */
+		/* another */
+	
+	 	.b {
+			fill: blue;
+		}
+		
+		rect {
+			fill: pink;
+		}
+		/* comment */
+	 </style>
+	 <style></style>
+	 <g>
+		 <style>
+		 
+		#a {
+			fill: yellow;
+		}
+		
+		g {
+			stroke-width: 3 /* asd */;
+			stroke: red
+		}
+		
+	 	.g {
+			/* comment */
+			fill: green;
+		}
+		
+	 	.o {
+			fill: orange;
+		}
+				
+		circle {
+			fill: red;
+		}
+
+		</style>
+	</g>
+
+    <g id="a">
+	<circle cx="90" cy="70" r="50" class="s b"/>
+	
+	<circle cx="260" cy="70" r="50" class="s o"/>
+		
+	<circle cx="90" cy="220" r="50" class="s g"/>
+	
+	<circle id="a" cx="260" cy="220" r="50" class="s g h" fill="blue" />
+	
+	<circle cx="90" cy="370" r="50" class="s"/>
+	
+	<circle cx="260" cy="370" class="s" r="50" style="fill: purple;"/>
+	
+	<polygon points="40,480 140,480 140,580 40,580" />
+	
+    <polygon points="210,480 310,480 310,580 210,580" fill="blue"/>
+	</g>			
+</svg>

@@ -1,16 +1,15 @@
 [![Build](https://github.com/swhitty/SwiftDraw/actions/workflows/build.yml/badge.svg)](https://github.com/swhitty/SwiftDraw/actions/workflows/build.yml)
 [![CodeCov](https://codecov.io/gh/swhitty/SwiftDraw/graphs/badge.svg)](https://codecov.io/gh/swhitty/SwiftDraw)
-[![Platforms](https://img.shields.io/badge/platforms-iOS%20|%20Mac%20|%20Linux-lightgray.svg)](https://github.com/swhitty/SwiftDraw/blob/main/Package.swift)
-[![Swift 5.7 — 5.9](https://img.shields.io/badge/swift-5.7-red.svg?style=flat)](https://developer.apple.com/swift)
-[![License](https://img.shields.io/badge/license-zlib-lightgrey.svg)](https://opensource.org/licenses/Zlib)
-[![Twitter](https://img.shields.io/badge/twitter-@simonwhitty-blue.svg)](http://twitter.com/simonwhitty)
+[![Platforms](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fswhitty%2FSwiftDraw%2Fbadge%3Ftype%3Dplatforms)](https://swiftpackageindex.com/swhitty/SwiftDraw)
+[![Swift 6.0](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fswhitty%2FSwiftDraw%2Fbadge%3Ftype%3Dswift-versions)](https://swiftpackageindex.com/swhitty/SwiftDraw)
 
 # Introduction
 **SwiftDraw** is Swift library for parsing and drawing SVG images and includes a command line tool to convert SVGs into SFSymbol, PNG, PDF and Swift source code.
 
 - [Usage](#usage)
-  - [iOS](#ios)
-  - [macOS](#macos)
+  - [SwiftUI](#swiftui)
+  - [UIKit](#uikit)
+  - [AppKit](#appkit)
 - [Command Line Tool](#command-line-tool)
   - [Installation](#installation)
   - [SF Symbol](#sf-symbol)
@@ -27,28 +26,50 @@ let svg = SVG(named: "sample.svg", in: .main)!
 imageView.image = svg.rasterize()
 ```
 
-Rasterize to any size:
+Transformations can be added before rasterizing: 
 
 ```swift
-let svg = SVG(named: "sample.svg", in: .main)!
-imageView.image = svg.rasterize(with: CGSize(width: 640, height: 480))
+let svg = SVG(named: "fish.svg")!   // 100x100 
+    .expanded(left: 10, right: 10)  // 120x100
+    .scaled(2)                      // 240x200
+
+imageView.image = svg.rasterize()   // 240x200
 ```
 
-Crop the image using insets:
+### SwiftUI
+
+`SVGView` works much like SwiftUI’s built-in `Image` view:
 
 ```swift
-let svg = SVG(named: "sample.svg", in: .main)!
-imageView.image = svg.rasterize(insets: .init(top: 10, left: 0, bottom: 10, bottom: 0))
+SVGView("sample.svg")
 ```
 
-Add padding using negative insets:
+By default, the SVG is rendered at its intrinsic size. To make it flexible within layouts, mark it as resizable:
 
 ```swift
-let svg = SVG(named: "sample.svg", in: .main)!
-imageView.image = svg.rasterize(insets: .init(top: -10, left: -10, bottom: -10, bottom: -10))
+SVGView("sample.svg")
+    .resizable()
+    .scaledToFit()
 ```
 
-### iOS
+`SVGView` works just like `Image`:
+
+- `.scaledToFit()` to scale proportionally so the SVG fits inside its container.  
+- `.scaledToFill()` to fill the entire container, cropping if necessary.  
+- `.resizable(resizingMode: .tile)` to repeat the SVG as tiles across the available space.
+
+When loading by name, `SVGView` maintains an internal cache for efficient repeated lookups.  
+For more predictable performance (avoiding cache lookups or parsing), you can pass in an already-constructed `SVG` instance:
+
+```swift
+var image: SVG
+
+var body: some View {
+    SVGView(svg: image)
+}
+```
+
+### UIKit
 
 Create a `UIImage` directly from an SVG within a bundle, `Data` or file `URL`:
 
@@ -57,7 +78,7 @@ import SwiftDraw
 let image = UIImage(svgNamed: "sample.svg")
 ```
 
-### macOS
+### AppKit
 
 Create an `NSImage` directly from an SVG within a bundle, `Data` or file `URL`:
 
@@ -71,7 +92,7 @@ let image = NSImage(svgNamed: "sample.svg")
 The command line tool converts SVGs to other formats: PNG, JPEG, SFSymbol and Swift source code.
 
 ```
-copyright (c) 2023 Simon Whitty
+copyright (c) 2025 Simon Whitty
 
 usage: swiftdraw <file.svg> [--format png | pdf | jpeg | swift | sfsymbol] [--size wxh] [--scale 1x | 2x | 3x]
 
@@ -85,17 +106,19 @@ Options:
  --precision   maximum number of decimal places
  --output      optional path of output file
 
- --hideUnsupportedFilters   hide elements with unsupported filters.
+ --hide-unsupported-filters   hide elements with unsupported filters.
 
 Available keys for --format swift:
  --api                api of generated code:  appkit | uikit
 
 Available keys for --format sfsymbol:
  --insets             alignment of regular variant: top,left,bottom,right | auto
+ --size               size category to generate: small, medium large. (default is small)
  --ultralight         svg file of ultralight variant
- --ultralightInsets   alignment of ultralight variant: top,left,bottom,right | auto
+ --ultralight-insets  alignment of ultralight variant: top,left,bottom,right | auto
  --black              svg file of black variant
- --blackInsets        alignment of black variant: top,left,bottom,right | auto
+ --black-insets       alignment of black variant: top,left,bottom,right | auto
+ --legacy             use the original, less precise alignment logic from earlier swiftdraw versions.
 ```
 
 ```bash
