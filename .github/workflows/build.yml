@@ -103,4 +103,4 @@ jobs:
       - name: Build and Test
         uses: skiptools/swift-android-action@v2
         with:
-          swift-version: 6.2
+          swift-version: nightly-main
