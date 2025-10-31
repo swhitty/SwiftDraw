@@ -95,7 +95,7 @@ public extension SVG {
         f.opaque = false
         let r = UIGraphicsImageRenderer(size: CGSize(width: pixelsWide, height: pixelsHigh), format: f)
         return r.image {
-            $0.cgContext.draw(self, in: bounds)
+            $0.draw(self, in: bounds)
         }
     }
 #endif
