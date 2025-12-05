@@ -134,6 +134,8 @@ extension String {
     for idx in 0..<CFArrayGetCount(glyphRuns) {
       let val = CFArrayGetValueAtIndex(glyphRuns, idx)
       let run = unsafeBitCast(val, to: CTRun.self)
+      let attributes = CTRunGetAttributes(run) as NSDictionary
+      let runFont = resolveRunFont(attributes: attributes, fallback: font)
 
       for idx in 0..<CTRunGetGlyphCount(run) {
         let glyphRange = CFRange(location: idx, length: 1)
@@ -142,7 +144,7 @@ extension String {
         CTRunGetGlyphs(run, glyphRange, &glyph)
         CTRunGetPositions(run, glyphRange, &position)
         var t = CGAffineTransform.identity
-        if let glyphPath = CTFontCreatePathForGlyph(font, glyph, &t) {
+        if let glyphPath = CTFontCreatePathForGlyph(runFont, glyph, &t) {
           let t = CGAffineTransform(a: 1, b: 0, c: 0, d: -1, tx: position.x, ty: baseline)
           let t1 = t.translatedBy(x: 0, y: baseline)
           path.addPath(glyphPath, transform: t1)
@@ -151,6 +153,18 @@ extension String {
     }
 
     return path
+  }
+
+  // Use the font CoreText resolved for this run, else fall back to the requested font.
+  private func resolveRunFont(attributes: NSDictionary, fallback: CTFont) -> CTFont {
+    guard let value = attributes[kCTFontAttributeName] else {
+      return fallback
+    }
+    // CoreFoundation type bridging: ensure it's a CTFont before use.
+    if CFGetTypeID(value as CFTypeRef) == CTFontGetTypeID() {
+      return unsafeDowncast(value as AnyObject, to: CTFont.self)
+    }
+    return fallback
   }
 }
 
