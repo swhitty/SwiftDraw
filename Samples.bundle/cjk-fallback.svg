@@ -1,0 +1,6 @@
+<svg width="360" height="160" xmlns="http://www.w3.org/2000/svg">
+  <!-- Mixed CJK samples using a font that typically lacks CJK glyphs -->
+  <text x="10" y="30" font-family="Helvetica" font-size="18">敏捷的棕色狐狸跳过懒狗，窗前明月光照桌上旧书</text>
+  <text x="10" y="70" font-family="Helvetica" font-size="18">いろはにほへとちりぬるを　わかよたれそ　つねならむ</text>
+  <text x="10" y="110" font-family="Helvetica" font-size="18">다람쥐 헌 쳇바퀴에 타고파, 한글도 잘 보이나요?</text>
+</svg>
