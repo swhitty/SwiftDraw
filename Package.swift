@@ -19,7 +19,8 @@ let package = Package(
             name: "SwiftDraw",
             dependencies: ["SwiftDrawDOM"],
             path: "SwiftDraw/Sources",
-            swiftSettings: .upcomingFeatures
+			swiftSettings: .upcomingFeatures,
+			linkerSettings: [.linkedLibrary("z", .when(platforms: [.android]))]
         ),
         .target(
             name: "SwiftDrawDOM",
