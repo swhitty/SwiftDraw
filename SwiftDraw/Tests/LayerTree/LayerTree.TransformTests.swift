@@ -37,12 +37,14 @@ final class LayerTreeTransformTests: XCTestCase {
   
   func testSkewXMatrix() {
     let transform = Transform.skewX(angle: LayerTree.Float.pi/4)
-    XCTAssertEqual(transform.toMatrix(), Matrix(a: 1, b: 0, c: tan(LayerTree.Float.pi/4), d: 1, tx: 0, ty: 0))
+    let angle = LayerTree.Float.pi / 4
+    XCTAssertEqual(transform.toMatrix(), Matrix(a: 1, b: 0, c: LayerTree.Float(tan(Double(angle))), d: 1, tx: 0, ty: 0))
   }
   
   func testSkewYMatrix() {
     let transform = Transform.skewY(angle: LayerTree.Float.pi/4)
-    XCTAssertEqual(transform.toMatrix(), Matrix(a: 1, b: tan(LayerTree.Float.pi/4), c: 0, d: 1, tx: 0, ty: 0))
+    let angle = LayerTree.Float.pi / 4
+    XCTAssertEqual(transform.toMatrix(), Matrix(a: 1, b: LayerTree.Float(tan(Double(angle))), c: 0, d: 1, tx: 0, ty: 0))
   }
   
   func testScaleMatrix() {
@@ -59,7 +61,11 @@ final class LayerTreeTransformTests: XCTestCase {
     let angle = LayerTree.Float.pi/4
     let transform = Transform.rotate(radians: angle)
     XCTAssertEqual(transform.toMatrix(),
-                   Matrix(a: cos(angle), b: sin(angle), c: -sin(angle), d: cos(angle), tx: 0, ty: 0))
+                   Matrix(a: LayerTree.Float(cos(Double(angle))),
+                          b: LayerTree.Float(sin(Double(angle))),
+                          c: -LayerTree.Float(sin(Double(angle))),
+                          d: LayerTree.Float(cos(Double(angle))),
+                          tx: 0, ty: 0))
   }
   
   func testMatrixConcatenation() {
