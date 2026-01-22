@@ -159,7 +159,7 @@ func makeCubic(from origin: LayerTree.Point, to destination: LayerTree.Point,
         ry1 *= lambdaSquareRoot
     }
 
-    let cc = getArcCenter(from: origin, to: destination, fa: large, fs: sweep, rx: rx, ry: ry, sin_phi: sin_phi, cos_phi: cos_phi)
+    let cc = getArcCenter(from: origin, to: destination, fa: large, fs: sweep, rx: rx1, ry: ry1, sin_phi: sin_phi, cos_phi: cos_phi)
 
     var result = [[LayerTree.Float]]()
 
