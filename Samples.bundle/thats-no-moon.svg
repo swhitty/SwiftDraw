@@ -14,14 +14,14 @@
     </linearGradient>
 
     <linearGradient id="alpha1" x1="0" x2="1" y1="0" y2="0">
-      <stop offset="20%" stop-color="white" />
-      <stop offset="40%" stop-color="#A0A0A0" />
-      <stop offset="55%" stop-color="#202020" />
-      <stop offset="60%" stop-color="#000000" />
+      <stop offset="25%" stop-color="white" />
+      <stop offset="50%" stop-color="#A0A0A0" />
+      <stop offset="68%" stop-color="#202020" />
+      <stop offset="75%" stop-color="#000000" />
     </linearGradient>
 
     <mask id="alpha">
-      <rect x="76" y="76" width="250" height="250" fill="url(#alpha1)" />
+      <rect x="76" y="76" width="200" height="200" fill="url(#alpha1)" />
       <circle cx="138.5" cy="138.5" r="24.5" fill="#A0A080" />
     </mask> 
   </defs>
