@@ -130,3 +130,8 @@ func asin(_ value: Float) -> Float { asinf(value) }
 func ceil(_ value: Float) -> Float { ceilf(value) }
 #endif
 
+extension LayerTree.Float {
+    static func tanf(_ value: Float) -> Float {
+        tan(value)
+    }
+}

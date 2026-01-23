@@ -36,15 +36,15 @@ final class LayerTreeTransformTests: XCTestCase {
     private typealias Matrix = LayerTree.Transform.Matrix
 
     func testSkewXMatrix() {
-        let transform = Transform.skewX(angle: LayerTree.Float.pi/4)
         let angle = LayerTree.Float.pi / 4
-        XCTAssertEqual(transform.toMatrix(), Matrix(a: 1, b: 0, c: LayerTree.Float(tan(Double(angle))), d: 1, tx: 0, ty: 0))
+        let transform = Transform.skewX(angle: angle)
+        XCTAssertEqual(transform.toMatrix(), Matrix(a: 1, b: 0, c: LayerTree.Float.tanf(angle), d: 1, tx: 0, ty: 0))
     }
 
     func testSkewYMatrix() {
-        let transform = Transform.skewY(angle: LayerTree.Float.pi/4)
         let angle = LayerTree.Float.pi / 4
-        XCTAssertEqual(transform.toMatrix(), Matrix(a: 1, b: LayerTree.Float(tan(Double(angle))), c: 0, d: 1, tx: 0, ty: 0))
+        let transform = Transform.skewY(angle: angle)
+        XCTAssertEqual(transform.toMatrix(), Matrix(a: 1, b: LayerTree.Float.tanf(angle), c: 0, d: 1, tx: 0, ty: 0))
     }
 
     func testScaleMatrix() {
