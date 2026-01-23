@@ -33,6 +33,8 @@
 import Darwin.POSIX
 #elseif canImport(Android)
 import Android
+#elseif canImport(ucrt)
+import ucrt
 #else
 import Glibc
 #endif

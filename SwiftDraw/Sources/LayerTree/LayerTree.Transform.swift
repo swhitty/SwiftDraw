@@ -33,6 +33,8 @@
 import Darwin
 #elseif canImport(Android)
 import Android
+#elseif canImport(ucrt)
+import ucrt
 #else
 import Glibc
 #endif
@@ -117,8 +119,8 @@ extension Array where Element == LayerTree.Transform {
     }
 }
 
-#if os(Android)
-// The Android module does not have Float overloads for the various math functions
+#if os(Android) || os(Windows)
+// The Android/Windows modules do not have Float overloads for the various math functions
 func tan(_ value: Float) -> Float { tanf(value) }
 func atan(_ value: Float) -> Float { atanf(value) }
 func cos(_ value: Float) -> Float { cosf(value) }
