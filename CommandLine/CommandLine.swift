@@ -87,7 +87,7 @@ Options:
  --hide-unsupported-filters   hide elements with unsupported filters.
 
 Available keys for --format swift:
- --api                api of generated code:  appkit | uikit
+ --api                api of generated code:  swiftui | appkit | uikit
 
 Available keys for --format sfsymbol:
  --insets             alignment of regular variant: top,left,bottom,right | auto

@@ -109,7 +109,7 @@ Options:
  --hide-unsupported-filters   hide elements with unsupported filters.
 
 Available keys for --format swift:
- --api                api of generated code:  appkit | uikit
+ --api                api of generated code:  swiftui | appkit | uikit
 
 Available keys for --format sfsymbol:
  --insets             alignment of regular variant: top,left,bottom,right | auto
@@ -196,47 +196,66 @@ $ swiftdraw simple.svg --format swift
 ```
 
 ```swift
-extension UIImage {
-  static func svgSimple(size: CGSize = CGSize(width: 160.0, height: 160.0)) -> UIImage {
-    let f = UIGraphicsImageRendererFormat.preferred()
-    f.opaque = false
-    let scale = CGSize(width: size.width / 160.0, height: size.height / 160.0)
-    return UIGraphicsImageRenderer(size: size, format: f).image {
-      drawSimple(in: $0.cgContext, scale: scale)
+struct SimpleView: View {
+
+  var body: some View {
+    if isResizable {
+      canvas
+        .frame(idealWidth: 160.0, idealHeight: 160.0)
+    } else {
+      canvas
+        .frame(width: 160.0, height: 160.0)
     }
   }
 
-  private static func drawSimple(in ctx: CGContext, scale: CGSize) {
-    ctx.scaleBy(x: scale.width, y: scale.height)
-    let rgb = CGColorSpaceCreateDeviceRGB()
-    let color1 = CGColor(colorSpace: rgb, components: [1, 0.98, 0.98, 1])!
-    ctx.setFillColor(color1)
-    ctx.fill(CGRect(x: 0, y: 0, width: 160, height: 160))
-    let color2 = CGColor(colorSpace: rgb, components: [1, 0.753, 0.796, 1])!
-    ctx.setFillColor(color2)
-    let path = CGMutablePath()
-    path.move(to: CGPoint(x: 80, y: 30))
-    path.addCurve(to: CGPoint(x: 30, y: 80),
-                   control1: CGPoint(x: 52.39, y: 30),
-                   control2: CGPoint(x: 30, y: 52.39))
-    path.addCurve(to: CGPoint(x: 80, y: 130),
-                   control1: CGPoint(x: 30, y: 107.61),
-                   control2: CGPoint(x: 52.39, y: 130))
-    path.addCurve(to: CGPoint(x: 130, y: 80),
-                   control1: CGPoint(x: 107.61, y: 130),
-                   control2: CGPoint(x: 130, y: 107.61))
-    path.addLine(to: CGPoint(x: 80, y: 80))
-    path.closeSubpath()
-    ctx.addPath(path)
-    ctx.fillPath()
-    ctx.setLineCap(.butt)
-    ctx.setLineJoin(.miter)
-    ctx.setLineWidth(2)
-    ctx.setMiterLimit(4)
-    let color3 = CGColor(colorSpace: rgb, components: [0, 0, 0, 1])!
-    ctx.setStrokeColor(color3)
-    ctx.addPath(path)
-    ctx.strokePath()
+  private var isResizable = false
+
+  func resizable() -> Self {
+     var copy = self 
+     copy.isResizable = true
+     return copy
+  }
+
+  var canvas: some View {
+    Canvas(
+      opaque: false,
+      colorMode: .linear,
+      rendersAsynchronously: false
+    ) { context, size in
+      let scale = CGSize(width: size.width / 160.0, height: size.height / 160.0)                                  
+      context.withCGContext { ctx in
+        ctx.scaleBy(x: scale.width, y: scale.height)
+        let rgb = CGColorSpaceCreateDeviceRGB()
+        let color1 = CGColor(colorSpace: rgb, components: [1, 0.98, 0.98, 1])!
+        ctx.setFillColor(color1)
+        ctx.fill(CGRect(x: 0, y: 0, width: 160, height: 160))
+        let color2 = CGColor(colorSpace: rgb, components: [1, 0.753, 0.796, 1])!
+        ctx.setFillColor(color2)
+        let path = CGMutablePath()
+        path.move(to: CGPoint(x: 80, y: 30))
+        path.addCurve(to: CGPoint(x: 30, y: 80),
+                       control1: CGPoint(x: 52.39, y: 30),
+                       control2: CGPoint(x: 30, y: 52.39))
+        path.addCurve(to: CGPoint(x: 80, y: 130),
+                       control1: CGPoint(x: 30, y: 107.61),
+                       control2: CGPoint(x: 52.39, y: 130))
+        path.addCurve(to: CGPoint(x: 130, y: 80),
+                       control1: CGPoint(x: 107.61, y: 130),
+                       control2: CGPoint(x: 130, y: 107.61))
+        path.addLine(to: CGPoint(x: 80, y: 80))
+        path.closeSubpath()
+        ctx.addPath(path)
+        ctx.fillPath()
+        ctx.setLineCap(.butt)
+        ctx.setLineJoin(.miter)
+        ctx.setLineWidth(2)
+        ctx.setMiterLimit(4)
+        let color3 = CGColor(colorSpace: rgb, components: [0, 0, 0, 1])!
+        ctx.setStrokeColor(color3)
+        ctx.addPath(path)
+        ctx.strokePath()    
+      }
+    }
   }
 }
 ```

@@ -140,7 +140,7 @@ final class CommandLineConfigurationTests: XCTestCase {
     }
 
     func testAPIConversion() {
-        XCTAssertEqual(CommandLine.makeTextAPI(for: nil), .uiKit)
+        XCTAssertEqual(CommandLine.makeTextAPI(for: nil), .swiftUI)
         XCTAssertEqual(CommandLine.makeTextAPI(for: .appkit), .appKit)
         XCTAssertEqual(CommandLine.makeTextAPI(for: .uikit), .uiKit)
     }
