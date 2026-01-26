@@ -63,6 +63,7 @@ extension CommandLine {
     public enum API: String {
         case appkit
         case uikit
+        case swiftui
     }
 
     public enum Size: Equatable {

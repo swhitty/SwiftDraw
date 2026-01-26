@@ -84,6 +84,76 @@ final class RendererCGTextTests: XCTestCase {
         )
     }
 
+    func testSwiftUICode() throws {
+        let code = try CGTextRenderer.render(svgNamed: "lines.svg", api: .swiftUI)
+        XCTAssertEqual(
+            code,
+            """
+            import SwiftUI
+
+            struct ImageView: View {
+
+              var body: some View {
+                if isResizable {
+                  canvas
+                    .frame(idealWidth: 100.0, idealHeight: 100.0)
+                } else {
+                  canvas
+                    .frame(width: 100.0, height: 100.0)
+                }
+              }
+
+              private var isResizable = false
+
+              func resizable() -> Self {
+                 var copy = self 
+                 copy.isResizable = true
+                 return copy
+              }
+
+              var canvas: some View {
+                Canvas(
+                  opaque: false,
+                  colorMode: .linear,
+                  rendersAsynchronously: false
+                ) { context, size in
+                  let scale = CGSize(width: size.width / 100.0, height: size.height / 100.0)                                  
+                  context.withCGContext { ctx in
+                    ctx.scaleBy(x: scale.width, y: scale.height)
+                    let rgb = CGColorSpaceCreateDeviceRGB()
+                    let color1 = CGColor(colorSpace: rgb, components: [0, 0, 0, 1])!
+                    ctx.setFillColor(color1)
+                    let path = CGMutablePath()
+                    path.addLines(between: [
+                      CGPoint(x: 0, y: 0),
+                      CGPoint(x: 100, y: 100)
+                    ])
+                    ctx.addPath(path)
+                    ctx.fillPath()
+                    ctx.setLineCap(.butt)
+                    ctx.setLineJoin(.miter)
+                    ctx.setLineWidth(1)
+                    ctx.setMiterLimit(4)
+                    ctx.setStrokeColor(color1)
+                    ctx.addPath(path)
+                    ctx.strokePath()
+                    let path1 = CGMutablePath()
+                    path1.addLines(between: [
+                      CGPoint(x: 100, y: 0),
+                      CGPoint(x: 0, y: 100)
+                    ])
+                    ctx.addPath(path1)
+                    ctx.fillPath()
+                    ctx.addPath(path1)
+                    ctx.strokePath()    
+                  }
+                }
+              }
+            }
+            """
+        )
+    }
+
     func testGradientAppleCode() throws {
         let code = try CGTextRenderer.render(svgNamed: "gradient-apple.svg")
         XCTAssertEqual(
@@ -479,10 +549,10 @@ final class RendererCGTextTests: XCTestCase {
 
 private extension CGTextRenderer {
 
-    static func render(svgNamed name: String, in bundle: Bundle = .test, precision: Int = 2) throws -> String {
+    static func render(svgNamed name: String, in bundle: Bundle = .test, api: API = .uiKit, precision: Int = 2) throws -> String {
         let url = try bundle.url(forResource: name)
         let data = try Data(contentsOf: url)
-        return try render(data: data, options: .default, api: .uiKit, precision: precision)
+        return try render(data: data, options: .default, api: api, precision: precision)
     }
 
 }

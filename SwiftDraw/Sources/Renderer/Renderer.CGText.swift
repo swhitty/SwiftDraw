@@ -236,6 +236,7 @@ public final class CGTextRenderer: Renderer {
   public enum API {
     case uiKit
     case appKit
+    case swiftUI
   }
 
   init(api: API,
@@ -591,6 +592,42 @@ public final class CGTextRenderer: Renderer {
     """)
   }
 
+  func makeSwiftUI() -> String {
+    """
+    import SwiftUI
+
+    struct \(name)View: View {
+
+      var body: some View {
+        if isResizable {
+          canvas
+            .frame(idealWidth: \(commandSize.width), idealHeight: \(commandSize.width))
+        } else {
+          canvas
+            .frame(width: \(commandSize.width), height: \(commandSize.width))
+        }
+      }
+
+      private var isResizable = false
+
+      func resizable() -> Self {
+         var copy = self 
+         copy.isResizable = true
+         return copy
+      }
+
+      var canvas: some View {
+        Canvas(
+          opaque: false,
+          colorMode: .linear,
+          rendersAsynchronously: false
+        ) { context, size in
+          let scale = CGSize(width: size.width / \(commandSize.width), height: size.height / \(commandSize.height))                                  
+          context.withCGContext { ctx in
+    
+    """
+  }
+
   func makeUIKit() -> String {
     """
     import CoreGraphics
@@ -632,27 +669,53 @@ public final class CGTextRenderer: Renderer {
     """
   }
 
-  func makeTemplate() -> String {
+  func makeTemplateStart() -> String {
     switch api {
     case .appKit:
       return makeAppKit()
     case .uiKit:
       return makeUIKit()
+    case .swiftUI:
+        return makeSwiftUI()
     }
   }
 
+  func makeTemplateEnd() -> String {
+      switch api {
+      case .appKit, .uiKit:
+        return "\n  }\n}"
+      case .swiftUI:
+          return """
+                  
+                    }
+                  }
+                }
+              }
+              """
+      }
+  }
+
+  func makeIndent() -> String {
+      switch api {
+      case .appKit, .uiKit:
+        return String(repeating: " ", count: 4)
+      case .swiftUI:
+        return String(repeating: " ", count: 8)
+      }
+  }
+
   func makeText() -> String {
-    var template = makeTemplate()
+    var template = makeTemplateStart()
 
     lines.insert("ctx.scaleBy(x: scale.width, y: scale.height)", at: 0)
     if !patterns.isEmpty {
         lines.insert("let baseCTM = ctx.ctm", at: 0)
     }
 
-    let indent = String(repeating: " ", count: 4)
+    let indent = makeIndent()
     let lines = self.lines.map { "\(indent)\($0)" }
     template.append(lines.joined(separator: "\n"))
-    template.append("\n  }\n}")
+    template.append(makeTemplateEnd())
     return template
   }
 }

@@ -90,10 +90,11 @@ public extension CommandLine {
     }
 
     static func makeTextAPI(for api: CommandLine.API?) -> CGTextRenderer.API {
-        guard let api = api else { return .uiKit }
+        guard let api = api else { return .swiftUI}
         switch api {
         case .appkit: return .appKit
         case .uikit: return .uiKit
+        case .swiftui: return .swiftUI
         }
     }
 
