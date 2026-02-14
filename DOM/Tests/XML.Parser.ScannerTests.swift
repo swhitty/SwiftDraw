@@ -254,6 +254,24 @@ struct ScannerTests {
             try scanner.scanURLFunction("url") == URL(string: "fish")
         )
     }
+
+    @Test
+    func scanAttributes() throws {
+        var scanner = XMLParser.Scanner(text: #"""
+        {
+           foo: bar;
+           src: url(foo;bar);
+           bar: baz;
+        }
+        """#)
+        #expect(
+            try scanner.scanAtttributes() == [
+                "foo": "bar",
+                "src": "url(foo;bar)",
+                "bar": "baz"
+            ]
+        )
+    }
 }
 
 private func scanUInt8(_ text: String) -> UInt8? {

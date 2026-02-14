@@ -28,6 +28,8 @@
 //
 //  3. This notice may not be removed or altered from any source distribution.
 //
+
+#if canImport(Compression)
 import Foundation
 import Compression
 
@@ -497,3 +499,4 @@ private extension Data {
         append(UInt8(value & 0xFF))
     }
 }
+#endif

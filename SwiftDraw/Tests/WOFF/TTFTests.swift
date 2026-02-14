@@ -31,13 +31,15 @@
 
 import Foundation
 import Testing
+#if canImport(CoreGraphics)
 import CoreGraphics
+#endif
 @testable import SwiftDraw
 
 struct TTFTests {
 
     @Test
-    func `parses TTF from Roboto`() throws {
+    func parses_TTF_from_Roboto() throws {
         let ttf = try TTF(contentsOf: Bundle.test.url(forResource: "Roboto-Regular.ttf"))
         
         #expect(ttf.header.numTables > 0)
@@ -46,14 +48,14 @@ struct TTFTests {
     }
     
     @Test
-    func `extracts postscript name from Roboto TTF`() throws {
+    func extracts_postscript_name_from_Roboto_TTF() throws {
         let ttf = try TTF(contentsOf: Bundle.test.url(forResource: "Roboto-Regular.ttf"))
         
         #expect(ttf.postScriptName == "RobotoRegular")
     }
     
     @Test
-    func `parses OTF from SourceCodePro`() throws {
+    func parses_OTF_from_SourceCodePro() throws {
         let otf = try TTF(contentsOf: Bundle.test.url(forResource: "SourceCodePro-Regular.otf"))
         
         #expect(otf.header.sfntVersion == 0x4F54544F) // "OTTO"
@@ -62,14 +64,14 @@ struct TTFTests {
     }
     
     @Test
-    func `extracts postscript name from SourceCodePro OTF`() throws {
+    func extracts_postscript_name_from_SourceCodePro_OTF() throws {
         let otf = try TTF(contentsOf: Bundle.test.url(forResource: "SourceCodePro-Regular.otf"))
         
         #expect(otf.postScriptName == "SourceCodePro-Regular")
     }
     
     @Test
-    func `throws on invalid data`() {
+    func throws_on_invalid_data() {
         let invalidData = Data([0x00, 0x01, 0x02, 0x03])
         
         #expect(throws: TTFError.self) {
@@ -78,16 +80,17 @@ struct TTFTests {
     }
     
     @Test
-    func `throws on empty data`() {
+    func throws_on_empty_data() {
         let emptyData = Data()
         
         #expect(throws: TTFError.self) {
             try TTF(data: emptyData)
         }
     }
-    
+
+#if canImport(CoreGraphics)
     @Test
-    func `makes CGFont from Roboto TTF`() throws {
+    func makes_CGFont_from_Roboto_TTF() throws {
         let ttf = try TTF(contentsOf: Bundle.test.url(forResource: "Roboto-Regular.ttf"))
         let cgFont = try ttf.makeCGFont()
         
@@ -95,10 +98,11 @@ struct TTFTests {
     }
     
     @Test
-    func `makes CGFont from SourceCodePro OTF`() throws {
+    func makes_CGFont_from_SourceCodePro_OTF() throws {
         let ttf = try TTF(contentsOf: Bundle.test.url(forResource: "SourceCodePro-Regular.otf"))
         let cgFont = try ttf.makeCGFont()
         
         #expect(cgFont.postScriptName == "SourceCodePro-Regular" as CFString)
     }
+#endif
 }

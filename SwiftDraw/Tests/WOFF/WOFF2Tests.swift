@@ -29,6 +29,7 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
+#if canImport(Compression)
 import Foundation
 import Testing
 import CoreGraphics
@@ -39,19 +40,19 @@ import ImageIO
 struct WOFF2Tests {
 
     @Test
-    func `bundle loads urls`() {
+    func bundle_loads_urls() {
         let url = Bundle.test.url(forResource: "Roboto-Regular.woff2", withExtension: nil)
         #expect(url != nil)
     }
 
     @Test
-    func `bundle does not load missing urls`() {
+    func bundle_does_not_load_missing_urls() {
         let url = Bundle.test.url(forResource: "Missing.woff2", withExtension: nil)
         #expect(url == nil)
     }
 
     @Test
-    func `parses WOFF2 from Roboto`() throws {
+    func parses_WOFF2_from_Roboto() throws {
         let woff2 = try WOFF2(contentsOf: Bundle.test.url(forResource: "Roboto-Regular.woff2"))
         
         #expect(woff2.header.numTables > 0)
@@ -60,14 +61,14 @@ struct WOFF2Tests {
     }
     
     @Test
-    func `extracts postscript name from Roboto`() throws {
+    func extracts_postscript_name_from_Roboto() throws {
         let woff2 = try WOFF2(contentsOf: Bundle.test.url(forResource: "Roboto-Regular.woff2"))
         
         #expect(woff2.postScriptName == "RobotoRegular")
     }
     
     @Test
-    func `throws on invalid data`() {
+    func throws_on_invalid_data() {
         let invalidData = Data([0x00, 0x01, 0x02, 0x03])
         
         #expect(throws: WOFF2Error.self) {
@@ -76,7 +77,7 @@ struct WOFF2Tests {
     }
     
     @Test
-    func `throws on empty data`() {
+    func throws_on_empty_data() {
         let emptyData = Data()
         
         #expect(throws: WOFF2Error.self) {
@@ -85,7 +86,7 @@ struct WOFF2Tests {
     }
     
     @Test
-    func `makes CGFont from Roboto WOFF2`() throws {
+    func makes_CGFont_from_Roboto_WOFF2() throws {
         let woff2 = try WOFF2(contentsOf: Bundle.test.url(forResource: "Roboto-Regular.woff2"))
         let cgFont = try woff2.makeCGFont()
         
@@ -93,7 +94,7 @@ struct WOFF2Tests {
     }
     
     @Test
-    func `makes CGFont from Lato WOFF2`() throws {
+    func makes_CGFont_from_Lato_WOFF2() throws {
         let woff2 = try WOFF2(contentsOf: Bundle.test.url(forResource: "Lato-Regular.woff2"))
         let cgFont = try woff2.makeCGFont()
         
@@ -101,7 +102,7 @@ struct WOFF2Tests {
     }
     
     @Test
-    func `makes CGFont from SourceCodePro WOFF2`() throws {
+    func makes_CGFont_from_SourceCodePro_WOFF2() throws {
         let woff2 = try WOFF2(contentsOf: Bundle.test.url(forResource: "SourceCodePro-Regular.woff2"))
         let cgFont = try woff2.makeCGFont()
         
@@ -109,7 +110,7 @@ struct WOFF2Tests {
     }
 
     @Test
-    func `makes CGFont from Roboto Medium Latin WOFF2`() throws {
+    func makes_CGFont_from_Roboto_Medium_Latin_WOFF2() throws {
         let woff2 = try WOFF2(contentsOf: Bundle.test.url(forResource: "Roboto-Medium-Latin.woff2"))
         let cgFont = try woff2.makeCGFont()
 
@@ -117,7 +118,7 @@ struct WOFF2Tests {
     }
 
     @Test
-    func `generates font preview PDF`() throws {
+    func generates_font_preview_PDF() throws {
         let woff2Fonts: [(filename: String, displayName: String)] = [
             ("Barrio-Regular.woff2", "Barrio"),
             ("EBGaramond-Regular.woff2", "EB Garamond"),
@@ -217,3 +218,4 @@ struct WOFF2Tests {
         return CTLineGetTypographicBounds(line, nil, nil, nil)
     }
 }
+#endif

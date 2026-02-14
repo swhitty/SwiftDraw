@@ -179,7 +179,7 @@ struct AttributeParserTests {
     
     @Test
     func parseURLSelector() throws {
-        let att = ["clip": "url(#shape)", "mask": "aa", "font": "url('data:;base64,f00d')"]
+        let att = ["clip": "url('#shape')", "mask": "aa", "font": "url(data:;base64,f00d)"]
         #expect(try att.parseUrlSelector("clip") == URL(string: "#shape"))
         #expect(try att.parseUrlSelector("missing") == nil)
         #expect(try att.parseUrlSelector("font") == URL(string: "data:;base64,f00d"))

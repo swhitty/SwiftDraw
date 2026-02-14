@@ -29,6 +29,7 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
+#if canImport(Compression)
 import Foundation
 import Testing
 @testable import SwiftDraw
@@ -36,7 +37,7 @@ import Testing
 struct DataBrotliTests {
 
     @Test
-    func `brotli decompresses string`() throws {
+    func brotli_decompresses_string() throws {
         let base64 = "CwaASGVsbG8sIFdvcmxkIQM="
         let compressed = Data(base64Encoded: base64)!
         let decompressed = try compressed.decompressBrotli(decompressedSize: 13)
@@ -46,7 +47,7 @@ struct DataBrotliTests {
     }
 
     @Test
-    func `brotli throws on invalid data`() {
+    func brotli_throws_on_invalid_data() {
         let invalidData = Data([0x00, 0x01, 0x02, 0x03])
         
         #expect(throws: BrotliError.self) {
@@ -54,3 +55,4 @@ struct DataBrotliTests {
         }
     }
 }
+#endif

@@ -126,7 +126,7 @@ package extension XMLParser {
             }
 
             var result = ""
-            let terminatorsAndQuotes = characters.union(CharacterSet(charactersIn: "\"'"))
+            let terminatorsAndQuotes = characters.union(CharacterSet(charactersIn: "\"'("))
             let savedSkip = scanner.charactersToBeSkipped
             scanner.charactersToBeSkipped = nil
             defer { scanner.charactersToBeSkipped = savedSkip }
@@ -150,6 +150,14 @@ package extension XMLParser {
                     result += quote + body
                     if !scanner.isAtEnd {
                         result += quote
+                        scanner.currentIndex = scanner.string.index(after: scanner.currentIndex)
+                    }
+                } else if ch == "(" {
+                    scanner.currentIndex = scanner.string.index(after: scanner.currentIndex)
+                    let body = scanner.scanUpToString(")") ?? ""
+                    result += "(" + body
+                    if !scanner.isAtEnd {
+                        result += ")"
                         scanner.currentIndex = scanner.string.index(after: scanner.currentIndex)
                     }
                 } else {
@@ -199,12 +207,12 @@ package extension XMLParser {
 
         package mutating func scanStringFunction(_ name: String) throws -> String {
             scanner.currentIndex = currentIndex
-            let result = try scanFunction(name, preservingStrings: true)
-            guard result.count == 1 else {
-                throw Error.invalid
-            }
+            try scanString(name)
+            try scanString("(")
+            let arg = try scanString(upTo: ")")
+            _ = try scanString(")")
             currentIndex = scanner.currentIndex
-            return result[0].unquoted
+            return arg.unquoted
         }
 
         package mutating func scanURLFunction(_ name: String) throws -> DOM.URL {

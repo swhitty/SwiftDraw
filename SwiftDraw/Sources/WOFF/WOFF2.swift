@@ -28,6 +28,7 @@
 //
 //  3. This notice may not be removed or altered from any source distribution.
 //
+#if canImport(Compression)
 import Foundation
 
 // MARK: - WOFF2
@@ -870,3 +871,4 @@ private extension Data {
     }
 }
 
+#endif

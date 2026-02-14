@@ -327,11 +327,19 @@ extension LayerTree.Builder {
                 if mime == "font/truetype" || format == "truetype" {
                     return .truetype(data)
                 } else if mime == "font/woff" || format == "woff" {
+                    #if canImport(Compression)
                     let decoded = try WOFF(data: data)
                     return .truetype(decoded.fontData)
+                    #else
+                    throw LayerTree.Error.invalid("unsupported font: \(mime)")
+                    #endif
                 } else if mime == "font/woff2" || format == "woff2" {
+                    #if canImport(Compression)
                     let decoded = try WOFF2(data: data)
                     return .truetype(decoded.fontData)
+                    #else
+                    throw LayerTree.Error.invalid("unsupported font: \(mime)")
+                    #endif
                 } else {
                     throw LayerTree.Error.invalid("unsupported font: \(mime)")
                 }

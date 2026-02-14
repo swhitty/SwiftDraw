@@ -42,14 +42,15 @@ extension LayerTree.Builder {
 #if canImport(CoreText)
     static func makeXOffset(for text: String, with attributes: LayerTree.TextAttributes) -> LayerTree.Float {
         let font = CGProvider.createCTFont(for: attributes.font, size: attributes.size)
-        guard let bounds = text.toPath(font: font)?.boundingBoxOfPath else { return 0 }
+        let line = text.toLine(font: font)
+        let width = CTLineGetTypographicBounds(line, nil, nil, nil)
         switch attributes.anchor {
         case .start:
-            return LayerTree.Float(bounds.minX)
+           return 0
         case .middle:
-            return LayerTree.Float(-bounds.midX)
+            return LayerTree.Float(-width / 2)
         case .end:
-            return LayerTree.Float(-bounds.maxX)
+            return LayerTree.Float(-width)
         }
     }
 #else

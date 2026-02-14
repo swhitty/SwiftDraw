@@ -186,7 +186,7 @@ extension XMLParser.Scanner {
         }
     }
 
-    private mutating func scanAtttributes() throws -> [String: String] {
+    mutating func scanAtttributes() throws -> [String: String] {
         _ = doScanString("{")
         var attributes = [String: String]()
         var last: String?

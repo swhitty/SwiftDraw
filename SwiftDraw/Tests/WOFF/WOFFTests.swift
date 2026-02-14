@@ -29,6 +29,7 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
+#if canImport(Compression)
 import Foundation
 import Testing
 import CoreGraphics
@@ -37,7 +38,7 @@ import CoreGraphics
 struct WOFFTests {
 
     @Test
-    func `parses WOFF from Roboto`() throws {
+    func parses_WOFF_from_Roboto() throws {
         let woff = try WOFF(contentsOf: Bundle.test.url(forResource: "Roboto-Regular.woff"))
         
         #expect(woff.header.numTables > 0)
@@ -46,14 +47,14 @@ struct WOFFTests {
     }
     
     @Test
-    func `extracts postscript name from Roboto WOFF`() throws {
+    func extracts_postscript_name_from_Roboto_WOFF() throws {
         let woff = try WOFF(contentsOf: Bundle.test.url(forResource: "Roboto-Regular.woff"))
         
         #expect(woff.postScriptName == "Roboto-Regular")
     }
     
     @Test
-    func `throws on invalid data`() {
+    func throws_on_invalid_data() {
         let invalidData = Data([0x00, 0x01, 0x02, 0x03])
         
         #expect(throws: WOFFError.self) {
@@ -62,7 +63,7 @@ struct WOFFTests {
     }
     
     @Test
-    func `throws on empty data`() {
+    func throws_on_empty_data() {
         let emptyData = Data()
         
         #expect(throws: WOFFError.self) {
@@ -71,10 +72,11 @@ struct WOFFTests {
     }
     
     @Test
-    func `makes CGFont from Roboto WOFF`() throws {
+    func makes_CGFont_from_Roboto_WOFF() throws {
         let woff = try WOFF(contentsOf: Bundle.test.url(forResource: "Roboto-Regular.woff"))
         let cgFont = try woff.makeCGFont()
         
         #expect(cgFont.postScriptName == "Roboto-Regular" as CFString)
     }
 }
+#endif
