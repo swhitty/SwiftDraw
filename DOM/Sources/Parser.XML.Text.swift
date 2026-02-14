@@ -37,6 +37,11 @@ extension XMLParser {
         guard
             let text = element.innerText?.trimmingCharacters(in: .whitespacesAndNewlines),
             !text.isEmpty else {
+            if let tspan = element.children.first(where: { $0.name == "tspan" }),
+               let text = tspan.innerText?.trimmingCharacters(in: .whitespacesAndNewlines) {
+                let tspanAtt = try parseAttributes(tspan)
+                return try parseText(tspanAtt, value: text)
+            }
             return nil
         }
 

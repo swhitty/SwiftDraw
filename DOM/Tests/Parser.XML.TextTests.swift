@@ -58,6 +58,26 @@ struct ParserXMLTextTests {
     }
 
     @Test
+    func textTSpanNodeParses() throws {
+        let tspan = XML.Element(name: "tspan", attributes: [:])
+        tspan.innerText = "Simon"
+        tspan.attributes["x"] = "1"
+        tspan.attributes["y"] = "2"
+        tspan.attributes["font-family"] = "'Futura', sans-serif"
+        tspan.attributes["font-size"] = "12.5"
+        tspan.attributes["text-anchor"] = "end"
+        let el = XML.Element(name: "text", attributes: [:])
+        el.children.append(tspan)
+
+        let parsed = try XMLParser().parseGraphicsElement(el) as? DOM.Text
+        let text = try #require(parsed)
+
+        #expect(text.x == 1)
+        #expect(text.y == 2)
+        #expect(text.value == "Simon")
+    }
+
+    @Test
     func emptyTextNodeReturnsNil() throws {
         let el = XML.Element(name: "text", attributes: [:])
         let first = try XMLParser().parseText(["x": "1", "y": "1"], element: el)
