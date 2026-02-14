@@ -130,24 +130,18 @@ extension XMLParser {
     func parseUrl(_ value: String) throws -> DOM.URL {
       guard let url = URL(maybeData: value) else { throw XMLParser.Error.invalid }
       return url
-      
     }
+
     func parseUrlSelector(_ value: String) throws -> DOM.URL {
       var scanner = XMLParser.Scanner(text: value)
-      
-      try scanner.scanString("url(")
-      let urlText = try scanner.scanString(upTo: ")")
-      _ = try? scanner.scanString(")")
-      
-      let url = urlText.trimmingCharacters(in: .whitespaces)
-      
+      let url = try scanner.scanStringFunction("url")
       guard !url.isEmpty, scanner.isEOF else {
         throw XMLParser.Error.invalid
       }
       
       return try parseUrl(url)
     }
-    
+
     func parsePoints(_ value: String) throws -> [DOM.Point] {
       var points = [DOM.Point]()
       var scanner = XMLParser.Scanner(text: value)

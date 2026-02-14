@@ -278,6 +278,13 @@ extension XMLParser {
         var `class`: String?
     }
 
+    func parseFontFace(_ att: any AttributeParser) throws -> DOM.FontFace {
+        try DOM.FontFace(
+            family: att.parseString("font-family").unquoted,
+            src: att.parseFontSource("src")
+        )
+    }
+
     package static func logParsingError(for error: any Swift.Error, filename: String?, parsing element: XML.Element? = nil) {
         let elementName = element.map { "<\($0.name)>" } ?? ""
         let filename = filename ?? ""

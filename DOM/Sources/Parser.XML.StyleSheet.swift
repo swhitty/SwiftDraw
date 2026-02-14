@@ -59,25 +59,49 @@ extension XMLParser {
     }
 
     func parseStyleSheetElement(_ text: String?) throws -> DOM.StyleSheet {
-        let entries = try Self.parseEntries(text)
+        let selectorEntries = try Self.parseSelectorEntries(text)
+        let fontEntries = try Self.parseFontFaceEntries(text)
 
         var sheet = DOM.StyleSheet()
-        sheet.attributes = try entries.mapValues(parsePresentationAttributes)
+        sheet.attributes = try selectorEntries.mapValues(parsePresentationAttributes)
+        sheet.fonts = try fontEntries.map(parseFontFace)
         return sheet
     }
 
-    static func parseEntries(_ text: String?) throws -> [DOM.StyleSheet.Selector: [String: String]] {
+    static func parseSelectorEntries(_ text: String?) throws -> [DOM.StyleSheet.Selector: [String: String]] {
         guard let text = text else { return [:] }
         var scanner = XMLParser.Scanner(text: removeCSSComments(from: text))
         var entries = [DOM.StyleSheet.Selector: [String: String]]()
 
-        while let (selectors, attributes) = try scanner.scanNextSelectorDecl() {
-            for selector in selectors {
-                var copy = entries[selector] ?? [:]
-                for (key, value) in attributes {
-                    copy[key] = value
+        while let (decl, attributes) = try scanner.scanNextBlockDecl() {
+            switch decl {
+            case .selector(let selectors):
+                for selector in selectors {
+                    var copy = entries[selector] ?? [:]
+                    for (key, value) in attributes {
+                        copy[key] = value
+                    }
+                    entries[selector] = copy
                 }
-                entries[selector] = copy
+            case .atRule:
+                ()
+            }
+        }
+
+        return entries
+    }
+
+    static func parseFontFaceEntries(_ text: String?) throws -> [[String: String]] {
+        guard let text = text else { return [] }
+        var scanner = XMLParser.Scanner(text: removeCSSComments(from: text))
+        var entries = [[String: String]]()
+
+        while let (decl, attributes) = try scanner.scanNextBlockDecl() {
+            switch decl {
+            case .atRule("font-face"):
+                entries.append(attributes)
+            default:
+                ()
             }
         }
 
@@ -93,10 +117,18 @@ extension XMLParser {
 
 extension XMLParser.Scanner {
 
-    mutating func scanNextSelectorDecl() throws -> ([DOM.StyleSheet.Selector], [String: String])? {
+    enum BlockDeclaration {
+        case selector([DOM.StyleSheet.Selector])
+        case atRule(String)
+    }
+
+    mutating func scanNextBlockDecl() throws -> (BlockDeclaration, [String: String])? {
+        if let attributes = try scanNextFontFace() {
+            return (.atRule("font-face"), attributes)
+        }
         let selectorTypes = try scanSelectorTypes()
         guard !selectorTypes.isEmpty else { return nil }
-        return (selectorTypes, try scanAtttributes())
+        return (.selector(selectorTypes), try scanAtttributes())
     }
 
     private mutating func scanNextClass() throws -> String? {
@@ -107,6 +139,13 @@ extension XMLParser.Scanner {
     private mutating func scanNextID() throws -> String? {
         guard doScanString("#") else { return nil }
         return try scanSelectorName()
+    }
+
+    mutating func scanNextFontFace() throws -> [String: String]? {
+        guard doScanString("@font-face") else {
+            return nil
+        }
+        return try scanAtttributes()
     }
 
     private mutating func scanNextElement() throws -> String? {
@@ -154,7 +193,8 @@ extension XMLParser.Scanner {
         repeat {
             last = try scanNextAttributeKey()
             if let last = last {
-                attributes[last] = try scanNextAttributeValue()
+                let val = try scanNextAttributeValue()
+                attributes[last] = val
             }
         } while last != nil
         return attributes
@@ -175,12 +215,21 @@ extension XMLParser.Scanner {
     }
 
     mutating func scanNextAttributeValue() throws -> String {
-        let value = try scanString(upTo: .init(charactersIn: ";\n}"))
+        let value = try scanString(upTo: .init(charactersIn: ";\n}"), preservingStrings: true)
         _ = doScanString(";")
         return value.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 }
 
+extension String {
+    var unquoted: String {
+        if (hasPrefix("'") && hasSuffix("'")) ||
+           (hasPrefix("\"") && hasSuffix("\"")) {
+            return String(dropFirst().dropLast())
+        }
+        return self
+    }
+}
 //Allow Dictionary to become an attribute parser
 extension Dictionary: AttributeParser where Key == String, Value == String {
     package var parser: any AttributeValueParser { return XMLParser.ValueParser() }

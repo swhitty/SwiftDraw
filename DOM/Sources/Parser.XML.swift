@@ -30,6 +30,7 @@
 //
 
 package typealias DOMXMLParser = XMLParser
+import struct Foundation.URL
 
 package struct XMLParser {
     package enum Error: Swift.Error {
@@ -132,6 +133,17 @@ package extension AttributeParser {
 
     func parsePoints(_ key: String) throws -> [DOM.Point] {
         return try parse(key) { return try parser.parsePoints($0) }
+    }
+
+    func parseFontSource(_ key: String) throws -> DOM.FontFace.Source {
+        return try parse(key) { value in
+            var scanner = XMLParser.Scanner(text: value)
+            let urlText = try scanner.scanStringFunction("url")
+            let url = try parser.parseUrl(urlText)
+            _ = try? scanner.scanString(";")
+            let format = try? scanner.scanStringFunction("format")
+            return .url(url: url, format: format)
+        }
     }
 
     func parseRaw<T: RawRepresentable>(_ key: String) throws -> T where T.RawValue == String {
