@@ -52,7 +52,7 @@ package extension DOM {
         package var fillOpacity: DOM.Float?
         package var fillRule: DOM.FillRule?
 
-        package var fontFamily: String?
+        package var fontFamily: [DOM.FontFamily]?
         package var fontSize: Float?
         package var textAnchor: TextAnchor?
 

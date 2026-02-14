@@ -37,6 +37,7 @@ struct GalleryView: View {
     var images = [
         "thats-no-moon.svg",
         "heliocentric.svg",
+        "every-grain.svg",
         "avocado.svg",
         "angry.svg",
         "ogre.svg",
@@ -53,6 +54,7 @@ struct GalleryView: View {
         "yawning.svg",
         "alert.svg",
         "effigy.svg",
+        "d10.svg",
         "stylesheet-multiple.svg"
     ]
 

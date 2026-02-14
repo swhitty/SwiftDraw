@@ -112,17 +112,117 @@ package extension XMLParser {
             currentIndex = scanner.currentIndex
             return match
         }
-        
-        package mutating func scanString(upTo characters: Foundation.CharacterSet) throws -> String {
+
+        package mutating func scanString(upTo characters: Foundation.CharacterSet, preservingStrings: Bool = false) throws -> String {
             let location = currentIndex
-            guard let match = scanner.scanUpToCharacters(from: characters) else {
+
+            guard preservingStrings else {
+                guard let match = scanner.scanUpToCharacters(from: characters) else {
+                    scanner.currentIndex = location
+                    throw Error.invalid
+                }
+                currentIndex = scanner.currentIndex
+                return match
+            }
+
+            var result = ""
+            let terminatorsAndQuotes = characters.union(CharacterSet(charactersIn: "\"'("))
+            let savedSkip = scanner.charactersToBeSkipped
+            scanner.charactersToBeSkipped = nil
+            defer { scanner.charactersToBeSkipped = savedSkip }
+
+            // skip leading whitespace once before scanning
+            _ = scanner.scanCharacters(from: .whitespacesAndNewlines)
+
+            while !scanner.isAtEnd {
+                if let text = scanner.scanUpToCharacters(from: terminatorsAndQuotes) {
+                    result += text
+                }
+
+                guard !scanner.isAtEnd else { break }
+
+                let ch = scanner.string[scanner.currentIndex]
+
+                if ch == "\"" || ch == "'" {
+                    let quote = String(ch)
+                    scanner.currentIndex = scanner.string.index(after: scanner.currentIndex)
+                    let body = scanner.scanUpToString(quote) ?? ""
+                    result += quote + body
+                    if !scanner.isAtEnd {
+                        result += quote
+                        scanner.currentIndex = scanner.string.index(after: scanner.currentIndex)
+                    }
+                } else if ch == "(" {
+                    scanner.currentIndex = scanner.string.index(after: scanner.currentIndex)
+                    let body = scanner.scanUpToString(")") ?? ""
+                    result += "(" + body
+                    if !scanner.isAtEnd {
+                        result += ")"
+                        scanner.currentIndex = scanner.string.index(after: scanner.currentIndex)
+                    }
+                } else {
+                    // Hit an actual terminator
+                    break
+                }
+            }
+
+            guard !result.isEmpty else {
                 scanner.currentIndex = location
                 throw Error.invalid
             }
+
             currentIndex = scanner.currentIndex
-            return match
+            return result
         }
-        
+
+        package mutating func scanFunction(_ name: String, preservingStrings: Bool = false) throws -> [String] {
+            scanner.currentIndex = currentIndex
+            try scanString(name)
+            try scanString("(")
+            var args = [String]()
+            let delimiters = CharacterSet(charactersIn: ",)")
+            while !doScanString(")") {
+                let arg = try scanString(upTo: delimiters, preservingStrings: preservingStrings)
+                    .trimmingCharacters(in: .whitespaces)
+                args.append(arg)
+                _ = doScanString(",")
+            }
+            currentIndex = scanner.currentIndex
+            return args
+        }
+
+        package mutating func scanStrings(delimitedBy delimiter: String = ",") throws -> [String] {
+            scanner.currentIndex = currentIndex
+            let delimiters = CharacterSet(charactersIn: delimiter)
+            var strings = [String]()
+            while !isEOF {
+                let value = try scanString(upTo: delimiters, preservingStrings: true)
+                    .trimmingCharacters(in: .whitespaces)
+                strings.append(value)
+                _ = doScanString(delimiter)
+            }
+            currentIndex = scanner.currentIndex
+            return strings
+        }
+
+        package mutating func scanStringFunction(_ name: String) throws -> String {
+            scanner.currentIndex = currentIndex
+            try scanString(name)
+            try scanString("(")
+            let arg = try scanString(upTo: ")")
+            _ = try scanString(")")
+            currentIndex = scanner.currentIndex
+            return arg.unquoted
+        }
+
+        package mutating func scanURLFunction(_ name: String) throws -> DOM.URL {
+            let body = try scanStringFunction(name)
+            guard let url = DOM.URL(string: body) else {
+                throw Error.invalid
+            }
+            return url
+        }
+
         package mutating func scanCharacter(matchingAny characters: Foundation.CharacterSet) throws -> Character {
             let location = currentIndex
             guard let scalar = scanner.scan(first: characters) else {

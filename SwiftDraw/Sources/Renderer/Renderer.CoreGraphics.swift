@@ -217,13 +217,40 @@ struct CGProvider: RendererTypeProvider {
     }
 
     func createPath(from text: String, at origin: LayerTree.Point, with attributes: LayerTree.TextAttributes) -> Types.Path? {
-        let font = CTFontCreateWithName(attributes.fontName as CFString,
-                                        createFloat(from: attributes.size),
-                                        nil)
+        let font = CGProvider.createCTFont(for: attributes.font, size: attributes.size)
         guard let path = text.toPath(font: font) else { return nil }
-
         var transform = CGAffineTransform(translationX: createFloat(from: origin.x), y: createFloat(from: origin.y))
         return path.copy(using: &transform)
+    }
+
+    private static func createCTFont(for font: LayerTree.TextAttributes.Font, size: CGFloat) -> CTFont? {
+        switch font {
+        case .truetype(let data):
+            guard let provider = CGDataProvider(data: data as CFData),
+                  let cgFont = CGFont(provider) else { return nil }
+            return CTFontCreateWithGraphicsFont(cgFont, size, nil, nil)
+        case .name(let name):
+            let ctFont = CTFontCreateWithName(name as CFString, size, nil)
+            let postScriptName = CTFontCopyPostScriptName(ctFont) as String
+            if postScriptName.caseInsensitiveCompare(name) == .orderedSame
+                || CTFontCopyFamilyName(ctFont) as String == name {
+                return ctFont
+            }
+            return nil
+        }
+    }
+
+    static func createCTFont(for fonts: [LayerTree.TextAttributes.Font], size: Float) -> CTFont {
+        let cgSize = CGFloat(size)
+        let fallback = CTFontCreateWithName("Times New Roman" as CFString, cgSize, nil)
+        let ctFonts = fonts.compactMap { createCTFont(for: $0, size: cgSize) }
+        guard let primary = ctFonts.first else { return fallback }
+        guard ctFonts.count > 1 else { return primary }
+        let descriptors = ctFonts.dropFirst().map { CTFontCopyFontDescriptor($0) }
+        let cascade = CTFontDescriptorCreateWithAttributes(
+            [kCTFontCascadeListAttribute: descriptors] as CFDictionary
+        )
+        return CTFontCreateCopyWithAttributes(primary, cgSize, nil, cascade)
     }
 
     func createPattern(from pattern: LayerTree.Pattern, contents: [RendererCommand<Types>]) -> CGTransformingPattern {

@@ -56,7 +56,7 @@ struct ParserXMLStyleSheetTests {
 
     @Test
     func parsesSelectors() throws {
-        let entries = try XMLParser.parseEntries(
+        let entries = try XMLParser.parseSelectorEntries(
             """
              .s {
                 stroke: darkgray;
@@ -104,23 +104,59 @@ struct ParserXMLStyleSheetTests {
                 fill: blue;
             }
             
+            @font-face {
+                font-family: 'Silkscreen';
+                src: url('data:font/truetype;base64,ZXZlcnkgZ3JhaW4gb2Ygc2FuZA==');
+            }
+            
             rect {
                 fill: pink;
             }
+            
+            @font-face {
+                font-family: Claudette;
+                src: url('data:font/woff2;base64,ZXZlcnkgZ3JhaW4gb2Ygc2FuZA==') format('woff2');
+            }
             /* comment */
             """
-        ).attributes
+        )
 
-        #expect(sheet[.class("s")]?.stroke == .color(.keyword(.darkgray)))
-        #expect(sheet[.class("s")]?.strokeWidth == 5)
-        #expect(sheet[.class("s")]?.fillOpacity == 0.3)
-        #expect(sheet[.class("b")]?.fill == .color(.keyword(.blue)))
-        #expect(sheet[.element("rect")]?.fill == .color(.keyword(.pink)))
+        let styles = sheet.attributes
+        #expect(styles[.class("s")]?.stroke == .color(.keyword(.darkgray)))
+        #expect(styles[.class("s")]?.strokeWidth == 5)
+        #expect(styles[.class("s")]?.fillOpacity == 0.3)
+        #expect(styles[.class("b")]?.fill == .color(.keyword(.blue)))
+        #expect(styles[.element("rect")]?.fill == .color(.keyword(.pink)))
+
+        let fonts = sheet.fonts
+
+        #expect(
+            fonts == [
+                DOM.FontFace(
+                    family: "Silkscreen",
+                    src: .url(url: DOM.URL(maybeData: "data:font/truetype;base64,ZXZlcnkgZ3JhaW4gb2Ygc2FuZA==")!, format: nil)
+                ),
+                DOM.FontFace(
+                    family: "Claudette",
+                    src: .url(url: DOM.URL(maybeData: "data:font/woff2;base64,ZXZlcnkgZ3JhaW4gb2Ygc2FuZA==")!, format: "woff2")
+                )
+            ]
+        )
+    }
+
+    @Test
+    func parsesFontFaceFile() throws {
+        let dom = try DOM.SVG.parse(fileNamed: "fontface-ttf.svg", in: .test)
+
+        let fonts = Set(dom.styles.flatMap { $0.fonts.map(\.family) })
+        #expect(
+            fonts == ["Silkscreen"]
+        )
     }
 
     @Test
     func mergesSelectors() throws {
-        let entries = try XMLParser.parseEntries(
+        let entries = try XMLParser.parseSelectorEntries(
             """
             .a {
                fill: red;
@@ -139,7 +175,7 @@ struct ParserXMLStyleSheetTests {
 
     @Test
     func mutlipleSelectors() throws {
-        let entries = try XMLParser.parseEntries(
+        let entries = try XMLParser.parseSelectorEntries(
             """
             .a, .b {
                fill: red;
@@ -151,6 +187,34 @@ struct ParserXMLStyleSheetTests {
             entries == [
                 .class("a"): ["fill": "red"],
                 .class("b"): ["fill": "red"]
+            ]
+        )
+    }
+
+    @Test
+    func parsesFontFaceEntries() throws {
+        let entries = try XMLParser.parseFontFaceEntries(
+            """
+            @font-face {
+                font-family: 'Silkscreen';
+                src: url('data:font/truetype;base64,ZXZlcnkgZ3JhaW4gb2Ygc2FuZA==') format('truetype');
+            }
+            @font-face {
+                font-family: 'Claudette';
+                src: url('data:font/woff2;base64,ZXZlcnkgZ3JhaW4gb2Ygc2FuZA==') format('woff2');
+            }
+            """
+        )
+        #expect(
+            entries == [
+                [
+                    "font-family": "'Silkscreen'",
+                    "src": "url('data:font/truetype;base64,ZXZlcnkgZ3JhaW4gb2Ygc2FuZA==') format('truetype')"
+                ],
+                [
+                    "font-family": "'Claudette'",
+                    "src": "url('data:font/woff2;base64,ZXZlcnkgZ3JhaW4gb2Ygc2FuZA==') format('woff2')"
+                ]
             ]
         )
     }

@@ -216,6 +216,62 @@ struct ScannerTests {
         _ = try? scanner.scanString(",")
         #expect(try scanner.scanCoordinate() == 5 * 16)
     }
+
+    @Test
+    func scanUpToPreservesStrings() throws {
+        var scanner = XMLParser.Scanner(text: #"foo: bar; baz: "bing;bob" zab;"#)
+
+        #expect(
+            try scanner.scanString(upTo: ";", preservingStrings: true) == "foo: bar"
+        )
+        _ = try? scanner.scanString(";")
+        #expect(
+            try scanner.scanString(upTo: ";", preservingStrings: true) == #"baz: "bing;bob" zab"#
+        )
+    }
+
+    @Test
+    func scanFunction() throws {
+        var scanner = XMLParser.Scanner(text: #"url('fish') foo( 1 , 'chips')"#)
+
+        #expect(
+            try scanner.scanFunction("url") == ["'fish'"]
+        )
+
+        #expect(throws: (any Error).self) {
+            try scanner.scanFunction("url")
+        }
+
+        #expect(
+            try scanner.scanFunction("foo") == ["1", "'chips'"]
+        )
+    }
+
+    @Test
+    func scanURLFunction() throws {
+        var scanner = XMLParser.Scanner(text: #"url('fish')"#)
+        #expect(
+            try scanner.scanURLFunction("url") == URL(string: "fish")
+        )
+    }
+
+    @Test
+    func scanAttributes() throws {
+        var scanner = XMLParser.Scanner(text: #"""
+        {
+           foo: bar;
+           src: url(foo;bar);
+           bar: baz;
+        }
+        """#)
+        #expect(
+            try scanner.scanAtttributes() == [
+                "foo": "bar",
+                "src": "url(foo;bar)",
+                "bar": "baz"
+            ]
+        )
+    }
 }
 
 private func scanUInt8(_ text: String) -> UInt8? {

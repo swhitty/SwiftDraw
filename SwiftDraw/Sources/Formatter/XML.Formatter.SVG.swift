@@ -133,7 +133,7 @@ extension XML.Formatter {
             attributes["fill"] = graphic.fill.map(encodeFill)
             attributes["fill-rule"] = graphic.fillRule?.rawValue
 
-            attributes["font-family"] = graphic.fontFamily
+            attributes["font-family"] = encodeFontFamily(graphic.fontFamily)
             attributes["font-size"] = formatter.format(graphic.fontSize)
             attributes["text-anchor"] = graphic.textAnchor?.rawValue
 
@@ -281,6 +281,21 @@ extension XML.Formatter {
                 return encodeColor(from: color)
             case .url(let url):
                 return encodeURL(url)
+            }
+        }
+
+        func encodeFontFamily(_ font: [DOM.FontFamily]?) -> String? {
+            guard let font else { return nil }
+            return font
+                .map(encodeFont)
+                .joined(separator: ", ")
+        }
+
+        func encodeFont(_ font: DOM.FontFamily) -> String {
+            if font.name.contains(" ") {
+                return "'\(font.name)'"
+            } else {
+                return font.name
             }
         }
 

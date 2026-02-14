@@ -101,7 +101,7 @@ extension LayerTree.TextAttributes {
     static var normal: Self {
         LayerTree.TextAttributes(
             color: .black,
-            fontName: "Helvetica",
+            font: [.name("Times New Roman")],
             size: 12.0,
             anchor: .start
         )

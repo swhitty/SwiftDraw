@@ -37,8 +37,9 @@ final class LayerTreeBuilderLayerTests: XCTestCase {
   
   func testMakeTextContentsFromDOM() {
     let text = DOM.Text(value: "Hello")
-    let contents = LayerTree.Builder.makeTextContents(from: text, with: .init())
-    
+    let builder = LayerTree.Builder(svg: DOM.SVG(width: 10, height: 10))
+    let contents = builder.makeTextContents(from: text, with: .init())
+
     guard case .text(let t, _, _) = contents else { XCTFail(); return }
     XCTAssertEqual(t, "Hello")
   }

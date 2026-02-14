@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 60">
+  <style>
+    @font-face {
+      font-family: 'Silkscreen';
+      src: url('data:font/truetype;base64,d09GMgABAAAAAAOsAA0AAAAACUQAAANWAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP0ZGVE0cBlYAgwIIBBEQCoVYhDoLJAABNgIkA0IEIAWEWwdEG5wHyJ6DceNcQlxTaxcRTX5zzOL4L5/Fw39z//4+M0nefUlumRSjqyS0rSJQxKqrQlXWliWDrcLPKMnnm9MfeH7k8OoIZKoGDGFs6+QkOzsjy+c5fI7XJ5Kylv/jAP//vap/0D+hsUButgYknBORsYD+fVlj0KJYOpY97vF6rQVc04oFLRWs2JJUDDu67cdUkmgmMT4YAe+av5+DW8NoX/jm8/IaJr0OKEl303lcEL54PNZEgaQskBSn6AGAjav2DgHjpPn7/ytj8vcoIAAZGaMw4BhOYBTeFjDIFE5hnA2vJApTIJL+LzHSF6LC4P1ue+CdKRMWJLOoCP5EQuJqkNlY+EcqK3o6elE30Hb76Es/kv2zzzI+HQZZR9IP878y6A+YAEaAl4DPAVBgOhYQkizkVPJtZrko2rbo6At1W7WdfpApkENs2pTdYhO5XjfdqKNBrm67Ta6jVqcmmk3RiCehS9uNjVojH9U0JQzLWh11QVKruW5gvpGCcmFrYqPCbCTlD9WX3JdMovRs6Ua7La4cMahuk4COYLMYtp7vGH+x9+J35MX1i+rxg10qa2L0u4igvkHppJPQBEkBYdDpDLrYSWRGaqtczPUkqB7IIAYSKBeSqr1JHI8mieFpEIbqbcM5FkBYjToxqdeLunEXiX4VAuI0lRHPTSYkjbh6UjI+qeJRAG6GGUv/egq/NG9W5QdHyEmM4jJXignVKv5h+fjJDEIMnT9/89R36aDT5O83kZflIP2ajI4Egm1h3pt3QcopGNJb+8VuOSBWQvwN6YBu+pXmD0RcSd610/9Nuhj0N4djmbPTLaGPa6I1n4VAqN2BpPIWstExFAp1LIdS/zhyd6WOS7IoerEbAIRBPiBpPYdssX8oDIp5UJoQm/7eyqC4YBmbI+VRyRQBIu9NAbHrhc9mIfbYAgGdqIxoqqtrqCJWGAykfMLnY6LJihdFRO+q8DHUa98mkd2tvm2RvX1BoIvl/1YKXTcwNe3/JtF7gPVUBp3vjUcksmD9DkPfe24DVrF5TC8MeJGOArq+g2CFveqiCQNKoFtBjBJIIwmhhwfti3QTseVTZ+68hqqGVvWhx/qZNKqNVpWFRHL4f5ot038Vff5E6zZs27HnyLELl67cuAcAAA==') format('truetype');
+    }
+  </style>
+  
+  <rect width="500" height="60" fill="snow" />
+  <text x="50" y="40" font-family="Silkscreen" font-size="24" text-anchor="start" fill="#333">Every leaf that trembles</text>
+</svg>

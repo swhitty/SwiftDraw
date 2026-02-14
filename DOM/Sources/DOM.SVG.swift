@@ -99,5 +99,6 @@ package extension DOM {
         }
         
         package var attributes: [Selector: PresentationAttributes] = [:]
+        package var fonts: [DOM.FontFace] = []
     }
 }

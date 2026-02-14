@@ -152,7 +152,7 @@ extension LayerTree {
             if let shape = Builder.makeShape(from: element) {
                 return makeShapeContents(from: shape, with: state)
             } else if let text = element as? DOM.Text {
-                return Builder.makeTextContents(from: text, with: state)
+                return makeTextContents(from: text, with: state)
             } else if let image = element as? DOM.Image {
                 return try? Builder.makeImageContents(from: image)
             } else if let use = element as? DOM.Use {
@@ -278,16 +278,75 @@ extension LayerTree.Builder {
         return gradient
     }
 
-    static func makeTextAttributes(with state: State) -> LayerTree.TextAttributes {
+    func makeTextAttributes(with state: State) -> LayerTree.TextAttributes {
         let fill = LayerTree.Color
             .create(from: state.fill.makeColor(), current: state.color)
             .withAlpha(state.fillOpacity).maybeNone()
+
         return LayerTree.TextAttributes(
             color: fill,
-            fontName: state.fontFamily,
+            font: state.fontFamily.flatMap(makeFonts),
             size: state.fontSize,
             anchor: state.textAnchor
         )
+    }
+
+    func makeFonts(with font: DOM.FontFamily) -> [LayerTree.TextAttributes.Font] {
+        switch font {
+        case .name(let name):
+            return makeFonts(faceName: name)
+        case .keyword(.serif):
+            return [.name("Times New Roman")]
+        case .keyword(.sansSerif):
+            return [.name("Helvetica")]
+        case .keyword(.monospace):
+            return [.name("Courier")]
+        case .keyword(.fantasy):
+            return [.name("Papyrus")]
+        case .keyword(.cursive):
+            return [.name("Apple Chancery")]
+        }
+    }
+
+    func makeFonts(faceName: String) -> [LayerTree.TextAttributes.Font] {
+        let fonts = svg.fontSources(for: faceName)
+            .compactMap { try? makeFont(for: $0) }
+
+        guard !fonts.isEmpty else {
+            return [.name(faceName)]
+        }
+        return fonts
+    }
+
+    func makeFont(for source: DOM.FontFace.Source) throws -> LayerTree.TextAttributes.Font {
+        switch source {
+        case .local(let name):
+            return .name(name)
+        case let .url(url: url, format: format):
+            if let (mime, data) = url.decodedData {
+                if mime == "font/truetype" || format == "truetype" {
+                    return .truetype(data)
+                } else if mime == "font/woff" || format == "woff" {
+                    #if canImport(Compression)
+                    let decoded = try WOFF(data: data)
+                    return .truetype(decoded.fontData)
+                    #else
+                    throw LayerTree.Error.invalid("unsupported font: \(mime)")
+                    #endif
+                } else if mime == "font/woff2" || format == "woff2" {
+                    #if canImport(Compression)
+                    let decoded = try WOFF2(data: data)
+                    return .truetype(decoded.fontData)
+                    #else
+                    throw LayerTree.Error.invalid("unsupported font: \(mime)")
+                    #endif
+                } else {
+                    throw LayerTree.Error.invalid("unsupported font: \(mime)")
+                }
+            } else {
+                throw LayerTree.Error.invalid("unsupported format: \(format ?? "unknown")")
+            }
+        }
     }
 
     func makePattern(for element: DOM.Pattern) -> LayerTree.Pattern {
@@ -387,7 +446,7 @@ extension LayerTree.Builder {
 
         var filter: DOM.URL?
 
-        var fontFamily: String
+        var fontFamily: [DOM.FontFamily]
         var fontSize: DOM.Float
         var textAnchor: DOM.TextAnchor
 
@@ -410,7 +469,7 @@ extension LayerTree.Builder {
             fillRule = .nonzero
             textAnchor = .start
 
-            fontFamily = "Helvetica"
+            fontFamily = [.name("Helvetica")]
             fontSize = 12.0
         }
     }
@@ -514,5 +573,18 @@ private extension DOM.Fill {
         case .url:
             return .none
         }
+    }
+}
+
+private extension DOM.SVG {
+
+    func fontSources(for family: String) -> [DOM.FontFace.Source] {
+        var sources = [DOM.FontFace.Source]()
+        for style in styles {
+            for font in style.fonts where font.family == family {
+                sources.append(font.src)
+            }
+        }
+        return sources
     }
 }

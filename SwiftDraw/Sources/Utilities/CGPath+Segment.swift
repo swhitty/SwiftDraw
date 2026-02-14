@@ -39,47 +39,47 @@ import UIKit
 #endif
 
 extension CGPath {
-  func doApply(action: @escaping (CGPathElement)->()) {
-    var action = action
-    withUnsafeMutablePointer(to: &action) { action in
-      apply(info: action) {
-        let action = $0!.bindMemory(to: ((CGPathElement)->()).self, capacity: 1).pointee
-        action($1.pointee)
-      }
+    func doApply(action: @escaping (CGPathElement)->()) {
+        var action = action
+        withUnsafeMutablePointer(to: &action) { action in
+            apply(info: action) {
+                let action = $0!.bindMemory(to: ((CGPathElement)->()).self, capacity: 1).pointee
+                action($1.pointee)
+            }
+        }
     }
-  }
 }
 
 extension CGPath {
-  enum Segment: Equatable {
-    case move(CGPoint)
-    case line(CGPoint)
-    case quad(CGPoint, CGPoint)
-    case cubic(CGPoint, CGPoint, CGPoint)
-    case close
-  }
-
-  func segments() -> [Segment] {
-    var segments = [Segment]()
-    self.doApply {
-      let p = $0
-      switch (p.type) {
-      case .moveToPoint:
-        segments.append(Segment.move(p.points[0]))
-      case .addLineToPoint:
-        segments.append(Segment.line(p.points[0]))
-      case .addQuadCurveToPoint:
-        segments.append(Segment.quad(p.points[0], p.points[1]))
-      case .addCurveToPoint:
-        segments.append(Segment.cubic(p.points[0], p.points[1], p.points[2]))
-      case .closeSubpath:
-        segments.append(Segment.close)
-      @unknown default:
-        ()
-      }
+    enum Segment: Equatable {
+        case move(CGPoint)
+        case line(CGPoint)
+        case quad(CGPoint, CGPoint)
+        case cubic(CGPoint, CGPoint, CGPoint)
+        case close
     }
-    return segments
-  }
+
+    func segments() -> [Segment] {
+        var segments = [Segment]()
+        self.doApply {
+            let p = $0
+            switch (p.type) {
+            case .moveToPoint:
+                segments.append(Segment.move(p.points[0]))
+            case .addLineToPoint:
+                segments.append(Segment.line(p.points[0]))
+            case .addQuadCurveToPoint:
+                segments.append(Segment.quad(p.points[0], p.points[1]))
+            case .addCurveToPoint:
+                segments.append(Segment.cubic(p.points[0], p.points[1], p.points[2]))
+            case .closeSubpath:
+                segments.append(Segment.close)
+            @unknown default:
+                ()
+            }
+        }
+        return segments
+    }
 }
 
 extension CGPath {
@@ -116,56 +116,60 @@ private extension LayerTree.Point {
 
 extension String {
 
-  func toPath(font: CTFont) -> CGPath? {
-    let attributes = [kCTFontAttributeName: font]
-    let attString = CFAttributedStringCreate(nil, self as CFString, attributes as CFDictionary)!
-    let line = CTLineCreateWithAttributedString(attString)
-    let glyphRuns = CTLineGetGlyphRuns(line)
+    func toLine(font: CTFont) -> CTLine {
+        let attributes = [kCTFontAttributeName: font]
+        let attString = CFAttributedStringCreate(nil, self as CFString, attributes as CFDictionary)!
+        return CTLineCreateWithAttributedString(attString)
+    }
 
-    var ascent = CGFloat(0)
-    var descent = CGFloat(0)
-    var leading = CGFloat(0)
-    CTLineGetTypographicBounds(line, &ascent, &descent, &leading)
-    let baseline = ascent
+    func toPath(font: CTFont) -> CGPath? {
+        let line = toLine(font: font)
+        let glyphRuns = CTLineGetGlyphRuns(line)
+
+        var ascent = CGFloat(0)
+        var descent = CGFloat(0)
+        var leading = CGFloat(0)
+        CTLineGetTypographicBounds(line, &ascent, &descent, &leading)
+        let baseline = ascent
 
 
-    let path = CGMutablePath()
+        let path = CGMutablePath()
 
-    for idx in 0..<CFArrayGetCount(glyphRuns) {
-      let val = CFArrayGetValueAtIndex(glyphRuns, idx)
-      let run = unsafeBitCast(val, to: CTRun.self)
-      let attributes = CTRunGetAttributes(run) as NSDictionary
-      let runFont = resolveRunFont(attributes: attributes, fallback: font)
+        for idx in 0..<CFArrayGetCount(glyphRuns) {
+            let val = CFArrayGetValueAtIndex(glyphRuns, idx)
+            let run = unsafeBitCast(val, to: CTRun.self)
+            let attributes = CTRunGetAttributes(run) as NSDictionary
+            let runFont = resolveRunFont(attributes: attributes, fallback: font)
 
-      for idx in 0..<CTRunGetGlyphCount(run) {
-        let glyphRange = CFRange(location: idx, length: 1)
-        var glyph: CGGlyph = 0
-        var position: CGPoint = .zero
-        CTRunGetGlyphs(run, glyphRange, &glyph)
-        CTRunGetPositions(run, glyphRange, &position)
-        var t = CGAffineTransform.identity
-        if let glyphPath = CTFontCreatePathForGlyph(runFont, glyph, &t) {
-          let t = CGAffineTransform(a: 1, b: 0, c: 0, d: -1, tx: position.x, ty: baseline)
-          let t1 = t.translatedBy(x: 0, y: baseline)
-          path.addPath(glyphPath, transform: t1)
+            for idx in 0..<CTRunGetGlyphCount(run) {
+                let glyphRange = CFRange(location: idx, length: 1)
+                var glyph: CGGlyph = 0
+                var position: CGPoint = .zero
+                CTRunGetGlyphs(run, glyphRange, &glyph)
+                CTRunGetPositions(run, glyphRange, &position)
+                var t = CGAffineTransform.identity
+                if let glyphPath = CTFontCreatePathForGlyph(runFont, glyph, &t) {
+                    let t = CGAffineTransform(a: 1, b: 0, c: 0, d: -1, tx: position.x, ty: baseline)
+                    let t1 = t.translatedBy(x: 0, y: baseline)
+                    path.addPath(glyphPath, transform: t1)
+                }
+            }
         }
-      }
+
+        return path
     }
 
-    return path
-  }
-
-  // Use the font CoreText resolved for this run, else fall back to the requested font.
-  private func resolveRunFont(attributes: NSDictionary, fallback: CTFont) -> CTFont {
-    guard let value = attributes[kCTFontAttributeName] else {
-      return fallback
+    // Use the font CoreText resolved for this run, else fall back to the requested font.
+    private func resolveRunFont(attributes: NSDictionary, fallback: CTFont) -> CTFont {
+        guard let value = attributes[kCTFontAttributeName] else {
+            return fallback
+        }
+        // CoreFoundation type bridging: ensure it's a CTFont before use.
+        if CFGetTypeID(value as CFTypeRef) == CTFontGetTypeID() {
+            return unsafeDowncast(value as AnyObject, to: CTFont.self)
+        }
+        return fallback
     }
-    // CoreFoundation type bridging: ensure it's a CTFont before use.
-    if CFGetTypeID(value as CFTypeRef) == CTFontGetTypeID() {
-      return unsafeDowncast(value as AnyObject, to: CTFont.self)
-    }
-    return fallback
-  }
 }
 
 #endif

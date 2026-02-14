@@ -130,24 +130,18 @@ extension XMLParser {
     func parseUrl(_ value: String) throws -> DOM.URL {
       guard let url = URL(maybeData: value) else { throw XMLParser.Error.invalid }
       return url
-      
     }
+
     func parseUrlSelector(_ value: String) throws -> DOM.URL {
       var scanner = XMLParser.Scanner(text: value)
-      
-      try scanner.scanString("url(")
-      let urlText = try scanner.scanString(upTo: ")")
-      _ = try? scanner.scanString(")")
-      
-      let url = urlText.trimmingCharacters(in: .whitespaces)
-      
+      let url = try scanner.scanStringFunction("url")
       guard !url.isEmpty, scanner.isEOF else {
         throw XMLParser.Error.invalid
       }
       
       return try parseUrl(url)
     }
-    
+
     func parsePoints(_ value: String) throws -> [DOM.Point] {
       var points = [DOM.Point]()
       var scanner = XMLParser.Scanner(text: value)
@@ -167,7 +161,21 @@ extension XMLParser {
       
       return points
     }
-    
+
+    func parseFontFamily(_ key: String) throws -> [DOM.FontFamily] {
+      var scanner = XMLParser.Scanner(text: key)
+      return try scanner
+        .scanStrings(delimitedBy: ",")
+        .map {
+          let value = $0.unquoted
+          if let keyword = DOM.FontFamily.Keyword(rawValue: value) {
+            return .keyword(keyword)
+          } else {
+            return .name(value)
+          }
+        }
+    }
+
     func parseRaw<T: RawRepresentable>(_ value: String) throws -> T where T.RawValue == String {
       guard let obj = T(rawValue: value.trimmingCharacters(in: .whitespaces)) else {
         throw XMLParser.Error.invalid

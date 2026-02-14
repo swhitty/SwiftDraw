@@ -250,7 +250,8 @@ extension XMLParser {
         el.fillOpacity = try att.parsePercentage("fill-opacity")
         el.fillRule = try att.parseRaw("fill-rule")
 
-        el.fontFamily = (try att.parseString("font-family"))?.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        el.fontFamily = try att.parseFontFamily("font-family")
         el.fontSize = try att.parseFloat("font-size")
         el.textAnchor = try att.parseRaw("text-anchor")
 
@@ -276,6 +277,13 @@ extension XMLParser {
     private struct ElementAtt: ElementAttributes {
         var id: String?
         var `class`: String?
+    }
+
+    func parseFontFace(_ att: any AttributeParser) throws -> DOM.FontFace {
+        try DOM.FontFace(
+            family: att.parseString("font-family").unquoted,
+            src: att.parseFontSource("src")
+        )
     }
 
     package static func logParsingError(for error: any Swift.Error, filename: String?, parsing element: XML.Element? = nil) {
