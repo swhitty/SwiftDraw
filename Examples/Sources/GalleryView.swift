@@ -54,6 +54,7 @@ struct GalleryView: View {
         "yawning.svg",
         "alert.svg",
         "effigy.svg",
+        "d10.svg",
         "stylesheet-multiple.svg"
     ]
 
