@@ -42,7 +42,7 @@ struct ParserXMLTextTests {
         el.innerText = "Simon"
         el.attributes["x"] = "1"
         el.attributes["y"] = "2"
-        el.attributes["font-family"] = "Futura"
+        el.attributes["font-family"] = "'Futura', sans-serif"
         el.attributes["font-size"] = "12.5"
         el.attributes["text-anchor"] = "end"
 
@@ -52,7 +52,7 @@ struct ParserXMLTextTests {
         #expect(text.x == 1)
         #expect(text.y == 2)
         #expect(text.value == "Simon")
-        #expect(text.attributes.fontFamily == "Futura")
+        #expect(text.attributes.fontFamily == [.name("Futura"), .keyword(.sansSerif)])
         #expect(text.attributes.fontSize == 12.5)
         #expect(text.attributes.textAnchor == .end)
     }

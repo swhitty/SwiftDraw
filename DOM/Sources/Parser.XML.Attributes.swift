@@ -161,7 +161,21 @@ extension XMLParser {
       
       return points
     }
-    
+
+    func parseFontFamily(_ key: String) throws -> [DOM.FontFamily] {
+      var scanner = XMLParser.Scanner(text: key)
+      return try scanner
+        .scanStrings(delimitedBy: ",")
+        .map {
+          let value = $0.unquoted
+          if let keyword = DOM.FontFamily.Keyword(rawValue: value) {
+            return .keyword(keyword)
+          } else {
+            return .name(value)
+          }
+        }
+    }
+
     func parseRaw<T: RawRepresentable>(_ value: String) throws -> T where T.RawValue == String {
       guard let obj = T(rawValue: value.trimmingCharacters(in: .whitespaces)) else {
         throw XMLParser.Error.invalid

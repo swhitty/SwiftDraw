@@ -1,14 +1,14 @@
 //
-//  DOM.FontFace.swift
-//  SwiftDraw
+//  Data+BrotliTests.swift
+//  swift-woff2
 //
-//  Created by Simon Whitty on 14/2/26.
+//  Created by Simon Whitty on 7/2/26.
 //  Copyright 2026 Simon Whitty
 //
 //  Distributed under the permissive zlib license
 //  Get the latest version from here:
 //
-//  https://github.com/swhitty/SwiftDraw
+//  https://github.com/swhitty/swift-woff2
 //
 //  This software is provided 'as-is', without any express or implied
 //  warranty.  In no event will the authors be held liable for any damages
@@ -30,46 +30,27 @@
 //
 
 import Foundation
+import Testing
+@testable import SwiftDraw
 
-package extension DOM {
+struct DataBrotliTests {
 
-    enum FontFamily: Hashable {
-        case keyword(Keyword)
-        case name(String)
-
-        package enum Keyword: String {
-            case serif
-            case sansSerif = "sans-serif"
-            case monospace
-            case cursive
-            case fantasy
-        }
+    @Test
+    func `brotli decompresses string`() throws {
+        let base64 = "CwaASGVsbG8sIFdvcmxkIQM="
+        let compressed = Data(base64Encoded: base64)!
+        let decompressed = try compressed.decompressBrotli(decompressedSize: 13)
+        #expect(
+            String(data: decompressed, encoding: .utf8) == "Hello, World!"
+        )
     }
 
-    struct FontFace: Hashable {
-        package var family: String
-        package var src: Source
-
-        package enum Source: Hashable {
-            case url(url: DOM.URL, format: String?)
-            case local(String)
-        }
-
-        package init(family: String, src: Source) {
-            self.family = family
-            self.src = src
-        }
-    }
-}
-
-package extension DOM.FontFamily {
-
-    var name: String {
-        switch self {
-        case .name(let s):
-            return s
-        case .keyword(let k):
-            return k.rawValue
+    @Test
+    func `brotli throws on invalid data`() {
+        let invalidData = Data([0x00, 0x01, 0x02, 0x03])
+        
+        #expect(throws: BrotliError.self) {
+            try invalidData.decompressBrotli(decompressedSize: 100)
         }
     }
 }

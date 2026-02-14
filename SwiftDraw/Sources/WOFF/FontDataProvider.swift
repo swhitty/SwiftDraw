@@ -1,14 +1,14 @@
 //
-//  DOM.FontFace.swift
-//  SwiftDraw
+//  FontDataProvider.swift
+//  swift-woff2
 //
-//  Created by Simon Whitty on 14/2/26.
+//  Created by Simon Whitty on 7/2/26.
 //  Copyright 2026 Simon Whitty
 //
 //  Distributed under the permissive zlib license
 //  Get the latest version from here:
 //
-//  https://github.com/swhitty/SwiftDraw
+//  https://github.com/swhitty/swift-woff2
 //
 //  This software is provided 'as-is', without any express or implied
 //  warranty.  In no event will the authors be held liable for any damages
@@ -29,47 +29,18 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
+#if canImport(CoreGraphics)
 import Foundation
+import CoreGraphics
 
-package extension DOM {
-
-    enum FontFamily: Hashable {
-        case keyword(Keyword)
-        case name(String)
-
-        package enum Keyword: String {
-            case serif
-            case sansSerif = "sans-serif"
-            case monospace
-            case cursive
-            case fantasy
-        }
-    }
-
-    struct FontFace: Hashable {
-        package var family: String
-        package var src: Source
-
-        package enum Source: Hashable {
-            case url(url: DOM.URL, format: String?)
-            case local(String)
-        }
-
-        package init(family: String, src: Source) {
-            self.family = family
-            self.src = src
-        }
-    }
+/// A protocol for types that can provide font data and create CGFonts
+protocol FontDataProvider {
+    init(data: Data) throws
+    init(contentsOf url: URL) throws
+    func makeCGFont() throws -> CGFont
 }
 
-package extension DOM.FontFamily {
-
-    var name: String {
-        switch self {
-        case .name(let s):
-            return s
-        case .keyword(let k):
-            return k.rawValue
-        }
-    }
-}
+extension TTF: FontDataProvider {}
+extension WOFF: FontDataProvider {}
+extension WOFF2: FontDataProvider {}
+#endif

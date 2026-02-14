@@ -41,9 +41,7 @@ extension LayerTree.Builder {
 
 #if canImport(CoreText)
     static func makeXOffset(for text: String, with attributes: LayerTree.TextAttributes) -> LayerTree.Float {
-        let font = CTFontCreateWithName(attributes.fontName as CFString,
-                                        CGFloat(attributes.size),
-                                        nil)
+        let font = CGProvider.createCTFont(for: attributes.font, size: attributes.size)
         guard let bounds = text.toPath(font: font)?.boundingBoxOfPath else { return 0 }
         switch attributes.anchor {
         case .start:
@@ -61,4 +59,24 @@ extension LayerTree.Builder {
 #endif
 
     
+}
+
+extension DOM.FontFamily {
+
+    var fontName: String {
+        switch self {
+        case .name(let s):
+            return s
+        case .keyword(.serif):
+            return "Times New Roman"
+        case .keyword(.sansSerif):
+            return "Helvetica"
+        case .keyword(.monospace):
+            return "Courier"
+        case .keyword(.fantasy):
+            return "Papyrus"
+        case .keyword(.cursive):
+            return "Apple Chancery"
+        }
+    }
 }

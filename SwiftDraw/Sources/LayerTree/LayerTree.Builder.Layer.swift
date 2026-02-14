@@ -58,13 +58,16 @@ extension LayerTree.Builder {
         return .layer(l)
     }
 
-    static func makeTextContents(from text: DOM.Text, with state: State) -> LayerTree.Layer.Contents {
+    func makeTextContents(from text: DOM.Text, with state: State) -> LayerTree.Layer.Contents {
         var point = Point(text.x ?? 0, text.y ?? 0)
         var att = makeTextAttributes(with: state)
-        att.fontName = text.attributes.fontFamily ?? att.fontName
+
+        if let fontFamily = text.attributes.fontFamily {
+            att.font = fontFamily.flatMap(makeFonts)
+        }
         att.size = text.attributes.fontSize ?? att.size
         att.anchor = text.attributes.textAnchor ?? att.anchor
-        point.x += makeXOffset(for: text.value, with: att)
+        point.x += Self.makeXOffset(for: text.value, with: att)
         return .text(text.value, point, att)
     }
 

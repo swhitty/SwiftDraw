@@ -27,6 +27,7 @@
 //
 
 import SwiftDrawDOM
+import struct Foundation.Data
 
 extension LayerTree {
     final class Layer: Hashable {
@@ -150,9 +151,14 @@ extension LayerTree {
 
     struct TextAttributes: Hashable {
         var color: Color
-        var fontName: String
+        var font: [Font]
         var size: Float
         var anchor: DOM.TextAnchor
+
+        enum Font: Hashable {
+            case truetype(Data)
+            case name(String)
+        }
     }
 }
 

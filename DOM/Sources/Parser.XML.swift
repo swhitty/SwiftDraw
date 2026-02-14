@@ -71,6 +71,7 @@ package protocol AttributeValueParser {
     func parseUrl(_ value: String) throws -> DOM.URL
     func parseUrlSelector(_ value: String) throws -> DOM.URL
     func parsePoints(_ value: String) throws -> [DOM.Point]
+    func parseFontFamily(_ value: String) throws -> [DOM.FontFamily]
 
     func parseRaw<T: RawRepresentable>(_ value: String) throws -> T where T.RawValue == String
 }
@@ -212,6 +213,10 @@ package extension AttributeParser {
 
     func parsePoints(_ key: String) throws -> [DOM.Point]? {
         return try parse(key) { return try parser.parsePoints($0) }
+    }
+
+    func parseFontFamily(_ key: String) throws -> [DOM.FontFamily]? {
+        return try parse(key) { return try parser.parseFontFamily($0) }
     }
 
     func parseRaw<T: RawRepresentable>(_ key: String) throws -> T? where T.RawValue == String {

@@ -183,6 +183,20 @@ package extension XMLParser {
             return args
         }
 
+        package mutating func scanStrings(delimitedBy delimiter: String = ",") throws -> [String] {
+            scanner.currentIndex = currentIndex
+            let delimiters = CharacterSet(charactersIn: delimiter)
+            var strings = [String]()
+            while !isEOF {
+                let value = try scanString(upTo: delimiters, preservingStrings: true)
+                    .trimmingCharacters(in: .whitespaces)
+                strings.append(value)
+                _ = doScanString(delimiter)
+            }
+            currentIndex = scanner.currentIndex
+            return strings
+        }
+
         package mutating func scanStringFunction(_ name: String) throws -> String {
             scanner.currentIndex = currentIndex
             let result = try scanFunction(name, preservingStrings: true)

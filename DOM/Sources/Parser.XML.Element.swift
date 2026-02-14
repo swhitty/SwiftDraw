@@ -250,7 +250,8 @@ extension XMLParser {
         el.fillOpacity = try att.parsePercentage("fill-opacity")
         el.fillRule = try att.parseRaw("fill-rule")
 
-        el.fontFamily = (try att.parseString("font-family"))?.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        el.fontFamily = try att.parseFontFamily("font-family")
         el.fontSize = try att.parseFloat("font-size")
         el.textAnchor = try att.parseRaw("text-anchor")
 
