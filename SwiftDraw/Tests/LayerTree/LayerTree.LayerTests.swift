@@ -103,7 +103,8 @@ extension LayerTree.TextAttributes {
             color: .black,
             font: [.name("Times New Roman")],
             size: 12.0,
-            anchor: .start
+            anchor: .start,
+            baseline: .auto
         )
     }
 }

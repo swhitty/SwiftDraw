@@ -287,7 +287,8 @@ extension LayerTree.Builder {
             color: fill,
             font: state.fontFamily.flatMap(makeFonts),
             size: state.fontSize,
-            anchor: state.textAnchor
+            anchor: state.textAnchor,
+            baseline: state.textBaseline
         )
     }
 
@@ -449,6 +450,7 @@ extension LayerTree.Builder {
         var fontFamily: [DOM.FontFamily]
         var fontSize: DOM.Float
         var textAnchor: DOM.TextAnchor
+        var textBaseline: DOM.TextBaseline
 
         init() {
             //default root SVG element state
@@ -468,6 +470,7 @@ extension LayerTree.Builder {
             fillOpacity = 1.0
             fillRule = .nonzero
             textAnchor = .start
+            textBaseline = .auto
 
             fontFamily = [.name("Helvetica")]
             fontSize = 12.0
@@ -502,6 +505,7 @@ extension LayerTree.Builder {
         state.fontFamily = attributes.fontFamily ?? existing.fontFamily
         state.fontSize = attributes.fontSize ?? existing.fontSize
         state.textAnchor = attributes.textAnchor ?? existing.textAnchor
+        state.textBaseline = attributes.dominantBaseline ?? existing.textBaseline
 
         return state
     }

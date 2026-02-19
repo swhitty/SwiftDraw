@@ -96,6 +96,14 @@ extension DOM {
         case end
     }
 
+    package enum TextBaseline: String {
+        case auto
+        case middle
+        case central
+        case hanging
+        case alphabetic
+    }
+
     package enum Transform: Equatable {
         case matrix(a: Float, b: Float, c: Float, d: Float, e: Float, f: Float)
         case translate(tx: Float, ty: Float)
