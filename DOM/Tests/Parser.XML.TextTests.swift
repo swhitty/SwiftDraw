@@ -45,6 +45,7 @@ struct ParserXMLTextTests {
         el.attributes["font-family"] = "'Futura', sans-serif"
         el.attributes["font-size"] = "12.5"
         el.attributes["text-anchor"] = "end"
+        el.attributes["dominant-baseline"] = "central"
 
         let parsed = try XMLParser().parseGraphicsElement(el) as? DOM.Text
         let text = try #require(parsed)
@@ -55,6 +56,7 @@ struct ParserXMLTextTests {
         #expect(text.attributes.fontFamily == [.name("Futura"), .keyword(.sansSerif)])
         #expect(text.attributes.fontSize == 12.5)
         #expect(text.attributes.textAnchor == .end)
+        #expect(text.attributes.dominantBaseline == .central)
     }
 
     @Test

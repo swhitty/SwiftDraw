@@ -67,8 +67,10 @@ extension LayerTree.Builder {
         }
         att.size = text.attributes.fontSize ?? att.size
         att.anchor = text.attributes.textAnchor ?? att.anchor
-        let offset = Self.makeXOffset(for: text.value, with: att)
-        point.x += offset
+        let offset = Self.makeOffset(for: text.value, with: att)
+        point.x += offset.width
+        point.y += offset.height
+
         return .text(text.value, point, att)
     }
 

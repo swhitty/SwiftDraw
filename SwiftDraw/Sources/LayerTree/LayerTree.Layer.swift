@@ -154,6 +154,7 @@ extension LayerTree {
         var font: [Font]
         var size: Float
         var anchor: DOM.TextAnchor
+        var baseline: DOM.TextBaseline
 
         enum Font: Hashable {
             case truetype(Data)

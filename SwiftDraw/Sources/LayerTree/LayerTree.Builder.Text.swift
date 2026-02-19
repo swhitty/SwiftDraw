@@ -40,11 +40,18 @@ import CoreText
 extension LayerTree.Builder {
 
 #if canImport(CoreText)
-    static func makeXOffset(for text: String, with attributes: LayerTree.TextAttributes) -> LayerTree.Float {
+    static func makeOffset(for text: String, with attributes: LayerTree.TextAttributes) -> LayerTree.Size {
         let font = CGProvider.createCTFont(for: attributes.font, size: attributes.size)
         let line = text.toLine(font: font)
+        return LayerTree.Size(
+            makeXOffset(line: line, anchor: attributes.anchor),
+            makeYOffset(font: font, baseline: attributes.baseline)
+        )
+    }
+
+    static func makeXOffset(line: CTLine, anchor: DOM.TextAnchor) -> LayerTree.Float {
         let width = CTLineGetTypographicBounds(line, nil, nil, nil)
-        switch attributes.anchor {
+        switch anchor {
         case .start:
            return 0
         case .middle:
@@ -53,13 +60,29 @@ extension LayerTree.Builder {
             return LayerTree.Float(-width)
         }
     }
+
+    static func makeYOffset(font: CTFont, baseline: DOM.TextBaseline) -> LayerTree.Float {
+        let ascent = CTFontGetAscent(font)
+        let descent = CTFontGetDescent(font)
+        let emHeight = ascent + descent
+        switch baseline {
+        case .central:
+            return LayerTree.Float(-(emHeight / 2 - ascent))
+        case .alphabetic, .auto:
+            return 0
+        case .hanging:
+            return LayerTree.Float(-ascent)
+        case .middle:
+            let xHeight = CTFontGetXHeight(font)
+            return LayerTree.Float(-(xHeight / 2 - ascent))
+        }
+    }
 #else
-    static func makeXOffset(for text: String, with attributes: LayerTree.TextAttributes) -> LayerTree.Float {
-        return 0
+    static func makeOffset(for text: String, with attributes: LayerTree.TextAttributes) -> LayerTree.Size {
+        return .zero
     }
 #endif
 
-    
 }
 
 extension DOM.FontFamily {

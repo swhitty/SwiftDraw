@@ -55,6 +55,7 @@ package extension DOM {
         package var fontFamily: [DOM.FontFamily]?
         package var fontSize: Float?
         package var textAnchor: TextAnchor?
+        package var dominantBaseline: TextBaseline?
 
         package var transform: [DOM.Transform]?
         package var clipPath: DOM.URL?
@@ -133,7 +134,8 @@ extension DOM.PresentationAttributes {
         merged.fontFamily = att.fontFamily ?? fontFamily
         merged.fontSize = att.fontSize ?? fontSize
         merged.textAnchor = att.textAnchor ?? textAnchor
-        
+        merged.dominantBaseline = att.dominantBaseline ?? dominantBaseline
+
         merged.transform = att.transform ?? transform
         merged.clipPath = att.clipPath ?? clipPath
         merged.clipRule = att.clipRule ?? clipRule
