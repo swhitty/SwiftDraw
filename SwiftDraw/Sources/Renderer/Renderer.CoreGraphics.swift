@@ -242,7 +242,7 @@ struct CGProvider: RendererTypeProvider {
 
     static func createCTFont(for fonts: [LayerTree.TextAttributes.Font], size: Float) -> CTFont {
         let cgSize = CGFloat(size)
-        let fallback = CTFontCreateWithName("Times New Roman" as CFString, cgSize, nil)
+        let fallback = CTFontCreateWithName("Times" as CFString, cgSize, nil)
         let ctFonts = fonts.compactMap { createCTFont(for: $0, size: cgSize) }
         guard let primary = ctFonts.first else { return fallback }
         guard ctFonts.count > 1 else { return primary }

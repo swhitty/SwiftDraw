@@ -62,19 +62,19 @@ extension LayerTree.Builder {
     }
 
     static func makeYOffset(font: CTFont, baseline: DOM.TextBaseline) -> LayerTree.Float {
-        let ascent = CTFontGetAscent(font)
-        let descent = CTFontGetDescent(font)
-        let emHeight = ascent + descent
         switch baseline {
         case .central:
-            return LayerTree.Float(-(emHeight / 2 - ascent))
+            let capHeight = CTFontGetCapHeight(font)
+            return LayerTree.Float(capHeight / 2)
         case .alphabetic, .auto:
             return 0
         case .hanging:
+            let leading = CTFontGetLeading(font)
+            let ascent = CTFontGetAscent(font) - leading
             return LayerTree.Float(-ascent)
         case .middle:
             let xHeight = CTFontGetXHeight(font)
-            return LayerTree.Float(-(xHeight / 2 - ascent))
+            return LayerTree.Float(xHeight / 2)
         }
     }
 #else
@@ -92,7 +92,7 @@ extension DOM.FontFamily {
         case .name(let s):
             return s
         case .keyword(.serif):
-            return "Times New Roman"
+            return "Times"
         case .keyword(.sansSerif):
             return "Helvetica"
         case .keyword(.monospace):

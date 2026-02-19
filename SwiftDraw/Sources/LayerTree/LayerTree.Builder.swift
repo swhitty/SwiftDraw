@@ -297,7 +297,7 @@ extension LayerTree.Builder {
         case .name(let name):
             return makeFonts(faceName: name)
         case .keyword(.serif):
-            return [.name("Times New Roman")]
+            return [.name("Times")]
         case .keyword(.sansSerif):
             return [.name("Helvetica")]
         case .keyword(.monospace):
@@ -472,7 +472,7 @@ extension LayerTree.Builder {
             textAnchor = .start
             textBaseline = .auto
 
-            fontFamily = [.name("Helvetica")]
+            fontFamily = [.keyword(.serif)]
             fontSize = 12.0
         }
     }
