@@ -29,7 +29,7 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-#if canImport(Compression)
+#if canImport(CoreGraphics)
 import Foundation
 import Testing
 import CoreGraphics

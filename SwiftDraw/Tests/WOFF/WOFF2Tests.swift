@@ -29,7 +29,7 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-#if canImport(Compression)
+#if canImport(CoreGraphics)
 import Foundation
 import Testing
 import CoreGraphics
@@ -82,6 +82,23 @@ struct WOFF2Tests {
         
         #expect(throws: WOFF2Error.self) {
             try WOFF2(data: emptyData)
+        }
+    }
+
+    @Test
+    func throws_on_transformed_CFF() throws {
+        // Load a real WOFF2 font and patch the first table entry's flags
+        // to look like a CFF table (tag index 13) with transformVersion = 1.
+        // The check happens during table directory parsing, before decompression,
+        // so the rest of the data doesn't need to be valid.
+        var data = try Data(contentsOf: Bundle.test.url(forResource: "Roboto-Regular.woff2"))
+
+        // First table entry flags byte is at offset 48 (right after the 48-byte header)
+        // Set tag bits to 13 (CFF) and transform version to 1: (01_001101) = 0x4D
+        data[48] = 0x4D
+
+        #expect(throws: WOFF2Error.unsupportedCFFTransform) {
+            try WOFF2(data: data)
         }
     }
     

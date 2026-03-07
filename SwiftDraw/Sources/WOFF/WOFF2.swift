@@ -185,6 +185,11 @@ struct WOFF2 {
                 }
             }
             
+            // CFF transform is not yet supported
+            if tag == .cff && transformVersion != 0 {
+                throw WOFF2Error.unsupportedCFFTransform
+            }
+            
             entries.append(TableDirectoryEntry(
                 tag: tag,
                 flags: flags,
@@ -784,6 +789,7 @@ enum WOFF2Error: Error {
     case invalidFormat
     case invalidCompressedData
     case decompressionFailed
+    case unsupportedCFFTransform
     #if canImport(CoreGraphics)
     case invalidFontData
     #endif
