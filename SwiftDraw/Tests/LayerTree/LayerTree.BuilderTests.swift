@@ -122,6 +122,28 @@ final class LayerTreeBuilderTests: XCTestCase {
     XCTAssertEqual(pattern.contents, [.layer(expected)])
   }
   
+  func testDOMPatternObjectBoundingBox() {
+    let builder = LayerTree.Builder(svg: DOM.SVG(width: 100, height: 100))
+
+    var element = DOM.Pattern(id: "p1", width: 1, height: 1)
+    element.patternContentUnits = .objectBoundingBox
+    element.childElements = [DOM.Circle(cx: 0, cy: 0, r: 5)]
+
+    let pattern = builder.makePattern(for: element)
+    XCTAssertEqual(pattern.contentUnits, LayerTree.PatternUnits.objectBoundingBox)
+    XCTAssertEqual(pattern.frame, LayerTree.Rect(x: 0, y: 0, width: 1, height: 1))
+  }
+
+  func testDOMPatternUserSpaceOnUse() {
+    let builder = LayerTree.Builder(svg: DOM.SVG(width: 100, height: 100))
+
+    var element = DOM.Pattern(id: "p2", width: 20, height: 20)
+    element.childElements = [DOM.Circle(cx: 10, cy: 10, r: 5)]
+
+    let pattern = builder.makePattern(for: element)
+    XCTAssertEqual(pattern.contentUnits, LayerTree.PatternUnits.userSpaceOnUse)
+  }
+
   func testStrokeAttributes() {
     var state = LayerTree.Builder.State()
     state.stroke = .color(.rgbf(1.0, 0.0, 0.0, 1.0))

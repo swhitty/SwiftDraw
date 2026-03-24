@@ -207,12 +207,24 @@ extension LayerTree {
                     commands.append(.fill(path, rule: rule))
                 }
             case .pattern(let fillPattern):
+                var resolvedPattern = fillPattern
+                if fillPattern.contentUnits == .objectBoundingBox {
+                    let bounds = provider.getBounds(from: shape)
+                    let scaledFrame = LayerTree.Rect(
+                        x: fillPattern.frame.x * bounds.width + bounds.x,
+                        y: fillPattern.frame.y * bounds.height + bounds.y,
+                        width: fillPattern.frame.width * bounds.width,
+                        height: fillPattern.frame.height * bounds.height
+                    )
+                    resolvedPattern = LayerTree.Pattern(frame: scaledFrame)
+                    resolvedPattern.contents = fillPattern.contents
+                }
                 var patternCommands = [RendererCommand<P.Types>]()
-                for contents in fillPattern.contents {
+                for contents in resolvedPattern.contents {
                     patternCommands.append(contentsOf: renderCommands(for: contents, colorConverter: colorConverter))
                 }
 
-                let pattern = provider.createPattern(from: fillPattern, contents: patternCommands)
+                let pattern = provider.createPattern(from: resolvedPattern, contents: patternCommands)
                 let rule = provider.createFillRule(from: fill.rule)
                 commands.append(.setFillPattern(pattern))
                 commands.append(.fill(path, rule: rule))

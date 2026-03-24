@@ -352,7 +352,8 @@ extension LayerTree.Builder {
 
     func makePattern(for element: DOM.Pattern) -> LayerTree.Pattern {
         let frame = LayerTree.Rect(x: 0, y: 0, width: element.width, height: element.height)
-        let pattern = LayerTree.Pattern(frame: frame)
+        let contentUnits: LayerTree.PatternUnits = element.patternContentUnits == .objectBoundingBox ? .objectBoundingBox : .userSpaceOnUse
+        let pattern = LayerTree.Pattern(frame: frame, contentUnits: contentUnits)
         pattern.contents = element.childElements.compactMap { .layer(makeLayer(from: $0, inheriting: .init())) }
         return pattern
     }

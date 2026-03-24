@@ -61,8 +61,9 @@ package extension Array<DOM.GraphicsElement> {
             if element.id == id {
                 return element
             }
-            if let container = element as? any ContainerElement {
-                return container.childElements.firstGraphicsElement(with: id)
+            if let container = element as? any ContainerElement,
+               let found = container.childElements.firstGraphicsElement(with: id) {
+                return found
             }
         }
         return nil

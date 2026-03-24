@@ -36,6 +36,24 @@ import Testing
 struct UseTests {
 
     @Test
+    func firstGraphicsElementSearchesPastContainers() throws {
+        let svg = DOM.SVG(width: 100, height: 100)
+
+        // Place a group (container) before the target element
+        let group = DOM.Group()
+        group.childElements = [DOM.Circle(cx: 0, cy: 0, r: 5)]
+
+        let target = DOM.Rect(width: 10, height: 10)
+        target.id = "target"
+
+        svg.childElements = [group, target]
+
+        // Should find "target" even though a container (group) comes first
+        let found = svg.firstGraphicsElement(with: "target")
+        #expect(found?.id == "target")
+    }
+
+    @Test
     func use() throws {
         var node = ["xlink:href": "#line2", "href": "#line1"]
 
