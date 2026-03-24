@@ -105,6 +105,7 @@ public struct SFSymbolRenderer {
             template.black.appendPaths(pathsRegular, from: bounds, isLegacy: isLegacyInsets)
         }
 
+        template.normalizeVariants()
         template.setSize(size)
 
         let element = try XML.Formatter.SVG(formatter: formatter).makeElement(from: template.svg)
@@ -382,6 +383,128 @@ struct SFSymbolTemplate {
         self.black = try Variant(svg: svg, kind: "Black")
     }
 
+    /// Normalizes path segments across all three weight variants so they are interpolatable.
+    /// Handles two cases:
+    /// 1. Different segment counts: inserts degenerate cubics to align paths
+    /// 2. Same count but different types: promotes lines to degenerate cubics
+    mutating func normalizeVariants() {
+        let pathCount = min(ultralight.contents.paths.count,
+                            regular.contents.paths.count,
+                            black.contents.paths.count)
+        for i in 0..<pathCount {
+            Self.normalizeSegments(
+                &ultralight.contents.paths[i].segments,
+                &regular.contents.paths[i].segments,
+                &black.contents.paths[i].segments
+            )
+        }
+    }
+
+    static func normalizeSegments(
+        _ a: inout [DOM.Path.Segment],
+        _ b: inout [DOM.Path.Segment],
+        _ c: inout [DOM.Path.Segment]
+    ) {
+        // Phase 1: Align segment counts by inserting degenerate segments
+        alignSegmentCounts(&a, &b, &c)
+
+        // Phase 2: Promote lines to cubics where types differ
+        guard a.count == b.count && b.count == c.count else { return }
+        promoteLinesToCubics(&a, &b, &c)
+    }
+
+    /// Walks through three segment arrays simultaneously, inserting degenerate cubic
+    /// segments where one variant has an extra segment the others don't.
+    private static func alignSegmentCounts(
+        _ a: inout [DOM.Path.Segment],
+        _ b: inout [DOM.Path.Segment],
+        _ c: inout [DOM.Path.Segment]
+    ) {
+        var ia = 0, ib = 0, ic = 0
+        var curA = (x: DOM.Coordinate(0), y: DOM.Coordinate(0))
+        var curB = (x: DOM.Coordinate(0), y: DOM.Coordinate(0))
+        var curC = (x: DOM.Coordinate(0), y: DOM.Coordinate(0))
+
+        while ia < a.count && ib < b.count && ic < c.count {
+            let ta = a[ia].commandType
+            let tb = b[ib].commandType
+            let tc = c[ic].commandType
+
+            if ta == tb && tb == tc {
+                curA = a[ia].endPoint ?? curA
+                curB = b[ib].endPoint ?? curB
+                curC = c[ic].endPoint ?? curC
+                ia += 1; ib += 1; ic += 1
+                continue
+            }
+
+            // Check if one variant has an extra segment. Try skipping each one
+            // to see if it restores alignment with the other two.
+            if tb == tc, ia + 1 < a.count, a[ia + 1].commandType == tb {
+                // a has extra segment at ia; insert degenerate in b and c
+                b.insert(degenerateCubic(at: curB), at: ib)
+                c.insert(degenerateCubic(at: curC), at: ic)
+                curA = a[ia].endPoint ?? curA
+                ia += 1; ib += 1; ic += 1
+                continue
+            }
+            if ta == tc, ib + 1 < b.count, b[ib + 1].commandType == ta {
+                a.insert(degenerateCubic(at: curA), at: ia)
+                c.insert(degenerateCubic(at: curC), at: ic)
+                curB = b[ib].endPoint ?? curB
+                ia += 1; ib += 1; ic += 1
+                continue
+            }
+            if ta == tb, ic + 1 < c.count, c[ic + 1].commandType == ta {
+                a.insert(degenerateCubic(at: curA), at: ia)
+                b.insert(degenerateCubic(at: curB), at: ib)
+                curC = c[ic].endPoint ?? curC
+                ia += 1; ib += 1; ic += 1
+                continue
+            }
+
+            // No simple alignment found, just advance all
+            curA = a[ia].endPoint ?? curA
+            curB = b[ib].endPoint ?? curB
+            curC = c[ic].endPoint ?? curC
+            ia += 1; ib += 1; ic += 1
+        }
+    }
+
+    /// Promotes line segments to degenerate cubics where variants disagree on type.
+    private static func promoteLinesToCubics(
+        _ a: inout [DOM.Path.Segment],
+        _ b: inout [DOM.Path.Segment],
+        _ c: inout [DOM.Path.Segment]
+    ) {
+        var curA = (x: DOM.Coordinate(0), y: DOM.Coordinate(0))
+        var curB = (x: DOM.Coordinate(0), y: DOM.Coordinate(0))
+        var curC = (x: DOM.Coordinate(0), y: DOM.Coordinate(0))
+
+        for i in 0..<a.count {
+            let sa = a[i], sb = b[i], sc = c[i]
+
+            if sa.commandType != sb.commandType || sb.commandType != sc.commandType {
+                let hasCubic = sa.isCubic || sb.isCubic || sc.isCubic
+                let allLineOrCubic = (sa.isLine || sa.isCubic) && (sb.isLine || sb.isCubic) && (sc.isLine || sc.isCubic)
+
+                if hasCubic && allLineOrCubic {
+                    if sa.isLine { a[i] = sa.promoteToCubic(from: curA) }
+                    if sb.isLine { b[i] = sb.promoteToCubic(from: curB) }
+                    if sc.isLine { c[i] = sc.promoteToCubic(from: curC) }
+                }
+            }
+
+            curA = a[i].endPoint ?? curA
+            curB = b[i].endPoint ?? curB
+            curC = c[i].endPoint ?? curC
+        }
+    }
+
+    private static func degenerateCubic(at point: (x: DOM.Coordinate, y: DOM.Coordinate)) -> DOM.Path.Segment {
+        .cubic(x1: point.x, y1: point.y, x2: point.x, y2: point.y, x: point.x, y: point.y, space: .absolute)
+    }
+
     mutating func setSize(_ size: SFSymbolRenderer.SizeCategory) {
         typeReference.attributes.transform = [.translate(tx: 0, ty: size.yOffset)]
         ultralight.setSize(size)
@@ -650,5 +773,47 @@ private extension DOM.Path {
             }
             segments[0] = .move(x: newValue, y: y, space: space)
         }
+    }
+}
+
+extension DOM.Path.Segment {
+
+    enum CommandType: Equatable {
+        case move, line, cubic, close, other
+    }
+
+    var commandType: CommandType {
+        switch self {
+        case .move: return .move
+        case .line, .horizontal, .vertical: return .line
+        case .cubic, .cubicSmooth: return .cubic
+        case .close: return .close
+        default: return .other
+        }
+    }
+
+    var isLine: Bool { commandType == .line }
+    var isCubic: Bool { commandType == .cubic }
+
+    var endPoint: (x: DOM.Coordinate, y: DOM.Coordinate)? {
+        switch self {
+        case .move(let x, let y, _), .line(let x, let y, _):
+            return (x, y)
+        case .cubic(_, _, _, _, let x, let y, _):
+            return (x, y)
+        case .horizontal(let x, _):
+            return (x, 0) // y stays same, caller tracks
+        case .vertical(let y, _):
+            return (0, y) // x stays same, caller tracks
+        default:
+            return nil
+        }
+    }
+
+    /// Promotes a line segment to a degenerate cubic curve.
+    /// The control points are placed at the start and end to create a straight line.
+    func promoteToCubic(from current: (x: DOM.Coordinate, y: DOM.Coordinate)) -> DOM.Path.Segment {
+        guard let end = endPoint else { return self }
+        return .cubic(x1: current.x, y1: current.y, x2: end.x, y2: end.y, x: end.x, y: end.y, space: .absolute)
     }
 }
