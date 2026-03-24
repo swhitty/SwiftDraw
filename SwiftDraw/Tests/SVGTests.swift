@@ -208,6 +208,54 @@ struct SVGTests {
 
         _ = SVG(dom: dom, options: .default)
     }
+
+    @Test
+    func cache() {
+        let cache = SVGGCache(totalCostLimit: 10 * 1024 * 1024)
+        let svg = SVG.makeLines()
+        let url = URL(fileURLWithPath: "/test/cached.svg")
+
+        // Initially empty
+        #expect(cache.svg(fileURL: url) == nil)
+
+        // Store and retrieve
+        cache.setSVG(svg, for: url)
+        #expect(cache.svg(fileURL: url) != nil)
+
+        // Different URL returns nil
+        let otherURL = URL(fileURLWithPath: "/test/other.svg")
+        #expect(cache.svg(fileURL: otherURL) == nil)
+    }
+
+    @Test
+    func cacheSharedInstance() {
+        let shared = SVGGCache.shared
+        #expect(shared === SVGGCache.shared)
+    }
+
+    @Test
+    func insets() {
+        let zero = SVG.Insets.zero
+        #expect(zero.top == 0)
+        #expect(zero.left == 0)
+        #expect(zero.bottom == 0)
+        #expect(zero.right == 0)
+
+        let custom = SVG.Insets(top: 10, left: 20, bottom: 30, right: 40)
+        #expect(custom.top == 10)
+        #expect(custom.left == 20)
+        #expect(custom.bottom == 30)
+        #expect(custom.right == 40)
+
+        #expect(SVG.Insets.zero == SVG.Insets(top: 0, left: 0, bottom: 0, right: 0))
+        #expect(SVG.Insets.zero != custom)
+    }
+
+    @Test
+    func defaultCostLimit() {
+        let limit = SVGGCache.defaultTotalCostLimit
+        #expect(limit > 0)
+    }
 }
 
 private extension SVG {
