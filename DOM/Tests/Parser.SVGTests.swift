@@ -57,6 +57,18 @@ struct ParserSVGTests {
     }
 
     @Test
+    func svgWithUnits() throws {
+        let node = XML.Element(name: "svg", attributes: ["width": "10cm", "height": "2in"])
+        let parser = DOMXMLParser()
+
+        let parsed = try parser.parseSVG(node)
+        // 10cm = 10 * 37.795 = 377.95 → truncated to 377
+        #expect(parsed.width == 377)
+        // 2in = 2 * 96 = 192
+        #expect(parsed.height == 192)
+    }
+
+    @Test
     func parseSVGInvalidNode() {
         let node = XML.Element(name: "svg2", attributes: ["width": "100", "height": "200"])
         #expect(throws: (any Error).self) {
