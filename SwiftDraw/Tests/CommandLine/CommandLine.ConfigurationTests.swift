@@ -144,6 +144,114 @@ final class CommandLineConfigurationTests: XCTestCase {
         XCTAssertEqual(CommandLine.makeTextAPI(for: .appkit), .appKit)
         XCTAssertEqual(CommandLine.makeTextAPI(for: .uikit), .uiKit)
     }
+
+    func testParseConfigurationScale3x() throws {
+        let config = try parseConfiguration("swiftdraw", "file.svg", "--format", "png", "--scale", "3x")
+
+        XCTAssertEqual(config.output, URL(fileURLWithPath: "/file@3x.png"))
+        XCTAssertEqual(config.scale, .superRetina)
+    }
+
+    func testParseConfigurationPrecision() throws {
+        let config = try parseConfiguration("swiftdraw", "file.svg", "--format", "swift", "--precision", "3")
+
+        XCTAssertEqual(config.precision, 3)
+    }
+
+    func testParseConfigurationPrecisionInvalid() {
+        XCTAssertThrowsError(
+            try parseConfiguration("swiftdraw", "file.svg", "--format", "swift", "--precision", "abc")
+        )
+    }
+
+    func testParseConfigurationSizeInvalid() {
+        XCTAssertThrowsError(
+            try parseConfiguration("swiftdraw", "file.svg", "--format", "png", "--size", "abc")
+        )
+        XCTAssertThrowsError(
+            try parseConfiguration("swiftdraw", "file.svg", "--format", "png", "--size", "0x0")
+        )
+        XCTAssertThrowsError(
+            try parseConfiguration("swiftdraw", "file.svg", "--format", "png", "--size", "-10x20")
+        )
+    }
+
+    func testParseConfigurationScaleInvalid() {
+        XCTAssertThrowsError(
+            try parseConfiguration("swiftdraw", "file.svg", "--format", "png", "--scale", "5x")
+        )
+    }
+
+    func testParseConfigurationSwiftUIAPI() throws {
+        let config = try parseConfiguration("swiftdraw", "file.svg", "--format", "swift", "--api", "swiftui")
+
+        XCTAssertEqual(config.format, .swift)
+        XCTAssertEqual(config.api, .swiftui)
+    }
+
+    func testParseConfigurationInvalidAPI() {
+        XCTAssertThrowsError(
+            try parseConfiguration("swiftdraw", "file.svg", "--format", "swift", "--api", "flutter")
+        )
+    }
+
+    func testParseConfigurationHideUnsupportedFilters() throws {
+        let config = try parseConfiguration("swiftdraw", "file.svg", "--format", "png", "--hide-unsupported-filters")
+
+        XCTAssertTrue(config.options.contains(.hideUnsupportedFilters))
+    }
+
+    func testParseConfigurationLegacyInsets() throws {
+        let config = try parseConfiguration("swiftdraw", "file.svg", "--format", "sfsymbol", "--legacy")
+
+        XCTAssertTrue(config.isLegacyInsetsEnabled)
+    }
+
+    func testParseConfigurationSymbolSize() throws {
+        let configSmall = try parseConfiguration("swiftdraw", "file.svg", "--format", "sfsymbol", "--size", "small")
+        XCTAssertEqual(configSmall.symbolSize, .small)
+
+        let configMedium = try parseConfiguration("swiftdraw", "file.svg", "--format", "sfsymbol", "--size", "medium")
+        XCTAssertEqual(configMedium.symbolSize, .medium)
+
+        let configLarge = try parseConfiguration("swiftdraw", "file.svg", "--format", "sfsymbol", "--size", "large")
+        XCTAssertEqual(configLarge.symbolSize, .large)
+    }
+
+    func testParseConfigurationSymbolSizeInvalid() {
+        XCTAssertThrowsError(
+            try parseConfiguration("swiftdraw", "file.svg", "--format", "sfsymbol", "--size", "tiny")
+        )
+    }
+
+    func testParseConfigurationCustomOutput() throws {
+        let config = try parseConfiguration("swiftdraw", "file.svg", "--format", "png", "--output", "custom.png")
+
+        XCTAssertEqual(config.output, URL(fileURLWithPath: "/custom.png"))
+    }
+
+    func testNewURLForSFSymbol() {
+        let svg = URL(fileURLWithPath: "/test/icon.svg")
+        XCTAssertEqual(svg.newURL(for: .sfsymbol, scale: .default), URL(fileURLWithPath: "/test/icon-symbol.svg"))
+    }
+
+    func testNewURLForJPEG() {
+        let svg = URL(fileURLWithPath: "/test/photo.svg")
+        XCTAssertEqual(svg.newURL(for: .jpeg, scale: .retina), URL(fileURLWithPath: "/test/photo.jpg"))
+    }
+
+    func testNewURLForSwift() {
+        let svg = URL(fileURLWithPath: "/test/icon.svg")
+        XCTAssertEqual(svg.newURL(for: .swift, scale: .default), URL(fileURLWithPath: "/test/icon.swift"))
+    }
+
+    func testInsetsIsEmpty() {
+        XCTAssertTrue(CommandLine.Insets().isEmpty)
+        XCTAssertFalse(CommandLine.Insets(top: 1).isEmpty)
+        XCTAssertFalse(CommandLine.Insets(left: 1).isEmpty)
+        XCTAssertFalse(CommandLine.Insets(bottom: 1).isEmpty)
+        XCTAssertFalse(CommandLine.Insets(right: 1).isEmpty)
+    }
 }
 
 private func parseConfiguration(_ args: String...) throws -> CommandLine.Configuration {
