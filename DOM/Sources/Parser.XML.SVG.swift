@@ -37,29 +37,28 @@ package extension XMLParser {
         }
 
         let att = try parseAttributes(e)
-        var width: DOM.Coordinate?
-        var height: DOM.Coordinate?
-
-        if (try? att.parsePercentage("width")) == nil {
-            width = try att.parseCoordinate("width")
-        }
-        if (try? att.parsePercentage("height")) == nil {
-            height = try att.parseCoordinate("height")
-        }
-
+        let widthRaw = try? att.parseString("width")
+        let heightRaw = try? att.parseString("height")
         let viewBox: DOM.SVG.ViewBox? = try parseViewBox(try att.parseString("viewBox"))
 
-        width = width ?? viewBox?.width
-        height = height ?? viewBox?.height
+        var width = try resolveRootDimension(widthRaw, viewport: defaultViewport?.width, attribute: "width")
+        var height = try resolveRootDimension(heightRaw, viewport: defaultViewport?.height, attribute: "height")
 
-        guard let w = width else { throw XMLParser.Error.missingAttribute(name: "width") }
-        guard let h = height else { throw XMLParser.Error.missingAttribute(name: "height") }
+        width = width ?? viewBox?.width ?? defaultViewport?.width
+        height = height ?? viewBox?.height ?? defaultViewport?.height
+
+        guard let w = width else {
+            throw XMLParser.Error.unresolvableDimension(reason: makeUnresolvedReason(attribute: "width", raw: widthRaw, hasViewBox: viewBox != nil))
+        }
+        guard let h = height else {
+            throw XMLParser.Error.unresolvableDimension(reason: makeUnresolvedReason(attribute: "height", raw: heightRaw, hasViewBox: viewBox != nil))
+        }
 
         let svg = DOM.SVG(width: DOM.Length(w), height: DOM.Length(h))
         svg.x = try att.parseCoordinate("x")
         svg.y = try att.parseCoordinate("y")
         svg.childElements = try parseGraphicsElements(e.children)
-        svg.viewBox = try parseViewBox(try att.parseString("viewBox"))
+        svg.viewBox = viewBox
 
         svg.defs = try parseSVGDefs(e)
         svg.styles = parseStyleSheetElements(within: e)
@@ -83,6 +82,34 @@ package extension XMLParser {
         }
 
         return DOM.SVG.ViewBox(x: x, y: y, width: width, height: height)
+    }
+
+    // Returns nil when raw is missing, or when a percent value has no viewport to resolve against
+    func resolveRootDimension(_ raw: String?, viewport: DOM.Coordinate?, attribute: String) throws -> DOM.Coordinate? {
+        guard let raw, !raw.isEmpty else { return nil }
+        var scanner = XMLParser.Scanner(text: raw)
+        let value = try scanner.scanCoordinate()
+        if scanner.scanStringIfPossible("%") {
+            guard let viewport else { return nil }
+            return value / 100 * viewport
+        }
+        guard scanner.isEOF else {
+            throw Error.invalidAttribute(name: attribute, value: raw)
+        }
+        return value
+    }
+
+    func makeUnresolvedReason(attribute: String, raw: String?, hasViewBox: Bool) -> String {
+        if let raw, raw.contains("%") {
+            return "<svg> \(attribute)=\"\(raw)\" cannot be resolved without a viewBox or an explicit viewport (--size on the command line)"
+        }
+        if raw == nil {
+            if hasViewBox {
+                return "<svg> \(attribute) attribute is missing"
+            }
+            return "<svg> \(attribute) attribute is missing and no viewBox or explicit viewport (--size on the command line) was provided"
+        }
+        return "<svg> \(attribute)=\"\(raw ?? "")\" cannot be resolved"
     }
 
 

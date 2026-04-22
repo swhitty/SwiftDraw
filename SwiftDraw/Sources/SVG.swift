@@ -61,6 +61,19 @@ public struct SVG: Hashable, Sendable {
         }
     }
 
+    init?(fileURL url: URL, options: SVG.Options, defaultViewport: CGSize?) {
+        let viewport = defaultViewport.map {
+            XMLParser.Viewport(width: DOM.Coordinate($0.width), height: DOM.Coordinate($0.height))
+        }
+        do {
+            let svg = try DOM.SVG.parse(fileURL: url, defaultViewport: viewport)
+            self.init(dom: svg, options: options)
+        } catch {
+            XMLParser.logParsingError(for: error, filename: url.lastPathComponent, parsing: nil)
+            return nil
+        }
+    }
+
     public init?(named name: String, in bundle: Bundle = Bundle.main, options: SVG.Options = .default) {
         guard let url = bundle.url(forResource: name, withExtension: nil) else { return nil }
         self.init(fileURL: url, options: options)
