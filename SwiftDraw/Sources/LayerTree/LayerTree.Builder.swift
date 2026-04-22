@@ -142,6 +142,7 @@ extension LayerTree {
             l.transform = Builder.createTransforms(from: attributes.transform ?? [])
             l.clip = makeClipShapes(for: element)
             l.clipRule = attributes.clipRule
+            l.clipUnits = makeClipUnits(for: element)
             l.mask = createMaskLayer(for: element)
             l.opacity = state.opacity
             l.filters = makeFilters(for: state)
@@ -171,6 +172,16 @@ extension LayerTree {
             guard let clipID = attributes.clipPath?.fragmentID,
                   let clip = svg.defs.clipPaths.first(where: { $0.id == clipID }) else { return [] }
             return clip.childElements.compactMap(makeClipShape)
+        }
+
+        func makeClipUnits(for element: DOM.GraphicsElement) -> ClipUnits {
+            let attributes = DOM.presentationAttributes(for: element, styles: svg.styles)
+            guard let clipID = attributes.clipPath?.fragmentID,
+                  let clip = svg.defs.clipPaths.first(where: { $0.id == clipID }) else { return .userSpaceOnUse }
+            switch clip.clipPathUnits {
+            case .objectBoundingBox: return .objectBoundingBox
+            case .userSpaceOnUse, nil: return .userSpaceOnUse
+            }
         }
 
         func makeClipShape(for element: DOM.GraphicsElement) -> ClipShape? {
