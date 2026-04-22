@@ -114,11 +114,13 @@ Available keys for --format swift:
 Available keys for --format sfsymbol:
  --insets             alignment of regular variant: top,left,bottom,right | auto
  --size               size category to generate: small, medium large. (default is small)
- --ultralight         svg file of ultralight variant
- --ultralight-insets  alignment of ultralight variant: top,left,bottom,right | auto
- --black              svg file of black variant
- --black-insets       alignment of black variant: top,left,bottom,right | auto
- --legacy             use the original, less precise alignment logic from earlier swiftdraw versions.
+ --ultralight               svg file of ultralight variant
+ --ultralight-insets        alignment of ultralight variant: top,left,bottom,right | auto
+ --ultralight-stroke-width  auto-generate ultralight variant by scaling regular stroke-width: 0.5 | 50%
+ --black                    svg file of black variant
+ --black-insets             alignment of black variant: top,left,bottom,right | auto
+ --black-stroke-width       auto-generate black variant by scaling regular stroke-width: 2.0 | 200%
+ --legacy                   use the original, less precise alignment logic from earlier swiftdraw versions.
 ```
 
 ```bash
@@ -178,6 +180,21 @@ Alignment: --insets 40,30,40,30
 ```
 
 Variants can also be aligned using `--ultralightInsets` and `--blackInsets`.
+
+#### Auto-generated weight variants
+
+When matching ultralight or black SVGs are not available, SwiftDraw can synthesize them from the regular SVG by scaling every `stroke-width` value before strokes are expanded. Both decimal and percent forms are accepted:
+
+```bash
+$ swiftdraw key.svg --format sfsymbol \
+    --ultralight-stroke-width 50% \
+    --black-stroke-width 2.0
+```
+
+Notes:
+ - An explicit `--ultralight` or `--black` SVG always wins over the matching `--*-stroke-width` flag. A warning is printed if both are supplied.
+ - The scaler walks element attributes, inline styles, and `<style>` rules. If the regular SVG has no `stroke-width` values to scale, a warning is printed and the regular paths are reused unchanged.
+ - Only `stroke-width` is scaled today. Future work could add scaling for related attributes (for example, dash arrays).
 
 ### Swift Code Generation
 
