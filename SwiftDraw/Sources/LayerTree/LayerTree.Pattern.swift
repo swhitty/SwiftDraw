@@ -31,23 +31,31 @@
 
 extension LayerTree {
 
+    enum PatternUnits: Hashable {
+        case userSpaceOnUse
+        case objectBoundingBox
+    }
+
     final class Pattern: Hashable {
 
         var frame: LayerTree.Rect
+        var contentUnits: PatternUnits
         var contents: [LayerTree.Layer.Contents]
 
-        init(frame: LayerTree.Rect) {
+        init(frame: LayerTree.Rect, contentUnits: PatternUnits = .userSpaceOnUse) {
             self.frame = frame
+            self.contentUnits = contentUnits
             self.contents = []
         }
 
         func hash(into hasher: inout Hasher) {
             frame.hash(into: &hasher)
+            contentUnits.hash(into: &hasher)
             contents.hash(into: &hasher)
         }
 
         static func == (lhs: LayerTree.Pattern, rhs: LayerTree.Pattern) -> Bool {
-            return lhs.frame == rhs.frame && lhs.contents == rhs.contents
+            return lhs.frame == rhs.frame && lhs.contentUnits == rhs.contentUnits && lhs.contents == rhs.contents
         }
     }
 }
