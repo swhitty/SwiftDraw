@@ -192,6 +192,47 @@ struct ParserXMLStyleSheetTests {
     }
 
     @Test
+    func skipsMediaQueries() throws {
+        let entries = try XMLParser.parseSelectorEntries(
+            """
+            g { fill: #000; }
+
+            @media (prefers-color-scheme: dark) {
+              g { fill: #fff; }
+            }
+            """
+        )
+
+        #expect(
+            entries == [
+                .element("g"): ["fill": "#000"]
+            ]
+        )
+    }
+
+    @Test
+    func skipsNestedAtRules() throws {
+        let entries = try XMLParser.parseSelectorEntries(
+            """
+            .a { fill: red; }
+            @supports (display: grid) {
+              @media (min-width: 600px) {
+                .b { fill: blue; }
+              }
+            }
+            .c { stroke: green; }
+            """
+        )
+
+        #expect(
+            entries == [
+                .class("a"): ["fill": "red"],
+                .class("c"): ["stroke": "green"]
+            ]
+        )
+    }
+
+    @Test
     func parsesFontFaceEntries() throws {
         let entries = try XMLParser.parseFontFaceEntries(
             """

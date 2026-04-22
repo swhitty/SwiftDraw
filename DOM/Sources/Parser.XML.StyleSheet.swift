@@ -126,6 +126,9 @@ extension XMLParser.Scanner {
         if let attributes = try scanNextFontFace() {
             return (.atRule("font-face"), attributes)
         }
+        if let name = scanUnknownAtRule() {
+            return (.atRule(name), [:])
+        }
         let selectorTypes = try scanSelectorTypes()
         guard !selectorTypes.isEmpty else { return nil }
         return (.selector(selectorTypes), try scanAtttributes())
@@ -146,6 +149,25 @@ extension XMLParser.Scanner {
             return nil
         }
         return try scanAtttributes()
+    }
+
+    /// Skips unknown @ rules (e.g. @media, @supports) including nested blocks.
+    /// Returns the rule name if an unknown @ rule was consumed, nil otherwise.
+    mutating func scanUnknownAtRule() -> String? {
+        guard doScanString("@") else { return nil }
+        guard let name = try? scanString(upTo: .init(charactersIn: "{")),
+              doScanString("{") else { return nil }
+        var depth = 1
+        while depth > 0 && !isEOF {
+            if doScanString("{") {
+                depth += 1
+            } else if doScanString("}") {
+                depth -= 1
+            } else {
+                _ = try? scanString(upTo: .init(charactersIn: "{}"))
+            }
+        }
+        return name.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     private mutating func scanNextElement() throws -> String? {
