@@ -174,6 +174,114 @@ final class RendererSFSymbolTests: XCTestCase {
         )
     }
     #endif
+
+    // MARK: - Segment Normalization Tests
+
+    func testNormalizeSegments_PromotesLineToCubic() {
+        // When one variant has a cubic and another has a line at the same position,
+        // the line should be promoted to a degenerate cubic
+        var a: [DOM.Path.Segment] = [
+            .move(x: 0, y: 0, space: .absolute),
+            .cubic(x1: 1, y1: 0, x2: 2, y2: 1, x: 3, y: 1, space: .absolute),
+            .close
+        ]
+        var b: [DOM.Path.Segment] = [
+            .move(x: 0, y: 0, space: .absolute),
+            .line(x: 3, y: 1, space: .absolute),
+            .close
+        ]
+        var c: [DOM.Path.Segment] = [
+            .move(x: 0, y: 0, space: .absolute),
+            .line(x: 3, y: 1, space: .absolute),
+            .close
+        ]
+
+        SFSymbolTemplate.normalizeSegments(&a, &b, &c)
+
+        // b and c should now have cubics instead of lines
+        XCTAssertTrue(b[1].isCubic)
+        XCTAssertTrue(c[1].isCubic)
+        // All should have same count
+        XCTAssertEqual(a.count, b.count)
+        XCTAssertEqual(b.count, c.count)
+    }
+
+    func testNormalizeSegments_InsertsDegenerate() {
+        // When one variant has an extra segment, a degenerate cubic should be
+        // inserted in the other variants to align them
+        var a: [DOM.Path.Segment] = [
+            .move(x: 0, y: 0, space: .absolute),
+            .line(x: 5, y: 0, space: .absolute),
+            .cubic(x1: 5, y1: 0, x2: 7, y2: 2, x: 10, y: 5, space: .absolute),
+            .line(x: 10, y: 10, space: .absolute),
+            .close
+        ]
+        var b: [DOM.Path.Segment] = [
+            .move(x: 0, y: 0, space: .absolute),
+            .line(x: 5, y: 0, space: .absolute),
+            .line(x: 10, y: 10, space: .absolute),
+            .close
+        ]
+        var c: [DOM.Path.Segment] = [
+            .move(x: 0, y: 0, space: .absolute),
+            .line(x: 5, y: 0, space: .absolute),
+            .line(x: 10, y: 10, space: .absolute),
+            .close
+        ]
+
+        SFSymbolTemplate.normalizeSegments(&a, &b, &c)
+
+        // All should now have the same number of segments
+        XCTAssertEqual(a.count, b.count, "Segment counts should match after normalization")
+        XCTAssertEqual(b.count, c.count, "Segment counts should match after normalization")
+        // All should have same command types at each position
+        for i in 0..<a.count {
+            XCTAssertEqual(a[i].commandType, b[i].commandType, "Command types should match at index \(i)")
+            XCTAssertEqual(b[i].commandType, c[i].commandType, "Command types should match at index \(i)")
+        }
+    }
+
+    func testNormalizeSegments_AlreadyMatching() {
+        // When all three variants already match, no changes should be made
+        var a: [DOM.Path.Segment] = [
+            .move(x: 0, y: 0, space: .absolute),
+            .line(x: 10, y: 10, space: .absolute),
+            .close
+        ]
+        var b = a
+        var c = a
+
+        SFSymbolTemplate.normalizeSegments(&a, &b, &c)
+
+        XCTAssertEqual(a.count, 3)
+        XCTAssertEqual(b.count, 3)
+        XCTAssertEqual(c.count, 3)
+    }
+
+    func testCommandType() {
+        XCTAssertEqual(DOM.Path.Segment.move(x: 0, y: 0, space: .absolute).commandType, .move)
+        XCTAssertEqual(DOM.Path.Segment.line(x: 0, y: 0, space: .absolute).commandType, .line)
+        XCTAssertEqual(DOM.Path.Segment.cubic(x1: 0, y1: 0, x2: 0, y2: 0, x: 0, y: 0, space: .absolute).commandType, .cubic)
+        XCTAssertEqual(DOM.Path.Segment.close.commandType, .close)
+        XCTAssertEqual(DOM.Path.Segment.horizontal(x: 0, space: .absolute).commandType, .line)
+        XCTAssertEqual(DOM.Path.Segment.vertical(y: 0, space: .absolute).commandType, .line)
+    }
+
+    func testPromoteToCubic() {
+        let line = DOM.Path.Segment.line(x: 10, y: 20, space: .absolute)
+        let promoted = line.promoteToCubic(from: (x: 0, y: 0))
+
+        if case .cubic(let x1, let y1, let x2, let y2, let x, let y, _) = promoted {
+            XCTAssertEqual(x1, 0)   // control1 at start
+            XCTAssertEqual(y1, 0)
+            XCTAssertEqual(x2, 10)  // control2 at end
+            XCTAssertEqual(y2, 20)
+            XCTAssertEqual(x, 10)   // endpoint
+            XCTAssertEqual(y, 20)
+        } else {
+            XCTFail("Expected cubic segment")
+        }
+    }
 }
 
 private extension DOM.SVG {
