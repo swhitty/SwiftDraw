@@ -69,7 +69,7 @@ public extension CommandLine {
         case .jpeg, .pdf, .png:
             #if canImport(CoreGraphics)
             let options = makeSVGOptions(for: config)
-            guard let image = SVG(fileURL: config.input, options: options) else {
+            guard let image = SVG(fileURL: config.input, options: options, defaultViewport: config.size.cgValue) else {
                 throw Error.invalid
             }
             return try processImage(image, with: config)
