@@ -37,6 +37,7 @@ extension LayerTree {
         var transform: [Transform] = []
         var clip: [ClipShape] = []
         var clipRule: FillRule?
+        var clipUnits: ClipUnits = .userSpaceOnUse
         var mask: Layer?
         var filters: [Filter] = []
 
@@ -79,6 +80,7 @@ extension LayerTree {
             opacity.hash(into: &hasher)
             transform.hash(into: &hasher)
             clip.hash(into: &hasher)
+            clipUnits.hash(into: &hasher)
             mask.hash(into: &hasher)
             filters.hash(into: &hasher)
         }
@@ -90,6 +92,7 @@ extension LayerTree {
             lhs.transform == rhs.transform &&
             lhs.clip == rhs.clip &&
             lhs.clipRule == rhs.clipRule &&
+            lhs.clipUnits == rhs.clipUnits &&
             lhs.mask == rhs.mask &&
             lhs.filters == rhs.filters
         }
