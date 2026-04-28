@@ -77,7 +77,13 @@ package extension DOM {
     
     struct ClipPath: ContainerElement {
         package var id: String
+        package var clipPathUnits: Units?
         package var childElements = [GraphicsElement]()
+
+        package enum Units: String {
+            case userSpaceOnUse
+            case objectBoundingBox
+        }
     }
     
     final class Mask: GraphicsElement, ContainerElement {

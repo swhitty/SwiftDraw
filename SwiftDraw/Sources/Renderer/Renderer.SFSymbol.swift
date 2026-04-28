@@ -198,10 +198,6 @@ extension SFSymbolRenderer {
 
         let isSFSymbolLayer = containsAcceptedName(layer.class)
         guard isSFSymbolLayer || layer.opacity > 0 else { return [] }
-        guard layer.clip.isEmpty else {
-            print("Warning:", "clip-path unsupported in SF Symbols.", to: &.standardError)
-            return []
-        }
         guard layer.mask == nil else {
             print("Warning:", "mask unsupported in SF Symbols.", to: &.standardError)
             return []
@@ -237,7 +233,39 @@ extension SFSymbolRenderer {
             }
         }
 
+        if !layer.clip.isEmpty {
+            paths = applyClip(to: paths,
+                              clipShapes: layer.clip,
+                              clipRule: layer.clipRule,
+                              clipUnits: layer.clipUnits,
+                              ctm: ctm)
+        }
+
         return paths
+    }
+
+    static func applyClip(to paths: [SymbolPath],
+                          clipShapes: [LayerTree.ClipShape],
+                          clipRule: LayerTree.FillRule?,
+                          clipUnits: LayerTree.ClipUnits,
+                          ctm: LayerTree.Transform.Matrix) -> [SymbolPath] {
+#if canImport(CoreGraphics)
+        var result = [SymbolPath]()
+        result.reserveCapacity(paths.count)
+        for symbolPath in paths {
+            if let clipped = intersect(path: symbolPath.path,
+                                       with: clipShapes,
+                                       clipRule: clipRule,
+                                       clipUnits: clipUnits,
+                                       clipCTM: ctm) {
+                result.append(SymbolPath(class: symbolPath.class, path: clipped))
+            }
+        }
+        return result
+#else
+        print("Warning:", "clip-path requires CoreGraphics.", to: &.standardError)
+        return paths
+#endif
     }
 
     static func makeFillPath(for shape: LayerTree.Shape,

@@ -43,6 +43,11 @@ extension LayerTree {
         var shape: Shape
         var transform: Transform.Matrix
     }
+
+    enum ClipUnits: Hashable {
+        case userSpaceOnUse
+        case objectBoundingBox
+    }
 }
 
 extension LayerTree.Shape {

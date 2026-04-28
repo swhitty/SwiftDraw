@@ -152,9 +152,12 @@ package extension XMLParser {
 
         let att = try parseAttributes(e)
         let id: String = try att.parseString("id")
+        let units: DOM.ClipPath.Units? = try att.parseRaw("clipPathUnits")
 
         let children = try parseGraphicsElements(e.children)
-        return DOM.ClipPath(id: id, childElements: children)
+        var clip = DOM.ClipPath(id: id, childElements: children)
+        clip.clipPathUnits = units
+        return clip
     }
 
     func parseMasks(_ e: XML.Element) throws -> [DOM.Mask] {
