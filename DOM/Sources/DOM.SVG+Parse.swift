@@ -33,15 +33,15 @@ import Foundation
 
 package extension DOM.SVG {
 
-    static func parse(fileURL url: URL, options: XMLParser.Options = .skipInvalidElements) throws -> DOM.SVG {
+    static func parse(fileURL url: URL, options: XMLParser.Options = .skipInvalidElements, defaultViewport: XMLParser.Viewport? = nil) throws -> DOM.SVG {
         let element = try XML.SAXParser.parse(contentsOf: url)
-        let parser = XMLParser(options: options, filename: url.lastPathComponent)
+        let parser = XMLParser(options: options, filename: url.lastPathComponent, defaultViewport: defaultViewport)
         return try parser.parseSVG(element)
     }
 
-    static func parse(data: Data, options: XMLParser.Options = .skipInvalidElements) throws -> DOM.SVG {
+    static func parse(data: Data, options: XMLParser.Options = .skipInvalidElements, defaultViewport: XMLParser.Viewport? = nil) throws -> DOM.SVG {
         let element = try XML.SAXParser.parse(data: data)
-        let parser = XMLParser(options: options)
+        let parser = XMLParser(options: options, defaultViewport: defaultViewport)
         return try parser.parseSVG(element)
     }
 }

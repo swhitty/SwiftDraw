@@ -129,6 +129,16 @@ $ swiftdraw simple.svg --format png --scale 3x
 $ swiftdraw simple.svg --format pdf
 ```
 
+#### Resolving relative dimensions
+
+When the root `<svg>` uses percent values (`width="100%"`) or omits `width`/`height` entirely, SwiftDraw cannot determine the canvas size from the file alone. In those cases provide an explicit canvas size with `--size`, which acts as the viewport that percent values resolve against and as a fallback when both `width`/`height` and `viewBox` are missing:
+
+```bash
+$ swiftdraw responsive.svg --format png --size 800x600
+```
+
+If the SVG already declares a `viewBox`, missing `width`/`height` fall back to its dimensions automatically and `--size` is not required.
+
 ### Installation
 
 You can install the `swiftdraw` command-line tool on macOS using [Homebrew](http://brew.sh/). Assuming you already have Homebrew installed, just type:

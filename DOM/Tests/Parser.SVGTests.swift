@@ -93,6 +93,70 @@ struct ParserSVGTests {
     }
 
     @Test
+    func svgPercentDimensionsResolveAgainstViewport() throws {
+        let node = XML.Element(name: "svg", attributes: ["width": "100%", "height": "50%"])
+        var parser = DOMXMLParser()
+        parser.defaultViewport = .init(width: 800, height: 600)
+
+        let parsed = try parser.parseSVG(node)
+        #expect(parsed.width == 800)
+        #expect(parsed.height == 300)
+    }
+
+    @Test
+    func svgPercentDimensionsWithoutViewportThrows() {
+        let node = XML.Element(name: "svg", attributes: ["width": "100%", "height": "50%"])
+        #expect(throws: XMLParser.Error.self) {
+            try XMLParser().parseSVG(node)
+        }
+    }
+
+    @Test
+    func svgMissingDimensionsFallBackToViewport() throws {
+        let node = XML.Element(name: "svg")
+        var parser = DOMXMLParser()
+        parser.defaultViewport = .init(width: 320, height: 240)
+
+        let parsed = try parser.parseSVG(node)
+        #expect(parsed.width == 320)
+        #expect(parsed.height == 240)
+    }
+
+    @Test
+    func svgMissingDimensionsFallBackToViewBox() throws {
+        let node = XML.Element(name: "svg", attributes: ["viewBox": "0 0 150 75"])
+        let parsed = try DOMXMLParser().parseSVG(node)
+        #expect(parsed.width == 150)
+        #expect(parsed.height == 75)
+    }
+
+    @Test
+    func svgMissingDimensionsAndViewBoxThrowsUnresolvable() {
+        let node = XML.Element(name: "svg")
+        var thrown: (any Error)?
+        do {
+            _ = try XMLParser().parseSVG(node)
+        } catch {
+            thrown = error
+        }
+        guard case XMLParser.Error.unresolvableDimension? = thrown else {
+            Issue.record("expected unresolvableDimension, got \(String(describing: thrown))")
+            return
+        }
+    }
+
+    @Test
+    func svgPercentWidthWithExplicitHeight() throws {
+        let node = XML.Element(name: "svg", attributes: ["width": "50%", "height": "120"])
+        var parser = DOMXMLParser()
+        parser.defaultViewport = .init(width: 400, height: 999)
+
+        let parsed = try parser.parseSVG(node)
+        #expect(parsed.width == 200)
+        #expect(parsed.height == 120)
+    }
+
+    @Test
     func viewBox() throws {
         let parsed = try #require(try XMLParser().parseViewBox(" 10\t20  300.0  5e2"))
         #expect(parsed.x == 10)
