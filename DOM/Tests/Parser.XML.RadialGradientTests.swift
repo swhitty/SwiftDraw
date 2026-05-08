@@ -51,6 +51,23 @@ struct ParserXMLRadialGradientTests {
     }
 
     @Test
+    func parseCoordinatesWithPercentage() throws {
+        let element = XML.Element.makeMockGradient()
+        element.attributes["r"] = "10%"
+        element.attributes["cx"] = "50%"
+        element.attributes["cy"] = "25%"
+        element.attributes["fx"] = "50%"
+        element.attributes["fy"] = "25%"
+
+        let gradient = try XMLParser().parseRadialGradient(element)
+        #expect(abs((gradient.r ?? 0) - 0.1) < 0.0001)
+        #expect(abs((gradient.cx ?? 0) - 0.5) < 0.0001)
+        #expect(abs((gradient.cy ?? 0) - 0.25) < 0.0001)
+        #expect(abs((gradient.fx ?? 0) - 0.5) < 0.0001)
+        #expect(abs((gradient.fy ?? 0) - 0.25) < 0.0001)
+    }
+
+    @Test
     func parseCoordinates() throws {
         let element = XML.Element.makeMockGradient()
         element.attributes["r"] = "0.1"

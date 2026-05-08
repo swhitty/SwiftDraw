@@ -311,6 +311,17 @@ package extension XMLParser {
             let unit = scanUnit() ?? .pixel
             return DOM.Coordinate(double.apply(unit: unit))
         }
+
+        package mutating func scanCoordinateOrPercentage() throws -> DOM.Coordinate {
+            let double = try scanDouble()
+            scanner.currentIndex = currentIndex
+            if scanner.scanString("%") != nil {
+                currentIndex = scanner.currentIndex
+                return DOM.Coordinate(double / 100.0)
+            }
+            let unit = scanUnit() ?? .pixel
+            return DOM.Coordinate(double.apply(unit: unit))
+        }
         
         package mutating func scanPercentageFloat() throws -> Float {
             scanner.currentIndex = currentIndex

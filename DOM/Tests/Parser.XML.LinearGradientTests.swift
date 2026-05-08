@@ -50,6 +50,38 @@ struct ParserXMLLinearGradientTests {
     }
 
     @Test
+    func parseCoordinatesWithPercentage() throws {
+        let element = XML.Element(name: "linearGradient", attributes: [
+            "id": "a",
+            "x1": "3.309%",
+            "y1": "28.41%",
+            "x2": "103.216%",
+            "y2": "64.511%"
+        ])
+        let gradient = try XMLParser().parseLinearGradient(element)
+        #expect(abs((gradient.x1 ?? 0) - 0.03309) < 0.0001)
+        #expect(abs((gradient.y1 ?? 0) - 0.2841) < 0.0001)
+        #expect(abs((gradient.x2 ?? 0) - 1.03216) < 0.0001)
+        #expect(abs((gradient.y2 ?? 0) - 0.64511) < 0.0001)
+    }
+
+    @Test
+    func parseCoordinatesWithoutPercentage() throws {
+        let element = XML.Element(name: "linearGradient", attributes: [
+            "id": "b",
+            "x1": "0",
+            "y1": "0.5",
+            "x2": "1",
+            "y2": "0.5"
+        ])
+        let gradient = try XMLParser().parseLinearGradient(element)
+        #expect(gradient.x1 == 0)
+        #expect(gradient.y1 == 0.5)
+        #expect(gradient.x2 == 1)
+        #expect(gradient.y2 == 0.5)
+    }
+
+    @Test
     func parseFile() throws {
         let dom = try DOM.SVG.parse(fileNamed: "linearGradient.svg", in: .test)
 
