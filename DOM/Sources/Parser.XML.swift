@@ -39,10 +39,25 @@ package struct XMLParser {
         case invalidAttribute(name: String, value: any Sendable)
         case invalidElement(name: String, error: Swift.Error, line: Int?, column: Int?)
         case invalidDocument(error: Swift.Error?, element: String?, line: Int, column: Int)
+        case unresolvableDimension(reason: String)
     }
 
     package var options: Options = []
     package var filename: String?
+
+    /// When set, percent root <svg> width/height attributes resolve against this viewport,
+    /// and SVGs with no width/height/viewBox fall back to it
+    package var defaultViewport: Viewport?
+
+    package struct Viewport: Equatable, Sendable {
+        package var width: DOM.Coordinate
+        package var height: DOM.Coordinate
+
+        package init(width: DOM.Coordinate, height: DOM.Coordinate) {
+            self.width = width
+            self.height = height
+        }
+    }
 
     package struct Options: OptionSet {
         package let rawValue: Int
@@ -54,9 +69,10 @@ package struct XMLParser {
         package static let skipInvalidElements = Options(rawValue: 1 << 1)
     }
 
-    package init(options: Options = [], filename: String? = nil) {
+    package init(options: Options = [], filename: String? = nil, defaultViewport: Viewport? = nil) {
         self.options = options
         self.filename = filename
+        self.defaultViewport = defaultViewport
     }
 }
 
