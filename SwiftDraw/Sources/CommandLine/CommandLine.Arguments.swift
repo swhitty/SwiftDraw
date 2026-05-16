@@ -43,8 +43,10 @@ extension CommandLine {
         case api
         case ultralight
         case ultralightInsets
+        case ultralightStrokeWidth
         case black
         case blackInsets
+        case blackStrokeWidth
         case hideUnsupportedFilters
         case legacy
 
@@ -65,8 +67,12 @@ extension CommandLine {
             switch text {
             case "ultralight-insets":
                 return .ultralightInsets
+            case "ultralight-stroke-width":
+                return .ultralightStrokeWidth
             case "black-insets":
                 return .blackInsets
+            case "black-stroke-width":
+                return .blackStrokeWidth
             case "hide-unsupported-filters":
                 return .hideUnsupportedFilters
             default:

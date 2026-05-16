@@ -58,7 +58,9 @@ public extension CommandLine {
                 insetsUltralight: config.insetsUltralight ?? config.insets,
                 insetsBlack: config.insetsBlack ?? config.insets,
                 precision: config.precision ?? 3,
-                isLegacyInsets: config.isLegacyInsetsEnabled
+                isLegacyInsets: config.isLegacyInsetsEnabled,
+                ultralightStrokeScale: config.ultralightStrokeScale,
+                blackStrokeScale: config.blackStrokeScale
             )
             let svg = try renderer.render(
                 regular: config.input,

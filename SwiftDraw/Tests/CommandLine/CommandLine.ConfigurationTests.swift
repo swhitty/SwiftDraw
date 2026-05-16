@@ -252,6 +252,39 @@ final class CommandLineConfigurationTests: XCTestCase {
         XCTAssertFalse(CommandLine.Insets(bottom: 1).isEmpty)
         XCTAssertFalse(CommandLine.Insets(right: 1).isEmpty)
     }
+
+    func testParseConfigurationUltralightStrokeWidth() throws {
+        let config = try parseConfiguration(
+            "swiftdraw", "file.svg", "--format", "sfsymbol",
+            "--ultralight-stroke-width", "50%"
+        )
+        XCTAssertEqual(config.ultralightStrokeScale?.multiplier, 0.5)
+        XCTAssertNil(config.blackStrokeScale)
+    }
+
+    func testParseConfigurationBlackStrokeWidth() throws {
+        let config = try parseConfiguration(
+            "swiftdraw", "file.svg", "--format", "sfsymbol",
+            "--black-stroke-width", "2"
+        )
+        XCTAssertEqual(config.blackStrokeScale?.multiplier, 2.0)
+        XCTAssertNil(config.ultralightStrokeScale)
+    }
+
+    func testParseConfigurationStrokeWidthInvalid() {
+        XCTAssertThrowsError(
+            try parseConfiguration(
+                "swiftdraw", "file.svg", "--format", "sfsymbol",
+                "--ultralight-stroke-width", "abc"
+            )
+        )
+        XCTAssertThrowsError(
+            try parseConfiguration(
+                "swiftdraw", "file.svg", "--format", "sfsymbol",
+                "--black-stroke-width", "0"
+            )
+        )
+    }
 }
 
 private func parseConfiguration(_ args: String...) throws -> CommandLine.Configuration {

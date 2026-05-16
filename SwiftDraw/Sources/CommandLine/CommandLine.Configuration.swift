@@ -50,6 +50,8 @@ extension CommandLine {
         public var precision: Int?
         public var symbolSize: SFSymbolRenderer.SizeCategory?
         public var isLegacyInsetsEnabled: Bool
+        public var ultralightStrokeScale: SFSymbolRenderer.StrokeWidthScale?
+        public var blackStrokeScale: SFSymbolRenderer.StrokeWidthScale?
     }
 
     public enum Format: String {
@@ -116,8 +118,10 @@ extension CommandLine {
         let api = try parseAPI(from: modifiers[.api])
         let ultralight = try parseFileURL(file: modifiers[.ultralight], within: baseDirectory)
         let ultralightInsets = try parseInsets(from: modifiers[.ultralightInsets])
+        let ultralightStroke = try parseStrokeScale(from: modifiers[.ultralightStrokeWidth])
         let black = try parseFileURL(file: modifiers[.black], within: baseDirectory)
         let blackInsets = try parseInsets(from: modifiers[.blackInsets])
+        let blackStroke = try parseStrokeScale(from: modifiers[.blackStrokeWidth])
         let output = try parseFileURL(file: modifiers[.output], within: baseDirectory)
         let symbolSize = try parseSymbolSize(from: modifiers[.size], format: format)
 
@@ -138,8 +142,21 @@ extension CommandLine {
             options: options,
             precision: precision,
             symbolSize: symbolSize,
-            isLegacyInsetsEnabled: modifiers.keys.contains(.legacy)
+            isLegacyInsetsEnabled: modifiers.keys.contains(.legacy),
+            ultralightStrokeScale: ultralightStroke,
+            blackStrokeScale: blackStroke
         )
+    }
+
+    static func parseStrokeScale(from value: String??) throws -> SFSymbolRenderer.StrokeWidthScale? {
+        guard let value = value,
+              let value = value else {
+            return nil
+        }
+        guard let scale = SFSymbolRenderer.StrokeWidthScale(rawValue: value) else {
+            throw Error.invalid
+        }
+        return scale
     }
 
     static func parseFileURL(file: String, within directory: URL) throws -> URL {

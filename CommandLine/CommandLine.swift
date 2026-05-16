@@ -92,11 +92,17 @@ Available keys for --format swift:
 Available keys for --format sfsymbol:
  --insets             alignment of regular variant: top,left,bottom,right | auto
  --size               size category to generate: small, medium large. (default is small)
- --ultralight         svg file of ultralight variant
- --ultralight-insets  alignment of ultralight variant: top,left,bottom,right | auto
- --black              svg file of black variant
- --black-insets       alignment of black variant: top,left,bottom,right | auto
- --legacy             use the original, less precise alignment logic from earlier swiftdraw versions.
+ --ultralight               svg file of ultralight variant
+ --ultralight-insets        alignment of ultralight variant: top,left,bottom,right | auto
+ --ultralight-stroke-width  auto-generate ultralight variant by scaling regular stroke-width: 0.5 | 50%
+ --black                    svg file of black variant
+ --black-insets             alignment of black variant: top,left,bottom,right | auto
+ --black-stroke-width       auto-generate black variant by scaling regular stroke-width: 2.0 | 200%
+ --legacy                   use the original, less precise alignment logic from earlier swiftdraw versions.
+
+Notes:
+ An explicit --ultralight or --black file always wins over the matching stroke-width flag.
+ Stroke-width scaling has no effect on shapes that lack a stroke (a warning is printed).
 
 
 """)

@@ -41,6 +41,8 @@ public struct SFSymbolRenderer {
     private let insetsBlack: CommandLine.Insets
     private let formatter: CoordinateFormatter
     private let isLegacyInsets: Bool
+    private let ultralightStrokeScale: StrokeWidthScale?
+    private let blackStrokeScale: StrokeWidthScale?
 
     public enum SizeCategory {
         case small
@@ -55,7 +57,9 @@ public struct SFSymbolRenderer {
         insetsUltralight: CommandLine.Insets,
         insetsBlack: CommandLine.Insets,
         precision: Int,
-        isLegacyInsets: Bool
+        isLegacyInsets: Bool,
+        ultralightStrokeScale: StrokeWidthScale? = nil,
+        blackStrokeScale: StrokeWidthScale? = nil
     ) {
         self.size = size
         self.options = options
@@ -67,13 +71,41 @@ public struct SFSymbolRenderer {
             precision: .capped(max: precision)
         )
         self.isLegacyInsets = isLegacyInsets
+        self.ultralightStrokeScale = ultralightStrokeScale
+        self.blackStrokeScale = blackStrokeScale
     }
 
     public func render(regular: URL, ultralight: URL?, black: URL?) throws -> String {
-        let regular = try DOM.SVG.parse(fileURL: regular)
-        let ultralight = try ultralight.map { try DOM.SVG.parse(fileURL: $0) }
-        let black = try black.map { try DOM.SVG.parse(fileURL: $0) }
-        return try render(default: regular, ultralight: ultralight, black: black)
+        let regularDOM = try DOM.SVG.parse(fileURL: regular)
+        let ultralightDOM = try makeVariant(
+            regular: regular,
+            explicit: ultralight,
+            scale: ultralightStrokeScale,
+            variant: .ultralight
+        )
+        let blackDOM = try makeVariant(
+            regular: regular,
+            explicit: black,
+            scale: blackStrokeScale,
+            variant: .black
+        )
+        return try render(default: regularDOM, ultralight: ultralightDOM, black: blackDOM)
+    }
+
+    private func makeVariant(regular: URL, explicit: URL?, scale: StrokeWidthScale?, variant: Variant) throws -> DOM.SVG? {
+        if let explicit {
+            if scale != nil {
+                print("Warning:", "explicit --\(variant.rawValue) overrides --\(variant.rawValue)-stroke-width.", to: &.standardError)
+            }
+            return try DOM.SVG.parse(fileURL: explicit)
+        }
+        guard let scale else { return nil }
+        let dom = try DOM.SVG.parse(fileURL: regular)
+        let count = StrokeWidthScaler.scale(dom, by: scale)
+        if count == 0 {
+            print("Warning:", "--\(variant.rawValue)-stroke-width has no effect: source SVG has no stroke-width values.", to: &.standardError)
+        }
+        return dom
     }
 
     func render(default image: DOM.SVG, ultralight: DOM.SVG?, black: DOM.SVG?) throws -> String {
