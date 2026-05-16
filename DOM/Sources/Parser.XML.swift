@@ -65,6 +65,7 @@ package protocol AttributeValueParser {
     func parseFloats(_ value: String) throws -> [DOM.Float]
     func parsePercentage(_ value: String) throws -> DOM.Float
     func parseCoordinate(_ value: String) throws -> DOM.Coordinate
+    func parseCoordinateOrPercentage(_ value: String) throws -> DOM.Coordinate
     func parseLength(_ value: String) throws -> DOM.Length
     func parseBool(_ value: String) throws -> DOM.Bool
     func parseFill(_ value: String) throws -> DOM.Fill
@@ -106,6 +107,10 @@ package extension AttributeParser {
 
     func parseCoordinate(_ key: String) throws -> DOM.Coordinate {
         return try parse(key) { return try parser.parseCoordinate($0) }
+    }
+
+    func parseCoordinateOrPercentage(_ key: String) throws -> DOM.Coordinate {
+        return try parse(key) { return try parser.parseCoordinateOrPercentage($0) }
     }
 
     func parseLength(_ key: String) throws -> DOM.Length {
@@ -185,6 +190,10 @@ package extension AttributeParser {
 
     func parseCoordinate(_ key: String) throws -> DOM.Coordinate? {
         return try parse(key) { return try parser.parseCoordinate($0) }
+    }
+
+    func parseCoordinateOrPercentage(_ key: String) throws -> DOM.Coordinate? {
+        return try parse(key) { return try parser.parseCoordinateOrPercentage($0) }
     }
 
     func parseLength(_ key: String) throws -> DOM.Length? {

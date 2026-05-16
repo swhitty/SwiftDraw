@@ -112,7 +112,12 @@ extension XMLParser {
       var scanner = XMLParser.Scanner(text: value)
       return try scanner.scanCoordinate()
     }
-    
+
+    func parseCoordinateOrPercentage(_ value: String) throws -> DOM.Coordinate {
+      var scanner = XMLParser.Scanner(text: value)
+      return try scanner.scanCoordinateOrPercentage()
+    }
+
     func parseLength(_ value: String) throws -> DOM.Length {
       var scanner = XMLParser.Scanner(text: value)
       return try scanner.scanLength()
