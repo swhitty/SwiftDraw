@@ -112,8 +112,8 @@ Available keys for --format swift:
  --api                api of generated code:  swiftui | appkit | uikit
 
 Available keys for --format sfsymbol:
- --insets             alignment of regular variant: top,left,bottom,right | auto
- --size               size category to generate: small, medium large. (default is small)
+ --insets                   alignment of regular variant: top,left,bottom,right | auto
+ --size                     size category to generate: small, medium large. (default is small)
  --ultralight               svg file of ultralight variant
  --ultralight-insets        alignment of ultralight variant: top,left,bottom,right | auto
  --ultralight-stroke-width  auto-generate ultralight variant by scaling regular stroke-width: 0.5 | 50%
