@@ -6,10 +6,10 @@ on:
   workflow_dispatch:
 
 jobs:
-  xcode_26_2:
+  xcode_26_6:
     runs-on: macos-26
     env:
-      DEVELOPER_DIR: /Applications/Xcode_26.2.app/Contents/Developer
+      DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -27,10 +27,10 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage_report.lcov
 
-  xcode_26_1:
-    runs-on: macos-15
+  xcode_26_2:
+    runs-on: macos-26
     env:
-      DEVELOPER_DIR: /Applications/Xcode_26.1.1.app/Contents/Developer
+      DEVELOPER_DIR: /Applications/Xcode_26.2.app/Contents/Developer
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -109,6 +109,19 @@ jobs:
       - name: Test
         run: swift test --skip-build
 
+  linux_swift_6_3:
+    runs-on: ubuntu-latest
+    container: swift:6.3
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Version
+        run: swift --version
+      - name: Build
+        run: swift build --build-tests
+      - name: Test
+        run: swift test --skip-build
+
   android:
     runs-on: ubuntu-latest
     timeout-minutes: 8
@@ -118,7 +131,7 @@ jobs:
       - name: Build and Test
         uses: skiptools/swift-android-action@v2
         with:
-          swift-version: 6.2
+          swift-version: 6.3
 
   windows:
     runs-on: windows-latest
