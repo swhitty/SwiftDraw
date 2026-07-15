@@ -55,6 +55,7 @@ struct GalleryView: View {
         "alert.svg",
         "effigy.svg",
         "d10.svg",
+        "mathjax-latex.svg",
         "stylesheet-multiple.svg"
     ]
 

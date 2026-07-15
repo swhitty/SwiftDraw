@@ -60,6 +60,21 @@ struct SVGTests {
     }
 
     @Test
+    func root_em_ex_dimensions_parse_as_raw_values() {
+        let ex = #"<svg xmlns="http://www.w3.org/2000/svg" width="2ex" height="1ex"><rect width="5" height="5"/></svg>"#
+        let em = #"<svg xmlns="http://www.w3.org/2000/svg" width="2em" height="1em"><rect width="5" height="5"/></svg>"#
+        let px = #"<svg xmlns="http://www.w3.org/2000/svg" width="2px" height="1px"><rect width="5" height="5"/></svg>"#
+
+        let exSVG = SVG(data: Data(ex.utf8))
+        let emSVG = SVG(data: Data(em.utf8))
+        let pxSVG = SVG(data: Data(px.utf8))
+
+        #expect(exSVG?.size == CGSize(width: 2, height: 1))
+        #expect(emSVG?.size == CGSize(width: 2, height: 1))
+        #expect(pxSVG?.size == CGSize(width: 2, height: 1))
+    }
+
+    @Test
     func imageRasterizes() {
         let image = SVG.makeLines()
         let rendered = image.rasterize(scale: 1)

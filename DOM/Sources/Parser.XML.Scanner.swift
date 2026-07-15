@@ -35,7 +35,7 @@ package extension XMLParser {
 
     struct Scanner {
         
-        private let scanner: Foundation.Scanner
+        package let scanner: Foundation.Scanner
         package var currentIndex: String.Index
 
         package init(text: String) {
@@ -256,7 +256,7 @@ package extension XMLParser {
         
         package mutating func scanDouble() throws -> Double {
             scanner.currentIndex = currentIndex
-            guard let val = scanner.scanDouble() else {
+            guard let val = scanner.scanDoubleCompatibly() else {
                 throw Error.invalid
             }
             currentIndex = scanner.currentIndex
@@ -285,6 +285,10 @@ package extension XMLParser {
                 return .point
             } else if scanUnit(.pica) {
                 return .pica
+            } else if scanUnit(.em) {
+                return .em
+            } else if scanUnit(.ex) {
+                return .ex
             } else {
                 return nil
             }
@@ -404,9 +408,42 @@ package extension Scanner {
         _ = scanCharacter()
         return scalar
     }
+
+    func scanDoubleCompatibly() -> Double? {
+        #if canImport(Darwin)
+        return scanDouble()
+        #else
+        let start = currentIndex
+        if let value = scanDouble() {
+            return value
+        }
+
+        currentIndex = start
+        let numeric = Foundation.CharacterSet(charactersIn: "+-0123456789.Ee")
+        guard let scannedNumber = scanCharacters(from: numeric), !scannedNumber.isEmpty else {
+            currentIndex = start
+            return nil
+        }
+
+        var numericEnd = currentIndex
+        var numericPrefix = scannedNumber
+        while Double(numericPrefix) == nil, !numericPrefix.isEmpty {
+            numericEnd = string.index(before: numericEnd)
+            numericPrefix.removeLast()
+        }
+
+        guard let value = Double(numericPrefix), !numericPrefix.isEmpty else {
+            currentIndex = start
+            return nil
+        }
+
+        currentIndex = numericEnd
+        return value
+        #endif
+    }
     
     func scanCoordinate() throws -> DOM.Coordinate {
-        guard let val = scanDouble() else { throw XMLParser.Error.invalid }
+        guard let val = scanDoubleCompatibly() else { throw XMLParser.Error.invalid }
         return DOM.Coordinate(val)
     }
 

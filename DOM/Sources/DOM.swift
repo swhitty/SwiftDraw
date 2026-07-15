@@ -121,6 +121,8 @@ extension DOM {
         case millimeter
         case point
         case pica
+        case em
+        case ex
     }
 
     package enum Error: Swift.Error {
@@ -143,6 +145,10 @@ package extension DOM.Unit {
             return "pt"
         case .pica:
             return "pc"
+        case .em:
+            return "em"
+        case .ex:
+            return "ex"
         }
     }
 }
@@ -162,6 +168,8 @@ package extension Double {
             return self * 1.3333
         case .pica:
             return self * 16
+        case .em, .ex:
+            return self
         }
     }
 }

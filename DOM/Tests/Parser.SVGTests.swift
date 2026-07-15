@@ -69,6 +69,29 @@ struct ParserSVGTests {
     }
 
     @Test
+    func root_em_ex_dimensions_fall_back_to_raw_values() throws {
+        let em = XML.Element(name: "svg", attributes: ["width": "2em", "height": "1em"])
+        let ex = XML.Element(name: "svg", attributes: ["width": "2ex", "height": "1ex"])
+        let parser = DOMXMLParser()
+
+        let parsedEm = try parser.parseSVG(em)
+        #expect(parsedEm.width == 2)
+        #expect(parsedEm.height == 1)
+
+        let parsedEx = try parser.parseSVG(ex)
+        #expect(parsedEx.width == 2)
+        #expect(parsedEx.height == 1)
+    }
+
+    @Test
+    func unknown_root_units_still_throw() {
+        let node = XML.Element(name: "svg", attributes: ["width": "2abc", "height": "1abc"])
+        #expect(throws: XMLParser.Error.self) {
+            try XMLParser().parseSVG(node)
+        }
+    }
+
+    @Test
     func parseSVGInvalidNode() {
         let node = XML.Element(name: "svg2", attributes: ["width": "100", "height": "200"])
         #expect(throws: (any Error).self) {
