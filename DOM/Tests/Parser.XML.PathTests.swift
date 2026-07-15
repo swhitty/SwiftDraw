@@ -63,6 +63,17 @@ struct ParserXMLPathTests {
     }
 
     @Test
+    func scanCoordinate_FontUnitsFallBackToRawValues() throws {
+        let emScanner = XMLParser.PathScanner(string: "2em")
+        let exScanner = XMLParser.PathScanner(string: "3ex")
+
+        #expect(try emScanner.scanCoordinate() == 2.0)
+        #expect(emScanner.isAtEnd == false)
+        #expect(try exScanner.scanCoordinate() == 3.0)
+        #expect(exScanner.isAtEnd == false)
+    }
+
+    @Test
     func equality() {
         #expect(Segment.move(x: 10, y: 20, space: .relative) == move(10, 20, .relative))
 

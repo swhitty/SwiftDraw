@@ -88,15 +88,26 @@ package extension XMLParser {
     func resolveRootDimension(_ raw: String?, viewport: DOM.Coordinate?, attribute: String) throws -> DOM.Coordinate? {
         guard let raw, !raw.isEmpty else { return nil }
         var scanner = XMLParser.Scanner(text: raw)
-        let value = try scanner.scanCoordinate()
+        scanner.scanner.currentIndex = scanner.currentIndex
+        guard let number = scanner.scanner.scanDoubleCompatibly() else {
+            throw Error.invalidAttribute(name: attribute, value: raw)
+        }
+        scanner.currentIndex = scanner.scanner.currentIndex
+
         if scanner.scanStringIfPossible("%") {
             guard let viewport else { return nil }
-            return value / 100 * viewport
+            return DOM.Coordinate(number / 100) * viewport
+        }
+        if let unit = scanner.scanUnit() {
+            guard scanner.isEOF else {
+                throw Error.invalidAttribute(name: attribute, value: raw)
+            }
+            return DOM.Coordinate(number.apply(unit: unit))
         }
         guard scanner.isEOF else {
             throw Error.invalidAttribute(name: attribute, value: raw)
         }
-        return value
+        return DOM.Coordinate(number)
     }
 
     func makeUnresolvedReason(attribute: String, raw: String?, hasViewBox: Bool) -> String {

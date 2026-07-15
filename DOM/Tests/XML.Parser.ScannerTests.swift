@@ -134,7 +134,36 @@ struct ScannerTests {
         #expect(scanDouble("124") == 124)
         #expect(scanDouble(" 045") == 45)
         #expect(scanDouble("-29") == -29)
+        #expect(scanDouble("2em") == 2)
+        #expect(scanDouble(".5em") == 0.5)
         #expect(scanDouble("ab24") == nil)
+    }
+
+    @Test
+    func foundationScanDouble_WithTrailingEmEx_IsPlatformDependent() {
+        let emScanner = Foundation.Scanner(string: "2em")
+        emScanner.charactersToBeSkipped = Foundation.CharacterSet.whitespacesAndNewlines
+
+        let exScanner = Foundation.Scanner(string: "2ex")
+        exScanner.charactersToBeSkipped = Foundation.CharacterSet.whitespacesAndNewlines
+
+        #if canImport(Darwin)
+        #expect(emScanner.scanDouble() == 2)
+        #expect(exScanner.scanDouble() == 2)
+        #else
+        #expect(emScanner.scanDouble() == nil)
+        #expect(exScanner.scanDouble() == nil)
+        #endif
+    }
+
+    @Test
+    func scanDoubleCompatibly_FallsBackForTrailingFontUnits() {
+        #expect(scanDoubleCompatibly("2em") == 2)
+        #expect(scanDoubleCompatibly("2ex") == 2)
+        #expect(scanDoubleCompatibly("2e") == 2)
+        #expect(scanDoubleCompatibly("2e+") == 2)
+        #expect(scanDoubleCompatibly(".5em") == 0.5)
+        #expect(scanDoubleCompatibly("ab24") == nil)
     }
 
     @Test
@@ -218,6 +247,13 @@ struct ScannerTests {
     }
 
     @Test
+    func scanCoordinate_FontUnitsFallBackToRawValues() {
+        #expect(parseCoordinate("2em") == 2)
+        #expect(parseCoordinate("2ex") == 2)
+        #expect(parseCoordinate(".5em") == 0.5)
+    }
+
+    @Test
     func scanUpToPreservesStrings() throws {
         var scanner = XMLParser.Scanner(text: #"foo: bar; baz: "bing;bob" zab;"#)
 
@@ -287,6 +323,17 @@ private func scanFloat(_ text: String) -> Float? {
 private func scanDouble(_ text: String) -> Double? {
     var scanner = XMLParser.Scanner(text: text)
     return try? scanner.scanDouble()
+}
+
+private func scanDoubleCompatibly(_ text: String) -> Double? {
+    let scanner = Foundation.Scanner(string: text)
+    scanner.charactersToBeSkipped = Foundation.CharacterSet.whitespacesAndNewlines
+    return scanner.scanDoubleCompatibly()
+}
+
+private func parseCoordinate(_ text: String) -> DOM.Coordinate? {
+    var scanner = XMLParser.Scanner(text: text)
+    return try? scanner.scanCoordinate()
 }
 
 private func scanLength(_ text: String) -> DOM.Length? {
