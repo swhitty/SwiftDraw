@@ -4,7 +4,8 @@
 [![Swift 6.0](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fswhitty%2FSwiftDraw%2Fbadge%3Ftype%3Dswift-versions)](https://swiftpackageindex.com/swhitty/SwiftDraw)
 
 # Introduction
-**SwiftDraw** is Swift library for parsing and drawing SVG images and includes a command line tool to convert SVGs into SFSymbol, PNG, PDF and Swift source code.
+
+**SwiftDraw** displays SVG images natively in SwiftUI, UIKit and AppKit. It includes a pure-Swift SVG parser and renderer, plus a command-line tool for converting SVGs to PNG, PDF, custom SF Symbols and Swift source code.
 
 - [Usage](#usage)
   - [SwiftUI](#swiftui)
