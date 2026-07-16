@@ -9,6 +9,7 @@
 
 - [Usage](#usage)
   - [SwiftUI](#swiftui)
+  - [Loading and Transforming SVGs](#loading-and-transforming-svgs)
   - [UIKit](#uikit)
   - [AppKit](#appkit)
 - [Command Line Tool](#command-line-tool)
@@ -20,28 +21,13 @@
 
 ## Usage
 
-Vector images can be easily loaded and rasterized to `UIImage` or `NSImage`:
-
-```swift
-let svg = SVG(named: "sample.svg", in: .main)!
-imageView.image = svg.rasterize()
-```
-
-Transformations can be added before rasterizing: 
-
-```swift
-let svg = SVG(named: "fish.svg")!   // 100x100 
-    .expanded(left: 10, right: 10)  // 120x100
-    .scaled(2)                      // 240x200
-
-imageView.image = svg.rasterize()   // 240x200
-```
-
 ### SwiftUI
 
 `SVGView` works much like SwiftUI’s built-in `Image` view:
 
 ```swift
+import SwiftDraw
+
 SVGView("sample.svg")
 ```
 
@@ -68,6 +54,25 @@ var image: SVG
 var body: some View {
     SVGView(svg: image)
 }
+```
+
+### Loading and Transforming SVGs
+
+SVG images can be loaded and rasterized to `UIImage` or `NSImage`:
+
+```swift
+let svg = SVG(named: "sample.svg", in: .main)!
+imageView.image = svg.rasterize()
+```
+
+Transformations can be added before rasterizing:
+
+```swift
+let svg = SVG(named: "fish.svg")!   // 100x100
+    .expanded(left: 10, right: 10)  // 120x100
+    .scaled(2)                      // 240x200
+
+imageView.image = svg.rasterize()   // 240x200
 ```
 
 ### UIKit
