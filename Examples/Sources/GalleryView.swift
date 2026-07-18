@@ -35,6 +35,7 @@ import SwiftUI
 struct GalleryView: View {
 
     var images = [
+        "spider.svg",
         "thats-no-moon.svg",
         "heliocentric.svg",
         "every-grain.svg",
@@ -48,7 +49,6 @@ struct GalleryView: View {
         "sleepy.svg",
         "smile.svg",
         "snake.svg",
-        "spider.svg",
         "star-struck.svg",
         "worried.svg",
         "yawning.svg",
@@ -62,6 +62,11 @@ struct GalleryView: View {
     var body: some View {
         ScrollView {
             LazyVStack(spacing: 20) {
+                SVGView("spider.svg", bundle: .samples)
+                    .renderingMode(.template)
+                    .resizable()
+                    .scaledToFit()
+
                 ForEach(images, id: \.self) { image in
                     SVGView(image, bundle: .samples)
                         .resizable()
@@ -70,6 +75,13 @@ struct GalleryView: View {
                 }
             }
             .background(Color.white)
+            .foregroundStyle(
+                LinearGradient(
+                    colors: [.blue, .purple],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+            )
         }
     }
 }
