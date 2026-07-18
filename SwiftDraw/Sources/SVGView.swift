@@ -44,14 +44,15 @@ public struct SVGView: View {
 
     private let svg: SVG?
     private var resizable: (capInsets: EdgeInsets, mode: ResizingMode)?
+    private var renderingMode: TemplateRenderingMode = .original
 
     public var body: some View {
         if let svg {
             if let resizable {
-                SVGView.makeCanvas(svg: svg, capInsets: resizable.capInsets, resizingMode: resizable.mode)
+                SVGView.makeCanvas(svg: svg, capInsets: resizable.capInsets, resizingMode: resizable.mode, renderingMode: renderingMode)
                     .frame(idealWidth: svg.size.width, idealHeight: svg.size.height)
             } else {
-                SVGView.makeCanvas(svg: svg, resizingMode: .stretch)
+                SVGView.makeCanvas(svg: svg, resizingMode: .stretch, renderingMode: renderingMode)
                     .frame(width: svg.size.width, height: svg.size.height)
             }
         }
@@ -65,6 +66,14 @@ public struct SVGView: View {
         /// A mode to enlarge or reduce the size of an image so that it
         /// fills the available space.
         case stretch
+    }
+
+    public enum TemplateRenderingMode: Sendable, Hashable {
+        /// A mode that renders all non-transparent pixels as the foreground style.
+        case template
+
+        /// A mode that renders pixels of svg as-is.
+        case original
     }
 
     /// Sets the mode by which SwiftUI resizes an SVG to fit its space.
@@ -82,8 +91,22 @@ public struct SVGView: View {
         return copy
     }
 
+    /// Sets the mode by which SwiftUI renders the SVG.
+    /// - `.original` renders the SVG as-is
+    /// - `.template` renders all non-transparent pixels as the foreground style.
+    public func renderingMode(_ renderingMode: TemplateRenderingMode) -> Self {
+        var copy = self
+        copy.renderingMode = renderingMode
+        return copy
+    }
+
     @ViewBuilder
-    private static func makeCanvas(svg: SVG, capInsets: EdgeInsets = .init(), resizingMode: ResizingMode) -> some View {
+    private static func makeCanvas(
+        svg: SVG,
+        capInsets: EdgeInsets = .init(),
+        resizingMode: ResizingMode,
+        renderingMode: TemplateRenderingMode
+    ) -> some View {
         if #available(iOS 15.0, macOS 12.0, tvOS 15.0, watchOS 8.0, *) {
             Canvas(
                 opaque: false,
@@ -94,17 +117,31 @@ public struct SVGView: View {
                     svg,
                     in: CGRect(origin: .zero, size: size),
                     capInsets: capInsets,
-                    byTiling: resizingMode == .tile
+                    byTiling: resizingMode == .tile,
+                    renderingMode: renderingMode
                 )
             }
         } else {
-            #if !os(watchOS)
-            CanvasFallbackView(
-                svg: svg,
-                capInsets: capInsets,
-                resizingMode: resizingMode
-            )
-            #endif
+        #if !os(watchOS)
+            switch renderingMode {
+            case .original:
+                CanvasFallbackView(
+                    svg: svg,
+                    capInsets: capInsets,
+                    resizingMode: resizingMode
+                )
+            case .template:
+                Rectangle()
+                    .fill(ForegroundStyle())
+                    .mask(
+                        CanvasFallbackView(
+                            svg: svg,
+                            capInsets: capInsets,
+                            resizingMode: resizingMode
+                        )
+                    )
+            }
+        #endif
         }
     }
 }
@@ -128,6 +165,53 @@ public extension GraphicsContext {
             )
         }
     }
+
+    mutating func draw(
+        _ svg: SVG,
+        in rect: CGRect,
+        capInsets: EdgeInsets,
+        byTiling: Bool = false,
+        renderingMode: SVGView.TemplateRenderingMode
+    )  {
+        switch renderingMode {
+        case .original:
+            draw(svg, in: rect, capInsets: capInsets, byTiling: byTiling)
+        case .template:
+            if Self.requiresClipToLayerWorkaround(svg, in: rect, byTiling: byTiling) {
+                clipToLayer { mask in
+                    mask.scaleBy(x: rect.size.width / svg.size.width, y: rect.size.height / svg.size.height)
+                    mask.draw(svg, in: CGRect(origin: .zero, size: svg.size), capInsets: capInsets, byTiling: false)
+                }
+            } else {
+                clipToLayer { mask in
+                    mask.draw(svg, in: rect, capInsets: capInsets, byTiling: byTiling)
+                }
+            }
+            fill(Path(rect), with: .foreground)
+        }
+    }
+
+    private static func requiresClipToLayerWorkaround(
+        _ svg: SVG,
+        in rect: CGRect,
+        byTiling: Bool
+    ) -> Bool {
+        if #available(
+            iOS 27.0,
+            macOS 27.0,
+            tvOS 27.0,
+            watchOS 27.0,
+            visionOS 27.0,
+            *
+        ) {
+            return false
+        } else {
+            // clipToLayer has a bug on OS 26 and earlier with non uniform scale
+            let scaleX = rect.size.width / svg.size.width
+            let scaleY = rect.size.height / svg.size.height
+            return byTiling == false && scaleX != scaleY
+        }
+    }
 }
 
 #if DEBUG
@@ -136,8 +220,10 @@ public extension GraphicsContext {
 #Preview {
     SVGView(svg: .circle)
 
-    SVGView(svg: .circle)
+    SVGView(svg: .circleStroke)
         .resizable(resizingMode: .stretch)
+        .renderingMode(.template)
+        .foregroundStyle(Color.pink)
 
     SVGView(svg: .circle)
         .resizable(resizingMode: .tile)
@@ -149,6 +235,14 @@ private extension SVG {
         SVG(xml: """
         <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="100" height="100">
           <circle cx="50" cy="50" r="50" fill="orange" />
+        </svg>
+        """)!
+    }
+
+    static var circleStroke: SVG {
+        SVG(xml: """
+        <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="100" height="100">
+          <circle cx="50" cy="50" r="45" stroke-width="4" stroke="black" fill="none" />
         </svg>
         """)!
     }
