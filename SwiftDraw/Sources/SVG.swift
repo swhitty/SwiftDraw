@@ -85,11 +85,11 @@ public struct SVG: Hashable, Sendable {
     }
 
     public init?(data: Data, options: SVG.Options = .default) {
-        guard let svg = try? DOM.SVG.parse(data: data) else { return nil }
-        self.init(dom: svg, options: options)
+        guard let svg = try? SVG(parsing: data, options: options) else { return nil }
+        self = svg
     }
 
-    public struct Options: OptionSet {
+    public struct Options: OptionSet, Sendable {
         public let rawValue: Int
         public init(rawValue: Int) {
             self.rawValue = rawValue
@@ -153,6 +153,11 @@ public extension SVG {
 }
 
 extension SVG {
+
+    init(parsing data: Data, options: Options) throws {
+        let svg = try DOM.SVG.parse(data: data)
+        self.init(dom: svg, options: options)
+    }
 
     init(dom: DOM.SVG, options: Options) {
         self.size = CGSize(width: dom.width, height: dom.height)

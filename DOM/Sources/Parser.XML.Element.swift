@@ -118,6 +118,8 @@ extension XMLParser {
             .map { ($0, parent: nil) }
 
         while let (element, parent) = stack.popLast() {
+            try Task.checkCancellation()
+
             guard let ge = try parseGraphicsElement(element) else {
                 continue
             }

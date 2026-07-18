@@ -56,6 +56,29 @@ var body: some View {
 }
 ```
 
+Remote SVGs can be loaded using `AsyncSVGView`:
+
+```swift
+AsyncSVGView(url: URL(string: "https://example.com/image.svg"))
+    .resizable()
+    .scaledToFit()
+```
+
+For custom loading and error states, use the phase-based initializer:
+
+```swift
+AsyncSVGView(url: url) { phase in
+    switch phase {
+    case .empty:
+        ProgressView()
+    case .success(let svg):
+        SVGView(svg: svg)
+    case .failure:
+        Image(systemName: "exclamationmark.triangle")
+    }
+}
+```
+
 ### Loading and Transforming SVGs
 
 SVG images can be loaded and rasterized to `UIImage` or `NSImage`:
