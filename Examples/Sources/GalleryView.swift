@@ -35,7 +35,6 @@ import SwiftUI
 struct GalleryView: View {
 
     var images = [
-        "spider.svg",
         "thats-no-moon.svg",
         "heliocentric.svg",
         "every-grain.svg",
@@ -64,6 +63,10 @@ struct GalleryView: View {
             LazyVStack(spacing: 20) {
                 SVGView("spider.svg", bundle: .samples)
                     .renderingMode(.template)
+                    .resizable()
+                    .scaledToFit()
+
+                AsyncSVGView(url: URL(string: "https://raw.githubusercontent.com/swhitty/SwiftDraw/refs/heads/main/Samples.bundle/spider.svg"))
                     .resizable()
                     .scaledToFit()
 

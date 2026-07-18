@@ -287,4 +287,25 @@ struct ParserSVGTests {
             </svg>
             """#)
     }
+
+    @Test
+    func parsingGraphicsElementsChecksCancellation() async {
+        let task = Task {
+            withUnsafeCurrentTask { task in
+                task?.cancel()
+            }
+
+            _ = try DOM.SVG.parse(xml: #"""
+                <svg width="64" height="64">
+                    <g>
+                        <circle cx="32" cy="32" r="16" />
+                    </g>
+                </svg>
+                """#)
+        }
+
+        await #expect(throws: CancellationError.self) {
+            try await task.value
+        }
+    }
 }
