@@ -45,6 +45,24 @@ SVGView("sample.svg")
 - `.scaledToFill()` to fill the entire container, cropping if necessary.  
 - `.resizable(resizingMode: .tile)` to repeat the SVG as tiles across the available space.
 
+SVGs can also be rendered as templates, replacing every non-transparent pixel with the current foreground style:
+
+```swift
+SVGView("spider.svg")
+    .renderingMode(.template)
+    .foregroundStyle(
+        LinearGradient(
+            colors: [.blue, .purple],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+    )
+```
+
+| `.original` | `.template` |
+|:-----------:|:-----------:|
+| <img src="Documentation/spider-original.webp" width="200" alt="Spider SVG rendered using original mode" /> | <img src="Documentation/spider-template.webp" width="200" alt="Spider SVG rendered with a blue-to-purple gradient using template mode" /> |
+
 When loading by name, `SVGView` maintains an internal cache for efficient repeated lookups.  
 For more predictable performance (avoiding cache lookups or parsing), you can pass in an already-constructed `SVG` instance:
 
