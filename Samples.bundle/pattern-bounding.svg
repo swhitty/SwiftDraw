@@ -3,10 +3,9 @@
 
 	 <defs>
 	 	<pattern id="checkerboard" width="64" height="64" patternUnits="userSpaceOnUse">
-			<rect x="0" y="0" width="32" height="32" fill="#404040" />
-			<rect x="32" y="0" width="32" height="32" fill="#292929" />
-			<rect x="0" y="32" width="32" height="32" fill="#292929" />
-			<rect x="32" y="32" width="32" height="32" fill="#404040" />
+            <rect x="0" y="0" width="64" height="64" fill="#404040" />
+            <rect x="32" y="0" width="32" height="32" fill="#292929" />
+            <rect x="0" y="32" width="32" height="32" fill="#292929" />
 		</pattern>
 
 	 	<pattern id="pattern1" width="0.3333" height="0.3333" patternUnits="objectBoundingBox" patternContentUnits="objectBoundingBox">

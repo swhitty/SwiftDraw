@@ -12,10 +12,9 @@
 	  <polygon id="star" points="100,10 40,198 190,78, 10,78, 160,198" fill-rule="nonzero" />
 	  <image id="dot" width="6" height="6" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg==" />
 	  <pattern id="checkerboard" width="64" height="64" patternUnits="userSpaceOnUse">
-		<rect x="0" y="0" width="32" height="32" fill="green" />
-		<rect x="32" y="0" width="32" height="32" fill="red" />
-		<rect x="0" y="32" width="32" height="32" fill="blue" />
-		<rect x="32" y="32" width="32" height="32" fill="pink" />
+          <rect x="0" y="0" width="64" height="64" fill="#404040" />
+          <rect x="32" y="0" width="32" height="32" fill="#292929" />
+          <rect x="0" y="32" width="32" height="32" fill="#292929" />
 	  </pattern>
 	</defs>
 	

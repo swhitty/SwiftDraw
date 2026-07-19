@@ -3,7 +3,7 @@
 
 	 <defs>
 	 	<pattern id="checkerboard" width="64" height="64" patternUnits="userSpaceOnUse">
-			<rect x="0" y="0" width="32" height="32" fill="green" />
+			<rect x="0" y="0" width="64" height="64" fill="green" />
 			<rect x="32" y="0" width="32" height="32" fill="red" />
 			<rect x="0" y="32" width="32" height="32" fill="blue" />
 			<rect x="32" y="32" width="32" height="32" fill="pink" />
