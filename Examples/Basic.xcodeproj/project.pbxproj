@@ -10,6 +10,7 @@
 		D9618466220FDD1100C59D9B /* ExampleApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9618465220FDD1100C59D9B /* ExampleApp.swift */; };
 		D961846D220FDD1200C59D9B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D961846C220FDD1200C59D9B /* Assets.xcassets */; };
 		D9742E1E27D4877300E02FFD /* SwiftDraw in Frameworks */ = {isa = PBXBuildFile; productRef = D9742E1D27D4877300E02FFD /* SwiftDraw */; };
+		D9837FBC301381910013BAC7 /* snake.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9837FBB301381910013BAC7 /* snake.swift */; };
 		D9AC57BF2D65E86A005ACBFF /* GalleryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9AC57BE2D65E86A005ACBFF /* GalleryView.swift */; };
 		D9EE86AF2A4EC94E00C7CAE1 /* Samples.bundle in Resources */ = {isa = PBXBuildFile; fileRef = D94D5BE22A4EC906001DCD83 /* Samples.bundle */; };
 /* End PBXBuildFile section */
@@ -34,6 +35,7 @@
 		D961846C220FDD1200C59D9B /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		D9618471220FDD1200C59D9B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		D9742E1C27D4875100E02FFD /* SwiftDraw */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = SwiftDraw; path = ..; sourceTree = "<group>"; };
+		D9837FBB301381910013BAC7 /* snake.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = snake.swift; sourceTree = "<group>"; };
 		D9AC57BE2D65E86A005ACBFF /* GalleryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GalleryView.swift; sourceTree = "<group>"; };
 		D9ACD7A0220FDE04009717CF /* SwiftDraw.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = SwiftDraw.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -74,6 +76,7 @@
 			isa = PBXGroup;
 			children = (
 				D9AC57BE2D65E86A005ACBFF /* GalleryView.swift */,
+				D9837FBB301381910013BAC7 /* snake.swift */,
 				D9618465220FDD1100C59D9B /* ExampleApp.swift */,
 				D961846C220FDD1200C59D9B /* Assets.xcassets */,
 				D9618471220FDD1200C59D9B /* Info.plist */,
@@ -163,6 +166,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D9837FBC301381910013BAC7 /* snake.swift in Sources */,
 				D9618466220FDD1100C59D9B /* ExampleApp.swift in Sources */,
 				D9AC57BF2D65E86A005ACBFF /* GalleryView.swift in Sources */,
 			);

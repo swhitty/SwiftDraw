@@ -62,6 +62,10 @@ struct GalleryView: View {
     var body: some View {
         ScrollView {
             LazyVStack(spacing: 20) {
+                SnakeView()
+                    .resizable()
+                    .scaledToFit()
+
                 SVGView("spider.svg", bundle: .samples)
                     .renderingMode(.template)
                     .resizable()
