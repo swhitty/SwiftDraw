@@ -52,6 +52,7 @@ extension CommandLine {
         public var isLegacyInsetsEnabled: Bool
         public var ultralightStrokeScale: SFSymbolRenderer.StrokeWidthScale?
         public var blackStrokeScale: SFSymbolRenderer.StrokeWidthScale?
+        public var logLevel: Log.Level = .info
     }
 
     public enum Format: String {
@@ -144,7 +145,8 @@ extension CommandLine {
             symbolSize: symbolSize,
             isLegacyInsetsEnabled: modifiers.keys.contains(.legacy),
             ultralightStrokeScale: ultralightStroke,
-            blackStrokeScale: blackStroke
+            blackStrokeScale: blackStroke,
+            logLevel: modifiers.keys.contains(.quiet) ? .error : .info
         )
     }
 

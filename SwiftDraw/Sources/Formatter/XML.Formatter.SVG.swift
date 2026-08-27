@@ -172,9 +172,9 @@ extension XML.Formatter {
                 do {
                     elements.append(try makeElement(from: graphic))
                 } catch Error.unsupportedGraphicsElement {
-                    print("Warning:", elementName, "has no encoder, ignoring element.", to: &.standardError)
+                    LogSink.warning("\(elementName) has no encoder, ignoring element.")
                 } catch {
-                    print("[encoding error]", elementName, "error:", error, to: &.standardError)
+                    LogSink.error("[encoding error] \(elementName) error: \(error)")
                     throw error
                 }
             }

@@ -83,6 +83,14 @@ final class CommandLineConfigurationTests: XCTestCase {
         XCTAssertEqual(config.format, .png)
     }
 
+    func testParseConfigurationLogLevel() throws {
+        let config = try parseConfiguration("swiftdraw", "file.svg", "--format", "pdf")
+        XCTAssertEqual(config.logLevel, .info)
+
+        let quiet = try parseConfiguration("swiftdraw", "file.svg", "--format", "pdf", "--quiet")
+        XCTAssertEqual(quiet.logLevel, .error)
+    }
+
     func testParseConfigurationThrows() {
         XCTAssertThrowsError(try parseConfiguration())
         XCTAssertThrowsError(try parseConfiguration("swiftdraw", "file.svg"))

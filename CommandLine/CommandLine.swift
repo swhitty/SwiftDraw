@@ -31,7 +31,6 @@
 
 import Foundation
 import SwiftDraw
-import SwiftDrawDOM
 
 extension SwiftDraw.CommandLine {
     
@@ -39,36 +38,38 @@ extension SwiftDraw.CommandLine {
                     baseDirectory: URL = .currentDirectory) -> ExitCode {
         
         guard let config = try? parseConfiguration(from: args, baseDirectory: baseDirectory) else {
-            print("Invalid Syntax.", to: &.standardError)
+            Log.error("Invalid Syntax.")
             printHelp()
             return .error
         }
+
+        Log.handler = Log.standardStreams(minimumLevel: config.logLevel)
 
         let data: Data
         do {
             data = try processImage(with: config)
         } catch Error.fileNotFound {
-            print("Failure: File does not exist.", to: &.standardError)
+            Log.error("Failure: File does not exist.")
             return .error
         } catch {
-            print("Failure:", error.localizedDescription, to: &.standardError)
+            Log.error("Failure: \(error.localizedDescription)")
             printHelp()
             return .error
         }
 
         do {
             try data.write(to: config.output)
-            print("Created: \(config.output.path)")
+            Log.info("Created: \(config.output.path)")
         } catch _ {
-            print("Failure: \(config.output.path)", to: &.standardError)
+            Log.error("Failure: \(config.output.path)")
         }
-        
+
         return .ok
     }
-    
+
     static func printHelp() {
-        print("")
-        print("""
+        Log.info("""
+
 swiftdraw, version 0.29.0
 copyright (c) 2026 Simon Whitty
 
@@ -83,6 +84,7 @@ Options:
  --insets      crop inset of output image: top,left,bottom,right
  --precision   maximum number of decimal places
  --output      optional path of output file
+ --quiet       suppress warnings and progress, reporting failures only
 
  --hide-unsupported-filters   hide elements with unsupported filters.
 

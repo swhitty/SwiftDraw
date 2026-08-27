@@ -44,6 +44,8 @@ final class CommandLineArgumentsTests: XCTestCase {
         modifiers = try CommandLine.parseModifiers(from: ["--ultralight-insets", "a", "--black-insets", "b", "--hide-unsupported-filters", "--legacy"])
         XCTAssertEqual(modifiers, [.ultralightInsets: "a", .blackInsets: "b", .hideUnsupportedFilters: nil, .legacy: nil])
 
+        modifiers = try CommandLine.parseModifiers(from: ["--format", "png", "--quiet"])
+        XCTAssertEqual(modifiers, [.format: "png", .quiet: nil])
     }
 
     func testParseModifiersThrowsForOddPairs() {
