@@ -160,8 +160,7 @@ extension SVG {
     }
 
     init(dom: DOM.SVG, options: Options) {
-        self.size = CGSize(width: dom.width, height: dom.height)
-
+        self.size = CGSize(width: CGFloat(dom.width), height: CGFloat(dom.height))
         //To create the draw commands;
         // - XML is parsed into DOM.SVG
         // - DOM.SVG is converted into a LayerTree

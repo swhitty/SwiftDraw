@@ -57,8 +57,8 @@ extension XML.Formatter {
             element.attributes["viewBox"] = makeViewBox(svg.viewBox)
 
             if svg.viewBox != .init(x: 0, y: 0, width: DOM.Coordinate(svg.width), height: DOM.Coordinate(svg.height)) {
-                element.attributes["width"] = formatter.formatLength(svg.width)
-                element.attributes["height"] = formatter.formatLength(svg.height)
+                element.attributes["width"] = formatter.format(svg.width)
+                element.attributes["height"] = formatter.format(svg.height)
             }
 
             try element.children.append(contentsOf: makeStyles(svg.styles))
