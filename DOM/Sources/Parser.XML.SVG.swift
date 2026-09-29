@@ -56,7 +56,7 @@ package extension XMLParser {
             throw XMLParser.Error.unresolvableDimension(reason: makeUnresolvedReason(attribute: "height", raw: heightRaw, hasViewBox: viewBox != nil))
         }
 
-        let svg = DOM.SVG(width: DOM.Length(w), height: DOM.Length(h))
+        let svg = DOM.SVG(width: w, height: h)
         svg.x = try att.parseCoordinate("x")
         svg.y = try att.parseCoordinate("y")
         svg.childElements = try parseGraphicsElements(e.children)

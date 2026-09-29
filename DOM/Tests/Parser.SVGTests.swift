@@ -57,13 +57,21 @@ struct ParserSVGTests {
     }
 
     @Test
+    func svgWithFractionalDimensions() throws {
+        let node = XML.Element(name: "svg", attributes: ["width": "5.8", "height": "5.8"])
+        let parser = DOMXMLParser()
+        let parsed = try parser.parseSVG(node)
+        #expect(Float(parsed.width) == 5.8)
+        #expect(Float(parsed.height) == 5.8)
+    }
+    @Test
     func svgWithUnits() throws {
         let node = XML.Element(name: "svg", attributes: ["width": "10cm", "height": "2in"])
         let parser = DOMXMLParser()
 
         let parsed = try parser.parseSVG(node)
-        // 10cm = 10 * 37.795 = 377.95 → truncated to 377
-        #expect(parsed.width == 377)
+        // 10cm = 10 * 37.795 = 377.95
+        #expect(parsed.width == 377.95)
         // 2in = 2 * 96 = 192
         #expect(parsed.height == 192)
     }

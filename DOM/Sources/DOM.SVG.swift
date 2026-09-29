@@ -33,8 +33,8 @@ package extension DOM {
     final class SVG: GraphicsElement, ContainerElement {
         package var x: Coordinate?
         package var y: Coordinate?
-        package var width: Length
-        package var height: Length
+        package var width: Coordinate
+        package var height: Coordinate
         package var viewBox: ViewBox?
 
         package var childElements = [GraphicsElement]()
@@ -42,7 +42,7 @@ package extension DOM {
         package var styles = [StyleSheet]()
         package var defs = Defs()
 
-        package init(x: Coordinate? = nil, y: Coordinate? = nil, width: Length, height: Length) {
+        package init(x: Coordinate? = nil, y: Coordinate? = nil, width: Coordinate, height: Coordinate) {
             self.x = x
             self.y = y
             self.width = width

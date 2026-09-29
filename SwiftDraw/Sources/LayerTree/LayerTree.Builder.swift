@@ -64,8 +64,8 @@ extension LayerTree {
             x: DOM.Coordinate?,
             y: DOM.Coordinate?,
             viewBox: DOM.SVG.ViewBox?,
-            width: DOM.Length,
-            height: DOM.Length
+            width: DOM.Coordinate,
+            height: DOM.Coordinate
         ) -> [LayerTree.Transform] {
             let position = LayerTree.Transform.translate(tx: x ?? 0, ty: y ?? 0)
             let viewBox = viewBox ?? DOM.SVG.ViewBox(x: 0, y: 0, width: .init(width), height: .init(height))
