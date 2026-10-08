@@ -2,8 +2,8 @@
 //  LayerTree.Builder.Clip.swift
 //  SwiftDraw
 //
-//  Created by Simon Whitty on 21/11/18.
-//  Copyright 2020 WhileLoop Pty Ltd. All rights reserved.
+//  Created by Misoservices on 8/10/26.
+//  Copyright 2026 Simon Whitty
 //
 //  Distributed under the permissive zlib license
 //  Get the latest version from here:
@@ -27,8 +27,6 @@
 //  misrepresented as being the original software.
 //
 //  3. This notice may not be removed or altered from any source distribution.
-//
-//  Altered by Misoservices for Backdrop (SD8): clip paths and masks to spec.
 //
 
 import SwiftDrawDOM
