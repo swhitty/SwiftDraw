@@ -104,9 +104,10 @@ final class CGRendererTests: XCTestCase {
     let renderer = ImageRenderer(pixelsWide: 300, pixelsHigh: 200)
     renderer.renderer.perform(svg.commands)
 
-    XCTAssertTrue(renderer.isSVGRed(x: 100, y: 50))
-    XCTAssertFalse(renderer.isSVGRed(x: 250, y: 50))
-    XCTAssertFalse(renderer.isSVGRed(x: 100, y: 150))
+    // the context is not flipped, so the 200x100 viewport is the bottom half of the 300x200 bitmap (rows 100...199)
+    XCTAssertTrue(renderer.isSVGRed(x: 100, y: 150))
+    XCTAssertFalse(renderer.isSVGRed(x: 250, y: 150))
+    XCTAssertFalse(renderer.isSVGRed(x: 100, y: 50))
   }
 
   func testAlphaClips() {
