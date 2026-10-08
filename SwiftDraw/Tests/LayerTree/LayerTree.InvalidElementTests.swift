@@ -50,7 +50,13 @@ final class LayerTreeInvalidElementTests: XCTestCase {
         let layer = LayerTree.Builder(svg: dom).makeLayer()
         let generator = LayerTree.CommandGenerator(provider: LayerTreeProvider(), size: .zero, options: .default)
         let commands = generator.renderCommands(for: layer, colorConverter: .default)
-        let fills = commands.filter { if case .setFill = $0 { return true } else { return false } }
-        XCTAssertEqual(fills.count, 2)
+        let fills = commands.compactMap { command -> LayerTree.Color? in
+            if case let .setFill(color: color) = command { return color }
+            return nil
+        }
+        XCTAssertEqual(fills, [
+            .rgba(r: 1, g: 0, b: 0, a: 1, space: .srgb),
+            .rgba(r: 0, g: 0, b: 1, a: 1, space: .srgb)
+        ])
     }
 }
