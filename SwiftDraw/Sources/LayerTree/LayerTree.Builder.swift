@@ -93,19 +93,25 @@ extension LayerTree {
             return transform
         }
 
-        func makeLayer(from root: DOM.GraphicsElement, inheriting previousState: State) -> Layer {
-            var stack: [(DOM.GraphicsElement, State, Layer?)] = [(root, previousState, nil)]
+        /// `ancestors` holds the ids of the elements enclosing `root` (and, through `<use>`, of the
+        /// elements being instanced), so a `<use>` that references one of them can be dropped.
+        func makeLayer(from root: DOM.GraphicsElement, inheriting previousState: State, ancestors: [String] = []) -> Layer {
+            var stack: [(DOM.GraphicsElement, State, Layer?, [String])] = [(root, previousState, nil, ancestors)]
             var resultLayer: Layer? = nil
 
-            while let (currentElement, currentState, parentLayer) = stack.popLast() {
+            while let (currentElement, currentState, parentLayer, currentAncestors) = stack.popLast() {
                 let (layer, newState) = makeBaseLayer(from: currentElement, inheriting: currentState)
+                var childAncestors = currentAncestors
+                if let id = currentElement.id {
+                    childAncestors.append(id)
+                }
 
-                if let contents = makeContents(from: currentElement, with: newState) {
+                if let contents = makeContents(from: currentElement, with: newState, ancestors: childAncestors) {
                     layer.appendContents(contents)
                 } else if let container = currentElement as? any ContainerElement {
                     // Push children in reverse so they are processed in the original order
                     for child in container.childElements.reversed() {
-                        stack.append((child, newState, layer))
+                        stack.append((child, newState, layer, childAncestors))
                     }
                 }
 
@@ -150,7 +156,7 @@ extension LayerTree {
             return (l, state)
         }
 
-        func makeContents(from element: DOM.GraphicsElement, with state: State) -> Layer.Contents? {
+        func makeContents(from element: DOM.GraphicsElement, with state: State, ancestors: [String] = []) -> Layer.Contents? {
             if let shape = Builder.makeShape(from: element) {
                 return makeShapeContents(from: shape, with: state)
             } else if let text = element as? DOM.Text {
@@ -158,11 +164,11 @@ extension LayerTree {
             } else if let image = element as? DOM.Image {
                 return try? Builder.makeImageContents(from: image)
             } else if let use = element as? DOM.Use {
-                return try? makeUseLayerContents(from: use, with: state)
+                return try? makeUseLayerContents(from: use, with: state, ancestors: ancestors)
             } else if let sw = element as? DOM.Switch,
                       let e = sw.childElements.first {
                 //TODO: select first element that creates non empty Layer
-                return .layer(makeLayer(from: e, inheriting: state))
+                return .layer(makeLayer(from: e, inheriting: state, ancestors: ancestors))
             }
 
             return nil
@@ -200,11 +206,11 @@ extension LayerTree {
             guard let maskId = element.attributes.mask?.fragmentID,
                   let mask = svg.defs.masks.first(where: { $0.id == maskId }) else { return nil }
 
-            let l = Layer()
-
             // a mask that (indirectly) references itself is dropped
             guard references.enter("mask:\(maskId)") else { return nil }
             defer { references.leave("mask:\(maskId)") }
+
+            let l = Layer()
 
             let maskState = createState(for: mask, inheriting: State())
             mask.childElements.forEach {
@@ -623,16 +629,25 @@ private extension DOM.SVG {
 
 extension LayerTree.Builder {
 
-    /// Tracks the `<use>`, mask and pattern references being resolved so cycles
-    /// (and absurdly deep chains) are dropped instead of recursing forever.
+    /// Bounds the work done resolving `<use>`, mask and pattern references: a reference already
+    /// being resolved is refused, as is nesting deeper than `maxDepth` (each level costs native stack,
+    /// and Backdrop renders on secondary threads) or more than `maxReferences` expansions in one
+    /// document (non-cyclic fan-out such as 2 uses per level is exponential).
+    ///
+    /// Any new walk over a reference chain (gradient / pattern `href` inheritance) must call this.
     final class ReferenceGuard {
-        static let maxDepth = 64
+        static let maxDepth = 16
+        static let maxReferences = 20_000
         private var active = Set<String>()
         private var depth = 0
+        private var total = 0
 
         func enter(_ key: String) -> Bool {
-            guard depth < Self.maxDepth, active.insert(key).inserted else { return false }
+            guard depth < Self.maxDepth,
+                  total < Self.maxReferences,
+                  active.insert(key).inserted else { return false }
             depth += 1
+            total += 1
             return true
         }
 
@@ -640,5 +655,25 @@ extension LayerTree.Builder {
             active.remove(key)
             depth -= 1
         }
+    }
+
+    /// True when following the `<use>` elements inside `root` (transitively) reaches an id in `forbidden`.
+    func containsReferenceCycle(from root: DOM.GraphicsElement, reaching forbidden: Set<String>) -> Bool {
+        var visited = Set<String>()
+        var pending = [root]
+        while let element = pending.popLast() {
+            if let use = element as? DOM.Use, let id = use.href.fragmentID {
+                if forbidden.contains(id) {
+                    return true
+                }
+                if visited.insert(id).inserted, let target = svg.firstGraphicsElement(with: id) {
+                    pending.append(target)
+                }
+            }
+            if let container = element as? any ContainerElement {
+                pending.append(contentsOf: container.childElements)
+            }
+        }
+        return false
     }
 }
