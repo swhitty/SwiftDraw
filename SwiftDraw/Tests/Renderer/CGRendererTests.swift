@@ -75,10 +75,10 @@ final class CGRendererTests: XCTestCase {
     let renderer = ImageRenderer(pixelsWide: 200, pixelsHigh: 100)
     renderer.renderer.perform(svg.commands)
 
-    XCTAssertEqual(renderer.getColor(x: 100, y: 50), .red)
-    XCTAssertEqual(renderer.getColor(x: 55, y: 50), .red)
-    XCTAssertNotEqual(renderer.getColor(x: 45, y: 50), .red)
-    XCTAssertNotEqual(renderer.getColor(x: 155, y: 50), .red)
+    XCTAssertTrue(renderer.isSVGRed(x: 100, y: 50))
+    XCTAssertTrue(renderer.isSVGRed(x: 55, y: 50))
+    XCTAssertFalse(renderer.isSVGRed(x: 45, y: 50))
+    XCTAssertFalse(renderer.isSVGRed(x: 155, y: 50))
   }
 
   func testPreserveAspectRatioSliceFillsViewport() throws {
@@ -90,8 +90,8 @@ final class CGRendererTests: XCTestCase {
     let renderer = ImageRenderer(pixelsWide: 200, pixelsHigh: 100)
     renderer.renderer.perform(svg.commands)
 
-    XCTAssertEqual(renderer.getColor(x: 5, y: 5), .red)
-    XCTAssertEqual(renderer.getColor(x: 195, y: 95), .red)
+    XCTAssertTrue(renderer.isSVGRed(x: 5, y: 5))
+    XCTAssertTrue(renderer.isSVGRed(x: 195, y: 95))
   }
 
   func testAlphaClips() {
@@ -117,6 +117,12 @@ final class ImageRenderer {
     self.renderer = CGRenderer(context: context)
   }
   
+  /// `.red` in this file is a test colour; an SVG `red` fill reads back as pure (1, 0, 0)
+  func isSVGRed(x: Int, y: Int) -> Bool {
+    guard let c = bitmap.colorAt(x: x, y: y)?.usingColorSpace(.deviceRGB) else { return false }
+    return c.redComponent > 0.99 && c.greenComponent < 0.01 && c.blueComponent < 0.01 && c.alphaComponent > 0.99
+  }
+
   func getColor(x: Int, y: Int) -> CGColor? {
     return bitmap.colorAt(x: x, y: y)?.cgColor
   }
