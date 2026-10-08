@@ -205,66 +205,73 @@ extension XMLParser {
         return try parsePresentationAttributes(style)
     }
 
+    // A malformed declaration (`fill:`, `fill`, empty) is skipped; the others are kept.
     func parseStyleAttributes(_ data: String) throws -> [String: String] {
-        var scanner = XMLParser.Scanner(text: data)
         var style = [String: String]()
 
-        while !scanner.isEOF {
-            let att = try parseStyleAttribute(&scanner)
-            style[att.0] = att.1
+        for declaration in data.split(separator: ";", omittingEmptySubsequences: true) {
+            guard let colon = declaration.firstIndex(of: ":") else { continue }
+            let key = declaration[declaration.startIndex..<colon].trimmingCharacters(in: .whitespacesAndNewlines)
+            let value = declaration[declaration.index(after: colon)...].trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !key.isEmpty, !value.isEmpty else { continue }
+            style[key] = value
         }
         return style
     }
 
-    private func parseStyleAttribute(_ scanner: inout  XMLParser.Scanner) throws -> (String, String) {
-        let key = try scanner.scanString(upTo: ":")
-        _ = try? scanner.scanString(":")
-        let value = try scanner.scanString(upTo: ";")
-        _ = try? scanner.scanString(";")
+    // An invalid value drops the attribute (the spec default applies) rather than the document.
+    private func lenient<T>(_ parse: () throws -> T?) -> T? {
+        (try? parse()) ?? nil
+    }
 
-        return (key.trimmingCharacters(in: .whitespaces),
-                value.trimmingCharacters(in: .whitespaces))
+    // opacity outside 0...1 is clamped; a non-numeric value is dropped
+    private func opacity(_ att: any AttributeParser, _ key: String) -> DOM.Float? {
+        if let value = lenient({ try att.parsePercentage(key) as DOM.Float? }) {
+            return value
+        }
+        return lenient { try att.parseFloat(key) as DOM.Float? }.map { min(max($0, 0), 1) }
     }
 
     func parsePresentationAttributes(_ att: any AttributeParser) throws -> DOM.PresentationAttributes {
         var el = DOM.PresentationAttributes()
 
-        el.opacity = try att.parsePercentage("opacity")
-        el.display = try att.parseRaw("display")
-        el.color = try att.parseColor("color")
+        el.opacity = opacity(att, "opacity")
+        el.display = lenient { try att.parseRaw("display") }
+        el.color = lenient { try att.parseColor("color") }
 
-        el.stroke = try att.parseFill("stroke")
-        el.strokeWidth = try att.parseFloat("stroke-width")
-        el.strokeOpacity = try att.parsePercentage("stroke-opacity")
-        el.strokeLineCap = try att.parseRaw("stroke-linecap")
-        el.strokeLineJoin = try att.parseRaw("stroke-linejoin")
+        el.stroke = lenient { try att.parseFill("stroke") }
+        // a negative stroke-width is an error: drop it (SVG 1.1 §11.4)
+        el.strokeWidth = lenient { try att.parseFloat("stroke-width") }.flatMap { $0 < 0 ? nil : $0 }
+        el.strokeOpacity = opacity(att, "stroke-opacity")
+        el.strokeLineCap = lenient { try att.parseRaw("stroke-linecap") }
+        el.strokeLineJoin = lenient { try att.parseRaw("stroke-linejoin") }
 
         //maybe handle this better
         // att.parseDashArray?
-        if let dash = try att.parseString("stroke-dasharray") as String?,
+        if let dash = lenient({ try att.parseString("stroke-dasharray") as String? }),
            dash.trimmingCharacters(in: .whitespaces) == "none" {
             el.strokeDashArray = nil
         } else {
-            el.strokeDashArray = try att.parseFloats("stroke-dasharray")
+            el.strokeDashArray = lenient { try att.parseFloats("stroke-dasharray") }
         }
 
-        el.fill = try att.parseFill("fill")
-        el.fillOpacity = try att.parsePercentage("fill-opacity")
-        el.fillRule = try att.parseRaw("fill-rule")
+        el.fill = lenient { try att.parseFill("fill") }
+        el.fillOpacity = opacity(att, "fill-opacity")
+        el.fillRule = lenient { try att.parseRaw("fill-rule") }
 
-        el.fontFamily = try att.parseFontFamily("font-family")
-        el.fontSize = try att.parseFloat("font-size")
-        el.textAnchor = try att.parseRaw("text-anchor")
-        el.dominantBaseline = try att.parseRaw("dominant-baseline")
+        el.fontFamily = lenient { try att.parseFontFamily("font-family") }
+        el.fontSize = lenient { try att.parseFloat("font-size") }
+        el.textAnchor = lenient { try att.parseRaw("text-anchor") }
+        el.dominantBaseline = lenient { try att.parseRaw("dominant-baseline") }
 
         if let val = try? att.parseString("transform") {
-            el.transform = try parseTransform(val)
+            el.transform = try? parseTransform(val)
         }
 
-        el.clipPath = try att.parseUrlSelector("clip-path")
-        el.clipRule = try att.parseRaw("clip-rule")
-        el.mask = try att.parseUrlSelector("mask")
-        el.filter = try att.parseUrlSelector("filter")
+        el.clipPath = lenient { try att.parseUrlSelector("clip-path") }
+        el.clipRule = lenient { try att.parseRaw("clip-rule") }
+        el.mask = lenient { try att.parseUrlSelector("mask") }
+        el.filter = lenient { try att.parseUrlSelector("filter") }
 
         return el
     }
