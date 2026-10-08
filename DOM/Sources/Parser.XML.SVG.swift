@@ -178,7 +178,7 @@ package extension XMLParser {
 
         for n in e.children {
             if n.name == "clipPath" {
-                if let parsed = try skippingInvalid(n, { try parseClipPath(n) }) { clipPaths.append(parsed) }
+                try appendSkippingInvalid(&clipPaths, n, parseClipPath)
             } else {
                 clipPaths.append(contentsOf: try parseClipPaths(n))
             }
@@ -204,7 +204,7 @@ package extension XMLParser {
 
         for n in e.children {
             if n.name == "mask" {
-                if let parsed = try skippingInvalid(n, { try parseMask(n) }) { masks.append(parsed) }
+                try appendSkippingInvalid(&masks, n, parseMask)
             } else {
                 masks.append(contentsOf: try parseMasks(n))
             }
