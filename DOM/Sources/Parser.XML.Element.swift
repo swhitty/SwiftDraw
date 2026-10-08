@@ -120,19 +120,8 @@ extension XMLParser {
         while let (element, parent) = stack.popLast() {
             try Task.checkCancellation()
 
-            let ge: DOM.GraphicsElement
-            do {
-                guard let parsed = try parseGraphicsElement(element) else {
-                    continue
-                }
-                ge = parsed
-            } catch is CancellationError {
-                throw CancellationError()
-            } catch {
-                // an invalid element drops itself and its subtree; its siblings survive
-                if let parseError = parseError(for: error, parsing: element, with: options) {
-                    throw parseError
-                }
+            guard let parsed = try skippingInvalid(element, { try parseGraphicsElement(element) }),
+                  let ge = parsed else {
                 continue
             }
 
@@ -149,6 +138,20 @@ extension XMLParser {
         }
 
         return result
+    }
+
+    /// Runs `body`; with `.skipInvalidElements` an error drops the element (returns nil) instead of throwing.
+    func skippingInvalid<T>(_ element: XML.Element, _ body: () throws -> T) throws -> T? {
+        do {
+            return try body()
+        } catch is CancellationError {
+            throw CancellationError()
+        } catch {
+            if let parseError = parseError(for: error, parsing: element, with: options) {
+                throw parseError
+            }
+            return nil
+        }
     }
 
     func parseError(for error: any Swift.Error, parsing element: XML.Element, with options: Options) -> XMLParser.Error? {
