@@ -59,6 +59,13 @@ extension LayerTree {
     }
 }
 
+extension LayerTree.Layer {
+
+    var hasUnsupportedFilters: Bool {
+        filters.contains { !$0.isSupported }
+    }
+}
+
 extension LayerTree.Filter {
 
     var isSupported: Bool {

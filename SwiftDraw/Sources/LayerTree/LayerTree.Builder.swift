@@ -472,8 +472,6 @@ extension LayerTree.Builder {
         var fillOpacity: DOM.Float
         var fillRule: DOM.FillRule
 
-        var filter: DOM.URL?
-
         var fontFamily: [DOM.FontFamily]
         var fontSize: DOM.Float
         var textAnchor: DOM.TextAnchor
@@ -526,8 +524,6 @@ extension LayerTree.Builder {
         state.fill = attributes.fill ?? existing.fill
         state.fillOpacity = attributes.fillOpacity ?? existing.fillOpacity
         state.fillRule = attributes.fillRule ?? existing.fillRule
-
-        state.filter = attributes.filter ?? existing.filter
 
         state.fontFamily = attributes.fontFamily ?? existing.fontFamily
         state.fontSize = attributes.fontSize ?? existing.fontSize

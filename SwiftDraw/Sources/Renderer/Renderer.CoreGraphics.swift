@@ -328,6 +328,7 @@ struct CGRenderer: Renderer {
     private let rootContext: CGContext
     private let rootCTM: CGAffineTransform
     private let filterLayers = CGFilterLayerStack()
+    let maxFilterLayerPixels: Int
 
     // drawing goes into the innermost offscreen filter layer, if any
     var ctx: CGContext { filterLayers.context ?? rootContext }
@@ -335,9 +336,10 @@ struct CGRenderer: Renderer {
     // offscreen filter layers are bitmaps whose base space is the identity
     var baseCTM: CGAffineTransform { filterLayers.context == nil ? rootCTM : .identity }
 
-    init(context: CGContext) {
+    init(context: CGContext, maxFilterLayerPixels: Int = CGRenderer.defaultMaxFilterLayerPixels) {
         self.rootContext = context
         self.rootCTM = context.ctm
+        self.maxFilterLayerPixels = maxFilterLayerPixels
     }
 
     func pushState() {
@@ -467,8 +469,10 @@ struct CGRenderer: Renderer {
         )
     }
 
-    // The following commands are drawn into a bitmap sized to the filter region in device pixels,
-    // intersected with the visible clip (grown by the blur extent so edges stay correct).
+    // The following commands are drawn into a bitmap covering the filter region in device pixels,
+    // intersected with the visible clip grown by the blur extent. The result is composited back clipped to
+    // the region. Over maxFilterLayerPixels the bitmap is rendered at a reduced scale (deviations scaled to
+    // match) and drawn back up, so large exports stay blurred without unbounded allocations.
     func pushFilterLayer(_ filter: LayerTree.FilterLayer) {
         let parent = ctx
         let region = CGRect(x: CGFloat(filter.region.x),
@@ -477,51 +481,75 @@ struct CGRenderer: Renderer {
                             height: CGFloat(filter.region.height))
         let toDevice = parent.userSpaceToDeviceSpaceTransform
         let deviations = filter.effects.compactMap { $0.deviceStdDeviation(toDevice) }
-        let spreadX = deviations.reduce(0) { $0 + 3 * $1.width }
-        let spreadY = deviations.reduce(0) { $0 + 3 * $1.height }
+        let visible = parent.boundingBoxOfClipPath
 
-        var deviceRect = region.applying(toDevice)
-        let clip = parent.boundingBoxOfClipPath
-        if !clip.isNull && !clip.isInfinite {
-            let visible = clip.applying(toDevice).insetBy(dx: -spreadX, dy: -spreadY)
-            deviceRect = deviceRect.intersection(visible)
-        }
-        deviceRect = deviceRect.isNull ? .zero : deviceRect.integral
+        parent.saveGState()
+        parent.clip(to: region)
 
-        guard let offscreen = CGContext.makeFilterLayer(size: deviceRect.size, colorSpace: parent.colorSpace) else {
-            // nothing visible or too large: draw unfiltered, still clipped to the filter region
-            parent.saveGState()
-            parent.clip(to: region)
-            filterLayers.entries.append(CGFilterLayer(region: region, deviceRect: deviceRect, deviations: [], offscreen: nil))
+        // empty clip: draw nothing and allocate nothing
+        guard !visible.isNull, !visible.isEmpty else {
+            parent.clip(to: .zero)
+            filterLayers.entries.append(CGFilterLayer())
             return
         }
 
-        offscreen.translateBy(x: -deviceRect.minX, y: -deviceRect.minY)
-        offscreen.concatenate(toDevice)
-        offscreen.clip(to: region)
-        filterLayers.entries.append(CGFilterLayer(region: region, deviceRect: deviceRect, deviations: deviations, offscreen: offscreen))
+        // zero deviation is a pass-through: draw straight into the parent, clipped to the region
+        guard !deviations.isEmpty else {
+            filterLayers.entries.append(CGFilterLayer())
+            return
+        }
+
+        var deviceRect = region.applying(toDevice)
+        if !visible.isInfinite {
+            let spreadX = min(deviations.reduce(0) { $0 + 3 * $1.width }, CGRenderer.maxDeviceSpread)
+            let spreadY = min(deviations.reduce(0) { $0 + 3 * $1.height }, CGRenderer.maxDeviceSpread)
+            deviceRect = deviceRect.intersection(visible.applying(toDevice).insetBy(dx: -spreadX, dy: -spreadY))
+        }
+
+        let isVector = parent.bitsPerPixel == 0
+        guard let layer = CGFilterLayer.make(deviceRect: deviceRect,
+                                             deviations: deviations,
+                                             maxPixels: maxFilterLayerPixels,
+                                             oversample: isVector ? 2 : 1,
+                                             colorSpace: parent.colorSpace) else {
+            // empty clip or region: draw nothing and allocate nothing
+            parent.clip(to: .zero)
+            filterLayers.entries.append(CGFilterLayer())
+            return
+        }
+
+        layer.offscreen?.concatenate(toDevice)
+        filterLayers.entries.append(layer)
     }
 
     func popFilterLayer() {
         guard let layer = filterLayers.entries.popLast() else { return }
         let parent = ctx
 
-        guard let offscreen = layer.offscreen else {
-            parent.restoreGState()
-            return
+        if let offscreen = layer.offscreen {
+            for deviation in layer.deviations {
+                offscreen.applyGaussianBlur(CGSize(width: deviation.width * layer.scale,
+                                                   height: deviation.height * layer.scale))
+            }
+            if let image = offscreen.makeImage() {
+                let size = CGSize(width: CGFloat(image.width) / layer.scale,
+                                  height: CGFloat(image.height) / layer.scale)
+                parent.saveGState()
+                parent.concatenate(parent.userSpaceToDeviceSpaceTransform.inverted())
+                if layer.scale == 1 {
+                    parent.interpolationQuality = .none
+                }
+                parent.draw(image, in: CGRect(origin: layer.deviceRect.origin, size: size))
+                parent.restoreGState()
+            }
         }
 
-        for deviation in layer.deviations {
-            offscreen.applyGaussianBlur(deviation)
-        }
-
-        guard let image = offscreen.makeImage() else { return }
-        parent.saveGState()
-        parent.clip(to: layer.region)
-        parent.concatenate(parent.userSpaceToDeviceSpaceTransform.inverted())
-        parent.draw(image, in: layer.deviceRect)
+        // removes the region clip set by pushFilterLayer
         parent.restoreGState()
     }
+
+    static let defaultMaxFilterLayerPixels = 16_777_216
+    static let maxDeviceSpread: CGFloat = 100_000
 }
 
 final class CGFilterLayerStack {
@@ -533,21 +561,60 @@ final class CGFilterLayerStack {
 }
 
 struct CGFilterLayer {
-    var region: CGRect
-    var deviceRect: CGRect
-    var deviations: [CGSize]
     // nil when contents are drawn directly into the parent context
     var offscreen: CGContext?
+    var deviceRect: CGRect = .zero
+    var deviations: [CGSize] = []
+    // offscreen pixels per device pixel
+    var scale: CGFloat = 1
+
+    // nil when the device rect is empty or not finite
+    static func make(deviceRect: CGRect,
+                     deviations: [CGSize],
+                     maxPixels: Int,
+                     oversample: CGFloat,
+                     colorSpace: CGColorSpace?) -> CGFilterLayer? {
+        guard !deviceRect.isNull, !deviceRect.isInfinite,
+              deviceRect.minX.isFinite, deviceRect.minY.isFinite,
+              deviceRect.width.isFinite, deviceRect.height.isFinite else { return nil }
+        let rect = deviceRect.integral
+        guard rect.width >= 1, rect.height >= 1 else { return nil }
+
+        let scale = makeScale(size: rect.size, maxPixels: maxPixels, oversample: oversample)
+        let width = max(1, Int((rect.width * scale).rounded(.up)))
+        let height = max(1, Int((rect.height * scale).rounded(.up)))
+        guard let offscreen = CGContext.makeFilterLayer(width: width, height: height, colorSpace: colorSpace) else {
+            return nil
+        }
+
+        offscreen.scaleBy(x: scale, y: scale)
+        offscreen.translateBy(x: -rect.minX, y: -rect.minY)
+        return CGFilterLayer(offscreen: offscreen, deviceRect: rect, deviations: deviations, scale: scale)
+    }
+
+    // largest scale ≤ oversample that keeps the bitmap within maxPixels and each side within maxSide
+    static func makeScale(size: CGSize, maxPixels: Int, oversample: CGFloat) -> CGFloat {
+        let maxSide = CGFloat(maxPixels).squareRoot() * 4
+        let pixels = size.width * size.height
+        var scale = oversample
+        scale = min(scale, (CGFloat(maxPixels) / pixels).squareRoot())
+        scale = min(scale, maxSide / size.width, maxSide / size.height)
+        return scale
+    }
 }
 
 private extension LayerTree.Filter {
 
-    // stdDeviation converted to device pixels; nil for primitives that do not blur
+    // stdDeviation converted to device pixels along the device axes; nil when it does not blur.
+    // Exact for scale and 90° rotations, an approximation under skew or other rotations.
     func deviceStdDeviation(_ toDevice: CGAffineTransform) -> CGSize? {
         switch self {
         case let .gaussianBlur(stdDeviation: x, stdDeviationY: y):
-            let size = CGSize(width: CGFloat(x) * hypot(toDevice.a, toDevice.b),
-                              height: CGFloat(y ?? x) * hypot(toDevice.c, toDevice.d))
+            let sx = CGFloat(x)
+            let sy = CGFloat(y ?? x)
+            let width = hypot(sx * toDevice.a, sy * toDevice.c)
+            let height = hypot(sx * toDevice.b, sy * toDevice.d)
+            let size = CGSize(width: width.isFinite ? width : 0, height: height.isFinite ? height : 0)
             return size.width > 0 || size.height > 0 ? size : nil
         case .unsupported:
             return nil
@@ -557,14 +624,7 @@ private extension LayerTree.Filter {
 
 extension CGContext {
 
-    // keeps an offscreen filter layer within 64 MB
-    static let maxFilterLayerPixels = 16_777_216
-
-    static func makeFilterLayer(size: CGSize, colorSpace: CGColorSpace?) -> CGContext? {
-        let width = Int(size.width)
-        let height = Int(size.height)
-        guard width > 0, height > 0, width * height <= maxFilterLayerPixels else { return nil }
-
+    static func makeFilterLayer(width: Int, height: Int, colorSpace: CGColorSpace?) -> CGContext? {
         let sRGB = CGColorSpace(name: CGColorSpace.sRGB)!
         let space = colorSpace.flatMap { $0.model == .rgb ? $0 : nil } ?? sRGB
         let info = CGImageAlphaInfo.premultipliedLast.rawValue
@@ -576,28 +636,35 @@ extension CGContext {
     // Box sizes must be odd for vImage, so an even size d becomes d+1, d-1, d+1 (near-identical variance).
     func applyGaussianBlur(_ deviation: CGSize) {
         guard let data else { return }
-        let sizesX = Self.boxSizes(for: deviation.width)
-        let sizesY = Self.boxSizes(for: deviation.height)
+        let limit = 2 * Swift.max(width, height) + 1
+        let sizesX = Self.boxSizes(for: deviation.width, limit: limit)
+        let sizesY = Self.boxSizes(for: deviation.height, limit: limit)
+        guard sizesX.contains(where: { $0 > 1 }) || sizesY.contains(where: { $0 > 1 }) else { return }
+
         let byteCount = bytesPerRow * height
-        guard let temp = malloc(byteCount) else { return }
+        guard let temp = calloc(byteCount, 1) else { return }
         defer { free(temp) }
 
         var src = vImage_Buffer(data: data, height: vImagePixelCount(height), width: vImagePixelCount(width), rowBytes: bytesPerRow)
         var dst = vImage_Buffer(data: temp, height: vImagePixelCount(height), width: vImagePixelCount(width), rowBytes: bytesPerRow)
         var background: [UInt8] = [0, 0, 0, 0]
         for pass in 0..<3 {
-            vImageBoxConvolve_ARGB8888(&src, &dst, nil, 0, 0,
-                                       UInt32(sizesY[pass]), UInt32(sizesX[pass]),
-                                       &background, vImage_Flags(kvImageBackgroundColorFill))
+            let error = vImageBoxConvolve_ARGB8888(&src, &dst, nil, 0, 0,
+                                                   UInt32(sizesY[pass]), UInt32(sizesX[pass]),
+                                                   &background, vImage_Flags(kvImageBackgroundColorFill))
+            guard error == kvImageNoError else { return }
             swap(&src, &dst)
         }
         // after three passes the result is in the temporary buffer
         memcpy(data, src.data, byteCount)
     }
 
-    static func boxSizes(for deviation: CGFloat) -> [Int] {
+    // limit is odd: the largest box size worth applying
+    static func boxSizes(for deviation: CGFloat, limit: Int = .max) -> [Int] {
+        guard deviation.isFinite, deviation > 0 else { return [1, 1, 1] }
         let factor: CGFloat = 3 * (2 * CGFloat.pi).squareRoot() / 4
-        let d = Int((deviation * factor + 0.5).rounded(.down))
+        let value = Swift.min(deviation * factor + 0.5, CGFloat(Swift.min(limit, 1 << 24)))
+        let d = Int(value.rounded(.down))
         guard d > 1 else { return [1, 1, 1] }
         return d % 2 == 1 ? [d, d, d] : [d + 1, d - 1, d + 1]
     }

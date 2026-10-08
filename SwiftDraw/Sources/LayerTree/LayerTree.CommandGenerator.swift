@@ -73,7 +73,7 @@ extension LayerTree {
                         // an empty filter region clips everything away (matches Chrome / Safari)
                         continue
                     }
-                    if state.hasFilters && state.filterLayer == nil {
+                    if state.hasFilters && state.filterLayer == nil && layer.hasUnsupportedFilters {
                         if options.contains(.hideUnsupportedFilters) {
                             continue
                         }
@@ -574,10 +574,11 @@ extension LayerTree {
 extension LayerTree.CommandGenerator {
 
     // Resolves the layer's filter into its user space; nil when a primitive is unsupported
-    // or the filter region cannot be resolved.
+    // or the filter region cannot be resolved (e.g. text-only contents under objectBoundingBox),
+    // in which case the contents are drawn unfiltered.
     func makeFilterLayer(for layer: LayerTree.Layer) -> LayerTree.FilterLayer? {
         guard !layer.filters.isEmpty,
-              layer.filters.allSatisfy(\.isSupported) else { return nil }
+              !layer.hasUnsupportedFilters else { return nil }
 
         let region = layer.filterRegion
         let bounds = makeBounds(for: layer)
@@ -607,6 +608,8 @@ extension LayerTree.CommandGenerator {
             guard let bounds else { return nil }
             scale = bounds.size
         }
+
+        guard rect.x.isFinite, rect.y.isFinite, rect.width.isFinite, rect.height.isFinite else { return nil }
 
         let effects = layer.filters.map { $0.resolved(scale: scale) }
         let width = max(rect.width, 0)
@@ -739,7 +742,10 @@ private extension LayerTree.Filter {
             guard x >= 0, y >= 0 else {
                 return .gaussianBlur(stdDeviation: 0, stdDeviationY: 0)
             }
-            return .gaussianBlur(stdDeviation: x * scale.width, stdDeviationY: y * scale.height)
+            // renderers clamp to their pixel limits; keep the values finite
+            let maximum = LayerTree.Float.greatestFiniteMagnitude
+            return .gaussianBlur(stdDeviation: min(x * scale.width, maximum),
+                                 stdDeviationY: min(y * scale.height, maximum))
         case .unsupported:
             return self
         }

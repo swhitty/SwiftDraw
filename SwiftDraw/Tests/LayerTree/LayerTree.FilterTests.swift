@@ -157,7 +157,74 @@ final class LayerTreeFilterTests: XCTestCase {
         XCTAssertEqual(commands.names, ["setFillColor", "fillPath"])
     }
 
-    func testOptimizerResetsStateInsideFilterLayer() {
+    func testFilterIsAppliedBeforeOpacityClipAndMask() throws {
+        let commands = try makeCommands(#"""
+        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+            <filter id="blur"><feGaussianBlur stdDeviation="2" /></filter>
+            <clipPath id="clip"><rect x="0" y="0" width="50" height="100" /></clipPath>
+            <mask id="mask"><rect x="0" y="0" width="100" height="100" fill="white" /></mask>
+            <rect x="10" y="10" width="80" height="80" opacity="0.5" clip-path="url(#clip)" mask="url(#mask)" filter="url(#blur)" />
+        </svg>
+        """#)
+
+        XCTAssertEqual(commands.names, [
+            "pushState", "setAlpha", "pushTransparencyLayer", "setClip", "pushTransparencyLayer",
+            "pushFilterLayer", "setFillColor", "fillPath", "popFilterLayer",
+            "setBlendMode", "pushTransparencyLayer", "setBlendMode", "setFillColor", "fillPath",
+            "popTransparencyLayer", "popTransparencyLayer",
+            "popTransparencyLayer", "popState"
+        ])
+    }
+
+    func testNestedFilterLayers() throws {
+        let commands = try makeCommands(#"""
+        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+            <filter id="blur"><feGaussianBlur stdDeviation="2" /></filter>
+            <g filter="url(#blur)">
+                <rect x="10" y="10" width="20" height="20" filter="url(#blur)" />
+                <rect x="50" y="50" width="20" height="20" />
+            </g>
+        </svg>
+        """#)
+
+        XCTAssertEqual(commands.names, [
+            "pushFilterLayer", "pushFilterLayer", "setFillColor", "fillPath", "popFilterLayer",
+            "setFillColor", "fillPath", "popFilterLayer"
+        ])
+    }
+
+    // text has no measured bounds: drawn unfiltered, neither warned about nor hidden as unsupported
+    func testTextWithObjectBoundingBoxBlurIsDrawnUnfiltered() throws {
+        let svg = try DOM.SVG.parse(xml: #"""
+        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+            <filter id="blur"><feGaussianBlur stdDeviation="2" /></filter>
+            <text x="10" y="50" filter="url(#blur)">Hi</text>
+        </svg>
+        """#)
+        let root = LayerTree.Builder(svg: svg).makeLayer()
+        let layer = try XCTUnwrap(root.allLayers.first { !$0.filters.isEmpty })
+        let generator = LayerTree.CommandGenerator(provider: LayerTreeProvider(), size: .init(100, 100), options: .hideUnsupportedFilters)
+
+        XCTAssertFalse(layer.hasUnsupportedFilters)
+        XCTAssertNil(generator.makeFilterLayer(for: layer))
+    }
+
+    func testHugeDeviationStaysFinite() throws {
+        let commands = try makeCommands(#"""
+        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+            <filter id="blur" primitiveUnits="objectBoundingBox"><feGaussianBlur stdDeviation="1e38" /></filter>
+            <rect x="0" y="0" width="50" height="50" filter="url(#blur)" />
+        </svg>
+        """#)
+
+        let effect = try XCTUnwrap(commands.filterLayers.first?.effects.first)
+        guard case let .gaussianBlur(x, y) = effect else { return XCTFail() }
+        XCTAssertTrue(x.isFinite)
+        XCTAssertTrue(y?.isFinite == true)
+    }
+
+    // renderers isolate a filter layer, but the optimizer does not elide state after it
+    func testOptimizerResetsStateAroundFilterLayer() {
         let filter = LayerTree.FilterLayer(region: .init(x: 0, y: 0, width: 10, height: 10),
                                            effects: [.gaussianBlur(stdDeviation: 1, stdDeviationY: 1)])
         let commands: [RendererCommand<LayerTreeTypes>] = [
@@ -169,7 +236,7 @@ final class LayerTreeFilterTests: XCTestCase {
         ]
 
         let optimized = LayerTree.CommandOptimizer<LayerTreeTypes>().optimizeCommands(commands)
-        XCTAssertEqual(optimized.names, ["setFillColor", "pushFilterLayer", "setFillColor", "popFilterLayer"])
+        XCTAssertEqual(optimized.names, ["setFillColor", "pushFilterLayer", "setFillColor", "popFilterLayer", "setFillColor"])
     }
 }
 
@@ -199,5 +266,15 @@ private extension Array where Element == RendererCommand<LayerTreeTypes> {
         let renderer = MockRenderer()
         renderer.perform(self)
         return renderer.operations
+    }
+}
+
+private extension LayerTree.Layer {
+
+    var allLayers: [LayerTree.Layer] {
+        [self] + contents.flatMap { contents -> [LayerTree.Layer] in
+            if case .layer(let layer) = contents { return layer.allLayers }
+            return []
+        }
     }
 }

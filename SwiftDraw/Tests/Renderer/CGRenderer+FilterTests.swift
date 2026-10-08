@@ -102,6 +102,130 @@ final class CGRendererFilterTests: XCTestCase {
         XCTAssertEqual(CGContext.boxSizes(for: 0), [1, 1, 1])
         XCTAssertEqual(CGContext.boxSizes(for: 2), [5, 3, 5])
         XCTAssertEqual(CGContext.boxSizes(for: 5), [9, 9, 9])
+        XCTAssertEqual(CGContext.boxSizes(for: .infinity), [1, 1, 1])
+        XCTAssertEqual(CGContext.boxSizes(for: .nan), [1, 1, 1])
+        XCTAssertEqual(CGContext.boxSizes(for: 1e300, limit: 201), [201, 201, 201])
+    }
+
+    // shape near the top: catches a vertically flipped composite
+    func testOffCentreBlurIsNotFlipped() throws {
+        let bitmap = try render(#"""
+        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+            <filter id="blur"><feGaussianBlur stdDeviation="3" /></filter>
+            <rect x="20" y="10" width="60" height="20" fill="black" filter="url(#blur)" />
+        </svg>
+        """#)
+
+        XCTAssertGreaterThan(bitmap.alpha(x: 50, y: 20), 0.9)
+        XCTAssertEqual(bitmap.alpha(x: 50, y: 10), 0.5, accuracy: 0.15)
+        XCTAssertEqual(bitmap.alpha(x: 50, y: 30), 0.5, accuracy: 0.15)
+        XCTAssertEqual(bitmap.alpha(x: 50, y: 80), 0)
+    }
+
+    func testBlurWithOpacityAndClip() throws {
+        let bitmap = try render(#"""
+        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+            <filter id="blur"><feGaussianBlur stdDeviation="2" /></filter>
+            <clipPath id="left"><rect x="0" y="0" width="50" height="100" /></clipPath>
+            <rect x="20" y="20" width="60" height="60" fill="black" opacity="0.5"
+                  clip-path="url(#left)" filter="url(#blur)" />
+        </svg>
+        """#)
+
+        XCTAssertEqual(bitmap.alpha(x: 40, y: 50), 0.5, accuracy: 0.05)
+        XCTAssertEqual(bitmap.alpha(x: 60, y: 50), 0)
+        XCTAssertEqual(bitmap.alpha(x: 20, y: 50), 0.25, accuracy: 0.1)
+    }
+
+    func testBlurWithMask() throws {
+        let bitmap = try render(#"""
+        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+            <filter id="blur"><feGaussianBlur stdDeviation="2" /></filter>
+            <mask id="top"><rect x="0" y="0" width="100" height="50" fill="white" /></mask>
+            <rect x="20" y="20" width="60" height="60" fill="black" mask="url(#top)" filter="url(#blur)" />
+        </svg>
+        """#)
+
+        XCTAssertGreaterThan(bitmap.alpha(x: 50, y: 40), 0.9)
+        XCTAssertEqual(bitmap.alpha(x: 50, y: 60), 0)
+        XCTAssertEqual(bitmap.alpha(x: 20, y: 40), 0.5, accuracy: 0.15)
+    }
+
+    // stdDeviation "0 5" is vertical in user space, horizontal after rotate(90)
+    func testBlurFollowsRotation() throws {
+        let bitmap = try render(#"""
+        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+            <filter id="blur"><feGaussianBlur stdDeviation="0 5" /></filter>
+            <rect x="25" y="25" width="50" height="50" fill="black" transform="rotate(90 50 50)" filter="url(#blur)" />
+        </svg>
+        """#)
+
+        XCTAssertEqual(bitmap.alpha(x: 25, y: 50), 0.5, accuracy: 0.15)
+        XCTAssertEqual(bitmap.alpha(x: 50, y: 24), 0)
+        XCTAssertGreaterThan(bitmap.alpha(x: 50, y: 26), 0.95)
+    }
+
+    func testNestedBlurs() throws {
+        let bitmap = try render(#"""
+        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+            <filter id="blur" x="-0.5" y="-0.5" width="2" height="2"><feGaussianBlur stdDeviation="2" /></filter>
+            <g filter="url(#blur)">
+                <rect x="20" y="20" width="20" height="20" fill="black" filter="url(#blur)" />
+                <rect x="60" y="60" width="20" height="20" fill="black" />
+            </g>
+            <rect x="0" y="90" width="10" height="10" fill="black" />
+        </svg>
+        """#)
+
+        // the inner rect is blurred twice, so softer than the outer one at the same edge offset
+        XCTAssertLessThan(bitmap.alpha(x: 21, y: 30), bitmap.alpha(x: 61, y: 70))
+        XCTAssertGreaterThan(bitmap.alpha(x: 30, y: 30), 0.9)
+        XCTAssertGreaterThan(bitmap.alpha(x: 70, y: 70), 0.9)
+        XCTAssertEqual(bitmap.alpha(x: 5, y: 95), 1)
+    }
+
+    // over the pixel cap the layer is rendered at a reduced scale, still blurred
+    func testOverPixelCapStillBlurs() throws {
+        let bitmap = try render(#"""
+        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+            <filter id="blur"><feGaussianBlur stdDeviation="5" /></filter>
+            <rect x="25" y="25" width="50" height="50" fill="black" filter="url(#blur)" />
+        </svg>
+        """#, maxFilterLayerPixels: 900)
+
+        XCTAssertGreaterThan(bitmap.alpha(x: 50, y: 50), 0.9)
+        XCTAssertEqual(bitmap.alpha(x: 25, y: 50), 0.5, accuracy: 0.2)
+        XCTAssertEqual(bitmap.alpha(x: 10, y: 50), 0)
+        XCTAssertEqual(CGFilterLayer.makeScale(size: CGSize(width: 60, height: 60), maxPixels: 900, oversample: 1), 0.5)
+    }
+
+    func testHugeValuesDoNotTrap() throws {
+        let bitmap = try render(#"""
+        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+            <filter id="a"><feGaussianBlur stdDeviation="1e30" /></filter>
+            <filter id="b" filterUnits="userSpaceOnUse" x="-1e30" y="-1e30" width="1e31" height="1e31">
+                <feGaussianBlur stdDeviation="3" />
+            </filter>
+            <rect x="10" y="10" width="20" height="20" fill="black" filter="url(#a)" />
+            <rect x="50" y="50" width="20" height="20" fill="black" filter="url(#b)" />
+        </svg>
+        """#)
+
+        XCTAssertGreaterThan(bitmap.alpha(x: 60, y: 60), 0.9)
+    }
+
+    func testEmptyClipDrawsNothing() throws {
+        let bitmap = try render(#"""
+        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+            <filter id="blur"><feGaussianBlur stdDeviation="2" /></filter>
+            <clipPath id="none"><rect x="0" y="0" width="0" height="0" /></clipPath>
+            <g clip-path="url(#none)">
+                <rect x="20" y="20" width="60" height="60" fill="black" filter="url(#blur)" />
+            </g>
+        </svg>
+        """#)
+
+        XCTAssertEqual(bitmap.alpha(x: 50, y: 50), 0)
     }
 }
 
@@ -118,7 +242,7 @@ private struct Bitmap {
 
 private extension CGRendererFilterTests {
 
-    func render(_ xml: String, scale: CGFloat = 1) throws -> Bitmap {
+    func render(_ xml: String, scale: CGFloat = 1, maxFilterLayerPixels: Int = CGRenderer.defaultMaxFilterLayerPixels) throws -> Bitmap {
         let svg = try XCTUnwrap(SVG(xml: xml))
         let width = Int(svg.size.width * scale)
         let height = Int(svg.size.height * scale)
@@ -131,7 +255,7 @@ private extension CGRendererFilterTests {
             // SVG coordinates are y-down
             ctx.translateBy(x: 0, y: CGFloat(height))
             ctx.scaleBy(x: scale, y: -scale)
-            ctx.draw(svg)
+            CGRenderer(context: ctx, maxFilterLayerPixels: maxFilterLayerPixels).perform(svg.commands)
         }
         return Bitmap(width: width, height: height, bytes: bytes)
     }
