@@ -77,7 +77,7 @@ final class LayerTreeVisibilityTests: XCTestCase {
         <use href="#r" display="none"/><use href="#h"/>
         """#
         XCTAssertEqual(try fillCount(body), 0)
-        XCTAssertEqual(try fillCount(#"<defs><rect id="r" width="10" height="10"/></defs><use href="#r"/>"#), 1)
+        XCTAssertEqual(try fillCount(##"<defs><rect id="r" width="10" height="10"/></defs><use href="#r"/>"##), 1)
     }
 
     func testDisplayNoneRootDoesNotCrash() throws {
@@ -118,7 +118,7 @@ final class LayerTreeVisibilityTests: XCTestCase {
     }
 
     func testVisibilityHiddenGroupStillAppliesToUse() throws {
-        let body = #"<defs><rect id="r" width="10" height="10"/></defs><g visibility="hidden"><use href="#r"/><use href="#r" visibility="visible"/></g>"#
+        let body = ##"<defs><rect id="r" width="10" height="10"/></defs><g visibility="hidden"><use href="#r"/><use href="#r" visibility="visible"/></g>"##
         XCTAssertEqual(try fillCount(body), 1)
     }
 
