@@ -42,7 +42,7 @@ and CSS named colours beyond SVG 1.1 (`rebeccapurple`); `inherit`; `clip-path`/`
 (`<use>` already has it upstream: `Parser.XML.Use.swift`, follow that pattern). Also fix 4- and 8-digit hex colours, which parse to a **different colour** (`#ff0000ff`
 renders blue). Parser files: `DOM/Sources/Parser.XML.*.swift`.
 
-### SD5 — patterns complete · corpus 14+ · status: PR #4, review fixes requested
+### SD5 — patterns complete · corpus 14+ · status: merged (#4)
 `<pattern>` `x`/`y`, `patternUnits`, `patternContentUnits`, `patternTransform` and `viewBox` are dropped, so tiles
 land misplaced; a pattern without `width`/`height` is fatal (it should simply paint nothing, per spec). Inkscape
 writes most patterns as `<pattern xlink:href="#base" patternTransform="…"/>`: implement `href` inheritance of
@@ -102,6 +102,8 @@ Non-root lengths ignore units: `width="20%"` becomes 20. Implement %, px, pt, pc
 inheritance) and mixed runs; parse `font-weight`/`font-style`; draw stroked text.
 
 ## Integrator's log
+
+- 2026-10-08 — SD5 merged (#4, head 11f2810 after review fixes; CI 20/20; corpus 0 regressions).
 
 - 2026-10-08 — Wave 1 reviewed (five PRs, CI green): SD5 mergeable, the other four "merge after fix"; fix lists sent
   back to each session. Trial merge of all five builds and passes on macOS; one trivial conflict (SD4 × SD1 in
