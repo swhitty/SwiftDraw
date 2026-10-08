@@ -62,6 +62,85 @@ struct ParserXMLFilterTests {
         #expect(filter.id == "blur")
         #expect(filter.effects == [.gaussianBlur(stdDeviation: 0.5)])
     }
+
+    @Test
+    func parseBlurTwoValues() throws {
+        let element = XML.Element.makeMockFilter()
+        element.children = [.makeElement("feGaussianBlur", ["stdDeviation": "3 1.5"])]
+
+        let filter = try XMLParser().parseFilter(element)
+        #expect(filter.effects == [.gaussianBlur(stdDeviation: 3, stdDeviationY: 1.5)])
+    }
+
+    @Test
+    func parseBlurMissingOrInvalidDeviationIsZero() throws {
+        let element = XML.Element.makeMockFilter()
+        element.children = [
+            .makeElement("feGaussianBlur"),
+            .makeElement("feGaussianBlur", ["stdDeviation": "abc"])
+        ]
+
+        let filter = try XMLParser().parseFilter(element)
+        #expect(filter.effects == [.gaussianBlur(stdDeviation: 0), .gaussianBlur(stdDeviation: 0)])
+    }
+
+    @Test
+    func parseRegionAndUnits() throws {
+        let element = XML.Element(name: "filter", attributes: [
+            "id": "f",
+            "x": "-0.2", "y": "-20%", "width": "140%", "height": "1.4",
+            "filterUnits": "objectBoundingBox",
+            "primitiveUnits": "objectBoundingBox"
+        ])
+
+        let filter = try XMLParser().parseFilter(element)
+        #expect(filter.x == -0.2)
+        #expect(filter.y == -0.2)
+        #expect(filter.width == 1.4)
+        #expect(filter.height == 1.4)
+        #expect(filter.filterUnits == .objectBoundingBox)
+        #expect(filter.primitiveUnits == .objectBoundingBox)
+    }
+
+    @Test
+    func parseInvalidRegionKeepsDefaults() throws {
+        let element = XML.Element(name: "filter", attributes: [
+            "id": "f", "x": "left", "filterUnits": "bogus"
+        ])
+
+        let filter = try XMLParser().parseFilter(element)
+        #expect(filter.x == nil)
+        #expect(filter.filterUnits == nil)
+    }
+
+    @Test
+    func parseUnknownPrimitiveIsUnsupported() throws {
+        let element = XML.Element.makeMockFilter()
+        element.children = [
+            .makeElement("feOffset", ["dx": "2"]),
+            .makeElement("desc")
+        ]
+
+        let filter = try XMLParser().parseFilter(element)
+        #expect(filter.effects == [.unsupported(name: "feOffset")])
+    }
+
+    @Test
+    func parseInputChain() throws {
+        let element = XML.Element.makeMockFilter()
+        element.children = [
+            .makeElement("feGaussianBlur", ["in": "SourceGraphic", "stdDeviation": "1", "result": "a"]),
+            .makeElement("feGaussianBlur", ["in": "a", "stdDeviation": "2"]),
+            .makeElement("feGaussianBlur", ["in": "SourceAlpha", "stdDeviation": "3"])
+        ]
+
+        let filter = try XMLParser().parseFilter(element)
+        #expect(filter.effects == [
+            .gaussianBlur(stdDeviation: 1),
+            .gaussianBlur(stdDeviation: 2),
+            .unsupported(name: "feGaussianBlur")
+        ])
+    }
 }
 
 private extension XML.Element {
