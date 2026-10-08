@@ -47,6 +47,11 @@ extension LayerTree.Builder {
             throw LayerTree.Error.invalid("missing referenced element: \(use.href)")
         }
 
+        guard references.enter("use:\(id)") else {
+            throw LayerTree.Error.invalid("circular reference: \(use.href)")
+        }
+        defer { references.leave("use:\(id)") }
+
         let l = makeLayer(from: element, inheriting: state)
         let x = use.x ?? 0.0
         let y = use.y ?? 0.0

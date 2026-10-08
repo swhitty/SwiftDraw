@@ -39,6 +39,7 @@ extension LayerTree {
     struct Builder {
 
         let svg: DOM.SVG
+        let references = ReferenceGuard()
 
         init(svg: DOM.SVG) {
             self.svg = svg
@@ -201,6 +202,10 @@ extension LayerTree {
 
             let l = Layer()
 
+            // a mask that (indirectly) references itself is dropped
+            guard references.enter("mask:\(maskId)") else { return nil }
+            defer { references.leave("mask:\(maskId)") }
+
             let maskState = createState(for: mask, inheriting: State())
             mask.childElements.forEach {
                 let contents = Layer.Contents.layer(makeLayer(from: $0, inheriting: maskState))
@@ -258,7 +263,10 @@ extension LayerTree.Builder {
 
         if case .url(let patternId) = state.fill,
            let element = svg.defs.patterns.first(where: { $0.id == patternId.fragmentID }) {
-            let pattern = makePattern(for: element)
+            // a pattern that (indirectly) paints itself is dropped
+            guard let pattern = makePatternGuarded(for: element) else {
+                return LayerTree.FillAttributes(color: .none, rule: state.fillRule)
+            }
             return LayerTree.FillAttributes(pattern: pattern, rule: state.fillRule, opacity: state.fillOpacity)
         } else if case .url(let gradientId) = state.fill,
                   let element = svg.defs.linearGradients.first(where: { $0.id == gradientId.fragmentID }),
@@ -359,6 +367,13 @@ extension LayerTree.Builder {
                 throw LayerTree.Error.invalid("unsupported format: \(format ?? "unknown")")
             }
         }
+    }
+
+    func makePatternGuarded(for element: DOM.Pattern) -> LayerTree.Pattern? {
+        let key = "pattern:\(element.id)"
+        guard references.enter(key) else { return nil }
+        defer { references.leave(key) }
+        return makePattern(for: element)
     }
 
     func makePattern(for element: DOM.Pattern) -> LayerTree.Pattern {
@@ -602,5 +617,28 @@ private extension DOM.SVG {
             }
         }
         return sources
+    }
+}
+
+
+extension LayerTree.Builder {
+
+    /// Tracks the `<use>`, mask and pattern references being resolved so cycles
+    /// (and absurdly deep chains) are dropped instead of recursing forever.
+    final class ReferenceGuard {
+        static let maxDepth = 64
+        private var active = Set<String>()
+        private var depth = 0
+
+        func enter(_ key: String) -> Bool {
+            guard depth < Self.maxDepth, active.insert(key).inserted else { return false }
+            depth += 1
+            return true
+        }
+
+        func leave(_ key: String) {
+            active.remove(key)
+            depth -= 1
+        }
     }
 }
