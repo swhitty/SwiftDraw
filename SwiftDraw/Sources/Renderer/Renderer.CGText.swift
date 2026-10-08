@@ -576,9 +576,9 @@ public final class CGTextRenderer: Renderer {
   
   func draw(image: LayerTree.Image, in rect: String) {
     lines.append("ctx.saveGState()")
-    lines.append("ctx.translateBy(x: 0, y: image.height)")
+    lines.append("ctx.translateBy(x: \(rect).minX, y: \(rect).maxY)")
     lines.append("ctx.scaleBy(x: 1, y: -1)")
-    lines.append("ctx.draw(image, in: CGRect(x: 0, y: 0, width: image.width, height: image.height)")
+    lines.append("ctx.draw(image, in: CGRect(origin: .zero, size: \(rect).size))")
     lines.append("ctx.restoreGState()")
   }
 

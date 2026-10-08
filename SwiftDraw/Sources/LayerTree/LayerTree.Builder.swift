@@ -58,6 +58,17 @@ extension LayerTree {
                 height: svg.height,
                 preserveAspectRatio: svg.preserveAspectRatio
             )
+            // `slice` lets the viewBox overflow the viewport, which clips it (also when drawn into a larger context).
+            // layer.clip applies after layer.transform, so the viewport is expressed in viewBox space.
+            if let par = svg.preserveAspectRatio, par.align != .none, par.meetOrSlice == .slice, l.clip.isEmpty {
+                let viewport = Builder.makeViewportClip(
+                    viewBox: svg.viewBox,
+                    width: svg.width,
+                    height: svg.height,
+                    preserveAspectRatio: par
+                )
+                l.clip = [ClipShape(shape: .rect(within: viewport, radii: .zero), transform: .identity)]
+            }
             return l
         }
 
@@ -476,6 +487,7 @@ extension LayerTree.Builder {
         if let viewBox = inherited(\.viewBox) {
             pattern.viewBox = LayerTree.Rect(x: viewBox.x, y: viewBox.y, width: viewBox.width, height: viewBox.height)
         }
+        pattern.preserveAspectRatio = inherited(\.preserveAspectRatio) ?? .default
         pattern.transform = Self.createTransforms(from: inherited(\.patternTransform) ?? []).toMatrix()
         let children = chain.first(where: { !$0.childElements.isEmpty })?.childElements ?? []
         pattern.contents = children.compactMap { .layer(makeLayer(from: $0, inheriting: .init())) }
