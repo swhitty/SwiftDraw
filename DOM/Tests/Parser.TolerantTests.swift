@@ -229,7 +229,8 @@ struct TolerantParsingTests {
         """)
         #expect(svg.childElements.count == 1)
         #expect(svg.defs.linearGradients.first { $0.id == "a" }?.gradientTransform == [])
-        #expect(svg.defs.radialGradients.first { $0.id == "b" }?.gradientTransform == [])
+        // unreadable: left unset so it can be inherited through href
+        #expect(svg.defs.radialGradients.first { $0.id == "b" }?.gradientTransform == nil)
     }
 
     @Test

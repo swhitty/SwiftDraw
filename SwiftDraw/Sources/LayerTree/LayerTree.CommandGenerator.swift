@@ -234,6 +234,7 @@ extension LayerTree {
                     let pathBounds = provider.getBounds(from: shape)
                     commands.append(contentsOf: renderCommands(forLinear: gradient,
                                                                endpoints: pathBounds.endpoints,
+                                                               covering: pathBounds,
                                                                opacity: fill.opacity,
                                                                colorConverter: colorConverter))
                     commands.append(.popState)
@@ -246,6 +247,7 @@ extension LayerTree {
                     let pathBounds = provider.getBounds(from: shape)
                     commands.append(contentsOf: renderCommands(forRadial: gradient,
                                                                in: pathBounds,
+                                                               covering: pathBounds,
                                                                opacity: fill.opacity,
                                                                colorConverter: colorConverter))
                     commands.append(.popState)
@@ -294,6 +296,7 @@ extension LayerTree {
 
                     commands.append(contentsOf: renderCommands(forLinear: gradient,
                                                                endpoints: endpoints,
+                                                               covering: shape.bounds?.outset(by: stroke.coverage),
                                                                opacity: fill.opacity,
                                                                colorConverter: colorConverter))
                     commands.append(contentsOf: renderCommands(forDashResetOf: stroke))
@@ -316,6 +319,7 @@ extension LayerTree {
 
                     commands.append(contentsOf: renderCommands(forRadial: gradient,
                                                                in: pathBounds,
+                                                               covering: pathBounds.outset(by: stroke.coverage),
                                                                opacity: fill.opacity,
                                                                colorConverter: colorConverter))
                     commands.append(contentsOf: renderCommands(forDashResetOf: stroke))
@@ -494,10 +498,11 @@ extension LayerTree {
 
         func renderCommands(forLinear gradient: LayerTree.LinearGradient,
                             endpoints: (start: LayerTree.Point, end: LayerTree.Point),
+                            covering area: LayerTree.Rect?,
                             opacity: LayerTree.Float,
                             colorConverter: any ColorConverter) -> [RendererCommand<P.Types>] {
-            let pathStart: LayerTree.Point
-            let pathEnd: LayerTree.Point
+            var pathStart: LayerTree.Point
+            var pathEnd: LayerTree.Point
             switch gradient.units  {
             case .objectBoundingBox:
                 let width = endpoints.end.x - endpoints.start.x
@@ -516,7 +521,16 @@ extension LayerTree {
                 commands.append(contentsOf: renderCommands(forTransforms: gradient.transform))
             }
 
-            let converted =  gradient.gradient.convertColor(using: colorConverter)
+            var stops = gradient.gradient
+            if gradient.spread != .pad, let area,
+               let periods = Self.spreadPeriods(start: pathStart, end: pathEnd, transform: gradient.transform, covering: area) {
+                let vector = LayerTree.Point(pathEnd.x - pathStart.x, pathEnd.y - pathStart.y)
+                stops = stops.spread(gradient.spread, periods: periods)
+                pathEnd = pathStart.offset(vector, times: LayerTree.Float(periods.upperBound + 1))
+                pathStart = pathStart.offset(vector, times: LayerTree.Float(periods.lowerBound))
+            }
+
+            let converted = stops.convertColor(using: colorConverter)
             let gradient = provider.createGradient(from: converted)
             let start = provider.createPoint(from: pathStart)
             let end = provider.createPoint(from: pathEnd)
@@ -528,12 +542,13 @@ extension LayerTree {
 
         func renderCommands(forRadial gradient: RadialGradient,
                             in bounds: LayerTree.Rect,
+                            covering area: LayerTree.Rect?,
                             opacity: LayerTree.Float,
                             colorConverter: any ColorConverter) -> [RendererCommand<P.Types>] {
             let startCenter: LayerTree.Point
             let startRadius: LayerTree.Float
-            let endCenter: LayerTree.Point
-            let endRadius: LayerTree.Float
+            var endCenter: LayerTree.Point
+            var endRadius: LayerTree.Float
 
             switch gradient.units  {
             case .objectBoundingBox:
@@ -560,7 +575,19 @@ extension LayerTree {
                 commands.append(contentsOf: renderCommands(forTransforms: gradient.transform))
             }
 
-            let converted =  gradient.gradient.convertColor(using: colorConverter)
+            var stops = gradient.gradient
+            if gradient.spread != .pad, let area,
+               let periods = Self.spreadPeriods(startCenter: startCenter, startRadius: startRadius,
+                                                endCenter: endCenter, endRadius: endRadius,
+                                                transform: gradient.transform, covering: area) {
+                let vector = LayerTree.Point(endCenter.x - startCenter.x, endCenter.y - startCenter.y)
+                let count = LayerTree.Float(periods.upperBound + 1)
+                stops = stops.spread(gradient.spread, periods: periods)
+                endCenter = startCenter.offset(vector, times: count)
+                endRadius = startRadius + (endRadius - startRadius) * count
+            }
+
+            let converted = stops.convertColor(using: colorConverter)
             let gradient = provider.createGradient(from: converted)
             let apha = provider.createFloat(from: opacity)
             commands.append(.setAlpha(apha))
@@ -577,6 +604,59 @@ extension LayerTree {
 }
 
 extension LayerTree.CommandGenerator {
+
+    /// Most periods drawn for `reflect` or `repeat`; beyond them the gradient pads.
+    static var maxSpreadPeriods: Int { 256 }
+
+    /// The periods of a linear gradient (0 being start...end) needed to cover `area`, which is in
+    /// the space the gradient's transform is applied to. nil when they cannot be computed.
+    static func spreadPeriods(start: LayerTree.Point, end: LayerTree.Point,
+                              transform: [LayerTree.Transform],
+                              covering area: LayerTree.Rect) -> ClosedRange<Int>? {
+        let dx = end.x - start.x
+        let dy = end.y - start.y
+        let length = dx * dx + dy * dy
+        guard length > 0, let inverse = transform.toMatrix().inverted() else { return nil }
+        let offsets = area.corners.map {
+            let p = inverse.transform(point: $0)
+            return ((p.x - start.x) * dx + (p.y - start.y) * dy) / length
+        }
+        guard let lower = offsets.min(), let upper = offsets.max(), lower.isFinite, upper.isFinite else { return nil }
+        return clampPeriods(lower: lower, upper: upper)
+    }
+
+    /// The periods of a radial gradient needed to cover `area`. Only computed when the focal circle
+    /// lies inside the end circle; otherwise (and inside the focal circle) the gradient pads.
+    static func spreadPeriods(startCenter: LayerTree.Point, startRadius: LayerTree.Float,
+                              endCenter: LayerTree.Point, endRadius: LayerTree.Float,
+                              transform: [LayerTree.Transform],
+                              covering area: LayerTree.Rect) -> ClosedRange<Int>? {
+        let dx = endCenter.x - startCenter.x
+        let dy = endCenter.y - startCenter.y
+        // each period the circle grows by `growth` more than its centre moves, so a point at
+        // distance d from the focal centre is inside the circle from t = (d - r0) / growth.
+        let growth = (endRadius - startRadius) - (dx * dx + dy * dy).squareRoot()
+        guard growth > 0, let inverse = transform.toMatrix().inverted() else { return nil }
+        let offsets = area.corners.map {
+            let p = inverse.transform(point: $0)
+            let distance = ((p.x - startCenter.x) * (p.x - startCenter.x) + (p.y - startCenter.y) * (p.y - startCenter.y)).squareRoot()
+            return (distance - startRadius) / growth
+        }
+        guard let upper = offsets.max(), upper.isFinite else { return nil }
+        return clampPeriods(lower: 0, upper: upper)
+    }
+
+    static func clampPeriods(lower: LayerTree.Float, upper: LayerTree.Float) -> ClosedRange<Int> {
+        let limit = LayerTree.Float(maxSpreadPeriods)
+        var first = Int(max(-limit, min(0, lower.rounded(.down))))
+        var last = Int(min(limit, max(1, upper.rounded(.up)))) - 1
+        if last - first + 1 > maxSpreadPeriods {
+            // keep the periods around the gradient vector
+            first = max(first, -maxSpreadPeriods / 2)
+            last = first + maxSpreadPeriods - 1
+        }
+        return first...last
+    }
 
     func logUnsupportedFilters(_ filters: [LayerTree.Filter]) {
         guard !hasLoggedFilterWarning else { return }
@@ -612,6 +692,15 @@ extension LayerTree.CommandGenerator {
 
 private extension LayerTree.Rect {
 
+    var corners: [LayerTree.Point] {
+        [LayerTree.Point(minX, minY), LayerTree.Point(maxX, minY),
+         LayerTree.Point(minX, maxY), LayerTree.Point(maxX, maxY)]
+    }
+
+    func outset(by amount: LayerTree.Float) -> LayerTree.Rect {
+        LayerTree.Rect(x: x - amount, y: y - amount, width: width + amount * 2, height: height + amount * 2)
+    }
+
     func getPoint(offset: LayerTree.Point) -> LayerTree.Point {
         return LayerTree.Point(origin.x + size.width * offset.x,
                                origin.y + size.height * offset.y)
@@ -624,6 +713,34 @@ private extension LayerTree.Rect {
 }
 
 
+extension LayerTree.Gradient {
+
+    /// The stops of the given periods of this gradient laid end to end over 0...1, every odd period
+    /// mirrored for `reflect` (SVG 1.1 §13.2.2 spreadMethod).
+    func spread(_ spread: Spread, periods: ClosedRange<Int>) -> LayerTree.Gradient {
+        guard spread != .pad, !stops.isEmpty else { return self }
+        // complete each period so the first and last colours fill 0 and 1
+        var period = stops
+        if let first = period.first, first.offset > 0 {
+            period.insert(Stop(offset: 0, color: first.color, opacity: first.opacity), at: 0)
+        }
+        if let last = period.last, last.offset < 1 {
+            period.append(Stop(offset: 1, color: last.color, opacity: last.opacity))
+        }
+        let mirrored = period.reversed().map { Stop(offset: 1 - $0.offset, color: $0.color, opacity: $0.opacity) }
+        let count = LayerTree.Float(periods.count)
+        var result = [Stop]()
+        for (index, k) in periods.enumerated() {
+            let source = spread == .reflect && k % 2 != 0 ? mirrored : period
+            for stop in source {
+                result.append(Stop(offset: (LayerTree.Float(index) + stop.offset) / count,
+                                   color: stop.color, opacity: stop.opacity))
+            }
+        }
+        return LayerTree.Gradient(stops: result)
+    }
+}
+
 private extension LayerTree.Gradient {
     func convertColor(using converter: any ColorConverter) -> LayerTree.Gradient {
         let stops: [LayerTree.Gradient.Stop] = stops.map { stop in
@@ -632,6 +749,30 @@ private extension LayerTree.Gradient {
             return stop
         }
         return LayerTree.Gradient(stops: stops)
+    }
+}
+
+private extension LayerTree.StrokeAttributes {
+    /// How far the stroke may reach beyond the path's bounds (half the width, more at miter joins).
+    var coverage: LayerTree.Float {
+        width / 2 * (join == .miter ? max(1, miterLimit) : 1)
+    }
+}
+
+private extension LayerTree.Point {
+    func offset(_ vector: LayerTree.Point, times factor: LayerTree.Float) -> LayerTree.Point {
+        LayerTree.Point(x + vector.x * factor, y + vector.y * factor)
+    }
+}
+
+private extension LayerTree.Transform.Matrix {
+    func inverted() -> Self? {
+        let determinant = a * d - b * c
+        guard determinant != 0, determinant.isFinite else { return nil }
+        return Self(a: d / determinant, b: -b / determinant,
+                    c: -c / determinant, d: a / determinant,
+                    tx: (c * ty - d * tx) / determinant,
+                    ty: (b * tx - a * ty) / determinant)
     }
 }
 
