@@ -32,6 +32,26 @@ import XCTest
 
 final class RendererCGTextTests: XCTestCase {
 
+    func testFilterLayerIsolatesGraphicsState() throws {
+        let xml = #"""
+        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+            <filter id="blur"><feGaussianBlur stdDeviation="2" /></filter>
+            <rect x="10" y="10" width="20" height="20" fill="red" filter="url(#blur)" />
+            <rect x="50" y="50" width="20" height="20" fill="black" />
+        </svg>
+        """#
+        let code = try CGTextRenderer.render(data: Data(xml.utf8), options: .default, api: .uiKit, precision: 2)
+        let lines = code.components(separatedBy: "\n").map { $0.trimmingCharacters(in: .whitespaces) }
+
+        let warning = try XCTUnwrap(lines.firstIndex { $0.hasPrefix("// warning: filter dropped") })
+        let save = try XCTUnwrap(lines.firstIndex(of: "ctx.saveGState()"))
+        let restore = try XCTUnwrap(lines.lastIndex(of: "ctx.restoreGState()"))
+        let lastFill = try XCTUnwrap(lines.lastIndex { $0.hasPrefix("ctx.setFillColor") })
+        XCTAssertLessThan(warning, save)
+        XCTAssertLessThan(save, restore)
+        XCTAssertGreaterThan(lastFill, restore)
+    }
+
     func testLinesCode() throws {
         let code = try CGTextRenderer.render(svgNamed: "lines.svg")
         XCTAssertEqual(
