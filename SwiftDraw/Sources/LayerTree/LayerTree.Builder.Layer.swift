@@ -69,13 +69,8 @@ extension LayerTree.Builder {
 
     func makeTextContents(from text: DOM.Text, with state: State) -> LayerTree.Layer.Contents {
         var point = Point(text.x ?? 0, text.y ?? 0)
-        var att = makeTextAttributes(with: state)
-
-        if let fontFamily = text.attributes.fontFamily {
-            att.font = fontFamily.flatMap(makeFonts)
-        }
-        att.size = text.attributes.fontSize ?? att.size
-        att.anchor = text.attributes.textAnchor ?? att.anchor
+        // state already holds the cascaded font-family, font-size and text-anchor
+        let att = makeTextAttributes(with: state)
         let offset = Self.makeOffset(for: text.value, with: att)
         point.x += offset.width
         point.y += offset.height

@@ -108,6 +108,7 @@ extension XMLParser {
 
         ge.attributes = try parsePresentationAttributes(e)
         ge.style = try parseStyleAttributes(e)
+        ge.matchedStyle = styleContext.matcher?.match(e)
         return ge
     }
 

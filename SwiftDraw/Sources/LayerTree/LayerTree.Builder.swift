@@ -140,8 +140,9 @@ extension LayerTree {
         }
 
         func makeBaseLayer(from element: DOM.GraphicsElement, inheriting previousState: State) -> (Layer, State) {
-            let state = createState(for: element, inheriting: previousState)
-            let attributes = element.attributes
+            // transform, clip-rule and mask may come from CSS as well as attributes
+            let attributes = DOM.presentationAttributes(for: element, styles: svg.styles)
+            let state = Self.createState(for: attributes, inheriting: previousState)
             let l = Layer()
             l.class = element.class
             guard state.display != .none else { return (l, state) }
@@ -150,7 +151,7 @@ extension LayerTree {
             l.clip = makeClipShapes(for: element)
             l.clipRule = attributes.clipRule
             l.clipUnits = makeClipUnits(for: element)
-            l.mask = createMaskLayer(for: element)
+            l.mask = createMaskLayer(for: attributes)
             l.opacity = state.opacity
             l.filters = makeFilters(for: state)
             return (l, state)
@@ -196,14 +197,19 @@ extension LayerTree {
                 return nil
             }
 
-            let transform = Self.createTransforms(from: element.attributes.transform ?? [])
+            let attributes = DOM.presentationAttributes(for: element, styles: svg.styles)
+            let transform = Self.createTransforms(from: attributes.transform ?? [])
                 .toMatrix()
 
             return ClipShape(shape: shape, transform: transform)
         }
 
         func createMaskLayer(for element: DOM.GraphicsElement) -> Layer? {
-            guard let maskId = element.attributes.mask?.fragmentID,
+            createMaskLayer(for: DOM.presentationAttributes(for: element, styles: svg.styles))
+        }
+
+        func createMaskLayer(for attributes: DOM.PresentationAttributes) -> Layer? {
+            guard let maskId = attributes.mask?.fragmentID,
                   let mask = svg.defs.masks.first(where: { $0.id == maskId }) else { return nil }
 
             // a mask that (indirectly) references itself is dropped

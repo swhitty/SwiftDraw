@@ -59,11 +59,22 @@ package extension XMLParser {
         let svg = DOM.SVG(width: DOM.Length(w), height: DOM.Length(h))
         svg.x = try att.parseCoordinate("x")
         svg.y = try att.parseCoordinate("y")
+        // selectors are matched against the whole document tree before its elements are parsed
+        let styles = parseStyleSheetElements(within: e)
+        let isRoot = styleContext.matcher == nil
+        if isRoot {
+            styleContext.matcher = DOM.StyleSheet.Matcher(sheets: styles, root: e)
+        }
+        defer {
+            if isRoot { styleContext.matcher = nil }
+        }
+        svg.matchedStyle = styleContext.matcher?.match(e)
+
         svg.childElements = try parseGraphicsElements(e.children)
         svg.viewBox = viewBox
 
         svg.defs = try parseSVGDefs(e)
-        svg.styles = parseStyleSheetElements(within: e)
+        svg.styles = styles
 
         svg.attributes = try parsePresentationAttributes(att)
 
@@ -223,6 +234,7 @@ package extension XMLParser {
         mask.class = try att.parseString("class")
         mask.attributes = try parsePresentationAttributes(e)
         mask.style = try parseStyleAttributes(e)
+        mask.matchedStyle = styleContext.matcher?.match(e)
         mask.childElements = try parseGraphicsElements(e.children)
         return mask
     }

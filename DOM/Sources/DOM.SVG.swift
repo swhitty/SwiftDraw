@@ -106,5 +106,7 @@ package extension DOM {
         
         package var attributes: [Selector: PresentationAttributes] = [:]
         package var fonts: [DOM.FontFace] = []
+        // every rule in source order, including selectors `attributes` cannot key
+        package var rules: [Rule] = []
     }
 }

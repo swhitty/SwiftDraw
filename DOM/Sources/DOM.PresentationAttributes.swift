@@ -35,6 +35,7 @@ package extension DOM {
 
     // PresentationAttributes cascade;
     // element.attributes --> .element() --> .class() ---> .id() ---> element.style ---> layerTree.state
+    // (parsed documents: element.attributes --> matched rules --> element.style --> !important rules)
     
     struct PresentationAttributes {
         package var opacity: DOM.Float?
@@ -68,13 +69,23 @@ package extension DOM {
     static func presentationAttributes(for element: DOM.GraphicsElement,
                                        styles: [StyleSheet]) -> PresentationAttributes {
         var attributes = element.attributes
-        
-        for selector in makeSelectors(for: element) {
-            let new = makeAttributes(for: selector, styles: styles)
-            attributes = attributes.applyingAttributes(new)
+
+        if let matched = element.matchedStyle {
+            // parsed documents: every selector form, by specificity then source order (CSS Cascade 3 §6)
+            attributes = attributes.applyingAttributes(matched.attributes)
+        } else {
+            for selector in makeSelectors(for: element) {
+                let new = makeAttributes(for: selector, styles: styles)
+                attributes = attributes.applyingAttributes(new)
+            }
         }
-        
+
         attributes = attributes.applyingAttributes(element.style)
+
+        if let matched = element.matchedStyle {
+            // `!important` stylesheet declarations override style=""
+            attributes = attributes.applyingAttributes(matched.importantAttributes)
+        }
         return attributes
     }
     
