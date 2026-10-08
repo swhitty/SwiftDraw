@@ -136,7 +136,7 @@ extension XMLParser {
                         result.append(chars[i])
                         i += 1
                         continue
-                    } else if c == q {
+                    } else if c == q || c.isNewline {
                         quote = nil
                     }
                 } else if c == "\"" || c == "'" {
@@ -190,6 +190,24 @@ extension XMLParser {
         return (rules, fontFaces)
     }
 
+    static func hasBadString(_ text: String) -> Bool {
+        var quote: Character?
+        var escaped = false
+        for c in text {
+            if escaped {
+                escaped = false
+            } else if c == "\\" {
+                escaped = true
+            } else if let q = quote {
+                if c == q { quote = nil }
+                if c.isNewline { return true }
+            } else if c == "\"" || c == "'" {
+                quote = c
+            }
+        }
+        return quote != nil
+    }
+
     // A declaration without a name or a value is skipped; the others are kept (CSS Syntax §5.4.5).
     static func parseCSSDeclarations(_ text: String) -> [CSSDeclaration] {
         DOM.StyleSheet.ComplexSelector.splitTopLevel(text, separator: ";").compactMap { declaration in
@@ -198,6 +216,9 @@ extension XMLParser {
             var value = declaration[declaration.index(after: colon)...].trimmingCharacters(in: .whitespacesAndNewlines)
             // a nested block (CSS nesting) is not a declaration
             guard !name.isEmpty, !name.contains("{"), !name.contains("}") else { return nil }
+
+            // a string cut by a newline makes the declaration invalid
+            guard !Self.hasBadString(value) else { return nil }
 
             let stripped = XMLParser.Attributes.removingImportant(from: value)
             let important = stripped != value

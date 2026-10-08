@@ -334,7 +334,7 @@ extension XML.Formatter {
         }
 
         func encodeURL(_ url: URL) -> String {
-            "url(\(url.absoluteString))"
+            url.isNone ? "none" : "url(\(url.absoluteString))"
         }
 
         func encodeColor(from color: DOM.Color) -> String {
