@@ -502,8 +502,11 @@ struct CGRenderer: Renderer {
             return
         }
 
-        // zero deviation is a pass-through: draw straight into the parent, clipped to the region
-        guard !deviations.isEmpty else {
+        // blurs too small to change a pixel (every box size 1) are a pass-through:
+        // draw straight into the parent, clipped to the region
+        let isVector = parent.bitsPerPixel == 0
+        let oversample: CGFloat = isVector ? 2 : 1
+        guard deviations.contains(where: { CGContext.isVisibleBlur($0, scale: oversample) }) else {
             filterLayers.entries.append(CGFilterLayer())
             return
         }
@@ -515,11 +518,11 @@ struct CGRenderer: Renderer {
             deviceRect = deviceRect.intersection(visible.applying(toDevice).insetBy(dx: -spreadX, dy: -spreadY))
         }
 
-        let isVector = parent.bitsPerPixel == 0
+        // PDF and other vector contexts: blurred groups are rasterized at 2x (2 px per point)
         guard let layer = CGFilterLayer.make(deviceRect: deviceRect,
                                              deviations: deviations,
                                              maxPixels: maxFilterLayerPixels,
-                                             oversample: isVector ? 2 : 1,
+                                             oversample: oversample,
                                              colorSpace: parent.colorSpace) else {
             // empty clip or region: draw nothing and allocate nothing
             parent.clip(to: .zero)
@@ -528,6 +531,11 @@ struct CGRenderer: Renderer {
         }
 
         layer.offscreen?.concatenate(toDevice)
+        // input outside the region is excluded (it matters under rotation or skew); the edge is anti-aliased
+        // once, by the parent clip at composite time
+        layer.offscreen?.setShouldAntialias(false)
+        layer.offscreen?.clip(to: region)
+        layer.offscreen?.setShouldAntialias(true)
         filterLayers.entries.append(layer)
     }
 
@@ -645,9 +653,9 @@ extension CGContext {
     // Box sizes must be odd for vImage, so an even size d becomes d+1, d-1, d+1 (near-identical variance).
     func applyGaussianBlur(_ deviation: CGSize) {
         guard let data else { return }
-        let limit = 2 * Swift.max(width, height) + 1
-        let sizesX = Self.boxSizes(for: deviation.width, limit: limit)
-        let sizesY = Self.boxSizes(for: deviation.height, limit: limit)
+        // a box wider than the image only spreads it further towards transparent: clamp per axis
+        let sizesX = Self.boxSizes(for: deviation.width, limit: width | 1)
+        let sizesY = Self.boxSizes(for: deviation.height, limit: height | 1)
         guard sizesX.contains(where: { $0 > 1 }) || sizesY.contains(where: { $0 > 1 }) else { return }
 
         let byteCount = bytesPerRow * height
@@ -666,6 +674,10 @@ extension CGContext {
         }
         // after three passes the result is in the temporary buffer
         memcpy(data, src.data, byteCount)
+    }
+
+    static func isVisibleBlur(_ deviation: CGSize, scale: CGFloat) -> Bool {
+        boxSizes(for: deviation.width * scale) != [1, 1, 1] || boxSizes(for: deviation.height * scale) != [1, 1, 1]
     }
 
     // limit is odd: the largest box size worth applying

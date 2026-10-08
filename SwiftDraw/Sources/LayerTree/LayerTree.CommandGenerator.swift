@@ -643,8 +643,11 @@ extension LayerTree.CommandGenerator {
         )
     }
 
-    // Geometry bounding box of the layer contents in the layer's user space; stroke excluded, text not measured.
+    // Geometry bounding box of the layer contents in the layer's user space; stroke excluded.
+    // nil when the contents include text, which is not measured: the filter is then dropped
+    // rather than clipping the text away.
     func makeBounds(for layer: LayerTree.Layer) -> LayerTree.Rect? {
+        guard !layer.containsText else { return nil }
         var points = [LayerTree.Point]()
         for contents in layer.contents {
             switch contents {

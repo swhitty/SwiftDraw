@@ -105,6 +105,48 @@ final class CGRendererFilterTests: XCTestCase {
         XCTAssertEqual(CGContext.boxSizes(for: .infinity), [1, 1, 1])
         XCTAssertEqual(CGContext.boxSizes(for: .nan), [1, 1, 1])
         XCTAssertEqual(CGContext.boxSizes(for: 1e300, limit: 201), [201, 201, 201])
+        XCTAssertEqual(CGContext.boxSizes(for: 1e6, limit: 1024 | 1), [1025, 1025, 1025])
+        XCTAssertFalse(CGContext.isVisibleBlur(CGSize(width: 0.3, height: 0.3), scale: 1))
+        XCTAssertTrue(CGContext.isVisibleBlur(CGSize(width: 0, height: 2), scale: 1))
+    }
+
+    // the clip-path applies to the blurred result: a hard edge at the clip, the blur kept inside it
+    func testBlurThenClip() throws {
+        let bitmap = try render(#"""
+        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+            <filter id="blur" x="-1" y="-1" width="3" height="3"><feGaussianBlur stdDeviation="2" /></filter>
+            <clipPath id="left"><rect x="0" y="0" width="50" height="100" /></clipPath>
+            <rect x="10" y="10" width="41" height="30" fill="black" clip-path="url(#left)" filter="url(#blur)" />
+            <rect x="10" y="60" width="39" height="30" fill="black" clip-path="url(#left)" filter="url(#blur)" />
+        </svg>
+        """#)
+
+        // edge at x=51 (outside the clip): blurred first, so x=49 stays dark and x=50 is cut
+        XCTAssertGreaterThan(bitmap.alpha(x: 49, y: 25), 0.65)
+        XCTAssertEqual(bitmap.alpha(x: 50, y: 25), 0)
+        // edge at x=49 (inside the clip): the blur falls off before the clip
+        XCTAssertEqual(bitmap.alpha(x: 49, y: 75), 0.4, accuracy: 0.15)
+        XCTAssertEqual(bitmap.alpha(x: 50, y: 75), 0)
+    }
+
+    // blurred groups are rasterized at 2x in PDF contexts
+    func testPDFContextSmoke() throws {
+        let svg = try XCTUnwrap(SVG(xml: #"""
+        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+            <filter id="blur"><feGaussianBlur stdDeviation="5" /></filter>
+            <rect x="25" y="25" width="50" height="50" fill="black" filter="url(#blur)" />
+        </svg>
+        """#))
+        let data = NSMutableData()
+        var box = CGRect(x: 0, y: 0, width: 100, height: 100)
+        let consumer = try XCTUnwrap(CGDataConsumer(data: data as CFMutableData))
+        let ctx = try XCTUnwrap(CGContext(consumer: consumer, mediaBox: &box, nil))
+        ctx.beginPDFPage(nil)
+        ctx.draw(svg)
+        ctx.endPDFPage()
+        ctx.closePDF()
+
+        XCTAssertGreaterThan(data.length, 1000)
     }
 
     // shape near the top: catches a vertically flipped composite
