@@ -248,7 +248,6 @@ extension LayerTree {
                                                                in: pathBounds,
                                                                opacity: fill.opacity,
                                                                colorConverter: colorConverter))
-                    commands.append(contentsOf: renderCommands(forDashResetOf: stroke))
                     commands.append(.popState)
                 }
             }
@@ -319,6 +318,7 @@ extension LayerTree {
                                                                in: pathBounds,
                                                                opacity: fill.opacity,
                                                                colorConverter: colorConverter))
+                    commands.append(contentsOf: renderCommands(forDashResetOf: stroke))
                     commands.append(.popState)
                 }
             default:

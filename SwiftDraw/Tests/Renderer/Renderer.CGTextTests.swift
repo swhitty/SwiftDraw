@@ -576,6 +576,21 @@ extension RendererCGTextTests {
         // the lone push/pop pair is stripped by the optimizer, so the dash must be reset explicitly
         XCTAssertEqual(lines[stroke + 1], "ctx.setLineDash(phase: 0, lengths: [])")
     }
+
+    func testDashedGradientStrokesAreReset() throws {
+        // A stroke-only shape is the lone push/pop pair the optimizer strips, so each gradient stroke
+        // branch must reset the dash itself or it leaks into the caller's context.
+        for gradient in [#"<linearGradient id="g"><stop offset="0" stop-color="red"/><stop offset="1" stop-color="blue"/></linearGradient>"#,
+                         #"<radialGradient id="g"><stop offset="0" stop-color="red"/><stop offset="1" stop-color="blue"/></radialGradient>"#] {
+            let svg = #"<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><defs>"# + gradient +
+                #"</defs><path d="M0 0 L100 100" fill="none" stroke="url(#g)" stroke-width="4" stroke-dasharray="4 2"/></svg>"#
+            let code = try CGTextRenderer.render(data: Data(svg.utf8), options: .default, api: .uiKit, precision: 2)
+            let lines = code.split(separator: "\n").map { $0.trimmingCharacters(in: .whitespaces) }
+            let dash = try XCTUnwrap(lines.firstIndex(of: "ctx.setLineDash(phase: 0, lengths: [4, 2])"), gradient)
+            let reset = try XCTUnwrap(lines.lastIndex(of: "ctx.setLineDash(phase: 0, lengths: [])"), gradient)
+            XCTAssertGreaterThan(reset, dash, gradient)
+        }
+    }
 }
 
 private extension CGTextRenderer {
