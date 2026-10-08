@@ -29,6 +29,7 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
+@testable import SwiftDrawDOM
 @testable import SwiftDraw
 
 #if canImport(AppKit) && !targetEnvironment(macCatalyst)
@@ -62,6 +63,35 @@ final class CGRendererTests: XCTestCase {
     XCTAssertEqual(renderer.getColor(x: 2, y: 2), .red)
     XCTAssertNotEqual(renderer.getColor(x: 7, y: 2), .red)
     XCTAssertEqual(renderer.getColor(x: 12, y: 2), .red)
+  }
+
+  func testPreserveAspectRatioLetterboxesViewBox() throws {
+    // 100x100 viewBox in a 200x100 viewport: xMidYMid meet centres it, leaving 50px bands either side
+    let dom = try DOM.SVG.parse(xml: """
+    <svg xmlns="http://www.w3.org/2000/svg" width="200" height="100" viewBox="0 0 100 100">
+    <rect width="100" height="100" fill="red"/></svg>
+    """)
+    let svg = SVG(dom: dom, options: .default)
+    let renderer = ImageRenderer(pixelsWide: 200, pixelsHigh: 100)
+    renderer.renderer.perform(svg.commands)
+
+    XCTAssertEqual(renderer.getColor(x: 100, y: 50), .red)
+    XCTAssertEqual(renderer.getColor(x: 55, y: 50), .red)
+    XCTAssertNotEqual(renderer.getColor(x: 45, y: 50), .red)
+    XCTAssertNotEqual(renderer.getColor(x: 155, y: 50), .red)
+  }
+
+  func testPreserveAspectRatioSliceFillsViewport() throws {
+    let dom = try DOM.SVG.parse(xml: """
+    <svg xmlns="http://www.w3.org/2000/svg" width="200" height="100" viewBox="0 0 100 100" preserveAspectRatio="xMinYMin slice">
+    <rect width="100" height="100" fill="red"/></svg>
+    """)
+    let svg = SVG(dom: dom, options: .default)
+    let renderer = ImageRenderer(pixelsWide: 200, pixelsHigh: 100)
+    renderer.renderer.perform(svg.commands)
+
+    XCTAssertEqual(renderer.getColor(x: 5, y: 5), .red)
+    XCTAssertEqual(renderer.getColor(x: 195, y: 95), .red)
   }
 
   func testAlphaClips() {

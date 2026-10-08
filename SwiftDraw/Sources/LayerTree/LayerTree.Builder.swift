@@ -55,7 +55,8 @@ extension LayerTree {
                 y: svg.y,
                 viewBox: svg.viewBox,
                 width: svg.width,
-                height: svg.height
+                height: svg.height,
+                preserveAspectRatio: svg.preserveAspectRatio
             )
             return l
         }
@@ -65,15 +66,13 @@ extension LayerTree {
             y: DOM.Coordinate?,
             viewBox: DOM.SVG.ViewBox?,
             width: DOM.Length,
-            height: DOM.Length
+            height: DOM.Length,
+            preserveAspectRatio: DOM.PreserveAspectRatio? = nil
         ) -> [LayerTree.Transform] {
-            let position = LayerTree.Transform.translate(tx: x ?? 0, ty: y ?? 0)
-            let viewBox = viewBox ?? DOM.SVG.ViewBox(x: 0, y: 0, width: .init(width), height: .init(height))
-
-            let sx = LayerTree.Float(width) / viewBox.width
-            let sy = LayerTree.Float(height) / viewBox.height
-            let scale = LayerTree.Transform.scale(sx: sx, sy: sy)
-            let translate = LayerTree.Transform.translate(tx: -viewBox.x, ty: -viewBox.y)
+            let fit = makeViewBoxFit(viewBox: viewBox, width: width, height: height, preserveAspectRatio: preserveAspectRatio)
+            let position = LayerTree.Transform.translate(tx: (x ?? 0) + fit.tx, ty: (y ?? 0) + fit.ty)
+            let scale = LayerTree.Transform.scale(sx: fit.sx, sy: fit.sy)
+            let translate = LayerTree.Transform.translate(tx: -fit.viewBox.x, ty: -fit.viewBox.y)
 
             var transform: [LayerTree.Transform] = []
 
@@ -121,15 +120,20 @@ extension LayerTree {
                     parent.appendContents(.layer(layer))
 
                     if let svg = currentElement as? DOM.SVG {
-                        let viewBox = svg.viewBox ?? DOM.SVG.ViewBox(x: 0, y: 0, width: .init(svg.width), height: .init(svg.height))
-                        let bounds = LayerTree.Rect(x: viewBox.x, y: viewBox.y, width: viewBox.width, height: viewBox.height)
+                        let bounds = Builder.makeViewportClip(
+                            viewBox: svg.viewBox,
+                            width: svg.width,
+                            height: svg.height,
+                            preserveAspectRatio: svg.preserveAspectRatio
+                        )
                         layer.clip = [ClipShape(shape: .rect(within: bounds, radii: .zero), transform: .identity)]
                         layer.transform = Builder.makeTransform(
                             x: svg.x,
                             y: svg.y,
                             viewBox: svg.viewBox,
                             width: svg.width,
-                            height: svg.height
+                            height: svg.height,
+                            preserveAspectRatio: svg.preserveAspectRatio
                         )
                     }
                 } else {

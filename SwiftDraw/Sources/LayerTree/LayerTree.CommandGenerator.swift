@@ -345,9 +345,34 @@ extension LayerTree {
             let size = provider.createSize(from: renderImage)
             guard size.width > 0 && size.height > 0 else { return [] }
 
+            let (dest, clip) = makeImagePlacement(for: image, bitmapSize: size)
+            let draw = RendererCommand<P.Types>.draw(image: renderImage, in: provider.createRect(from: dest))
+            guard let clip else { return [draw] }
+            return [.pushState,
+                    .setClip(path: makeCachedPath(from: .rect(within: clip, radii: .zero)), rule: provider.createFillRule(from: .nonzero)),
+                    draw,
+                    .popState]
+        }
+
+        /// Where the bitmap is drawn and, for `slice` overflowing its frame, the rect that clips it.
+        /// With both width and height the bitmap is fitted to the frame per preserveAspectRatio (SVG 1.1 §7.8).
+        func makeImagePlacement(for image: Image, bitmapSize size: LayerTree.Size) -> (dest: LayerTree.Rect, clip: LayerTree.Rect?) {
             let frame = makeImageFrame(for: image, bitmapSize: size)
-            let rect = provider.createRect(from: frame)
-            return [.draw(image: renderImage, in: rect)]
+            guard image.width != nil, image.height != nil, frame.width > 0, frame.height > 0 else {
+                return (frame, nil)
+            }
+            let fit = image.preserveAspectRatio.fit(
+                contentWidth: size.width, contentHeight: size.height,
+                viewportWidth: frame.width, viewportHeight: frame.height
+            )
+            let dest = LayerTree.Rect(
+                x: frame.x + fit.tx,
+                y: frame.y + fit.ty,
+                width: size.width * fit.sx,
+                height: size.height * fit.sy
+            )
+            let overflows = image.preserveAspectRatio.align != .none && (dest.width > frame.width || dest.height > frame.height)
+            return (dest, overflows ? frame : nil)
         }
 
         private func makeCachedPath(from shape: LayerTree.Shape) -> P.Types.Path {

@@ -36,6 +36,7 @@ package extension DOM {
         package var width: Length
         package var height: Length
         package var viewBox: ViewBox?
+        package var preserveAspectRatio: PreserveAspectRatio?
 
         package var childElements = [GraphicsElement]()
 
