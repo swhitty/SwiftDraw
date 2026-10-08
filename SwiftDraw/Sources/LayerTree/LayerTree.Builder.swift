@@ -362,11 +362,43 @@ extension LayerTree.Builder {
     }
 
     func makePattern(for element: DOM.Pattern) -> LayerTree.Pattern {
-        let frame = LayerTree.Rect(x: 0, y: 0, width: element.width, height: element.height)
-        let contentUnits: LayerTree.PatternUnits = element.patternContentUnits == .objectBoundingBox ? .objectBoundingBox : .userSpaceOnUse
-        let pattern = LayerTree.Pattern(frame: frame, contentUnits: contentUnits)
-        pattern.contents = element.childElements.compactMap { .layer(makeLayer(from: $0, inheriting: .init())) }
+        // SVG 1.1 §13.3: attributes not set on this element, and its children when it has none,
+        // are inherited along the xlink:href chain.
+        let chain = makePatternChain(for: element)
+        func inherited<T>(_ value: (DOM.Pattern) -> T?) -> T? {
+            chain.lazy.compactMap(value).first
+        }
+
+        let frame = LayerTree.Rect(x: inherited(\.x) ?? 0,
+                                   y: inherited(\.y) ?? 0,
+                                   width: inherited(\.width) ?? 0,
+                                   height: inherited(\.height) ?? 0)
+        let units: LayerTree.PatternUnits = inherited(\.patternUnits) == .userSpaceOnUse ? .userSpaceOnUse : .objectBoundingBox
+        let contentUnits: LayerTree.PatternUnits = inherited(\.patternContentUnits) == .objectBoundingBox ? .objectBoundingBox : .userSpaceOnUse
+        let pattern = LayerTree.Pattern(frame: frame, contentUnits: contentUnits, units: units)
+        if let viewBox = inherited(\.viewBox) {
+            pattern.viewBox = LayerTree.Rect(x: viewBox.x, y: viewBox.y, width: viewBox.width, height: viewBox.height)
+        }
+        pattern.transform = Self.createTransforms(from: inherited(\.patternTransform) ?? []).toMatrix()
+        let children = chain.first(where: { !$0.childElements.isEmpty })?.childElements ?? []
+        pattern.contents = children.compactMap { .layer(makeLayer(from: $0, inheriting: .init())) }
         return pattern
+    }
+
+    /// The pattern followed by the patterns it references through href; a cycle or a reference
+    /// that is not a pattern ends the chain.
+    func makePatternChain(for element: DOM.Pattern) -> [DOM.Pattern] {
+        var chain = [element]
+        var visited: Set<String> = [element.id]
+        var current = element
+        while let id = current.href?.fragmentID,
+              !visited.contains(id),
+              let next = svg.defs.patterns.first(where: { $0.id == id }) {
+            visited.insert(id)
+            chain.append(next)
+            current = next
+        }
+        return chain
     }
 
     func makeGradient(for element: DOM.LinearGradient) -> LayerTree.LinearGradient? {

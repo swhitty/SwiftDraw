@@ -37,16 +37,28 @@ extension XMLParser {
   func parsePattern(_ att: any AttributeParser) throws -> DOM.Pattern {
     
     let id: String = try att.parseString("id")
-    let width: DOM.Coordinate = try att.parseCoordinate("width")
-    let height: DOM.Coordinate = try att.parseCoordinate("height")
+    // width / height are optional: they may be inherited through href, and a pattern
+    // that ends up without them disables rendering instead of failing the document.
+    // Percentages are read as fractions (objectBoundingBox); an unreadable value is dropped.
+    let width: DOM.Coordinate? = try? att.parseCoordinateOrPercentage("width")
+    let height: DOM.Coordinate? = try? att.parseCoordinateOrPercentage("height")
     
     var pattern = DOM.Pattern(id: id, width: width, height: height)
-    pattern.x = try att.parseCoordinate("x")
-    pattern.y = try att.parseCoordinate("y")
+    pattern.x = try? att.parseCoordinateOrPercentage("x")
+    pattern.y = try? att.parseCoordinateOrPercentage("y")
     
     pattern.patternUnits = try att.parseRaw("patternUnits")
     pattern.patternContentUnits = try att.parseRaw("patternContentUnits")
-    
+
+    // SVG 2 plain href, falling back to the deprecated xlink:href
+    let href: DOM.URL? = try? att.parseUrl("href")
+    let xlinkHref: DOM.URL? = try? att.parseUrl("xlink:href")
+    pattern.href = href ?? xlinkHref
+    pattern.viewBox = try? parseViewBox(try att.parseString("viewBox"))
+    if let val = try? att.parseString("patternTransform") {
+      pattern.patternTransform = try? parseTransform(val)
+    }
+
     return pattern
   }
   

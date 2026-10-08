@@ -207,27 +207,25 @@ extension LayerTree {
                     commands.append(.fill(path, rule: rule))
                 }
             case .pattern(let fillPattern):
-                var resolvedPattern = fillPattern
-                if fillPattern.contentUnits == .objectBoundingBox {
-                    let bounds = provider.getBounds(from: shape)
-                    let scaledFrame = LayerTree.Rect(
-                        x: fillPattern.frame.x * bounds.width + bounds.x,
-                        y: fillPattern.frame.y * bounds.height + bounds.y,
-                        width: fillPattern.frame.width * bounds.width,
-                        height: fillPattern.frame.height * bounds.height
-                    )
-                    resolvedPattern = LayerTree.Pattern(frame: scaledFrame)
-                    resolvedPattern.contents = fillPattern.contents
-                }
-                var patternCommands = [RendererCommand<P.Types>]()
-                for contents in resolvedPattern.contents {
-                    patternCommands.append(contentsOf: renderCommands(for: contents, colorConverter: colorConverter))
-                }
+                let bounds = provider.getBounds(from: shape)
+                if let (resolvedPattern, contentTransform) = Self.resolvePattern(fillPattern, in: bounds) {
+                    var patternCommands = [RendererCommand<P.Types>]()
+                    if contentTransform != .identity {
+                        patternCommands.append(.pushState)
+                        patternCommands.append(.concatenate(transform: provider.createTransform(from: contentTransform)))
+                    }
+                    for contents in resolvedPattern.contents {
+                        patternCommands.append(contentsOf: renderCommands(for: contents, colorConverter: colorConverter))
+                    }
+                    if contentTransform != .identity {
+                        patternCommands.append(.popState)
+                    }
 
-                let pattern = provider.createPattern(from: resolvedPattern, contents: patternCommands)
-                let rule = provider.createFillRule(from: fill.rule)
-                commands.append(.setFillPattern(pattern))
-                commands.append(.fill(path, rule: rule))
+                    let pattern = provider.createPattern(from: resolvedPattern, contents: patternCommands)
+                    let rule = provider.createFillRule(from: fill.rule)
+                    commands.append(.setFillPattern(pattern))
+                    commands.append(.fill(path, rule: rule))
+                }
             case .linearGradient(let gradient):
                 if canRenderGradient(gradient.gradient) {
                     commands.append(.pushState)
@@ -662,5 +660,51 @@ private extension LayerTree.Rect {
             width: max.x - min.x,
             height: max.y - min.y
         )
+    }
+}
+
+extension LayerTree.CommandGenerator {
+
+    /// Resolves a pattern against the bounding box of the element it fills (SVG 1.1 §13.3).
+    ///
+    /// Returns a pattern whose `frame` is the tile in pattern space (user units) and whose `transform`
+    /// is the patternTransform, plus the transform that maps the pattern contents into that tile
+    /// (tile origin, then viewBox or objectBoundingBox content units). Returns nil when the
+    /// pattern disables rendering: a zero or negative tile, an empty bounding box with
+    /// objectBoundingBox units, or an empty viewBox.
+    static func resolvePattern(_ pattern: LayerTree.Pattern, in bounds: LayerTree.Rect) -> (LayerTree.Pattern, LayerTree.Transform.Matrix)? {
+        var tile = pattern.frame
+        if pattern.units == .objectBoundingBox {
+            tile = LayerTree.Rect(
+                x: bounds.x + pattern.frame.x * bounds.width,
+                y: bounds.y + pattern.frame.y * bounds.height,
+                width: pattern.frame.width * bounds.width,
+                height: pattern.frame.height * bounds.height
+            )
+        }
+        guard tile.width > 0, tile.height > 0 else { return nil }
+
+        var contentTransform = LayerTree.Transform.Matrix.identity
+        if let viewBox = pattern.viewBox {
+            // preserveAspectRatio is not parsed yet: its default, xMidYMid meet
+            guard viewBox.width > 0, viewBox.height > 0 else { return nil }
+            let scale = min(tile.width / viewBox.width, tile.height / viewBox.height)
+            contentTransform = LayerTree.Transform.Matrix(
+                a: scale, b: 0, c: 0, d: scale,
+                tx: (tile.width - viewBox.width * scale) / 2 - viewBox.x * scale,
+                ty: (tile.height - viewBox.height * scale) / 2 - viewBox.y * scale
+            )
+        } else if pattern.contentUnits == .objectBoundingBox {
+            guard bounds.width > 0, bounds.height > 0 else { return nil }
+            contentTransform = LayerTree.Transform.Matrix(a: bounds.width, b: 0, c: 0, d: bounds.height, tx: 0, ty: 0)
+        }
+        contentTransform = contentTransform.concatenated(
+            LayerTree.Transform.translate(tx: tile.x, ty: tile.y).toMatrix()
+        )
+
+        let resolved = LayerTree.Pattern(frame: tile)
+        resolved.transform = pattern.transform
+        resolved.contents = pattern.contents
+        return (resolved, contentTransform)
     }
 }

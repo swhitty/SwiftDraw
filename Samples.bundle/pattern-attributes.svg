@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="256" height="256">
+
+	<defs>
+		<!-- Inkscape style: a base pattern and a derived one that only adds patternTransform -->
+		<pattern id="stripes" width="16" height="16" patternUnits="userSpaceOnUse">
+			<rect width="8" height="16" fill="#34D3F2" />
+		</pattern>
+		<pattern id="stripes-rotated" xlink:href="#stripes" patternTransform="rotate(45)" />
+
+		<!-- x / y offset the tile grid -->
+		<pattern id="dots" x="8" y="8" width="16" height="16" patternUnits="userSpaceOnUse">
+			<circle cx="8" cy="8" r="4" fill="#8C67C2" />
+		</pattern>
+
+		<!-- default patternUnits="objectBoundingBox": 4 x 4 tiles whatever the shape size -->
+		<pattern id="grid" width="0.25" height="0.25">
+			<rect width="4" height="4" fill="#F2A134" />
+		</pattern>
+
+		<!-- viewBox maps 0 0 10 10 into each 32 x 32 tile -->
+		<pattern id="scaled" width="32" height="32" viewBox="0 0 10 10" patternUnits="userSpaceOnUse">
+			<path d="M0 10 L5 0 L10 10 Z" fill="#E2534B" />
+		</pattern>
+
+		<!-- no width / height: paints nothing, the rest of the document still renders -->
+		<pattern id="empty">
+			<rect width="10" height="10" fill="black" />
+		</pattern>
+	</defs>
+
+	<rect x="0" y="0" width="128" height="128" fill="url(#stripes-rotated)" />
+	<rect x="128" y="0" width="128" height="128" fill="url(#dots)" />
+	<rect x="0" y="128" width="128" height="128" fill="url(#grid)" />
+	<rect x="128" y="128" width="128" height="128" fill="url(#scaled)" />
+	<rect x="96" y="96" width="64" height="64" fill="url(#empty)" stroke="black" />
+</svg>
