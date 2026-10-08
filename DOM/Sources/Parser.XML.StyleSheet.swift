@@ -58,6 +58,19 @@ extension XMLParser {
         return sheets
     }
 
+    // stop-color and stop-opacity through the cascade (attribute < rules < style="" < !important),
+    // e.g. Illustrator's <stop class="st0"/> with .st0 { stop-color: … }; nil without a stylesheet
+    func cascadedStop(_ e: XML.Element) -> (color: DOM.Color?, opacity: DOM.Float?)? {
+        guard let matched = styleContext.matcher?.match(e) else { return nil }
+        let style = parseStyleDeclarations(e)
+        let attributes = ((try? parsePresentationAttributes(e.attributes)) ?? DOM.PresentationAttributes())
+            .applyingAttributes(matched.attributes)
+            .applyingAttributes(style.normal)
+            .applyingAttributes(matched.importantAttributes)
+            .applyingAttributes(style.important)
+        return (attributes.stopColor, attributes.stopOpacity)
+    }
+
     // CSS Syntax Level 3 error recovery: a malformed rule or declaration is dropped on its own,
     // the rest of the sheet is kept.
     func parseStyleSheetElement(_ text: String?) throws -> DOM.StyleSheet {
@@ -67,10 +80,8 @@ extension XMLParser {
 
         for (prelude, declarations) in blocks.rules {
             guard let selectors = DOM.StyleSheet.ComplexSelector.parseList(prelude) else { continue }
-            let normal = declarations.filter { !$0.important }
-            let important = declarations.filter(\.important)
-            let attributes = (try? parsePresentationAttributes(Self.makeDictionary(normal))) ?? DOM.PresentationAttributes()
-            let importantAttributes = (try? parsePresentationAttributes(Self.makeDictionary(important))) ?? DOM.PresentationAttributes()
+            let attributes = parsePresentationAttributes(declarations.filter { !$0.important })
+            let importantAttributes = parsePresentationAttributes(declarations.filter(\.important))
 
             for selector in selectors {
                 sheet.rules.append(DOM.StyleSheet.Rule(selector: selector,
@@ -143,8 +154,11 @@ extension XMLParser {
                 if let q = quote {
                     if c == "\\", i + 1 < chars.count {
                         result.append(c)
-                        i += 1
-                    } else if c == q {
+                        result.append(chars[i + 1])
+                        i += 2
+                        continue
+                    } else if c == q || c.isNewline {
+                        // an unescaped newline ends a string (CSS Syntax §4.3.5, bad-string)
                         quote = nil
                     }
                 } else if c == "\"" || c == "'" {
@@ -153,7 +167,8 @@ extension XMLParser {
                     depth += 1
                 } else if c == ")" || c == "]" {
                     depth = max(0, depth - 1)
-                } else if depth == 0 && stops.contains(c) {
+                } else if (depth == 0 || c == "{") && stops.contains(c) {
+                    // a block always starts at `{`, even after an unclosed `(` or `[`
                     return result
                 }
                 result.append(c)
@@ -177,7 +192,7 @@ extension XMLParser {
                         result.append(chars[i])
                         i += 1
                         continue
-                    } else if c == q {
+                    } else if c == q || c.isNewline {
                         quote = nil
                     }
                 } else if c == "\"" || c == "'" {
@@ -231,6 +246,24 @@ extension XMLParser {
         return (rules, fontFaces)
     }
 
+    static func hasBadString(_ text: String) -> Bool {
+        var quote: Character?
+        var escaped = false
+        for c in text {
+            if escaped {
+                escaped = false
+            } else if c == "\\" {
+                escaped = true
+            } else if let q = quote {
+                if c == q { quote = nil }
+                if c.isNewline { return true }
+            } else if c == "\"" || c == "'" {
+                quote = c
+            }
+        }
+        return quote != nil
+    }
+
     // A declaration without a name or a value is skipped; the others are kept (CSS Syntax §5.4.5).
     static func parseCSSDeclarations(_ text: String) -> [CSSDeclaration] {
         DOM.StyleSheet.ComplexSelector.splitTopLevel(text, separator: ";").compactMap { declaration in
@@ -239,6 +272,9 @@ extension XMLParser {
             var value = declaration[declaration.index(after: colon)...].trimmingCharacters(in: .whitespacesAndNewlines)
             // a nested block (CSS nesting) is not a declaration
             guard !name.isEmpty, !name.contains("{"), !name.contains("}") else { return nil }
+
+            // a string cut by a newline makes the declaration invalid
+            guard !Self.hasBadString(value) else { return nil }
 
             let stripped = XMLParser.Attributes.removingImportant(from: value)
             let important = stripped != value

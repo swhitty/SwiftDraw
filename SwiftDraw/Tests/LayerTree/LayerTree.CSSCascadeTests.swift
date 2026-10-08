@@ -83,6 +83,7 @@ final class LayerTreeCSSCascadeTests: XCTestCase {
         XCTAssertNotNil(layer.mask)
     }
 
+    // interim: clip-rule is read from the referencing element; SD8 moves it to the <clipPath> children
     func testClipRuleFromStyleSheet() throws {
         let layer = try firstChild("""
         <defs><clipPath id="c"><rect width="5" height="5"/></clipPath></defs>
@@ -140,5 +141,67 @@ final class LayerTreeCSSCascadeTests: XCTestCase {
             return nil
         }
         XCTAssertEqual(fills, [.black, .rgba(r: 0, g: 0, b: 1, a: 1, space: .srgb)])
+    }
+
+    private func fills(_ body: String) throws -> [LayerTree.Color] {
+        try commandStream(body).compactMap {
+            if case let .setFill(color: c) = $0 { return c }
+            return nil
+        }
+    }
+
+    func testUseKeepsTheStyleOfItsOriginalElement() throws {
+        let colors = try fills("""
+        <style>defs > .a { fill: #ff0000 } use { fill: #0000ff }</style>
+        <defs><rect id="r" class="a" width="5" height="5"/><circle id="c" r="2"/></defs>
+        <use href="#r"/><use href="#c"/>
+        """)
+        // the referenced rect matches in <defs>; the circle inherits fill from the styled <use>
+        XCTAssertEqual(colors, [.rgba(r: 1, g: 0, b: 0, a: 1, space: .srgb), .rgba(r: 0, g: 0, b: 1, a: 1, space: .srgb)])
+    }
+
+    func testRulesApplyInsideNestedSVG() throws {
+        let colors = try fills("""
+        <style>svg svg > rect { fill: #ff0000 }</style>
+        <rect width="5" height="5"/>
+        <svg x="10" width="10" height="10"><rect width="5" height="5"/></svg>
+        """)
+        // (a nested <svg>'s children are currently emitted twice, a parser bug outside SD10)
+        XCTAssertEqual(colors.first, .black)
+        XCTAssertGreaterThan(colors.count, 1)
+        XCTAssertTrue(colors.dropFirst().allSatisfy { $0 == .rgba(r: 1, g: 0, b: 0, a: 1, space: .srgb) })
+    }
+
+    func testNoneTransformOverridesLowerRule() throws {
+        let root = try makeLayer(#"<style>rect { transform: scale(2) } #r { transform: none }</style><rect id="r" width="5" height="5"/>"#)
+        XCTAssertEqual(root.contents.count, 1)
+        if case .layer(let l) = root.contents.first {
+            XCTAssertEqual(l.transform, [])
+        }
+    }
+
+    func testNoneMaskOverridesLowerRule() throws {
+        let root = try makeLayer("""
+        <defs><mask id="m"><rect width="5" height="5" fill="white"/></mask></defs>
+        <style>rect { mask: url(#m) } #r { mask: none }</style>
+        <rect id="r" width="10" height="10"/>
+        """)
+        for case .layer(let l) in root.contents {
+            XCTAssertNil(l.mask)
+        }
+    }
+
+    func testStylesheetStrokeWidthIsScaledForSFSymbols() throws {
+        let svg = try DOM.SVG.parse(xml: """
+        <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">
+        <style>g > line { stroke-width: 4 } line.b { stroke-width: 6 !important }</style>
+        <g><line x1="0" y1="0" x2="10" y2="0" stroke="black"/><line class="b" x1="0" y1="0" x2="10" y2="0" stroke="black"/></g>
+        </svg>
+        """)
+        StrokeWidthScaler.scale(svg, by: .init(multiplier: 0.5))
+        let group = try XCTUnwrap(svg.childElements.first as? DOM.Group)
+        XCTAssertEqual(DOM.presentationAttributes(for: group.childElements[0], styles: svg.styles).strokeWidth, 2)
+        XCTAssertEqual(DOM.presentationAttributes(for: group.childElements[1], styles: svg.styles).strokeWidth, 3)
+        XCTAssertEqual(svg.styles[0].rules[0].attributes.strokeWidth, 2)
     }
 }

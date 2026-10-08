@@ -107,8 +107,7 @@ extension XMLParser {
         ge.class = elementAtt.class
 
         ge.attributes = try parsePresentationAttributes(e)
-        ge.style = try parseStyleAttributes(e)
-        ge.matchedStyle = styleContext.matcher?.match(e)
+        applyStyle(of: e, to: ge)
         return ge
     }
 
@@ -227,12 +226,36 @@ extension XMLParser {
     }
 
     func parseStyleAttributes(_ e: XML.Element) throws -> DOM.PresentationAttributes {
-        guard let styleText = e.attributes["style"] else {
-            return DOM.PresentationAttributes()
-        }
+        parseStyleDeclarations(e).normal
+    }
 
-        let style = try parseStyleAttributes(styleText)
-        return try parsePresentationAttributes(style)
+    // style="" in source order: the last valid declaration of a property wins,
+    // `!important` ones are kept apart so they can override `!important` stylesheet rules
+    func parseStyleDeclarations(_ e: XML.Element) -> (normal: DOM.PresentationAttributes, important: DOM.PresentationAttributes) {
+        guard let styleText = e.attributes["style"] else {
+            return (DOM.PresentationAttributes(), DOM.PresentationAttributes())
+        }
+        let declarations = Self.parseCSSDeclarations(styleText)
+        return (parsePresentationAttributes(declarations.filter { !$0.important }),
+                parsePresentationAttributes(declarations.filter(\.important)))
+    }
+
+    // Each declaration is validated on its own, so an invalid later value
+    // (`fill: red; fill: var(--x)`) leaves the earlier valid one in place.
+    func parsePresentationAttributes(_ declarations: [CSSDeclaration]) -> DOM.PresentationAttributes {
+        declarations.reduce(into: DOM.PresentationAttributes()) { result, d in
+            if let att = try? parsePresentationAttributes([d.name: d.value]) {
+                result = result.applyingAttributes(att)
+            }
+        }
+    }
+
+    // inline style and the stylesheet rules matched against the document tree
+    func applyStyle(of e: XML.Element, to element: DOM.GraphicsElement) {
+        let style = parseStyleDeclarations(e)
+        element.style = style.normal
+        element.importantStyle = style.important
+        element.matchedStyle = styleContext.matcher?.match(e)
     }
 
     // A malformed declaration (`fill:`, `fill`, empty) is skipped; the others are kept.
@@ -260,6 +283,20 @@ extension XMLParser {
             return value
         }
         return lenient { try att.parseFloat(key) as DOM.Float? }.map { min(max($0, 0), 1) }
+    }
+
+    static func isNone(_ value: String) -> Bool {
+        XMLParser.Attributes.removingImportant(from: value)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased() == "none"
+    }
+
+    // `none` is kept as DOM.URL.none so it overrides a reference from a lower rule
+    private func urlOrNone(_ att: any AttributeParser, _ key: String) -> DOM.URL? {
+        if let raw = lenient({ try att.parseString(key) as String? }), Self.isNone(raw) {
+            return DOM.URL.none
+        }
+        return lenient { try att.parseUrlSelector(key) }
     }
 
     func parsePresentationAttributes(_ att: any AttributeParser) throws -> DOM.PresentationAttributes {
@@ -294,13 +331,17 @@ extension XMLParser {
         el.dominantBaseline = lenient { try att.parseRaw("dominant-baseline") }
 
         if let val = try? att.parseString("transform") {
-            el.transform = try? parseTransform(val)
+            // `none` is the identity, and still overrides a lower rule
+            el.transform = Self.isNone(val) ? [] : try? parseTransform(val)
         }
 
-        el.clipPath = lenient { try att.parseUrlSelector("clip-path") }
+        el.clipPath = urlOrNone(att, "clip-path")
         el.clipRule = lenient { try att.parseRaw("clip-rule") }
-        el.mask = lenient { try att.parseUrlSelector("mask") }
-        el.filter = lenient { try att.parseUrlSelector("filter") }
+        el.mask = urlOrNone(att, "mask")
+        el.filter = urlOrNone(att, "filter")
+
+        el.stopColor = lenient { try att.parseFill("stop-color").getColor() }
+        el.stopOpacity = opacity(att, "stop-opacity")
 
         return el
     }

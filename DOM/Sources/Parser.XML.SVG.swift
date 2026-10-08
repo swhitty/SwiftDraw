@@ -68,7 +68,6 @@ package extension XMLParser {
         defer {
             if isRoot { styleContext.matcher = nil }
         }
-        svg.matchedStyle = styleContext.matcher?.match(e)
 
         svg.childElements = try parseGraphicsElements(e.children)
         svg.viewBox = viewBox
@@ -76,7 +75,9 @@ package extension XMLParser {
         svg.defs = try parseSVGDefs(e)
         svg.styles = styles
 
-        svg.attributes = try parsePresentationAttributes(att)
+        // attributes and style="" stay separate so stylesheet rules fall between them
+        svg.attributes = try parsePresentationAttributes(e)
+        applyStyle(of: e, to: svg)
 
         return svg
     }
@@ -233,8 +234,7 @@ package extension XMLParser {
         let mask = DOM.Mask(id: id)
         mask.class = try att.parseString("class")
         mask.attributes = try parsePresentationAttributes(e)
-        mask.style = try parseStyleAttributes(e)
-        mask.matchedStyle = styleContext.matcher?.match(e)
+        applyStyle(of: e, to: mask)
         mask.childElements = try parseGraphicsElements(e.children)
         return mask
     }

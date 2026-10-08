@@ -35,7 +35,7 @@ package extension DOM {
 
     // PresentationAttributes cascade;
     // element.attributes --> .element() --> .class() ---> .id() ---> element.style ---> layerTree.state
-    // (parsed documents: element.attributes --> matched rules --> element.style --> !important rules)
+    // (parsed documents: element.attributes --> matched rules --> element.style --> !important rules --> !important style)
     
     struct PresentationAttributes {
         package var opacity: DOM.Float?
@@ -64,6 +64,9 @@ package extension DOM {
         package var clipRule: DOM.FillRule?
         package var mask: DOM.URL?
         package var filter: DOM.URL?
+
+        package var stopColor: DOM.Color?
+        package var stopOpacity: DOM.Float?
     }
     
     static func presentationAttributes(for element: DOM.GraphicsElement,
@@ -86,6 +89,9 @@ package extension DOM {
             // `!important` stylesheet declarations override style=""
             attributes = attributes.applyingAttributes(matched.importantAttributes)
         }
+
+        // and `!important` in style="" overrides them (CSS Cascade 3 §6.1)
+        attributes = attributes.applyingAttributes(element.importantStyle)
         return attributes
     }
     
@@ -154,6 +160,9 @@ extension DOM.PresentationAttributes {
         merged.clipRule = att.clipRule ?? clipRule
         merged.mask = att.mask ?? mask
         merged.filter = att.filter ?? filter
+
+        merged.stopColor = att.stopColor ?? stopColor
+        merged.stopOpacity = att.stopOpacity ?? stopOpacity
         
         return merged
     }

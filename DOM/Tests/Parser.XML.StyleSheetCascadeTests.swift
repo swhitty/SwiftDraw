@@ -30,6 +30,7 @@
 //
 
 import Testing
+import Foundation
 @testable import SwiftDrawDOM
 
 @Suite("Parser XML StyleSheet Cascade Tests")
@@ -257,5 +258,174 @@ struct ParserXMLStyleSheetCascadeTests {
         let mask = try #require(svg.defs.masks.first)
         #expect(DOM.presentationAttributes(for: mask, styles: svg.styles).opacity == 0.5)
         #expect(DOM.presentationAttributes(for: mask.childElements[0], styles: svg.styles).fill == .color(.keyword(.white)))
+    }
+
+    // MARK: - Second review
+
+    private func cascaded(_ id: String, style: String, body: String) throws -> DOM.PresentationAttributes {
+        let svg = try DOM.SVG.parse(xml: """
+        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10">
+        <style>\(style)</style>
+        \(body)
+        </svg>
+        """)
+        let element = try #require(Self.find(id, in: svg.childElements))
+        return DOM.presentationAttributes(for: element, styles: svg.styles)
+    }
+
+    @Test
+    func mediaBlocksAreSkippedInADocument() throws {
+        let body = #"<rect id="r" class="a" width="1" height="1"/>"#
+        #expect(try fill(of: "r", style: "@media (min-width: 1px) { .a { fill: red } } .a { stroke: blue }", body: body) == nil)
+        #expect(try cascaded("r", style: "@media print { .a { fill: red } } .a { stroke: blue }", body: body).stroke == .color(.keyword(.blue)))
+    }
+
+    @Test
+    func unterminatedStringEndsAtTheNewline() throws {
+        let sheet = try XMLParser().parseStyleSheetElement(
+            """
+            .a { font-family: "Foo
+            ; fill: red }
+            .b { fill: blue }
+            """
+        )
+        #expect(sheet.attributes[.class("a")]?.fill == .color(.keyword(.red)))
+        #expect(sheet.attributes[.class("a")]?.fontFamily == nil)
+        #expect(sheet.attributes[.class("b")]?.fill == .color(.keyword(.blue)))
+    }
+
+    @Test
+    func unterminatedStringInAPrelude() throws {
+        let sheet = try XMLParser().parseStyleSheetElement(
+            """
+            [title="x
+            ] { fill: red }
+            .b { fill: blue }
+            """
+        )
+        #expect(sheet.attributes[.class("b")]?.fill == .color(.keyword(.blue)))
+    }
+
+    @Test
+    func unclosedParenStopsAtTheBlock() throws {
+        let sheet = try XMLParser().parseStyleSheetElement(
+            """
+            .a:not( { fill: red }
+            .b { fill: blue; stroke: rgb(1, 2 }
+            .c { fill: green }
+            """
+        )
+        #expect(sheet.attributes[.class("a")] == nil)
+        #expect(sheet.attributes[.class("b")]?.fill == .color(.keyword(.blue)))
+        #expect(sheet.attributes[.class("c")]?.fill == .color(.keyword(.green)))
+    }
+
+    @Test
+    func escapedBackslashInAPrelude() throws {
+        let sheet = try XMLParser().parseStyleSheetElement(#"[data-x="a\"b"] { fill: red } .b { fill: blue }"#)
+        #expect(sheet.rules.first?.selector.compounds[0].attributes[0].value == #"a"b"#)
+        #expect(sheet.attributes[.class("b")]?.fill == .color(.keyword(.blue)))
+    }
+
+    @Test
+    func inlineImportantBeatsAuthorImportant() throws {
+        let body = #"<rect id="r" class="a" style="fill: red !important" width="1" height="1"/>"#
+        #expect(try fill(of: "r", style: "rect.a { fill: blue !important }", body: body) == .color(.keyword(.red)))
+        let plain = #"<rect id="r" class="a" style="fill: red" width="1" height="1"/>"#
+        #expect(try fill(of: "r", style: "rect.a { fill: blue !important }", body: plain) == .color(.keyword(.blue)))
+    }
+
+    @Test
+    func importantBeatsHigherSpecificity() throws {
+        let body = #"<g id="g"><rect id="r" class="a" width="1" height="1"/></g>"#
+        #expect(try fill(of: "r", style: "rect { fill: red !important } #g > #r.a { fill: blue }", body: body) == .color(.keyword(.red)))
+    }
+
+    @Test
+    func commaListMembersKeepTheirOwnSpecificity() throws {
+        let style = "#r, circle { fill: red } .a { fill: blue }"
+        let body = #"<rect id="r" class="a" width="1" height="1"/><circle id="c" class="a" r="1"/>"#
+        #expect(try fill(of: "r", style: style, body: body) == .color(.keyword(.red)))
+        #expect(try fill(of: "c", style: style, body: body) == .color(.keyword(.blue)))
+    }
+
+    @Test
+    func fallbackDeclarationsKeepTheLastValidValue() throws {
+        let body = #"<rect id="r" class="a" width="1" height="1"/>"#
+        #expect(try fill(of: "r", style: ".a { fill: #f00; fill: color(rec2020 1 0 0) }", body: body) == .color(.hex(255, 0, 0)))
+        #expect(try fill(of: "r", style: ".a { fill: #f00; fill: color(display-p3 1 0 0) }", body: body) == .color(.p3(1, 0, 0)))
+        #expect(try fill(of: "r", style: ".a { fill: red; fill: var(--x) }", body: body) == .color(.keyword(.red)))
+        let inline = #"<rect id="r" style="fill: red; fill: var(--x)" width="1" height="1"/>"#
+        #expect(try fill(of: "r", style: "", body: inline) == .color(.keyword(.red)))
+    }
+
+    @Test
+    func noneOverridesALowerRule() throws {
+        let style = """
+        rect { clip-path: url(#c); mask: url(#m); filter: url(#f); transform: scale(2) }
+        #r { clip-path: none; mask: none; filter: none; transform: none }
+        """
+        let att = try cascaded("r", style: style, body: #"<rect id="r" width="1" height="1"/>"#)
+        #expect(att.clipPath == DOM.URL.none)
+        #expect(att.mask == DOM.URL.none)
+        #expect(att.filter == DOM.URL.none)
+        #expect(att.transform == [])
+    }
+
+    @Test
+    func rootInlineStyleBeatsStyleSheet() throws {
+        for selector in ["svg", ":root", "*"] {
+            let svg = try DOM.SVG.parse(xml: """
+            <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="green" style="fill: red">
+            <style>\(selector) { fill: blue; stroke: blue }</style>
+            </svg>
+            """)
+            let att = DOM.presentationAttributes(for: svg, styles: svg.styles)
+            #expect(att.fill == .color(.keyword(.red)))
+            #expect(att.stroke == .color(.keyword(.blue)))
+        }
+    }
+
+    @Test
+    func stopPropertiesFromTheCascade() throws {
+        let svg = try DOM.SVG.parse(xml: """
+        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10">
+        <style>.st0 { stop-color: #00ff00; stop-opacity: 0.5 } .st1 { stop-color: red }</style>
+        <linearGradient id="g">
+          <stop offset="0" class="st0"/>
+          <stop offset="1" class="st1" style="stop-color: blue" stop-opacity="0.25"/>
+        </linearGradient>
+        <radialGradient id="r"><stop offset="0" class="st0"/></radialGradient>
+        </svg>
+        """)
+        let stops = try #require(svg.defs.linearGradients.first).stops
+        #expect(stops[0].color == .hex(0, 255, 0))
+        #expect(stops[0].opacity == 0.5)
+        #expect(stops[1].color == .keyword(.blue))
+        #expect(stops[1].opacity == 0.25)
+        #expect(try #require(svg.defs.radialGradients.first).stops[0].color == .hex(0, 255, 0))
+    }
+
+    @Test
+    func manyRulesOnALargeDocumentStayFast() throws {
+        let rules = (0..<300).map { ".c\($0) { fill: #\(String(format: "%06x", $0)) }" }.joined(separator: "\n")
+        let elements = (0..<5000).map { #"<rect class="x c\#($0 % 300)" width="1" height="1"/>"# }.joined()
+        let siblings = "g > rect ~ rect + rect { stroke: red } svg rect:last-child { stroke-width: 2 }"
+        let start = Date()
+        let svg = try DOM.SVG.parse(xml: """
+        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10">
+        <style>\(rules) \(siblings)</style><g>\(elements)</g>
+        </svg>
+        """)
+        let elapsed = Date().timeIntervalSince(start)
+        let group = try #require(svg.childElements.first as? DOM.Group)
+        #expect(group.childElements.count == 5000)
+        let last = DOM.presentationAttributes(for: group.childElements[4999], styles: svg.styles)
+        #expect(last.fill == .color(.hex(0, 0, 199)))
+        #expect(last.stroke == .color(.keyword(.red)))
+        #expect(last.strokeWidth == 2)
+        #expect(DOM.presentationAttributes(for: group.childElements[0], styles: svg.styles).stroke == nil)
+        // generous bound for debug builds on CI; the quadratic matcher took far longer
+        #expect(elapsed < 20)
     }
 }

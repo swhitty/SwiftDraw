@@ -33,6 +33,12 @@ import Foundation
 
 package extension URL {
 
+    // the `none` value of clip-path, mask and filter: references nothing,
+    // but still overrides a reference from a lower-priority rule
+    static let none = URL(string: "none:")!
+
+    var isNone: Bool { self == Self.none }
+
     var fragmentID: String? {
         #if canImport(Darwin)
         if #available(macOS 13.0, iOS 16.0, tvOS 16.0, watchOS 9.0, *) {

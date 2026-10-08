@@ -199,7 +199,8 @@ package extension DOM.StyleSheet.ComplexSelector {
             } else if ch == "\\" {
                 escaped = true
             } else if let q = quote {
-                if ch == q { quote = nil }
+                // an unescaped newline ends a string (CSS Syntax §4.3.5, bad-string)
+                if ch == q || ch.isNewline { quote = nil }
             } else if ch == "\"" || ch == "'" {
                 quote = ch
             } else if ch == "(" || ch == "[" {
@@ -395,14 +396,58 @@ package extension DOM.StyleSheet {
 
     // Matches stylesheet rules against the XML tree they were parsed with,
     // so combinators and structural pseudo-classes see every element (Selectors Level 3 §6.6.5, §8).
+    // Rules are bucketed by their rightmost compound, and combinator results are memoized,
+    // so descendant and `~` chains stay linear in the size of the document.
     final class Matcher {
-        private let rules: [Rule]
+        private let selectors: [ComplexSelector]
+        private let specificities: [Specificity]
+        private let attributes: [DOM.PresentationAttributes]
+        private let importantAttributes: [DOM.PresentationAttributes]
+
+        private var byID = [String: [Int]]()
+        private var byClass = [String: [Int]]()
+        private var byType = [String: [Int]]()
+        private var universal = [Int]()
+
         private var parents = [ObjectIdentifier: XML.Element]()
         private var siblingIndex = [ObjectIdentifier: Int]()
+        private var classTokens = [ObjectIdentifier: Set<String>]()
+        private var memo = [MemoKey: Bool]()
+
+        private struct MemoKey: Hashable {
+            var rule: Int
+            var compound: Int
+            var kind: Kind
+            var element: ObjectIdentifier
+        }
+
+        private enum Kind: Hashable {
+            case element         // the selector up to `compound` matches the element
+            case anyAncestor     // … matches one of the element's ancestors
+            case anyPrevious     // … matches one of the element's previous siblings
+        }
 
         package init(sheets: [DOM.StyleSheet], root: XML.Element) {
-            self.rules = sheets.flatMap(\.rules)
+            let rules = sheets.flatMap(\.rules)
+            self.selectors = rules.map(\.selector)
+            self.specificities = selectors.map(\.specificity)
+            self.attributes = rules.map(\.attributes)
+            self.importantAttributes = rules.map(\.importantAttributes)
             guard !rules.isEmpty else { return }
+
+            for (index, selector) in selectors.enumerated() {
+                let key = selector.compounds[selector.compounds.count - 1]
+                if let id = key.ids.first {
+                    byID[id, default: []].append(index)
+                } else if let name = key.classes.first {
+                    byClass[name, default: []].append(index)
+                } else if let element = key.element {
+                    byType[element, default: []].append(index)
+                } else {
+                    universal.append(index)
+                }
+            }
+
             var stack = [root]
             while let e = stack.popLast() {
                 for (i, child) in e.children.enumerated() {
@@ -413,62 +458,104 @@ package extension DOM.StyleSheet {
             }
         }
 
-        package var isEmpty: Bool { rules.isEmpty }
+        package var isEmpty: Bool { selectors.isEmpty }
 
         package func match(_ element: XML.Element) -> Matched? {
-            guard !rules.isEmpty else { return nil }
-            let matching = rules.enumerated()
-                .filter { matches($0.element.selector, element) }
-                .sorted { lhs, rhs in
-                    let l = lhs.element.selector.specificity
-                    let r = rhs.element.selector.specificity
-                    return l == r ? lhs.offset < rhs.offset : l < r
+            guard !selectors.isEmpty else { return nil }
+
+            var candidates = universal
+            candidates += byType[element.name] ?? []
+            if let id = element.attributes["id"] {
+                candidates += byID[id] ?? []
+            }
+            for name in classes(of: element) {
+                candidates += byClass[name] ?? []
+            }
+
+            let matching = Set(candidates)
+                .filter { matches(rule: $0, at: selectors[$0].compounds.count - 1, element) }
+                .sorted { l, r in
+                    specificities[l] == specificities[r] ? l < r : specificities[l] < specificities[r]
                 }
-                .map(\.element)
 
             var result = Matched()
-            for rule in matching {
-                result.attributes = result.attributes.applyingAttributes(rule.attributes)
-                result.importantAttributes = result.importantAttributes.applyingAttributes(rule.importantAttributes)
+            for index in matching {
+                result.attributes = result.attributes.applyingAttributes(attributes[index])
+                result.importantAttributes = result.importantAttributes.applyingAttributes(importantAttributes[index])
             }
             return result
         }
 
-        func matches(_ selector: ComplexSelector, _ element: XML.Element) -> Bool {
-            matches(selector, at: selector.compounds.count - 1, element)
+        private func matches(rule: Int, at i: Int, _ element: XML.Element) -> Bool {
+            let selector = selectors[rule]
+            let isLast = i == selector.compounds.count - 1
+            let key = MemoKey(rule: rule, compound: i, kind: .element, element: ObjectIdentifier(element))
+            if !isLast, let known = memo[key] { return known }
+
+            let result: Bool
+            if !matches(selector.compounds[i], element) {
+                result = false
+            } else if i == 0 {
+                result = true
+            } else {
+                switch selector.combinators[i - 1] {
+                case .child:
+                    result = parent(of: element).map { matches(rule: rule, at: i - 1, $0) } ?? false
+                case .descendant:
+                    result = any(rule: rule, at: i - 1, from: element, kind: .anyAncestor, next: parent(of:))
+                case .adjacentSibling:
+                    result = previousSibling(of: element).map { matches(rule: rule, at: i - 1, $0) } ?? false
+                case .generalSibling:
+                    result = any(rule: rule, at: i - 1, from: element, kind: .anyPrevious, next: previousSibling(of:))
+                }
+            }
+
+            if !isLast { memo[key] = result }
+            return result
         }
 
-        private func matches(_ selector: ComplexSelector, at i: Int, _ element: XML.Element) -> Bool {
-            guard matches(selector.compounds[i], element) else { return false }
-            guard i > 0 else { return true }
-
-            switch selector.combinators[i - 1] {
-            case .child:
-                guard let p = parent(of: element) else { return false }
-                return matches(selector, at: i - 1, p)
-            case .descendant:
-                var p = parent(of: element)
-                while let ancestor = p {
-                    if matches(selector, at: i - 1, ancestor) { return true }
-                    p = parent(of: ancestor)
+        // Walks ancestors (or previous siblings) until one matches the selector up to `i`,
+        // or until an element whose answer is already known; every element walked is memoized.
+        private func any(rule: Int, at i: Int, from element: XML.Element, kind: Kind,
+                         next: (XML.Element) -> XML.Element?) -> Bool {
+            var walked = [ObjectIdentifier]()
+            var current = element
+            var result = false
+            while let candidate = next(current) {
+                let key = MemoKey(rule: rule, compound: i, kind: kind, element: ObjectIdentifier(current))
+                if let known = memo[key] {
+                    result = known
+                    break
                 }
-                return false
-            case .adjacentSibling:
-                guard let s = previousSiblings(of: element).last else { return false }
-                return matches(selector, at: i - 1, s)
-            case .generalSibling:
-                return previousSiblings(of: element).contains { matches(selector, at: i - 1, $0) }
+                walked.append(ObjectIdentifier(current))
+                if matches(rule: rule, at: i, candidate) {
+                    result = true
+                    break
+                }
+                current = candidate
             }
+            for id in walked {
+                memo[MemoKey(rule: rule, compound: i, kind: kind, element: id)] = result
+            }
+            return result
         }
 
         private func parent(of element: XML.Element) -> XML.Element? {
             parents[ObjectIdentifier(element)]
         }
 
-        private func previousSiblings(of element: XML.Element) -> ArraySlice<XML.Element> {
+        private func previousSibling(of element: XML.Element) -> XML.Element? {
             guard let p = parent(of: element),
-                  let i = siblingIndex[ObjectIdentifier(element)] else { return [] }
-            return p.children[..<i]
+                  let i = siblingIndex[ObjectIdentifier(element)], i > 0 else { return nil }
+            return p.children[i - 1]
+        }
+
+        private func classes(of element: XML.Element) -> Set<String> {
+            let id = ObjectIdentifier(element)
+            if let cached = classTokens[id] { return cached }
+            let tokens = Set((element.attributes["class"] ?? "").split(whereSeparator: \.isWhitespace).map(String.init))
+            classTokens[id] = tokens
+            return tokens
         }
 
         private func matches(_ c: ComplexSelector.Compound, _ e: XML.Element) -> Bool {
@@ -477,8 +564,8 @@ package extension DOM.StyleSheet {
                 guard let id = e.attributes["id"], c.ids.allSatisfy({ $0 == id }) else { return false }
             }
             if !c.classes.isEmpty {
-                let classes = (e.attributes["class"] ?? "").split(whereSeparator: \.isWhitespace)
-                guard c.classes.allSatisfy({ classes.contains(Substring($0)) }) else { return false }
+                let tokens = classes(of: e)
+                guard c.classes.allSatisfy(tokens.contains) else { return false }
             }
             for a in c.attributes where !matches(a, e) { return false }
             for p in c.pseudoClasses where !matches(p, e) { return false }
