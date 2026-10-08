@@ -46,7 +46,8 @@ package extension DOM {
         package var strokeOpacity: DOM.Float?
         package var strokeLineCap: DOM.LineCap?
         package var strokeLineJoin: DOM.LineJoin?
-        package var strokeDashArray: [DOM.Float]?
+        package var strokeDashArray: [DOM.DashLength]?
+        package var strokeDashOffset: DOM.DashLength?
 
         package var fill: DOM.Fill?
         package var fillOpacity: DOM.Float?
@@ -126,6 +127,7 @@ extension DOM.PresentationAttributes {
         merged.strokeLineCap = att.strokeLineCap ?? strokeLineCap
         merged.strokeLineJoin = att.strokeLineJoin ?? strokeLineJoin
         merged.strokeDashArray = att.strokeDashArray ?? strokeDashArray
+        merged.strokeDashOffset = att.strokeDashOffset ?? strokeDashOffset
         
         merged.fill = att.fill ?? fill
         merged.fillOpacity = att.fillOpacity ?? fillOpacity

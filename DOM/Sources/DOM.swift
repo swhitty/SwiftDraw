@@ -43,6 +43,18 @@ package extension DOM {
 }
 
 extension DOM {
+    /// A `stroke-dasharray` / `stroke-dashoffset` length; a percentage is relative to the viewport diagonal.
+    package enum DashLength: Equatable {
+        case absolute(Float)
+        case percentage(Float)
+
+        var isNegative: Bool {
+            switch self {
+            case .absolute(let v), .percentage(let v): return v < 0
+            }
+        }
+    }
+
     package struct Point: Equatable {
         package var x: Coordinate
         package var y: Coordinate

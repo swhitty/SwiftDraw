@@ -264,12 +264,21 @@ extension LayerTree {
                 let join = provider.createLineJoin(from: stroke.join)
                 let limit = provider.createFloat(from: stroke.miterLimit)
 
+                let dash = renderCommands(forDash: stroke)
+
+                if !dash.isEmpty {
+                    commands.append(.pushState)
+                }
                 commands.append(.setLineCap(cap))
                 commands.append(.setLineJoin(join))
                 commands.append(.setLine(width: width))
                 commands.append(.setLineMiter(limit: limit))
+                commands.append(contentsOf: dash)
                 commands.append(.setStroke(color: color))
                 commands.append(.stroke(path))
+                if !dash.isEmpty {
+                    commands.append(.popState)
+                }
             case .linearGradient(let gradient):
                 if let endpoints = shape.gradientEndpoints, canRenderGradient(gradient.gradient) {
                     let width = provider.createFloat(from: stroke.width)
@@ -282,6 +291,7 @@ extension LayerTree {
                     commands.append(.setLineJoin(join))
                     commands.append(.setLine(width: width))
                     commands.append(.setLineMiter(limit: limit))
+                    commands.append(contentsOf: renderCommands(forDash: stroke))
                     commands.append(.clipStrokeOutline(path))
 
                     commands.append(contentsOf: renderCommands(forLinear: gradient,
@@ -302,6 +312,7 @@ extension LayerTree {
                     commands.append(.setLineJoin(join))
                     commands.append(.setLine(width: width))
                     commands.append(.setLineMiter(limit: limit))
+                    commands.append(contentsOf: renderCommands(forDash: stroke))
                     commands.append(.clipStrokeOutline(path))
 
                     commands.append(contentsOf: renderCommands(forRadial: gradient,
@@ -315,6 +326,12 @@ extension LayerTree {
             }
 
             return commands
+        }
+
+        func renderCommands(forDash stroke: StrokeAttributes) -> [RendererCommand<P.Types>] {
+            guard !stroke.dashArray.isEmpty else { return [] }
+            return [.setLineDash(phase: provider.createFloat(from: stroke.dashOffset),
+                                 lengths: stroke.dashArray.map(provider.createFloat))]
         }
 
         func renderCommands(for image: Image) -> [RendererCommand<P.Types>] {
