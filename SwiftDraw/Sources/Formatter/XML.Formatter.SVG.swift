@@ -125,9 +125,20 @@ extension XML.Formatter {
             attributes["stroke-opacity"] = formatter.format(graphic.strokeOpacity)
             attributes["stroke-linecap"] = graphic.strokeLineCap?.rawValue
             attributes["stroke-linejoin"] = graphic.strokeLineJoin?.rawValue
-            attributes["stroke-dasharray"] = graphic.strokeDashArray?
-                                                            .map { formatter.format($0) }
-                                                            .joined(separator: " ")
+            attributes["stroke-dasharray"] = graphic.strokeDashArray.map { lengths in
+                lengths.isEmpty ? "none" : lengths.map { length -> String in
+                    switch length {
+                    case .absolute(let v): return formatter.format(v)
+                    case .percentage(let v): return formatter.format(v) + "%"
+                    }
+                }.joined(separator: " ")
+            }
+            attributes["stroke-dashoffset"] = graphic.strokeDashOffset.map { length -> String in
+                switch length {
+                case .absolute(let v): return formatter.format(v)
+                case .percentage(let v): return formatter.format(v) + "%"
+                }
+            }
 
             attributes["fill-opacity"] = formatter.format(graphic.fillOpacity)
             attributes["fill"] = graphic.fill.map(encodeFill)

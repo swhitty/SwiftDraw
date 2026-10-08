@@ -98,6 +98,10 @@ final class MockRenderer: Renderer {
     operations.append("setLineMiterLimit")
   }
 
+  func setLineDash(phase: LayerTree.Float, lengths: [LayerTree.Float]) {
+    operations.append("setLineDash")
+  }
+
   func setClip(path: [LayerTree.Shape], rule: LayerTree.FillRule) {
     operations.append("setClip")
   }

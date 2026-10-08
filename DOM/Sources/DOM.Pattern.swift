@@ -38,15 +38,22 @@ package extension DOM {
         package var id: String
         package var x: Coordinate?
         package var y: Coordinate?
-        package var width: Coordinate
-        package var height: Coordinate
+        package var width: Coordinate?
+        package var height: Coordinate?
 
         package var patternUnits: Units?
         package var patternContentUnits: Units?
 
         package var childElements: [DOM.GraphicsElement] = []
 
-        package init(id: String, width: Coordinate, height: Coordinate) {
+        package var href: URL?
+        package var viewBox: DOM.SVG.ViewBox?
+        package var patternTransform: [Transform]?
+        /// Names of the x / y / width / height attributes written as percentages; their value
+        /// is stored as a fraction and resolved against the viewport under userSpaceOnUse.
+        package var percentageAttributes: Set<String> = []
+
+        package init(id: String, width: Coordinate? = nil, height: Coordinate? = nil) {
             self.id = id
             self.width = width
             self.height = height

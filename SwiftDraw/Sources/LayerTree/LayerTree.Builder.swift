@@ -39,6 +39,7 @@ extension LayerTree {
     struct Builder {
 
         let svg: DOM.SVG
+        let references = ReferenceGuard()
 
         init(svg: DOM.SVG) {
             self.svg = svg
@@ -92,19 +93,25 @@ extension LayerTree {
             return transform
         }
 
-        func makeLayer(from root: DOM.GraphicsElement, inheriting previousState: State) -> Layer {
-            var stack: [(DOM.GraphicsElement, State, Layer?)] = [(root, previousState, nil)]
+        /// `ancestors` holds the ids of the elements enclosing `root` (and, through `<use>`, of the
+        /// elements being instanced), so a `<use>` that references one of them can be dropped.
+        func makeLayer(from root: DOM.GraphicsElement, inheriting previousState: State, ancestors: [String] = []) -> Layer {
+            var stack: [(DOM.GraphicsElement, State, Layer?, [String])] = [(root, previousState, nil, ancestors)]
             var resultLayer: Layer? = nil
 
-            while let (currentElement, currentState, parentLayer) = stack.popLast() {
+            while let (currentElement, currentState, parentLayer, currentAncestors) = stack.popLast() {
                 let (layer, newState) = makeBaseLayer(from: currentElement, inheriting: currentState)
+                var childAncestors = currentAncestors
+                if let id = currentElement.id {
+                    childAncestors.append(id)
+                }
 
-                if let contents = makeContents(from: currentElement, with: newState) {
+                if let contents = makeContents(from: currentElement, with: newState, ancestors: childAncestors) {
                     layer.appendContents(contents)
                 } else if let container = currentElement as? any ContainerElement {
                     // Push children in reverse so they are processed in the original order
                     for child in container.childElements.reversed() {
-                        stack.append((child, newState, layer))
+                        stack.append((child, newState, layer, childAncestors))
                     }
                 }
 
@@ -152,7 +159,7 @@ extension LayerTree {
             return (l, state)
         }
 
-        func makeContents(from element: DOM.GraphicsElement, with state: State) -> Layer.Contents? {
+        func makeContents(from element: DOM.GraphicsElement, with state: State, ancestors: [String] = []) -> Layer.Contents? {
             if let shape = Builder.makeShape(from: element) {
                 return makeShapeContents(from: shape, with: state)
             } else if let text = element as? DOM.Text {
@@ -160,11 +167,11 @@ extension LayerTree {
             } else if let image = element as? DOM.Image {
                 return try? Builder.makeImageContents(from: image)
             } else if let use = element as? DOM.Use {
-                return try? makeUseLayerContents(from: use, with: state)
+                return try? makeUseLayerContents(from: use, with: state, ancestors: ancestors)
             } else if let sw = element as? DOM.Switch,
                       let e = sw.childElements.first {
                 //TODO: select first element that creates non empty Layer
-                return .layer(makeLayer(from: e, inheriting: state))
+                return .layer(makeLayer(from: e, inheriting: state, ancestors: ancestors))
             }
 
             return nil
@@ -201,6 +208,10 @@ extension LayerTree {
         func createMaskLayer(for element: DOM.GraphicsElement) -> Layer? {
             guard let maskId = element.attributes.mask?.fragmentID,
                   let mask = svg.defs.masks.first(where: { $0.id == maskId }) else { return nil }
+
+            // a mask that (indirectly) references itself is dropped
+            guard references.enter("mask:\(maskId)") else { return nil }
+            defer { references.leave("mask:\(maskId)") }
 
             let l = Layer()
 
@@ -263,7 +274,47 @@ extension LayerTree.Builder {
                                           width: state.strokeWidth,
                                           cap: state.strokeLineCap,
                                           join: state.strokeLineJoin,
-                                          miterLimit: state.strokeLineMiterLimit)
+                                          miterLimit: state.strokeLineMiterLimit,
+                                          dashArray: makeDashArray(with: state),
+                                          dashOffset: makeDashOffset(with: state))
+    }
+
+    /// Length of the viewport diagonal / sqrt(2), the reference for percentages (SVG 1.1 §7.10).
+    var viewportDiagonal: LayerTree.Float {
+        let w: LayerTree.Float
+        let h: LayerTree.Float
+        if let viewBox = svg.viewBox {
+            w = viewBox.width
+            h = viewBox.height
+        } else {
+            w = LayerTree.Float(svg.width)
+            h = LayerTree.Float(svg.height)
+        }
+        return ((w * w + h * h) / 2).squareRoot()
+    }
+
+    func makeDashLength(_ length: DOM.DashLength) -> LayerTree.Float {
+        switch length {
+        case .absolute(let value): return value
+        case .percentage(let value): return value / 100 * viewportDiagonal
+        }
+    }
+
+    func makeDashOffset(with state: State) -> LayerTree.Float {
+        let offset = makeDashLength(state.strokeDashOffset)
+        return offset.isFinite ? offset : 0
+    }
+
+    /// SVG 1.1 §11.4: odd-length lists repeat to even length; a zero sum renders solid.
+    func makeDashArray(with state: State) -> [LayerTree.Float] {
+        var lengths = state.strokeDashArray.map(makeDashLength)
+        guard !lengths.isEmpty, lengths.allSatisfy({ $0 >= 0 && $0.isFinite }), lengths.reduce(0, +) > 0 else {
+            return []
+        }
+        if lengths.count % 2 == 1 {
+            lengths += lengths
+        }
+        return lengths
     }
 
     func makeFillAttributes(with state: State) -> LayerTree.FillAttributes {
@@ -273,7 +324,10 @@ extension LayerTree.Builder {
 
         if case .url(let patternId) = state.fill,
            let element = svg.defs.patterns.first(where: { $0.id == patternId.fragmentID }) {
-            let pattern = makePattern(for: element)
+            // a pattern that (indirectly) paints itself is dropped
+            guard let pattern = makePatternGuarded(for: element) else {
+                return LayerTree.FillAttributes(color: .none, rule: state.fillRule)
+            }
             return LayerTree.FillAttributes(pattern: pattern, rule: state.fillRule, opacity: state.fillOpacity)
         } else if case .url(let gradientId) = state.fill,
                   let element = svg.defs.linearGradients.first(where: { $0.id == gradientId.fragmentID }),
@@ -376,12 +430,69 @@ extension LayerTree.Builder {
         }
     }
 
+    func makePatternGuarded(for element: DOM.Pattern) -> LayerTree.Pattern? {
+        let key = "pattern:\(element.id)"
+        guard references.enter(key) else { return nil }
+        defer { references.leave(key) }
+        return makePattern(for: element)
+    }
+
     func makePattern(for element: DOM.Pattern) -> LayerTree.Pattern {
-        let frame = LayerTree.Rect(x: 0, y: 0, width: element.width, height: element.height)
-        let contentUnits: LayerTree.PatternUnits = element.patternContentUnits == .objectBoundingBox ? .objectBoundingBox : .userSpaceOnUse
-        let pattern = LayerTree.Pattern(frame: frame, contentUnits: contentUnits)
-        pattern.contents = element.childElements.compactMap { .layer(makeLayer(from: $0, inheriting: .init())) }
+        // SVG 1.1 §13.3: attributes not set on this element, and its children when it has none,
+        // are inherited along the xlink:href chain.
+        let chain = makePatternChain(for: element)
+        func inherited<T>(_ value: (DOM.Pattern) -> T?) -> T? {
+            chain.lazy.compactMap(value).first
+        }
+
+        let units: LayerTree.PatternUnits = inherited(\.patternUnits) == .userSpaceOnUse ? .userSpaceOnUse : .objectBoundingBox
+
+        // Percentages are fractions of the bounding box under objectBoundingBox, and of the
+        // viewport (in user units) under userSpaceOnUse.
+        let viewport = svg.viewBox.map { LayerTree.Size($0.width, $0.height) }
+            ?? LayerTree.Size(LayerTree.Float(svg.width), LayerTree.Float(svg.height))
+        func geometry(_ key: String, _ value: (DOM.Pattern) -> DOM.Coordinate?, viewport length: LayerTree.Float) -> LayerTree.Float {
+            guard let source = chain.first(where: { value($0) != nil }),
+                  let coordinate = value(source) else { return 0 }
+            if units == .userSpaceOnUse && source.percentageAttributes.contains(key) {
+                return coordinate * length
+            }
+            return coordinate
+        }
+
+        let frame = LayerTree.Rect(x: geometry("x", \.x, viewport: viewport.width),
+                                   y: geometry("y", \.y, viewport: viewport.height),
+                                   width: geometry("width", \.width, viewport: viewport.width),
+                                   height: geometry("height", \.height, viewport: viewport.height))
+        let contentUnits: LayerTree.PatternUnits = inherited(\.patternContentUnits) == .objectBoundingBox ? .objectBoundingBox : .userSpaceOnUse
+        let pattern = LayerTree.Pattern(frame: frame, contentUnits: contentUnits, units: units)
+        if let viewBox = inherited(\.viewBox) {
+            pattern.viewBox = LayerTree.Rect(x: viewBox.x, y: viewBox.y, width: viewBox.width, height: viewBox.height)
+        }
+        pattern.transform = Self.createTransforms(from: inherited(\.patternTransform) ?? []).toMatrix()
+        let children = chain.first(where: { !$0.childElements.isEmpty })?.childElements ?? []
+        pattern.contents = children.compactMap { .layer(makeLayer(from: $0, inheriting: .init())) }
         return pattern
+    }
+
+    /// The pattern followed by the patterns it references through href; a cycle, a reference
+    /// that is not a pattern, or a chain deeper than `ReferenceGuard.maxDepth` ends the chain.
+    func makePatternChain(for element: DOM.Pattern) -> [DOM.Pattern] {
+        var chain = [element]
+        var visited: Set<String> = [element.id]
+        var entered = [String]()
+        defer { entered.forEach(references.leave) }
+        var current = element
+        while let id = current.href?.fragmentID,
+              !visited.contains(id),
+              let next = svg.defs.patterns.first(where: { $0.id == id }),
+              references.enter("patternHref:\(id)") {
+            entered.append("patternHref:\(id)")
+            visited.insert(id)
+            chain.append(next)
+            current = next
+        }
+        return chain
     }
 
     func makeGradient(for element: DOM.LinearGradient) -> LayerTree.LinearGradient? {
@@ -466,7 +577,8 @@ extension LayerTree.Builder {
         var strokeLineCap: DOM.LineCap
         var strokeLineJoin: DOM.LineJoin
         var strokeLineMiterLimit: DOM.Float
-        var strokeDashArray: [DOM.Float]
+        var strokeDashArray: [DOM.DashLength]
+        var strokeDashOffset: DOM.DashLength
 
         var fill: DOM.Fill
         var fillOpacity: DOM.Float
@@ -490,6 +602,7 @@ extension LayerTree.Builder {
             strokeLineJoin = .miter
             strokeLineMiterLimit = 4.0
             strokeDashArray = []
+            strokeDashOffset = .absolute(0)
 
             fill = .color(.keyword(.black))
             fillOpacity = 1.0
@@ -520,6 +633,7 @@ extension LayerTree.Builder {
         state.strokeLineCap = attributes.strokeLineCap ?? existing.strokeLineCap
         state.strokeLineJoin = attributes.strokeLineJoin ?? existing.strokeLineJoin
         state.strokeDashArray = attributes.strokeDashArray ?? existing.strokeDashArray
+        state.strokeDashOffset = attributes.strokeDashOffset ?? existing.strokeDashOffset
 
         state.fill = attributes.fill ?? existing.fill
         state.fillOpacity = attributes.fillOpacity ?? existing.fillOpacity
@@ -613,5 +727,57 @@ private extension DOM.SVG {
             }
         }
         return sources
+    }
+}
+
+
+extension LayerTree.Builder {
+
+    /// Bounds the work done resolving `<use>`, mask and pattern references: a reference already
+    /// being resolved is refused, as is nesting deeper than `maxDepth` (each level costs native stack,
+    /// and Backdrop renders on secondary threads) or more than `maxReferences` expansions in one
+    /// document (non-cyclic fan-out such as 2 uses per level is exponential).
+    ///
+    /// Any new walk over a reference chain (gradient / pattern `href` inheritance) must call this.
+    final class ReferenceGuard {
+        static let maxDepth = 16
+        static let maxReferences = 20_000
+        private var active = Set<String>()
+        private var depth = 0
+        private var total = 0
+
+        func enter(_ key: String) -> Bool {
+            guard depth < Self.maxDepth,
+                  total < Self.maxReferences,
+                  active.insert(key).inserted else { return false }
+            depth += 1
+            total += 1
+            return true
+        }
+
+        func leave(_ key: String) {
+            active.remove(key)
+            depth -= 1
+        }
+    }
+
+    /// True when following the `<use>` elements inside `root` (transitively) reaches an id in `forbidden`.
+    func containsReferenceCycle(from root: DOM.GraphicsElement, reaching forbidden: Set<String>) -> Bool {
+        var visited = Set<String>()
+        var pending = [root]
+        while let element = pending.popLast() {
+            if let use = element as? DOM.Use, let id = use.href.fragmentID {
+                if forbidden.contains(id) {
+                    return true
+                }
+                if visited.insert(id).inserted, let target = svg.firstGraphicsElement(with: id) {
+                    pending.append(target)
+                }
+            }
+            if let container = element as? any ContainerElement {
+                pending.append(contentsOf: container.childElements)
+            }
+        }
+        return false
     }
 }

@@ -104,6 +104,23 @@ final class RendererCGTextTests: XCTestCase {
         )
     }
 
+    func testPatternCode() throws {
+        let svg = #"""
+        <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="64" height="64">
+            <defs>
+                <pattern id="base" x="2" y="3" width="8" height="8" patternUnits="userSpaceOnUse">
+                    <rect width="4" height="4" fill="red" />
+                </pattern>
+                <pattern id="derived" xlink:href="#base" patternTransform="translate(10, 0)" />
+            </defs>
+            <rect width="64" height="64" fill="url(#derived)" />
+        </svg>
+        """#
+        let code = try CGTextRenderer.render(data: Data(svg.utf8), options: .default, api: .uiKit, precision: 2)
+        XCTAssertTrue(code.contains("bounds: CGRect(x: 2, y: 3, width: 8, height: 8)"))
+        XCTAssertTrue(code.contains("matrix: CGAffineTransform(a: 1.0, b: 0.0, c: 0.0, d: 1.0, tx: 10.0, ty: 0.0).concatenating(ctx.ctm.concatenating(baseCTM.inverted()))"))
+    }
+
     func testSwiftUICode() throws {
         let code = try CGTextRenderer.render(svgNamed: "lines.svg", api: .swiftUI)
         XCTAssertEqual(
@@ -564,6 +581,35 @@ final class RendererCGTextTests: XCTestCase {
             }
             """
         )
+    }
+}
+
+extension RendererCGTextTests {
+
+    func testDashedStrokeIsResetAfterStroke() throws {
+        let svg = #"<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><path d="M0 0 L100 100" stroke="black" stroke-dasharray="4 2" stroke-dashoffset="1"/></svg>"#
+        let code = try CGTextRenderer.render(data: Data(svg.utf8), options: .default, api: .uiKit, precision: 2)
+        let lines = code.split(separator: "\n").map { $0.trimmingCharacters(in: .whitespaces) }
+        let dash = try XCTUnwrap(lines.firstIndex(of: "ctx.setLineDash(phase: 1, lengths: [4, 2])"))
+        let stroke = try XCTUnwrap(lines.lastIndex(of: "ctx.strokePath()"))
+        XCTAssertGreaterThan(stroke, dash)
+        // the lone push/pop pair is stripped by the optimizer, so the dash must be reset explicitly
+        XCTAssertEqual(lines[stroke + 1], "ctx.setLineDash(phase: 0, lengths: [])")
+    }
+
+    func testDashedGradientStrokesAreReset() throws {
+        // A stroke-only shape is the lone push/pop pair the optimizer strips, so each gradient stroke
+        // branch must reset the dash itself or it leaks into the caller's context.
+        for gradient in [#"<linearGradient id="g"><stop offset="0" stop-color="red"/><stop offset="1" stop-color="blue"/></linearGradient>"#,
+                         #"<radialGradient id="g"><stop offset="0" stop-color="red"/><stop offset="1" stop-color="blue"/></radialGradient>"#] {
+            let svg = #"<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><defs>"# + gradient +
+                #"</defs><path d="M0 0 L100 100" fill="none" stroke="url(#g)" stroke-width="4" stroke-dasharray="4 2"/></svg>"#
+            let code = try CGTextRenderer.render(data: Data(svg.utf8), options: .default, api: .uiKit, precision: 2)
+            let lines = code.split(separator: "\n").map { $0.trimmingCharacters(in: .whitespaces) }
+            let dash = try XCTUnwrap(lines.firstIndex(of: "ctx.setLineDash(phase: 0, lengths: [4, 2])"), gradient)
+            let reset = try XCTUnwrap(lines.lastIndex(of: "ctx.setLineDash(phase: 0, lengths: [])"), gradient)
+            XCTAssertGreaterThan(reset, dash, gradient)
+        }
     }
 }
 
