@@ -64,6 +64,19 @@ extension LayerTree.Layer {
     var hasUnsupportedFilters: Bool {
         filters.contains { !$0.isSupported }
     }
+
+    var containsText: Bool {
+        contents.contains {
+            switch $0 {
+            case .text:
+                return true
+            case .layer(let layer):
+                return layer.containsText
+            case .shape, .image:
+                return false
+            }
+        }
+    }
 }
 
 extension LayerTree.Filter {

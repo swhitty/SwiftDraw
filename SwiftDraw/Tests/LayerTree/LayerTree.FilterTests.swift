@@ -209,6 +209,38 @@ final class LayerTreeFilterTests: XCTestCase {
         XCTAssertNil(generator.makeFilterLayer(for: layer))
     }
 
+    // a group mixing shapes and text has unknown bounds: draw it unfiltered rather than clip the text away
+    func testGroupWithTextIsDrawnUnfiltered() throws {
+        let commands = try makeCommands(#"""
+        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+            <filter id="blur"><feGaussianBlur stdDeviation="2" /></filter>
+            <g filter="url(#blur)">
+                <rect x="10" y="10" width="10" height="10" />
+                <text x="10" y="80">Hello</text>
+            </g>
+        </svg>
+        """#, options: .hideUnsupportedFilters)
+
+        XCTAssertTrue(commands.filterLayers.isEmpty)
+        XCTAssertEqual(commands.names.prefix(2), ["setFillColor", "fillPath"])
+    }
+
+    func testGroupWithTextKeepsUserSpaceFilter() throws {
+        let commands = try makeCommands(#"""
+        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+            <filter id="blur" filterUnits="userSpaceOnUse" x="0" y="0" width="100" height="100">
+                <feGaussianBlur stdDeviation="2" />
+            </filter>
+            <g filter="url(#blur)">
+                <rect x="10" y="10" width="10" height="10" />
+                <text x="10" y="80">Hello</text>
+            </g>
+        </svg>
+        """#)
+
+        XCTAssertEqual(commands.filterLayers.first?.region, LayerTree.Rect(x: 0, y: 0, width: 100, height: 100))
+    }
+
     func testHugeDeviationStaysFinite() throws {
         let commands = try makeCommands(#"""
         <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
