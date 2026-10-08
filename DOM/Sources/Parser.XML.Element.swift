@@ -120,7 +120,19 @@ extension XMLParser {
         while let (element, parent) = stack.popLast() {
             try Task.checkCancellation()
 
-            guard let ge = try parseGraphicsElement(element) else {
+            let ge: DOM.GraphicsElement
+            do {
+                guard let parsed = try parseGraphicsElement(element) else {
+                    continue
+                }
+                ge = parsed
+            } catch is CancellationError {
+                throw CancellationError()
+            } catch {
+                // an invalid element drops itself and its subtree; its siblings survive
+                if let parseError = parseError(for: error, parsing: element, with: options) {
+                    throw parseError
+                }
                 continue
             }
 
