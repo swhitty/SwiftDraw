@@ -33,6 +33,15 @@ import Foundation
 
 final class LayerTreeDashTests: XCTestCase {
 
+    private func commandStream(_ body: String) throws -> [RendererCommand<LayerTreeProvider.Types>] {
+        let svg = try DOM.SVG.parse(xml: """
+        <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">\(body)</svg>
+        """)
+        let layer = LayerTree.Builder(svg: svg).makeLayer()
+        let generator = LayerTree.CommandGenerator(provider: LayerTreeProvider(), size: .zero, options: .default)
+        return generator.renderCommands(for: layer, colorConverter: .default)
+    }
+
     private func dashes(_ svgBody: String, attributes: String = "") throws -> [(phase: Float, lengths: [Float])] {
         let svg = try DOM.SVG.parse(xml: """
         <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" \(attributes)>\(svgBody)</svg>
@@ -40,7 +49,7 @@ final class LayerTreeDashTests: XCTestCase {
         let layer = LayerTree.Builder(svg: svg).makeLayer()
         let generator = LayerTree.CommandGenerator(provider: LayerTreeProvider(), size: .zero, options: .default)
         return generator.renderCommands(for: layer, colorConverter: .default).compactMap {
-            if case let .setLineDash(phase: p, lengths: l) = $0 { return (p, l) }
+            if case let .setLineDash(phase: p, lengths: l) = $0, !l.isEmpty { return (p, l) }
             return nil
         }
     }
@@ -90,5 +99,57 @@ final class LayerTreeDashTests: XCTestCase {
 
     func testSolidStrokeEmitsNoDashCommand() throws {
         XCTAssertTrue(try dashes(#"<path d="M0 0 L50 50" stroke="black"/>"#).isEmpty)
+    }
+
+    func testDashIsBracketedByPushAndPop() throws {
+        let commands = try commandStream(#"<path d="M0 0 L50 50" stroke="black" stroke-dasharray="4 2"/>"#)
+        let names = commands.map { String(describing: $0).prefix(while: { $0 != "(" }) }
+        let dash = try XCTUnwrap(names.firstIndex(of: "setLineDash"))
+        let stroke = try XCTUnwrap(names.firstIndex(of: "stroke"))
+        XCTAssertEqual(names[dash - 5], "pushState") // push, cap, join, width, miter, dash
+        XCTAssertGreaterThan(stroke, dash)
+        // explicit reset after the stroke, then pop
+        guard case let .setLineDash(phase: phase, lengths: lengths) = commands[stroke + 1] else {
+            return XCTFail("expected dash reset after stroke")
+        }
+        XCTAssertEqual(phase, 0)
+        XCTAssertEqual(lengths, [])
+        XCTAssertEqual(names[stroke + 2], "popState")
+    }
+
+    func testPercentageNonSquareViewport() throws {
+        let d = try dashes(#"<path d="M0 0 L50 50" stroke="black" stroke-dasharray="10% 10%"/>"#,
+                           attributes: #"viewBox="0 0 200 100""#)
+        // viewBox 200x100: sqrt((200² + 100²) / 2) = 158.11
+        XCTAssertEqual(d[0].lengths[0], 15.811, accuracy: 0.01)
+    }
+
+    func testPercentageUsesViewBoxNotWidthHeight() throws {
+        let d = try dashes(#"<path d="M0 0 L50 50" stroke="black" stroke-dasharray="10% 10%"/>"#,
+                           attributes: #"viewBox="0 0 50 50""#)
+        XCTAssertEqual(d[0].lengths[0], 5, accuracy: 0.001)
+    }
+
+    func testNegativeOffsetIsKept() throws {
+        let d = try dashes(#"<path d="M0 0 L50 50" stroke="black" stroke-dasharray="4 2" stroke-dashoffset="-3"/>"#)
+        XCTAssertEqual(d[0].phase, -3)
+    }
+
+    func testInvalidChildDasharrayInheritsFromDashedGroup() throws {
+        let d = try dashes(#"<g stroke-dasharray="4 2"><path d="M0 0 L50 50" stroke="black" stroke-dasharray="4 -2"/></g>"#)
+        XCTAssertEqual(d.count, 1)
+        XCTAssertEqual(d[0].lengths, [4, 2])
+    }
+
+    func testStyleNoneOverridesGroup() throws {
+        let d = try dashes(#"<g stroke-dasharray="4 2"><path d="M0 0 L50 50" stroke="black" style="stroke-dasharray:none"/></g>"#)
+        XCTAssertTrue(d.isEmpty)
+    }
+
+    func testNonFiniteValuesAreInvalid() throws {
+        XCTAssertTrue(try dashes(#"<path d="M0 0 L50 50" stroke="black" stroke-dasharray="nan% 5"/>"#).isEmpty)
+        XCTAssertTrue(try dashes(#"<path d="M0 0 L50 50" stroke="black" stroke-dasharray="inf 5"/>"#).isEmpty)
+        let d = try dashes(#"<path d="M0 0 L50 50" stroke="black" stroke-dasharray="4 2" stroke-dashoffset="nan%"/>"#)
+        XCTAssertEqual(d[0].phase, 0)
     }
 }

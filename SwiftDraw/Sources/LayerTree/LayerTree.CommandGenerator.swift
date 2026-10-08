@@ -251,6 +251,7 @@ extension LayerTree {
                                                                in: pathBounds,
                                                                opacity: fill.opacity,
                                                                colorConverter: colorConverter))
+                    commands.append(contentsOf: renderCommands(forDashResetOf: stroke))
                     commands.append(.popState)
                 }
             }
@@ -277,6 +278,7 @@ extension LayerTree {
                 commands.append(.setStroke(color: color))
                 commands.append(.stroke(path))
                 if !dash.isEmpty {
+                    commands.append(contentsOf: renderCommands(forDashResetOf: stroke))
                     commands.append(.popState)
                 }
             case .linearGradient(let gradient):
@@ -298,6 +300,7 @@ extension LayerTree {
                                                                endpoints: endpoints,
                                                                opacity: fill.opacity,
                                                                colorConverter: colorConverter))
+                    commands.append(contentsOf: renderCommands(forDashResetOf: stroke))
                     commands.append(.popState)
                 }
             case .radialGradient(let gradient):
@@ -332,6 +335,12 @@ extension LayerTree {
             guard !stroke.dashArray.isEmpty else { return [] }
             return [.setLineDash(phase: provider.createFloat(from: stroke.dashOffset),
                                  lengths: stroke.dashArray.map(provider.createFloat))]
+        }
+
+        /// The optimizer may strip a lone push/pop pair (CGText), so a dash must be reset explicitly.
+        func renderCommands(forDashResetOf stroke: StrokeAttributes) -> [RendererCommand<P.Types>] {
+            guard !stroke.dashArray.isEmpty else { return [] }
+            return [.setLineDash(phase: provider.createFloat(from: 0), lengths: [])]
         }
 
         func renderCommands(for image: Image) -> [RendererCommand<P.Types>] {

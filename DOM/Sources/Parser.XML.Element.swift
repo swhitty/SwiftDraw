@@ -213,11 +213,11 @@ extension XMLParser {
     static func parseDashLength(_ text: String) -> DOM.DashLength? {
         let text = text.trimmingCharacters(in: .whitespacesAndNewlines)
         if text.hasSuffix("%") {
-            guard let value = Float(text.dropLast()) else { return nil }
+            guard let value = Float(text.dropLast()), value.isFinite else { return nil }
             return .percentage(value)
         }
         var scanner = XMLParser.Scanner(text: text)
-        guard let value = try? scanner.scanCoordinate(), scanner.isEOF else { return nil }
+        guard let value = try? scanner.scanCoordinate(), value.isFinite, scanner.isEOF else { return nil }
         return .absolute(value)
     }
 

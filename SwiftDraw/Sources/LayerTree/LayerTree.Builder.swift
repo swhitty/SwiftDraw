@@ -250,7 +250,7 @@ extension LayerTree.Builder {
                                           join: state.strokeLineJoin,
                                           miterLimit: state.strokeLineMiterLimit,
                                           dashArray: makeDashArray(with: state),
-                                          dashOffset: makeDashLength(state.strokeDashOffset))
+                                          dashOffset: makeDashOffset(with: state))
     }
 
     /// Length of the viewport diagonal / sqrt(2), the reference for percentages (SVG 1.1 §7.10).
@@ -272,6 +272,11 @@ extension LayerTree.Builder {
         case .absolute(let value): return value
         case .percentage(let value): return value / 100 * viewportDiagonal
         }
+    }
+
+    func makeDashOffset(with state: State) -> LayerTree.Float {
+        let offset = makeDashLength(state.strokeDashOffset)
+        return offset.isFinite ? offset : 0
     }
 
     /// SVG 1.1 §11.4: odd-length lists repeat to even length; a zero sum renders solid.
