@@ -339,10 +339,22 @@ extension LayerTree {
             }
         }
 
-        func makeFilters(for state: State) -> [Filter] {
-            guard let filterId = state.filter?.fragmentID,
-                  let filter = svg.defs.filters.first(where: { $0.id == filterId }) else { return [] }
-            return filter.effects
+        // `filter` is not inherited: it applies once, to the element that references it
+        func makeFilter(for element: DOM.GraphicsElement) -> DOM.Filter? {
+            let attributes = DOM.presentationAttributes(for: element, styles: svg.styles)
+            guard let filterId = attributes.filter?.fragmentID else { return nil }
+            return svg.defs.filters.first(where: { $0.id == filterId })
+        }
+
+        func makeFilterRegion(for filter: DOM.Filter) -> FilterRegion {
+            FilterRegion(
+                x: filter.x.map { Float($0) },
+                y: filter.y.map { Float($0) },
+                width: filter.width.map { Float($0) },
+                height: filter.height.map { Float($0) },
+                units: filter.filterUnits == .userSpaceOnUse ? .userSpaceOnUse : .objectBoundingBox,
+                primitiveUnits: filter.primitiveUnits == .objectBoundingBox ? .objectBoundingBox : .userSpaceOnUse
+            )
         }
     }
 }
