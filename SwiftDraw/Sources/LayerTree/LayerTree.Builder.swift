@@ -201,7 +201,7 @@ extension LayerTree {
         func makeClipShape(for element: DOM.GraphicsElement) -> ClipShape? {
             // SVG 1.1 §14.3.5: children with `display="none"` or hidden `visibility` do not contribute to the clip
             let att = DOM.presentationAttributes(for: element, styles: svg.styles)
-            guard att.display != .none, att.visibility ?? .visible == .visible else {
+            guard att.display != DOM.DisplayMode.none, (att.visibility ?? .visible) == .visible else {
                 return nil
             }
             guard let shape = Builder.makeShape(from: element) else {
