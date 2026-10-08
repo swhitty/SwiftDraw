@@ -261,10 +261,12 @@ extension LayerTree {
             let l = Layer()
             l.class = element.class
             l.transform = Builder.createTransforms(from: attributes.transform ?? [])
-            l.clip = makeClipShapes(for: element)
-            l.clipRule = attributes.clipRule
-            l.clipUnits = makeClipUnits(for: element)
             l.mask = createMaskLayer(for: element)
+            // clip-rule comes from the <clipPath> contents and objectBoundingBox units are resolved
+            // here, so every clip reaches the renderers in user space (SVG 1.1 §14.3.5)
+            if let clip = makeClip(for: element) {
+                apply(clip, to: l)
+            }
             l.opacity = state.opacity
             if let filter = makeFilter(for: element) {
                 l.filters = filter.effects
