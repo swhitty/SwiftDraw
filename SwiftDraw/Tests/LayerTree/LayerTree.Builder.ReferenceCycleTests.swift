@@ -219,6 +219,28 @@ final class LayerTreeBuilderReferenceCycleTests: XCTestCase {
         XCTAssertEqual(s.patternFills, 1)
     }
 
+    func testPatternHrefCycleStillPaints() throws {
+        let s = try stats(##"""
+        <pattern id="a" xlink:href="#b" width="10" height="10" patternUnits="userSpaceOnUse"/>
+        <pattern id="b" xlink:href="#a"><rect width="5" height="5"/></pattern>
+        <rect width="10" height="10" fill="url(#a)"/>
+        """##)
+        XCTAssertEqual(s.patternFills, 1)
+        XCTAssertEqual(s.shapes, 2) // the filled rect and the rect inherited from #b
+    }
+
+    func testPatternHrefChainStopsAtTheCap() throws {
+        var body = ""
+        for i in 0..<100 {
+            body += ##"<pattern id="p\##(i)" xlink:href="#p\##(i + 1)" width="10" height="10" patternUnits="userSpaceOnUse"/>"##
+        }
+        body += ##"<pattern id="p100"><rect width="5" height="5"/></pattern><rect width="10" height="10" fill="url(#p0)"/>"##
+        let s = try stats(body)
+        // the content lives past the cap, so it is not inherited; the document still renders
+        XCTAssertEqual(s.patternFills, 1)
+        XCTAssertEqual(s.shapes, 1)
+    }
+
     func testGradientHrefCycleDoesNotRecurse() throws {
         let s = try stats(##"""
         <linearGradient id="a" xlink:href="#b"/>

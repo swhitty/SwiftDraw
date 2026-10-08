@@ -420,15 +420,19 @@ extension LayerTree.Builder {
         return pattern
     }
 
-    /// The pattern followed by the patterns it references through href; a cycle or a reference
-    /// that is not a pattern ends the chain.
+    /// The pattern followed by the patterns it references through href; a cycle, a reference
+    /// that is not a pattern, or a chain deeper than `ReferenceGuard.maxDepth` ends the chain.
     func makePatternChain(for element: DOM.Pattern) -> [DOM.Pattern] {
         var chain = [element]
         var visited: Set<String> = [element.id]
+        var entered = [String]()
+        defer { entered.forEach(references.leave) }
         var current = element
         while let id = current.href?.fragmentID,
               !visited.contains(id),
-              let next = svg.defs.patterns.first(where: { $0.id == id }) {
+              let next = svg.defs.patterns.first(where: { $0.id == id }),
+              references.enter("patternHref:\(id)") {
+            entered.append("patternHref:\(id)")
             visited.insert(id)
             chain.append(next)
             current = next
