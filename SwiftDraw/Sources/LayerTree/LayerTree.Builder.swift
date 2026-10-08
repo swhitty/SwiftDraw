@@ -362,11 +362,57 @@ extension LayerTree.Builder {
     }
 
     func makePattern(for element: DOM.Pattern) -> LayerTree.Pattern {
-        let frame = LayerTree.Rect(x: 0, y: 0, width: element.width, height: element.height)
-        let contentUnits: LayerTree.PatternUnits = element.patternContentUnits == .objectBoundingBox ? .objectBoundingBox : .userSpaceOnUse
-        let pattern = LayerTree.Pattern(frame: frame, contentUnits: contentUnits)
-        pattern.contents = element.childElements.compactMap { .layer(makeLayer(from: $0, inheriting: .init())) }
+        // SVG 1.1 §13.3: attributes not set on this element, and its children when it has none,
+        // are inherited along the xlink:href chain.
+        let chain = makePatternChain(for: element)
+        func inherited<T>(_ value: (DOM.Pattern) -> T?) -> T? {
+            chain.lazy.compactMap(value).first
+        }
+
+        let units: LayerTree.PatternUnits = inherited(\.patternUnits) == .userSpaceOnUse ? .userSpaceOnUse : .objectBoundingBox
+
+        // Percentages are fractions of the bounding box under objectBoundingBox, and of the
+        // viewport (in user units) under userSpaceOnUse.
+        let viewport = svg.viewBox.map { LayerTree.Size($0.width, $0.height) }
+            ?? LayerTree.Size(LayerTree.Float(svg.width), LayerTree.Float(svg.height))
+        func geometry(_ key: String, _ value: (DOM.Pattern) -> DOM.Coordinate?, viewport length: LayerTree.Float) -> LayerTree.Float {
+            guard let source = chain.first(where: { value($0) != nil }),
+                  let coordinate = value(source) else { return 0 }
+            if units == .userSpaceOnUse && source.percentageAttributes.contains(key) {
+                return coordinate * length
+            }
+            return coordinate
+        }
+
+        let frame = LayerTree.Rect(x: geometry("x", \.x, viewport: viewport.width),
+                                   y: geometry("y", \.y, viewport: viewport.height),
+                                   width: geometry("width", \.width, viewport: viewport.width),
+                                   height: geometry("height", \.height, viewport: viewport.height))
+        let contentUnits: LayerTree.PatternUnits = inherited(\.patternContentUnits) == .objectBoundingBox ? .objectBoundingBox : .userSpaceOnUse
+        let pattern = LayerTree.Pattern(frame: frame, contentUnits: contentUnits, units: units)
+        if let viewBox = inherited(\.viewBox) {
+            pattern.viewBox = LayerTree.Rect(x: viewBox.x, y: viewBox.y, width: viewBox.width, height: viewBox.height)
+        }
+        pattern.transform = Self.createTransforms(from: inherited(\.patternTransform) ?? []).toMatrix()
+        let children = chain.first(where: { !$0.childElements.isEmpty })?.childElements ?? []
+        pattern.contents = children.compactMap { .layer(makeLayer(from: $0, inheriting: .init())) }
         return pattern
+    }
+
+    /// The pattern followed by the patterns it references through href; a cycle or a reference
+    /// that is not a pattern ends the chain.
+    func makePatternChain(for element: DOM.Pattern) -> [DOM.Pattern] {
+        var chain = [element]
+        var visited: Set<String> = [element.id]
+        var current = element
+        while let id = current.href?.fragmentID,
+              !visited.contains(id),
+              let next = svg.defs.patterns.first(where: { $0.id == id }) {
+            visited.insert(id)
+            chain.append(next)
+            current = next
+        }
+        return chain
     }
 
     func makeGradient(for element: DOM.LinearGradient) -> LayerTree.LinearGradient? {
