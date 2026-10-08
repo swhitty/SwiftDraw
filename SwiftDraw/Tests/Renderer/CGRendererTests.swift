@@ -94,6 +94,21 @@ final class CGRendererTests: XCTestCase {
     XCTAssertTrue(renderer.isSVGRed(x: 195, y: 95))
   }
 
+  func testRootSliceDoesNotBleedOutsideItsViewport() throws {
+    // drawn into a larger context, the overflow of a sliced viewBox is clipped to the 200x100 viewport
+    let dom = try DOM.SVG.parse(xml: """
+    <svg xmlns="http://www.w3.org/2000/svg" width="200" height="100" viewBox="0 0 100 100" preserveAspectRatio="xMinYMin slice">
+    <rect x="-50" y="-50" width="300" height="300" fill="red"/></svg>
+    """)
+    let svg = SVG(dom: dom, options: .default)
+    let renderer = ImageRenderer(pixelsWide: 300, pixelsHigh: 200)
+    renderer.renderer.perform(svg.commands)
+
+    XCTAssertTrue(renderer.isSVGRed(x: 100, y: 50))
+    XCTAssertFalse(renderer.isSVGRed(x: 250, y: 50))
+    XCTAssertFalse(renderer.isSVGRed(x: 100, y: 150))
+  }
+
   func testAlphaClips() {
     let renderer = ImageRenderer(pixelsWide: 2, pixelsHigh: 2)
     

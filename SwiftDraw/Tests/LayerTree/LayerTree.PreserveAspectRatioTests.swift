@@ -211,4 +211,157 @@ final class LayerTreePreserveAspectRatioTests: XCTestCase {
         XCTAssertEqual(none.sx, 10)
         XCTAssertEqual(none.sy, 5)
     }
+
+    // MARK: table over alignments
+
+    func testEveryAlignmentAndModeOnBothAxes() {
+        let aligns: [(String, Float, Float)] = [
+            ("xMinYMin", 0, 0), ("xMidYMin", 0.5, 0), ("xMaxYMin", 1, 0),
+            ("xMinYMid", 0, 0.5), ("xMidYMid", 0.5, 0.5), ("xMaxYMid", 1, 0.5),
+            ("xMinYMax", 0, 1), ("xMidYMax", 0.5, 1), ("xMaxYMax", 1, 1)
+        ]
+        // content 40x10 and 10x40 into 100x100: the wide one is limited by x, the tall one by y
+        for (content, size) in [("wide", (w: Float(40), h: Float(10))), ("tall", (w: Float(10), h: Float(40)))] {
+            for (name, fx, fy) in aligns {
+                for mode in ["meet", "slice"] {
+                    let par = parse("\(name) \(mode)")!
+                    let fit = par.fit(contentWidth: size.w, contentHeight: size.h, viewportWidth: 100, viewportHeight: 100)
+                    // meet is limited by the long side (100 / 40), slice by the short side (100 / 10)
+                    let expected: Float = mode == "meet" ? 2.5 : 10
+                    XCTAssertEqual(fit.sx, expected, "\(content) \(name) \(mode)")
+                    XCTAssertEqual(fit.sy, expected, "\(content) \(name) \(mode)")
+                    XCTAssertEqual(fit.tx, (100 - size.w * expected) * fx, accuracy: 1e-4, "\(content) \(name) \(mode)")
+                    XCTAssertEqual(fit.ty, (100 - size.h * expected) * fy, accuracy: 1e-4, "\(content) \(name) \(mode)")
+                }
+            }
+        }
+    }
+
+    func testNoneSliceStillStretches() {
+        let par = parse("none slice")!
+        XCTAssertEqual(par.align, .none)
+        let fit = par.fit(contentWidth: 10, contentHeight: 20, viewportWidth: 100, viewportHeight: 100)
+        XCTAssertEqual(fit.sx, 10)
+        XCTAssertEqual(fit.sy, 5)
+        XCTAssertEqual(fit.tx, 0)
+        XCTAssertEqual(fit.ty, 0)
+    }
+
+    func testBareDeferAndWhitespaceVariants() {
+        XCTAssertNil(parse("defer"))
+        XCTAssertEqual(parse("\t xMaxYMin\n\r slice "), PAR(align: .xMaxYMin, meetOrSlice: .slice))
+        XCTAssertEqual(parse("defer\txMinYMax"), PAR(align: .xMinYMax, meetOrSlice: .meet))
+    }
+
+    // MARK: degenerate sizes
+
+    private func isFinite(_ rect: LayerTree.Rect) -> Bool {
+        [rect.x, rect.y, rect.width, rect.height].allSatisfy(\.isFinite)
+    }
+
+    func testDegenerateViewportsFallBackToIdentity() {
+        let box = DOM.SVG.ViewBox(x: 0, y: 0, width: 100, height: 50)
+        for (w, h) in [(0, 100), (100, 0), (-10, 100), (100, -10), (0, 0)] {
+            let fit = LayerTree.Builder.makeViewBoxFit(viewBox: box, width: w, height: h, preserveAspectRatio: nil)
+            XCTAssertEqual([fit.sx, fit.sy, fit.tx, fit.ty], [1, 1, 0, 0], "\(w)x\(h)")
+            let clip = LayerTree.Builder.makeViewportClip(viewBox: box, width: w, height: h, preserveAspectRatio: nil)
+            XCTAssertTrue(isFinite(clip), "\(w)x\(h)")
+        }
+    }
+
+    func testNonFiniteViewBoxFallsBackToViewport() {
+        let size = Float.infinity
+        for box in [DOM.SVG.ViewBox(x: 0, y: 0, width: size, height: 10),
+                    DOM.SVG.ViewBox(x: size, y: 0, width: 10, height: 10),
+                    DOM.SVG.ViewBox(x: 0, y: 0, width: .nan, height: 10),
+                    // tiny box: the scale overflows to infinity
+                    DOM.SVG.ViewBox(x: 0, y: 0, width: Float.leastNonzeroMagnitude, height: 10)] {
+            let fit = LayerTree.Builder.makeViewBoxFit(viewBox: box, width: 100, height: 100, preserveAspectRatio: nil)
+            XCTAssertTrue([fit.sx, fit.sy, fit.tx, fit.ty].allSatisfy(\.isFinite), "\(box)")
+            XCTAssertGreaterThan(fit.sx, 0)
+            let clip = LayerTree.Builder.makeViewportClip(viewBox: box, width: 100, height: 100, preserveAspectRatio: nil)
+            XCTAssertTrue(isFinite(clip), "\(box)")
+        }
+    }
+
+    // MARK: root slice
+
+    func testRootSliceGetsAClipInViewBoxSpace() throws {
+        let svg = try DOM.SVG.parse(xml: """
+        <svg xmlns="http://www.w3.org/2000/svg" width="200" height="100" viewBox="0 0 100 100" preserveAspectRatio="xMinYMin slice"/>
+        """)
+        let root = LayerTree.Builder(svg: svg).makeLayer()
+        XCTAssertEqual(root.transform, [.scale(sx: 2, sy: 2)])
+        XCTAssertEqual(root.clip.first?.shape, .rect(within: .init(x: 0, y: 0, width: 100, height: 50), radii: .zero))
+    }
+
+    func testRootMeetAndNoneAreNotClipped() throws {
+        for par in ["xMidYMid meet", "none", "xMinYMin slice".replacingOccurrences(of: "slice", with: "meet")] {
+            let svg = try DOM.SVG.parse(xml: """
+            <svg xmlns="http://www.w3.org/2000/svg" width="200" height="100" viewBox="0 0 100 100" preserveAspectRatio="\(par)"/>
+            """)
+            XCTAssertTrue(LayerTree.Builder(svg: svg).makeLayer().clip.isEmpty, par)
+        }
+    }
+
+    // MARK: nested svg with a viewBox origin
+
+    func testNestedSVGWithViewBoxOrigin() throws {
+        let svg = try DOM.SVG.parse(xml: """
+        <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">
+        <svg x="10" y="20" width="40" height="20" viewBox="5 5 10 10" preserveAspectRatio="xMidYMid meet"><rect width="10" height="10"/></svg>
+        </svg>
+        """)
+        let root = LayerTree.Builder(svg: svg).makeLayer()
+        guard case .layer(let nested)? = root.contents.first else { return XCTFail() }
+        // scale 2, centred horizontally: (40 - 20) / 2 = 10
+        XCTAssertEqual(nested.transform, [.translate(tx: 20, ty: 20), .scale(sx: 2, sy: 2), .translate(tx: -5, ty: -5)])
+        // the viewport in viewBox space: x from 5 - 10 / 2 = 0, 20 wide, 10 tall
+        XCTAssertEqual(nested.clip.first?.shape, .rect(within: .init(x: 0, y: 5, width: 20, height: 10), radii: .zero))
+    }
+
+    // MARK: image epsilon
+
+    func testImageMeetAndEqualAspectDoNotClip() {
+        XCTAssertNil(placement(PAR(), bitmap: .init(100, 100)).clip)
+        XCTAssertNil(placement(PAR(align: .xMinYMin, meetOrSlice: .slice), bitmap: .init(100, 100)).clip)
+        // a bitmap whose ratio matches up to rounding noise
+        XCTAssertNil(placement(PAR(align: .xMidYMid, meetOrSlice: .slice), bitmap: .init(333.3333, 333.33334)).clip)
+        XCTAssertNotNil(placement(PAR(align: .xMidYMid, meetOrSlice: .slice), bitmap: .init(50, 100)).clip)
+    }
+
+    // MARK: pattern
+
+    func testPatternViewBoxHonoursPreserveAspectRatio() throws {
+        typealias Generator = LayerTree.CommandGenerator<LayerTreeProvider>
+        func content(_ par: PAR) throws -> LayerTree.Transform.Matrix {
+            let pattern = LayerTree.Pattern(frame: .init(x: 5, y: 0, width: 40, height: 20))
+            pattern.viewBox = .init(x: 10, y: 10, width: 10, height: 10)
+            pattern.preserveAspectRatio = par
+            return try XCTUnwrap(Generator.resolvePattern(pattern, in: .init(x: 0, y: 0, width: 100, height: 100))).1
+        }
+        // meet: scale 2, free space 20 in x
+        XCTAssertEqual(try content(PAR(align: .xMinYMin)), .init(a: 2, b: 0, c: 0, d: 2, tx: 5 - 20, ty: -20))
+        XCTAssertEqual(try content(PAR(align: .xMaxYMax)), .init(a: 2, b: 0, c: 0, d: 2, tx: 5 + 20 - 20, ty: -20))
+        // slice: scale 4, 20 of overflow in y
+        XCTAssertEqual(try content(PAR(align: .xMinYMid, meetOrSlice: .slice)), .init(a: 4, b: 0, c: 0, d: 4, tx: 5 - 40, ty: -10 - 40))
+        // none: stretched
+        XCTAssertEqual(try content(PAR(align: .none)), .init(a: 4, b: 0, c: 0, d: 2, tx: 5 - 40, ty: -20))
+    }
+
+    func testPatternParsesAndInheritsPreserveAspectRatio() throws {
+        let svg = try DOM.SVG.parse(xml: """
+        <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="100" height="100">
+        <defs>
+        <pattern id="a" width="40" height="20" patternUnits="userSpaceOnUse" viewBox="0 0 10 10" preserveAspectRatio="xMaxYMax slice"><rect width="10" height="10"/></pattern>
+        <pattern id="b" xlink:href="#a"/>
+        </defs>
+        <rect width="100" height="100" fill="url(#b)"/></svg>
+        """)
+        XCTAssertEqual(svg.defs.patterns.first?.preserveAspectRatio, PAR(align: .xMaxYMax, meetOrSlice: .slice))
+        let layer = LayerTree.Builder(svg: svg).makeLayer()
+        let generator = LayerTree.CommandGenerator(provider: LayerTreeProvider(), size: .zero, options: .default)
+        let commands = generator.renderCommands(for: layer, colorConverter: .default)
+        XCTAssertTrue(commands.contains { if case .setFillPattern = $0 { return true }; return false })
+    }
 }

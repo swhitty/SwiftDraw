@@ -59,6 +59,17 @@ extension LayerTree {
                 height: svg.height,
                 preserveAspectRatio: svg.preserveAspectRatio
             )
+            // `slice` lets the viewBox overflow the viewport, which clips it (also when drawn into a larger context).
+            // layer.clip applies after layer.transform, so the viewport is expressed in viewBox space.
+            if let par = svg.preserveAspectRatio, par.align != .none, par.meetOrSlice == .slice, l.clip.isEmpty {
+                let viewport = Builder.makeViewportClip(
+                    viewBox: svg.viewBox,
+                    width: svg.width,
+                    height: svg.height,
+                    preserveAspectRatio: par
+                )
+                l.clip = [ClipShape(shape: .rect(within: viewport, radii: .zero), transform: .identity)]
+            }
             return l
         }
 
@@ -101,10 +112,13 @@ extension LayerTree {
             preserveAspectRatio: DOM.PreserveAspectRatio?
         ) -> (viewBox: DOM.SVG.ViewBox, sx: LayerTree.Float, sy: LayerTree.Float, tx: LayerTree.Float, ty: LayerTree.Float) {
             var box = DOM.SVG.ViewBox(x: 0, y: 0, width: .init(width), height: .init(height))
-            if let viewBox, viewBox.width > 0, viewBox.height > 0 {
+            if let viewBox, viewBox.x.isFinite, viewBox.y.isFinite,
+               viewBox.width.isFinite, viewBox.height.isFinite,
+               viewBox.width > 0, viewBox.height > 0 {
                 box = viewBox
             }
-            guard box.width > 0, box.height > 0 else {
+            // an empty or non-finite viewport (or one that overflows the fit) has no mapping: identity
+            guard box.width > 0, box.height > 0, width > 0, height > 0 else {
                 return (box, 1, 1, 0, 0)
             }
             let fit = (preserveAspectRatio ?? .default).fit(
@@ -114,6 +128,9 @@ extension LayerTree {
             // the free space of an exact fit is only rounding noise
             let tx = abs(fit.tx) < 1e-4 ? 0 : fit.tx
             let ty = abs(fit.ty) < 1e-4 ? 0 : fit.ty
+            guard [fit.sx, fit.sy, tx, ty].allSatisfy(\.isFinite), fit.sx > 0, fit.sy > 0 else {
+                return (DOM.SVG.ViewBox(x: 0, y: 0, width: .init(width), height: .init(height)), 1, 1, 0, 0)
+            }
             return (box, fit.sx, fit.sy, tx, ty)
         }
 
@@ -515,6 +532,7 @@ extension LayerTree.Builder {
         if let viewBox = inherited(\.viewBox) {
             pattern.viewBox = LayerTree.Rect(x: viewBox.x, y: viewBox.y, width: viewBox.width, height: viewBox.height)
         }
+        pattern.preserveAspectRatio = inherited(\.preserveAspectRatio) ?? .default
         pattern.transform = Self.createTransforms(from: inherited(\.patternTransform) ?? []).toMatrix()
         let children = chain.first(where: { !$0.childElements.isEmpty })?.childElements ?? []
         pattern.contents = children.compactMap { .layer(makeLayer(from: $0, inheriting: .init())) }

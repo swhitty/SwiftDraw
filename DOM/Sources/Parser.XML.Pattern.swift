@@ -63,6 +63,7 @@ extension XMLParser {
     let xlinkHref: DOM.URL? = try? att.parseUrl("xlink:href")
     pattern.href = href ?? xlinkHref
     pattern.viewBox = try? parseViewBox(try att.parseString("viewBox"))
+    pattern.preserveAspectRatio = parsePreserveAspectRatio(try? att.parseString("preserveAspectRatio"))
     if let val = try? att.parseString("patternTransform") {
       pattern.patternTransform = try? parseTransform(val)
     }
