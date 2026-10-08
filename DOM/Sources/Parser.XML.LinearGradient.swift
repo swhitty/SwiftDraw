@@ -65,7 +65,7 @@ extension XMLParser {
         node.href  = try? nodeAtt.parseHref()
 
         if let val = try? nodeAtt.parseString("gradientTransform") {
-          node.gradientTransform = try parseTransform(val)
+          if let t = try? parseTransform(val) { node.gradientTransform = t }
         }
 
         return node

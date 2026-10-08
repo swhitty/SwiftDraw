@@ -1,9 +1,9 @@
 //
-//  Parser.XML.ColorTests.swift
+//  Parser.TolerantTests.swift
 //  SwiftDraw
 //
-//  Created by Simon Whitty on 31/12/16.
-//  Copyright 2020 Simon Whitty
+//  Created by Misoservices on 08/10/26.
+//  Copyright 2026 Simon Whitty
 //
 //  Distributed under the permissive zlib license
 //  Get the latest version from here:
@@ -171,5 +171,95 @@ struct TolerantParsingTests {
         #expect(svg.childElements[0] is DOM.Image)
         #expect(svg.defs.linearGradients.first { $0.id == "derived" }?.href?.fragment == "base")
         #expect(svg.defs.radialGradients.first { $0.id == "rderived" }?.href?.fragment == "rbase")
+    }
+
+    @Test
+    func hslEdgeCases() throws {
+        // hue wraps: -120 == 240, 480 == 120
+        try expectRGBA("hsl(-120, 100%, 50%)", 0, 0, 1, 1)
+        try expectRGBA("hsl(480, 100%, 50%)", 0, 1, 0, 1)
+        // l > 0.5
+        try expectRGBA("hsl(0, 100%, 75%)", 1, 0.5, 0.5, 1)
+        // s = 0 is grey
+        try expectRGBA("hsl(200, 0%, 40%)", 0.4, 0.4, 0.4, 1)
+        // percentage alpha and comma-form hsla
+        try expectRGBA("hsla(0 100% 50% / 50%)", 1, 0, 0, 0.5)
+        try expectRGBA("hsla(0, 100%, 50%, 0.25)", 1, 0, 0, 0.25)
+    }
+
+    @Test
+    func hexWithAlphaEightDigits() throws {
+        guard case let .rgbi(r, g, b, a) = try color("#11223344") else {
+            Issue.record("expected rgbi")
+            return
+        }
+        #expect(r == 0x11 && g == 0x22 && b == 0x33)
+        #expect(abs(a - 0x44 / 255.0) < 0.001)
+    }
+
+    @Test
+    func emptyStyleDeclarationsAreSkipped() throws {
+        let parser = SwiftDrawDOM.XMLParser()
+        #expect(try parser.parseStyleAttributes("fill:;stroke:red") == ["stroke": "red"])
+        #expect(try parser.parseStyleAttributes("fill: ") == [:])
+        #expect(try parser.parseStyleAttributes("fill") == [:])
+        #expect(try parser.parseStyleAttributes("; ;") == [:])
+        #expect(try parser.parseStyleAttributes(";") == [:])
+        #expect(try parser.parseStyleAttributes("fill:red;;stroke:blue;") == ["fill": "red", "stroke": "blue"])
+
+        let svg = try parse("""
+        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10">
+          <rect width="5" height="5" style="fill:;stroke:red"/>
+        </svg>
+        """)
+        #expect(svg.childElements.count == 1)
+        #expect(svg.childElements[0].style.stroke == .color(.keyword(.red)))
+    }
+
+    @Test
+    func invalidGradientTransformIsDropped() throws {
+        let svg = try parse("""
+        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10">
+          <defs>
+            <linearGradient id="a" gradientTransform="none"><stop offset="0" stop-color="red"/></linearGradient>
+            <radialGradient id="b" gradientTransform="junk(1)"><stop offset="0" stop-color="red"/></radialGradient>
+          </defs>
+          <rect width="5" height="5"/>
+        </svg>
+        """)
+        #expect(svg.childElements.count == 1)
+        #expect(svg.defs.linearGradients.first { $0.id == "a" }?.gradientTransform == [])
+        #expect(svg.defs.radialGradients.first { $0.id == "b" }?.gradientTransform == [])
+    }
+
+    @Test
+    func importantWithSpaces() {
+        typealias A = SwiftDrawDOM.XMLParser.Attributes
+        #expect(A.removingImportant(from: "red !important") == "red ")
+        #expect(A.removingImportant(from: "red ! important") == "red ")
+        #expect(A.removingImportant(from: "red !IMPORTANT") == "red ")
+        #expect(A.removingImportant(from: "important") == "important")
+        #expect(A.removingImportant(from: "red") == "red")
+    }
+
+    @Test
+    func invalidHrefFallsBackToXLink() throws {
+        let att: [String: String] = ["href": "", "xlink:href": "#base"]
+        #expect(try att.parseHref().fragment == "base")
+        let valid: [String: String] = ["href": "#new", "xlink:href": "#old"]
+        #expect(try valid.parseHref().fragment == "new")
+    }
+
+    @Test
+    func negativeStrokeWidthIsDropped() throws {
+        let svg = try parse("""
+        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10">
+          <rect width="5" height="5" stroke-width="-2" font-size="12"/>
+          <rect width="5" height="5" stroke-width="0"/>
+        </svg>
+        """)
+        #expect(svg.childElements[0].attributes.strokeWidth == nil)
+        #expect(svg.childElements[0].attributes.fontSize == 12)
+        #expect(svg.childElements[1].attributes.strokeWidth == 0)
     }
 }

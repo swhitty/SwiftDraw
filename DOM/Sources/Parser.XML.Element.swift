@@ -205,25 +205,18 @@ extension XMLParser {
         return try parsePresentationAttributes(style)
     }
 
+    // A malformed declaration (`fill:`, `fill`, empty) is skipped; the others are kept.
     func parseStyleAttributes(_ data: String) throws -> [String: String] {
-        var scanner = XMLParser.Scanner(text: data)
         var style = [String: String]()
 
-        while !scanner.isEOF {
-            let att = try parseStyleAttribute(&scanner)
-            style[att.0] = att.1
+        for declaration in data.split(separator: ";", omittingEmptySubsequences: true) {
+            guard let colon = declaration.firstIndex(of: ":") else { continue }
+            let key = declaration[declaration.startIndex..<colon].trimmingCharacters(in: .whitespacesAndNewlines)
+            let value = declaration[declaration.index(after: colon)...].trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !key.isEmpty, !value.isEmpty else { continue }
+            style[key] = value
         }
         return style
-    }
-
-    private func parseStyleAttribute(_ scanner: inout  XMLParser.Scanner) throws -> (String, String) {
-        let key = try scanner.scanString(upTo: ":")
-        _ = try? scanner.scanString(":")
-        let value = try scanner.scanString(upTo: ";")
-        _ = try? scanner.scanString(";")
-
-        return (key.trimmingCharacters(in: .whitespaces),
-                value.trimmingCharacters(in: .whitespaces))
     }
 
     // An invalid value drops the attribute (the spec default applies) rather than the document.
@@ -247,7 +240,8 @@ extension XMLParser {
         el.color = lenient { try att.parseColor("color") }
 
         el.stroke = lenient { try att.parseFill("stroke") }
-        el.strokeWidth = lenient { try att.parseFloat("stroke-width") }
+        // a negative stroke-width is an error: drop it (SVG 1.1 §11.4)
+        el.strokeWidth = lenient { try att.parseFloat("stroke-width") }.flatMap { $0 < 0 ? nil : $0 }
         el.strokeOpacity = opacity(att, "stroke-opacity")
         el.strokeLineCap = lenient { try att.parseRaw("stroke-linecap") }
         el.strokeLineJoin = lenient { try att.parseRaw("stroke-linejoin") }
