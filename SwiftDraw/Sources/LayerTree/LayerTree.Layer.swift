@@ -40,6 +40,7 @@ extension LayerTree {
         var clipUnits: ClipUnits = .userSpaceOnUse
         var mask: Layer?
         var filters: [Filter] = []
+        var filterRegion = FilterRegion()
 
         enum Contents: Hashable {
             case shape(Shape, StrokeAttributes, FillAttributes)
@@ -83,6 +84,7 @@ extension LayerTree {
             clipUnits.hash(into: &hasher)
             mask.hash(into: &hasher)
             filters.hash(into: &hasher)
+            filterRegion.hash(into: &hasher)
         }
 
         static func ==(lhs: Layer, rhs: Layer) -> Bool {
@@ -94,7 +96,8 @@ extension LayerTree {
             lhs.clipRule == rhs.clipRule &&
             lhs.clipUnits == rhs.clipUnits &&
             lhs.mask == rhs.mask &&
-            lhs.filters == rhs.filters
+            lhs.filters == rhs.filters &&
+            lhs.filterRegion == rhs.filterRegion
         }
     }
 
