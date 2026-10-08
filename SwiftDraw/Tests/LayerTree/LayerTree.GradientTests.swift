@@ -172,14 +172,50 @@ final class LayerTreeGradientTests: XCTestCase {
         XCTAssertTrue(cmds.contains { if case .drawLinearGradient = $0 { return true }; return false })
     }
 
-    func testLongChainIsBounded() throws {
+    private func chain(hops: Int) -> String {
         var defs = #"<linearGradient id="n0" x1="0.5">\#(stops)</linearGradient>"#
-        for i in 1...40 {
+        for i in 1..<hops {
             defs += "<linearGradient id=\"n\(i)\" xlink:href=\"#n\(i - 1)\"/>"
         }
-        defs += "<linearGradient id=\"g\" xlink:href=\"#n40\"/>"
-        // the chain is cut by ReferenceGuard.maxDepth, so the stops are out of reach: paints none
-        XCTAssertEqual(try color("<defs>\(defs)</defs>"), LayerTree.Color.none)
+        defs += "<linearGradient id=\"g\" xlink:href=\"#n\(hops - 1)\" x2=\"0.75\"/>"
+        return "<defs>\(defs)</defs>"
+    }
+
+    func testFortyHopChainResolves() throws {
+        let g = try linear(chain(hops: 40))
+        XCTAssertEqual(g?.start.x, 0.5)
+        XCTAssertEqual(g?.end.x, 0.75)
+        XCTAssertEqual(g?.gradient.stops.count, 2)
+    }
+
+    func testLongChainIsBounded() throws {
+        // cut after maxGradientHops: the stops at the far end are out of reach, so it paints none
+        XCTAssertEqual(try color(chain(hops: LayerTree.Builder.maxGradientHops + 10)), LayerTree.Color.none)
+    }
+
+    func testManyShapesSharingAnHrefdGradientAllPaint() throws {
+        // more paints than ReferenceGuard.maxReferences: gradient hrefs must not spend that budget
+        let count = LayerTree.Builder.ReferenceGuard.maxReferences + 100
+        let rects = String(repeating: #"<rect width="1" height="1" fill="url(#g)"/>"#, count: count)
+        let cmds = try commands("""
+        <defs><linearGradient id="a">\(stops)</linearGradient><linearGradient id="g" xlink:href="#a"/></defs>
+        \(rects)
+        """)
+        let drawn = cmds.filter { if case .drawLinearGradient = $0 { return true }; return false }
+        XCTAssertEqual(drawn.count, count)
+    }
+
+    func testHrefChainResolvesInsideDeepUse() throws {
+        // <use> nesting spends ReferenceGuard depth; the gradient chain must still resolve
+        var body = "<defs><linearGradient id=\"a\">\(stops)</linearGradient>"
+        body += "<linearGradient id=\"b\" xlink:href=\"#a\"/><linearGradient id=\"g\" xlink:href=\"#b\"/></defs>"
+        body += "<rect id=\"u0\" width=\"1\" height=\"1\" fill=\"url(#g)\"/>"
+        for i in 1...14 {
+            body += "<g id=\"u\(i)\"><use xlink:href=\"#u\(i - 1)\"/></g>"
+        }
+        let cmds = try commands(body)
+        XCTAssertGreaterThan(cmds.filter { if case .drawLinearGradient = $0 { return true }; return false }.count, 1)
+        XCTAssertFalse(cmds.contains { if case .setFill = $0 { return true }; return false })
     }
 
     // MARK: - degenerate gradients (SVG 1.1 §13.2.2-§13.2.4)
@@ -323,12 +359,120 @@ final class LayerTreeGradientTests: XCTestCase {
         XCTAssertEqual(d?.gradient.stops.count, 4)
     }
 
-    func testRepeatPeriodsAreCapped() throws {
+    func testRepeatJustUnderTheCapExpands() throws {
+        // 2 stops: up to 4096 / 4 = 1024 periods
         let d = try drawnLinear("""
-        <defs><linearGradient id="g" gradientUnits="userSpaceOnUse" x1="0" x2="0.001" spreadMethod="repeat">\(stops)</linearGradient></defs>
+        <defs><linearGradient id="g" gradientUnits="userSpaceOnUse" x1="0" x2="0.1" spreadMethod="repeat">\(stops)</linearGradient></defs>
         <rect width="100" height="10" fill="url(#g)"/>
         """)
-        XCTAssertEqual(d?.gradient.stops.count, LayerTree.CommandGenerator<LayerTreeProvider>.maxSpreadPeriods * 2)
+        XCTAssertEqual(LayerTree.CommandGenerator<LayerTreeProvider>.maxSpreadPeriods(stopCount: 2), 1024)
+        XCTAssertEqual(d?.gradient.stops.count, 2000)
+        XCTAssertEqual(d?.end, LayerTree.Point(100, 0))
+    }
+
+    func testRepeatBeyondTheCapPaintsAverageColour() throws {
+        let d = try drawnLinear("""
+        <defs><linearGradient id="g" gradientUnits="userSpaceOnUse" x1="0" x2="0.001" spreadMethod="repeat">
+          <stop offset="0" stop-color="red"/><stop offset="0.5" stop-color="blue"/>
+        </linearGradient></defs>
+        <rect width="100" height="10" fill="url(#g)"/>
+        """)
+        // red→blue over the first half, blue pad over the second: 1/4 red, 3/4 blue
+        guard let d, case let .rgba(r, g, b, a, _) = d.gradient.stops[0].color else { return XCTFail("no gradient") }
+        XCTAssertEqual(d.gradient.stops.count, 2)
+        XCTAssertEqual(d.gradient.stops[0].color, d.gradient.stops[1].color)
+        XCTAssertEqual(r, 0.25, accuracy: 0.001)
+        XCTAssertEqual(g, 0, accuracy: 0.001)
+        XCTAssertEqual(b, 0.75, accuracy: 0.001)
+        XCTAssertEqual(a, 1, accuracy: 0.001)
+    }
+
+    func testAverageColourIsPremultiplied() throws {
+        let d = try drawnLinear("""
+        <defs><linearGradient id="g" gradientUnits="userSpaceOnUse" x1="0" x2="0.001" spreadMethod="reflect">
+          <stop offset="0" stop-color="red"/><stop offset="1" stop-color="blue" stop-opacity="0"/>
+        </linearGradient></defs>
+        <rect width="100" height="10" fill="url(#g)"/>
+        """)
+        // transparent blue contributes no hue
+        guard let d, case let .rgba(r, _, b, a, _) = d.gradient.stops[0].color else { return XCTFail("no gradient") }
+        XCTAssertEqual(r, 1, accuracy: 0.001)
+        XCTAssertEqual(b, 0, accuracy: 0.001)
+        XCTAssertEqual(a, 0.5, accuracy: 0.001)
+    }
+
+    func testObjectBoundingBoxRepeatWithTransform() throws {
+        let d = try drawnLinear("""
+        <defs><linearGradient id="g" x1="0" x2="0.25" spreadMethod="repeat" gradientTransform="translate(10 0)">\(stops)</linearGradient></defs>
+        <rect width="100" height="10" fill="url(#g)"/>
+        """)
+        // one period is 25 units, shifted by 10: x -10...90 is periods -1...3
+        XCTAssertEqual(d?.start, LayerTree.Point(-25, 0))
+        XCTAssertEqual(d?.end, LayerTree.Point(100, 0))
+        XCTAssertEqual(d?.gradient.stops.count, 10)
+    }
+
+    func testObjectBoundingBoxReflectWithTransform() throws {
+        let d = try drawnLinear("""
+        <defs><linearGradient id="g" x1="0" x2="0.5" spreadMethod="reflect" gradientTransform="scale(0.5)">\(stops)</linearGradient></defs>
+        <rect width="100" height="10" fill="url(#g)"/>
+        """)
+        // scaled by 0.5: x 0...100 maps to 0...200 in gradient space, four periods of 50
+        XCTAssertEqual(d?.end, LayerTree.Point(200, 0))
+        XCTAssertEqual(d?.gradient.stops.map(\.color), [red, blue, blue, red, red, blue, blue, red])
+    }
+
+    func testObjectBoundingBoxRadialRepeatWithTransform() throws {
+        let d = try drawnRadial("""
+        <defs><radialGradient id="g" r="0.25" spreadMethod="repeat" gradientTransform="scale(2)">\(stops)</radialGradient></defs>
+        <rect width="40" height="40" fill="url(#g)"/>
+        """)
+        // centre (20, 20), radius 10; scale(2) maps the rect to 0...20, farthest corner 28.3 away
+        XCTAssertEqual(d?.endCenter, LayerTree.Point(20, 20))
+        XCTAssertEqual(d?.endRadius, 30)
+        XCTAssertEqual(d?.gradient.stops.count, 6)
+    }
+
+    func testObjectBoundingBoxRadialReflect() throws {
+        let d = try drawnRadial("""
+        <defs><radialGradient id="g" r="0.25" spreadMethod="reflect" gradientTransform="translate(5 0)">\(stops)</radialGradient></defs>
+        <rect width="40" height="40" fill="url(#g)"/>
+        """)
+        // corners -5...35: farthest from (20, 20) is 35.4, four periods of 10
+        XCTAssertEqual(d?.endRadius, 40)
+        XCTAssertEqual(d?.gradient.stops.map(\.color), [red, blue, blue, red, red, blue, blue, red])
+    }
+
+    func testRadialStrokeWithSpread() throws {
+        let d = try drawnRadial("""
+        <defs><radialGradient id="g" gradientUnits="userSpaceOnUse" cx="50" cy="50" r="10" spreadMethod="repeat">\(stops)</radialGradient></defs>
+        <circle cx="50" cy="50" r="20" fill="none" stroke="url(#g)" stroke-width="4"/>
+        """)
+        // bounds 30...70 outset by 8 (miter limit 4): farthest corner 39.6 away, four periods
+        XCTAssertEqual(d?.endRadius, 40)
+        XCTAssertEqual(d?.gradient.stops.count, 8)
+    }
+
+    func testRadialPeriodsAreExactWithFocalNearEdge() throws {
+        let d = try drawnRadial("""
+        <defs><radialGradient id="g" gradientUnits="userSpaceOnUse" cx="50" cy="50" r="50" fx="99" fy="50" spreadMethod="repeat">\(stops)</radialGradient></defs>
+        <rect width="100" height="100" fill="url(#g)"/>
+        """)
+        // the farthest corners, (100, 0) and (100, 100), are covered from t = 5.54: six periods,
+        // not the ~110 that a bound of (distance − r0) / (Δr − |Δc|) gives
+        XCTAssertEqual(d?.gradient.stops.count, 12)
+    }
+
+    func testSquareCapCoverage() throws {
+        func end(_ cap: String) throws -> LayerTree.Point? {
+            try drawnLinear("""
+            <defs><linearGradient id="g" gradientUnits="userSpaceOnUse" x1="0" x2="0" y1="0" y2="10" spreadMethod="repeat">\(stops)</linearGradient></defs>
+            <line x1="50" y1="12" x2="50" y2="37.5" stroke="url(#g)" stroke-width="4" stroke-linejoin="round" stroke-linecap="\(cap)"/>
+            """)?.end
+        }
+        // a square cap reaches 2·√2 = 2.83 beyond y = 37.5, past the fourth period
+        XCTAssertEqual(try end("round"), LayerTree.Point(0, 40))
+        XCTAssertEqual(try end("square"), LayerTree.Point(0, 50))
     }
 
     func testRepeatRadialCoversShape() throws {

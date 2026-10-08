@@ -45,6 +45,7 @@ extension LayerTree {
         private var hasLoggedFilterWarning = false
         private var hasLoggedGradientWarning = false
         private var hasLoggedMaskWarning = false
+        private var hasLoggedSpreadWarning = false
 
         private var paths: [LayerTree.Shape: P.Types.Path] = [:]
         private var images: [LayerTree.Image: P.Types.Image] = [:]
@@ -542,10 +543,15 @@ extension LayerTree {
             var stops = gradient.gradient
             if gradient.spread != .pad, let area,
                let periods = Self.spreadPeriods(start: pathStart, end: pathEnd, transform: gradient.transform, covering: area) {
-                let vector = LayerTree.Point(pathEnd.x - pathStart.x, pathEnd.y - pathStart.y)
-                stops = stops.spread(gradient.spread, periods: periods)
-                pathEnd = pathStart.offset(vector, times: LayerTree.Float(periods.upperBound + 1))
-                pathStart = pathStart.offset(vector, times: LayerTree.Float(periods.lowerBound))
+                if periods.count <= Self.maxSpreadPeriods(stopCount: stops.stops.count) {
+                    let vector = LayerTree.Point(pathEnd.x - pathStart.x, pathEnd.y - pathStart.y)
+                    stops = stops.spread(gradient.spread, periods: periods)
+                    pathEnd = pathStart.offset(vector, times: LayerTree.Float(periods.upperBound + 1))
+                    pathStart = pathStart.offset(vector, times: LayerTree.Float(periods.lowerBound))
+                } else {
+                    logUnsupportedSpread()
+                    stops = stops.averaged()
+                }
             }
 
             let converted = stops.convertColor(using: colorConverter)
@@ -598,11 +604,16 @@ extension LayerTree {
                let periods = Self.spreadPeriods(startCenter: startCenter, startRadius: startRadius,
                                                 endCenter: endCenter, endRadius: endRadius,
                                                 transform: gradient.transform, covering: area) {
-                let vector = LayerTree.Point(endCenter.x - startCenter.x, endCenter.y - startCenter.y)
-                let count = LayerTree.Float(periods.upperBound + 1)
-                stops = stops.spread(gradient.spread, periods: periods)
-                endCenter = startCenter.offset(vector, times: count)
-                endRadius = startRadius + (endRadius - startRadius) * count
+                if periods.count <= Self.maxSpreadPeriods(stopCount: stops.stops.count) {
+                    let vector = LayerTree.Point(endCenter.x - startCenter.x, endCenter.y - startCenter.y)
+                    let count = LayerTree.Float(periods.upperBound + 1)
+                    stops = stops.spread(gradient.spread, periods: periods)
+                    endCenter = startCenter.offset(vector, times: count)
+                    endRadius = startRadius + (endRadius - startRadius) * count
+                } else {
+                    logUnsupportedSpread()
+                    stops = stops.averaged()
+                }
             }
 
             let converted = stops.convertColor(using: colorConverter)
@@ -623,8 +634,14 @@ extension LayerTree {
 
 extension LayerTree.CommandGenerator {
 
-    /// Most periods drawn for `reflect` or `repeat`; beyond them the gradient pads.
-    static var maxSpreadPeriods: Int { 256 }
+    /// Most stops a `reflect` or `repeat` gradient expands to.
+    static var maxSpreadStops: Int { 4096 }
+
+    /// Most periods drawn for a gradient of `stopCount` stops (each period may gain two stops when
+    /// completed to 0...1); a gradient needing more paints its average colour instead.
+    static func maxSpreadPeriods(stopCount: Int) -> Int {
+        max(1, maxSpreadStops / (stopCount + 2))
+    }
 
     /// The periods of a linear gradient (0 being start...end) needed to cover `area`, which is in
     /// the space the gradient's transform is applied to. nil when they cannot be computed.
@@ -639,8 +656,8 @@ extension LayerTree.CommandGenerator {
             let p = inverse.transform(point: $0)
             return ((p.x - start.x) * dx + (p.y - start.y) * dy) / length
         }
-        guard let lower = offsets.min(), let upper = offsets.max(), lower.isFinite, upper.isFinite else { return nil }
-        return clampPeriods(lower: lower, upper: upper)
+        guard let lower = offsets.min(), let upper = offsets.max() else { return nil }
+        return makePeriods(lower: lower, upper: upper)
     }
 
     /// The periods of a radial gradient needed to cover `area`. Only computed when the focal circle
@@ -649,30 +666,34 @@ extension LayerTree.CommandGenerator {
                               endCenter: LayerTree.Point, endRadius: LayerTree.Float,
                               transform: [LayerTree.Transform],
                               covering area: LayerTree.Rect) -> ClosedRange<Int>? {
+        // the circle at t has centre c0 + t·Δc and radius r0 + t·Δr; a point p = c0 + q is on it when
+        // (Δc·Δc − Δr²)t² − 2(q·Δc + r0Δr)t + (q·q − r0²) = 0. With the focal circle inside
+        // (Δr > |Δc|) the circles nest, so p is covered from the larger root on.
         let dx = endCenter.x - startCenter.x
         let dy = endCenter.y - startCenter.y
-        // each period the circle grows by `growth` more than its centre moves, so a point at
-        // distance d from the focal centre is inside the circle from t = (d - r0) / growth.
-        let growth = (endRadius - startRadius) - (dx * dx + dy * dy).squareRoot()
-        guard growth > 0, let inverse = transform.toMatrix().inverted() else { return nil }
-        let offsets = area.corners.map {
-            let p = inverse.transform(point: $0)
-            let distance = ((p.x - startCenter.x) * (p.x - startCenter.x) + (p.y - startCenter.y) * (p.y - startCenter.y)).squareRoot()
-            return (distance - startRadius) / growth
+        let dr = endRadius - startRadius
+        let a = dx * dx + dy * dy - dr * dr
+        guard a < 0, dr > 0, let inverse = transform.toMatrix().inverted() else { return nil }
+        let offsets = area.corners.map { corner -> LayerTree.Float in
+            let p = inverse.transform(point: corner)
+            let qx = p.x - startCenter.x
+            let qy = p.y - startCenter.y
+            let b = -2 * (qx * dx + qy * dy + startRadius * dr)
+            let c = qx * qx + qy * qy - startRadius * startRadius
+            let discriminant = max(0, b * b - 4 * a * c)
+            return (-b - discriminant.squareRoot()) / (2 * a)
         }
-        guard let upper = offsets.max(), upper.isFinite else { return nil }
-        return clampPeriods(lower: 0, upper: upper)
+        guard let upper = offsets.max() else { return nil }
+        return makePeriods(lower: 0, upper: upper)
     }
 
-    static func clampPeriods(lower: LayerTree.Float, upper: LayerTree.Float) -> ClosedRange<Int> {
-        let limit = LayerTree.Float(maxSpreadPeriods)
-        var first = Int(max(-limit, min(0, lower.rounded(.down))))
-        var last = Int(min(limit, max(1, upper.rounded(.up)))) - 1
-        if last - first + 1 > maxSpreadPeriods {
-            // keep the periods around the gradient vector
-            first = max(first, -maxSpreadPeriods / 2)
-            last = first + maxSpreadPeriods - 1
-        }
+    /// The whole periods spanning lower...upper, always including period 0.
+    static func makePeriods(lower: LayerTree.Float, upper: LayerTree.Float) -> ClosedRange<Int>? {
+        guard lower.isFinite, upper.isFinite else { return nil }
+        // bounded so the conversion to Int cannot trap; anything this large is averaged anyway
+        let limit: LayerTree.Float = 1_000_000
+        let first = Int(max(-limit, min(0, lower.rounded(.down))))
+        let last = Int(min(limit, max(1, upper.rounded(.up)))) - 1
         return first...last
     }
 
@@ -777,6 +798,12 @@ extension LayerTree.CommandGenerator {
         hasLoggedGradientWarning = true
     }
 
+    func logUnsupportedSpread() {
+        guard !hasLoggedSpreadWarning else { return }
+        print("Warning:", "spreadMethod needs more than \(Self.maxSpreadStops) gradient stops; painting the average colour", to: &.standardError)
+        hasLoggedSpreadWarning = true
+    }
+
     func logUnsupportedMask() {
         guard !hasLoggedMaskWarning else { return }
         print("Warning:", "PDF does not support transparency masks", to: &.standardError)
@@ -808,14 +835,7 @@ extension LayerTree.Gradient {
     /// mirrored for `reflect` (SVG 1.1 §13.2.2 spreadMethod).
     func spread(_ spread: Spread, periods: ClosedRange<Int>) -> LayerTree.Gradient {
         guard spread != .pad, !stops.isEmpty else { return self }
-        // complete each period so the first and last colours fill 0 and 1
-        var period = stops
-        if let first = period.first, first.offset > 0 {
-            period.insert(Stop(offset: 0, color: first.color, opacity: first.opacity), at: 0)
-        }
-        if let last = period.last, last.offset < 1 {
-            period.append(Stop(offset: 1, color: last.color, opacity: last.opacity))
-        }
+        let period = completedPeriod
         let mirrored = period.reversed().map { Stop(offset: 1 - $0.offset, color: $0.color, opacity: $0.opacity) }
         let count = LayerTree.Float(periods.count)
         var result = [Stop]()
@@ -827,6 +847,54 @@ extension LayerTree.Gradient {
             }
         }
         return LayerTree.Gradient(stops: result)
+    }
+
+    /// The stops completed so the first and last colours fill 0 and 1.
+    var completedPeriod: [Stop] {
+        var period = stops
+        if let first = period.first, first.offset > 0 {
+            period.insert(Stop(offset: 0, color: first.color, opacity: first.opacity), at: 0)
+        }
+        if let last = period.last, last.offset < 1 {
+            period.append(Stop(offset: 1, color: last.color, opacity: last.opacity))
+        }
+        return period
+    }
+
+    /// A flat gradient of the average colour of one period (premultiplied, the same for `reflect`),
+    /// for spreads too fine to draw.
+    func averaged() -> LayerTree.Gradient {
+        let period = completedPeriod
+        var sum: (r: LayerTree.Float, g: LayerTree.Float, b: LayerTree.Float, a: LayerTree.Float) = (0, 0, 0, 0)
+        var space = LayerTree.ColorSpace.srgb
+        for (lhs, rhs) in zip(period, period.dropFirst()) {
+            let weight = (rhs.offset - lhs.offset) / 2
+            for stop in [lhs, rhs] {
+                let c = stop.premultiplied
+                sum = (sum.r + c.r * weight, sum.g + c.g * weight, sum.b + c.b * weight, sum.a + c.a * weight)
+            }
+            if case .rgba(_, _, _, _, let s) = lhs.color { space = s }
+        }
+        let color: LayerTree.Color = sum.a > 0
+            ? .rgba(r: sum.r / sum.a, g: sum.g / sum.a, b: sum.b / sum.a, a: sum.a, space: space)
+            : .none
+        return LayerTree.Gradient(stops: [Stop(offset: 0, color: color, opacity: 1),
+                                          Stop(offset: 1, color: color, opacity: 1)])
+    }
+}
+
+private extension LayerTree.Gradient.Stop {
+    var premultiplied: (r: LayerTree.Float, g: LayerTree.Float, b: LayerTree.Float, a: LayerTree.Float) {
+        switch color {
+        case .none:
+            return (0, 0, 0, 0)
+        case let .rgba(r, g, b, a, _):
+            let alpha = a * opacity
+            return (r * alpha, g * alpha, b * alpha, alpha)
+        case let .gray(white, a):
+            let alpha = a * opacity
+            return (white * alpha, white * alpha, white * alpha, alpha)
+        }
     }
 }
 
@@ -842,9 +910,12 @@ private extension LayerTree.Gradient {
 }
 
 private extension LayerTree.StrokeAttributes {
-    /// How far the stroke may reach beyond the path's bounds (half the width, more at miter joins).
+    /// How far the stroke may reach beyond the path's bounds: half the width, √2 times that at
+    /// square caps, up to the miter limit at miter joins.
     var coverage: LayerTree.Float {
-        width / 2 * (join == .miter ? max(1, miterLimit) : 1)
+        let cap: LayerTree.Float = self.cap == .square ? LayerTree.Float(2).squareRoot() : 1
+        let join: LayerTree.Float = self.join == .miter ? max(1, miterLimit) : 1
+        return width / 2 * max(cap, join)
     }
 }
 

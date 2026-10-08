@@ -40,6 +40,7 @@ extension LayerTree {
 
         let svg: DOM.SVG
         let references = ReferenceGuard()
+        let gradients = GradientCache()
 
         init(svg: DOM.SVG) {
             self.svg = svg
@@ -421,10 +422,23 @@ extension LayerTree.Builder {
         return nil
     }
 
-    /// nil when the url does not name a gradient.
+    /// nil when the url does not name a gradient. Resolved once per gradient id.
     func makeGradientPaint(for gradientId: URL) -> GradientPaint? {
-        makeGradientElement(id: gradientId.fragmentID).map(makeGradientPaint)
+        guard let id = gradientId.fragmentID else { return nil }
+        if let paint = gradients.paints[id] {
+            return paint
+        }
+        let paint = makeGradientElement(id: id).map(makeGradientPaint)
+        gradients.paints[id] = paint
+        return paint
     }
+
+    final class GradientCache {
+        var paints = [String: GradientPaint?]()
+    }
+
+    /// Most href hops followed from one gradient (SVG sets no limit; this bounds hostile chains).
+    static var maxGradientHops: Int { 64 }
 
     func makeTextAttributes(with state: State) -> LayerTree.TextAttributes {
         let fill = LayerTree.Color
@@ -564,18 +578,17 @@ extension LayerTree.Builder {
     }
 
     /// The gradient followed by the gradients it references through href, of either kind; a cycle,
-    /// a reference that is not a gradient, or a chain deeper than `ReferenceGuard.maxDepth` ends it.
+    /// a reference that is not a gradient, or more than `maxGradientHops` hops ends it, keeping what
+    /// was collected. Gradient hrefs only point at other gradients, so they never re-enter `<use>`,
+    /// mask or pattern expansion and do not spend the document-wide `ReferenceGuard` budget.
     func makeGradientChain(for element: GradientElement) -> [GradientElement] {
         var chain = [element]
         var visited: Set<String> = [element.id]
-        var entered = [String]()
-        defer { entered.forEach(references.leave) }
         var current = element
-        while let id = current.href?.fragmentID,
+        while chain.count <= Self.maxGradientHops,
+              let id = current.href?.fragmentID,
               !visited.contains(id),
-              let next = makeGradientElement(id: id),
-              references.enter("gradientHref:\(id)") {
-            entered.append("gradientHref:\(id)")
+              let next = makeGradientElement(id: id) {
             visited.insert(id)
             chain.append(next)
             current = next
