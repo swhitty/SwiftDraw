@@ -46,7 +46,7 @@ struct InvalidElementTests {
         #"<line x1="a" y1="0" x2="1" y2="1"/>"#,
     ]
 
-    private func parse(_ body: String, options: XMLParser.Options = [.skipInvalidElements]) throws -> DOM.SVG {
+    private func parse(_ body: String, options: SwiftDrawDOM.XMLParser.Options = [.skipInvalidElements]) throws -> DOM.SVG {
         try DOM.SVG.parse(xml: #"<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10">\#(body)</svg>"#,
                           options: options)
     }
