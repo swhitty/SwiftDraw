@@ -207,8 +207,7 @@ extension LayerTree {
                     commands.append(.fill(path, rule: rule))
                 }
             case .pattern(let fillPattern):
-                let bounds = provider.getBounds(from: shape)
-                if let (resolvedPattern, contentTransform) = Self.resolvePattern(fillPattern, in: bounds) {
+                if let (resolvedPattern, contentTransform) = Self.resolvePattern(fillPattern, in: provider.getBounds(from: shape)) {
                     var patternCommands = [RendererCommand<P.Types>]()
                     if contentTransform != .identity {
                         patternCommands.append(.pushState)
@@ -671,8 +670,18 @@ extension LayerTree.CommandGenerator {
     /// is the patternTransform, plus the transform that maps the pattern contents into that tile
     /// (tile origin, then viewBox or objectBoundingBox content units). Returns nil when the
     /// pattern disables rendering: a zero or negative tile, an empty bounding box with
-    /// objectBoundingBox units, or an empty viewBox.
-    static func resolvePattern(_ pattern: LayerTree.Pattern, in bounds: LayerTree.Rect) -> (LayerTree.Pattern, LayerTree.Transform.Matrix)? {
+    /// objectBoundingBox units, an empty viewBox, or a non-finite or non-invertible patternTransform.
+    /// `bounds` is only evaluated when objectBoundingBox units need it.
+    static func resolvePattern(_ pattern: LayerTree.Pattern, in boundingBox: @autoclosure () -> LayerTree.Rect) -> (LayerTree.Pattern, LayerTree.Transform.Matrix)? {
+        let t = pattern.transform
+        let determinant = t.a * t.d - t.b * t.c
+        guard [t.a, t.b, t.c, t.d, t.tx, t.ty].allSatisfy(\.isFinite),
+              determinant.isFinite, determinant != 0 else { return nil }
+
+        let needsBounds = pattern.units == .objectBoundingBox ||
+            (pattern.viewBox == nil && pattern.contentUnits == .objectBoundingBox)
+        let bounds = needsBounds ? boundingBox() : .zero
+
         var tile = pattern.frame
         if pattern.units == .objectBoundingBox {
             tile = LayerTree.Rect(
@@ -682,7 +691,8 @@ extension LayerTree.CommandGenerator {
                 height: pattern.frame.height * bounds.height
             )
         }
-        guard tile.width > 0, tile.height > 0 else { return nil }
+        guard [tile.x, tile.y, tile.width, tile.height].allSatisfy(\.isFinite),
+              tile.width > 0, tile.height > 0 else { return nil }
 
         var contentTransform = LayerTree.Transform.Matrix.identity
         if let viewBox = pattern.viewBox {

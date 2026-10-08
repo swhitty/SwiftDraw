@@ -125,6 +125,47 @@ final class LayerTreeCommandGeneratorTests: XCTestCase {
         XCTAssertNil(Generator.resolvePattern(emptyViewBox, in: bounds))
     }
 
+    func testPatternWithDegenerateTransformPaintsNothing() {
+        let bounds = LayerTree.Rect(x: 0, y: 0, width: 10, height: 10)
+        let scaledToZero = LayerTree.Pattern(frame: .init(x: 0, y: 0, width: 5, height: 5))
+        scaledToZero.transform = .init(a: 0, b: 0, c: 0, d: 0, tx: 0, ty: 0)
+        XCTAssertNil(Generator.resolvePattern(scaledToZero, in: bounds))
+
+        let collapsed = LayerTree.Pattern(frame: .init(x: 0, y: 0, width: 5, height: 5))
+        collapsed.transform = .init(a: 1, b: 2, c: 2, d: 4, tx: 0, ty: 0)
+        XCTAssertNil(Generator.resolvePattern(collapsed, in: bounds))
+
+        let infinite = LayerTree.Pattern(frame: .init(x: 0, y: 0, width: 5, height: 5))
+        infinite.transform = .init(a: .infinity, b: 0, c: 0, d: 1, tx: 0, ty: 0)
+        XCTAssertNil(Generator.resolvePattern(infinite, in: bounds))
+
+        let nanTile = LayerTree.Pattern(frame: .init(x: .nan, y: 0, width: 5, height: 5))
+        XCTAssertNil(Generator.resolvePattern(nanTile, in: bounds))
+    }
+
+    func testPatternBoundsOnlyEvaluatedWhenNeeded() {
+        var evaluated = 0
+        func bounds() -> LayerTree.Rect {
+            evaluated += 1
+            return .init(x: 0, y: 0, width: 10, height: 10)
+        }
+
+        let userSpace = LayerTree.Pattern(frame: .init(x: 0, y: 0, width: 5, height: 5))
+        _ = Generator.resolvePattern(userSpace, in: bounds())
+        XCTAssertEqual(evaluated, 0)
+
+        let viewBoxOverridesContentUnits = LayerTree.Pattern(frame: .init(x: 0, y: 0, width: 5, height: 5), contentUnits: .objectBoundingBox)
+        viewBoxOverridesContentUnits.viewBox = .init(x: 0, y: 0, width: 1, height: 1)
+        _ = Generator.resolvePattern(viewBoxOverridesContentUnits, in: bounds())
+        XCTAssertEqual(evaluated, 0)
+
+        _ = Generator.resolvePattern(LayerTree.Pattern(frame: .init(x: 0, y: 0, width: 5, height: 5), contentUnits: .objectBoundingBox), in: bounds())
+        XCTAssertEqual(evaluated, 1)
+
+        _ = Generator.resolvePattern(LayerTree.Pattern(frame: .init(x: 0, y: 0, width: 1, height: 1), units: .objectBoundingBox), in: bounds())
+        XCTAssertEqual(evaluated, 2)
+    }
+
     func testPatternCommandsFromInkscapeStyleDocument() throws {
         let svg = try DOM.SVG.parse(xml: #"""
         <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="64" height="64">

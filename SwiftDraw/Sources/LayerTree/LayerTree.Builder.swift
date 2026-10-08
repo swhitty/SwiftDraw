@@ -369,11 +369,25 @@ extension LayerTree.Builder {
             chain.lazy.compactMap(value).first
         }
 
-        let frame = LayerTree.Rect(x: inherited(\.x) ?? 0,
-                                   y: inherited(\.y) ?? 0,
-                                   width: inherited(\.width) ?? 0,
-                                   height: inherited(\.height) ?? 0)
         let units: LayerTree.PatternUnits = inherited(\.patternUnits) == .userSpaceOnUse ? .userSpaceOnUse : .objectBoundingBox
+
+        // Percentages are fractions of the bounding box under objectBoundingBox, and of the
+        // viewport (in user units) under userSpaceOnUse.
+        let viewport = svg.viewBox.map { LayerTree.Size($0.width, $0.height) }
+            ?? LayerTree.Size(LayerTree.Float(svg.width), LayerTree.Float(svg.height))
+        func geometry(_ key: String, _ value: (DOM.Pattern) -> DOM.Coordinate?, viewport length: LayerTree.Float) -> LayerTree.Float {
+            guard let source = chain.first(where: { value($0) != nil }),
+                  let coordinate = value(source) else { return 0 }
+            if units == .userSpaceOnUse && source.percentageAttributes.contains(key) {
+                return coordinate * length
+            }
+            return coordinate
+        }
+
+        let frame = LayerTree.Rect(x: geometry("x", \.x, viewport: viewport.width),
+                                   y: geometry("y", \.y, viewport: viewport.height),
+                                   width: geometry("width", \.width, viewport: viewport.width),
+                                   height: geometry("height", \.height, viewport: viewport.height))
         let contentUnits: LayerTree.PatternUnits = inherited(\.patternContentUnits) == .objectBoundingBox ? .objectBoundingBox : .userSpaceOnUse
         let pattern = LayerTree.Pattern(frame: frame, contentUnits: contentUnits, units: units)
         if let viewBox = inherited(\.viewBox) {

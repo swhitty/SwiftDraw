@@ -158,6 +158,41 @@ final class LayerTreeBuilderTests: XCTestCase {
     XCTAssertNil(pattern.viewBox)
   }
 
+  func testDOMPatternPercentagesResolveAgainstViewportInUserSpace() {
+    let svg = DOM.SVG(width: 200, height: 100)
+    svg.viewBox = .init(x: 0, y: 0, width: 400, height: 50)
+
+    var element = DOM.Pattern(id: "p", width: 0.5, height: 1)
+    element.x = 0.1
+    element.y = 4
+    element.patternUnits = .userSpaceOnUse
+    element.percentageAttributes = ["x", "width", "height"]
+
+    let pattern = LayerTree.Builder(svg: svg).makePattern(for: element)
+    // x 10% and width 50% of the viewBox width 400, height 100% of 50; y is a plain number
+    XCTAssertEqual(pattern.frame, LayerTree.Rect(x: 40, y: 4, width: 200, height: 50))
+  }
+
+  func testDOMPatternPercentagesStayFractionsInObjectBoundingBox() {
+    var element = DOM.Pattern(id: "p", width: 0.5, height: 1)
+    element.percentageAttributes = ["width", "height"]
+    let pattern = LayerTree.Builder(svg: DOM.SVG(width: 200, height: 100)).makePattern(for: element)
+    XCTAssertEqual(pattern.frame, LayerTree.Rect(x: 0, y: 0, width: 0.5, height: 1))
+  }
+
+  func testDOMPatternInheritedPercentageKeepsItsUnit() {
+    var base = DOM.Pattern(id: "base", width: 0.25, height: 8)
+    base.percentageAttributes = ["width"]
+    var derived = DOM.Pattern(id: "derived")
+    derived.href = URL(string: "#base")
+    derived.patternUnits = .userSpaceOnUse
+
+    let svg = DOM.SVG(width: 100, height: 100)
+    svg.defs.patterns = [base, derived]
+    let pattern = LayerTree.Builder(svg: svg).makePattern(for: derived)
+    XCTAssertEqual(pattern.frame.size, LayerTree.Size(25, 8))
+  }
+
   func testDOMPatternMissingSizeIsEmpty() {
     let builder = LayerTree.Builder(svg: DOM.SVG(width: 100, height: 100))
     let pattern = builder.makePattern(for: DOM.Pattern(id: "p"))

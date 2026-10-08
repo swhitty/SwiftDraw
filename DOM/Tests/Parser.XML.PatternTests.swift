@@ -66,6 +66,7 @@ struct ParserXMLPatternTests {
         #expect(pattern.y == 0.1)
         #expect(pattern.width == 0.5)
         #expect(pattern.height == 0.25)
+        #expect(pattern.percentageAttributes == ["y", "width"])
     }
 
     @Test
@@ -142,10 +143,10 @@ struct ParserXMLPatternTests {
         pattern = try XMLParser().parsePattern(node)
         #expect(pattern.patternUnits == .objectBoundingBox)
 
+        // an unknown value drops the attribute instead of failing the document
         node["patternUnits"] = "invalid"
-        #expect(throws: (any Error).self) {
-            _ = try XMLParser().parsePattern(node)
-        }
+        pattern = try XMLParser().parsePattern(node)
+        #expect(pattern.patternUnits == nil)
     }
 
     @Test
@@ -164,8 +165,7 @@ struct ParserXMLPatternTests {
         #expect(pattern.patternContentUnits == .objectBoundingBox)
 
         node["patternContentUnits"] = "invalid"
-        #expect(throws: (any Error).self) {
-            _ = try XMLParser().parsePattern(node)
-        }
+        pattern = try XMLParser().parsePattern(node)
+        #expect(pattern.patternContentUnits == nil)
     }
 }
