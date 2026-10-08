@@ -41,7 +41,7 @@ final class LayerTreeCommandGeneratorTests: XCTestCase {
 
         XCTAssertEqual(
             commands.count,
-            165
+            159
         )
     }
 
