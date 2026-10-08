@@ -84,6 +84,23 @@ final class RendererCGTextTests: XCTestCase {
         )
     }
 
+    func testPatternCode() throws {
+        let svg = #"""
+        <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="64" height="64">
+            <defs>
+                <pattern id="base" x="2" y="3" width="8" height="8" patternUnits="userSpaceOnUse">
+                    <rect width="4" height="4" fill="red" />
+                </pattern>
+                <pattern id="derived" xlink:href="#base" patternTransform="translate(10, 0)" />
+            </defs>
+            <rect width="64" height="64" fill="url(#derived)" />
+        </svg>
+        """#
+        let code = try CGTextRenderer.render(data: Data(svg.utf8), options: .default, api: .uiKit, precision: 2)
+        XCTAssertTrue(code.contains("bounds: CGRect(x: 2, y: 3, width: 8, height: 8)"))
+        XCTAssertTrue(code.contains("matrix: CGAffineTransform(a: 1.0, b: 0.0, c: 0.0, d: 1.0, tx: 10.0, ty: 0.0).concatenating(ctx.ctm.concatenating(baseCTM.inverted()))"))
+    }
+
     func testSwiftUICode() throws {
         let code = try CGTextRenderer.render(svgNamed: "lines.svg", api: .swiftUI)
         XCTAssertEqual(

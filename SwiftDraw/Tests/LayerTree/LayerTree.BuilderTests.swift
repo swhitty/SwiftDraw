@@ -144,6 +144,107 @@ final class LayerTreeBuilderTests: XCTestCase {
     XCTAssertEqual(pattern.contentUnits, LayerTree.PatternUnits.userSpaceOnUse)
   }
 
+  func testDOMPatternDefaultsToObjectBoundingBoxUnits() {
+    let builder = LayerTree.Builder(svg: DOM.SVG(width: 100, height: 100))
+
+    var element = DOM.Pattern(id: "p", width: 0.5, height: 0.25)
+    element.x = 0.1
+
+    let pattern = builder.makePattern(for: element)
+    XCTAssertEqual(pattern.units, .objectBoundingBox)
+    XCTAssertEqual(pattern.contentUnits, .userSpaceOnUse)
+    XCTAssertEqual(pattern.frame, LayerTree.Rect(x: 0.1, y: 0, width: 0.5, height: 0.25))
+    XCTAssertEqual(pattern.transform, .identity)
+    XCTAssertNil(pattern.viewBox)
+  }
+
+  func testDOMPatternMissingSizeIsEmpty() {
+    let builder = LayerTree.Builder(svg: DOM.SVG(width: 100, height: 100))
+    let pattern = builder.makePattern(for: DOM.Pattern(id: "p"))
+    XCTAssertEqual(pattern.frame, .zero)
+  }
+
+  func testDOMPatternViewBoxAndTransform() {
+    let builder = LayerTree.Builder(svg: DOM.SVG(width: 100, height: 100))
+
+    var element = DOM.Pattern(id: "p", width: 10, height: 10)
+    element.viewBox = .init(x: 0, y: 0, width: 20, height: 20)
+    element.patternTransform = [.translate(tx: 5, ty: 0), .scale(sx: 2, sy: 2)]
+
+    let pattern = builder.makePattern(for: element)
+    XCTAssertEqual(pattern.viewBox, LayerTree.Rect(x: 0, y: 0, width: 20, height: 20))
+    XCTAssertEqual(pattern.transform, .init(a: 2, b: 0, c: 0, d: 2, tx: 5, ty: 0))
+  }
+
+  func testDOMPatternInheritsAttributesAndContentThroughHref() {
+    // Inkscape: <pattern id="p" xlink:href="#base" patternTransform="…"/>
+    var base = DOM.Pattern(id: "base", width: 8, height: 4)
+    base.patternUnits = .userSpaceOnUse
+    base.x = 1
+    base.patternTransform = [.scale(sx: 3, sy: 3)]
+    base.childElements = [DOM.Circle(cx: 2, cy: 2, r: 1)]
+
+    var middle = DOM.Pattern(id: "middle")
+    middle.href = URL(string: "#base")
+    middle.y = 2
+
+    var derived = DOM.Pattern(id: "derived")
+    derived.href = URL(string: "#middle")
+    derived.patternTransform = [.translate(tx: 10, ty: 20)]
+
+    let svg = DOM.SVG(width: 100, height: 100)
+    svg.defs.patterns = [base, middle, derived]
+    let builder = LayerTree.Builder(svg: svg)
+
+    let pattern = builder.makePattern(for: derived)
+    XCTAssertEqual(pattern.units, .userSpaceOnUse)
+    XCTAssertEqual(pattern.frame, LayerTree.Rect(x: 1, y: 2, width: 8, height: 4))
+    XCTAssertEqual(pattern.transform, .init(a: 1, b: 0, c: 0, d: 1, tx: 10, ty: 20))
+    XCTAssertEqual(pattern.contents, builder.makePattern(for: base).contents)
+    XCTAssertEqual(pattern.contents.count, 1)
+  }
+
+  func testDOMPatternOwnChildrenOverrideHref() {
+    var base = DOM.Pattern(id: "base", width: 8, height: 8)
+    base.childElements = [DOM.Circle(cx: 2, cy: 2, r: 1), DOM.Circle(cx: 4, cy: 4, r: 1)]
+
+    var derived = DOM.Pattern(id: "derived")
+    derived.href = URL(string: "#base")
+    derived.childElements = [DOM.Circle(cx: 1, cy: 1, r: 1)]
+
+    let svg = DOM.SVG(width: 100, height: 100)
+    svg.defs.patterns = [base, derived]
+
+    let pattern = LayerTree.Builder(svg: svg).makePattern(for: derived)
+    XCTAssertEqual(pattern.contents.count, 1)
+    XCTAssertEqual(pattern.frame.size, LayerTree.Size(8, 8))
+  }
+
+  func testDOMPatternHrefCycleTerminates() {
+    var a = DOM.Pattern(id: "a")
+    a.href = URL(string: "#b")
+    var b = DOM.Pattern(id: "b", width: 5, height: 5)
+    b.href = URL(string: "#a")
+    var selfRef = DOM.Pattern(id: "self", width: 3, height: 3)
+    selfRef.href = URL(string: "#self")
+
+    let svg = DOM.SVG(width: 100, height: 100)
+    svg.defs.patterns = [a, b, selfRef]
+    let builder = LayerTree.Builder(svg: svg)
+
+    XCTAssertEqual(builder.makePatternChain(for: a).map(\.id), ["a", "b"])
+    XCTAssertEqual(builder.makePattern(for: a).frame.size, LayerTree.Size(5, 5))
+    XCTAssertEqual(builder.makePatternChain(for: selfRef).map(\.id), ["self"])
+  }
+
+  func testDOMPatternHrefToMissingPattern() {
+    var element = DOM.Pattern(id: "p", width: 2, height: 2)
+    element.href = URL(string: "#missing")
+    let builder = LayerTree.Builder(svg: DOM.SVG(width: 100, height: 100))
+    XCTAssertEqual(builder.makePatternChain(for: element).map(\.id), ["p"])
+    XCTAssertEqual(builder.makePattern(for: element).frame.size, LayerTree.Size(2, 2))
+  }
+
   func testStrokeAttributes() {
     var state = LayerTree.Builder.State()
     state.stroke = .color(.rgbf(1.0, 0.0, 0.0, 1.0))

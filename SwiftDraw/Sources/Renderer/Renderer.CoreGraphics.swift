@@ -61,10 +61,13 @@ struct CGTransformingPattern: Hashable {
 
     var bounds: CGRect
     var contents: [RendererCommand<CGTypes>]
+    /// patternTransform: pattern space to the user space of the filled element
+    var transform: CGAffineTransform
 
-    init(bounds: CGRect, contents: [RendererCommand<CGTypes>]) {
+    init(bounds: CGRect, contents: [RendererCommand<CGTypes>], transform: CGAffineTransform = .identity) {
         self.bounds = bounds
         self.contents = contents
+        self.transform = transform
     }
 
     func draw(_ ctx: CGContext) {
@@ -255,7 +258,9 @@ struct CGProvider: RendererTypeProvider {
 
     func createPattern(from pattern: LayerTree.Pattern, contents: [RendererCommand<Types>]) -> CGTransformingPattern {
         let bounds = createRect(from: pattern.frame)
-        return CGTransformingPattern(bounds: bounds, contents: contents)
+        return CGTransformingPattern(bounds: bounds,
+                                     contents: contents,
+                                     transform: createTransform(from: pattern.transform))
     }
 
     func createFillRule(from rule: LayerTree.FillRule) -> CGPathFillRule {
@@ -374,7 +379,7 @@ struct CGRenderer: Renderer {
         var alpha : CGFloat = 1.0
 
         let cgPattern = CGPattern.make(bounds: pattern.bounds,
-                                       matrix: ctx.ctm.concatenating(baseCTM.inverted()),
+                                       matrix: pattern.transform.concatenating(ctx.ctm.concatenating(baseCTM.inverted())),
                                        step: pattern.bounds.size,
                                        tiling: .constantSpacingMinimalDistortion,
                                        isColored: true,
