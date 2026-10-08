@@ -88,18 +88,14 @@ extension XMLParser {
 
     static func parseSelectorEntries(_ text: String?) throws -> [DOM.StyleSheet.Selector: [String: String]] {
         guard let text = text else { return [:] }
-        var scanner = XMLParser.Scanner(text: removeCSSComments(from: text))
         var entries = [DOM.StyleSheet.Selector: [String: String]]()
 
-        while let (decl, attributes) = try scanner.scanNextBlockDecl() {
-            switch decl {
-            case .selector(let selectors):
-                for selector in selectors {
-                    var copy = entries[selector] ?? [:]
-                    for (key, value) in attributes {
-                        copy[key] = value
-                    }
-                    entries[selector] = copy
+        for (prelude, declarations) in parseCSSBlocks(text).rules {
+            guard let selectors = DOM.StyleSheet.ComplexSelector.parseList(prelude) else { continue }
+            for selector in selectors.compactMap(\.simple) {
+                var copy = entries[selector] ?? [:]
+                for d in declarations {
+                    copy[d.name] = d.value
                 }
             case .atRule, .fontFace:
                 ()
@@ -122,13 +118,98 @@ extension XMLParser {
             default:
                 ()
             }
+            return result
         }
 
-        return entries
+        // Reads a {} block whose opening brace is at i; returns its inner text.
+        func scanBlock() -> String {
+            i += 1
+            var result = ""
+            var depth = 1
+            var quote: Character?
+            while i < chars.count {
+                let c = chars[i]
+                i += 1
+                if let q = quote {
+                    if c == "\\", i < chars.count {
+                        result.append(c)
+                        result.append(chars[i])
+                        i += 1
+                        continue
+                    } else if c == q {
+                        quote = nil
+                    }
+                } else if c == "\"" || c == "'" {
+                    quote = c
+                } else if c == "{" {
+                    depth += 1
+                } else if c == "}" {
+                    depth -= 1
+                    if depth == 0 { return result }
+                }
+                result.append(c)
+            }
+            return result
+        }
+
+        while i < chars.count {
+            let c = chars[i]
+            if c.isWhitespace || c == "}" || c == ";" {
+                i += 1
+                continue
+            }
+            // HTML comment markers are allowed at the top level of a sheet
+            if chars[i...].starts(with: "<!--") {
+                i += 4
+                continue
+            }
+            if chars[i...].starts(with: "-->") {
+                i += 3
+                continue
+            }
+            if c == "@" {
+                let prelude = scanPrelude(stops: ["{", ";"])
+                guard i < chars.count, chars[i] == "{" else {
+                    i += 1
+                    continue
+                }
+                let block = scanBlock()
+                let name = prelude.dropFirst().prefix { !$0.isWhitespace }.lowercased()
+                if name == "font-face" {
+                    fontFaces.append(parseCSSDeclarations(block))
+                }
+                continue
+            }
+
+            let prelude = scanPrelude(stops: ["{"])
+            guard i < chars.count else { break }
+            let block = scanBlock()
+            rules.append((prelude.trimmingCharacters(in: .whitespacesAndNewlines), parseCSSDeclarations(block)))
+        }
+
+        return (rules, fontFaces)
+    }
+
+    // A declaration without a name or a value is skipped; the others are kept (CSS Syntax §5.4.5).
+    static func parseCSSDeclarations(_ text: String) -> [CSSDeclaration] {
+        DOM.StyleSheet.ComplexSelector.splitTopLevel(text, separator: ";").compactMap { declaration in
+            guard let colon = declaration.firstIndex(of: ":") else { return nil }
+            let name = declaration[..<colon].trimmingCharacters(in: .whitespacesAndNewlines)
+            var value = declaration[declaration.index(after: colon)...].trimmingCharacters(in: .whitespacesAndNewlines)
+            // a nested block (CSS nesting) is not a declaration
+            guard !name.isEmpty, !name.contains("{"), !name.contains("}") else { return nil }
+
+            let stripped = XMLParser.Attributes.removingImportant(from: value)
+            let important = stripped != value
+            value = stripped.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !value.isEmpty else { return nil }
+            return CSSDeclaration(name: name.hasPrefix("--") ? name : name.lowercased(), value: value, important: important)
+        }
     }
 
     static func removeCSSComments(from text: String) -> String {
-        let regex = try! NSRegularExpression(pattern: "\\/\\*.*\\*\\/", options: .caseInsensitive)
+        // non-greedy, across lines; an unterminated comment runs to the end of the sheet
+        let regex = try! NSRegularExpression(pattern: "/\\*[\\s\\S]*?(?:\\*/|$)", options: [])
         let range = NSMakeRange(0, (text as NSString).length)
         return regex.stringByReplacingMatches(in: text, options: [], range: range, withTemplate: "")
     }

@@ -305,7 +305,11 @@ extension LayerTree {
         }
 
         func createMaskLayer(for element: DOM.GraphicsElement) -> Layer? {
-            guard let maskId = element.attributes.mask?.fragmentID,
+            createMaskLayer(for: DOM.presentationAttributes(for: element, styles: svg.styles))
+        }
+
+        func createMaskLayer(for attributes: DOM.PresentationAttributes) -> Layer? {
+            guard let maskId = attributes.mask?.fragmentID,
                   let mask = svg.defs.masks.first(where: { $0.id == maskId }) else { return nil }
 
             // SVG 1.1 §14.4: maskUnits places the mask region, maskContentUnits the contents

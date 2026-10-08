@@ -112,7 +112,7 @@ package extension XMLParser {
         svg.preserveAspectRatio = parsePreserveAspectRatio(try? att.parseString("preserveAspectRatio"))
 
         svg.defs = try parseSVGDefs(e)
-        svg.styles = parseStyleSheetElements(within: e)
+        svg.styles = styles
 
         svg.attributes = try parsePresentationAttributes(att)
 
@@ -294,6 +294,7 @@ package extension XMLParser {
         mask.class = try att.parseString("class")
         mask.attributes = try parsePresentationAttributes(e)
         mask.style = try parseStyleAttributes(e)
+        mask.matchedStyle = styleContext.matcher?.match(e)
         mask.childElements = try parseGraphicsElements(e.children)
         // an unknown unit or an unparseable length is ignored and the spec default applies
         mask.maskUnits = (try? att.parseRaw("maskUnits")) ?? nil

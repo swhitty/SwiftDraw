@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="120" viewBox="0 0 240 120">
+  <style>
+    /* one bad declaration must not discard the sheet */
+    :root { --accent: tomato; }
+    .tile { fill: var(--accent); stroke: #333; stroke-width: 2; }
+    rect { fill: lightgray; }
+    g.row > rect:first-child { fill: steelblue; }
+    g.row rect + rect { fill: gold; }
+    .row [data-kind="star"] { fill: seagreen; }
+    #last.tile { fill: purple !important; }
+    .turned { transform: rotate(15deg); }
+    .holed { clip-rule: evenodd; clip-path: url(#ring); }
+    .faded { mask: url(#fade); }
+  </style>
+  <defs>
+    <clipPath id="ring"><path d="M150 30h40v40h-40z M160 40v20h20v-20z"/></clipPath>
+    <mask id="fade"><rect x="200" y="30" width="40" height="40" fill="white" opacity="0.4"/></mask>
+  </defs>
+  <g class="row">
+    <rect class="tile" x="10" y="30" width="40" height="40"/>
+    <rect class="tile" x="60" y="30" width="40" height="40" data-kind="star"/>
+    <rect class="tile turned" x="110" y="30" width="30" height="30"/>
+  </g>
+  <rect class="holed" x="150" y="30" width="40" height="40" fill="crimson" style="fill: crimson"/>
+  <rect id="last" class="tile faded" x="200" y="30" width="40" height="40" style="fill: black"/>
+</svg>
