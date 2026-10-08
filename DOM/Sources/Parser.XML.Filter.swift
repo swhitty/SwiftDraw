@@ -36,7 +36,7 @@ extension XMLParser {
 
         for n in e.children {
             if n.name == "filter" {
-                if let parsed = try skippingInvalid(n, { try parseFilter(n) }) { filters.append(parsed) }
+                try appendSkippingInvalid(&filters, n, parseFilter)
             } else {
                 filters.append(contentsOf: try parseFilters(n))
             }

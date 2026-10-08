@@ -36,7 +36,7 @@ extension XMLParser {
 
         for n in e.children {
             if n.name == "linearGradient" {
-                if let parsed = try skippingInvalid(n, { try parseLinearGradient(n) }) { gradients.append(parsed) }
+                try appendSkippingInvalid(&gradients, n, parseLinearGradient)
             } else {
                 gradients.append(contentsOf: try parseLinearGradients(n))
             }

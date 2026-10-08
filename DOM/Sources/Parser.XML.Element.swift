@@ -150,17 +150,19 @@ extension XMLParser {
         return result
     }
 
-    /// Runs `body`; with `.skipInvalidElements` an error drops the element (returns nil) instead of throwing.
-    func skippingInvalid<T>(_ element: XML.Element, _ body: () throws -> T) throws -> T? {
+    /// Appends `parse(element)` to `array`; with `.skipInvalidElements` an error drops the element instead of throwing.
+    /// Kept out of line: the recursive `parse…s(_:)` walkers call it so their own frames stay small
+    /// (500 nested groups must still fit the small stacks of test threads).
+    @inline(never)
+    func appendSkippingInvalid<T>(_ array: inout [T], _ element: XML.Element, _ parse: (XML.Element) throws -> T) throws {
         do {
-            return try body()
+            array.append(try parse(element))
         } catch is CancellationError {
             throw CancellationError()
         } catch {
             if let parseError = parseError(for: error, parsing: element, with: options) {
                 throw parseError
             }
-            return nil
         }
     }
 
