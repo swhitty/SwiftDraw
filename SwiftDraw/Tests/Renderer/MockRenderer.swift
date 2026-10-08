@@ -137,4 +137,12 @@ final class MockRenderer: Renderer {
   func draw(radial gradient: LayerTree.Gradient, startCenter: LayerTree.Point, startRadius: LayerTree.Float, endCenter: LayerTree.Point, endRadius: LayerTree.Float) {
     operations.append("drawRadialGradient")
   }
+
+  func pushFilterLayer(_ filter: LayerTree.FilterLayer) {
+    operations.append("pushFilterLayer")
+  }
+
+  func popFilterLayer() {
+    operations.append("popFilterLayer")
+  }
 }

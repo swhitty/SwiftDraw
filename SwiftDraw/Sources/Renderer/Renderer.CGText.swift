@@ -592,6 +592,13 @@ public final class CGTextRenderer: Renderer {
     """)
   }
 
+  // Filters are not generated: the contents are drawn unfiltered.
+  func pushFilterLayer(_ filter: LayerTree.FilterLayer) {
+    lines.append("// filter not generated: contents drawn unfiltered")
+  }
+
+  func popFilterLayer() { }
+
   func makeSwiftUI() -> String {
     """
     import SwiftUI

@@ -101,6 +101,9 @@ protocol Renderer {
     func draw(image: Types.Image, in rect: Types.Rect)
     func draw(linear gradient: Types.Gradient, from start: Types.Point, to end: Types.Point)
     func draw(radial gradient: Types.Gradient, startCenter: Types.Point, startRadius: Types.Float, endCenter: Types.Point, endRadius: Types.Float)
+
+    func pushFilterLayer(_ filter: LayerTree.FilterLayer)
+    func popFilterLayer()
 }
 
 extension Renderer {
@@ -154,6 +157,10 @@ extension Renderer {
             draw(linear: g, from: start, to: end)
         case let .drawRadialGradient(g, startCenter, startRadius, endCenter, endRadius):
             draw(radial: g, startCenter: startCenter, startRadius: startRadius, endCenter: endCenter, endRadius: endRadius)
+        case .pushFilterLayer(let f):
+            pushFilterLayer(f)
+        case .popFilterLayer:
+            popFilterLayer()
         }
     }
 
@@ -194,6 +201,10 @@ enum RendererCommand<Types: RendererTypes>: @unchecked Sendable {
 
     case pushTransparencyLayer
     case popTransparencyLayer
+
+    // draws the following commands offscreen until popFilterLayer, then composites the filtered result
+    case pushFilterLayer(LayerTree.FilterLayer)
+    case popFilterLayer
 }
 
 

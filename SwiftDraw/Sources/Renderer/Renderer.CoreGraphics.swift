@@ -32,6 +32,7 @@
 #if canImport(CoreGraphics)
 import Foundation
 import CoreText
+import Accelerate
 #if canImport(UIKit)
 import UIKit
 #elseif canImport(AppKit)
@@ -324,12 +325,19 @@ private extension CGImage {
 struct CGRenderer: Renderer {
     typealias Types = CGTypes
 
-    let ctx: CGContext
-    let baseCTM: CGAffineTransform
+    private let rootContext: CGContext
+    private let rootCTM: CGAffineTransform
+    private let filterLayers = CGFilterLayerStack()
+
+    // drawing goes into the innermost offscreen filter layer, if any
+    var ctx: CGContext { filterLayers.context ?? rootContext }
+
+    // offscreen filter layers are bitmaps whose base space is the identity
+    var baseCTM: CGAffineTransform { filterLayers.context == nil ? rootCTM : .identity }
 
     init(context: CGContext) {
-        self.ctx = context
-        self.baseCTM = ctx.ctm
+        self.rootContext = context
+        self.rootCTM = context.ctm
     }
 
     func pushState() {
@@ -457,6 +465,140 @@ struct CGRenderer: Renderer {
                                endRadius: endRadius,
                                options: [.drawsAfterEndLocation, .drawsBeforeStartLocation]
         )
+    }
+
+    // The following commands are drawn into a bitmap sized to the filter region in device pixels,
+    // intersected with the visible clip (grown by the blur extent so edges stay correct).
+    func pushFilterLayer(_ filter: LayerTree.FilterLayer) {
+        let parent = ctx
+        let region = CGRect(x: CGFloat(filter.region.x),
+                            y: CGFloat(filter.region.y),
+                            width: CGFloat(filter.region.width),
+                            height: CGFloat(filter.region.height))
+        let toDevice = parent.userSpaceToDeviceSpaceTransform
+        let deviations = filter.effects.compactMap { $0.deviceStdDeviation(toDevice) }
+        let spreadX = deviations.reduce(0) { $0 + 3 * $1.width }
+        let spreadY = deviations.reduce(0) { $0 + 3 * $1.height }
+
+        var deviceRect = region.applying(toDevice)
+        let clip = parent.boundingBoxOfClipPath
+        if !clip.isNull && !clip.isInfinite {
+            let visible = clip.applying(toDevice).insetBy(dx: -spreadX, dy: -spreadY)
+            deviceRect = deviceRect.intersection(visible)
+        }
+        deviceRect = deviceRect.isNull ? .zero : deviceRect.integral
+
+        guard let offscreen = CGContext.makeFilterLayer(size: deviceRect.size, colorSpace: parent.colorSpace) else {
+            // nothing visible or too large: draw unfiltered, still clipped to the filter region
+            parent.saveGState()
+            parent.clip(to: region)
+            filterLayers.entries.append(CGFilterLayer(region: region, deviceRect: deviceRect, deviations: [], offscreen: nil))
+            return
+        }
+
+        offscreen.translateBy(x: -deviceRect.minX, y: -deviceRect.minY)
+        offscreen.concatenate(toDevice)
+        offscreen.clip(to: region)
+        filterLayers.entries.append(CGFilterLayer(region: region, deviceRect: deviceRect, deviations: deviations, offscreen: offscreen))
+    }
+
+    func popFilterLayer() {
+        guard let layer = filterLayers.entries.popLast() else { return }
+        let parent = ctx
+
+        guard let offscreen = layer.offscreen else {
+            parent.restoreGState()
+            return
+        }
+
+        for deviation in layer.deviations {
+            offscreen.applyGaussianBlur(deviation)
+        }
+
+        guard let image = offscreen.makeImage() else { return }
+        parent.saveGState()
+        parent.clip(to: layer.region)
+        parent.concatenate(parent.userSpaceToDeviceSpaceTransform.inverted())
+        parent.draw(image, in: layer.deviceRect)
+        parent.restoreGState()
+    }
+}
+
+final class CGFilterLayerStack {
+    var entries = [CGFilterLayer]()
+
+    var context: CGContext? {
+        entries.last(where: { $0.offscreen != nil })?.offscreen
+    }
+}
+
+struct CGFilterLayer {
+    var region: CGRect
+    var deviceRect: CGRect
+    var deviations: [CGSize]
+    // nil when contents are drawn directly into the parent context
+    var offscreen: CGContext?
+}
+
+private extension LayerTree.Filter {
+
+    // stdDeviation converted to device pixels; nil for primitives that do not blur
+    func deviceStdDeviation(_ toDevice: CGAffineTransform) -> CGSize? {
+        switch self {
+        case let .gaussianBlur(stdDeviation: x, stdDeviationY: y):
+            let size = CGSize(width: CGFloat(x) * hypot(toDevice.a, toDevice.b),
+                              height: CGFloat(y ?? x) * hypot(toDevice.c, toDevice.d))
+            return size.width > 0 || size.height > 0 ? size : nil
+        case .unsupported:
+            return nil
+        }
+    }
+}
+
+extension CGContext {
+
+    // keeps an offscreen filter layer within 64 MB
+    static let maxFilterLayerPixels = 16_777_216
+
+    static func makeFilterLayer(size: CGSize, colorSpace: CGColorSpace?) -> CGContext? {
+        let width = Int(size.width)
+        let height = Int(size.height)
+        guard width > 0, height > 0, width * height <= maxFilterLayerPixels else { return nil }
+
+        let sRGB = CGColorSpace(name: CGColorSpace.sRGB)!
+        let space = colorSpace.flatMap { $0.model == .rgb ? $0 : nil } ?? sRGB
+        let info = CGImageAlphaInfo.premultipliedLast.rawValue
+        return CGContext(data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: 0, space: space, bitmapInfo: info) ??
+               CGContext(data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: 0, space: sRGB, bitmapInfo: info)
+    }
+
+    // Filter Effects 1 §9.16 / SVG 1.1 §15.17: three successive box blurs approximate the gaussian.
+    // Box sizes must be odd for vImage, so an even size d becomes d+1, d-1, d+1 (near-identical variance).
+    func applyGaussianBlur(_ deviation: CGSize) {
+        guard let data else { return }
+        let sizesX = Self.boxSizes(for: deviation.width)
+        let sizesY = Self.boxSizes(for: deviation.height)
+        let byteCount = bytesPerRow * height
+        guard let temp = malloc(byteCount) else { return }
+        defer { free(temp) }
+
+        var src = vImage_Buffer(data: data, height: vImagePixelCount(height), width: vImagePixelCount(width), rowBytes: bytesPerRow)
+        var dst = vImage_Buffer(data: temp, height: vImagePixelCount(height), width: vImagePixelCount(width), rowBytes: bytesPerRow)
+        var background: [UInt8] = [0, 0, 0, 0]
+        for pass in 0..<3 {
+            vImageBoxConvolve_ARGB8888(&src, &dst, nil, 0, 0,
+                                       UInt32(sizesY[pass]), UInt32(sizesX[pass]),
+                                       &background, vImage_Flags(kvImageBackgroundColorFill))
+            swap(&src, &dst)
+        }
+        // after three passes the result is in the temporary buffer
+        memcpy(data, src.data, byteCount)
+    }
+
+    static func boxSizes(for deviation: CGFloat) -> [Int] {
+        let d = Int((deviation * 3 * sqrt(2 * .pi) / 4 + 0.5).rounded(.down))
+        guard d > 1 else { return [1, 1, 1] }
+        return d % 2 == 1 ? [d, d, d] : [d + 1, d - 1, d + 1]
     }
 }
 

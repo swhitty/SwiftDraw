@@ -97,6 +97,11 @@ extension LayerTree {
                 state.push(state.top)
             case .popState:
                 state.pop()
+            case .pushFilterLayer:
+                // filter layers draw into a fresh graphics state
+                state.push(State())
+            case .popFilterLayer:
+                state.pop()
             default: break
             }
 
