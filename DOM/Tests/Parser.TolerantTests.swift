@@ -41,7 +41,7 @@ struct TolerantParsingTests {
     }
 
     private func color(_ value: String) throws -> DOM.Color {
-        try XMLParser().parseFill(value).getColor()
+        try SwiftDrawDOM.XMLParser().parseFill(value).getColor()
     }
 
     private func expectRGBA(_ value: String, _ r: DOM.Float, _ g: DOM.Float, _ b: DOM.Float, _ a: DOM.Float,
@@ -149,7 +149,7 @@ struct TolerantParsingTests {
 
     @Test
     func transformUnitsAreAccepted() throws {
-        let parser = XMLParser()
+        let parser = SwiftDrawDOM.XMLParser()
         #expect(try parser.parseTransform("translate(10px, 20px)") == [.translate(tx: 10, ty: 20)])
         #expect(try parser.parseTransform("rotate(45deg)") == [.rotate(angle: 45)])
     }
