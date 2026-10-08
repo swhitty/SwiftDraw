@@ -27,7 +27,7 @@ to device pixels, and composite it back. CoreGraphics side: Core Image or Accele
 step as a general "filter layer" command so SD12 can add primitives without redesign. CGText: generate equivalent
 code or degrade with a comment. Keep the unsupported-filter path for primitives not yet implemented.
 
-### SD3 — reference cycles never crash · status: PR #1, review fixes requested
+### SD3 — reference cycles never crash · status: merged (#1)
 `<g id="a"><use xlink:href="#a"/></g>` recurses with no cycle check (`LayerTree.Builder.Layer.swift:43-59`):
 SIGSEGV. Detect cycles and cap depth for `<use>`, and for every `href` chain (gradients, patterns) — a cycle
 drops the reference, never the process.
@@ -103,6 +103,9 @@ inheritance) and mixed runs; parse `font-weight`/`font-style`; draw stroked text
 
 ## Integrator's log
 
+- 2026-10-08 — SD3 merged (#1, head 136287e; CI 20/20; corpus 0 changes, draw time +0.3 %). Follow-ups noted, not
+  blocking: the ancestor check re-walks the target per `<use>` (fine on the corpus); the 20,000 budget also counts
+  pattern fills and masks, so a document with more pattern-filled shapes than that loses the extra fills.
 - 2026-10-08 — SD5 merged (#4, head 11f2810 after review fixes; CI 20/20; corpus 0 regressions).
 
 - 2026-10-08 — Wave 1 reviewed (five PRs, CI green): SD5 mergeable, the other four "merge after fix"; fix lists sent
