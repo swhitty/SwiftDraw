@@ -137,8 +137,6 @@ extension LayerTree {
             let attributes = element.attributes
             let l = Layer()
             l.class = element.class
-            guard state.display != .none else { return (l, state) }
-
             l.transform = Builder.createTransforms(from: attributes.transform ?? [])
             l.clip = makeClipShapes(for: element)
             l.clipRule = attributes.clipRule
@@ -151,11 +149,11 @@ extension LayerTree {
 
         func makeContents(from element: DOM.GraphicsElement, with state: State) -> Layer.Contents? {
             if let shape = Builder.makeShape(from: element) {
-                return makeShapeContents(from: shape, with: state)
+                return isVisible ? makeShapeContents(from: shape, with: state) : nil
             } else if let text = element as? DOM.Text {
-                return makeTextContents(from: text, with: state)
+                return isVisible ? makeTextContents(from: text, with: state) : nil
             } else if let image = element as? DOM.Image {
-                return try? Builder.makeImageContents(from: image)
+                return isVisible ? try? Builder.makeImageContents(from: image) : nil
             } else if let use = element as? DOM.Use {
                 return try? makeUseLayerContents(from: use, with: state)
             } else if let sw = element as? DOM.Switch,
@@ -185,6 +183,11 @@ extension LayerTree {
         }
 
         func makeClipShape(for element: DOM.GraphicsElement) -> ClipShape? {
+            // SVG 1.1 §14.3.5: children with `display="none"` or hidden `visibility` do not contribute to the clip
+            let att = DOM.presentationAttributes(for: element, styles: svg.styles)
+            guard att.display != .none, att.visibility ?? .visible == .visible else {
+                return nil
+            }
             guard let shape = Builder.makeShape(from: element) else {
                 return nil
             }
@@ -609,6 +612,7 @@ extension LayerTree.Builder {
     struct State {
         var opacity: DOM.Float
         var display: DOM.DisplayMode
+        var visibility: DOM.Visibility
         var color: DOM.Color
 
         var stroke: DOM.Fill
@@ -635,6 +639,7 @@ extension LayerTree.Builder {
             //default root SVG element state
             opacity = 1.0
             display = .inline
+            visibility = .visible
             color = .keyword(.black)
 
             stroke = .color(.none)
@@ -667,6 +672,7 @@ extension LayerTree.Builder {
 
         state.opacity = attributes.opacity ?? 1.0
         state.display = attributes.display ?? existing.display
+        state.visibility = attributes.visibility ?? existing.visibility
         state.color = attributes.color ?? existing.color
 
         state.stroke = attributes.stroke ?? existing.stroke

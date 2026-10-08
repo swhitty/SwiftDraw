@@ -379,6 +379,7 @@ extension DOM.PresentationAttributes {
     mutating func updateAttributes(from attributes: Self) {
         opacity = attributes.opacity
         display = attributes.display
+        visibility = attributes.visibility
         color = attributes.color
         stroke = attributes.stroke
         strokeWidth = attributes.strokeWidth

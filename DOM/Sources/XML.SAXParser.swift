@@ -48,6 +48,8 @@ package extension XML {
         private let validNamespaces = Set(["http://www.w3.org/2000/svg", ""])
 
         private var rootNode: Element?
+        /// Nesting depth inside an element from a foreign namespace (`<inkscape:foo>`); its whole subtree is dropped.
+        private var foreignDepth = 0
         private var elements: [Element]
 
         private var currentElement: Element {
@@ -89,8 +91,9 @@ package extension XML {
         }
 
         package func parser(_ parser: FoundationXMLParser, didStartElement elementName: String, namespaceURI: String?, qualifiedName _: String?, attributes attributeDict: [String: String] = [:]) {
-            guard
-                self.parser === parser, isValidNamespaceURI(namespaceURI) else {
+            guard self.parser === parser else { return }
+            guard foreignDepth == 0, isValidNamespaceURI(namespaceURI) else {
+                foreignDepth += 1
                 return
             }
 
@@ -106,6 +109,10 @@ package extension XML {
         }
 
         package func parser(_ parser: FoundationXMLParser, didEndElement elementName: String, namespaceURI: String?, qualifiedName _: String?) {
+            if foreignDepth > 0 {
+                foreignDepth -= 1
+                return
+            }
             guard isValidNamespaceURI(namespaceURI), currentElement.name == elementName else {
                 return
             }
@@ -114,7 +121,7 @@ package extension XML {
         }
 
         package func parser(_ parser: FoundationXMLParser, foundCharacters string: String) {
-            guard let element = elements.last else { return }
+            guard foreignDepth == 0, let element = elements.last else { return }
             let text = element.innerText.map { $0.appending(string) }
             element.innerText = text ?? string
         }
