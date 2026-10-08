@@ -596,7 +596,8 @@ extension CGContext {
     }
 
     static func boxSizes(for deviation: CGFloat) -> [Int] {
-        let d = Int((deviation * 3 * sqrt(2 * .pi) / 4 + 0.5).rounded(.down))
+        let factor: CGFloat = 3 * (2 * CGFloat.pi).squareRoot() / 4
+        let d = Int((deviation * factor + 0.5).rounded(.down))
         guard d > 1 else { return [1, 1, 1] }
         return d % 2 == 1 ? [d, d, d] : [d + 1, d - 1, d + 1]
     }
