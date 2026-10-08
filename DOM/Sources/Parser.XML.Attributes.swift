@@ -66,9 +66,19 @@ extension XMLParser {
       return try parse(element[key], with: exp, for: key)
     }
     
+    // CSS priority flag: `fill: red !important` is read as `fill: red`
+    static func removingImportant(from value: String) -> String {
+      let trimmed = value.trimmingCharacters(in: .whitespaces)
+      guard let range = trimmed.range(of: "!important", options: [.caseInsensitive, .backwards]),
+            range.upperBound == trimmed.endIndex else {
+        return value
+      }
+      return String(trimmed[trimmed.startIndex..<range.lowerBound])
+    }
+
     func parse<T>(_ value: String?, with expression: (String) throws -> T, for key: String) throws -> T {
       guard let value = value else { throw XMLParser.Error.missingAttribute(name: key) }
-      guard let result = try? expression(value) else {
+      guard let result = try? expression(Self.removingImportant(from: value)) else {
         throw XMLParser.Error.invalidAttribute(name: key, value: value)
       }
       return result
@@ -189,4 +199,17 @@ extension XMLParser {
     }
   }
   
+}
+
+extension AttributeParser {
+
+    // SVG 2 plain `href`, falling back to the deprecated `xlink:href`
+    // https://www.w3.org/TR/SVG2/linking.html#XLinkRefAttrs
+    func parseHref() throws -> DOM.URL {
+        do {
+            return try parseUrl("href")
+        } catch XMLParser.Error.missingAttribute(_) {
+            return try parseUrl("xlink:href")
+        }
+    }
 }
