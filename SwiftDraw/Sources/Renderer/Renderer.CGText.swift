@@ -604,6 +604,16 @@ public final class CGTextRenderer: Renderer {
     """)
   }
 
+  // Filters are not generated: the contents are drawn unfiltered, in their own graphics state.
+  func pushFilterLayer(_ filter: LayerTree.FilterLayer) {
+    lines.append("// warning: filter dropped (\(filter.effects.count) effect(s)), contents drawn unfiltered")
+    lines.append("ctx.saveGState()")
+  }
+
+  func popFilterLayer() {
+    lines.append("ctx.restoreGState()")
+  }
+
   func makeSwiftUI() -> String {
     """
     import SwiftUI

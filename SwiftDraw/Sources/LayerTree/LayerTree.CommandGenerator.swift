@@ -69,11 +69,18 @@ extension LayerTree {
                     let state = makeCommandState(for: layer, colorConverter: colorConverter)
 
                     //guard state.hasContents else { continue }
-                    stack.append(.endLayer(layer, state))
-
-                    if state.hasFilters {
+                    if let filterLayer = state.filterLayer, filterLayer.region.isEmpty {
+                        // an empty filter region clips everything away (matches Chrome / Safari)
+                        continue
+                    }
+                    if state.hasFilters && state.filterLayer == nil && layer.hasUnsupportedFilters {
+                        if options.contains(.hideUnsupportedFilters) {
+                            continue
+                        }
                         logUnsupportedFilters(layer.filters)
                     }
+
+                    stack.append(.endLayer(layer, state))
 
                     if state.hasOpacity || state.hasTransform || state.hasClip || state.hasMask {
                         commands.append(.pushState)
@@ -85,6 +92,11 @@ extension LayerTree {
 
                     if state.hasMask {
                         commands.append(.pushTransparencyLayer)
+                    }
+
+                    // filter is applied before clipping, masking and opacity
+                    if let filterLayer = state.filterLayer {
+                        commands.append(.pushFilterLayer(filterLayer))
                     }
 
                     //push render of all of the layer contents in reverse order
@@ -101,6 +113,10 @@ extension LayerTree {
                     commands.append(contentsOf: cmd)
 
                 case let .endLayer(layer, state):
+                    if state.filterLayer != nil {
+                        commands.append(.popFilterLayer)
+                    }
+
                     //render apply mask
                     if state.hasMask {
                         commands.append(contentsOf: renderCommands(forMask: layer.mask))
@@ -134,6 +150,7 @@ extension LayerTree {
             var hasMask: Bool
             var hasFilters: Bool
             var colorConverter: any ColorConverter
+            var filterLayer: LayerTree.FilterLayer?
         }
 
         func makeCommandState(for layer: Layer, colorConverter: any ColorConverter) -> CommandState {
@@ -156,7 +173,8 @@ extension LayerTree {
                 hasContents: hasContents,
                 hasMask: hasMask,
                 hasFilters: hasFilters,
-                colorConverter: colorConverter
+                colorConverter: colorConverter,
+                filterLayer: hasFilters ? makeFilterLayer(for: layer) : nil
             )
         }
 
@@ -658,6 +676,82 @@ extension LayerTree.CommandGenerator {
         return first...last
     }
 
+    // Resolves the layer's filter into its user space; nil when a primitive is unsupported
+    // or the filter region cannot be resolved (e.g. text-only contents under objectBoundingBox),
+    // in which case the contents are drawn unfiltered.
+    func makeFilterLayer(for layer: LayerTree.Layer) -> LayerTree.FilterLayer? {
+        guard !layer.filters.isEmpty,
+              !layer.hasUnsupportedFilters else { return nil }
+
+        let region = layer.filterRegion
+        let bounds = makeBounds(for: layer)
+
+        // Filter Effects 1 §5.1, SVG 1.1 §15.7.2: filter region
+        let rect: LayerTree.Rect
+        switch region.units {
+        case .objectBoundingBox:
+            guard let bounds else { return nil }
+            rect = LayerTree.Rect(
+                x: bounds.x + (region.x ?? -0.1) * bounds.width,
+                y: bounds.y + (region.y ?? -0.1) * bounds.height,
+                width: (region.width ?? 1.2) * bounds.width,
+                height: (region.height ?? 1.2) * bounds.height
+            )
+        case .userSpaceOnUse:
+            rect = LayerTree.Rect(
+                x: region.x ?? -0.1 * size.width,
+                y: region.y ?? -0.1 * size.height,
+                width: region.width ?? 1.2 * size.width,
+                height: region.height ?? 1.2 * size.height
+            )
+        }
+
+        var scale = LayerTree.Size(1, 1)
+        if region.primitiveUnits == .objectBoundingBox {
+            guard let bounds else { return nil }
+            scale = bounds.size
+        }
+
+        guard rect.x.isFinite, rect.y.isFinite, rect.width.isFinite, rect.height.isFinite else { return nil }
+
+        let effects = layer.filters.map { $0.resolved(scale: scale) }
+        let width = max(rect.width, 0)
+        let height = max(rect.height, 0)
+        return LayerTree.FilterLayer(
+            region: LayerTree.Rect(x: rect.x, y: rect.y, width: width, height: height),
+            effects: effects
+        )
+    }
+
+    // Geometry bounding box of the layer contents in the layer's user space; stroke excluded.
+    // nil when the contents include text, which is not measured: the filter is then dropped
+    // rather than clipping the text away.
+    func makeBounds(for layer: LayerTree.Layer) -> LayerTree.Rect? {
+        guard !layer.containsText else { return nil }
+        var points = [LayerTree.Point]()
+        for contents in layer.contents {
+            switch contents {
+            case .shape(let shape, _, _):
+                if let rect = shape.bounds {
+                    points.append(contentsOf: rect.corners)
+                }
+            case .image(let image):
+                if let width = image.width, let height = image.height {
+                    points.append(contentsOf: LayerTree.Rect(x: image.origin.x, y: image.origin.y, width: width, height: height).corners)
+                }
+            case .text:
+                break
+            case .layer(let child):
+                if let rect = makeBounds(for: child) {
+                    let matrix = child.transform.toMatrix()
+                    points.append(contentsOf: rect.corners.map { matrix.transform(point: $0) })
+                }
+            }
+        }
+        guard !points.isEmpty else { return nil }
+        return .makeBounds(between: points)
+    }
+
     func logUnsupportedFilters(_ filters: [LayerTree.Filter]) {
         guard !hasLoggedFilterWarning else { return }
         let name = filters.map(\.name).joined(separator: ", ")
@@ -691,11 +785,6 @@ extension LayerTree.CommandGenerator {
 }
 
 private extension LayerTree.Rect {
-
-    var corners: [LayerTree.Point] {
-        [LayerTree.Point(minX, minY), LayerTree.Point(maxX, minY),
-         LayerTree.Point(minX, maxY), LayerTree.Point(maxX, maxY)]
-    }
 
     func outset(by amount: LayerTree.Float) -> LayerTree.Rect {
         LayerTree.Rect(x: x - amount, y: y - amount, width: width + amount * 2, height: height + amount * 2)
@@ -799,13 +888,44 @@ private extension LayerTree.Shape {
 private extension LayerTree.Filter {
     var name: String {
         switch self {
-        case .gaussianBlur:
+        case .gaussianBlur(_, _):
             return "<feGaussianBlur>"
+        case .unsupported(let name):
+            return "<\(name)>"
+        }
+    }
+
+    // stdDeviation in user units with both values explicit.
+    // Filter Effects 1 §9.16: a negative value disables the primitive, zero disables one direction.
+    func resolved(scale: LayerTree.Size) -> Self {
+        switch self {
+        case let .gaussianBlur(stdDeviation: x, stdDeviationY: y):
+            let y = y ?? x
+            guard x >= 0, y >= 0 else {
+                return .gaussianBlur(stdDeviation: 0, stdDeviationY: 0)
+            }
+            // renderers clamp to their pixel limits; keep the values finite
+            let maximum = LayerTree.Float.greatestFiniteMagnitude
+            return .gaussianBlur(stdDeviation: min(x * scale.width, maximum),
+                                 stdDeviationY: min(y * scale.height, maximum))
+        case .unsupported:
+            return self
         }
     }
 }
 
 private extension LayerTree.Rect {
+
+    var isEmpty: Bool {
+        width <= 0 || height <= 0
+    }
+
+    var corners: [LayerTree.Point] {
+        [origin,
+         LayerTree.Point(maxX, minY),
+         LayerTree.Point(maxX, maxY),
+         LayerTree.Point(minX, maxY)]
+    }
 
     var gradientEndpoints: (start: LayerTree.Point, end: LayerTree.Point) {
         let start = LayerTree.Point(midX, minY)
