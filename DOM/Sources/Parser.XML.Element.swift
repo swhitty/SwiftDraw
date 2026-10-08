@@ -120,8 +120,18 @@ extension XMLParser {
         while let (element, parent) = stack.popLast() {
             try Task.checkCancellation()
 
-            guard let parsed = try skippingInvalid(element, { try parseGraphicsElement(element) }),
-                  let ge = parsed else {
+            // not routed through skippingInvalid(_:_:): nested <svg> recurses through here and
+            // the extra generic/closure frames overflow the small stacks of test threads
+            let ge: DOM.GraphicsElement
+            do {
+                guard let parsed = try parseGraphicsElement(element) else { continue }
+                ge = parsed
+            } catch is CancellationError {
+                throw CancellationError()
+            } catch {
+                if let parseError = parseError(for: error, parsing: element, with: options) {
+                    throw parseError
+                }
                 continue
             }
 
