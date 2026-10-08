@@ -48,6 +48,22 @@ final class CGRendererTests: XCTestCase {
     XCTAssertEqual(renderer.getColor(x: 1, y: 1), .red)
   }
   
+  func testLineDashLeavesGaps() {
+    let renderer = ImageRenderer(pixelsWide: 20, pixelsHigh: 4)
+    let path = CGMutablePath()
+    path.move(to: CGPoint(x: 0, y: 2))
+    path.addLine(to: CGPoint(x: 20, y: 2))
+
+    renderer.renderer.setStroke(color: .red)
+    renderer.renderer.setLine(width: 4)
+    renderer.renderer.setLineDash(phase: 0, lengths: [5, 5])
+    renderer.renderer.stroke(path: path)
+
+    XCTAssertEqual(renderer.getColor(x: 2, y: 2), .red)
+    XCTAssertNotEqual(renderer.getColor(x: 7, y: 2), .red)
+    XCTAssertEqual(renderer.getColor(x: 12, y: 2), .red)
+  }
+
   func testAlphaClips() {
     let renderer = ImageRenderer(pixelsWide: 2, pixelsHigh: 2)
     

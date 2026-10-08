@@ -512,6 +512,11 @@ public final class CGTextRenderer: Renderer {
     lines.append("ctx.setMiterLimit(\(formatter.format(miterLimit)))")
   }
 
+  func setLineDash(phase: LayerTree.Float, lengths: [LayerTree.Float]) {
+    let values = lengths.map { formatter.format($0) }.joined(separator: ", ")
+    lines.append("ctx.setLineDash(phase: \(formatter.format(phase)), lengths: [\(values)])")
+  }
+
   func setClip(path: [LayerTree.Shape], rule: String) {
     let identifier = createOrGetPath(path)
     lines.append("ctx.addPath(\(identifier))")

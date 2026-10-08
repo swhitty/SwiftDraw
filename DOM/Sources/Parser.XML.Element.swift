@@ -192,6 +192,35 @@ extension XMLParser {
                           style: style)
     }
 
+    /// SVG 1.1 §11.4: `none` or a list of non-negative lengths / percentages; returns nil when invalid.
+    static func parseDashArray(_ text: String) -> [DOM.DashLength]? {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmed == "none" {
+            return []
+        }
+        let tokens = trimmed
+            .split(whereSeparator: { $0 == "," || $0 == " " || $0 == "\t" || $0 == "\n" || $0 == "\r" })
+            .map(String.init)
+        guard !tokens.isEmpty else { return nil }
+        var lengths = [DOM.DashLength]()
+        for token in tokens {
+            guard let length = parseDashLength(token), !length.isNegative else { return nil }
+            lengths.append(length)
+        }
+        return lengths
+    }
+
+    static func parseDashLength(_ text: String) -> DOM.DashLength? {
+        let text = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        if text.hasSuffix("%") {
+            guard let value = Float(text.dropLast()), value.isFinite else { return nil }
+            return .percentage(value)
+        }
+        var scanner = XMLParser.Scanner(text: text)
+        guard let value = try? scanner.scanCoordinate(), value.isFinite, scanner.isEOF else { return nil }
+        return .absolute(value)
+    }
+
     func parsePresentationAttributes(_ e: XML.Element) throws -> DOM.PresentationAttributes {
         return try parsePresentationAttributes(e.attributes)
     }
@@ -246,13 +275,12 @@ extension XMLParser {
         el.strokeLineCap = lenient { try att.parseRaw("stroke-linecap") }
         el.strokeLineJoin = lenient { try att.parseRaw("stroke-linejoin") }
 
-        //maybe handle this better
-        // att.parseDashArray?
-        if let dash = lenient({ try att.parseString("stroke-dasharray") as String? }),
-           dash.trimmingCharacters(in: .whitespaces) == "none" {
-            el.strokeDashArray = nil
-        } else {
-            el.strokeDashArray = lenient { try att.parseFloats("stroke-dasharray") }
+        // an invalid dash value is dropped (inherited), never fatal for the document
+        if let dash = lenient({ try att.parseString("stroke-dasharray") as String? }) {
+            el.strokeDashArray = Self.parseDashArray(dash)
+        }
+        if let offset = lenient({ try att.parseString("stroke-dashoffset") as String? }) {
+            el.strokeDashOffset = Self.parseDashLength(offset)
         }
 
         el.fill = lenient { try att.parseFill("fill") }
@@ -334,6 +362,7 @@ extension DOM.PresentationAttributes {
         strokeLineCap = attributes.strokeLineCap
         strokeLineJoin = attributes.strokeLineJoin
         strokeDashArray = attributes.strokeDashArray
+        strokeDashOffset = attributes.strokeDashOffset
         fill = attributes.fill
         fillOpacity = attributes.fillOpacity
         fillRule = attributes.fillRule

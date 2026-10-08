@@ -259,7 +259,47 @@ extension LayerTree.Builder {
                                           width: state.strokeWidth,
                                           cap: state.strokeLineCap,
                                           join: state.strokeLineJoin,
-                                          miterLimit: state.strokeLineMiterLimit)
+                                          miterLimit: state.strokeLineMiterLimit,
+                                          dashArray: makeDashArray(with: state),
+                                          dashOffset: makeDashOffset(with: state))
+    }
+
+    /// Length of the viewport diagonal / sqrt(2), the reference for percentages (SVG 1.1 §7.10).
+    var viewportDiagonal: LayerTree.Float {
+        let w: LayerTree.Float
+        let h: LayerTree.Float
+        if let viewBox = svg.viewBox {
+            w = viewBox.width
+            h = viewBox.height
+        } else {
+            w = LayerTree.Float(svg.width)
+            h = LayerTree.Float(svg.height)
+        }
+        return ((w * w + h * h) / 2).squareRoot()
+    }
+
+    func makeDashLength(_ length: DOM.DashLength) -> LayerTree.Float {
+        switch length {
+        case .absolute(let value): return value
+        case .percentage(let value): return value / 100 * viewportDiagonal
+        }
+    }
+
+    func makeDashOffset(with state: State) -> LayerTree.Float {
+        let offset = makeDashLength(state.strokeDashOffset)
+        return offset.isFinite ? offset : 0
+    }
+
+    /// SVG 1.1 §11.4: odd-length lists repeat to even length; a zero sum renders solid.
+    func makeDashArray(with state: State) -> [LayerTree.Float] {
+        var lengths = state.strokeDashArray.map(makeDashLength)
+        guard !lengths.isEmpty, lengths.allSatisfy({ $0 >= 0 && $0.isFinite }), lengths.reduce(0, +) > 0 else {
+            return []
+        }
+        if lengths.count % 2 == 1 {
+            lengths += lengths
+        }
+        return lengths
     }
 
     func makeFillAttributes(with state: State) -> LayerTree.FillAttributes {
@@ -522,7 +562,8 @@ extension LayerTree.Builder {
         var strokeLineCap: DOM.LineCap
         var strokeLineJoin: DOM.LineJoin
         var strokeLineMiterLimit: DOM.Float
-        var strokeDashArray: [DOM.Float]
+        var strokeDashArray: [DOM.DashLength]
+        var strokeDashOffset: DOM.DashLength
 
         var fill: DOM.Fill
         var fillOpacity: DOM.Float
@@ -548,6 +589,7 @@ extension LayerTree.Builder {
             strokeLineJoin = .miter
             strokeLineMiterLimit = 4.0
             strokeDashArray = []
+            strokeDashOffset = .absolute(0)
 
             fill = .color(.keyword(.black))
             fillOpacity = 1.0
@@ -578,6 +620,7 @@ extension LayerTree.Builder {
         state.strokeLineCap = attributes.strokeLineCap ?? existing.strokeLineCap
         state.strokeLineJoin = attributes.strokeLineJoin ?? existing.strokeLineJoin
         state.strokeDashArray = attributes.strokeDashArray ?? existing.strokeDashArray
+        state.strokeDashOffset = attributes.strokeDashOffset ?? existing.strokeDashOffset
 
         state.fill = attributes.fill ?? existing.fill
         state.fillOpacity = attributes.fillOpacity ?? existing.fillOpacity
