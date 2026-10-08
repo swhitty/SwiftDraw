@@ -547,6 +547,20 @@ final class RendererCGTextTests: XCTestCase {
     }
 }
 
+extension RendererCGTextTests {
+
+    func testDashedStrokeIsResetAfterStroke() throws {
+        let svg = #"<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><path d="M0 0 L100 100" stroke="black" stroke-dasharray="4 2" stroke-dashoffset="1"/></svg>"#
+        let code = try CGTextRenderer.render(data: Data(svg.utf8), options: .default, api: .uiKit, precision: 2)
+        let lines = code.split(separator: "\n").map { $0.trimmingCharacters(in: .whitespaces) }
+        let dash = try XCTUnwrap(lines.firstIndex(of: "ctx.setLineDash(phase: 1, lengths: [4, 2])"))
+        let stroke = try XCTUnwrap(lines.lastIndex(of: "ctx.strokePath()"))
+        XCTAssertGreaterThan(stroke, dash)
+        // the lone push/pop pair is stripped by the optimizer, so the dash must be reset explicitly
+        XCTAssertEqual(lines[stroke + 1], "ctx.setLineDash(phase: 0, lengths: [])")
+    }
+}
+
 private extension CGTextRenderer {
 
     static func render(svgNamed name: String, in bundle: Bundle = .test, api: API = .uiKit, precision: Int = 2) throws -> String {
