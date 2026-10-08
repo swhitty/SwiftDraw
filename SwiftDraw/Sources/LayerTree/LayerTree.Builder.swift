@@ -147,10 +147,12 @@ extension LayerTree {
             guard state.display != .none else { return (l, state) }
 
             l.transform = Builder.createTransforms(from: attributes.transform ?? [])
-            l.clip = makeClipShapes(for: element)
-            l.clipRule = attributes.clipRule
-            l.clipUnits = makeClipUnits(for: element)
             l.mask = createMaskLayer(for: element)
+            // clip-rule comes from the <clipPath> contents and objectBoundingBox units are resolved
+            // here, so every clip reaches the renderers in user space (SVG 1.1 §14.3.5)
+            if let clip = makeClip(for: element) {
+                apply(clip, to: l)
+            }
             l.opacity = state.opacity
             l.filters = makeFilters(for: state)
             return (l, state)
@@ -175,31 +177,8 @@ extension LayerTree {
         }
 
         func makeClipShapes(for element: DOM.GraphicsElement) -> [ClipShape] {
-            let attributes = DOM.presentationAttributes(for: element, styles: svg.styles)
-            guard let clipID = attributes.clipPath?.fragmentID,
-                  let clip = svg.defs.clipPaths.first(where: { $0.id == clipID }) else { return [] }
-            return clip.childElements.compactMap(makeClipShape)
-        }
-
-        func makeClipUnits(for element: DOM.GraphicsElement) -> ClipUnits {
-            let attributes = DOM.presentationAttributes(for: element, styles: svg.styles)
-            guard let clipID = attributes.clipPath?.fragmentID,
-                  let clip = svg.defs.clipPaths.first(where: { $0.id == clipID }) else { return .userSpaceOnUse }
-            switch clip.clipPathUnits {
-            case .objectBoundingBox: return .objectBoundingBox
-            case .userSpaceOnUse, nil: return .userSpaceOnUse
-            }
-        }
-
-        func makeClipShape(for element: DOM.GraphicsElement) -> ClipShape? {
-            guard let shape = Builder.makeShape(from: element) else {
-                return nil
-            }
-
-            let transform = Self.createTransforms(from: element.attributes.transform ?? [])
-                .toMatrix()
-
-            return ClipShape(shape: shape, transform: transform)
+            guard case .shapes(let shapes, _) = makeClip(for: element) else { return [] }
+            return shapes
         }
 
         func createMaskLayer(for element: DOM.GraphicsElement) -> Layer? {
@@ -212,10 +191,39 @@ extension LayerTree {
 
             let l = Layer()
 
+            // SVG 1.1 §14.4: maskUnits places the mask region, maskContentUnits the contents
+            let regionUnits = mask.maskUnits ?? .objectBoundingBox
+            let contentUnits = mask.maskContentUnits ?? .userSpaceOnUse
+            let bounds = (regionUnits == .objectBoundingBox || contentUnits == .objectBoundingBox)
+                ? makeBoundingBox(for: element) : nil
+
+            let content = Layer()
+            if contentUnits == .objectBoundingBox {
+                // the bounding box of text is unknown here: ignore the mask
+                guard let bounds else { return nil }
+                // an empty bounding box masks everything away
+                guard bounds.width > 0, bounds.height > 0 else { return l }
+                content.transform = [.matrix(Transform.Matrix(a: bounds.width, b: 0, c: 0, d: bounds.height,
+                                                              tx: bounds.x, ty: bounds.y))]
+            }
+
             let maskState = createState(for: mask, inheriting: State())
             mask.childElements.forEach {
                 let contents = Layer.Contents.layer(makeLayer(from: $0, inheriting: maskState))
-                l.appendContents(contents)
+                content.appendContents(contents)
+            }
+
+            if let region = makeMaskRegion(for: mask, bounds: bounds) {
+                // a zero or negative region disables rendering of the element
+                guard region.width > 0, region.height > 0 else { return l }
+                let clipped = Layer()
+                clipped.clip = [ClipShape(shape: .rect(within: region, radii: .zero), transform: .identity)]
+                clipped.appendContents(.layer(content))
+                l.appendContents(.layer(clipped))
+            } else if content.transform.isEmpty {
+                content.contents.forEach(l.appendContents)
+            } else {
+                l.appendContents(.layer(content))
             }
 
             return l

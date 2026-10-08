@@ -197,7 +197,7 @@ final class RendererSFSymbolClipPathTests: XCTestCase {
 
     // MARK: - Layer-level coverage
 
-    /// Independent smoke test: the layer's clipUnits propagates through Builder.
+    /// objectBoundingBox units are resolved by the Builder (SD8): the clip reaches the renderers in user space.
     func testBuilder_setsClipUnits_objectBoundingBox() throws {
         let svg = try DOM.SVG.parse(#"""
         <svg width="10" height="10" xmlns="http://www.w3.org/2000/svg">
@@ -212,7 +212,9 @@ final class RendererSFSymbolClipPathTests: XCTestCase {
         let layer = LayerTree.Builder(svg: svg).makeLayer()
         let clipped = firstClippedLayer(in: layer)
         XCTAssertNotNil(clipped)
-        XCTAssertEqual(clipped?.clipUnits, .objectBoundingBox)
+        XCTAssertEqual(clipped?.clipUnits, .userSpaceOnUse)
+        XCTAssertEqual(clipped?.clip.first?.transform,
+                       LayerTree.Transform.Matrix(a: 10, b: 0, c: 0, d: 10, tx: 0, ty: 0))
     }
 
     func testBuilder_setsClipUnits_userSpaceOnUseByDefault() throws {
