@@ -39,7 +39,7 @@ extension XMLParser {
     let id: String = try att.parseString("id")
     // width / height are optional: they may be inherited through href, and a pattern
     // that ends up without them disables rendering instead of failing the document.
-    // Percentages are read as fractions (objectBoundingBox); an unreadable value is dropped.
+    // Percentages are read as fractions (see percentageAttributes); an unreadable value is dropped.
     let width: DOM.Coordinate? = try? att.parseCoordinateOrPercentage("width")
     let height: DOM.Coordinate? = try? att.parseCoordinateOrPercentage("height")
     
@@ -47,8 +47,16 @@ extension XMLParser {
     pattern.x = try? att.parseCoordinateOrPercentage("x")
     pattern.y = try? att.parseCoordinateOrPercentage("y")
     
-    pattern.patternUnits = try att.parseRaw("patternUnits")
-    pattern.patternContentUnits = try att.parseRaw("patternContentUnits")
+    for key in ["x", "y", "width", "height"] {
+      let raw: String? = try? att.parseString(key)
+      if let raw, raw.trimmingCharacters(in: .whitespaces).hasSuffix("%") {
+        pattern.percentageAttributes.insert(key)
+      }
+    }
+
+    // an unknown value drops the attribute (spec default), not the document
+    pattern.patternUnits = try? att.parseRaw("patternUnits")
+    pattern.patternContentUnits = try? att.parseRaw("patternContentUnits")
 
     // SVG 2 plain href, falling back to the deprecated xlink:href
     let href: DOM.URL? = try? att.parseUrl("href")
