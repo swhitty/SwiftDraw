@@ -55,7 +55,7 @@ struct InvalidElementTests {
     func invalidElementKeepsSiblings() throws {
         for element in bad {
             let svg = try parse(#"<rect id="a" width="1" height="1"/>\#(element)<rect id="b" width="1" height="1"/>"#)
-            #expect(svg.childElements.compactMap(\.id) == ["a", "b"], "\(element)")
+            #expect(svg.childElements.compactMap { $0.id } == ["a", "b"], "\(element)")
         }
     }
 
@@ -64,7 +64,7 @@ struct InvalidElementTests {
         let svg = try parse(#"<g id="g"><path/><rect id="r" width="1" height="1"/></g><rect id="after" width="1" height="1"/>"#)
         #expect(svg.childElements.count == 2)
         let group = try #require(svg.childElements.first as? DOM.Group)
-        #expect(group.childElements.compactMap(\.id) == ["r"])
+        #expect(group.childElements.compactMap { $0.id } == ["r"])
     }
 
     @Test
@@ -73,7 +73,7 @@ struct InvalidElementTests {
         <defs><clipPath id="c"><path/><rect width="1" height="1"/></clipPath></defs>
         <rect id="ok" width="1" height="1"/>
         """#)
-        #expect(svg.childElements.compactMap(\.id) == ["ok"])
+        #expect(svg.childElements.compactMap { $0.id } == ["ok"])
         #expect(svg.defs.clipPaths.first?.childElements.count == 1)
     }
 
