@@ -232,6 +232,8 @@ package extension XMLParser {
 
         for n in e.children {
             if n.name == "pattern" {
+                // a pattern without an id can never be referenced; skip it rather than fail
+                guard n.attributes["id"] != nil else { continue }
                 patterns.append(try parsePattern(n))
             } else {
                 patterns.append(contentsOf: try parsePatterns(n))

@@ -10,14 +10,14 @@ references below are into 0.29.0. The fork starts from upstream `main` at `cf234
 
 ## Wave 1 — parallel
 
-### SD1 — `stroke-dasharray` and `stroke-dashoffset` · corpus 44 · status: todo
+### SD1 — `stroke-dasharray` and `stroke-dashoffset` · corpus 44 · status: PR #2, review fixes requested
 Parsed into the DOM (`Parser.XML.Element.swift:244`) and carried in builder state, never drawn: dashes render
 solid. Add a `RendererCommand` (e.g. `.setLineDash(phase:lengths:)`), emit it from the CommandGenerator, execute it
 in CoreGraphics (`setLineDash`) and CGText. Spec details to honour: odd-length lists repeat to even, negative
 values invalidate the attribute (render solid), all-zero lists render solid, `none`, CSS `style=` form, inheritance
 from groups, percentages relative to the viewport diagonal.
 
-### SD2 — `feGaussianBlur` rendered · corpus 99 · status: todo
+### SD2 — `feGaussianBlur` rendered · corpus 99 · status: PR #5, review fixes requested
 The one filter primitive SwiftDraw parses is never applied: the only consumer of `layer.filters` is a stderr
 warning (`LayerTree.CommandGenerator.swift:75`, `:558`) and `hideUnsupportedFilters` is a no-op. Inkscape uses it
 for every soft shadow and glow, so those draw as hard-edged blobs. Render a filtered layer into an offscreen
@@ -27,12 +27,12 @@ to device pixels, and composite it back. CoreGraphics side: Core Image or Accele
 step as a general "filter layer" command so SD12 can add primitives without redesign. CGText: generate equivalent
 code or degrade with a comment. Keep the unsupported-filter path for primitives not yet implemented.
 
-### SD3 — reference cycles never crash · status: todo
+### SD3 — reference cycles never crash · status: PR #1, review fixes requested
 `<g id="a"><use xlink:href="#a"/></g>` recurses with no cycle check (`LayerTree.Builder.Layer.swift:43-59`):
 SIGSEGV. Detect cycles and cap depth for `<use>`, and for every `href` chain (gradients, patterns) — a cycle
 drops the reference, never the process.
 
-### SD4 — tolerant parsing: a bad value drops the attribute, not the document · status: todo
+### SD4 — tolerant parsing: a bad value drops the attribute, not the document · status: PR #3, review fixes requested
 Today each of these makes the **whole document** render nothing: `hsl()`/`hsla()`; capitalised colour keywords
 and CSS named colours beyond SVG 1.1 (`rebeccapurple`); `inherit`; `clip-path`/`mask`/`filter="none"`;
 `transform="none"` or with units (`translate(10px,10px)`, `rotate(45deg)`); empty values (`fill=""`);
@@ -42,7 +42,7 @@ and CSS named colours beyond SVG 1.1 (`rebeccapurple`); `inherit`; `clip-path`/`
 (`<use>` already has it upstream: `Parser.XML.Use.swift`, follow that pattern). Also fix 4- and 8-digit hex colours, which parse to a **different colour** (`#ff0000ff`
 renders blue). Parser files: `DOM/Sources/Parser.XML.*.swift`.
 
-### SD5 — patterns complete · corpus 14+ · status: todo
+### SD5 — patterns complete · corpus 14+ · status: merged (#4)
 `<pattern>` `x`/`y`, `patternUnits`, `patternContentUnits`, `patternTransform` and `viewBox` are dropped, so tiles
 land misplaced; a pattern without `width`/`height` is fatal (it should simply paint nothing, per spec). Inkscape
 writes most patterns as `<pattern xlink:href="#base" patternTransform="…"/>`: implement `href` inheritance of
@@ -76,6 +76,12 @@ frame is skewed. Root `<svg>`, nested `<svg>`, `<image>`; all nine alignments ×
 (`var(--x)` is enough) discards the entire `<style>` sheet. Selectors beyond bare type, `.class` and `#id` never
 match: add descendant, child, compound, attribute selectors and `:first-child`, with specificity and source order.
 
+### SD15 — an invalid element is skipped, not the document · status: todo
+Found reviewing SD4: a missing mandatory attribute (`<path>` without `d`, `<rect>` without `width`, `<image>`
+without `href`) or an unparseable optional geometry value (`x=""`) still throws out of `parseGraphicsElements`, which
+has no catch, so the **whole document** vanishes — `parseError`/`skipInvalidElements` exist and are dead code. Skip
+the offending element (and only it), keep its siblings; make `skipInvalidElements` real and the default.
+
 ## Wave 3
 
 ### SD11 — `<symbol>`, `<marker>`, `<switch>` · status: todo
@@ -96,5 +102,11 @@ Non-root lengths ignore units: `width="20%"` becomes 20. Implement %, px, pt, pc
 inheritance) and mixed runs; parse `font-weight`/`font-style`; draw stroked text.
 
 ## Integrator's log
+
+- 2026-10-08 — SD5 merged (#4, head 11f2810 after review fixes; CI 20/20; corpus 0 regressions).
+
+- 2026-10-08 — Wave 1 reviewed (five PRs, CI green): SD5 mergeable, the other four "merge after fix"; fix lists sent
+  back to each session. Trial merge of all five builds and passes on macOS; one trivial conflict (SD4 × SD1 in
+  `parsePresentationAttributes`), resolved by the integrator at merge time — sessions need not rebase. SD15 added.
 
 - 2026-10-08 — Fork created from upstream 0.29.0; this roadmap written from Backdrop's measured gap catalogue.
