@@ -62,8 +62,10 @@ extension LayerTree.Builder {
         guard let clip = svg.defs.clipPaths.first(where: { $0.id == id }) else { return nil }
 
         // a clip path that (indirectly) clips itself is ignored; the active set is not counted
-        // against the document-wide reference budget, so any number of elements may share a clip
-        guard activeClips.insert(id).inserted else { return nil }
+        // against the document-wide reference budget, so any number of elements may share a clip.
+        // Each nested clip-path costs native stack, so nesting stops at ReferenceGuard.maxDepth.
+        guard activeClips.count < ReferenceGuard.maxDepth,
+              activeClips.insert(id).inserted else { return nil }
         defer { activeClips.remove(id) }
 
         var units = LayerTree.Transform.Matrix.identity
@@ -235,10 +237,10 @@ extension LayerTree.Builder {
         case unknown
     }
 
-    /// Measurement keeps its own visited set and depth cap: it never spends the document-wide
-    /// reference budget that `<use>`, masks and patterns share.
+    /// Measurement keeps its own visited set, depth cap and step budget: it never spends the
+    /// document-wide reference budget that `<use>`, masks and patterns share.
     private func makeBounds(for element: DOM.GraphicsElement, depth: Int, visited: inout Set<String>) -> Bounds {
-        guard depth < 32 else { return .unknown }
+        guard depth < 32, measurement.spend() else { return .unknown }
 
         if let shape = Self.makeShape(from: element) {
             return Bounds(shape.path.bounds)
@@ -299,12 +301,31 @@ extension LayerTree.Builder.Bounds {
 final class ActiveClipSet {
     private var ids = Set<String>()
 
+    var count: Int { ids.count }
+
     func insert(_ id: String) -> (inserted: Bool, memberAfterInsert: String) {
         ids.insert(id)
     }
 
     func remove(_ id: String) {
         ids.remove(id)
+    }
+}
+
+extension LayerTree.Builder {
+
+    /// Bounds the elements visited measuring bounding boxes, document-wide: `visited` only cuts cycles,
+    /// and non-cyclic `<use>` fan-out (4 uses per level) is exponential. Past the budget every box is
+    /// unknown, so bbox clips and mask regions degrade to none rather than hide content.
+    final class MeasurementBudget {
+        static let maxSteps = 250_000
+        private(set) var steps = 0
+
+        func spend() -> Bool {
+            guard steps < Self.maxSteps else { return false }
+            steps += 1
+            return true
+        }
     }
 }
 
