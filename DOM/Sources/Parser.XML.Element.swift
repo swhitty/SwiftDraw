@@ -259,8 +259,13 @@ extension XMLParser {
             return (DOM.PresentationAttributes(), DOM.PresentationAttributes())
         }
         let declarations = Self.parseCSSDeclarations(styleText)
+        let important = declarations.filter(\.important)
+        // most style attributes have no !important: skip a second parse of an empty partition
+        guard !important.isEmpty else {
+            return (parsePresentationAttributes(declarations), DOM.PresentationAttributes())
+        }
         return (parsePresentationAttributes(declarations.filter { !$0.important }),
-                parsePresentationAttributes(declarations.filter(\.important)))
+                parsePresentationAttributes(important))
     }
 
     // Declarations are parsed once as a dictionary; only properties that repeat are
