@@ -479,9 +479,11 @@ struct CGRenderer: Renderer {
     }
 
     // The following commands are drawn into a bitmap covering the filter region in device pixels,
-    // intersected with the visible clip grown by the blur extent. The result is composited back clipped to
-    // the region. Over maxFilterLayerPixels the bitmap is rendered at a reduced scale (deviations scaled to
-    // match) and drawn back up, so large exports stay blurred without unbounded allocations.
+    // intersected with the visible clip grown by how far the filter moves pixels (blur extent, offsets).
+    // The result is composited back clipped to the region. Over maxFilterLayerPixels the bitmap is rendered
+    // at a reduced scale (deviations and offsets scaled to match) and drawn back up, so large exports stay
+    // filtered without unbounded allocations. SD2's blur chains are blurred in place; other filters evaluate
+    // their primitive tree (SD12), which keeps several bitmaps alive: the budget is shared between them.
     func pushFilterLayer(_ filter: LayerTree.FilterLayer) {
         let parent = ctx
         let region = CGRect(x: CGFloat(filter.region.x),
@@ -489,7 +491,8 @@ struct CGRenderer: Renderer {
                             width: CGFloat(filter.region.width),
                             height: CGFloat(filter.region.height))
         let toDevice = parent.userSpaceToDeviceSpaceTransform
-        let deviations = filter.effects.compactMap { $0.deviceStdDeviation(toDevice) }
+        let isBlurChain = filter.isBlurChain
+        let deviations = isBlurChain ? filter.effects.compactMap { $0.deviceStdDeviation(toDevice) } : []
         let visible = parent.boundingBoxOfClipPath
 
         parent.saveGState()
@@ -506,28 +509,34 @@ struct CGRenderer: Renderer {
         // draw straight into the parent, clipped to the region
         let isVector = parent.bitsPerPixel == 0
         let oversample: CGFloat = isVector ? 2 : 1
-        guard deviations.contains(where: { CGContext.isVisibleBlur($0, scale: oversample) }) else {
+        if isBlurChain && !deviations.contains(where: { CGContext.isVisibleBlur($0, scale: oversample) }) {
             filterLayers.entries.append(CGFilterLayer())
             return
         }
 
         var deviceRect = region.applying(toDevice)
         if !visible.isInfinite {
-            let spreadX = min(deviations.reduce(0) { $0 + 3 * $1.width }, CGRenderer.maxDeviceSpread)
-            let spreadY = min(deviations.reduce(0) { $0 + 3 * $1.height }, CGRenderer.maxDeviceSpread)
-            deviceRect = deviceRect.intersection(visible.applying(toDevice).insetBy(dx: -spreadX, dy: -spreadY))
+            let spread = filter.deviceSpread(toDevice)
+            deviceRect = deviceRect.intersection(visible.applying(toDevice).insetBy(dx: -spread.width, dy: -spread.height))
         }
 
-        // PDF and other vector contexts: blurred groups are rasterized at 2x (2 px per point)
-        guard let layer = CGFilterLayer.make(deviceRect: deviceRect,
+        // the offscreen itself, plus the bitmaps of the primitive tree
+        let maxPixels = isBlurChain ? maxFilterLayerPixels : maxFilterLayerPixels / (filter.peakBitmapCount + 1)
+
+        // PDF and other vector contexts: filtered groups are rasterized at 2x (2 px per point)
+        guard var layer = CGFilterLayer.make(deviceRect: deviceRect,
                                              deviations: deviations,
-                                             maxPixels: maxFilterLayerPixels,
+                                             maxPixels: maxPixels,
                                              oversample: oversample,
                                              colorSpace: parent.colorSpace) else {
             // empty clip or region: draw nothing and allocate nothing
             parent.clip(to: .zero)
             filterLayers.entries.append(CGFilterLayer())
             return
+        }
+        if !isBlurChain {
+            layer.filter = filter
+            layer.toDevice = toDevice
         }
 
         layer.offscreen?.concatenate(toDevice)
@@ -544,9 +553,13 @@ struct CGRenderer: Renderer {
         let parent = ctx
 
         if let offscreen = layer.offscreen {
-            for deviation in layer.deviations {
-                offscreen.applyGaussianBlur(CGSize(width: deviation.width * layer.scale,
-                                                   height: deviation.height * layer.scale))
+            if let filter = layer.filter {
+                offscreen.applyFilter(filter, toPixels: layer.pixelTransform)
+            } else {
+                for deviation in layer.deviations {
+                    offscreen.applyGaussianBlur(CGSize(width: deviation.width * layer.scale,
+                                                       height: deviation.height * layer.scale))
+                }
             }
             if let image = offscreen.makeImage() {
                 let size = CGSize(width: CGFloat(image.width) / layer.scale,
@@ -584,6 +597,19 @@ struct CGFilterLayer {
     var deviations: [CGSize] = []
     // offscreen pixels per device pixel
     var scale: CGFloat = 1
+    // a primitive tree to evaluate when popped, with the user space it was resolved in (SD12);
+    // nil for blur chains, blurred in place by deviations
+    var filter: LayerTree.FilterLayer?
+    var toDevice: CGAffineTransform = .identity
+
+    // user space to offscreen pixels: x right, y down from the first row in memory
+    var pixelTransform: CGAffineTransform {
+        let height = CGFloat(offscreen?.height ?? 0)
+        return toDevice
+            .concatenating(CGAffineTransform(translationX: -deviceRect.minX, y: -deviceRect.minY))
+            .concatenating(CGAffineTransform(scaleX: scale, y: scale))
+            .concatenating(CGAffineTransform(a: 1, b: 0, c: 0, d: -1, tx: 0, ty: height))
+    }
 
     // nil when the device rect is empty or not finite
     static func make(deviceRect: CGRect,
@@ -620,22 +646,45 @@ struct CGFilterLayer {
     }
 }
 
-private extension LayerTree.Filter {
+private extension LayerTree.FilterLayer.Effect {
 
     // stdDeviation converted to device pixels along the device axes; nil when it does not blur.
     // Exact for scale and 90° rotations, an approximation under skew or other rotations.
     func deviceStdDeviation(_ toDevice: CGAffineTransform) -> CGSize? {
-        switch self {
-        case let .gaussianBlur(stdDeviation: x, stdDeviationY: y):
-            let sx = CGFloat(x)
-            let sy = CGFloat(y ?? x)
-            let width = hypot(sx * toDevice.a, sy * toDevice.c)
-            let height = hypot(sx * toDevice.b, sy * toDevice.d)
-            let size = CGSize(width: width.isFinite ? width : 0, height: height.isFinite ? height : 0)
-            return size.width > 0 || size.height > 0 ? size : nil
-        case .unsupported:
-            return nil
+        guard case let .gaussianBlur(stdDeviation: x, stdDeviationY: y) = self else { return nil }
+        let sx = CGFloat(x)
+        let sy = CGFloat(y)
+        let width = hypot(sx * toDevice.a, sy * toDevice.c)
+        let height = hypot(sx * toDevice.b, sy * toDevice.d)
+        let size = CGSize(width: width.isFinite ? width : 0, height: height.isFinite ? height : 0)
+        return size.width > 0 || size.height > 0 ? size : nil
+    }
+}
+
+private extension LayerTree.FilterLayer {
+
+    // How far the filter can move a pixel, in device pixels: three deviations per blur plus each offset.
+    // Every path through the primitive tree is covered by the sum over all primitives.
+    func deviceSpread(_ toDevice: CGAffineTransform) -> CGSize {
+        var width: CGFloat = 0
+        var height: CGFloat = 0
+        for effect in effects {
+            switch effect {
+            case .gaussianBlur:
+                if let deviation = effect.deviceStdDeviation(toDevice) {
+                    width += 3 * deviation.width
+                    height += 3 * deviation.height
+                }
+            case let .offset(dx: dx, dy: dy):
+                let vector = CGSize(width: CGFloat(dx), height: CGFloat(dy)).applying(toDevice)
+                width += abs(vector.width)
+                height += abs(vector.height)
+            case .flood, .composite, .merge, .blend, .colorMatrix:
+                break
+            }
         }
+        return CGSize(width: width.isFinite ? min(width, CGRenderer.maxDeviceSpread) : CGRenderer.maxDeviceSpread,
+                      height: height.isFinite ? min(height, CGRenderer.maxDeviceSpread) : CGRenderer.maxDeviceSpread)
     }
 }
 
@@ -653,6 +702,10 @@ extension CGContext {
     // Box sizes must be odd for vImage, so an even size d becomes d+1, d-1, d+1 (near-identical variance).
     func applyGaussianBlur(_ deviation: CGSize) {
         guard let data else { return }
+        Self.applyGaussianBlur(deviation, data: data, width: width, height: height, bytesPerRow: bytesPerRow)
+    }
+
+    static func applyGaussianBlur(_ deviation: CGSize, data: UnsafeMutableRawPointer, width: Int, height: Int, bytesPerRow: Int) {
         // a box wider than the image only spreads it further towards transparent: clamp per axis
         let sizesX = Self.boxSizes(for: deviation.width, limit: width | 1)
         let sizesY = Self.boxSizes(for: deviation.height, limit: height | 1)
@@ -674,6 +727,65 @@ extension CGContext {
         }
         // after three passes the result is in the temporary buffer
         memcpy(data, src.data, byteCount)
+    }
+
+    // SD12: evaluates the primitive tree on the offscreen's pixels, SourceGraphic being what was drawn,
+    // and leaves the result in their place.
+    func applyFilter(_ filter: LayerTree.FilterLayer, toPixels transform: CGAffineTransform) {
+        let width = self.width
+        let height = self.height
+        let bytesPerRow = self.bytesPerRow
+        let colorSpace = self.colorSpace
+        guard let data = self.data, width > 0, height > 0 else { return }
+        let rowBytes = width * 4
+
+        var pixels = [UInt8](repeating: 0, count: rowBytes * height)
+        pixels.withUnsafeMutableBytes { buffer in
+            guard let base = buffer.baseAddress else { return }
+            for row in 0..<height {
+                memcpy(base + row * rowBytes, data + row * bytesPerRow, rowBytes)
+            }
+        }
+
+        let environment = LayerTree.FilterLayer.Environment(
+            transform: LayerTree.Transform.Matrix(a: Float(transform.a), b: Float(transform.b),
+                                                  c: Float(transform.c), d: Float(transform.d),
+                                                  tx: Float(transform.tx), ty: Float(transform.ty)),
+            blur: { bitmap, x, y in
+                let w = bitmap.width
+                let h = bitmap.height
+                bitmap.pixels.withUnsafeMutableBytes { buffer in
+                    guard let base = buffer.baseAddress else { return }
+                    CGContext.applyGaussianBlur(CGSize(width: CGFloat(x), height: CGFloat(y)),
+                                                data: base, width: w, height: h, bytesPerRow: w * 4)
+                }
+            },
+            color: { CGContext.filterComponents(of: $0, colorSpace: colorSpace) }
+        )
+        let result = filter.evaluate(source: FilterBitmap(width: width, height: height, pixels: pixels),
+                                     environment: environment)
+
+        result.pixels.withUnsafeBytes { buffer in
+            guard let base = buffer.baseAddress else { return }
+            for row in 0..<height {
+                memcpy(data + row * bytesPerRow, base + row * rowBytes, rowBytes)
+            }
+        }
+    }
+
+    // The straight RGBA a fill of this colour leaves in a filter layer of the colour space:
+    // floods are colour matched exactly like the shapes they are composited with.
+    static func filterComponents(of color: LayerTree.Color, colorSpace: CGColorSpace?) -> SIMD4<Float> {
+        guard let ctx = CGContext.makeFilterLayer(width: 1, height: 1, colorSpace: colorSpace),
+              let data = ctx.data else {
+            return FilterBitmap.components(of: color)
+        }
+        ctx.setFillColor(CGProvider().createColor(from: color))
+        ctx.fill(CGRect(x: 0, y: 0, width: 1, height: 1))
+        let pixel = data.assumingMemoryBound(to: UInt8.self)
+        let alpha = Float(pixel[3])
+        guard alpha > 0 else { return .zero }
+        return SIMD4(Float(pixel[0]) / alpha, Float(pixel[1]) / alpha, Float(pixel[2]) / alpha, alpha / 255)
     }
 
     static func isVisibleBlur(_ deviation: CGSize, scale: CGFloat) -> Bool {

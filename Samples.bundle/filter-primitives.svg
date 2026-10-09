@@ -1,0 +1,46 @@
+<svg width="300" height="200" viewBox="0 0 300 200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Filter Effects 1 §9.4: the flood fills its subregion only -->
+    <filter id="flood" x="0" y="0" width="1" height="1" primitiveUnits="objectBoundingBox">
+      <feFlood x="25%" y="25%" width="50%" height="50%" flood-color="green" flood-opacity="0.75" />
+    </filter>
+    <!-- a glow: dilated by an offset merge, coloured, under the shape -->
+    <filter id="glow" x="-0.5" y="-0.5" width="2" height="2" color-interpolation-filters="sRGB">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="4" result="blur" />
+      <feFlood flood-color="#ffb703" result="gold" />
+      <feComposite in="gold" in2="blur" operator="in" result="glow" />
+      <feMerge><feMergeNode in="glow" /><feMergeNode in="glow" /><feMergeNode in="SourceGraphic" /></feMerge>
+    </filter>
+    <filter id="multiply" x="0" y="0" width="1" height="1">
+      <feFlood flood-color="#ffd166" result="paper" />
+      <feBlend mode="multiply" in="SourceGraphic" in2="paper" />
+    </filter>
+    <filter id="screen" x="0" y="0" width="1" height="1">
+      <feFlood flood-color="#264653" result="ink" />
+      <feBlend mode="screen" in="SourceGraphic" in2="ink" />
+    </filter>
+    <filter id="grey"><feColorMatrix type="saturate" values="0" /></filter>
+    <filter id="hue"><feColorMatrix type="hueRotate" values="120" /></filter>
+    <filter id="luminance">
+      <feColorMatrix type="luminanceToAlpha" result="a" />
+      <feComposite in="SourceGraphic" in2="a" operator="in" />
+    </filter>
+    <filter id="xor" x="0" y="0" width="1.5" height="1.5">
+      <feOffset dx="12" dy="12" result="moved" />
+      <feComposite in="SourceGraphic" in2="moved" operator="xor" />
+    </filter>
+    <linearGradient id="rainbow" x1="0" x2="1">
+      <stop offset="0" stop-color="#ff006e" />
+      <stop offset="0.5" stop-color="#8338ec" />
+      <stop offset="1" stop-color="#3a86ff" />
+    </linearGradient>
+  </defs>
+  <circle cx="50" cy="50" r="40" fill="red" filter="url(#flood)" />
+  <rect x="115" y="20" width="60" height="60" rx="10" fill="#fb8500" filter="url(#glow)" />
+  <rect x="210" y="15" width="70" height="35" fill="url(#rainbow)" filter="url(#multiply)" />
+  <rect x="210" y="55" width="70" height="35" fill="url(#rainbow)" filter="url(#screen)" />
+  <rect x="10" y="115" width="60" height="60" fill="url(#rainbow)" filter="url(#grey)" />
+  <rect x="80" y="115" width="60" height="60" fill="url(#rainbow)" filter="url(#hue)" />
+  <rect x="150" y="115" width="60" height="60" fill="url(#rainbow)" filter="url(#luminance)" />
+  <rect x="220" y="110" width="50" height="50" fill="#219ebc" filter="url(#xor)" />
+</svg>
