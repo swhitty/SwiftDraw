@@ -170,7 +170,9 @@ final class LayerTreeFilterTests: XCTestCase {
         XCTAssertEqual(commands.names, [
             "pushState", "setAlpha", "pushTransparencyLayer", "setClip", "pushTransparencyLayer",
             "pushFilterLayer", "setFillColor", "fillPath", "popFilterLayer",
-            "setBlendMode", "pushTransparencyLayer", "setBlendMode", "setFillColor", "fillPath",
+            // the mask is clipped to its region, SVG 1.1 §14.4 (SD8)
+            "setBlendMode", "pushTransparencyLayer", "setBlendMode",
+            "pushState", "setClip", "setFillColor", "fillPath", "popState",
             "popTransparencyLayer", "popTransparencyLayer",
             "popTransparencyLayer", "popState"
         ])
