@@ -70,6 +70,15 @@ final class FilterBitmapTests: XCTestCase {
         XCTAssertEqual(shifted.row(0), [[128, 128, 128, 128], [128, 128, 128, 128], clear])
         // within a thousandth of a pixel the offset is whole
         XCTAssertEqual(FilterBitmap.offset(source, dx: 0.9999, dy: 0).row(0), [clear, white, clear])
+
+        // inside a solid area the colour is exact, both axes interpolate at its edges
+        let solid = FilterBitmap.make([[white, white, white],
+                                       [white, white, white],
+                                       [clear, clear, clear]])
+        let diagonal = FilterBitmap.offset(solid, dx: 0.5, dy: 0.5)
+        XCTAssertEqual(diagonal.row(0), [[64, 64, 64, 64], [128, 128, 128, 128], [128, 128, 128, 128]])
+        XCTAssertEqual(diagonal.row(1), [[128, 128, 128, 128], white, white])
+        XCTAssertEqual(diagonal.row(2), [[64, 64, 64, 64], [128, 128, 128, 128], [128, 128, 128, 128]])
     }
 
     func testOffsetBeyondBitmapIsTransparent() {
@@ -213,8 +222,10 @@ final class FilterBitmapTests: XCTestCase {
     func testClipToRotatedSubregion() {
         var bitmap = FilterBitmap.flood(width: 5, height: 5, color: SIMD4(1, 1, 1, 1))
         // 45° about the bitmap centre: a diamond
-        let angle = Float.pi / 4
-        let rotate = LayerTree.Transform.Matrix(a: cos(angle), b: sin(angle), c: -sin(angle), d: cos(angle), tx: 0, ty: 0)
+        // Float overloads of cos and sin are missing on Android and Windows
+        let cosine = Float(cos(Double.pi / 4))
+        let sine = Float(sin(Double.pi / 4))
+        let rotate = LayerTree.Transform.Matrix(a: cosine, b: sine, c: -sine, d: cosine, tx: 0, ty: 0)
         let transform = rotate.concatenated(LayerTree.Transform.Matrix(a: 1, b: 0, c: 0, d: 1, tx: 2.5, ty: 2.5))
         bitmap.clip(to: LayerTree.Rect(x: -1.5, y: -1.5, width: 3, height: 3), transform: transform)
         XCTAssertEqual(bitmap.pixel(x: 2, y: 2), white)

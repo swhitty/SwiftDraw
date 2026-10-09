@@ -290,42 +290,75 @@ extension FilterBitmap {
         if fx > 0.999 { fx = 0; sx += 1 }
         if fy > 0.999 { fy = 0; sy += 1 }
 
+        // 8-bit fixed point weights: a destination pixel (x, y) reads the source at (x - sx, y - sy) and,
+        // weighted wx and wy, at the pixel before along each axis
+        let wx = Int((fx * 256).rounded())
+        let wy = Int((fy * 256).rounded())
+        let w11 = (256 - wx) * (256 - wy)
+        let w01 = wx * (256 - wy)
+        let w10 = (256 - wx) * wy
+        let w00 = wx * wy
+
         var result = FilterBitmap(width: width, height: height)
         source.pixels.withUnsafeBufferPointer { src in
             result.pixels.withUnsafeMutableBufferPointer { dst in
-                // a destination pixel (x, y) reads the source at (x - sx - 1, y - sy - 1) ... (x - sx, y - sy)
-                // weighted fx, fy towards the first
-                func sample(_ x: Int, _ y: Int) -> SIMD4<Float> {
-                    guard x >= 0, y >= 0, x < width, y < height else { return .zero }
-                    let i = (y * width + x) * 4
-                    return SIMD4(Float(src[i]), Float(src[i + 1]), Float(src[i + 2]), Float(src[i + 3]))
+                guard let srcBase = src.baseAddress, let dstBase = dst.baseAddress else { return }
+                let raw = UnsafeRawPointer(srcBase)
+                let rowBytes = width * 4
+                // destination columns with a source column inside the bitmap
+                let xStart = Swift.max(0, sx)
+                let xEnd = Swift.min(width, width + sx + (wx > 0 ? 1 : 0))
+                guard xStart < xEnd else { return }
+
+                // a whole pixel offset copies row segments
+                if wx == 0 && wy == 0 {
+                    for y in 0..<height where y - sy >= 0 && y - sy < height {
+                        memcpy(dstBase + y * rowBytes + xStart * 4,
+                               srcBase + (y - sy) * rowBytes + (xStart - sx) * 4,
+                               (xEnd - xStart) * 4)
+                    }
+                    return
                 }
+
                 for y in 0..<height {
                     let y1 = y - sy
                     let y0 = y1 - 1
-                    if fy == 0 && (y1 < 0 || y1 >= height) { continue }
-                    for x in 0..<width {
+                    let hasRow1 = y1 >= 0 && y1 < height
+                    let hasRow0 = wy > 0 && y0 >= 0 && y0 < height
+                    guard hasRow1 || hasRow0 else { continue }
+                    let row1 = y1 * rowBytes
+                    let row0 = y0 * rowBytes
+                    for x in xStart..<xEnd {
                         let x1 = x - sx
-                        let o = (y * width + x) * 4
-                        if fx == 0 && fy == 0 {
-                            guard x1 >= 0, x1 < width else { continue }
-                            let i = (y1 * width + x1) * 4
-                            dst[o] = src[i]
-                            dst[o + 1] = src[i + 1]
-                            dst[o + 2] = src[i + 2]
-                            dst[o + 3] = src[i + 3]
+                        let x0 = x1 - 1
+                        let hasColumn1 = x1 < width
+                        let hasColumn0 = wx > 0 && x0 >= 0
+                        let o = y * rowBytes + x * 4
+
+                        // transparent or uniform neighbourhoods need no weighting
+                        let p11 = hasRow1 && hasColumn1 ? raw.loadUnaligned(fromByteOffset: row1 + x1 * 4, as: UInt32.self) : 0
+                        let p01 = hasRow1 && hasColumn0 ? raw.loadUnaligned(fromByteOffset: row1 + x0 * 4, as: UInt32.self) : 0
+                        let p10 = hasRow0 && hasColumn1 ? raw.loadUnaligned(fromByteOffset: row0 + x1 * 4, as: UInt32.self) : 0
+                        let p00 = hasRow0 && hasColumn0 ? raw.loadUnaligned(fromByteOffset: row0 + x0 * 4, as: UInt32.self) : 0
+                        let isUniform = (wx == 0 || p01 == p11) && (wy == 0 || (p10 == p11 && (wx == 0 || p00 == p11)))
+                        if isUniform {
+                            if p11 != 0 {
+                                memcpy(dstBase + o, srcBase + row1 + x1 * 4, 4)
+                            }
                             continue
                         }
-                        let x0 = x1 - 1
-                        var value = sample(x1, y1) * ((1 - fx) * (1 - fy))
-                        if fx > 0 { value += sample(x0, y1) * (fx * (1 - fy)) }
-                        if fy > 0 { value += sample(x1, y0) * ((1 - fx) * fy) }
-                        if fx > 0 && fy > 0 { value += sample(x0, y0) * (fx * fy) }
-                        let rounded = (value + 0.5).clamped(lowerBound: .zero, upperBound: SIMD4(repeating: 255))
-                        dst[o] = UInt8(rounded.x)
-                        dst[o + 1] = UInt8(rounded.y)
-                        dst[o + 2] = UInt8(rounded.z)
-                        dst[o + 3] = UInt8(rounded.w)
+                        for c in 0..<4 {
+                            var sum = 0
+                            if hasRow1 {
+                                if hasColumn1 { sum += Int(src[row1 + x1 * 4 + c]) * w11 }
+                                if hasColumn0 { sum += Int(src[row1 + x0 * 4 + c]) * w01 }
+                            }
+                            if hasRow0 {
+                                if hasColumn1 { sum += Int(src[row0 + x1 * 4 + c]) * w10 }
+                                if hasColumn0 { sum += Int(src[row0 + x0 * 4 + c]) * w00 }
+                            }
+                            dst[o + c] = UInt8(truncatingIfNeeded: (sum + 32768) >> 16)
+                        }
                     }
                 }
             }
@@ -484,6 +517,7 @@ extension FilterBitmap {
 
 private extension FilterBitmap {
 
+    // Runs of equal pixels (transparent areas, solid fills) are computed once.
     static func combine(_ a: FilterBitmap, _ b: FilterBitmap, linear: Bool,
                         _ op: (SIMD4<Float>, SIMD4<Float>) -> SIMD4<Float>) -> FilterBitmap {
         precondition(a.pixels.count == b.pixels.count)
@@ -491,10 +525,27 @@ private extension FilterBitmap {
         a.pixels.withUnsafeBufferPointer { pa in
             b.pixels.withUnsafeBufferPointer { pb in
                 result.pixels.withUnsafeMutableBufferPointer { dst in
+                    guard let baseA = pa.baseAddress, let baseB = pb.baseAddress, let out = dst.baseAddress else { return }
+                    let rawA = UnsafeRawPointer(baseA)
+                    let rawB = UnsafeRawPointer(baseB)
+                    var keyA: UInt32 = 0
+                    var keyB: UInt32 = 0
+                    var value = quantize(op(.zero, .zero), linear: linear)
                     var i = 0
                     while i < dst.count {
-                        let value = op(load(pa.baseAddress!, i, linear: linear), load(pb.baseAddress!, i, linear: linear))
-                        store(value, dst.baseAddress!, i, linear: linear)
+                        let pixelA = rawA.loadUnaligned(fromByteOffset: i, as: UInt32.self)
+                        let pixelB = rawB.loadUnaligned(fromByteOffset: i, as: UInt32.self)
+                        if pixelA != keyA || pixelB != keyB {
+                            keyA = pixelA
+                            keyB = pixelB
+                            value = quantize(op(load(baseA, i, linear: linear), load(baseB, i, linear: linear)), linear: linear)
+                        }
+                        if value != .zero {
+                            out[i] = value.x
+                            out[i + 1] = value.y
+                            out[i + 2] = value.z
+                            out[i + 3] = value.w
+                        }
                         i += 4
                     }
                 }
@@ -507,9 +558,23 @@ private extension FilterBitmap {
         var result = FilterBitmap(width: source.width, height: source.height)
         source.pixels.withUnsafeBufferPointer { src in
             result.pixels.withUnsafeMutableBufferPointer { dst in
+                guard let base = src.baseAddress, let out = dst.baseAddress else { return }
+                let raw = UnsafeRawPointer(base)
+                var key: UInt32 = 0
+                var value = quantize(op(.zero), linear: linear)
                 var i = 0
                 while i < dst.count {
-                    store(op(load(src.baseAddress!, i, linear: linear)), dst.baseAddress!, i, linear: linear)
+                    let pixel = raw.loadUnaligned(fromByteOffset: i, as: UInt32.self)
+                    if pixel != key {
+                        key = pixel
+                        value = quantize(op(load(base, i, linear: linear)), linear: linear)
+                    }
+                    if value != .zero {
+                        out[i] = value.x
+                        out[i + 1] = value.y
+                        out[i + 2] = value.z
+                        out[i + 3] = value.w
+                    }
                     i += 4
                 }
             }
@@ -528,9 +593,18 @@ private extension FilterBitmap {
         return SIMD4(decode(p[i], a) * alpha, decode(p[i + 1], a) * alpha, decode(p[i + 2], a) * alpha, alpha)
     }
 
-    // clamped to 0...1 with colour never above alpha (premultiplied), then rounded
     @inline(__always)
     static func store(_ value: SIMD4<Float>, _ p: UnsafeMutablePointer<UInt8>, _ i: Int, linear: Bool) {
+        let bytes = quantize(value, linear: linear)
+        p[i] = bytes.x
+        p[i + 1] = bytes.y
+        p[i + 2] = bytes.z
+        p[i + 3] = bytes.w
+    }
+
+    // clamped to 0...1 with colour never above alpha (premultiplied), then rounded
+    @inline(__always)
+    static func quantize(_ value: SIMD4<Float>, linear: Bool) -> SIMD4<UInt8> {
         var v = value
         v.replace(with: 0, where: v .!= v)
         v.clamp(lowerBound: .zero, upperBound: SIMD4(repeating: 1))
@@ -543,10 +617,7 @@ private extension FilterBitmap {
             v.z = encode(v.z / v.w) * v.w
         }
         let rounded = v * 255 + 0.5
-        p[i] = UInt8(rounded.x)
-        p[i + 1] = UInt8(rounded.y)
-        p[i + 2] = UInt8(rounded.z)
-        p[i + 3] = UInt8(rounded.w)
+        return SIMD4(UInt8(rounded.x), UInt8(rounded.y), UInt8(rounded.z), UInt8(rounded.w))
     }
 
     // a premultiplied channel to its straight value in linear light
@@ -566,12 +637,12 @@ private extension FilterBitmap {
     // sRGB transfer function (IEC 61966-2-1)
     static let linearTable: [Float] = (0...255).map { value in
         let c = Float(value) / 255
-        return c <= 0.04045 ? c / 12.92 : pow((c + 0.055) / 1.055, 2.4)
+        return c <= 0.04045 ? c / 12.92 : Float(pow(Double((c + 0.055) / 1.055), 2.4))
     }
 
     static let encodingTable: [Float] = (0..<8192).map { index in
         let l = Float(index) / 8191
-        return l <= 0.0031308 ? l * 12.92 : 1.055 * pow(l, 1 / 2.4) - 0.055
+        return l <= 0.0031308 ? l * 12.92 : 1.055 * Float(pow(Double(l), 1 / 2.4)) - 0.055
     }
 }
 
