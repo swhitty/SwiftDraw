@@ -39,6 +39,7 @@ extension XMLParser {
     image.y = try att.parseCoordinate("y")
     image.width = try att.parseCoordinate("width")
     image.height = try att.parseCoordinate("height")
+    image.preserveAspectRatio = parsePreserveAspectRatio(try? att.parseString("preserveAspectRatio"))
 
     return image
   }

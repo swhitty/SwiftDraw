@@ -36,7 +36,7 @@ extension XMLParser {
 
         for n in e.children {
             if n.name == "radialGradient" {
-                gradients.append(try parseRadialGradient(n))
+                try appendSkippingInvalid(&gradients, n, parseRadialGradient)
             } else {
                 gradients.append(contentsOf: try parseRadialGradients(n))
             }
@@ -71,17 +71,20 @@ extension XMLParser {
         node.gradientUnits = try nodeAtt.parseRaw("gradientUnits")
         node.href  = try? nodeAtt.parseHref()
 
+        // an unreadable value is left unset, so it is inherited through href (SVG 1.1 §13.2)
         if let val = try? nodeAtt.parseString("gradientTransform") {
-          if let t = try? parseTransform(val) { node.gradientTransform = t }
+          if val.trimmingCharacters(in: .whitespaces) == "none" { node.gradientTransform = [] }
+          else if let t = try? parseTransform(val) { node.gradientTransform = t }
         }
+        node.spreadMethod = try? nodeAtt.parseRaw("spreadMethod")
 
         return node
     }
 
     func parseRadialGradientStop(_ att: any AttributeParser) throws -> DOM.RadialGradient.Stop {
-        let offset: DOM.Float? = try? att.parsePercentage("offset")
+        let offset: DOM.Float? = parseClampedFraction(att, "offset")
         let color: DOM.Color? = try? att.parseFill("stop-color").getColor()
-        let opacity: DOM.Float? = try att.parsePercentage("stop-opacity")
+        let opacity: DOM.Float? = parseClampedFraction(att, "stop-opacity")
         return DOM.RadialGradient.Stop(offset: offset ?? 0, color: color ?? .keyword(.black), opacity: opacity ?? 1.0)
     }
 }

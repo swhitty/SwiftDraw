@@ -89,6 +89,7 @@ extension LayerTree.Builder {
         im.origin.y = LayerTree.Float(image.y ?? 0)
         im.width = image.width.map { LayerTree.Float($0) }
         im.height = image.height.map { LayerTree.Float($0) }
+        im.preserveAspectRatio = image.preserveAspectRatio ?? .default
 
         return .image(im)
     }

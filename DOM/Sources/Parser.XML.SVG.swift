@@ -71,6 +71,7 @@ package extension XMLParser {
 
         svg.childElements = try parseGraphicsElements(e.children)
         svg.viewBox = viewBox
+        svg.preserveAspectRatio = parsePreserveAspectRatio(try? att.parseString("preserveAspectRatio"))
 
         svg.defs = try parseSVGDefs(e)
         svg.styles = styles
@@ -176,9 +177,8 @@ package extension XMLParser {
         let elements = try parseGraphicsElements(e.children)
 
         for e in elements {
-            guard let id = e.id else {
-                throw Error.invalid
-            }
+            // an element without an id can never be referenced; skip it rather than fail
+            guard let id = e.id else { continue }
             defs[id] = e
         }
 
@@ -191,7 +191,7 @@ package extension XMLParser {
 
         for n in e.children {
             if n.name == "clipPath" {
-                clipPaths.append(try parseClipPath(n))
+                try appendSkippingInvalid(&clipPaths, n, parseClipPath)
             } else {
                 clipPaths.append(contentsOf: try parseClipPaths(n))
             }
@@ -217,7 +217,7 @@ package extension XMLParser {
 
         for n in e.children {
             if n.name == "mask" {
-                masks.append(try parseMask(n))
+                try appendSkippingInvalid(&masks, n, parseMask)
             } else {
                 masks.append(contentsOf: try parseMasks(n))
             }
@@ -246,7 +246,7 @@ package extension XMLParser {
             if n.name == "pattern" {
                 // a pattern without an id can never be referenced; skip it rather than fail
                 guard n.attributes["id"] != nil else { continue }
-                patterns.append(try parsePattern(n))
+                try appendSkippingInvalid(&patterns, n, parsePattern)
             } else {
                 patterns.append(contentsOf: try parsePatterns(n))
             }
@@ -276,4 +276,41 @@ private extension XMLParser.Scanner {
 private extension Foundation.CharacterSet {
 
     static let viewBoxSeparator = Foundation.CharacterSet(charactersIn: ",")
+}
+
+package extension XMLParser {
+
+    /// `[defer] <align> [meet|slice]`. Never throws: an invalid value is dropped so the
+    /// element uses the initial value `xMidYMid meet`, rather than failing the document.
+    func parsePreserveAspectRatio(_ data: String?) -> DOM.PreserveAspectRatio? {
+        guard let data else { return nil }
+        var tokens = data.split(whereSeparator: { $0 == " " || $0 == "\t" || $0 == "\n" || $0 == "\r" }).map(String.init)
+        if tokens.first == "defer" { tokens.removeFirst() }
+        guard (1...2).contains(tokens.count) else { return nil }
+
+        let align: DOM.PreserveAspectRatio.Align
+        switch tokens[0] {
+        case "none": align = .none
+        case "xMinYMin": align = .xMinYMin
+        case "xMidYMin": align = .xMidYMin
+        case "xMaxYMin": align = .xMaxYMin
+        case "xMinYMid": align = .xMinYMid
+        case "xMidYMid": align = .xMidYMid
+        case "xMaxYMid": align = .xMaxYMid
+        case "xMinYMax": align = .xMinYMax
+        case "xMidYMax": align = .xMidYMax
+        case "xMaxYMax": align = .xMaxYMax
+        default: return nil
+        }
+
+        var meetOrSlice = DOM.PreserveAspectRatio.MeetOrSlice.meet
+        if tokens.count == 2 {
+            switch tokens[1] {
+            case "meet": meetOrSlice = .meet
+            case "slice": meetOrSlice = .slice
+            default: return nil
+            }
+        }
+        return DOM.PreserveAspectRatio(align: align, meetOrSlice: meetOrSlice)
+    }
 }
