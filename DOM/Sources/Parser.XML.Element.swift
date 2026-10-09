@@ -120,7 +120,18 @@ extension XMLParser {
         while let (element, parent) = stack.popLast() {
             try Task.checkCancellation()
 
-            guard let ge = try parseGraphicsElement(element) else {
+            // not routed through skippingInvalid(_:_:): nested <svg> recurses through here and
+            // the extra generic/closure frames overflow the small stacks of test threads
+            let ge: DOM.GraphicsElement
+            do {
+                guard let parsed = try parseGraphicsElement(element) else { continue }
+                ge = parsed
+            } catch is CancellationError {
+                throw CancellationError()
+            } catch {
+                if let parseError = parseError(for: error, parsing: element, with: options) {
+                    throw parseError
+                }
                 continue
             }
 
@@ -137,6 +148,22 @@ extension XMLParser {
         }
 
         return result
+    }
+
+    /// Appends `parse(element)` to `array`; with `.skipInvalidElements` an error drops the element instead of throwing.
+    /// Kept out of line: the recursive `parse…s(_:)` walkers call it so their own frames stay small
+    /// (500 nested groups must still fit the small stacks of test threads).
+    @inline(never)
+    func appendSkippingInvalid<T>(_ array: inout [T], _ element: XML.Element, _ parse: (XML.Element) throws -> T) throws {
+        do {
+            array.append(try parse(element))
+        } catch is CancellationError {
+            throw CancellationError()
+        } catch {
+            if let parseError = parseError(for: error, parsing: element, with: options) {
+                throw parseError
+            }
+        }
     }
 
     func parseError(for error: any Swift.Error, parsing element: XML.Element, with options: Options) -> XMLParser.Error? {

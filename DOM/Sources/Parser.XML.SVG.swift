@@ -165,9 +165,8 @@ package extension XMLParser {
         let elements = try parseGraphicsElements(e.children)
 
         for e in elements {
-            guard let id = e.id else {
-                throw Error.invalid
-            }
+            // an element without an id can never be referenced; skip it rather than fail
+            guard let id = e.id else { continue }
             defs[id] = e
         }
 
@@ -180,7 +179,7 @@ package extension XMLParser {
 
         for n in e.children {
             if n.name == "clipPath" {
-                clipPaths.append(try parseClipPath(n))
+                try appendSkippingInvalid(&clipPaths, n, parseClipPath)
             } else {
                 clipPaths.append(contentsOf: try parseClipPaths(n))
             }
@@ -206,7 +205,7 @@ package extension XMLParser {
 
         for n in e.children {
             if n.name == "mask" {
-                masks.append(try parseMask(n))
+                try appendSkippingInvalid(&masks, n, parseMask)
             } else {
                 masks.append(contentsOf: try parseMasks(n))
             }
@@ -235,7 +234,7 @@ package extension XMLParser {
             if n.name == "pattern" {
                 // a pattern without an id can never be referenced; skip it rather than fail
                 guard n.attributes["id"] != nil else { continue }
-                patterns.append(try parsePattern(n))
+                try appendSkippingInvalid(&patterns, n, parsePattern)
             } else {
                 patterns.append(contentsOf: try parsePatterns(n))
             }
