@@ -293,6 +293,8 @@ extension XML.Formatter {
                 return encodeColor(from: color)
             case .url(let url):
                 return encodeURL(url)
+            case .urlWithFallback(let url, let color):
+                return "\(encodeURL(url)) \(encodeColor(from: color))"
             }
         }
 
