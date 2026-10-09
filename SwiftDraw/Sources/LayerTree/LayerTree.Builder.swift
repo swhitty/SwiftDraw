@@ -132,8 +132,7 @@ extension LayerTree {
             return resultLayer!
         }
 
-        func makeBaseLayer(from element: DOM.GraphicsElement, inheriting previousState: State) -> (Layer, State) {
-            let state = createState(for: element, inheriting: previousState)
+        func makeBaseLayer(from element: DOM.GraphicsElement, with state: State) -> Layer {
             let attributes = element.attributes
             let l = Layer()
             l.class = element.class
@@ -169,7 +168,9 @@ extension LayerTree {
             let attributes = DOM.presentationAttributes(for: element, styles: svg.styles)
             guard let clipID = attributes.clipPath?.fragmentID,
                   let clip = svg.defs.clipPaths.first(where: { $0.id == clipID }) else { return [] }
-            return clip.childElements.compactMap(makeClipShape)
+            let shapes = clip.childElements.compactMap(makeClipShape)
+            // SVG 1.1 §14.3.5: a clipPath without contributing children clips everything away
+            return shapes.isEmpty ? [ClipShape(shape: .rect(within: .zero, radii: .zero), transform: .identity)] : shapes
         }
 
         func makeClipUnits(for element: DOM.GraphicsElement) -> ClipUnits {
@@ -204,7 +205,9 @@ extension LayerTree {
 
             let l = Layer()
 
-            let maskState = createState(for: mask, inheriting: State())
+            var maskState = createState(for: mask, inheriting: State())
+            // SVG 1.1 §11.5: `display` does not apply to `<mask>`; only its children can be hidden
+            maskState.display = .inline
             mask.childElements.forEach {
                 let contents = Layer.Contents.layer(makeLayer(from: $0, inheriting: maskState))
                 l.appendContents(contents)

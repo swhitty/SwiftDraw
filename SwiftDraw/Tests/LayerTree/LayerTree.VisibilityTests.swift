@@ -49,6 +49,21 @@ final class LayerTreeVisibilityTests: XCTestCase {
         }.count
     }
 
+    /// The `clip` of every layer that has one, in tree order.
+    private func clipShapes(_ body: String) throws -> [[LayerTree.ClipShape]] {
+        let svg = try DOM.SVG.parse(xml: """
+        <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">\(body)</svg>
+        """)
+        func collect(_ layer: LayerTree.Layer) -> [[LayerTree.ClipShape]] {
+            var result = layer.clip.isEmpty ? [] : [layer.clip]
+            for case .layer(let child) in layer.contents {
+                result += collect(child)
+            }
+            return result
+        }
+        return collect(LayerTree.Builder(svg: svg).makeLayer())
+    }
+
     func testDisplayNoneDrawsNothing() throws {
         XCTAssertEqual(try fillCount(#"<rect width="10" height="10" display="none"/>"#), 0)
         XCTAssertEqual(try fillCount(#"<rect width="10" height="10" style="display:none"/>"#), 0)
@@ -83,7 +98,7 @@ final class LayerTreeVisibilityTests: XCTestCase {
     func testDisplayNoneRootDoesNotCrash() throws {
         let svg = try DOM.SVG.parse(xml: #"<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" display="none"><rect width="5" height="5"/></svg>"#)
         let layer = LayerTree.Builder(svg: svg).makeLayer()
-        XCTAssertNotNil(layer)
+        XCTAssertTrue(layer.contents.isEmpty)
     }
 
     func testDisplayNoneChildOfClipPathDoesNotContribute() throws {
@@ -93,6 +108,119 @@ final class LayerTreeVisibilityTests: XCTestCase {
         """#
         let clips = try commands(body).filter { if case .setClip = $0 { return true } else { return false } }
         XCTAssertEqual(clips.count, 1)
+        // the hidden child is not part of the clip itself
+        let clip = try XCTUnwrap(clipShapes(body).first)
+        XCTAssertEqual(clip.count, 1)
+        XCTAssertEqual(clip[0].shape, .rect(within: .init(x: 0, y: 0, width: 5, height: 5), radii: .zero))
+    }
+
+    func testClipPathWithOnlyHiddenChildrenClipsEverything() throws {
+        let body = #"""
+        <clipPath id="c"><rect width="5" height="5" display="none"/><rect width="5" height="5" visibility="hidden"/></clipPath>
+        <rect width="10" height="10" clip-path="url(#c)"/>
+        """#
+        let clip = try XCTUnwrap(clipShapes(body).first)
+        XCTAssertEqual(clip.map(\.shape), [.rect(within: .zero, radii: .zero)])
+    }
+
+    func testDisplayDoesNotApplyToMask() throws {
+        let body = #"""
+        <mask id="m" display="none"><rect width="10" height="10" fill="white"/></mask>
+        <rect width="10" height="10" mask="url(#m)"/>
+        """#
+        XCTAssertEqual(try fillCount(body), 2)
+    }
+
+    func testDisplayNoneOnChildOfMaskStillHidesIt() throws {
+        let body = #"""
+        <mask id="m"><rect width="10" height="10" fill="white"/><rect width="10" height="10" display="none"/></mask>
+        <rect width="10" height="10" mask="url(#m)"/>
+        """#
+        XCTAssertEqual(try fillCount(body), 2)
+    }
+
+    func testDisplayNoneOnClipPathElementStillClips() throws {
+        let body = #"""
+        <clipPath id="c" display="none"><rect width="5" height="5"/></clipPath>
+        <rect width="10" height="10" clip-path="url(#c)"/>
+        """#
+        XCTAssertEqual(try clipShapes(body).first?.count, 1)
+        XCTAssertEqual(try fillCount(body), 1)
+    }
+
+    func testDefinitionsInsideDisplayNoneGroupAreStillUsed() throws {
+        let body = #"""
+        <g display="none">
+          <clipPath id="c"><rect width="5" height="5"/></clipPath>
+          <linearGradient id="g"><stop offset="0" stop-color="red"/><stop offset="1" stop-color="blue"/></linearGradient>
+          <pattern id="p" width="4" height="4" patternUnits="userSpaceOnUse"><rect width="2" height="2"/></pattern>
+        </g>
+        <rect width="10" height="10" clip-path="url(#c)"/>
+        <rect width="10" height="10" fill="url(#g)"/>
+        <rect width="10" height="10" fill="url(#p)"/>
+        """#
+        let cmds = try commands(body)
+        XCTAssertEqual(try XCTUnwrap(clipShapes(body).first).count, 1)
+        XCTAssertTrue(cmds.contains { if case .drawLinearGradient = $0 { return true } else { return false } })
+        XCTAssertTrue(cmds.contains { if case .setFillPattern = $0 { return true } else { return false } })
+    }
+
+    func testDisplayAndVisibilityFromClassAndStyleSheet() throws {
+        let body = #"""
+        <style>.gone { display: none } .ghost { visibility: hidden } #shown { visibility: visible }</style>
+        <rect class="gone" width="10" height="10"/>
+        <rect class="ghost" width="10" height="10"/>
+        <g class="ghost"><rect id="shown" width="10" height="10"/></g>
+        <rect width="10" height="10"/>
+        """#
+        XCTAssertEqual(try fillCount(body), 2)
+    }
+
+    func testHiddenTextAndImageDrawNothing() throws {
+        let png = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
+        let cmds = try commands(#"""
+        <text x="0" y="10" visibility="hidden">hi</text><image width="1" height="1" visibility="hidden" href="\#(png)"/>
+        <text x="0" y="10" display="none">hi</text><image width="1" height="1" display="none" href="\#(png)"/>
+        """#)
+        XCTAssertTrue(cmds.filter { if case .draw = $0 { return true } else { return false } }.isEmpty)
+        XCTAssertEqual(cmds.count, 0)
+    }
+
+    func testUseOfDisplayNoneElementWithOpacityAndMaskDrawsNothing() throws {
+        let body = #"""
+        <defs>
+          <mask id="m"><rect width="10" height="10" fill="white"/></mask>
+          <rect id="h" width="10" height="10" display="none" opacity="0.5" mask="url(#m)" transform="translate(5 5)"/>
+        </defs>
+        <use href="#h"/>
+        """#
+        XCTAssertEqual(try commands(body).count, 0)
+    }
+
+    func testDisplayNoneElementBuildsNoLayerState() throws {
+        let cmds = try commands(#"<rect width="10" height="10" display="none" opacity="0.5" stroke="red"/>"#)
+        XCTAssertEqual(cmds.count, 0)
+    }
+
+    func testForeignObjectWithSVGNamespaceChild() throws {
+        let body = #"""
+        <foreignObject width="10" height="10"><rect xmlns="http://www.w3.org/2000/svg" width="5" height="5"/></foreignObject>
+        <rect width="1" height="1"/>
+        """#
+        XCTAssertGreaterThanOrEqual(try fillCount(body), 1)
+    }
+
+    func testVisibilityParsesInDOM() throws {
+        let svg = try DOM.SVG.parse(xml: #"""
+        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10">
+          <rect width="1" height="1" visibility="hidden"/>
+          <rect width="1" height="1" style="visibility: collapse"/>
+          <rect width="1" height="1" visibility="bogus"/>
+          <rect width="1" height="1"/>
+        </svg>
+        """#)
+        let values = svg.childElements.map { DOM.presentationAttributes(for: $0, styles: svg.styles).visibility }
+        XCTAssertEqual(values, [.hidden, .collapse, nil, nil])
     }
 
     func testVisibilityHiddenDrawsNothing() throws {
