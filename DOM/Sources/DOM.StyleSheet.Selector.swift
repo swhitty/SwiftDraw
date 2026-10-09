@@ -300,7 +300,8 @@ private struct SelectorScanner {
                 if Self.isSFSymbolLayerClass(name), current == ":" {
                     let start = index
                     index += 1
-                    if let annotation = scanIdentifier() {
+                    // `:not(` and other functional pseudo-classes are not annotations
+                    if let annotation = scanIdentifier(), current != "(" {
                         name += ":" + annotation
                     } else {
                         index = start
@@ -429,7 +430,7 @@ package extension DOM.StyleSheet {
         private var classTokens = [ObjectIdentifier: Set<String>]()
         private var memo = [MemoKey: Bool]()
 
-        // compound selectors tested so far (memo hits excluded), for performance tests
+        // compound selector tests, memo hits and ancestor / sibling walk steps, for performance tests
         package private(set) var evaluations = 0
 
         private struct MemoKey: Hashable {
@@ -508,9 +509,9 @@ package extension DOM.StyleSheet {
             let selector = selectors[rule]
             let isLast = i == selector.compounds.count - 1
             let key = MemoKey(rule: rule, compound: i, kind: .element, element: ObjectIdentifier(element))
+            evaluations += 1
             if !isLast, let known = memo[key] { return known }
 
-            evaluations += 1
             let result: Bool
             if !matches(selector.compounds[i], element) {
                 result = false
@@ -541,6 +542,7 @@ package extension DOM.StyleSheet {
             var current = element
             var result = false
             while let candidate = next(current) {
+                evaluations += 1
                 let key = MemoKey(rule: rule, compound: i, kind: kind, element: ObjectIdentifier(current))
                 if let known = memo[key] {
                     result = known

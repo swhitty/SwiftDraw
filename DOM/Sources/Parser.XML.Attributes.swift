@@ -187,7 +187,9 @@ extension XMLParser {
       return try scanner
         .scanStrings(delimitedBy: ",")
         .map {
-          let value = $0.unquoted
+          var value = $0.unquoted
+          // a quote left open at the end of the value is closed by EOF, it is not part of the name
+          if let first = value.first, first == "'" || first == "\"" { value.removeFirst() }
           if let keyword = DOM.FontFamily.Keyword(rawValue: value) {
             return .keyword(keyword)
           } else {

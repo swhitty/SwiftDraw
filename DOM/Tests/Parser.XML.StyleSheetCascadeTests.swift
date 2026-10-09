@@ -439,6 +439,10 @@ struct ParserXMLStyleSheetCascadeTests {
         #expect(s.simple == .class("multicolor-0:systemYellowColor"))
         #expect(try #require(Selector.parse(".hierarchical-0:secondary")).simple == .class("hierarchical-0:secondary"))
         #expect(try #require(Selector.parse(".monochrome-1:primary")).simple == .class("monochrome-1:primary"))
+        // a functional pseudo-class after such a class is not an annotation: the selector stays whole
+        let functional = try #require(Selector.parse(".monochrome-0:not(.x)"))
+        #expect(functional.compounds[0].classes == ["monochrome-0"])
+        #expect(functional.compounds[0].pseudoClasses.count == 1)
         // other classes still take a pseudo-class
         #expect(try #require(Selector.parse(".a:first-child")).compounds[0].pseudoClasses == [.firstChild])
 
@@ -461,6 +465,25 @@ struct ParserXMLStyleSheetCascadeTests {
         let decls = XMLParser.parseCSSDeclarations("font-family:'Foo")
         #expect(decls.count == 1)
         #expect(decls.first?.value == "'Foo")
+    }
+
+    @Test
+    func quoteOpenAtEndOfFontFamilyIsNotPartOfTheName() throws {
+        #expect(try XMLParser.ValueParser().parseFontFamily("'Foo") == [.name("Foo")])
+        #expect(try XMLParser.ValueParser().parseFontFamily("'Foo Bar") == [.name("Foo Bar")])
+        #expect(try XMLParser.ValueParser().parseFontFamily("'Foo'") == [.name("Foo")])
+    }
+
+    @Test
+    func importantFreeStyleSkipsTheImportantParse() throws {
+        let e = try XML.SAXParser.parse(data: Data(#"<rect style="fill:red;stroke:blue"/>"#.utf8))
+        let (normal, important) = XMLParser().parseStyleDeclarations(e)
+        #expect(normal.fill == .color(.keyword(.red)))
+        #expect(important.fill == nil && important.stroke == nil)
+        let e2 = try XML.SAXParser.parse(data: Data(#"<rect style="fill:red;stroke:blue !important"/>"#.utf8))
+        let (n2, i2) = XMLParser().parseStyleDeclarations(e2)
+        #expect(n2.fill == .color(.keyword(.red)) && n2.stroke == nil)
+        #expect(i2.stroke == .color(.keyword(.blue)))
     }
 
     @Test
@@ -507,8 +530,9 @@ struct ParserXMLStyleSheetCascadeTests {
         for e in elements {
             #expect(m.match(e)?.attributes.fill == nil)
         }
-        // without the memo every rect walks back over all its previous siblings (~12.5 M)
-        #expect(m.evaluations < 3 * elements.count)
+        // without the memo every rect walks back over all its previous siblings (~12.5 M); the counter
+        // includes memo hits and walk steps, so a lost memo shows
+        #expect(m.evaluations < 5 * elements.count)
     }
 
     @Test
