@@ -90,19 +90,9 @@ package extension XML {
             validNamespaces.contains(uri ?? "")
         }
 
-        /// A prefixed name whose prefix is undeclared (`<ns:g>`) reports no namespace on some platforms,
-        /// which would pass as the default namespace; it is foreign all the same.
-        private func isSVGElement(namespaceURI: String?, qualifiedName: String?) -> Bool {
-            guard isValidNamespaceURI(namespaceURI) else { return false }
-            if (namespaceURI ?? "").isEmpty, qualifiedName?.contains(":") == true {
-                return false
-            }
-            return true
-        }
-
-        package func parser(_ parser: FoundationXMLParser, didStartElement elementName: String, namespaceURI: String?, qualifiedName: String?, attributes attributeDict: [String: String] = [:]) {
+        package func parser(_ parser: FoundationXMLParser, didStartElement elementName: String, namespaceURI: String?, qualifiedName _: String?, attributes attributeDict: [String: String] = [:]) {
             guard self.parser === parser else { return }
-            guard foreignDepth == 0, isSVGElement(namespaceURI: namespaceURI, qualifiedName: qualifiedName) else {
+            guard foreignDepth == 0, isValidNamespaceURI(namespaceURI) else {
                 foreignDepth += 1
                 return
             }
