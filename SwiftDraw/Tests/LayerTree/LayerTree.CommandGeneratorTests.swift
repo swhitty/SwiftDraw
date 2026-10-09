@@ -39,10 +39,14 @@ final class LayerTreeCommandGeneratorTests: XCTestCase {
         let generator = LayerTree.CommandGenerator(provider: LayerTreeProvider(), size: .zero, options: .default)
         let commands = generator.renderCommands(for: layer, colorConverter: .default)
 
-        XCTAssertEqual(
-            commands.count,
-            159
-        )
+        // shapes.svg wraps a circle in `<ns:g>`, an undeclared prefix: the subtree is foreign and dropped,
+        // except where the platform's XML parser reports no prefix at all (Windows)
+        #if os(Windows)
+        let expected = 165
+        #else
+        let expected = 159
+        #endif
+        XCTAssertEqual(commands.count, expected)
     }
 
     func testClip() {
