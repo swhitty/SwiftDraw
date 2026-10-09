@@ -135,7 +135,9 @@ struct InvalidElementTests {
         <rect id="r" width="1" height="1"/>
         """#)
         #expect(svg.childElements.compactMap { $0.id } == ["r"])
-        #expect(svg.defs.clipPaths.isEmpty)
+        // since SD8 a bad clipPathUnits drops only that attribute (userSpaceOnUse, as browsers do); the id-less one is skipped
+        #expect(svg.defs.clipPaths.map { $0.id } == ["c"])
+        #expect(svg.defs.clipPaths.first?.clipPathUnits == nil)
         #expect(svg.defs.masks.isEmpty)
         #expect(svg.defs.radialGradients.isEmpty)
         #expect(svg.defs.filters.isEmpty)
