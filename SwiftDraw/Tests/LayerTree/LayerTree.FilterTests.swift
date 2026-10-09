@@ -145,7 +145,7 @@ struct LayerTreeFilterTests {
         <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
             <filter id="shadow">
                 <feGaussianBlur in="SourceAlpha" stdDeviation="2" />
-                <feOffset dx="2" dy="2" />
+                <feTurbulence baseFrequency="0.1" />
             </filter>
             <rect x="0" y="0" width="10" height="10" filter="url(#shadow)" />
         </svg>
@@ -158,8 +158,8 @@ struct LayerTreeFilterTests {
     func unsupportedPrimitiveIsHiddenWithOption() throws {
         let commands = try makeCommands(#"""
         <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
-            <filter id="offset"><feOffset dx="2" dy="2" /></filter>
-            <rect x="0" y="0" width="10" height="10" filter="url(#offset)" />
+            <filter id="noise"><feTurbulence baseFrequency="0.1" /></filter>
+            <rect x="0" y="0" width="10" height="10" filter="url(#noise)" />
             <rect x="20" y="0" width="10" height="10" />
         </svg>
         """#, options: .hideUnsupportedFilters)

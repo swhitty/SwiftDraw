@@ -31,7 +31,7 @@
 
 package extension DOM {
 
-    enum Color: Equatable {
+    enum Color: Hashable {
         case none
         case currentColor
         case keyword(Keyword)
