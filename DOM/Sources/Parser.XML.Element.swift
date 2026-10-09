@@ -58,8 +58,8 @@ extension XMLParser {
     }
 
     func parseRect(_ att: any AttributeParser) throws -> DOM.Rect {
-        let width: DOM.Coordinate = try att.parseCoordinate("width")
-        let height: DOM.Coordinate = try att.parseCoordinate("height")
+        let width: DOM.Coordinate = try parseLength(att, "width", .horizontal)
+        let height: DOM.Coordinate = try parseLength(att, "height", .vertical)
         let rect = DOM.Rect(width: width, height: height)
 
         rect.x = parseDefaultedCoordinate(att, "x")
@@ -82,6 +82,16 @@ extension XMLParser {
         var ge: DOM.GraphicsElement
 
         let att = try parseAttributes(e)
+        let attributes = try parsePresentationAttributes(e)
+        let style = parseStyleDeclarations(e)
+        let matched = styleContext.matcher?.match(e)
+        // `em` and `ex` lengths of this element (and font-size inherited by its children)
+        lengthContext.fontSize = style.important.fontSize
+            ?? matched?.importantAttributes.fontSize
+            ?? style.normal.fontSize
+            ?? matched?.attributes.fontSize
+            ?? attributes.fontSize
+            ?? lengthContext.fontSize
 
         switch e.name {
         case "g": ge = try parseGroup(e)
@@ -116,12 +126,16 @@ extension XMLParser {
 
     func parseGraphicsElements(_ elements: [XML.Element]) throws -> [DOM.GraphicsElement] {
         var result = [DOM.GraphicsElement]()
-        var stack: [(XML.Element, parent: (any ContainerElement)?)] = elements
+        // each element inherits the font-size of its parent for `em` and `ex` lengths
+        let fontSize = lengthContext.fontSize
+        defer { lengthContext.fontSize = fontSize }
+        var stack: [(XML.Element, parent: (any ContainerElement)?, fontSize: DOM.Float)] = elements
             .reversed()
-            .map { ($0, parent: nil) }
+            .map { ($0, parent: nil, fontSize: fontSize) }
 
-        while let (element, parent) = stack.popLast() {
+        while let (element, parent, inheritedFontSize) = stack.popLast() {
             try Task.checkCancellation()
+            lengthContext.fontSize = inheritedFontSize
 
             // not routed through skippingInvalid(_:_:): nested <svg> recurses through here and
             // the extra generic/closure frames overflow the small stacks of test threads
@@ -320,7 +334,8 @@ extension XMLParser {
         el.fillRule = lenient { try att.parseRaw("fill-rule") }
 
         el.fontFamily = lenient { try att.parseFontFamily("font-family") }
-        el.fontSize = lenient { try att.parseFloat("font-size") }
+        // absolute units (`12pt`) in px; `em` and `%` keep their raw number as before
+        el.fontSize = lenient { try att.parseCoordinate("font-size") }
         el.textAnchor = lenient { try att.parseRaw("text-anchor") }
         el.dominantBaseline = lenient { try att.parseRaw("dominant-baseline") }
 

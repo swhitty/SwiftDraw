@@ -180,11 +180,11 @@ package extension Double {
         case .inch:
             return self * 96
         case .centimeter:
-            return self * 37.795
+            return self * 96 / 2.54
         case .millimeter:
-            return self * 3.7795
+            return self * 96 / 25.4
         case .point:
-            return self * 1.3333
+            return self * 96 / 72
         case .pica:
             return self * 16
         case .em, .ex:

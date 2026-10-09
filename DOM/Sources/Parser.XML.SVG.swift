@@ -113,12 +113,31 @@ package extension XMLParser {
             guard scanner.isEOF else {
                 throw Error.invalidAttribute(name: attribute, value: raw)
             }
-            return DOM.Coordinate(number.apply(unit: unit))
+            switch unit {
+            case .em:
+                return DOM.Coordinate(number) * lengthContext.fontSize
+            case .ex:
+                return DOM.Coordinate(number) * lengthContext.fontSize / 2
+            default:
+                return DOM.Coordinate(number.apply(unit: unit))
+            }
         }
         guard scanner.isEOF else {
             throw Error.invalidAttribute(name: attribute, value: raw)
         }
         return DOM.Coordinate(number)
+    }
+
+    // the font-size of the root <svg> for its own `em` sizes and those of its contents
+    func rootFontSize(_ e: XML.Element) -> DOM.Float {
+        let style = parseStyleDeclarations(e)
+        let matched = styleContext.matcher?.match(e)
+        return style.important.fontSize
+            ?? matched?.importantAttributes.fontSize
+            ?? style.normal.fontSize
+            ?? matched?.attributes.fontSize
+            ?? (try? parsePresentationAttributes(e))?.fontSize
+            ?? LengthContext.initialFontSize
     }
 
     func makeUnresolvedReason(attribute: String, raw: String?, hasViewBox: Bool) -> String {
