@@ -9,6 +9,8 @@ every session takes exactly one item from it.
 ## Build and test
 
 - `swift build --build-tests && swift test --skip-build` — works on Linux (Swift 6.0–6.3) and macOS.
+- **Also run the tests optimized:** `swift test -c release -Xswiftc -enable-testing`. Apps ship Release builds,
+  and SD12's floods were transparent under `-O` while every Debug job passed; CI's `xcode_release` job runs it.
 - **Cloud sessions run on Linux, where CoreGraphics does not exist.** Everything under
   `#if canImport(CoreGraphics)` is neither compiled nor tested there. The fork's GitHub Actions (`build.yml`)
   runs macOS 26 / Xcode 26.6, four Linux toolchains and Windows on every push: **push your branch early and

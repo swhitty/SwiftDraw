@@ -135,7 +135,7 @@ outside the clip); the `CGPaintFallbackTests` header names the wrong file.
 
 The owner's call, 2026-10-08: Backdrop draws backgrounds and, with MisoPhoto, cards — not a browser and not an
 editor; the goal is a fair chance of showing the artwork well. **SD16 and SD13 came first, both merged 2026-10-09** (they decide render
-quality), **SD12 is welcome but optional**, **SD11 and SD14 are set aside** (markers, `<symbol>` and text barely
+quality), **SD12 is welcome but optional** (merged 2026-10-09), **SD11 and SD14 are set aside** (markers, `<symbol>` and text barely
 occur in that content). A set-aside item stays specified here in case that changes.
 
 ### SD11 — `<symbol>`, `<marker>`, `<switch>` · status: set aside (owner, 2026-10-08)
@@ -143,9 +143,20 @@ occur in that content). A set-aside item stays specified here in case that chang
 `<marker>` with `marker-start`/`-mid`/`-end` (arrowheads). `<switch>` renders its first child unconditionally:
 evaluate `systemLanguage`, `requiredFeatures`, `requiredExtensions`.
 
-### SD12 — filter primitives beyond blur · status: optional, after SD13 and SD16
+### SD12 — filter primitives beyond blur · status: merged (#14, 69a9fa5, 2026-10-09)
 `feOffset`, `feFlood`, `feComposite`, `feMerge`, `feBlend`, `feColorMatrix` — enough for the drop-shadow pipelines
 editors emit — on SD2's filter-layer design, with `in`/`in2`/`result` wiring and `SourceGraphic`/`SourceAlpha`.
+
+**Left undone after the merge (SD12):** blur and offset work on the stored sRGB values even under `linearRGB` (only
+multi-colour blurred edges differ; Chrome blurs in linear light); `FillPaint`/`StrokePaint` are transparent black;
+not implemented, so the filter draws unfiltered when they are in the primary tree: `feDropShadow` (a six-primitive
+expansion of the above), `feComponentTransfer`, `feTile`, `feImage`, `feMorphology`, `feTurbulence`,
+`feConvolveMatrix`, `feDisplacementMap`, lighting, feBlend `no-composite`; `flood-color`, `flood-opacity` and
+`color-interpolation-filters` are not read from `<style>` sheets; an empty `<filter>` draws unfiltered (spec: not
+rendered); a primary tree over 64 primitives draws unfiltered without a warning; CGText emits no filter code; the
+filter region's `x`/`y`/`width`/`height` are still on the old parser. Comments: the colour-matrix luminance
+coefficients are not Filter Effects 1's (0.213/0.715/0.072; at most 0.15/255 apart), and SD2's comments cite
+superseded section numbers (§9.16 → §9.14, §5.1 → §8).
 
 ### SD13 — units and percentages on all geometry · status: merged (#13, bc6ad10, 2026-10-09; Backdrop pinned at bc6ad10)
 Non-root lengths ignore units: `width="20%"` becomes 20. Implement %, px, pt, pc, mm, cm, in, em, ex per spec
