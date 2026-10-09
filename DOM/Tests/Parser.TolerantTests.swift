@@ -104,9 +104,9 @@ struct TolerantParsingTests {
         #expect(att.strokeLineCap == nil)
         #expect(att.dominantBaseline == nil)
         // `none` is a valid value: it is kept so it overrides a lower stylesheet rule (SD10)
-        #expect(att.clipPath == DOM.URL.none)
-        #expect(att.mask == DOM.URL.none)
-        #expect(att.filter == DOM.URL.none)
+        #expect(att.clipPath == DOM.noneURL)
+        #expect(att.mask == DOM.noneURL)
+        #expect(att.filter == DOM.noneURL)
         #expect(att.transform == [])
     }
 

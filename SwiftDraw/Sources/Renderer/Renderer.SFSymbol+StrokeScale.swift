@@ -131,12 +131,16 @@ enum StrokeWidthScaler {
                 }
             }
             // the same values in source order, as the cascade reads them
+            // (complex-selector rules are not in `attributes`, so they are counted here)
             for ruleIndex in styles[sheetIndex].rules.indices {
+                let isComplex = styles[sheetIndex].rules[ruleIndex].selector.simple == nil
                 if let value = styles[sheetIndex].rules[ruleIndex].attributes.strokeWidth {
                     styles[sheetIndex].rules[ruleIndex].attributes.strokeWidth = multiply(value, by: scale)
+                    if isComplex { count += 1 }
                 }
                 if let value = styles[sheetIndex].rules[ruleIndex].importantAttributes.strokeWidth {
                     styles[sheetIndex].rules[ruleIndex].importantAttributes.strokeWidth = multiply(value, by: scale)
+                    if isComplex { count += 1 }
                 }
             }
         }

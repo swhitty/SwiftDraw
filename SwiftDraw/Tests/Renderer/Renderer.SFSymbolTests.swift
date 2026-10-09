@@ -101,6 +101,23 @@ final class RendererSFSymbolTests: XCTestCase {
         )
     }
 
+    // SD10: `.hierarchical-0:secondary` is one class name, not a class plus a pseudo-class
+    func testSFSymbolExportKeepsLayerClassRules() throws {
+        let expected = [
+            "sun-horizon.svg": [".monochrome-0 {", ".monochrome-1 {",
+                                ".multicolor-0:systemYellowColor {", ".multicolor-1:emerald {",
+                                ".hierarchical-0:secondary {", ".hierarchical-1:primary {"],
+            "checkmark.svg": [".multicolor-0:custom {"]
+        ]
+        for (file, rules) in expected {
+            let url = try Bundle.test.url(forResource: file)
+            let output = try SFSymbolRenderer.render(svg: DOM.SVG.parse(fileURL: url))
+            for rule in rules {
+                XCTAssertTrue(output.contains(rule), "\(file) lost \(rule)")
+            }
+        }
+    }
+
     func testTransparentSFSymboleLayers_AreNot_Removed() throws {
         let source = try DOM.SVG.parse(#"""
         <?xml version="1.0" encoding="UTF-8"?>

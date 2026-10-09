@@ -174,9 +174,10 @@ final class LayerTreeCSSCascadeTests: XCTestCase {
 
     func testNoneTransformOverridesLowerRule() throws {
         let root = try makeLayer(#"<style>rect { transform: scale(2) } #r { transform: none }</style><rect id="r" width="5" height="5"/>"#)
+        // without a transform the rect is a plain shape, not a transformed layer
         XCTAssertEqual(root.contents.count, 1)
-        if case .layer(let l) = root.contents.first {
-            XCTAssertEqual(l.transform, [])
+        guard case .shape = root.contents.first else {
+            return XCTFail("expected an untransformed shape, got \(root.contents)")
         }
     }
 
@@ -186,8 +187,10 @@ final class LayerTreeCSSCascadeTests: XCTestCase {
         <style>rect { mask: url(#m) } #r { mask: none }</style>
         <rect id="r" width="10" height="10"/>
         """)
-        for case .layer(let l) in root.contents {
-            XCTAssertNil(l.mask)
+        // without a mask the rect is a plain shape, not a masked layer
+        XCTAssertEqual(root.contents.count, 1)
+        guard case .shape = root.contents.first else {
+            return XCTFail("expected an unmasked shape, got \(root.contents)")
         }
     }
 
@@ -203,5 +206,16 @@ final class LayerTreeCSSCascadeTests: XCTestCase {
         XCTAssertEqual(DOM.presentationAttributes(for: group.childElements[0], styles: svg.styles).strokeWidth, 2)
         XCTAssertEqual(DOM.presentationAttributes(for: group.childElements[1], styles: svg.styles).strokeWidth, 3)
         XCTAssertEqual(svg.styles[0].rules[0].attributes.strokeWidth, 2)
+    }
+
+    func testComplexSelectorStrokeWidthCountsForSFSymbols() throws {
+        let svg = try DOM.SVG.parse(xml: """
+        <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">
+        <style>g > line { stroke-width: 4 }</style>
+        <g><line x1="0" y1="0" x2="10" y2="0" stroke="black"/></g>
+        </svg>
+        """)
+        // the renderer warns "no effect" when this is 0
+        XCTAssertEqual(StrokeWidthScaler.scale(svg, by: .init(multiplier: 0.5)), 1)
     }
 }
