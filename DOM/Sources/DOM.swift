@@ -90,6 +90,12 @@ extension DOM {
         case block
     }
     
+    package enum Visibility: String {
+        case visible
+        case hidden
+        case collapse
+    }
+
     package enum LineCap: String {
         case butt
         case round

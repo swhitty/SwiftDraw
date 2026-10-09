@@ -338,6 +338,7 @@ extension XMLParser {
 
         el.opacity = opacity(att, "opacity")
         el.display = lenient { try att.parseRaw("display") }
+        el.visibility = lenient { try att.parseRaw("visibility") }
         el.color = lenient { try att.parseColor("color") }
 
         el.stroke = lenient { try att.parseFill("stroke") }
@@ -431,6 +432,7 @@ extension DOM.PresentationAttributes {
     mutating func updateAttributes(from attributes: Self) {
         opacity = attributes.opacity
         display = attributes.display
+        visibility = attributes.visibility
         color = attributes.color
         stroke = attributes.stroke
         strokeWidth = attributes.strokeWidth

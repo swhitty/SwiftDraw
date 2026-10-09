@@ -40,6 +40,7 @@ package extension DOM {
     struct PresentationAttributes {
         package var opacity: DOM.Float?
         package var display: DOM.DisplayMode?
+        package var visibility: DOM.Visibility?
         package var color: DOM.Color?
 
         package var stroke: DOM.Fill?
@@ -136,6 +137,7 @@ extension DOM.PresentationAttributes {
         
         merged.opacity = att.opacity ?? opacity
         merged.display = att.display ?? display
+        merged.visibility = att.visibility ?? visibility
         merged.color = att.color ?? color
         
         merged.stroke = att.stroke ?? stroke

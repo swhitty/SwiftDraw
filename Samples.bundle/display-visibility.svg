@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" width="200" height="60" viewBox="0 0 200 60">
+  <!-- only the green and the blue squares draw -->
+  <rect x="10" y="10" width="40" height="40" fill="green"/>
+  <rect x="60" y="10" width="40" height="40" fill="red" display="none" transform="translate(40 0)"/>
+  <g visibility="hidden">
+    <rect x="60" y="10" width="40" height="40" fill="red"/>
+    <rect x="110" y="10" width="40" height="40" fill="blue" visibility="visible"/>
+  </g>
+  <inkscape:foo><rect x="160" y="10" width="30" height="40" fill="red"/></inkscape:foo>
+</svg>
