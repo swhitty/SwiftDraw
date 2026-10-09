@@ -55,6 +55,10 @@ extension LayerTree {
     // Renderers draw the layer contents offscreen (SourceGraphic), evaluate the primitives in order, then
     // composite the result of the last one clipped to region.
     struct FilterLayer: Hashable {
+        // each primitive is at least one pass over the whole region: a longer primary tree is drawn
+        // unfiltered, so a hostile document cannot stall every frame
+        static let maxPrimitives = 64
+
         var region: Rect
         // the primary filter primitive tree (Filter Effects 1 §9.3); inputs only refer to earlier primitives
         var primitives: [Primitive]

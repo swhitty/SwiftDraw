@@ -252,8 +252,10 @@ extension FilterBitmap {
         premultiplied.x *= color.w
         premultiplied.y *= color.w
         premultiplied.z *= color.w
-        var pixel: [UInt8] = [0, 0, 0, 0]
-        pixel.withUnsafeMutableBufferPointer { store(premultiplied, $0.baseAddress!, 0, linear: false) }
+        // not stored through a pointer into a local array: optimized builds (Swift 6.4, -O) kept only the
+        // first byte, so every flood was transparent in Release while Debug tests passed
+        let bytes = quantize(premultiplied, linear: false)
+        let pixel: [UInt8] = [bytes.x, bytes.y, bytes.z, bytes.w]
         guard pixel != [0, 0, 0, 0] else { return result }
         result.pixels.withUnsafeMutableBufferPointer { dst in
             var i = 0

@@ -774,7 +774,9 @@ extension LayerTree.CommandGenerator {
         let inputs = LayerTree.FilterLayer.makeInputs(for: layer.filters)
         var positions = [Int: Int]()
         var primitives = [LayerTree.FilterLayer.Primitive]()
-        for index in LayerTree.FilterLayer.primaryTree(of: inputs) {
+        let tree = LayerTree.FilterLayer.primaryTree(of: inputs)
+        guard tree.count <= LayerTree.FilterLayer.maxPrimitives else { return nil }
+        for index in tree {
             let primitive = layer.filters[index]
             guard let effect = makeFilterEffect(primitive.effect, scale: units.size, colorConverter: colorConverter) else {
                 return nil
