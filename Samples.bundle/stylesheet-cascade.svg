@@ -9,11 +9,12 @@
     .row [data-kind="star"] { fill: seagreen; }
     #last.tile { fill: purple !important; }
     .turned { transform: rotate(15deg); }
-    .holed { clip-rule: evenodd; clip-path: url(#ring); }
+    .holed { clip-path: url(#ring); }
+    .evenodd { clip-rule: evenodd; }
     .faded { mask: url(#fade); }
   </style>
   <defs>
-    <clipPath id="ring"><path d="M150 30h40v40h-40z M160 40v20h20v-20z"/></clipPath>
+    <clipPath id="ring"><path class="evenodd" d="M150 30h40v40h-40z M160 40v20h20v-20z"/></clipPath>
     <mask id="fade"><rect x="200" y="30" width="40" height="40" fill="white" opacity="0.4"/></mask>
   </defs>
   <g class="row">

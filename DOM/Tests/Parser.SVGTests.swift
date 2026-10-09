@@ -234,6 +234,41 @@ struct ParserSVGTests {
     }
 
     @Test
+    func clipPathPresentationAttributes() throws {
+        let node = XML.Element(name: "clipPath", attributes: [
+            "id": "c", "clipPathUnits": "objectBoundingBox", "clip-rule": "evenodd",
+            "transform": "translate(1 2)", "clip-path": "url(#d)"
+        ])
+        let parsed = try XMLParser().parseClipPath(node)
+        #expect(parsed.clipPathUnits == .objectBoundingBox)
+        #expect(parsed.attributes.clipRule == .evenodd)
+        #expect(parsed.attributes.transform == [.translate(tx: 1, ty: 2)])
+        #expect(parsed.attributes.clipPath?.fragmentID == "d")
+    }
+
+    @Test
+    func clipPathInvalidUnitsAreIgnored() throws {
+        let node = XML.Element(name: "clipPath", attributes: ["id": "c", "clipPathUnits": "bogus"])
+        let parsed = try XMLParser().parseClipPath(node)
+        #expect(parsed.clipPathUnits == nil)
+    }
+
+    @Test
+    func maskUnitsAndRegion() throws {
+        let node = XML.Element(name: "mask", attributes: [
+            "id": "m", "maskUnits": "userSpaceOnUse", "maskContentUnits": "objectBoundingBox",
+            "x": "5", "y": "10%", "width": "abc"
+        ])
+        let parsed = try XMLParser().parseMask(node)
+        #expect(parsed.maskUnits == .userSpaceOnUse)
+        #expect(parsed.maskContentUnits == .objectBoundingBox)
+        #expect(parsed.x == .absolute(5))
+        #expect(parsed.y == .percentage(10))
+        #expect(parsed.width == nil)
+        #expect(parsed.height == nil)
+    }
+
+    @Test
     func parseDefs() throws {
         let svg = XML.Element(name: "svg")
         let defs = XML.Element(name: "defs")

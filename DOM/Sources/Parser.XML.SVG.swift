@@ -204,11 +204,15 @@ package extension XMLParser {
 
         let att = try parseAttributes(e)
         let id: String = try att.parseString("id")
-        let units: DOM.ClipPath.Units? = try att.parseRaw("clipPathUnits")
+        // an unknown value falls back to userSpaceOnUse rather than failing the document
+        let units: DOM.ClipPath.Units? = (try? att.parseRaw("clipPathUnits")) ?? nil
 
         let children = try parseGraphicsElements(e.children)
         var clip = DOM.ClipPath(id: id, childElements: children)
         clip.clipPathUnits = units
+        clip.attributes = (try? parsePresentationAttributes(e)) ?? DOM.PresentationAttributes()
+        let style = parseStyleDeclarations(e)
+        clip.style = style.normal.applyingAttributes(style.important)
         return clip
     }
 
@@ -236,6 +240,13 @@ package extension XMLParser {
         mask.attributes = try parsePresentationAttributes(e)
         applyStyle(of: e, to: mask)
         mask.childElements = try parseGraphicsElements(e.children)
+        // an unknown unit or an unparseable length is ignored and the spec default applies
+        mask.maskUnits = (try? att.parseRaw("maskUnits")) ?? nil
+        mask.maskContentUnits = (try? att.parseRaw("maskContentUnits")) ?? nil
+        mask.x = e.attributes["x"].flatMap(XMLParser.parseDashLength)
+        mask.y = e.attributes["y"].flatMap(XMLParser.parseDashLength)
+        mask.width = e.attributes["width"].flatMap(XMLParser.parseDashLength)
+        mask.height = e.attributes["height"].flatMap(XMLParser.parseDashLength)
         return mask
     }
 

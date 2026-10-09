@@ -40,6 +40,8 @@ extension LayerTree {
 
         let svg: DOM.SVG
         let references = ReferenceGuard()
+        let activeClips = ActiveClipSet()
+        let measurement = MeasurementBudget()
         let gradients = GradientCache()
 
         init(svg: DOM.SVG) {
@@ -218,10 +220,13 @@ extension LayerTree {
             let l = Layer()
             l.class = element.class
             l.transform = Builder.createTransforms(from: attributes.transform ?? [])
-            l.clip = makeClipShapes(for: element)
-            l.clipRule = attributes.clipRule
-            l.clipUnits = makeClipUnits(for: element)
-            l.mask = createMaskLayer(for: attributes)
+            l.mask = createMaskLayer(for: element, attributes: attributes)
+            // clip-rule comes from the <clipPath> contents and objectBoundingBox units are resolved
+            // here, so every clip reaches the renderers in user space (SVG 1.1 §14.3.5)
+            if let clipID = attributes.clipPath?.fragmentID,
+               let clip = makeClip(id: clipID, bounds: { makeBoundingBox(for: element) }) {
+                apply(clip, to: l)
+            }
             l.opacity = state.opacity
             if let filter = makeFilter(for: element) {
                 l.filters = filter.effects
@@ -251,51 +256,15 @@ extension LayerTree {
         }
 
         func makeClipShapes(for element: DOM.GraphicsElement) -> [ClipShape] {
-            let attributes = DOM.presentationAttributes(for: element, styles: svg.styles)
-            guard let clipID = attributes.clipPath?.fragmentID,
-                  let clip = svg.defs.clipPaths.first(where: { $0.id == clipID }) else { return [] }
-            let contributing = clip.childElements.filter(contributesToClip)
-            // SVG 1.1 §14.3.5: a clipPath without contributing children clips everything away; a child
-            // this builder cannot clip with (`<use>`, `<text>`) still contributes, so the element stays unclipped
-            guard !contributing.isEmpty else {
-                return [ClipShape(shape: .rect(within: .zero, radii: .zero), transform: .identity)]
-            }
-            return contributing.compactMap(makeClipShape)
-        }
-
-        func contributesToClip(_ element: DOM.GraphicsElement) -> Bool {
-            // SVG 1.1 §14.3.5: children with `display="none"` or hidden `visibility` do not contribute to the clip
-            let att = DOM.presentationAttributes(for: element, styles: svg.styles)
-            return att.display != DOM.DisplayMode.none && (att.visibility ?? .visible) == .visible
-        }
-
-        func makeClipUnits(for element: DOM.GraphicsElement) -> ClipUnits {
-            let attributes = DOM.presentationAttributes(for: element, styles: svg.styles)
-            guard let clipID = attributes.clipPath?.fragmentID,
-                  let clip = svg.defs.clipPaths.first(where: { $0.id == clipID }) else { return .userSpaceOnUse }
-            switch clip.clipPathUnits {
-            case .objectBoundingBox: return .objectBoundingBox
-            case .userSpaceOnUse, nil: return .userSpaceOnUse
-            }
-        }
-
-        func makeClipShape(for element: DOM.GraphicsElement) -> ClipShape? {
-            guard let shape = Builder.makeShape(from: element) else {
-                return nil
-            }
-
-            let attributes = DOM.presentationAttributes(for: element, styles: svg.styles)
-            let transform = Self.createTransforms(from: attributes.transform ?? [])
-                .toMatrix()
-
-            return ClipShape(shape: shape, transform: transform)
+            guard case .shapes(let shapes, _) = makeClip(for: element) else { return [] }
+            return shapes
         }
 
         func createMaskLayer(for element: DOM.GraphicsElement) -> Layer? {
-            createMaskLayer(for: DOM.presentationAttributes(for: element, styles: svg.styles))
+            createMaskLayer(for: element, attributes: DOM.presentationAttributes(for: element, styles: svg.styles))
         }
 
-        func createMaskLayer(for attributes: DOM.PresentationAttributes) -> Layer? {
+        func createMaskLayer(for element: DOM.GraphicsElement, attributes: DOM.PresentationAttributes) -> Layer? {
             guard let maskId = attributes.mask?.fragmentID,
                   let mask = svg.defs.masks.first(where: { $0.id == maskId }) else { return nil }
 
@@ -305,12 +274,41 @@ extension LayerTree {
 
             let l = Layer()
 
+            // SVG 1.1 §14.4: maskUnits places the mask region, maskContentUnits the contents
+            let regionUnits = mask.maskUnits ?? .objectBoundingBox
+            let contentUnits = mask.maskContentUnits ?? .userSpaceOnUse
+            let bounds = (regionUnits == .objectBoundingBox || contentUnits == .objectBoundingBox)
+                ? makeBoundingBox(for: element) : nil
+
+            let content = Layer()
+            if contentUnits == .objectBoundingBox {
+                // the bounding box of text is unknown here: ignore the mask
+                guard let bounds else { return nil }
+                // an empty bounding box masks everything away
+                guard bounds.width > 0, bounds.height > 0 else { return l }
+                content.transform = [.matrix(Transform.Matrix(a: bounds.width, b: 0, c: 0, d: bounds.height,
+                                                              tx: bounds.x, ty: bounds.y))]
+            }
+
             var maskState = createState(for: mask, inheriting: State())
             // SVG 1.1 §11.5: `display` does not apply to `<mask>`; only its children can be hidden
             maskState.display = .inline
             mask.childElements.forEach {
                 let contents = Layer.Contents.layer(makeLayer(from: $0, inheriting: maskState))
-                l.appendContents(contents)
+                content.appendContents(contents)
+            }
+
+            if let region = makeMaskRegion(for: mask, bounds: bounds) {
+                // a zero or negative region disables rendering of the element
+                guard region.width > 0, region.height > 0 else { return l }
+                let clipped = Layer()
+                clipped.clip = [ClipShape(shape: .rect(within: region, radii: .zero), transform: .identity)]
+                clipped.appendContents(.layer(content))
+                l.appendContents(.layer(clipped))
+            } else if content.transform.isEmpty {
+                content.contents.forEach(l.appendContents)
+            } else {
+                l.appendContents(.layer(content))
             }
 
             return l
