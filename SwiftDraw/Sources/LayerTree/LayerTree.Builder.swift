@@ -516,12 +516,8 @@ extension LayerTree.Builder {
     }
 
     func makeGradientElement(id: String?) -> GradientElement? {
-        if let element = svg.defs.linearGradients.first(where: { $0.id == id }) {
-            return .linear(element)
-        } else if let element = svg.defs.radialGradients.first(where: { $0.id == id }) {
-            return .radial(element)
-        }
-        return nil
+        guard let id else { return nil }
+        return gradients.elements(in: svg.defs)[id]
     }
 
     /// nil when the url does not name a gradient. Resolved once per gradient id.
@@ -537,6 +533,18 @@ extension LayerTree.Builder {
 
     final class GradientCache {
         var paints = [String: GradientPaint?]()
+        private var index: [String: GradientElement]?
+
+        /// Every gradient by id, built once (a linear gradient wins over a radial one with the same id,
+        /// the first of its kind over later ones), so each href hop is a lookup, not a scan of the defs.
+        func elements(in defs: DOM.SVG.Defs) -> [String: GradientElement] {
+            if let index { return index }
+            var elements = [String: GradientElement]()
+            for element in defs.radialGradients.reversed() { elements[element.id] = .radial(element) }
+            for element in defs.linearGradients.reversed() { elements[element.id] = .linear(element) }
+            index = elements
+            return elements
+        }
     }
 
     /// Most href hops followed from one gradient (SVG sets no limit; this bounds hostile chains).
@@ -970,7 +978,8 @@ extension LayerTree.Builder {
     /// and Backdrop renders on secondary threads) or more than `maxReferences` expansions in one
     /// document (non-cyclic fan-out such as 2 uses per level is exponential).
     ///
-    /// Any new walk over a reference chain (gradient / pattern `href` inheritance) must call this.
+    /// Any new walk over a reference chain that re-enters `<use>`, mask or pattern expansion must call this.
+    /// Gradient `href` chains do not: they are bounded by `maxGradientHops`.
     final class ReferenceGuard {
         static let maxDepth = 16
         static let maxReferences = 20_000

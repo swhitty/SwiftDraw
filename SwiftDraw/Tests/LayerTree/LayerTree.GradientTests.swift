@@ -208,9 +208,9 @@ final class LayerTreeGradientTests: XCTestCase {
     func testHrefChainResolvesInsideDeepUse() throws {
         // <use> nesting spends ReferenceGuard depth; the gradient chain must still resolve
         var body = "<defs><linearGradient id=\"a\">\(stops)</linearGradient>"
-        body += "<linearGradient id=\"b\" xlink:href=\"#a\"/><linearGradient id=\"g\" xlink:href=\"#b\"/></defs>"
+        body += "<linearGradient id=\"b\" xlink:href=\"#a\"/><linearGradient id=\"c\" xlink:href=\"#b\"/><linearGradient id=\"g\" xlink:href=\"#c\"/></defs>"
         body += "<rect id=\"u0\" width=\"1\" height=\"1\" fill=\"url(#g)\"/>"
-        for i in 1...14 {
+        for i in 1...15 {
             body += "<g id=\"u\(i)\"><use xlink:href=\"#u\(i - 1)\"/></g>"
         }
         let cmds = try commands(body)
@@ -399,6 +399,49 @@ final class LayerTreeGradientTests: XCTestCase {
         XCTAssertEqual(r, 1, accuracy: 0.001)
         XCTAssertEqual(b, 0, accuracy: 0.001)
         XCTAssertEqual(a, 0.5, accuracy: 0.001)
+    }
+
+    func testRepeatFarFromItsVectorStillExpands() throws {
+        // 10 periods per unit, shape at x = 20 000: only the periods under the shape are drawn,
+        // not every period from 0 (which would exceed the cap and fall back to the average colour)
+        let d = try drawnLinear("""
+        <defs><linearGradient id="g" gradientUnits="userSpaceOnUse" x1="0" x2="0.1" spreadMethod="repeat">\(stops)</linearGradient></defs>
+        <rect x="20000" width="100" height="10" fill="url(#g)"/>
+        """)
+        XCTAssertGreaterThan(d?.gradient.stops.count ?? 0, 1000)
+    }
+
+    func testMakePeriodsLinearHasNoPeriodZeroFloor() {
+        typealias Generator = LayerTree.CommandGenerator<LayerTreeProvider>
+        XCTAssertEqual(Generator.makePeriods(lower: 10_000.3, upper: 10_000.7, includingZero: false), 10_000...10_000)
+        XCTAssertEqual(Generator.makePeriods(lower: -0.5, upper: 2.2, includingZero: false), -1...2)
+        XCTAssertEqual(Generator.makePeriods(lower: 5, upper: 5, includingZero: false), 5...5)
+        XCTAssertEqual(Generator.makePeriods(lower: 10_000.3, upper: 10_000.7), 0...10_000)
+    }
+
+    func testAverageOfMixedColourSpacesConvertsIntoTheGradientSpace() throws {
+        // sRGB mid grey and P3 mid grey are the same colour: the average stays that grey
+        let d = try drawnLinear("""
+        <defs><linearGradient id="g" gradientUnits="userSpaceOnUse" x1="0" x2="0.001" spreadMethod="repeat">
+          <stop offset="0" stop-color="#808080"/><stop offset="1" stop-color="color(display-p3 0.50196 0.50196 0.50196)"/>
+        </linearGradient></defs>
+        <rect width="100" height="10" fill="url(#g)"/>
+        """)
+        guard let d, case let .rgba(r, g, b, _, space) = d.gradient.stops[0].color else { return XCTFail("no gradient") }
+        XCTAssertEqual(space, .p3)
+        XCTAssertEqual(r, 0.50196, accuracy: 0.002)
+        XCTAssertEqual(g, 0.50196, accuracy: 0.002)
+        XCTAssertEqual(b, 0.50196, accuracy: 0.002)
+    }
+
+    func testColourConversionBetweenSpaces() {
+        let grey = LayerTree.Color.convert(r: 0.5, g: 0.5, b: 0.5, from: .p3, to: .srgb)
+        XCTAssertEqual(grey.0, 0.5, accuracy: 0.002)
+        XCTAssertEqual(grey.2, 0.5, accuracy: 0.002)
+        let red = LayerTree.Color.convert(r: 1, g: 0, b: 0, from: .srgb, to: .p3)
+        XCTAssertEqual(red.0, 0.917, accuracy: 0.005)   // sRGB red is inside P3
+        XCTAssertEqual(red.1, 0.2, accuracy: 0.01)
+        XCTAssertEqual(LayerTree.Color.convert(r: 0.2, g: 0.3, b: 0.4, from: .srgb, to: .srgb).1, 0.3)
     }
 
     func testObjectBoundingBoxRepeatWithTransform() throws {
