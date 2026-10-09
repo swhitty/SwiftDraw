@@ -131,9 +131,10 @@ struct ParserXMLLengthTests {
     }
 
     @Test
-    func fontSizeAcceptsAbsoluteUnits() throws {
-        let svg = try parse(#"<text font-size="12pt">A</text>"#)
+    func fontSizeAndStrokeWidthAcceptAbsoluteUnits() throws {
+        let svg = try parse(#"<text font-size="12pt">A</text><rect width="1" height="1" style="stroke-width: 0.5in"/>"#)
         #expect(svg.childElements.first?.attributes.fontSize == 16)
+        #expect(svg.childElements.last?.style.strokeWidth == 48)
     }
 
     @Test

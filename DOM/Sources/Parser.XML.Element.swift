@@ -360,8 +360,8 @@ extension XMLParser {
         el.color = lenient { try att.parseColor("color") }
 
         el.stroke = lenient { try att.parseFill("stroke") }
-        // a negative stroke-width is an error: drop it (SVG 1.1 §11.4)
-        el.strokeWidth = lenient { try att.parseFloat("stroke-width") }.flatMap { $0 < 0 ? nil : $0 }
+        // a negative stroke-width is an error: drop it (SVG 1.1 §11.4); absolute units in px
+        el.strokeWidth = lenient { try att.parseCoordinate("stroke-width") }.flatMap { $0 < 0 ? nil : $0 }
         el.strokeOpacity = opacity(att, "stroke-opacity")
         el.strokeLineCap = lenient { try att.parseRaw("stroke-linecap") }
         el.strokeLineJoin = lenient { try att.parseRaw("stroke-linejoin") }
