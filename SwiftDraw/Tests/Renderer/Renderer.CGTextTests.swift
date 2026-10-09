@@ -615,13 +615,4 @@ extension RendererCGTextTests {
         XCTAssertGreaterThan(clip, scale)
         XCTAssertTrue(lines.contains("ctx.clip()"))
     }
-
-    func testImageDrawEmitsItsFittedRect() throws {
-        let png = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="
-        let svg = #"<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><image x="5" y="6" width="40" height="20" href="data:image/png;base64,"# + png + #""/></svg>"#
-        let code = try CGTextRenderer.render(data: Data(svg.utf8), options: .default, api: .uiKit, precision: 2)
-        let rect = "CGRect(x: 5, y: 6, width: 40, height: 20)"
-        XCTAssertTrue(code.contains("ctx.translateBy(x: \(rect).minX, y: \(rect).maxY)"))
-        XCTAssertTrue(code.contains("ctx.draw(image, in: CGRect(origin: .zero, size: \(rect).size))"))
-    }
 }

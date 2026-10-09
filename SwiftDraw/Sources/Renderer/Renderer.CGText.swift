@@ -575,11 +575,8 @@ public final class CGTextRenderer: Renderer {
   }
   
   func draw(image: LayerTree.Image, in rect: String) {
-    lines.append("ctx.saveGState()")
-    lines.append("ctx.translateBy(x: \(rect).minX, y: \(rect).maxY)")
-    lines.append("ctx.scaleBy(x: 1, y: -1)")
-    lines.append("ctx.draw(image, in: CGRect(origin: .zero, size: \(rect).size))")
-    lines.append("ctx.restoreGState()")
+    // the generated code embeds no bitmaps: it cannot draw, nor letterbox (the bitmap size is unknown here)
+    lines.append("// warning: image dropped, <image> is not supported in generated code")
   }
 
   func draw(linear gradient: LayerTree.Gradient, from start: String, to end: String) {
