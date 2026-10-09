@@ -85,7 +85,7 @@ without `href`) or an unparseable optional geometry value (`x=""`) still throws 
 has no catch, so the **whole document** vanishes — `parseError`/`skipInvalidElements` exist and are dead code. Skip
 the offending element (and only it), keep its siblings; make `skipInvalidElements` real and the default.
 
-### SD16 — wave 2 follow-ups · status: next
+### SD16 — wave 2 follow-ups · status: merged (#12, 394179c, 2026-10-09; Backdrop pinned at bc6ad10)
 **Two rendering bugs first** — found by comparing Backdrop's FreeSVG picks against FreeSVG's own previews,
 Chrome and WebKit (all three agree; the fork alone differs), both present in upstream 0.29.0 too:
 1. `LayerTree.CommandOptimizer.filterStateCommand` does not treat `.setFillPattern` as changing the fill, so the
@@ -124,10 +124,17 @@ check that the text stays; `clip-path` on a `<clipPath>`'s children and `clip-ru
 `<clipPath>`'s ancestors or set on it by CSS are left undone. **SD15:** a bad `gradientUnits` still drops the whole
 gradient, where SD8 (`clipPathUnits`) and SD6 (`stop-opacity`) now drop only the attribute.
 
+**Left undone after the merge (SD16):** `style=""` parsing still costs about +20 % end to end (not profiled);
+`clip-rule` inherited from a `<clipPath>`'s ancestors; `clip-path` on a `<use>` inside a `<clipPath>`; CGText no
+longer draws `<image>` (a codegen degrade, a warning comment instead). Minor follow-ups: `resolveFallback` counts a
+degenerate pattern or a stop-less gradient differently from browsers; no test for a text-fill or `currentColor`
+fallback; `testFilterWithMaskTypeClip` cannot detect a missing clip (sample a column inside the filter region but
+outside the clip); the `CGPaintFallbackTests` header names the wrong file.
+
 ## Wave 3
 
 The owner's call, 2026-10-08: Backdrop draws backgrounds and, with MisoPhoto, cards — not a browser and not an
-editor; the goal is a fair chance of showing the artwork well. **SD16 and SD13 come first** (they decide render
+editor; the goal is a fair chance of showing the artwork well. **SD16 and SD13 came first, both merged 2026-10-09** (they decide render
 quality), **SD12 is welcome but optional**, **SD11 and SD14 are set aside** (markers, `<symbol>` and text barely
 occur in that content). A set-aside item stays specified here in case that changes.
 
@@ -140,7 +147,7 @@ evaluate `systemLanguage`, `requiredFeatures`, `requiredExtensions`.
 `feOffset`, `feFlood`, `feComposite`, `feMerge`, `feBlend`, `feColorMatrix` — enough for the drop-shadow pipelines
 editors emit — on SD2's filter-layer design, with `in`/`in2`/`result` wiring and `SourceGraphic`/`SourceAlpha`.
 
-### SD13 — units and percentages on all geometry · status: next
+### SD13 — units and percentages on all geometry · status: merged (#13, bc6ad10, 2026-10-09; Backdrop pinned at bc6ad10)
 Non-root lengths ignore units: `width="20%"` becomes 20. Implement %, px, pt, pc, mm, cm, in, em, ex per spec
 (percentages against the nearest viewport). Root sizes too: `width`/`height` are stored as `Int` (`DOM.Length`),
 so `width="145.11934"` becomes 145, and since SD9 a `viewBox` with the exact size letterboxes by a fraction of a
@@ -148,6 +155,12 @@ unit (44 of Backdrop's wishlist drawings move 0.3–5.9 % for this alone); keep 
 sizes fractional. With only `width` or only `height` and a `viewBox`, derive the missing side from the viewBox's
 aspect ratio: today the viewBox's own height is used, so `width="200" viewBox="0 0 100 50"` is 200×50 where browsers
 give 200×100.
+
+**Left undone after the merge (SD13):** percent/`em` on `stroke-width`, `em` in `stroke-dasharray`, `font-size` in
+`em`/`%` (a relative `font-size` also skews the `em` base of later geometry); percentages inside pattern content,
+`objectBoundingBox` clip/mask content and `<use>`-instanced elements; mask/clipPath/filter/pattern/gradient
+`x`/`y`/`width`/`height` still on the old parsers; `<image>` with one side does not derive the other from the bitmap
+ratio; text default 12px vs the 16px `em` base; root `x`/`y` on the old parser.
 
 ### SD14 — text · status: set aside (owner, 2026-10-08)
 `<tspan>` drawn only as a fallback and at (0,0) without its own x/y: implement positioning (`x`, `y`, `dx`, `dy`
