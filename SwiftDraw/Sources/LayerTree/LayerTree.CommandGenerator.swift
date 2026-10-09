@@ -175,7 +175,7 @@ extension LayerTree {
                 hasMask: hasMask,
                 hasFilters: hasFilters,
                 colorConverter: colorConverter,
-                filterLayer: hasFilters ? makeFilterLayer(for: layer) : nil
+                filterLayer: hasFilters ? makeFilterLayer(for: layer, colorConverter: colorConverter) : nil
             )
         }
 
@@ -729,7 +729,8 @@ extension LayerTree.CommandGenerator {
     // Resolves the layer's filter into its user space; nil when a primitive is unsupported
     // or the filter region cannot be resolved (e.g. text-only contents under objectBoundingBox),
     // in which case the contents are drawn unfiltered.
-    func makeFilterLayer(for layer: LayerTree.Layer) -> LayerTree.FilterLayer? {
+    func makeFilterLayer(for layer: LayerTree.Layer,
+                         colorConverter: any ColorConverter = DefaultColorConverter()) -> LayerTree.FilterLayer? {
         guard !layer.filters.isEmpty,
               !layer.hasUnsupportedFilters else { return nil }
 
@@ -756,21 +757,123 @@ extension LayerTree.CommandGenerator {
             )
         }
 
-        var scale = LayerTree.Size(1, 1)
+        // primitive values map to user space as units.origin + value × units.size
+        var units = LayerTree.Rect(x: 0, y: 0, width: 1, height: 1)
         if region.primitiveUnits == .objectBoundingBox {
             guard let bounds else { return nil }
-            scale = bounds.size
+            units = bounds
         }
 
         guard rect.x.isFinite, rect.y.isFinite, rect.width.isFinite, rect.height.isFinite else { return nil }
 
-        let effects = layer.filters.map { $0.resolved(scale: scale) }
         let width = max(rect.width, 0)
         let height = max(rect.height, 0)
-        return LayerTree.FilterLayer(
-            region: LayerTree.Rect(x: rect.x, y: rect.y, width: width, height: height),
-            effects: effects
-        )
+        let filterRegion = LayerTree.Rect(x: rect.x, y: rect.y, width: width, height: height)
+
+        // the primary tree only, inputs renumbered to positions within it
+        let inputs = LayerTree.FilterLayer.makeInputs(for: layer.filters)
+        var positions = [Int: Int]()
+        var primitives = [LayerTree.FilterLayer.Primitive]()
+        let tree = LayerTree.FilterLayer.primaryTree(of: inputs)
+        guard tree.count <= LayerTree.FilterLayer.maxPrimitives else { return nil }
+        for index in tree {
+            let primitive = layer.filters[index]
+            guard let effect = makeFilterEffect(primitive.effect, scale: units.size, colorConverter: colorConverter) else {
+                return nil
+            }
+            let sources = inputs[index].map { input -> LayerTree.FilterLayer.Input in
+                guard case .primitive(let source) = input else { return input }
+                return positions[source].map { .primitive($0) } ?? .transparent
+            }
+            let subregion = makeSubregion(for: primitive, inputs: sources, resolved: primitives,
+                                          region: filterRegion, units: units)
+            positions[index] = primitives.count
+            primitives.append(LayerTree.FilterLayer.Primitive(
+                effect: effect,
+                inputs: sources,
+                subregion: subregion,
+                colorInterpolation: primitive.colorInterpolation == .linearRGB ? .linearRGB : .sRGB
+            ))
+        }
+
+        return LayerTree.FilterLayer(region: filterRegion, primitives: primitives)
+    }
+
+    // Filter Effects 1 §9.4: x, y, width and height default to the union of the subregions of the inputs, or to
+    // the filter region when there is no input or one is a standard input. The subregion never exceeds the
+    // filter region (SVG 1.1 §15.7.3); zero or negative sizes disable the primitive (empty rect).
+    func makeSubregion(for primitive: LayerTree.FilterPrimitive,
+                       inputs: [LayerTree.FilterLayer.Input],
+                       resolved: [LayerTree.FilterLayer.Primitive],
+                       region: LayerTree.Rect,
+                       units: LayerTree.Rect) -> LayerTree.Rect {
+        var rect: LayerTree.Rect? = inputs.isEmpty ? region : nil
+        for input in inputs {
+            guard case .primitive(let source) = input else {
+                rect = region
+                break
+            }
+            let other = resolved[source].subregion
+            guard !other.isEmpty else { continue }
+            rect = rect.map { $0.union(other) } ?? other
+        }
+        guard let rect else { return .zero }
+        // the default is already within the region: keep it exact
+        guard primitive.x != nil || primitive.y != nil || primitive.width != nil || primitive.height != nil else {
+            return rect
+        }
+
+        var x = primitive.x.map { units.x + LayerTree.Float($0) * units.width } ?? rect.x
+        var y = primitive.y.map { units.y + LayerTree.Float($0) * units.height } ?? rect.y
+        var width = primitive.width.map { LayerTree.Float($0) * units.width } ?? rect.width
+        var height = primitive.height.map { LayerTree.Float($0) * units.height } ?? rect.height
+        if !x.isFinite { x = rect.x }
+        if !y.isFinite { y = rect.y }
+        if !width.isFinite { width = rect.width }
+        if !height.isFinite { height = rect.height }
+        guard width > 0, height > 0 else { return .zero }
+
+        let minX = max(x, region.minX)
+        let minY = max(y, region.minY)
+        let maxX = min(x + width, region.maxX)
+        let maxY = min(y + height, region.maxY)
+        guard maxX > minX, maxY > minY else { return .zero }
+        return LayerTree.Rect(x: minX, y: minY, width: maxX - minX, height: maxY - minY)
+    }
+
+    // The effect in user units; nil when unsupported.
+    func makeFilterEffect(_ effect: LayerTree.Filter,
+                          scale: LayerTree.Size,
+                          colorConverter: any ColorConverter) -> LayerTree.FilterLayer.Effect? {
+        // renderers clamp to their pixel limits; keep the values finite
+        let maximum = LayerTree.Float.greatestFiniteMagnitude
+        switch effect {
+        case let .gaussianBlur(stdDeviation: x, stdDeviationY: y):
+            // Filter Effects 1 §9.14: a negative value disables the primitive, zero disables one direction.
+            let y = y ?? x
+            guard x >= 0, y >= 0 else {
+                return .gaussianBlur(stdDeviation: 0, stdDeviationY: 0)
+            }
+            return .gaussianBlur(stdDeviation: min(x * scale.width, maximum),
+                                 stdDeviationY: min(y * scale.height, maximum))
+        case .unsupported:
+            return nil
+        case let .offset(dx: dx, dy: dy):
+            return .offset(dx: max(-maximum, min(dx * scale.width, maximum)),
+                           dy: max(-maximum, min(dy * scale.height, maximum)))
+        case let .flood(color: color, opacity: opacity):
+            // Filter Effects 1 §9.13: flood-opacity multiplies the alpha of flood-color
+            let flood = LayerTree.Color.create(from: color, current: .none).withAlpha(opacity)
+            return .flood(colorConverter.createColor(from: flood))
+        case .composite(let op):
+            return .composite(op)
+        case .merge:
+            return .merge
+        case .blend(let mode):
+            return .blend(mode)
+        case .colorMatrix(let matrix):
+            return .colorMatrix(matrix.values)
+        }
     }
 
     // Geometry bounding box of the layer contents in the layer's user space; stroke excluded.
@@ -802,9 +905,9 @@ extension LayerTree.CommandGenerator {
         return .makeBounds(between: points)
     }
 
-    func logUnsupportedFilters(_ filters: [LayerTree.Filter]) {
+    func logUnsupportedFilters(_ filters: [LayerTree.FilterPrimitive]) {
         guard !hasLoggedFilterWarning else { return }
-        let name = filters.map(\.name).joined(separator: ", ")
+        let name = filters.map(\.effect.name).joined(separator: ", ")
 
         let hint: String
         if options.contains(.commandLine) {
@@ -993,24 +1096,18 @@ private extension LayerTree.Filter {
             return "<feGaussianBlur>"
         case .unsupported(let name):
             return "<\(name)>"
-        }
-    }
-
-    // stdDeviation in user units with both values explicit.
-    // Filter Effects 1 §9.16: a negative value disables the primitive, zero disables one direction.
-    func resolved(scale: LayerTree.Size) -> Self {
-        switch self {
-        case let .gaussianBlur(stdDeviation: x, stdDeviationY: y):
-            let y = y ?? x
-            guard x >= 0, y >= 0 else {
-                return .gaussianBlur(stdDeviation: 0, stdDeviationY: 0)
-            }
-            // renderers clamp to their pixel limits; keep the values finite
-            let maximum = LayerTree.Float.greatestFiniteMagnitude
-            return .gaussianBlur(stdDeviation: min(x * scale.width, maximum),
-                                 stdDeviationY: min(y * scale.height, maximum))
-        case .unsupported:
-            return self
+        case .offset:
+            return "<feOffset>"
+        case .flood:
+            return "<feFlood>"
+        case .composite:
+            return "<feComposite>"
+        case .merge:
+            return "<feMerge>"
+        case .blend:
+            return "<feBlend>"
+        case .colorMatrix:
+            return "<feColorMatrix>"
         }
     }
 }
