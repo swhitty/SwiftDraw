@@ -349,6 +349,29 @@ final class LayerTreePreserveAspectRatioTests: XCTestCase {
         XCTAssertEqual(try content(PAR(align: .none)), .init(a: 4, b: 0, c: 0, d: 2, tx: 5 - 40, ty: -20))
     }
 
+    func testPatternFitOverflowIsDropped() {
+        typealias Generator = LayerTree.CommandGenerator<LayerTreeProvider>
+        let pattern = LayerTree.Pattern(frame: .init(x: 0, y: 0, width: 1e30, height: 1e30))
+        pattern.viewBox = .init(x: 0, y: 0, width: 1e-30, height: 1e-30)
+        XCTAssertNil(Generator.resolvePattern(pattern, in: .init(x: 0, y: 0, width: 100, height: 100)))
+    }
+
+    func testRootClipPathIntersectsTheSliceViewport() throws {
+        let svg = try DOM.SVG.parse(xml: """
+        <svg xmlns="http://www.w3.org/2000/svg" width="200" height="100" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice" clip-path="url(#c)">
+        <clipPath id="c"><rect width="50" height="50"/></clipPath>
+        <rect width="100" height="100"/></svg>
+        """)
+        let root = LayerTree.Builder(svg: svg).makeLayer()
+        // the viewport clips the outer layer, the root's own clip-path stays on the inner one
+        XCTAssertFalse(root.clip.isEmpty)
+        guard case .layer(let inner)? = root.contents.first else { return XCTFail("no inner layer") }
+        XCTAssertFalse(inner.clip.isEmpty)
+        XCTAssertNotEqual(root.clip, inner.clip)
+        XCTAssertTrue(inner.transform.isEmpty)
+        XCTAssertFalse(root.transform.isEmpty)
+    }
+
     func testPatternParsesAndInheritsPreserveAspectRatio() throws {
         let svg = try DOM.SVG.parse(xml: """
         <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="100" height="100">
@@ -362,6 +385,10 @@ final class LayerTreePreserveAspectRatioTests: XCTestCase {
         let layer = LayerTree.Builder(svg: svg).makeLayer()
         let generator = LayerTree.CommandGenerator(provider: LayerTreeProvider(), size: .zero, options: .default)
         let commands = generator.renderCommands(for: layer, colorConverter: .default)
-        XCTAssertTrue(commands.contains { if case .setFillPattern = $0 { return true }; return false })
+        // "b" has no preserveAspectRatio of its own: it inherits "a" (the resolved pattern only keeps the fit)
+        XCTAssertNil(svg.defs.patterns.last?.preserveAspectRatio)
+        let b = try XCTUnwrap(svg.defs.patterns.last)
+        let pattern = LayerTree.Builder(svg: svg).makePattern(for: b)
+        XCTAssertEqual(pattern.preserveAspectRatio, PAR(align: .xMaxYMax, meetOrSlice: .slice))
     }
 }

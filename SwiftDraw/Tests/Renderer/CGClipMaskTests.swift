@@ -126,18 +126,32 @@ final class CGClipMaskTests: XCTestCase {
     }
 
     func testFilterWithMaskTypeClip() throws {
-        // mixed clip-rules make the clip a mask; the blur stays inside the clipped columns
+        // mixed clip-rules make the clip a mask. A 2-px red bar blurred with σ = 3 spreads to a faint pink,
+        // so its pixels are no longer solid red; with the filter ignored they would be
         let colors = try render(#"""
-            <filter id="f"><feGaussianBlur stdDeviation="0.5" /></filter>
+            <filter id="f" x="-2" y="0" width="5" height="1"><feGaussianBlur stdDeviation="3" /></filter>
             <clipPath id="c">
               <rect width="6" height="16" clip-rule="evenodd" />
               <rect x="10" width="6" height="16" />
             </clipPath>
-            <rect width="16" height="16" fill="red" filter="url(#f)" clip-path="url(#c)" />
+            <rect x="1" width="2" height="16" fill="red" filter="url(#f)" clip-path="url(#c)" />
             """#)
-        XCTAssertEqual(colors(2), .red)
+        XCTAssertNotEqual(colors(1), .red)
+        XCTAssertNotEqual(colors(2), .red)
         XCTAssertEqual(colors(8), .white)
-        XCTAssertEqual(colors(13), .red)
+        XCTAssertEqual(colors(13), .white)
+    }
+
+    func testClipPathWithoutShapesClipsEverything() throws {
+        let colors = try render(#"""
+            <clipPath id="c"><rect width="0" height="0" /></clipPath>
+            <clipPath id="empty" />
+            <rect width="16" height="16" fill="red" clip-path="url(#c)" />
+            <rect width="16" height="16" fill="red" clip-path="url(#empty)" />
+            """#)
+        XCTAssertEqual(colors(2), .white)
+        XCTAssertEqual(colors(8), .white)
+        XCTAssertEqual(colors(13), .white)
     }
 
     enum Pixel: Equatable {

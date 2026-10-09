@@ -47,8 +47,8 @@ extension XMLParser {
       return .color(c)
     } else if let c = parseColorNone(data: data) {
       return .color(c)
-    } else if let url = try parseURLSelector(data: data) {
-      return .url(url)
+    } else if let paint = try parseURLPaint(data: data) {
+      return paint
     } else if let c = try parseColorRGBA(data: data) {
       return .color(c)
     } else if let c = parseColorHSL(data: data) {
@@ -104,6 +104,31 @@ extension XMLParser {
     return try parseColorRGBAi(data: data)
   }
   
+  /// SVG 1.1 §11.2: `<funciri> [ none | currentColor | <color> ]`, the fallback is used when the server does not resolve.
+  /// An unreadable fallback is dropped rather than failing the paint.
+  private func parseURLPaint(data: String) throws -> DOM.Fill? {
+    var scanner = XMLParser.Scanner(text: data)
+    guard (try? scanner.scanString("url(")) == true else {
+      return nil
+    }
+    let urlText = try scanner.scanString(upTo: ")")
+    _ = try? scanner.scanString(")")
+    guard let url = URL(string: urlText.trimmingCharacters(in: .whitespaces)) else {
+      throw XMLParser.Error.invalid
+    }
+    if scanner.isEOF {
+      return .url(url)
+    }
+    let remainder = String(data[scanner.currentIndex...])
+      .trimmingCharacters(in: .whitespaces)
+    guard !remainder.isEmpty else { return .url(url) }
+    guard remainder.lowercased().hasPrefix("url(") == false,
+          case .color(let fallback)? = try? parseFill(remainder) else {
+      return .url(url)
+    }
+    return .urlWithFallback(url, fallback)
+  }
+
   private func parseURLSelector(data: String) throws -> DOM.URL? {
     var scanner = XMLParser.Scanner(text: data)
     guard (try? scanner.scanString("url(")) == true else {

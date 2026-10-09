@@ -52,7 +52,18 @@ extension LayerTree {
             makeLayer(svg: svg, inheriting: State())
         }
 
+        /// SVG 1.1 §11.6.2: hidden shapes, text and images paint nothing, whatever mask, filter or
+        /// opacity they carry (a filter such as feFlood could otherwise still paint).
+        static func isHiddenLeaf(_ element: DOM.GraphicsElement, _ state: State) -> Bool {
+            guard state.visibility != .visible else { return false }
+            return makeShape(from: element) != nil || element is DOM.Text || element is DOM.Image
+        }
+
         func makeLayer(svg: DOM.SVG, inheriting previousState: State) -> Layer {
+            // a root removed by `display` has no viewport mapping either
+            if DOM.presentationAttributes(for: svg, styles: self.svg.styles).display == DOM.DisplayMode.none {
+                return Layer()
+            }
             let l = makeLayer(from: svg, inheriting: previousState)
             l.transform = Builder.makeTransform(
                 x: svg.x,
@@ -64,14 +75,26 @@ extension LayerTree {
             )
             // `slice` lets the viewBox overflow the viewport, which clips it (also when drawn into a larger context).
             // layer.clip applies after layer.transform, so the viewport is expressed in viewBox space.
-            if let par = svg.preserveAspectRatio, par.align != .none, par.meetOrSlice == .slice, l.clip.isEmpty {
+            if let par = svg.preserveAspectRatio, par.align != .none, par.meetOrSlice == .slice {
                 let viewport = Builder.makeViewportClip(
                     viewBox: svg.viewBox,
                     width: svg.width,
                     height: svg.height,
                     preserveAspectRatio: par
                 )
-                l.clip = [ClipShape(shape: .rect(within: viewport, radii: .zero), transform: .identity)]
+                let viewportClip = [ClipShape(shape: .rect(within: viewport, radii: .zero), transform: .identity)]
+                if l.clip.isEmpty {
+                    l.clip = viewportClip
+                } else {
+                    // the root's own clip-path and the viewport both apply: layer clips are unioned, so
+                    // the viewport clips an outer layer holding the root layer, which keeps its clip-path
+                    let outer = Layer()
+                    outer.transform = l.transform
+                    outer.clip = viewportClip
+                    l.transform = []
+                    outer.contents = [.layer(l)]
+                    return outer
+                }
             }
             return l
         }
@@ -166,7 +189,7 @@ extension LayerTree {
                 let newState = Self.createState(for: attributes, inheriting: currentState)
                 // SVG 1.1 §11.6.2: `display="none"` removes the element and its whole subtree from rendering,
                 // before any transform, clip, mask, filter or opacity is built for it
-                if newState.display == .none {
+                if newState.display == .none || Self.isHiddenLeaf(currentElement, newState) {
                     if parentLayer == nil {
                         resultLayer = Layer()
                     }
@@ -341,7 +364,7 @@ extension LayerTree.Builder {
         let stroke: LayerTree.StrokeAttributes.Stroke
 
         if state.strokeWidth > 0.0 {
-            switch state.stroke {
+            switch resolveFallback(state.stroke) {
             case .color(let c):
                 let color = LayerTree.Color
                     .create(from: c, current: state.color)
@@ -358,6 +381,8 @@ extension LayerTree.Builder {
                 case nil:
                     stroke = .color(.none)
                 }
+            case .urlWithFallback:
+                stroke = .color(.none) // resolved to .url or .color above
             }
         } else {
             stroke = .color(.none)
@@ -410,7 +435,18 @@ extension LayerTree.Builder {
         return lengths
     }
 
+    /// SVG 1.1 §11.2: a paint server that resolves wins; otherwise the fallback colour (`none` paints nothing).
+    func resolveFallback(_ paint: DOM.Fill) -> DOM.Fill {
+        guard case .urlWithFallback(let url, let color) = paint else { return paint }
+        let resolves = url.fragmentID.map { id in
+            svg.defs.patterns.contains(where: { $0.id == id }) || makeGradientPaint(for: url) != nil
+        } ?? false
+        return resolves ? .url(url) : .color(color)
+    }
+
     func makeFillAttributes(with state: State) -> LayerTree.FillAttributes {
+        var state = state
+        state.fill = resolveFallback(state.fill)
         let fill = LayerTree.Color
             .create(from: state.fill.makeColor(), current: state.color)
             .withAlpha(state.fillOpacity).maybeNone()
@@ -503,12 +539,8 @@ extension LayerTree.Builder {
     }
 
     func makeGradientElement(id: String?) -> GradientElement? {
-        if let element = svg.defs.linearGradients.first(where: { $0.id == id }) {
-            return .linear(element)
-        } else if let element = svg.defs.radialGradients.first(where: { $0.id == id }) {
-            return .radial(element)
-        }
-        return nil
+        guard let id else { return nil }
+        return gradients.elements(in: svg.defs)[id]
     }
 
     /// nil when the url does not name a gradient. Resolved once per gradient id.
@@ -524,12 +556,26 @@ extension LayerTree.Builder {
 
     final class GradientCache {
         var paints = [String: GradientPaint?]()
+        private var index: [String: GradientElement]?
+
+        /// Every gradient by id, built once (a linear gradient wins over a radial one with the same id,
+        /// the first of its kind over later ones), so each href hop is a lookup, not a scan of the defs.
+        func elements(in defs: DOM.SVG.Defs) -> [String: GradientElement] {
+            if let index { return index }
+            var elements = [String: GradientElement]()
+            for element in defs.radialGradients.reversed() { elements[element.id] = .radial(element) }
+            for element in defs.linearGradients.reversed() { elements[element.id] = .linear(element) }
+            index = elements
+            return elements
+        }
     }
 
     /// Most href hops followed from one gradient (SVG sets no limit; this bounds hostile chains).
     static var maxGradientHops: Int { 64 }
 
     func makeTextAttributes(with state: State) -> LayerTree.TextAttributes {
+        var state = state
+        state.fill = resolveFallback(state.fill)
         let fill = LayerTree.Color
             .create(from: state.fill.makeColor(), current: state.color)
             .withAlpha(state.fillOpacity).maybeNone()
@@ -928,6 +974,8 @@ private extension DOM.Fill {
             return c
         case .url:
             return .none
+        case .urlWithFallback(_, let c):
+            return c
         }
     }
 }
@@ -953,7 +1001,8 @@ extension LayerTree.Builder {
     /// and Backdrop renders on secondary threads) or more than `maxReferences` expansions in one
     /// document (non-cyclic fan-out such as 2 uses per level is exponential).
     ///
-    /// Any new walk over a reference chain (gradient / pattern `href` inheritance) must call this.
+    /// Any new walk over a reference chain that re-enters `<use>`, mask or pattern expansion must call this.
+    /// Gradient `href` chains do not: they are bounded by `maxGradientHops`.
     final class ReferenceGuard {
         static let maxDepth = 16
         static let maxReferences = 20_000

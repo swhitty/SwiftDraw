@@ -80,8 +80,9 @@ extension XMLParser {
 
         for (prelude, declarations) in blocks.rules {
             guard let selectors = DOM.StyleSheet.ComplexSelector.parseList(prelude) else { continue }
-            let attributes = parsePresentationAttributes(declarations.filter { !$0.important })
-            let importantAttributes = parsePresentationAttributes(declarations.filter(\.important))
+            let important = declarations.filter(\.important)
+            let attributes = parsePresentationAttributes(important.isEmpty ? declarations : declarations.filter { !$0.important })
+            let importantAttributes = important.isEmpty ? DOM.PresentationAttributes() : parsePresentationAttributes(important)
 
             for selector in selectors {
                 sheet.rules.append(DOM.StyleSheet.Rule(selector: selector,

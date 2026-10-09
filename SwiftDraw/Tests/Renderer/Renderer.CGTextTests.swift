@@ -52,6 +52,18 @@ final class RendererCGTextTests: XCTestCase {
         XCTAssertGreaterThan(lastFill, restore)
     }
 
+    func testImageIsDroppedWithAWarningNotAnUndeclaredReference() throws {
+        let png = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="
+        let xml = """
+        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+            <image width="50" height="20" preserveAspectRatio="xMidYMid slice" xlink:href="data:image/png;base64,\(png)" />
+        </svg>
+        """
+        let code = try CGTextRenderer.render(data: Data(xml.utf8), options: .default, api: .uiKit, precision: 2)
+        XCTAssertFalse(code.contains("ctx.draw(image"))
+        XCTAssertTrue(code.contains("// warning: image dropped"))
+    }
+
     func testLinesCode() throws {
         let code = try CGTextRenderer.render(svgNamed: "lines.svg")
         XCTAssertEqual(
@@ -648,14 +660,5 @@ extension RendererCGTextTests {
         let clip = try XCTUnwrap(lines.firstIndex(where: { $0.hasSuffix("CGRect(x: 0, y: 0, width: 100, height: 50),") }))
         XCTAssertGreaterThan(clip, scale)
         XCTAssertTrue(lines.contains("ctx.clip()"))
-    }
-
-    func testImageDrawEmitsItsFittedRect() throws {
-        let png = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="
-        let svg = #"<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><image x="5" y="6" width="40" height="20" href="data:image/png;base64,"# + png + #""/></svg>"#
-        let code = try CGTextRenderer.render(data: Data(svg.utf8), options: .default, api: .uiKit, precision: 2)
-        let rect = "CGRect(x: 5, y: 6, width: 40, height: 20)"
-        XCTAssertTrue(code.contains("ctx.translateBy(x: \(rect).minX, y: \(rect).maxY)"))
-        XCTAssertTrue(code.contains("ctx.draw(image, in: CGRect(origin: .zero, size: \(rect).size))"))
     }
 }

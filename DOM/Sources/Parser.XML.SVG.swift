@@ -210,9 +210,14 @@ package extension XMLParser {
         let children = try parseGraphicsElements(e.children)
         var clip = DOM.ClipPath(id: id, childElements: children)
         clip.clipPathUnits = units
-        clip.attributes = (try? parsePresentationAttributes(e)) ?? DOM.PresentationAttributes()
+        let matched = styleContext.matcher?.match(e)
+        // attribute < stylesheet rules < style="" < !important rules < !important style=""
+        clip.attributes = ((try? parsePresentationAttributes(e)) ?? DOM.PresentationAttributes())
+            .applyingAttributes(matched?.attributes ?? DOM.PresentationAttributes())
         let style = parseStyleDeclarations(e)
-        clip.style = style.normal.applyingAttributes(style.important)
+        clip.style = style.normal
+            .applyingAttributes(matched?.importantAttributes ?? DOM.PresentationAttributes())
+            .applyingAttributes(style.important)
         return clip
     }
 

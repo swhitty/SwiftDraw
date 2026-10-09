@@ -111,6 +111,16 @@ struct InvalidElementTests {
     }
 
     @Test
+    func badRadialGradientUnitsIsDroppedNotTheGradient() throws {
+        let svg = try parse(#"""
+        <radialGradient id="rg" gradientUnits="bogus"><stop offset="0" stop-color="red"/></radialGradient>
+        """#)
+        #expect(svg.defs.radialGradients.map { $0.id } == ["rg"])
+        #expect(svg.defs.radialGradients.first?.gradientUnits == nil)
+        #expect(svg.defs.radialGradients.first?.stops.count == 1)
+    }
+
+    @Test
     func badDefinitionsAreDroppedNotTheDocument() throws {
         let svg = try parse(#"""
         <clipPath><rect width="1" height="1"/></clipPath>
@@ -132,7 +142,9 @@ struct InvalidElementTests {
         // since SD6 a bad stop-opacity drops only that attribute, so "rg" survives; the id-less one is skipped
         #expect(svg.defs.radialGradients.map { $0.id } == ["rg"])
         #expect(svg.defs.filters.isEmpty)
-        #expect(svg.defs.linearGradients.map { $0.id } == ["good"])
+        // since SD16 a bad gradientUnits drops only that attribute, so "lg" survives (objectBoundingBox by default)
+        #expect(svg.defs.linearGradients.map { $0.id } == ["lg", "good"])
+        #expect(svg.defs.linearGradients.first?.gradientUnits == nil)
     }
 
     @Test

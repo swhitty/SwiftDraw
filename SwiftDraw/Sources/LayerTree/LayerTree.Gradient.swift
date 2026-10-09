@@ -97,7 +97,7 @@ extension LayerTree {
     }
 }
 
-private extension LayerTree.Color {
+extension LayerTree.Color {
     var isP3: Bool {
         switch self {
         case .rgba(r: _, g: _, b: _, a: _, space: .p3):

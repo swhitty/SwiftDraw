@@ -68,10 +68,11 @@ extension DOM {
     package enum Fill: Equatable {
         case url(URL)
         case color(DOM.Color)
+        case urlWithFallback(URL, DOM.Color)
         
         package func getColor() throws -> DOM.Color {
             switch self {
-            case .url:
+            case .url, .urlWithFallback:
                 throw Error.missing("Color")
             case .color(let c):
                 return c

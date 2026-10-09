@@ -684,7 +684,7 @@ extension LayerTree.CommandGenerator {
             return ((p.x - start.x) * dx + (p.y - start.y) * dy) / length
         }
         guard let lower = offsets.min(), let upper = offsets.max() else { return nil }
-        return makePeriods(lower: lower, upper: upper)
+        return makePeriods(lower: lower, upper: upper, includingZero: false)
     }
 
     /// The periods of a radial gradient needed to cover `area`. Only computed when the focal circle
@@ -714,14 +714,16 @@ extension LayerTree.CommandGenerator {
         return makePeriods(lower: 0, upper: upper)
     }
 
-    /// The whole periods spanning lower...upper, always including period 0.
-    static func makePeriods(lower: LayerTree.Float, upper: LayerTree.Float) -> ClosedRange<Int>? {
+    /// The whole periods spanning lower...upper; a radial gradient always includes period 0.
+    static func makePeriods(lower: LayerTree.Float, upper: LayerTree.Float, includingZero: Bool = true) -> ClosedRange<Int>? {
         guard lower.isFinite, upper.isFinite else { return nil }
         // bounded so the conversion to Int cannot trap; anything this large is averaged anyway
         let limit: LayerTree.Float = 1_000_000
-        let first = Int(max(-limit, min(0, lower.rounded(.down))))
-        let last = Int(min(limit, max(1, upper.rounded(.up)))) - 1
-        return first...last
+        let floor = lower.rounded(.down)
+        let ceil = upper.rounded(.up)
+        let first = Int(max(-limit, includingZero ? min(0, floor) : floor))
+        let last = Int(min(limit, includingZero ? max(1, ceil) : ceil)) - 1
+        return first...max(first, last)
     }
 
     // Resolves the layer's filter into its user space; nil when a primitive is unsupported
@@ -893,14 +895,14 @@ extension LayerTree.Gradient {
     func averaged() -> LayerTree.Gradient {
         let period = completedPeriod
         var sum: (r: LayerTree.Float, g: LayerTree.Float, b: LayerTree.Float, a: LayerTree.Float) = (0, 0, 0, 0)
-        var space = LayerTree.ColorSpace.srgb
+        // the gradient's own space (P3 when any stop is P3); the other stops are converted into it
+        let space = colorSpace
         for (lhs, rhs) in zip(period, period.dropFirst()) {
             let weight = (rhs.offset - lhs.offset) / 2
             for stop in [lhs, rhs] {
-                let c = stop.premultiplied
+                let c = stop.premultiplied(in: space)
                 sum = (sum.r + c.r * weight, sum.g + c.g * weight, sum.b + c.b * weight, sum.a + c.a * weight)
             }
-            if case .rgba(_, _, _, _, let s) = lhs.color { space = s }
         }
         let color: LayerTree.Color = sum.a > 0
             ? .rgba(r: sum.r / sum.a, g: sum.g / sum.a, b: sum.b / sum.a, a: sum.a, space: space)
@@ -911,12 +913,13 @@ extension LayerTree.Gradient {
 }
 
 private extension LayerTree.Gradient.Stop {
-    var premultiplied: (r: LayerTree.Float, g: LayerTree.Float, b: LayerTree.Float, a: LayerTree.Float) {
+    func premultiplied(in space: LayerTree.ColorSpace) -> (r: LayerTree.Float, g: LayerTree.Float, b: LayerTree.Float, a: LayerTree.Float) {
         switch color {
         case .none:
             return (0, 0, 0, 0)
-        case let .rgba(r, g, b, a, _):
+        case let .rgba(r, g, b, a, source):
             let alpha = a * opacity
+            let (r, g, b) = LayerTree.Color.convert(r: r, g: g, b: b, from: source, to: space)
             return (r * alpha, g * alpha, b * alpha, alpha)
         case let .gray(white, a):
             let alpha = a * opacity
@@ -1087,6 +1090,8 @@ extension LayerTree.CommandGenerator {
                 contentWidth: viewBox.width, contentHeight: viewBox.height,
                 viewportWidth: tile.width, viewportHeight: tile.height
             )
+            // a tiny viewBox in a large tile can overflow the scale: no pattern, not an infinite matrix
+            guard [fit.sx, fit.sy, fit.tx, fit.ty].allSatisfy(\.isFinite) else { return nil }
             contentTransform = LayerTree.Transform.Matrix(
                 a: fit.sx, b: 0, c: 0, d: fit.sy,
                 tx: fit.tx - viewBox.x * fit.sx,
@@ -1104,5 +1109,31 @@ extension LayerTree.CommandGenerator {
         resolved.transform = pattern.transform
         resolved.contents = pattern.contents
         return (resolved, contentTransform)
+    }
+}
+
+
+extension LayerTree.Color {
+
+    /// Display P3 shares sRGB's transfer curve: convert through linear light. Clamped to 0...1.
+    static func convert(r: LayerTree.Float, g: LayerTree.Float, b: LayerTree.Float,
+                        from: LayerTree.ColorSpace, to: LayerTree.ColorSpace) -> (LayerTree.Float, LayerTree.Float, LayerTree.Float) {
+        guard from != to else { return (r, g, b) }
+        func linear(_ v: LayerTree.Float) -> LayerTree.Float {
+            v <= 0.04045 ? v / 12.92 : LayerTree.Float(pow(Double((v + 0.055) / 1.055), 2.4))
+        }
+        func encode(_ v: LayerTree.Float) -> LayerTree.Float {
+            let c = min(1, max(0, v))
+            return c <= 0.0031308 ? c * 12.92 : LayerTree.Float(1.055 * pow(Double(c), 1 / 2.4) - 0.055)
+        }
+        let (lr, lg, lb) = (linear(r), linear(g), linear(b))
+        if from == .p3 {
+            return (encode(1.2249401 * lr - 0.2249404 * lg),
+                    encode(-0.0420569 * lr + 1.0420571 * lg),
+                    encode(-0.0196376 * lr - 0.0786361 * lg + 1.0982735 * lb))
+        }
+        return (encode(0.8224621 * lr + 0.1775380 * lg),
+                encode(0.0331941 * lr + 0.9668058 * lg),
+                encode(0.0170827 * lr + 0.0723974 * lg + 0.9105199 * lb))
     }
 }
