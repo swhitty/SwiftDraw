@@ -61,7 +61,8 @@ extension XMLParser {
             node.stops.append(try parseLinearGradientStop(att))
         }
 
-        node.gradientUnits = try nodeAtt.parseRaw("gradientUnits")
+        // an unreadable value is dropped like the other attributes, the gradient is kept (SVG 1.1 §13.2.2)
+        node.gradientUnits = (try? nodeAtt.parseRaw("gradientUnits")) ?? nil
         node.href  = try? nodeAtt.parseHref()
 
         if let val = try? nodeAtt.parseString("gradientTransform") {

@@ -82,7 +82,9 @@ final class GradientTests: XCTestCase {
     gradient = try DOMXMLParser().parseLinearGradient(node)
     XCTAssertEqual(gradient.gradientUnits, .objectBoundingBox)
 
+    // since SD16 an unreadable value is dropped, the gradient is kept
     node.attributes["gradientUnits"] = "invalid"
-    XCTAssertThrowsError(try DOMXMLParser().parseLinearGradient(node))
+    gradient = try DOMXMLParser().parseLinearGradient(node)
+    XCTAssertNil(gradient.gradientUnits)
   }
 }
