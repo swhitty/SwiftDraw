@@ -64,14 +64,26 @@ extension LayerTree {
             )
             // `slice` lets the viewBox overflow the viewport, which clips it (also when drawn into a larger context).
             // layer.clip applies after layer.transform, so the viewport is expressed in viewBox space.
-            if let par = svg.preserveAspectRatio, par.align != .none, par.meetOrSlice == .slice, l.clip.isEmpty {
+            if let par = svg.preserveAspectRatio, par.align != .none, par.meetOrSlice == .slice {
                 let viewport = Builder.makeViewportClip(
                     viewBox: svg.viewBox,
                     width: svg.width,
                     height: svg.height,
                     preserveAspectRatio: par
                 )
-                l.clip = [ClipShape(shape: .rect(within: viewport, radii: .zero), transform: .identity)]
+                let viewportClip = [ClipShape(shape: .rect(within: viewport, radii: .zero), transform: .identity)]
+                if l.clip.isEmpty {
+                    l.clip = viewportClip
+                } else {
+                    // the root's own clip-path and the viewport both apply: layer clips are unioned, so
+                    // the viewport clips an outer layer holding the root layer, which keeps its clip-path
+                    let outer = Layer()
+                    outer.transform = l.transform
+                    outer.clip = viewportClip
+                    l.transform = []
+                    outer.contents = [.layer(l)]
+                    return outer
+                }
             }
             return l
         }

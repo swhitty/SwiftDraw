@@ -1090,6 +1090,8 @@ extension LayerTree.CommandGenerator {
                 contentWidth: viewBox.width, contentHeight: viewBox.height,
                 viewportWidth: tile.width, viewportHeight: tile.height
             )
+            // a tiny viewBox in a large tile can overflow the scale: no pattern, not an infinite matrix
+            guard [fit.sx, fit.sy, fit.tx, fit.ty].allSatisfy(\.isFinite) else { return nil }
             contentTransform = LayerTree.Transform.Matrix(
                 a: fit.sx, b: 0, c: 0, d: fit.sy,
                 tx: fit.tx - viewBox.x * fit.sx,
