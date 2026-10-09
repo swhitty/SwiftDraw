@@ -368,9 +368,36 @@ extension LayerTree {
             let size = provider.createSize(from: renderImage)
             guard size.width > 0 && size.height > 0 else { return [] }
 
+            let (dest, clip) = makeImagePlacement(for: image, bitmapSize: size)
+            let draw = RendererCommand<P.Types>.draw(image: renderImage, in: provider.createRect(from: dest))
+            guard let clip else { return [draw] }
+            return [.pushState,
+                    .setClip(path: makeCachedPath(from: .rect(within: clip, radii: .zero)), rule: provider.createFillRule(from: .nonzero)),
+                    draw,
+                    .popState]
+        }
+
+        /// Where the bitmap is drawn and, for `slice` overflowing its frame, the rect that clips it.
+        /// With both width and height the bitmap is fitted to the frame per preserveAspectRatio (SVG 1.1 §7.8).
+        func makeImagePlacement(for image: Image, bitmapSize size: LayerTree.Size) -> (dest: LayerTree.Rect, clip: LayerTree.Rect?) {
             let frame = makeImageFrame(for: image, bitmapSize: size)
-            let rect = provider.createRect(from: frame)
-            return [.draw(image: renderImage, in: rect)]
+            guard image.width != nil, image.height != nil, frame.width > 0, frame.height > 0 else {
+                return (frame, nil)
+            }
+            let fit = image.preserveAspectRatio.fit(
+                contentWidth: size.width, contentHeight: size.height,
+                viewportWidth: frame.width, viewportHeight: frame.height
+            )
+            let dest = LayerTree.Rect(
+                x: frame.x + fit.tx,
+                y: frame.y + fit.ty,
+                width: size.width * fit.sx,
+                height: size.height * fit.sy
+            )
+            // a meet or equal-aspect fit only differs from the frame by rounding noise
+            let epsilon = 1e-4 * max(frame.width, frame.height)
+            let overflows = image.preserveAspectRatio.align != .none && (dest.width > frame.width + epsilon || dest.height > frame.height + epsilon)
+            return (dest, overflows ? frame : nil)
         }
 
         private func makeCachedPath(from shape: LayerTree.Shape) -> P.Types.Path {
@@ -1054,13 +1081,16 @@ extension LayerTree.CommandGenerator {
 
         var contentTransform = LayerTree.Transform.Matrix.identity
         if let viewBox = pattern.viewBox {
-            // preserveAspectRatio is not parsed yet: its default, xMidYMid meet
+            // the viewBox is fitted into the tile per the pattern's preserveAspectRatio (SVG 1.1 §7.8)
             guard viewBox.width > 0, viewBox.height > 0 else { return nil }
-            let scale = min(tile.width / viewBox.width, tile.height / viewBox.height)
+            let fit = pattern.preserveAspectRatio.fit(
+                contentWidth: viewBox.width, contentHeight: viewBox.height,
+                viewportWidth: tile.width, viewportHeight: tile.height
+            )
             contentTransform = LayerTree.Transform.Matrix(
-                a: scale, b: 0, c: 0, d: scale,
-                tx: (tile.width - viewBox.width * scale) / 2 - viewBox.x * scale,
-                ty: (tile.height - viewBox.height * scale) / 2 - viewBox.y * scale
+                a: fit.sx, b: 0, c: 0, d: fit.sy,
+                tx: fit.tx - viewBox.x * fit.sx,
+                ty: fit.ty - viewBox.y * fit.sy
             )
         } else if pattern.contentUnits == .objectBoundingBox {
             guard bounds.width > 0, bounds.height > 0 else { return nil }

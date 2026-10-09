@@ -61,6 +61,7 @@ package extension XMLParser {
         svg.y = try att.parseCoordinate("y")
         svg.childElements = try parseGraphicsElements(e.children)
         svg.viewBox = viewBox
+        svg.preserveAspectRatio = parsePreserveAspectRatio(try? att.parseString("preserveAspectRatio"))
 
         svg.defs = try parseSVGDefs(e)
         svg.styles = parseStyleSheetElements(within: e)
@@ -264,4 +265,41 @@ private extension XMLParser.Scanner {
 private extension Foundation.CharacterSet {
 
     static let viewBoxSeparator = Foundation.CharacterSet(charactersIn: ",")
+}
+
+package extension XMLParser {
+
+    /// `[defer] <align> [meet|slice]`. Never throws: an invalid value is dropped so the
+    /// element uses the initial value `xMidYMid meet`, rather than failing the document.
+    func parsePreserveAspectRatio(_ data: String?) -> DOM.PreserveAspectRatio? {
+        guard let data else { return nil }
+        var tokens = data.split(whereSeparator: { $0 == " " || $0 == "\t" || $0 == "\n" || $0 == "\r" }).map(String.init)
+        if tokens.first == "defer" { tokens.removeFirst() }
+        guard (1...2).contains(tokens.count) else { return nil }
+
+        let align: DOM.PreserveAspectRatio.Align
+        switch tokens[0] {
+        case "none": align = .none
+        case "xMinYMin": align = .xMinYMin
+        case "xMidYMin": align = .xMidYMin
+        case "xMaxYMin": align = .xMaxYMin
+        case "xMinYMid": align = .xMinYMid
+        case "xMidYMid": align = .xMidYMid
+        case "xMaxYMid": align = .xMaxYMid
+        case "xMinYMax": align = .xMinYMax
+        case "xMidYMax": align = .xMidYMax
+        case "xMaxYMax": align = .xMaxYMax
+        default: return nil
+        }
+
+        var meetOrSlice = DOM.PreserveAspectRatio.MeetOrSlice.meet
+        if tokens.count == 2 {
+            switch tokens[1] {
+            case "meet": meetOrSlice = .meet
+            case "slice": meetOrSlice = .slice
+            default: return nil
+            }
+        }
+        return DOM.PreserveAspectRatio(align: align, meetOrSlice: meetOrSlice)
+    }
 }
