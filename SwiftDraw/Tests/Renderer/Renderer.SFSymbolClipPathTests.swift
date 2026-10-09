@@ -197,7 +197,7 @@ final class RendererSFSymbolClipPathTests: XCTestCase {
 
     // MARK: - Layer-level coverage
 
-    /// Independent smoke test: the layer's clipUnits propagates through Builder.
+    /// objectBoundingBox units are resolved by the Builder (SD8): the clip reaches the renderers in user space.
     func testBuilder_setsClipUnits_objectBoundingBox() throws {
         let svg = try DOM.SVG.parse(#"""
         <svg width="10" height="10" xmlns="http://www.w3.org/2000/svg">
@@ -212,7 +212,25 @@ final class RendererSFSymbolClipPathTests: XCTestCase {
         let layer = LayerTree.Builder(svg: svg).makeLayer()
         let clipped = firstClippedLayer(in: layer)
         XCTAssertNotNil(clipped)
-        XCTAssertEqual(clipped?.clipUnits, .objectBoundingBox)
+        XCTAssertEqual(clipped?.clipUnits, .userSpaceOnUse)
+        XCTAssertEqual(clipped?.clip.first?.transform,
+                       LayerTree.Transform.Matrix(a: 10, b: 0, c: 0, d: 10, tx: 0, ty: 0))
+    }
+
+    /// A clip drawn as a mask (here mixed clip-rules) keeps its content, unclipped, in symbol export.
+    func testMaskTypeClip_keepsContentUnclipped() throws {
+        let svg = try DOM.SVG.parse(#"""
+        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+          <clipPath id="c">
+            <rect width="10" height="10" clip-rule="evenodd"/>
+            <rect x="20" width="10" height="10"/>
+          </clipPath>
+          <rect x="0" y="0" width="100" height="100" fill="black" clip-path="url(#c)"/>
+        </svg>
+        """#)
+        let paths = SFSymbolRenderer.getPaths(for: svg) ?? []
+        XCTAssertEqual(paths.count, 1)
+        assertBounds(paths[0].path.bounds, equals: .init(x: 0, y: 0, width: 100, height: 100), accuracy: 0.5)
     }
 
     func testBuilder_setsClipUnits_userSpaceOnUseByDefault() throws {

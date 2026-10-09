@@ -31,7 +31,7 @@
 
 package extension DOM {
 
-    enum Color: Equatable {
+    enum Color: Hashable {
         case none
         case currentColor
         case keyword(Keyword)
@@ -189,6 +189,8 @@ package extension DOM {
             case whitesmoke
             case yellow
             case yellowgreen
+            // CSS Color 4
+            case rebeccapurple
         }
     }
 }
@@ -345,6 +347,7 @@ package extension DOM.Color.Keyword {
         case .whitesmoke: return (245, 245, 245)
         case .yellow: return (255, 255, 0)
         case .yellowgreen: return (154, 205, 50)
+        case .rebeccapurple: return (102, 51, 153)
         }
     }
 }

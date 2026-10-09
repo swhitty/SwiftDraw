@@ -40,14 +40,23 @@ extension LayerTree.Builder {
         return .shape(shape, stroke, fill)
     }
 
-    func makeUseLayerContents(from use: DOM.Use, with state: State) throws -> LayerTree.Layer.Contents {
+    func makeUseLayerContents(from use: DOM.Use, with state: State, ancestors: [String] = []) throws -> LayerTree.Layer.Contents {
         guard
             let id = use.href.fragmentID,
             let element = svg.firstGraphicsElement(with: id) else {
             throw LayerTree.Error.invalid("missing referenced element: \(use.href)")
         }
 
-        let l = makeLayer(from: element, inheriting: state)
+        // SVG 1.1 §5.6: a `<use>` that (directly or indirectly) references one of its own ancestors is an error
+        guard !containsReferenceCycle(from: element, reaching: Set(ancestors).union([id])) else {
+            throw LayerTree.Error.invalid("circular reference: \(use.href)")
+        }
+        guard references.enter("use:\(id)") else {
+            throw LayerTree.Error.invalid("circular reference: \(use.href)")
+        }
+        defer { references.leave("use:\(id)") }
+
+        let l = makeLayer(from: element, inheriting: state, ancestors: ancestors + [id])
         let x = use.x ?? 0.0
         let y = use.y ?? 0.0
 
@@ -60,13 +69,8 @@ extension LayerTree.Builder {
 
     func makeTextContents(from text: DOM.Text, with state: State) -> LayerTree.Layer.Contents {
         var point = Point(text.x ?? 0, text.y ?? 0)
-        var att = makeTextAttributes(with: state)
-
-        if let fontFamily = text.attributes.fontFamily {
-            att.font = fontFamily.flatMap(makeFonts)
-        }
-        att.size = text.attributes.fontSize ?? att.size
-        att.anchor = text.attributes.textAnchor ?? att.anchor
+        // state already holds the cascaded font-family, font-size and text-anchor
+        let att = makeTextAttributes(with: state)
         let offset = Self.makeOffset(for: text.value, with: att)
         point.x += offset.width
         point.y += offset.height
@@ -85,6 +89,7 @@ extension LayerTree.Builder {
         im.origin.y = LayerTree.Float(image.y ?? 0)
         im.width = image.width.map { LayerTree.Float($0) }
         im.height = image.height.map { LayerTree.Float($0) }
+        im.preserveAspectRatio = image.preserveAspectRatio ?? .default
 
         return .image(im)
     }

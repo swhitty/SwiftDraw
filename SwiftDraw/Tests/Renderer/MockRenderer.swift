@@ -98,6 +98,10 @@ final class MockRenderer: Renderer {
     operations.append("setLineMiterLimit")
   }
 
+  func setLineDash(phase: LayerTree.Float, lengths: [LayerTree.Float]) {
+    operations.append("setLineDash")
+  }
+
   func setClip(path: [LayerTree.Shape], rule: LayerTree.FillRule) {
     operations.append("setClip")
   }
@@ -136,5 +140,13 @@ final class MockRenderer: Renderer {
 
   func draw(radial gradient: LayerTree.Gradient, startCenter: LayerTree.Point, startRadius: LayerTree.Float, endCenter: LayerTree.Point, endRadius: LayerTree.Float) {
     operations.append("drawRadialGradient")
+  }
+
+  func pushFilterLayer(_ filter: LayerTree.FilterLayer) {
+    operations.append("pushFilterLayer")
+  }
+
+  func popFilterLayer() {
+    operations.append("popFilterLayer")
   }
 }

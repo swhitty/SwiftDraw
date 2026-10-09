@@ -58,33 +58,60 @@ extension XMLParser {
         return sheets
     }
 
-    func parseStyleSheetElement(_ text: String?) throws -> DOM.StyleSheet {
-        let selectorEntries = try Self.parseSelectorEntries(text)
-        let fontEntries = try Self.parseFontFaceEntries(text)
+    // stop-color and stop-opacity through the cascade (attribute < rules < style="" < !important),
+    // e.g. Illustrator's <stop class="st0"/> with .st0 { stop-color: … }; nil without a stylesheet
+    func cascadedStop(_ e: XML.Element) -> (color: DOM.Color?, opacity: DOM.Float?)? {
+        guard let matched = styleContext.matcher?.match(e) else { return nil }
+        let style = parseStyleDeclarations(e)
+        let attributes = ((try? parsePresentationAttributes(e.attributes)) ?? DOM.PresentationAttributes())
+            .applyingAttributes(matched.attributes)
+            .applyingAttributes(style.normal)
+            .applyingAttributes(matched.importantAttributes)
+            .applyingAttributes(style.important)
+        return (attributes.stopColor, attributes.stopOpacity)
+    }
 
+    // CSS Syntax Level 3 error recovery: a malformed rule or declaration is dropped on its own,
+    // the rest of the sheet is kept.
+    func parseStyleSheetElement(_ text: String?) throws -> DOM.StyleSheet {
         var sheet = DOM.StyleSheet()
-        sheet.attributes = try selectorEntries.mapValues(parsePresentationAttributes)
-        sheet.fonts = try fontEntries.map(parseFontFace)
+        guard let text else { return sheet }
+        let blocks = Self.parseCSSBlocks(text)
+
+        for (prelude, declarations) in blocks.rules {
+            guard let selectors = DOM.StyleSheet.ComplexSelector.parseList(prelude) else { continue }
+            let important = declarations.filter(\.important)
+            let attributes = parsePresentationAttributes(important.isEmpty ? declarations : declarations.filter { !$0.important })
+            let importantAttributes = important.isEmpty ? DOM.PresentationAttributes() : parsePresentationAttributes(important)
+
+            for selector in selectors {
+                sheet.rules.append(DOM.StyleSheet.Rule(selector: selector,
+                                                       attributes: attributes,
+                                                       importantAttributes: importantAttributes))
+                if let simple = selector.simple {
+                    sheet.attributes[simple] = (sheet.attributes[simple] ?? DOM.PresentationAttributes())
+                        .applyingAttributes(attributes)
+                        .applyingAttributes(importantAttributes)
+                }
+            }
+        }
+
+        sheet.fonts = blocks.fontFaces.compactMap { try? parseFontFace(Self.makeDictionary($0)) }
         return sheet
     }
 
     static func parseSelectorEntries(_ text: String?) throws -> [DOM.StyleSheet.Selector: [String: String]] {
         guard let text = text else { return [:] }
-        var scanner = XMLParser.Scanner(text: removeCSSComments(from: text))
         var entries = [DOM.StyleSheet.Selector: [String: String]]()
 
-        while let (decl, attributes) = try scanner.scanNextBlockDecl() {
-            switch decl {
-            case .selector(let selectors):
-                for selector in selectors {
-                    var copy = entries[selector] ?? [:]
-                    for (key, value) in attributes {
-                        copy[key] = value
-                    }
-                    entries[selector] = copy
+        for (prelude, declarations) in parseCSSBlocks(text).rules {
+            guard let selectors = DOM.StyleSheet.ComplexSelector.parseList(prelude) else { continue }
+            for selector in selectors.compactMap(\.simple) {
+                var copy = entries[selector] ?? [:]
+                for d in declarations {
+                    copy[d.name] = d.value
                 }
-            case .atRule:
-                ()
+                entries[selector] = copy
             }
         }
 
@@ -93,23 +120,188 @@ extension XMLParser {
 
     static func parseFontFaceEntries(_ text: String?) throws -> [[String: String]] {
         guard let text = text else { return [] }
-        var scanner = XMLParser.Scanner(text: removeCSSComments(from: text))
-        var entries = [[String: String]]()
+        return parseCSSBlocks(text).fontFaces.map(makeDictionary)
+    }
 
-        while let (decl, attributes) = try scanner.scanNextBlockDecl() {
-            switch decl {
-            case .atRule("font-face"):
-                entries.append(attributes)
-            default:
-                ()
+    struct CSSDeclaration: Equatable {
+        var name: String
+        var value: String
+        var important: Bool
+    }
+
+    static func makeDictionary(_ declarations: [CSSDeclaration]) -> [String: String] {
+        var dict = [String: String]()
+        for d in declarations {
+            dict[d.name] = d.value
+        }
+        return dict
+    }
+
+    // Splits a sheet into qualified rules and @font-face blocks; other at-rules
+    // (@media, @supports, @import…) are skipped with their nested blocks.
+    static func parseCSSBlocks(_ text: String) -> (rules: [(prelude: String, declarations: [CSSDeclaration])], fontFaces: [[CSSDeclaration]]) {
+        let chars = Array(removeCSSComments(from: text))
+        var i = 0
+        var rules = [(prelude: String, declarations: [CSSDeclaration])]()
+        var fontFaces = [[CSSDeclaration]]()
+
+        // Reads up to (not including) the first top-level character in `stops`, skipping strings, (), [].
+        func scanPrelude(stops: Set<Character>) -> String {
+            var result = ""
+            var depth = 0
+            var quote: Character?
+            while i < chars.count {
+                let c = chars[i]
+                if let q = quote {
+                    if c == "\\", i + 1 < chars.count {
+                        result.append(c)
+                        result.append(chars[i + 1])
+                        i += 2
+                        continue
+                    } else if c == q || c.isNewline {
+                        // an unescaped newline ends a string (CSS Syntax §4.3.5, bad-string)
+                        quote = nil
+                    }
+                } else if c == "\\", i + 1 < chars.count {
+                    // an escaped character is never a delimiter
+                    result.append(c)
+                    result.append(chars[i + 1])
+                    i += 2
+                    continue
+                } else if c == "\"" || c == "'" {
+                    quote = c
+                } else if c == "(" || c == "[" {
+                    depth += 1
+                } else if c == ")" || c == "]" {
+                    depth = max(0, depth - 1)
+                } else if (depth == 0 || c == "{") && stops.contains(c) {
+                    // a block always starts at `{`, even after an unclosed `(` or `[`
+                    return result
+                }
+                result.append(c)
+                i += 1
             }
+            return result
         }
 
-        return entries
+        // Reads a {} block whose opening brace is at i; returns its inner text.
+        func scanBlock() -> String {
+            i += 1
+            var result = ""
+            var depth = 1
+            var quote: Character?
+            while i < chars.count {
+                let c = chars[i]
+                i += 1
+                if let q = quote {
+                    if c == "\\", i < chars.count {
+                        result.append(c)
+                        result.append(chars[i])
+                        i += 1
+                        continue
+                    } else if c == q || c.isNewline {
+                        quote = nil
+                    }
+                } else if c == "\\", i < chars.count {
+                    result.append(c)
+                    result.append(chars[i])
+                    i += 1
+                    continue
+                } else if c == "\"" || c == "'" {
+                    quote = c
+                } else if c == "{" {
+                    depth += 1
+                } else if c == "}" {
+                    depth -= 1
+                    if depth == 0 { return result }
+                }
+                result.append(c)
+            }
+            return result
+        }
+
+        while i < chars.count {
+            let c = chars[i]
+            if c.isWhitespace || c == "}" || c == ";" {
+                i += 1
+                continue
+            }
+            // HTML comment markers are allowed at the top level of a sheet
+            if chars[i...].starts(with: "<!--") {
+                i += 4
+                continue
+            }
+            if chars[i...].starts(with: "-->") {
+                i += 3
+                continue
+            }
+            if c == "@" {
+                let prelude = scanPrelude(stops: ["{", ";"])
+                guard i < chars.count, chars[i] == "{" else {
+                    i += 1
+                    continue
+                }
+                let block = scanBlock()
+                let name = prelude.dropFirst().prefix { !$0.isWhitespace }.lowercased()
+                if name == "font-face" {
+                    fontFaces.append(parseCSSDeclarations(block))
+                }
+                continue
+            }
+
+            let prelude = scanPrelude(stops: ["{"])
+            guard i < chars.count else { break }
+            let block = scanBlock()
+            rules.append((prelude.trimmingCharacters(in: .whitespacesAndNewlines), parseCSSDeclarations(block)))
+        }
+
+        return (rules, fontFaces)
+    }
+
+    static func hasBadString(_ text: String) -> Bool {
+        var quote: Character?
+        var escaped = false
+        for c in text {
+            if escaped {
+                escaped = false
+            } else if c == "\\" {
+                escaped = true
+            } else if let q = quote {
+                if c == q { quote = nil }
+                if c.isNewline { return true }
+            } else if c == "\"" || c == "'" {
+                quote = c
+            }
+        }
+        // a string still open at the end of the value is closed by EOF, not bad
+        return false
+    }
+
+    // A declaration without a name or a value is skipped; the others are kept (CSS Syntax §5.4.5).
+    static func parseCSSDeclarations(_ text: String) -> [CSSDeclaration] {
+        DOM.StyleSheet.ComplexSelector.splitTopLevel(text, separator: ";").compactMap { declaration in
+            guard let colon = declaration.firstIndex(of: ":") else { return nil }
+            let name = declaration[..<colon].trimmingCharacters(in: .whitespacesAndNewlines)
+            var value = declaration[declaration.index(after: colon)...].trimmingCharacters(in: .whitespacesAndNewlines)
+            // a nested block (CSS nesting) is not a declaration
+            guard !name.isEmpty, !name.contains("{"), !name.contains("}") else { return nil }
+
+            // a string cut by a newline makes the declaration invalid
+            guard !Self.hasBadString(String(declaration[declaration.index(after: colon)...])) else { return nil }
+
+            let stripped = XMLParser.Attributes.removingImportant(from: value)
+            let important = stripped != value
+            value = stripped.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !value.isEmpty else { return nil }
+            // CSS-wide keywords are not supported: drop them so a lower rule still applies
+            guard !["inherit", "initial", "unset", "revert", "revert-layer"].contains(value.lowercased()) else { return nil }
+            return CSSDeclaration(name: name.hasPrefix("--") ? name : name.lowercased(), value: value, important: important)
+        }
     }
 
     static func removeCSSComments(from text: String) -> String {
-        let regex = try! NSRegularExpression(pattern: "\\/\\*.*\\*\\/", options: .caseInsensitive)
+        // non-greedy, across lines; an unterminated comment runs to the end of the sheet
+        let regex = try! NSRegularExpression(pattern: "/\\*[\\s\\S]*?(?:\\*/|$)", options: [])
         let range = NSMakeRange(0, (text as NSString).length)
         return regex.stringByReplacingMatches(in: text, options: [], range: range, withTemplate: "")
     }
@@ -261,6 +453,6 @@ extension Dictionary: AttributeParser where Key == String, Value == String {
         guard let value = self[key] else {
             throw XMLParser.Error.missingAttribute(name: key)
         }
-        return try exp(value)
+        return try exp(XMLParser.Attributes.removingImportant(from: value))
     }
 }

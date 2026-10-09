@@ -49,6 +49,26 @@ package struct XMLParser {
     /// and SVGs with no width/height/viewBox fall back to it
     package var defaultViewport: Viewport?
 
+    // stylesheet matcher for the document being parsed (set while parsing the root <svg>)
+    let styleContext = StyleContext()
+
+    final class StyleContext {
+        var matcher: DOM.StyleSheet.Matcher?
+    }
+
+    // viewports and font-size that relative lengths of the element being parsed resolve against
+    let lengthContext = LengthContext()
+
+    final class LengthContext {
+        // the nearest viewport (in user units) is last; empty outside an <svg>
+        var viewports = [Viewport]()
+        // the computed font-size of the element being parsed, for `em` and `ex`
+        var fontSize: DOM.Float = LengthContext.initialFontSize
+
+        // `medium` in Chrome and Safari
+        static let initialFontSize: DOM.Float = 16
+    }
+
     package struct Viewport: Equatable, Sendable {
         package var width: DOM.Coordinate
         package var height: DOM.Coordinate

@@ -60,7 +60,7 @@ struct SVGTests {
     }
 
     @Test
-    func root_em_ex_dimensions_parse_as_raw_values() {
+    func root_em_ex_dimensions_resolve_against_font_size() {
         let ex = #"<svg xmlns="http://www.w3.org/2000/svg" width="2ex" height="1ex"><rect width="5" height="5"/></svg>"#
         let em = #"<svg xmlns="http://www.w3.org/2000/svg" width="2em" height="1em"><rect width="5" height="5"/></svg>"#
         let px = #"<svg xmlns="http://www.w3.org/2000/svg" width="2px" height="1px"><rect width="5" height="5"/></svg>"#
@@ -69,8 +69,9 @@ struct SVGTests {
         let emSVG = SVG(data: Data(em.utf8))
         let pxSVG = SVG(data: Data(px.utf8))
 
-        #expect(exSVG?.size == CGSize(width: 2, height: 1))
-        #expect(emSVG?.size == CGSize(width: 2, height: 1))
+        // SVG 1.1 §7.10: 1em is the initial 16px font-size, 1ex half of it
+        #expect(exSVG?.size == CGSize(width: 16, height: 8))
+        #expect(emSVG?.size == CGSize(width: 32, height: 16))
         #expect(pxSVG?.size == CGSize(width: 2, height: 1))
     }
 

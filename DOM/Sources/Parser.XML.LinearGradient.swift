@@ -36,7 +36,7 @@ extension XMLParser {
 
         for n in e.children {
             if n.name == "linearGradient" {
-                gradients.append(try parseLinearGradient(n))
+                try appendSkippingInvalid(&gradients, n, parseLinearGradient)
             } else {
                 gradients.append(contentsOf: try parseLinearGradients(n))
             }
@@ -58,23 +58,48 @@ extension XMLParser {
 
         for n in e.children where n.name == "stop" {
             let att: any AttributeParser = try parseAttributes(n)
-            node.stops.append(try parseLinearGradientStop(att))
+            var stop = try parseLinearGradientStop(att)
+            if let cascaded = cascadedStop(n) {
+                stop.color = cascaded.color ?? stop.color
+                stop.opacity = cascaded.opacity ?? stop.opacity
+            }
+            node.stops.append(stop)
         }
 
-        node.gradientUnits = try nodeAtt.parseRaw("gradientUnits")
-        node.href  = try? nodeAtt.parseUrl("xlink:href")
+        // an unreadable value is dropped like the other attributes, the gradient is kept (SVG 1.1 §13.2.2)
+        node.gradientUnits = (try? nodeAtt.parseRaw("gradientUnits")) ?? nil
+        node.href  = try? nodeAtt.parseHref()
 
+        // an unreadable value is left unset, so it is inherited through href (SVG 1.1 §13.2)
         if let val = try? nodeAtt.parseString("gradientTransform") {
-          node.gradientTransform = try parseTransform(val)
+          if val.trimmingCharacters(in: .whitespaces) == "none" { node.gradientTransform = [] }
+          else if let t = try? parseTransform(val) { node.gradientTransform = t }
         }
+        node.spreadMethod = try? nodeAtt.parseRaw("spreadMethod")
 
         return node
     }
 
     func parseLinearGradientStop(_ att: any AttributeParser) throws -> DOM.LinearGradient.Stop {
-        let offset: DOM.Float? = try? att.parsePercentage("offset")
+        let offset: DOM.Float? = parseClampedFraction(att, "offset")
         let color: DOM.Color? = try? att.parseFill("stop-color").getColor()
-        let opacity: DOM.Float? = try att.parsePercentage("stop-opacity")
+        let opacity: DOM.Float? = parseClampedFraction(att, "stop-opacity")
         return DOM.LinearGradient.Stop(offset: offset ?? 0, color: color ?? .keyword(.black), opacity: opacity ?? 1.0)
+    }
+}
+
+extension XMLParser {
+
+    /// A number or percentage clamped to 0...1 (SVG 1.1 §13.2.4 stop offset and stop-opacity);
+    /// nil when missing or unreadable, so the caller uses the initial value.
+    func parseClampedFraction(_ att: any AttributeParser, _ key: String) -> DOM.Float? {
+        guard var text = try? att.parseString(key).trimmingCharacters(in: .whitespaces) else { return nil }
+        var scale: DOM.Float = 1
+        if text.hasSuffix("%") {
+            text.removeLast()
+            scale = 100
+        }
+        guard let value = DOM.Float(text), value.isFinite else { return nil }
+        return min(1, max(0, value / scale))
     }
 }

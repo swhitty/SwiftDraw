@@ -40,6 +40,7 @@ extension LayerTree {
     typealias LineJoin = DOM.LineJoin
     typealias FillRule = DOM.FillRule
     typealias Filter = DOM.Filter.Effect
+    typealias FilterPrimitive = DOM.Filter.Primitive
 
     enum Error: Swift.Error {
         case unsupported(any Sendable)

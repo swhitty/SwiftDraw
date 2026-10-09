@@ -66,9 +66,24 @@ extension XMLParser {
       return try parse(element[key], with: exp, for: key)
     }
     
+    // CSS priority flag: `fill: red !important` is read as `fill: red`
+    static func removingImportant(from value: String) -> String {
+      let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+      guard let range = trimmed.range(of: "important", options: [.caseInsensitive, .backwards]),
+            range.upperBound == trimmed.endIndex else {
+        return value
+      }
+      // `!important` and `! important`
+      let head = trimmed[trimmed.startIndex..<range.lowerBound]
+      guard let bang = head.lastIndex(where: { !$0.isWhitespace }), head[bang] == "!" else {
+        return value
+      }
+      return String(head[head.startIndex..<bang])
+    }
+
     func parse<T>(_ value: String?, with expression: (String) throws -> T, for key: String) throws -> T {
       guard let value = value else { throw XMLParser.Error.missingAttribute(name: key) }
-      guard let result = try? expression(value) else {
+      guard let result = try? expression(Self.removingImportant(from: value)) else {
         throw XMLParser.Error.invalidAttribute(name: key, value: value)
       }
       return result
@@ -172,7 +187,9 @@ extension XMLParser {
       return try scanner
         .scanStrings(delimitedBy: ",")
         .map {
-          let value = $0.unquoted
+          var value = $0.unquoted
+          // a quote left open at the end of the value is closed by EOF, it is not part of the name
+          if let first = value.first, first == "'" || first == "\"" { value.removeFirst() }
           if let keyword = DOM.FontFamily.Keyword(rawValue: value) {
             return .keyword(keyword)
           } else {
@@ -189,4 +206,20 @@ extension XMLParser {
     }
   }
   
+}
+
+extension AttributeParser {
+
+    // SVG 2 plain `href`, falling back to the deprecated `xlink:href`
+    // https://www.w3.org/TR/SVG2/linking.html#XLinkRefAttrs
+    func parseHref() throws -> DOM.URL {
+        // a present but invalid `href` also falls back to `xlink:href`
+        do {
+            let url: DOM.URL = try parseUrl("href")
+            guard !url.absoluteString.isEmpty else { throw XMLParser.Error.invalid }
+            return url
+        } catch {
+            return try parseUrl("xlink:href")
+        }
+    }
 }

@@ -146,6 +146,13 @@ struct CGTextProvider: RendererTypeProvider {
       .map { "  \($0)" }
       .joined(separator: "\n")
 
+    var matrix = "ctx.ctm.concatenating(baseCTM.inverted())"
+    if pattern.transform != .identity {
+      let t = pattern.transform
+      let patternTransform = "CGAffineTransform(a: \(createFloat(from: t.a)), b: \(createFloat(from: t.b)), c: \(createFloat(from: t.c)), d: \(createFloat(from: t.d)), tx: \(createFloat(from: t.tx)), ty: \(createFloat(from: t.ty)))"
+      matrix = "\(patternTransform).concatenating(\(matrix))"
+    }
+
     return """
     let patternDraw1: CGPatternDrawPatternCallback = { _, ctx in
     \(lines)
@@ -154,7 +161,7 @@ struct CGTextProvider: RendererTypeProvider {
     let pattern1 = CGPattern(
       info: nil,
       bounds: \(createRect(from: pattern.frame)),
-      matrix: ctx.ctm.concatenating(baseCTM.inverted()),
+      matrix: \(matrix),
       xStep: \(formatter.format(pattern.frame.width)),
       yStep: \(formatter.format(pattern.frame.height)),
       tiling: .constantSpacing,
@@ -219,7 +226,7 @@ struct CGTextProvider: RendererTypeProvider {
 #if canImport(CoreGraphics)
     return CGProvider().getBounds(from: shape)
 #else
-    return .zero
+    return shape.path.bounds
 #endif
   }
 }
@@ -505,6 +512,11 @@ public final class CGTextRenderer: Renderer {
     lines.append("ctx.setMiterLimit(\(formatter.format(miterLimit)))")
   }
 
+  func setLineDash(phase: LayerTree.Float, lengths: [LayerTree.Float]) {
+    let values = lengths.map { formatter.format($0) }.joined(separator: ", ")
+    lines.append("ctx.setLineDash(phase: \(formatter.format(phase)), lengths: [\(values)])")
+  }
+
   func setClip(path: [LayerTree.Shape], rule: String) {
     let identifier = createOrGetPath(path)
     lines.append("ctx.addPath(\(identifier))")
@@ -563,11 +575,8 @@ public final class CGTextRenderer: Renderer {
   }
   
   func draw(image: LayerTree.Image, in rect: String) {
-    lines.append("ctx.saveGState()")
-    lines.append("ctx.translateBy(x: 0, y: image.height)")
-    lines.append("ctx.scaleBy(x: 1, y: -1)")
-    lines.append("ctx.draw(image, in: CGRect(x: 0, y: 0, width: image.width, height: image.height)")
-    lines.append("ctx.restoreGState()")
+    // the generated code embeds no bitmaps: it cannot draw, nor letterbox (the bitmap size is unknown here)
+    lines.append("// warning: image dropped, <image> is not supported in generated code")
   }
 
   func draw(linear gradient: LayerTree.Gradient, from start: String, to end: String) {
@@ -590,6 +599,16 @@ public final class CGTextRenderer: Renderer {
                            endRadius: \(formatter.format(endRadius)),
                            options: [.drawsAfterEndLocation, .drawsBeforeStartLocation])
     """)
+  }
+
+  // Filters are not generated: the contents are drawn unfiltered, in their own graphics state.
+  func pushFilterLayer(_ filter: LayerTree.FilterLayer) {
+    lines.append("// warning: filter dropped (\(filter.effects.count) effect(s)), contents drawn unfiltered")
+    lines.append("ctx.saveGState()")
+  }
+
+  func popFilterLayer() {
+    lines.append("ctx.restoreGState()")
   }
 
   func makeSwiftUI() -> String {

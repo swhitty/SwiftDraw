@@ -34,18 +34,15 @@ import Foundation
 package extension TextOutputStream where Self == StandardErrorStream {
     static var standardError: Self {
         get {
-            StandardErrorStream.shared
+            StandardErrorStream()
         }
-        set {
-            StandardErrorStream.shared = newValue
-        }
+        // the stream is stateless; ignoring the write-back keeps concurrent parses (and tests)
+        // from racing on a shared global
+        set { }
     }
 }
 
 package struct StandardErrorStream: TextOutputStream {
-
-    nonisolated(unsafe)
-    fileprivate static var shared = StandardErrorStream()
 
     package func write(_ string: String) {
         if #available(macOS 10.15.4, iOS 13.4, tvOS 13.4, watchOS 6.2, *) {

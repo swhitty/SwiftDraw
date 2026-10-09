@@ -50,14 +50,15 @@ extension XMLParser {
 
     func parseAnchor(_ att: any AttributeParser, element: XML.Element) throws -> DOM.Anchor? {
         let anchor = DOM.Anchor()
-        anchor.href = try att.parseUrl("href")
+        // an <a> without a valid href is a plain group (SVG 2)
+        anchor.href = try? att.parseHref()
         return anchor
     }
 
     func parseText(_ att: any AttributeParser, value: String) throws -> DOM.Text {
         let element = DOM.Text(value: value)
-        element.x = try att.parseCoordinate("x")
-        element.y = try att.parseCoordinate("y")
+        element.x = try parseLength(att, "x", .horizontal)
+        element.y = try parseLength(att, "y", .vertical)
         return element
     }
 }

@@ -91,6 +91,7 @@ protocol Renderer {
     func setLine(cap: Types.LineCap)
     func setLine(join: Types.LineJoin)
     func setLine(miterLimit: Types.Float)
+    func setLineDash(phase: Types.Float, lengths: [Types.Float])
     func setClip(path: Types.Path, rule: Types.FillRule)
     func setAlpha(_ alpha: Types.Float)
     func setBlend(mode: Types.BlendMode)
@@ -101,6 +102,9 @@ protocol Renderer {
     func draw(image: Types.Image, in rect: Types.Rect)
     func draw(linear gradient: Types.Gradient, from start: Types.Point, to end: Types.Point)
     func draw(radial gradient: Types.Gradient, startCenter: Types.Point, startRadius: Types.Float, endCenter: Types.Point, endRadius: Types.Float)
+
+    func pushFilterLayer(_ filter: LayerTree.FilterLayer)
+    func popFilterLayer()
 }
 
 extension Renderer {
@@ -136,6 +140,8 @@ extension Renderer {
             setLine(join: j)
         case .setLineMiter(limit: let l):
             setLine(miterLimit: l)
+        case .setLineDash(phase: let p, lengths: let l):
+            setLineDash(phase: p, lengths: l)
         case .setClip(path: let p, rule: let r):
             setClip(path: p, rule: r)
         case .setAlpha(let a):
@@ -154,6 +160,10 @@ extension Renderer {
             draw(linear: g, from: start, to: end)
         case let .drawRadialGradient(g, startCenter, startRadius, endCenter, endRadius):
             draw(radial: g, startCenter: startCenter, startRadius: startRadius, endCenter: endCenter, endRadius: endRadius)
+        case .pushFilterLayer(let f):
+            pushFilterLayer(f)
+        case .popFilterLayer:
+            popFilterLayer()
         }
     }
 
@@ -180,6 +190,7 @@ enum RendererCommand<Types: RendererTypes>: @unchecked Sendable {
     case setLineCap(Types.LineCap)
     case setLineJoin(Types.LineJoin)
     case setLineMiter(limit: Types.Float)
+    case setLineDash(phase: Types.Float, lengths: [Types.Float])
     case setClip(path: Types.Path, rule: Types.FillRule)
     case setAlpha(Types.Float)
     case setBlend(mode: Types.BlendMode)
@@ -194,6 +205,10 @@ enum RendererCommand<Types: RendererTypes>: @unchecked Sendable {
 
     case pushTransparencyLayer
     case popTransparencyLayer
+
+    // draws the following commands offscreen until popFilterLayer, then composites the filtered result
+    case pushFilterLayer(LayerTree.FilterLayer)
+    case popFilterLayer
 }
 
 

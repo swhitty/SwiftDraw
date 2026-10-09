@@ -39,7 +39,11 @@ extension LayerTree {
         var clipRule: FillRule?
         var clipUnits: ClipUnits = .userSpaceOnUse
         var mask: Layer?
-        var filters: [Filter] = []
+        /// The mask stands for a clip path one clipping path cannot express (SD8): renderers
+        /// without masks may draw the content unclipped instead of dropping it.
+        var maskIsClip = false
+        var filters: [FilterPrimitive] = []
+        var filterRegion = FilterRegion()
 
         enum Contents: Hashable {
             case shape(Shape, StrokeAttributes, FillAttributes)
@@ -82,7 +86,9 @@ extension LayerTree {
             clip.hash(into: &hasher)
             clipUnits.hash(into: &hasher)
             mask.hash(into: &hasher)
+            maskIsClip.hash(into: &hasher)
             filters.hash(into: &hasher)
+            filterRegion.hash(into: &hasher)
         }
 
         static func ==(lhs: Layer, rhs: Layer) -> Bool {
@@ -94,7 +100,9 @@ extension LayerTree {
             lhs.clipRule == rhs.clipRule &&
             lhs.clipUnits == rhs.clipUnits &&
             lhs.mask == rhs.mask &&
-            lhs.filters == rhs.filters
+            lhs.maskIsClip == rhs.maskIsClip &&
+            lhs.filters == rhs.filters &&
+            lhs.filterRegion == rhs.filterRegion
         }
     }
 
@@ -104,6 +112,8 @@ extension LayerTree {
         var cap: LineCap
         var join: LineJoin
         var miterLimit: Float
+        var dashArray: [Float] = []
+        var dashOffset: Float = 0
 
         enum Stroke: Hashable {
             case color(Color)

@@ -92,4 +92,36 @@ struct SAXParserTests {
         #expect(root.children.count == 1)
         #expect(root.children[0].name == "b")
     }
+
+    @Test
+    func declaredSVGPrefixIsKept() throws {
+        let xml = """
+        <svg xmlns="http://www.w3.org/2000/svg" xmlns:ns="http://www.w3.org/2000/svg" xmlns:s="http://www.w3.org/2000/svg">
+        <ns:g><s:rect /></ns:g>
+        <b />
+        </svg>
+        """
+        let root = try XML.SAXParser.parse(data: xml.data(using: .utf8)!)
+        #expect(root.children.map(\.name) == ["g", "b"])
+        #expect(root.children[0].children.map(\.name) == ["rect"])
+    }
+
+    @Test
+    func foreignNamespaceDropsSubtreeAndText() throws {
+        let xml = """
+        <svg xmlns="http://www.w3.org/2000/svg"
+             xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+             xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+             xmlns:x="http://example.com/custom">
+        <inkscape:foo><rect /><g>dropped</g></inkscape:foo>
+        <sodipodi:namedview><circle /></sodipodi:namedview>
+        <x:thing xmlns="http://example.com/other"><b /></x:thing>
+        <text>kept</text>
+        </svg>
+        """
+        let root = try XML.SAXParser.parse(data: xml.data(using: .utf8)!)
+        #expect(root.children.map(\.name) == ["text"])
+        #expect(root.children[0].innerText?.contains("kept") == true)
+        #expect(root.innerText?.contains("dropped") != true)
+    }
 }

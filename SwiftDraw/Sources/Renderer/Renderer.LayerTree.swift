@@ -124,6 +124,6 @@ struct LayerTreeProvider: RendererTypeProvider {
   }
 
   func getBounds(from shape: LayerTree.Shape) -> LayerTree.Rect {
-    return LayerTree.Rect(x: 0, y: 0, width: 0, height: 0)
+    return shape.path.bounds
   }
 }

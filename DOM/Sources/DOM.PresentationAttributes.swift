@@ -35,10 +35,12 @@ package extension DOM {
 
     // PresentationAttributes cascade;
     // element.attributes --> .element() --> .class() ---> .id() ---> element.style ---> layerTree.state
+    // (parsed documents: element.attributes --> matched rules --> element.style --> !important rules --> !important style)
     
     struct PresentationAttributes {
         package var opacity: DOM.Float?
         package var display: DOM.DisplayMode?
+        package var visibility: DOM.Visibility?
         package var color: DOM.Color?
 
         package var stroke: DOM.Fill?
@@ -46,7 +48,8 @@ package extension DOM {
         package var strokeOpacity: DOM.Float?
         package var strokeLineCap: DOM.LineCap?
         package var strokeLineJoin: DOM.LineJoin?
-        package var strokeDashArray: [DOM.Float]?
+        package var strokeDashArray: [DOM.DashLength]?
+        package var strokeDashOffset: DOM.DashLength?
 
         package var fill: DOM.Fill?
         package var fillOpacity: DOM.Float?
@@ -62,18 +65,34 @@ package extension DOM {
         package var clipRule: DOM.FillRule?
         package var mask: DOM.URL?
         package var filter: DOM.URL?
+
+        package var stopColor: DOM.Color?
+        package var stopOpacity: DOM.Float?
     }
     
     static func presentationAttributes(for element: DOM.GraphicsElement,
                                        styles: [StyleSheet]) -> PresentationAttributes {
         var attributes = element.attributes
-        
-        for selector in makeSelectors(for: element) {
-            let new = makeAttributes(for: selector, styles: styles)
-            attributes = attributes.applyingAttributes(new)
+
+        if let matched = element.matchedStyle {
+            // parsed documents: every selector form, by specificity then source order (CSS Cascade 3 §6)
+            attributes = attributes.applyingAttributes(matched.attributes)
+        } else {
+            for selector in makeSelectors(for: element) {
+                let new = makeAttributes(for: selector, styles: styles)
+                attributes = attributes.applyingAttributes(new)
+            }
         }
-        
+
         attributes = attributes.applyingAttributes(element.style)
+
+        if let matched = element.matchedStyle {
+            // `!important` stylesheet declarations override style=""
+            attributes = attributes.applyingAttributes(matched.importantAttributes)
+        }
+
+        // and `!important` in style="" overrides them (CSS Cascade 3 §6.1)
+        attributes = attributes.applyingAttributes(element.importantStyle)
         return attributes
     }
     
@@ -118,6 +137,7 @@ extension DOM.PresentationAttributes {
         
         merged.opacity = att.opacity ?? opacity
         merged.display = att.display ?? display
+        merged.visibility = att.visibility ?? visibility
         merged.color = att.color ?? color
         
         merged.stroke = att.stroke ?? stroke
@@ -126,6 +146,7 @@ extension DOM.PresentationAttributes {
         merged.strokeLineCap = att.strokeLineCap ?? strokeLineCap
         merged.strokeLineJoin = att.strokeLineJoin ?? strokeLineJoin
         merged.strokeDashArray = att.strokeDashArray ?? strokeDashArray
+        merged.strokeDashOffset = att.strokeDashOffset ?? strokeDashOffset
         
         merged.fill = att.fill ?? fill
         merged.fillOpacity = att.fillOpacity ?? fillOpacity
@@ -141,6 +162,9 @@ extension DOM.PresentationAttributes {
         merged.clipRule = att.clipRule ?? clipRule
         merged.mask = att.mask ?? mask
         merged.filter = att.filter ?? filter
+
+        merged.stopColor = att.stopColor ?? stopColor
+        merged.stopOpacity = att.stopOpacity ?? stopOpacity
         
         return merged
     }

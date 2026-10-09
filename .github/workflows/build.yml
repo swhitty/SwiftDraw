@@ -27,6 +27,22 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage_report.lcov
 
+  # Apps ship optimized builds: SD12's floods were transparent under -O while every Debug job passed
+  xcode_release:
+    runs-on: macos-26
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Select the newest Xcode
+        run: echo "DEVELOPER_DIR=$(ls -d /Applications/Xcode_*.app | sort -V | tail -1)/Contents/Developer" >> "$GITHUB_ENV"
+      - name: Version
+        run: swift --version
+      - name: Build
+        run: swift build -c release --build-tests -Xswiftc -enable-testing
+      - name: Test
+        run: swift test -c release --skip-build -Xswiftc -enable-testing
+
   xcode_26_2:
     runs-on: macos-26
     env:

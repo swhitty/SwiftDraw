@@ -43,29 +43,74 @@ package extension XMLParser {
         let heightRaw = try? att.parseString("height")
         let viewBox: DOM.SVG.ViewBox? = try parseViewBox(try att.parseString("viewBox"))
 
-        var width = try resolveRootDimension(widthRaw, viewport: defaultViewport?.width, attribute: "width")
-        var height = try resolveRootDimension(heightRaw, viewport: defaultViewport?.height, attribute: "height")
-
-        width = width ?? viewBox?.width ?? defaultViewport?.width
-        height = height ?? viewBox?.height ?? defaultViewport?.height
-
-        guard let w = width else {
-            throw XMLParser.Error.unresolvableDimension(reason: makeUnresolvedReason(attribute: "width", raw: widthRaw, hasViewBox: viewBox != nil))
+        // selectors are matched against the whole document tree before its elements are parsed
+        let styles = parseStyleSheetElements(within: e)
+        let isRoot = styleContext.matcher == nil
+        if isRoot {
+            styleContext.matcher = DOM.StyleSheet.Matcher(sheets: styles, root: e)
+            lengthContext.viewports = []
+            lengthContext.fontSize = rootFontSize(e)
         }
-        guard let h = height else {
-            throw XMLParser.Error.unresolvableDimension(reason: makeUnresolvedReason(attribute: "height", raw: heightRaw, hasViewBox: viewBox != nil))
+        defer {
+            if isRoot { styleContext.matcher = nil }
         }
 
-        let svg = DOM.SVG(width: DOM.Length(w), height: DOM.Length(h))
-        svg.x = try att.parseCoordinate("x")
-        svg.y = try att.parseCoordinate("y")
+        let svg: DOM.SVG
+        if let parent = lengthContext.viewports.last {
+            // SVG 1.1 §7.9: a nested <svg> resolves its percentages against the enclosing viewport,
+            // and a missing (or invalid) width or height is 100%
+            let width = widthRaw.flatMap { try? resolveLength($0, .horizontal) } ?? parent.width
+            let height = heightRaw.flatMap { try? resolveLength($0, .vertical) } ?? parent.height
+            svg = DOM.SVG(width: width, height: height)
+            svg.x = try? parseLength(att, "x", .horizontal)
+            svg.y = try? parseLength(att, "y", .vertical)
+        } else {
+            var width = try resolveRootDimension(widthRaw, viewport: defaultViewport?.width, attribute: "width")
+            var height = try resolveRootDimension(heightRaw, viewport: defaultViewport?.height, attribute: "height")
+
+            // only one side given: the other follows the viewBox's aspect ratio (SVG 2 §8.2, CSS
+            // replaced elements with an intrinsic ratio), as in Chrome and Safari
+            if let viewBox, viewBox.width > 0, viewBox.height > 0 {
+                if let w = width, height == nil {
+                    height = w * viewBox.height / viewBox.width
+                } else if let h = height, width == nil {
+                    width = h * viewBox.width / viewBox.height
+                }
+            }
+
+            width = width ?? viewBox?.width ?? defaultViewport?.width
+            height = height ?? viewBox?.height ?? defaultViewport?.height
+
+            guard let w = width else {
+                throw XMLParser.Error.unresolvableDimension(reason: makeUnresolvedReason(attribute: "width", raw: widthRaw, hasViewBox: viewBox != nil))
+            }
+            guard let h = height else {
+                throw XMLParser.Error.unresolvableDimension(reason: makeUnresolvedReason(attribute: "height", raw: heightRaw, hasViewBox: viewBox != nil))
+            }
+
+            svg = DOM.SVG(width: w, height: h)
+            svg.x = try att.parseCoordinate("x")
+            svg.y = try att.parseCoordinate("y")
+        }
+
+        // the viewport that percentages of the contents resolve against, in their user units
+        if let viewBox, viewBox.width > 0, viewBox.height > 0 {
+            lengthContext.viewports.append(Viewport(width: viewBox.width, height: viewBox.height))
+        } else {
+            lengthContext.viewports.append(Viewport(width: svg.width, height: svg.height))
+        }
+        defer { lengthContext.viewports.removeLast() }
+
         svg.childElements = try parseGraphicsElements(e.children)
         svg.viewBox = viewBox
+        svg.preserveAspectRatio = parsePreserveAspectRatio(try? att.parseString("preserveAspectRatio"))
 
         svg.defs = try parseSVGDefs(e)
-        svg.styles = parseStyleSheetElements(within: e)
+        svg.styles = styles
 
-        svg.attributes = try parsePresentationAttributes(att)
+        // attributes and style="" stay separate so stylesheet rules fall between them
+        svg.attributes = try parsePresentationAttributes(e)
+        applyStyle(of: e, to: svg)
 
         return svg
     }
@@ -104,12 +149,31 @@ package extension XMLParser {
             guard scanner.isEOF else {
                 throw Error.invalidAttribute(name: attribute, value: raw)
             }
-            return DOM.Coordinate(number.apply(unit: unit))
+            switch unit {
+            case .em:
+                return DOM.Coordinate(number) * lengthContext.fontSize
+            case .ex:
+                return DOM.Coordinate(number) * lengthContext.fontSize / 2
+            default:
+                return DOM.Coordinate(number.apply(unit: unit))
+            }
         }
         guard scanner.isEOF else {
             throw Error.invalidAttribute(name: attribute, value: raw)
         }
         return DOM.Coordinate(number)
+    }
+
+    // the font-size of the root <svg> for its own `em` sizes and those of its contents
+    func rootFontSize(_ e: XML.Element) -> DOM.Float {
+        let style = parseStyleDeclarations(e)
+        let matched = styleContext.matcher?.match(e)
+        return style.important.fontSize
+            ?? matched?.importantAttributes.fontSize
+            ?? style.normal.fontSize
+            ?? matched?.attributes.fontSize
+            ?? (try? parsePresentationAttributes(e))?.fontSize
+            ?? LengthContext.initialFontSize
     }
 
     func makeUnresolvedReason(attribute: String, raw: String?, hasViewBox: Bool) -> String {
@@ -164,9 +228,8 @@ package extension XMLParser {
         let elements = try parseGraphicsElements(e.children)
 
         for e in elements {
-            guard let id = e.id else {
-                throw Error.invalid
-            }
+            // an element without an id can never be referenced; skip it rather than fail
+            guard let id = e.id else { continue }
             defs[id] = e
         }
 
@@ -179,7 +242,7 @@ package extension XMLParser {
 
         for n in e.children {
             if n.name == "clipPath" {
-                clipPaths.append(try parseClipPath(n))
+                try appendSkippingInvalid(&clipPaths, n, parseClipPath)
             } else {
                 clipPaths.append(contentsOf: try parseClipPaths(n))
             }
@@ -192,11 +255,20 @@ package extension XMLParser {
 
         let att = try parseAttributes(e)
         let id: String = try att.parseString("id")
-        let units: DOM.ClipPath.Units? = try att.parseRaw("clipPathUnits")
+        // an unknown value falls back to userSpaceOnUse rather than failing the document
+        let units: DOM.ClipPath.Units? = (try? att.parseRaw("clipPathUnits")) ?? nil
 
         let children = try parseGraphicsElements(e.children)
         var clip = DOM.ClipPath(id: id, childElements: children)
         clip.clipPathUnits = units
+        let matched = styleContext.matcher?.match(e)
+        // attribute < stylesheet rules < style="" < !important rules < !important style=""
+        clip.attributes = ((try? parsePresentationAttributes(e)) ?? DOM.PresentationAttributes())
+            .applyingAttributes(matched?.attributes ?? DOM.PresentationAttributes())
+        let style = parseStyleDeclarations(e)
+        clip.style = style.normal
+            .applyingAttributes(matched?.importantAttributes ?? DOM.PresentationAttributes())
+            .applyingAttributes(style.important)
         return clip
     }
 
@@ -205,7 +277,7 @@ package extension XMLParser {
 
         for n in e.children {
             if n.name == "mask" {
-                masks.append(try parseMask(n))
+                try appendSkippingInvalid(&masks, n, parseMask)
             } else {
                 masks.append(contentsOf: try parseMasks(n))
             }
@@ -222,8 +294,15 @@ package extension XMLParser {
         let mask = DOM.Mask(id: id)
         mask.class = try att.parseString("class")
         mask.attributes = try parsePresentationAttributes(e)
-        mask.style = try parseStyleAttributes(e)
+        applyStyle(of: e, to: mask)
         mask.childElements = try parseGraphicsElements(e.children)
+        // an unknown unit or an unparseable length is ignored and the spec default applies
+        mask.maskUnits = (try? att.parseRaw("maskUnits")) ?? nil
+        mask.maskContentUnits = (try? att.parseRaw("maskContentUnits")) ?? nil
+        mask.x = e.attributes["x"].flatMap(XMLParser.parseDashLength)
+        mask.y = e.attributes["y"].flatMap(XMLParser.parseDashLength)
+        mask.width = e.attributes["width"].flatMap(XMLParser.parseDashLength)
+        mask.height = e.attributes["height"].flatMap(XMLParser.parseDashLength)
         return mask
     }
 
@@ -232,7 +311,9 @@ package extension XMLParser {
 
         for n in e.children {
             if n.name == "pattern" {
-                patterns.append(try parsePattern(n))
+                // a pattern without an id can never be referenced; skip it rather than fail
+                guard n.attributes["id"] != nil else { continue }
+                try appendSkippingInvalid(&patterns, n, parsePattern)
             } else {
                 patterns.append(contentsOf: try parsePatterns(n))
             }
@@ -262,4 +343,41 @@ private extension XMLParser.Scanner {
 private extension Foundation.CharacterSet {
 
     static let viewBoxSeparator = Foundation.CharacterSet(charactersIn: ",")
+}
+
+package extension XMLParser {
+
+    /// `[defer] <align> [meet|slice]`. Never throws: an invalid value is dropped so the
+    /// element uses the initial value `xMidYMid meet`, rather than failing the document.
+    func parsePreserveAspectRatio(_ data: String?) -> DOM.PreserveAspectRatio? {
+        guard let data else { return nil }
+        var tokens = data.split(whereSeparator: { $0 == " " || $0 == "\t" || $0 == "\n" || $0 == "\r" }).map(String.init)
+        if tokens.first == "defer" { tokens.removeFirst() }
+        guard (1...2).contains(tokens.count) else { return nil }
+
+        let align: DOM.PreserveAspectRatio.Align
+        switch tokens[0] {
+        case "none": align = .none
+        case "xMinYMin": align = .xMinYMin
+        case "xMidYMin": align = .xMidYMin
+        case "xMaxYMin": align = .xMaxYMin
+        case "xMinYMid": align = .xMinYMid
+        case "xMidYMid": align = .xMidYMid
+        case "xMaxYMid": align = .xMaxYMid
+        case "xMinYMax": align = .xMinYMax
+        case "xMidYMax": align = .xMidYMax
+        case "xMaxYMax": align = .xMaxYMax
+        default: return nil
+        }
+
+        var meetOrSlice = DOM.PreserveAspectRatio.MeetOrSlice.meet
+        if tokens.count == 2 {
+            switch tokens[1] {
+            case "meet": meetOrSlice = .meet
+            case "slice": meetOrSlice = .slice
+            default: return nil
+            }
+        }
+        return DOM.PreserveAspectRatio(align: align, meetOrSlice: meetOrSlice)
+    }
 }

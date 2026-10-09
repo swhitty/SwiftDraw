@@ -32,6 +32,38 @@ import XCTest
 
 final class RendererCGTextTests: XCTestCase {
 
+    func testFilterLayerIsolatesGraphicsState() throws {
+        let xml = #"""
+        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+            <filter id="blur"><feGaussianBlur stdDeviation="2" /></filter>
+            <rect x="10" y="10" width="20" height="20" fill="red" filter="url(#blur)" />
+            <rect x="50" y="50" width="20" height="20" fill="black" />
+        </svg>
+        """#
+        let code = try CGTextRenderer.render(data: Data(xml.utf8), options: .default, api: .uiKit, precision: 2)
+        let lines = code.components(separatedBy: "\n").map { $0.trimmingCharacters(in: .whitespaces) }
+
+        let warning = try XCTUnwrap(lines.firstIndex { $0.hasPrefix("// warning: filter dropped") })
+        let save = try XCTUnwrap(lines.firstIndex(of: "ctx.saveGState()"))
+        let restore = try XCTUnwrap(lines.lastIndex(of: "ctx.restoreGState()"))
+        let lastFill = try XCTUnwrap(lines.lastIndex { $0.hasPrefix("ctx.setFillColor") })
+        XCTAssertLessThan(warning, save)
+        XCTAssertLessThan(save, restore)
+        XCTAssertGreaterThan(lastFill, restore)
+    }
+
+    func testImageIsDroppedWithAWarningNotAnUndeclaredReference() throws {
+        let png = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="
+        let xml = """
+        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+            <image width="50" height="20" preserveAspectRatio="xMidYMid slice" xlink:href="data:image/png;base64,\(png)" />
+        </svg>
+        """
+        let code = try CGTextRenderer.render(data: Data(xml.utf8), options: .default, api: .uiKit, precision: 2)
+        XCTAssertFalse(code.contains("ctx.draw(image"))
+        XCTAssertTrue(code.contains("// warning: image dropped"))
+    }
+
     func testLinesCode() throws {
         let code = try CGTextRenderer.render(svgNamed: "lines.svg")
         XCTAssertEqual(
@@ -82,6 +114,23 @@ final class RendererCGTextTests: XCTestCase {
             }
             """
         )
+    }
+
+    func testPatternCode() throws {
+        let svg = #"""
+        <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="64" height="64">
+            <defs>
+                <pattern id="base" x="2" y="3" width="8" height="8" patternUnits="userSpaceOnUse">
+                    <rect width="4" height="4" fill="red" />
+                </pattern>
+                <pattern id="derived" xlink:href="#base" patternTransform="translate(10, 0)" />
+            </defs>
+            <rect width="64" height="64" fill="url(#derived)" />
+        </svg>
+        """#
+        let code = try CGTextRenderer.render(data: Data(svg.utf8), options: .default, api: .uiKit, precision: 2)
+        XCTAssertTrue(code.contains("bounds: CGRect(x: 2, y: 3, width: 8, height: 8)"))
+        XCTAssertTrue(code.contains("matrix: CGAffineTransform(a: 1.0, b: 0.0, c: 0.0, d: 1.0, tx: 10.0, ty: 0.0).concatenating(ctx.ctm.concatenating(baseCTM.inverted()))"))
     }
 
     func testSwiftUICode() throws {
@@ -547,6 +596,49 @@ final class RendererCGTextTests: XCTestCase {
     }
 }
 
+extension RendererCGTextTests {
+
+    func testDashedStrokeIsResetAfterStroke() throws {
+        let svg = #"<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><path d="M0 0 L100 100" stroke="black" stroke-dasharray="4 2" stroke-dashoffset="1"/></svg>"#
+        let code = try CGTextRenderer.render(data: Data(svg.utf8), options: .default, api: .uiKit, precision: 2)
+        let lines = code.split(separator: "\n").map { $0.trimmingCharacters(in: .whitespaces) }
+        let dash = try XCTUnwrap(lines.firstIndex(of: "ctx.setLineDash(phase: 1, lengths: [4, 2])"))
+        let stroke = try XCTUnwrap(lines.lastIndex(of: "ctx.strokePath()"))
+        XCTAssertGreaterThan(stroke, dash)
+        // the lone push/pop pair is stripped by the optimizer, so the dash must be reset explicitly
+        XCTAssertEqual(lines[stroke + 1], "ctx.setLineDash(phase: 0, lengths: [])")
+    }
+
+    func testRepeatGradientCode() throws {
+        let svg = #"""
+        <svg xmlns="http://www.w3.org/2000/svg" width="100" height="10">
+          <defs><linearGradient id="g" gradientUnits="userSpaceOnUse" x1="0" x2="25" spreadMethod="repeat">
+            <stop offset="0" stop-color="red"/><stop offset="1" stop-color="blue"/>
+          </linearGradient></defs>
+          <rect width="100" height="10" fill="url(#g)"/>
+        </svg>
+        """#
+        let code = try CGTextRenderer.render(data: Data(svg.utf8), options: .default, api: .uiKit, precision: 2)
+        XCTAssertTrue(code.contains("[0.0, 0.25, 0.25, 0.5, 0.5, 0.75, 0.75, 1.0]"), code)
+        XCTAssertTrue(code.contains("end: CGPoint(x: 100, y: 0)"), code)
+    }
+
+    func testDashedGradientStrokesAreReset() throws {
+        // A stroke-only shape is the lone push/pop pair the optimizer strips, so each gradient stroke
+        // branch must reset the dash itself or it leaks into the caller's context.
+        for gradient in [#"<linearGradient id="g"><stop offset="0" stop-color="red"/><stop offset="1" stop-color="blue"/></linearGradient>"#,
+                         #"<radialGradient id="g"><stop offset="0" stop-color="red"/><stop offset="1" stop-color="blue"/></radialGradient>"#] {
+            let svg = #"<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><defs>"# + gradient +
+                #"</defs><path d="M0 0 L100 100" fill="none" stroke="url(#g)" stroke-width="4" stroke-dasharray="4 2"/></svg>"#
+            let code = try CGTextRenderer.render(data: Data(svg.utf8), options: .default, api: .uiKit, precision: 2)
+            let lines = code.split(separator: "\n").map { $0.trimmingCharacters(in: .whitespaces) }
+            let dash = try XCTUnwrap(lines.firstIndex(of: "ctx.setLineDash(phase: 0, lengths: [4, 2])"), gradient)
+            let reset = try XCTUnwrap(lines.lastIndex(of: "ctx.setLineDash(phase: 0, lengths: [])"), gradient)
+            XCTAssertGreaterThan(reset, dash, gradient)
+        }
+    }
+}
+
 private extension CGTextRenderer {
 
     static func render(svgNamed name: String, in bundle: Bundle = .test, api: API = .uiKit, precision: Int = 2) throws -> String {
@@ -555,4 +647,18 @@ private extension CGTextRenderer {
         return try render(data: data, options: .default, api: api, precision: precision)
     }
 
+}
+
+extension RendererCGTextTests {
+
+    func testRootSliceIsClippedToItsViewport() throws {
+        let svg = #"<svg xmlns="http://www.w3.org/2000/svg" width="200" height="100" viewBox="0 0 100 100" preserveAspectRatio="xMinYMin slice"><rect width="100" height="100"/></svg>"#
+        let code = try CGTextRenderer.render(data: Data(svg.utf8), options: .default, api: .uiKit, precision: 2)
+        let lines = code.split(separator: "\n").map { $0.trimmingCharacters(in: .whitespaces) }
+        // the 200x100 viewport is 100x50 in viewBox space after the 2x scale
+        let scale = try XCTUnwrap(lines.firstIndex(of: "ctx.scaleBy(x: 2, y: 2)"))
+        let clip = try XCTUnwrap(lines.firstIndex(where: { $0.hasSuffix("CGRect(x: 0, y: 0, width: 100, height: 50),") }))
+        XCTAssertGreaterThan(clip, scale)
+        XCTAssertTrue(lines.contains("ctx.clip()"))
+    }
 }

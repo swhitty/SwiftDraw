@@ -57,8 +57,8 @@ extension XML.Formatter {
             element.attributes["viewBox"] = makeViewBox(svg.viewBox)
 
             if svg.viewBox != .init(x: 0, y: 0, width: DOM.Coordinate(svg.width), height: DOM.Coordinate(svg.height)) {
-                element.attributes["width"] = formatter.formatLength(svg.width)
-                element.attributes["height"] = formatter.formatLength(svg.height)
+                element.attributes["width"] = formatter.format(svg.width)
+                element.attributes["height"] = formatter.format(svg.height)
             }
 
             try element.children.append(contentsOf: makeStyles(svg.styles))
@@ -120,14 +120,26 @@ extension XML.Formatter {
             var attributes: [String: String] = [:]
             attributes["opacity"] = formatter.format(graphic.opacity)
             attributes["display"] = graphic.display?.rawValue
+            attributes["visibility"] = graphic.visibility?.rawValue
             attributes["stroke"] = graphic.stroke.map(encodeFill)
             attributes["stroke-width"] = formatter.format(graphic.strokeWidth)
             attributes["stroke-opacity"] = formatter.format(graphic.strokeOpacity)
             attributes["stroke-linecap"] = graphic.strokeLineCap?.rawValue
             attributes["stroke-linejoin"] = graphic.strokeLineJoin?.rawValue
-            attributes["stroke-dasharray"] = graphic.strokeDashArray?
-                                                            .map { formatter.format($0) }
-                                                            .joined(separator: " ")
+            attributes["stroke-dasharray"] = graphic.strokeDashArray.map { lengths in
+                lengths.isEmpty ? "none" : lengths.map { length -> String in
+                    switch length {
+                    case .absolute(let v): return formatter.format(v)
+                    case .percentage(let v): return formatter.format(v) + "%"
+                    }
+                }.joined(separator: " ")
+            }
+            attributes["stroke-dashoffset"] = graphic.strokeDashOffset.map { length -> String in
+                switch length {
+                case .absolute(let v): return formatter.format(v)
+                case .percentage(let v): return formatter.format(v) + "%"
+                }
+            }
 
             attributes["fill-opacity"] = formatter.format(graphic.fillOpacity)
             attributes["fill"] = graphic.fill.map(encodeFill)
@@ -281,6 +293,8 @@ extension XML.Formatter {
                 return encodeColor(from: color)
             case .url(let url):
                 return encodeURL(url)
+            case .urlWithFallback(let url, let color):
+                return "\(encodeURL(url)) \(encodeColor(from: color))"
             }
         }
 
@@ -300,7 +314,7 @@ extension XML.Formatter {
         }
 
         func encodeURL(_ url: URL) -> String {
-            "url(\(url.absoluteString))"
+            url.isNone ? "none" : "url(\(url.absoluteString))"
         }
 
         func encodeColor(from color: DOM.Color) -> String {

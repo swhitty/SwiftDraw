@@ -30,6 +30,7 @@
 //
 
 import Foundation
+import SwiftDrawDOM
 
 extension LayerTree {
     struct Image: Hashable {
@@ -38,6 +39,7 @@ extension LayerTree {
         var origin: Point = .zero
         var width: LayerTree.Float?
         var height: LayerTree.Float?
+        var preserveAspectRatio: DOM.PreserveAspectRatio = .default
 
         enum Bitmap: Hashable {
             case jpeg(Data)

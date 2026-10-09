@@ -33,16 +33,18 @@ package extension DOM {
     final class SVG: GraphicsElement, ContainerElement {
         package var x: Coordinate?
         package var y: Coordinate?
-        package var width: Length
-        package var height: Length
+        // fractional: a root `width="145.11934"` must not be truncated (SVG 1.1 §7.10)
+        package var width: Coordinate
+        package var height: Coordinate
         package var viewBox: ViewBox?
+        package var preserveAspectRatio: PreserveAspectRatio?
 
         package var childElements = [GraphicsElement]()
 
         package var styles = [StyleSheet]()
         package var defs = Defs()
 
-        package init(x: Coordinate? = nil, y: Coordinate? = nil, width: Length, height: Length) {
+        package init(x: Coordinate? = nil, y: Coordinate? = nil, width: Coordinate, height: Coordinate) {
             self.x = x
             self.y = y
             self.width = width
@@ -80,6 +82,13 @@ package extension DOM {
         package var clipPathUnits: Units?
         package var childElements = [GraphicsElement]()
 
+        // `clip-rule`, `transform` and `clip-path` of the <clipPath> itself (SVG 1.1 §14.3.5)
+        package var attributes = PresentationAttributes()
+        package var style = PresentationAttributes()
+
+        /// attributes < stylesheet rules < style="" (the parser folds rules into `attributes` and `style`)
+        package var cascaded: PresentationAttributes { attributes.applyingAttributes(style) }
+
         package enum Units: String {
             case userSpaceOnUse
             case objectBoundingBox
@@ -88,6 +97,14 @@ package extension DOM {
     
     final class Mask: GraphicsElement, ContainerElement {
         package var childElements = [GraphicsElement]()
+
+        // SVG 1.1 §14.4: the mask region and the coordinate systems of the region and the contents
+        package var maskUnits: ClipPath.Units?
+        package var maskContentUnits: ClipPath.Units?
+        package var x: DashLength?
+        package var y: DashLength?
+        package var width: DashLength?
+        package var height: DashLength?
 
         init(id: String, childElements: [GraphicsElement] = []) {
             super.init()
@@ -106,5 +123,7 @@ package extension DOM {
         
         package var attributes: [Selector: PresentationAttributes] = [:]
         package var fonts: [DOM.FontFace] = []
+        // every rule in source order, including selectors `attributes` cannot key
+        package var rules: [Rule] = []
     }
 }
