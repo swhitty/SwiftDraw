@@ -62,25 +62,31 @@ struct ParserSVGTests {
         let parser = DOMXMLParser()
 
         let parsed = try parser.parseSVG(node)
-        // 10cm = 10 * 37.795 = 377.95 → truncated to 377
-        #expect(parsed.width == 377)
+        // 10cm = 10 * 96 / 2.54 = 377.95276, kept fractional (SVG 1.1 §7.10)
+        #expect(parsed.width == DOM.Coordinate(10.0 * 96 / 2.54))
         // 2in = 2 * 96 = 192
         #expect(parsed.height == 192)
     }
 
     @Test
-    func root_em_ex_dimensions_fall_back_to_raw_values() throws {
+    func root_em_ex_dimensions_resolve_against_font_size() throws {
         let em = XML.Element(name: "svg", attributes: ["width": "2em", "height": "1em"])
         let ex = XML.Element(name: "svg", attributes: ["width": "2ex", "height": "1ex"])
+        let sized = XML.Element(name: "svg", attributes: ["width": "2em", "height": "3ex", "font-size": "10"])
         let parser = DOMXMLParser()
 
+        // the initial font-size is `medium`, 16px in Chrome and Safari; 1ex is half of it
         let parsedEm = try parser.parseSVG(em)
-        #expect(parsedEm.width == 2)
-        #expect(parsedEm.height == 1)
+        #expect(parsedEm.width == 32)
+        #expect(parsedEm.height == 16)
 
         let parsedEx = try parser.parseSVG(ex)
-        #expect(parsedEx.width == 2)
-        #expect(parsedEx.height == 1)
+        #expect(parsedEx.width == 16)
+        #expect(parsedEx.height == 8)
+
+        let parsedSized = try parser.parseSVG(sized)
+        #expect(parsedSized.width == 20)
+        #expect(parsedSized.height == 15)
     }
 
     @Test

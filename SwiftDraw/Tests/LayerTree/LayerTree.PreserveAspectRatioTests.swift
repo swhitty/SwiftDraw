@@ -261,7 +261,7 @@ final class LayerTreePreserveAspectRatioTests: XCTestCase {
 
     func testDegenerateViewportsFallBackToIdentity() {
         let box = DOM.SVG.ViewBox(x: 0, y: 0, width: 100, height: 50)
-        for (w, h) in [(0, 100), (100, 0), (-10, 100), (100, -10), (0, 0)] {
+        for (w, h): (DOM.Coordinate, DOM.Coordinate) in [(0, 100), (100, 0), (-10, 100), (100, -10), (0, 0)] {
             let fit = LayerTree.Builder.makeViewBoxFit(viewBox: box, width: w, height: h, preserveAspectRatio: nil)
             XCTAssertEqual([fit.sx, fit.sy, fit.tx, fit.ty], [1, 1, 0, 0], "\(w)x\(h)")
             let clip = LayerTree.Builder.makeViewportClip(viewBox: box, width: w, height: h, preserveAspectRatio: nil)

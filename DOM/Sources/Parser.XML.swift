@@ -56,6 +56,19 @@ package struct XMLParser {
         var matcher: DOM.StyleSheet.Matcher?
     }
 
+    // viewports and font-size that relative lengths of the element being parsed resolve against
+    let lengthContext = LengthContext()
+
+    final class LengthContext {
+        // the nearest viewport (in user units) is last; empty outside an <svg>
+        var viewports = [Viewport]()
+        // the computed font-size of the element being parsed, for `em` and `ex`
+        var fontSize: DOM.Float = LengthContext.initialFontSize
+
+        // `medium` in Chrome and Safari
+        static let initialFontSize: DOM.Float = 16
+    }
+
     package struct Viewport: Equatable, Sendable {
         package var width: DOM.Coordinate
         package var height: DOM.Coordinate

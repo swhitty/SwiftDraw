@@ -32,37 +32,37 @@
 extension XMLParser {
 
     func parseLine(_ att: any AttributeParser) throws -> DOM.Line {
-        let x1: DOM.Coordinate = try att.parseCoordinate("x1")
-        let y1: DOM.Coordinate = try att.parseCoordinate("y1")
-        let x2: DOM.Coordinate = try att.parseCoordinate("x2")
-        let y2: DOM.Coordinate = try att.parseCoordinate("y2")
+        let x1: DOM.Coordinate = try parseLength(att, "x1", .horizontal)
+        let y1: DOM.Coordinate = try parseLength(att, "y1", .vertical)
+        let x2: DOM.Coordinate = try parseLength(att, "x2", .horizontal)
+        let y2: DOM.Coordinate = try parseLength(att, "y2", .vertical)
         return DOM.Line(x1: x1, y1: y1, x2: x2, y2: y2)
     }
 
     func parseCircle(_ att: any AttributeParser) throws -> DOM.Circle {
-        let cx: DOM.Coordinate? = try att.parseCoordinate("cx")
-        let cy: DOM.Coordinate? = try att.parseCoordinate("cy")
-        let r: DOM.Coordinate = try att.parseCoordinate("r")
+        let cx: DOM.Coordinate? = try parseLength(att, "cx", .horizontal)
+        let cy: DOM.Coordinate? = try parseLength(att, "cy", .vertical)
+        let r: DOM.Coordinate = try parseLength(att, "r", .other)
         return DOM.Circle(cx: cx, cy: cy, r: r)
     }
 
     func parseEllipse(_ att: any AttributeParser) throws -> DOM.Ellipse {
-        let cx: DOM.Coordinate? = try att.parseCoordinate("cx")
-        let cy: DOM.Coordinate? = try att.parseCoordinate("cy")
-        let rx: DOM.Coordinate = try att.parseCoordinate("rx")
-        let ry: DOM.Coordinate = try att.parseCoordinate("ry")
+        let cx: DOM.Coordinate? = try parseLength(att, "cx", .horizontal)
+        let cy: DOM.Coordinate? = try parseLength(att, "cy", .vertical)
+        let rx: DOM.Coordinate = try parseLength(att, "rx", .horizontal)
+        let ry: DOM.Coordinate = try parseLength(att, "ry", .vertical)
         return DOM.Ellipse(cx: cx, cy: cy, rx: rx, ry: ry)
     }
 
     func parseRect(_ att: any AttributeParser) throws -> DOM.Rect {
-        let width: DOM.Coordinate = try att.parseCoordinate("width")
-        let height: DOM.Coordinate = try att.parseCoordinate("height")
+        let width: DOM.Coordinate = try parseLength(att, "width", .horizontal)
+        let height: DOM.Coordinate = try parseLength(att, "height", .vertical)
         let rect = DOM.Rect(width: width, height: height)
 
-        rect.x = try att.parseCoordinate("x")
-        rect.y = try att.parseCoordinate("y")
-        rect.rx = try att.parseCoordinate("rx")
-        rect.ry = try att.parseCoordinate("ry")
+        rect.x = try parseLength(att, "x", .horizontal)
+        rect.y = try parseLength(att, "y", .vertical)
+        rect.rx = try parseLength(att, "rx", .horizontal)
+        rect.ry = try parseLength(att, "ry", .vertical)
 
         return rect
     }
@@ -79,6 +79,16 @@ extension XMLParser {
         var ge: DOM.GraphicsElement
 
         let att = try parseAttributes(e)
+        let attributes = try parsePresentationAttributes(e)
+        let style = parseStyleDeclarations(e)
+        let matched = styleContext.matcher?.match(e)
+        // `em` and `ex` lengths of this element (and font-size inherited by its children)
+        lengthContext.fontSize = style.important.fontSize
+            ?? matched?.importantAttributes.fontSize
+            ?? style.normal.fontSize
+            ?? matched?.attributes.fontSize
+            ?? attributes.fontSize
+            ?? lengthContext.fontSize
 
         switch e.name {
         case "g": ge = try parseGroup(e)
@@ -106,19 +116,25 @@ extension XMLParser {
         ge.id = elementAtt.id
         ge.class = elementAtt.class
 
-        ge.attributes = try parsePresentationAttributes(e)
-        applyStyle(of: e, to: ge)
+        ge.attributes = attributes
+        ge.style = style.normal
+        ge.importantStyle = style.important
+        ge.matchedStyle = matched
         return ge
     }
 
     func parseGraphicsElements(_ elements: [XML.Element]) throws -> [DOM.GraphicsElement] {
         var result = [DOM.GraphicsElement]()
-        var stack: [(XML.Element, parent: (any ContainerElement)?)] = elements
+        // each element inherits the font-size of its parent for `em` and `ex` lengths
+        let fontSize = lengthContext.fontSize
+        defer { lengthContext.fontSize = fontSize }
+        var stack: [(XML.Element, parent: (any ContainerElement)?, fontSize: DOM.Float)] = elements
             .reversed()
-            .map { ($0, parent: nil) }
+            .map { ($0, parent: nil, fontSize: fontSize) }
 
-        while let (element, parent) = stack.popLast() {
+        while let (element, parent, inheritedFontSize) = stack.popLast() {
             try Task.checkCancellation()
+            lengthContext.fontSize = inheritedFontSize
 
             // not routed through skippingInvalid(_:_:): nested <svg> recurses through here and
             // the extra generic/closure frames overflow the small stacks of test threads
@@ -141,8 +157,10 @@ extension XMLParser {
                 result.append(ge)
             }
 
-            if let container = ge as? any ContainerElement {
-                stack.append(contentsOf: element.children.reversed().map { ($0, container) })
+            // a nested <svg> has already parsed its children against its own viewport (parseSVG)
+            if let container = ge as? any ContainerElement, !(ge is DOM.SVG) {
+                let fontSize = lengthContext.fontSize
+                stack.append(contentsOf: element.children.reversed().map { ($0, container, fontSize) })
             }
 
         }
@@ -361,7 +379,8 @@ extension XMLParser {
         el.fillRule = lenient { try att.parseRaw("fill-rule") }
 
         el.fontFamily = lenient { try att.parseFontFamily("font-family") }
-        el.fontSize = lenient { try att.parseFloat("font-size") }
+        // absolute units (`12pt`) in px; `em` and `%` keep their raw number as before
+        el.fontSize = lenient { try att.parseCoordinate("font-size") }
         el.textAnchor = lenient { try att.parseRaw("text-anchor") }
         el.dominantBaseline = lenient { try att.parseRaw("dominant-baseline") }
 

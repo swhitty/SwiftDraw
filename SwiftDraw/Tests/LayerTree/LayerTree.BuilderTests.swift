@@ -338,8 +338,8 @@ extension LayerTree.Builder {
 
     static func makeTransform(
         viewBox: DOM.SVG.ViewBox?,
-        width: DOM.Length,
-        height: DOM.Length
+        width: DOM.Coordinate,
+        height: DOM.Coordinate
     ) -> [LayerTree.Transform] {
         makeTransform(
             x: nil,

@@ -43,31 +43,63 @@ package extension XMLParser {
         let heightRaw = try? att.parseString("height")
         let viewBox: DOM.SVG.ViewBox? = try parseViewBox(try att.parseString("viewBox"))
 
-        var width = try resolveRootDimension(widthRaw, viewport: defaultViewport?.width, attribute: "width")
-        var height = try resolveRootDimension(heightRaw, viewport: defaultViewport?.height, attribute: "height")
-
-        width = width ?? viewBox?.width ?? defaultViewport?.width
-        height = height ?? viewBox?.height ?? defaultViewport?.height
-
-        guard let w = width else {
-            throw XMLParser.Error.unresolvableDimension(reason: makeUnresolvedReason(attribute: "width", raw: widthRaw, hasViewBox: viewBox != nil))
-        }
-        guard let h = height else {
-            throw XMLParser.Error.unresolvableDimension(reason: makeUnresolvedReason(attribute: "height", raw: heightRaw, hasViewBox: viewBox != nil))
-        }
-
-        let svg = DOM.SVG(width: DOM.Length(w), height: DOM.Length(h))
-        svg.x = try att.parseCoordinate("x")
-        svg.y = try att.parseCoordinate("y")
         // selectors are matched against the whole document tree before its elements are parsed
         let styles = parseStyleSheetElements(within: e)
         let isRoot = styleContext.matcher == nil
         if isRoot {
             styleContext.matcher = DOM.StyleSheet.Matcher(sheets: styles, root: e)
+            lengthContext.viewports = []
+            lengthContext.fontSize = rootFontSize(e)
         }
         defer {
             if isRoot { styleContext.matcher = nil }
         }
+
+        let svg: DOM.SVG
+        if let parent = lengthContext.viewports.last {
+            // SVG 1.1 §7.9: a nested <svg> resolves its percentages against the enclosing viewport,
+            // and a missing (or invalid) width or height is 100%
+            let width = widthRaw.flatMap { try? resolveLength($0, .horizontal) } ?? parent.width
+            let height = heightRaw.flatMap { try? resolveLength($0, .vertical) } ?? parent.height
+            svg = DOM.SVG(width: width, height: height)
+            svg.x = try? parseLength(att, "x", .horizontal)
+            svg.y = try? parseLength(att, "y", .vertical)
+        } else {
+            var width = try resolveRootDimension(widthRaw, viewport: defaultViewport?.width, attribute: "width")
+            var height = try resolveRootDimension(heightRaw, viewport: defaultViewport?.height, attribute: "height")
+
+            // only one side given: the other follows the viewBox's aspect ratio (SVG 2 §8.2, CSS
+            // replaced elements with an intrinsic ratio), as in Chrome and Safari
+            if let viewBox, viewBox.width > 0, viewBox.height > 0 {
+                if let w = width, height == nil {
+                    height = w * viewBox.height / viewBox.width
+                } else if let h = height, width == nil {
+                    width = h * viewBox.width / viewBox.height
+                }
+            }
+
+            width = width ?? viewBox?.width ?? defaultViewport?.width
+            height = height ?? viewBox?.height ?? defaultViewport?.height
+
+            guard let w = width else {
+                throw XMLParser.Error.unresolvableDimension(reason: makeUnresolvedReason(attribute: "width", raw: widthRaw, hasViewBox: viewBox != nil))
+            }
+            guard let h = height else {
+                throw XMLParser.Error.unresolvableDimension(reason: makeUnresolvedReason(attribute: "height", raw: heightRaw, hasViewBox: viewBox != nil))
+            }
+
+            svg = DOM.SVG(width: w, height: h)
+            svg.x = try att.parseCoordinate("x")
+            svg.y = try att.parseCoordinate("y")
+        }
+
+        // the viewport that percentages of the contents resolve against, in their user units
+        if let viewBox, viewBox.width > 0, viewBox.height > 0 {
+            lengthContext.viewports.append(Viewport(width: viewBox.width, height: viewBox.height))
+        } else {
+            lengthContext.viewports.append(Viewport(width: svg.width, height: svg.height))
+        }
+        defer { lengthContext.viewports.removeLast() }
 
         svg.childElements = try parseGraphicsElements(e.children)
         svg.viewBox = viewBox
@@ -117,12 +149,31 @@ package extension XMLParser {
             guard scanner.isEOF else {
                 throw Error.invalidAttribute(name: attribute, value: raw)
             }
-            return DOM.Coordinate(number.apply(unit: unit))
+            switch unit {
+            case .em:
+                return DOM.Coordinate(number) * lengthContext.fontSize
+            case .ex:
+                return DOM.Coordinate(number) * lengthContext.fontSize / 2
+            default:
+                return DOM.Coordinate(number.apply(unit: unit))
+            }
         }
         guard scanner.isEOF else {
             throw Error.invalidAttribute(name: attribute, value: raw)
         }
         return DOM.Coordinate(number)
+    }
+
+    // the font-size of the root <svg> for its own `em` sizes and those of its contents
+    func rootFontSize(_ e: XML.Element) -> DOM.Float {
+        let style = parseStyleDeclarations(e)
+        let matched = styleContext.matcher?.match(e)
+        return style.important.fontSize
+            ?? matched?.importantAttributes.fontSize
+            ?? style.normal.fontSize
+            ?? matched?.attributes.fontSize
+            ?? (try? parsePresentationAttributes(e))?.fontSize
+            ?? LengthContext.initialFontSize
     }
 
     func makeUnresolvedReason(attribute: String, raw: String?, hasViewBox: Bool) -> String {
