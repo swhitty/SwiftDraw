@@ -85,7 +85,7 @@ without `href`) or an unparseable optional geometry value (`x=""`) still throws 
 has no catch, so the **whole document** vanishes — `parseError`/`skipInvalidElements` exist and are dead code. Skip
 the offending element (and only it), keep its siblings; make `skipInvalidElements` real and the default.
 
-### SD16 — wave 2 follow-ups · status: todo
+### SD16 — wave 2 follow-ups · status: next
 Small defects found reviewing merged items, none blocking. **SD6:** each gradient `href` hop scans `svg.defs`
 linearly (`first(where:)`), so N chained gradients cost ~64·N² compares: index ids once in `GradientCache`;
 `makePeriods` always includes period 0, so a linear `repeat`/`reflect` far from its vector (fine period, shape
@@ -113,16 +113,21 @@ gradient, where SD8 (`clipPathUnits`) and SD6 (`stop-opacity`) now drop only the
 
 ## Wave 3
 
-### SD11 — `<symbol>`, `<marker>`, `<switch>` · status: todo
+The owner's call, 2026-10-08: Backdrop draws backgrounds and, with MisoPhoto, cards — not a browser and not an
+editor; the goal is a fair chance of showing the artwork well. **SD16 and SD13 come first** (they decide render
+quality), **SD12 is welcome but optional**, **SD11 and SD14 are set aside** (markers, `<symbol>` and text barely
+occur in that content). A set-aside item stays specified here in case that changes.
+
+### SD11 — `<symbol>`, `<marker>`, `<switch>` · status: set aside (owner, 2026-10-08)
 `<use>` → `<symbol>` renders blank (`<symbol>` is not parsed; honour its `viewBox` and `preserveAspectRatio`).
 `<marker>` with `marker-start`/`-mid`/`-end` (arrowheads). `<switch>` renders its first child unconditionally:
 evaluate `systemLanguage`, `requiredFeatures`, `requiredExtensions`.
 
-### SD12 — filter primitives beyond blur · status: todo (needs SD2)
+### SD12 — filter primitives beyond blur · status: optional, after SD13 and SD16
 `feOffset`, `feFlood`, `feComposite`, `feMerge`, `feBlend`, `feColorMatrix` — enough for the drop-shadow pipelines
 editors emit — on SD2's filter-layer design, with `in`/`in2`/`result` wiring and `SourceGraphic`/`SourceAlpha`.
 
-### SD13 — units and percentages on all geometry · status: todo
+### SD13 — units and percentages on all geometry · status: next
 Non-root lengths ignore units: `width="20%"` becomes 20. Implement %, px, pt, pc, mm, cm, in, em, ex per spec
 (percentages against the nearest viewport). Root sizes too: `width`/`height` are stored as `Int` (`DOM.Length`),
 so `width="145.11934"` becomes 145, and since SD9 a `viewBox` with the exact size letterboxes by a fraction of a
@@ -131,7 +136,7 @@ sizes fractional. With only `width` or only `height` and a `viewBox`, derive the
 aspect ratio: today the viewBox's own height is used, so `width="200" viewBox="0 0 100 50"` is 200×50 where browsers
 give 200×100.
 
-### SD14 — text · status: todo
+### SD14 — text · status: set aside (owner, 2026-10-08)
 `<tspan>` drawn only as a fallback and at (0,0) without its own x/y: implement positioning (`x`, `y`, `dx`, `dy`
 inheritance) and mixed runs; parse `font-weight`/`font-style`; draw stroked text.
 
