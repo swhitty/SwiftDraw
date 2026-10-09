@@ -60,7 +60,12 @@ extension XMLParser {
 
         for n in e.children where n.name == "stop" {
             let att: any AttributeParser = try parseAttributes(n)
-            node.stops.append(try parseRadialGradientStop(att))
+            var stop = try parseRadialGradientStop(att)
+            if let cascaded = cascadedStop(n) {
+                stop.color = cascaded.color ?? stop.color
+                stop.opacity = cascaded.opacity ?? stop.opacity
+            }
+            node.stops.append(stop)
         }
 
         node.gradientUnits = try nodeAtt.parseRaw("gradientUnits")

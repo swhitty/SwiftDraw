@@ -90,6 +90,17 @@ enum StrokeWidthScaler {
             element.style.strokeWidth = multiply(value, by: scale)
             count += 1
         }
+        if let value = element.importantStyle.strokeWidth {
+            element.importantStyle.strokeWidth = multiply(value, by: scale)
+            count += 1
+        }
+        // stylesheet values matched at parse time are copies of the rules counted in scaleStyles
+        if let value = element.matchedStyle?.attributes.strokeWidth {
+            element.matchedStyle?.attributes.strokeWidth = multiply(value, by: scale)
+        }
+        if let value = element.matchedStyle?.importantAttributes.strokeWidth {
+            element.matchedStyle?.importantAttributes.strokeWidth = multiply(value, by: scale)
+        }
     }
 
     private static func scaleDefs(_ defs: inout DOM.SVG.Defs, by scale: SFSymbolRenderer.StrokeWidthScale, count: inout Int) {
@@ -117,6 +128,19 @@ enum StrokeWidthScaler {
                 if let value = styles[sheetIndex].attributes[selector]?.strokeWidth {
                     styles[sheetIndex].attributes[selector]?.strokeWidth = multiply(value, by: scale)
                     count += 1
+                }
+            }
+            // the same values in source order, as the cascade reads them
+            // (complex-selector rules are not in `attributes`, so they are counted here)
+            for ruleIndex in styles[sheetIndex].rules.indices {
+                let isComplex = styles[sheetIndex].rules[ruleIndex].selector.simple == nil
+                if let value = styles[sheetIndex].rules[ruleIndex].attributes.strokeWidth {
+                    styles[sheetIndex].rules[ruleIndex].attributes.strokeWidth = multiply(value, by: scale)
+                    if isComplex { count += 1 }
+                }
+                if let value = styles[sheetIndex].rules[ruleIndex].importantAttributes.strokeWidth {
+                    styles[sheetIndex].rules[ruleIndex].importantAttributes.strokeWidth = multiply(value, by: scale)
+                    if isComplex { count += 1 }
                 }
             }
         }
