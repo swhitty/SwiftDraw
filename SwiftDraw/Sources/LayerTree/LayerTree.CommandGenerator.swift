@@ -45,6 +45,7 @@ extension LayerTree {
         private var hasLoggedFilterWarning = false
         private var hasLoggedGradientWarning = false
         private var hasLoggedMaskWarning = false
+        private var hasLoggedSpreadWarning = false
 
         private var paths: [LayerTree.Shape: P.Types.Path] = [:]
         private var images: [LayerTree.Image: P.Types.Image] = [:]
@@ -69,11 +70,18 @@ extension LayerTree {
                     let state = makeCommandState(for: layer, colorConverter: colorConverter)
 
                     //guard state.hasContents else { continue }
-                    stack.append(.endLayer(layer, state))
-
-                    if state.hasFilters {
+                    if let filterLayer = state.filterLayer, filterLayer.region.isEmpty {
+                        // an empty filter region clips everything away (matches Chrome / Safari)
+                        continue
+                    }
+                    if state.hasFilters && state.filterLayer == nil && layer.hasUnsupportedFilters {
+                        if options.contains(.hideUnsupportedFilters) {
+                            continue
+                        }
                         logUnsupportedFilters(layer.filters)
                     }
+
+                    stack.append(.endLayer(layer, state))
 
                     if state.hasOpacity || state.hasTransform || state.hasClip || state.hasMask {
                         commands.append(.pushState)
@@ -85,6 +93,11 @@ extension LayerTree {
 
                     if state.hasMask {
                         commands.append(.pushTransparencyLayer)
+                    }
+
+                    // filter is applied before clipping, masking and opacity
+                    if let filterLayer = state.filterLayer {
+                        commands.append(.pushFilterLayer(filterLayer))
                     }
 
                     //push render of all of the layer contents in reverse order
@@ -101,6 +114,10 @@ extension LayerTree {
                     commands.append(contentsOf: cmd)
 
                 case let .endLayer(layer, state):
+                    if state.filterLayer != nil {
+                        commands.append(.popFilterLayer)
+                    }
+
                     //render apply mask
                     if state.hasMask {
                         commands.append(contentsOf: renderCommands(forMask: layer.mask))
@@ -134,6 +151,7 @@ extension LayerTree {
             var hasMask: Bool
             var hasFilters: Bool
             var colorConverter: any ColorConverter
+            var filterLayer: LayerTree.FilterLayer?
         }
 
         func makeCommandState(for layer: Layer, colorConverter: any ColorConverter) -> CommandState {
@@ -156,7 +174,8 @@ extension LayerTree {
                 hasContents: hasContents,
                 hasMask: hasMask,
                 hasFilters: hasFilters,
-                colorConverter: colorConverter
+                colorConverter: colorConverter,
+                filterLayer: hasFilters ? makeFilterLayer(for: layer) : nil
             )
         }
 
@@ -234,6 +253,7 @@ extension LayerTree {
                     let pathBounds = provider.getBounds(from: shape)
                     commands.append(contentsOf: renderCommands(forLinear: gradient,
                                                                endpoints: pathBounds.endpoints,
+                                                               covering: pathBounds,
                                                                opacity: fill.opacity,
                                                                colorConverter: colorConverter))
                     commands.append(.popState)
@@ -246,6 +266,7 @@ extension LayerTree {
                     let pathBounds = provider.getBounds(from: shape)
                     commands.append(contentsOf: renderCommands(forRadial: gradient,
                                                                in: pathBounds,
+                                                               covering: pathBounds,
                                                                opacity: fill.opacity,
                                                                colorConverter: colorConverter))
                     commands.append(.popState)
@@ -294,6 +315,7 @@ extension LayerTree {
 
                     commands.append(contentsOf: renderCommands(forLinear: gradient,
                                                                endpoints: endpoints,
+                                                               covering: shape.bounds?.outset(by: stroke.coverage),
                                                                opacity: fill.opacity,
                                                                colorConverter: colorConverter))
                     commands.append(contentsOf: renderCommands(forDashResetOf: stroke))
@@ -316,6 +338,7 @@ extension LayerTree {
 
                     commands.append(contentsOf: renderCommands(forRadial: gradient,
                                                                in: pathBounds,
+                                                               covering: pathBounds.outset(by: stroke.coverage),
                                                                opacity: fill.opacity,
                                                                colorConverter: colorConverter))
                     commands.append(contentsOf: renderCommands(forDashResetOf: stroke))
@@ -345,9 +368,36 @@ extension LayerTree {
             let size = provider.createSize(from: renderImage)
             guard size.width > 0 && size.height > 0 else { return [] }
 
+            let (dest, clip) = makeImagePlacement(for: image, bitmapSize: size)
+            let draw = RendererCommand<P.Types>.draw(image: renderImage, in: provider.createRect(from: dest))
+            guard let clip else { return [draw] }
+            return [.pushState,
+                    .setClip(path: makeCachedPath(from: .rect(within: clip, radii: .zero)), rule: provider.createFillRule(from: .nonzero)),
+                    draw,
+                    .popState]
+        }
+
+        /// Where the bitmap is drawn and, for `slice` overflowing its frame, the rect that clips it.
+        /// With both width and height the bitmap is fitted to the frame per preserveAspectRatio (SVG 1.1 §7.8).
+        func makeImagePlacement(for image: Image, bitmapSize size: LayerTree.Size) -> (dest: LayerTree.Rect, clip: LayerTree.Rect?) {
             let frame = makeImageFrame(for: image, bitmapSize: size)
-            let rect = provider.createRect(from: frame)
-            return [.draw(image: renderImage, in: rect)]
+            guard image.width != nil, image.height != nil, frame.width > 0, frame.height > 0 else {
+                return (frame, nil)
+            }
+            let fit = image.preserveAspectRatio.fit(
+                contentWidth: size.width, contentHeight: size.height,
+                viewportWidth: frame.width, viewportHeight: frame.height
+            )
+            let dest = LayerTree.Rect(
+                x: frame.x + fit.tx,
+                y: frame.y + fit.ty,
+                width: size.width * fit.sx,
+                height: size.height * fit.sy
+            )
+            // a meet or equal-aspect fit only differs from the frame by rounding noise
+            let epsilon = 1e-4 * max(frame.width, frame.height)
+            let overflows = image.preserveAspectRatio.align != .none && (dest.width > frame.width + epsilon || dest.height > frame.height + epsilon)
+            return (dest, overflows ? frame : nil)
         }
 
         private func makeCachedPath(from shape: LayerTree.Shape) -> P.Types.Path {
@@ -494,10 +544,11 @@ extension LayerTree {
 
         func renderCommands(forLinear gradient: LayerTree.LinearGradient,
                             endpoints: (start: LayerTree.Point, end: LayerTree.Point),
+                            covering area: LayerTree.Rect?,
                             opacity: LayerTree.Float,
                             colorConverter: any ColorConverter) -> [RendererCommand<P.Types>] {
-            let pathStart: LayerTree.Point
-            let pathEnd: LayerTree.Point
+            var pathStart: LayerTree.Point
+            var pathEnd: LayerTree.Point
             switch gradient.units  {
             case .objectBoundingBox:
                 let width = endpoints.end.x - endpoints.start.x
@@ -516,7 +567,21 @@ extension LayerTree {
                 commands.append(contentsOf: renderCommands(forTransforms: gradient.transform))
             }
 
-            let converted =  gradient.gradient.convertColor(using: colorConverter)
+            var stops = gradient.gradient
+            if gradient.spread != .pad, let area,
+               let periods = Self.spreadPeriods(start: pathStart, end: pathEnd, transform: gradient.transform, covering: area) {
+                if periods.count <= Self.maxSpreadPeriods(stopCount: stops.stops.count) {
+                    let vector = LayerTree.Point(pathEnd.x - pathStart.x, pathEnd.y - pathStart.y)
+                    stops = stops.spread(gradient.spread, periods: periods)
+                    pathEnd = pathStart.offset(vector, times: LayerTree.Float(periods.upperBound + 1))
+                    pathStart = pathStart.offset(vector, times: LayerTree.Float(periods.lowerBound))
+                } else {
+                    logUnsupportedSpread()
+                    stops = stops.averaged()
+                }
+            }
+
+            let converted = stops.convertColor(using: colorConverter)
             let gradient = provider.createGradient(from: converted)
             let start = provider.createPoint(from: pathStart)
             let end = provider.createPoint(from: pathEnd)
@@ -528,12 +593,13 @@ extension LayerTree {
 
         func renderCommands(forRadial gradient: RadialGradient,
                             in bounds: LayerTree.Rect,
+                            covering area: LayerTree.Rect?,
                             opacity: LayerTree.Float,
                             colorConverter: any ColorConverter) -> [RendererCommand<P.Types>] {
             let startCenter: LayerTree.Point
             let startRadius: LayerTree.Float
-            let endCenter: LayerTree.Point
-            let endRadius: LayerTree.Float
+            var endCenter: LayerTree.Point
+            var endRadius: LayerTree.Float
 
             switch gradient.units  {
             case .objectBoundingBox:
@@ -560,7 +626,24 @@ extension LayerTree {
                 commands.append(contentsOf: renderCommands(forTransforms: gradient.transform))
             }
 
-            let converted =  gradient.gradient.convertColor(using: colorConverter)
+            var stops = gradient.gradient
+            if gradient.spread != .pad, let area,
+               let periods = Self.spreadPeriods(startCenter: startCenter, startRadius: startRadius,
+                                                endCenter: endCenter, endRadius: endRadius,
+                                                transform: gradient.transform, covering: area) {
+                if periods.count <= Self.maxSpreadPeriods(stopCount: stops.stops.count) {
+                    let vector = LayerTree.Point(endCenter.x - startCenter.x, endCenter.y - startCenter.y)
+                    let count = LayerTree.Float(periods.upperBound + 1)
+                    stops = stops.spread(gradient.spread, periods: periods)
+                    endCenter = startCenter.offset(vector, times: count)
+                    endRadius = startRadius + (endRadius - startRadius) * count
+                } else {
+                    logUnsupportedSpread()
+                    stops = stops.averaged()
+                }
+            }
+
+            let converted = stops.convertColor(using: colorConverter)
             let gradient = provider.createGradient(from: converted)
             let apha = provider.createFloat(from: opacity)
             commands.append(.setAlpha(apha))
@@ -577,6 +660,145 @@ extension LayerTree {
 }
 
 extension LayerTree.CommandGenerator {
+
+    /// Most stops a `reflect` or `repeat` gradient expands to.
+    static var maxSpreadStops: Int { 4096 }
+
+    /// Most periods drawn for a gradient of `stopCount` stops (each period may gain two stops when
+    /// completed to 0...1); a gradient needing more paints its average colour instead.
+    static func maxSpreadPeriods(stopCount: Int) -> Int {
+        max(1, maxSpreadStops / (stopCount + 2))
+    }
+
+    /// The periods of a linear gradient (0 being start...end) needed to cover `area`, which is in
+    /// the space the gradient's transform is applied to. nil when they cannot be computed.
+    static func spreadPeriods(start: LayerTree.Point, end: LayerTree.Point,
+                              transform: [LayerTree.Transform],
+                              covering area: LayerTree.Rect) -> ClosedRange<Int>? {
+        let dx = end.x - start.x
+        let dy = end.y - start.y
+        let length = dx * dx + dy * dy
+        guard length > 0, let inverse = transform.toMatrix().inverted() else { return nil }
+        let offsets = area.corners.map {
+            let p = inverse.transform(point: $0)
+            return ((p.x - start.x) * dx + (p.y - start.y) * dy) / length
+        }
+        guard let lower = offsets.min(), let upper = offsets.max() else { return nil }
+        return makePeriods(lower: lower, upper: upper)
+    }
+
+    /// The periods of a radial gradient needed to cover `area`. Only computed when the focal circle
+    /// lies inside the end circle; otherwise (and inside the focal circle) the gradient pads.
+    static func spreadPeriods(startCenter: LayerTree.Point, startRadius: LayerTree.Float,
+                              endCenter: LayerTree.Point, endRadius: LayerTree.Float,
+                              transform: [LayerTree.Transform],
+                              covering area: LayerTree.Rect) -> ClosedRange<Int>? {
+        // the circle at t has centre c0 + t·Δc and radius r0 + t·Δr; a point p = c0 + q is on it when
+        // (Δc·Δc − Δr²)t² − 2(q·Δc + r0Δr)t + (q·q − r0²) = 0. With the focal circle inside
+        // (Δr > |Δc|) the circles nest, so p is covered from the larger root on.
+        let dx = endCenter.x - startCenter.x
+        let dy = endCenter.y - startCenter.y
+        let dr = endRadius - startRadius
+        let a = dx * dx + dy * dy - dr * dr
+        guard a < 0, dr > 0, let inverse = transform.toMatrix().inverted() else { return nil }
+        let offsets = area.corners.map { corner -> LayerTree.Float in
+            let p = inverse.transform(point: corner)
+            let qx = p.x - startCenter.x
+            let qy = p.y - startCenter.y
+            let b = -2 * (qx * dx + qy * dy + startRadius * dr)
+            let c = qx * qx + qy * qy - startRadius * startRadius
+            let discriminant = max(0, b * b - 4 * a * c)
+            return (-b - discriminant.squareRoot()) / (2 * a)
+        }
+        guard let upper = offsets.max() else { return nil }
+        return makePeriods(lower: 0, upper: upper)
+    }
+
+    /// The whole periods spanning lower...upper, always including period 0.
+    static func makePeriods(lower: LayerTree.Float, upper: LayerTree.Float) -> ClosedRange<Int>? {
+        guard lower.isFinite, upper.isFinite else { return nil }
+        // bounded so the conversion to Int cannot trap; anything this large is averaged anyway
+        let limit: LayerTree.Float = 1_000_000
+        let first = Int(max(-limit, min(0, lower.rounded(.down))))
+        let last = Int(min(limit, max(1, upper.rounded(.up)))) - 1
+        return first...last
+    }
+
+    // Resolves the layer's filter into its user space; nil when a primitive is unsupported
+    // or the filter region cannot be resolved (e.g. text-only contents under objectBoundingBox),
+    // in which case the contents are drawn unfiltered.
+    func makeFilterLayer(for layer: LayerTree.Layer) -> LayerTree.FilterLayer? {
+        guard !layer.filters.isEmpty,
+              !layer.hasUnsupportedFilters else { return nil }
+
+        let region = layer.filterRegion
+        let bounds = makeBounds(for: layer)
+
+        // Filter Effects 1 §5.1, SVG 1.1 §15.7.2: filter region
+        let rect: LayerTree.Rect
+        switch region.units {
+        case .objectBoundingBox:
+            guard let bounds else { return nil }
+            rect = LayerTree.Rect(
+                x: bounds.x + (region.x ?? -0.1) * bounds.width,
+                y: bounds.y + (region.y ?? -0.1) * bounds.height,
+                width: (region.width ?? 1.2) * bounds.width,
+                height: (region.height ?? 1.2) * bounds.height
+            )
+        case .userSpaceOnUse:
+            rect = LayerTree.Rect(
+                x: region.x ?? -0.1 * size.width,
+                y: region.y ?? -0.1 * size.height,
+                width: region.width ?? 1.2 * size.width,
+                height: region.height ?? 1.2 * size.height
+            )
+        }
+
+        var scale = LayerTree.Size(1, 1)
+        if region.primitiveUnits == .objectBoundingBox {
+            guard let bounds else { return nil }
+            scale = bounds.size
+        }
+
+        guard rect.x.isFinite, rect.y.isFinite, rect.width.isFinite, rect.height.isFinite else { return nil }
+
+        let effects = layer.filters.map { $0.resolved(scale: scale) }
+        let width = max(rect.width, 0)
+        let height = max(rect.height, 0)
+        return LayerTree.FilterLayer(
+            region: LayerTree.Rect(x: rect.x, y: rect.y, width: width, height: height),
+            effects: effects
+        )
+    }
+
+    // Geometry bounding box of the layer contents in the layer's user space; stroke excluded.
+    // nil when the contents include text, which is not measured: the filter is then dropped
+    // rather than clipping the text away.
+    func makeBounds(for layer: LayerTree.Layer) -> LayerTree.Rect? {
+        guard !layer.containsText else { return nil }
+        var points = [LayerTree.Point]()
+        for contents in layer.contents {
+            switch contents {
+            case .shape(let shape, _, _):
+                if let rect = shape.bounds {
+                    points.append(contentsOf: rect.corners)
+                }
+            case .image(let image):
+                if let width = image.width, let height = image.height {
+                    points.append(contentsOf: LayerTree.Rect(x: image.origin.x, y: image.origin.y, width: width, height: height).corners)
+                }
+            case .text:
+                break
+            case .layer(let child):
+                if let rect = makeBounds(for: child) {
+                    let matrix = child.transform.toMatrix()
+                    points.append(contentsOf: rect.corners.map { matrix.transform(point: $0) })
+                }
+            }
+        }
+        guard !points.isEmpty else { return nil }
+        return .makeBounds(between: points)
+    }
 
     func logUnsupportedFilters(_ filters: [LayerTree.Filter]) {
         guard !hasLoggedFilterWarning else { return }
@@ -603,6 +825,12 @@ extension LayerTree.CommandGenerator {
         hasLoggedGradientWarning = true
     }
 
+    func logUnsupportedSpread() {
+        guard !hasLoggedSpreadWarning else { return }
+        print("Warning:", "spreadMethod needs more than \(Self.maxSpreadStops) gradient stops; painting the average colour", to: &.standardError)
+        hasLoggedSpreadWarning = true
+    }
+
     func logUnsupportedMask() {
         guard !hasLoggedMaskWarning else { return }
         print("Warning:", "PDF does not support transparency masks", to: &.standardError)
@@ -611,6 +839,10 @@ extension LayerTree.CommandGenerator {
 }
 
 private extension LayerTree.Rect {
+
+    func outset(by amount: LayerTree.Float) -> LayerTree.Rect {
+        LayerTree.Rect(x: x - amount, y: y - amount, width: width + amount * 2, height: height + amount * 2)
+    }
 
     func getPoint(offset: LayerTree.Point) -> LayerTree.Point {
         return LayerTree.Point(origin.x + size.width * offset.x,
@@ -624,6 +856,75 @@ private extension LayerTree.Rect {
 }
 
 
+extension LayerTree.Gradient {
+
+    /// The stops of the given periods of this gradient laid end to end over 0...1, every odd period
+    /// mirrored for `reflect` (SVG 1.1 §13.2.2 spreadMethod).
+    func spread(_ spread: Spread, periods: ClosedRange<Int>) -> LayerTree.Gradient {
+        guard spread != .pad, !stops.isEmpty else { return self }
+        let period = completedPeriod
+        let mirrored = period.reversed().map { Stop(offset: 1 - $0.offset, color: $0.color, opacity: $0.opacity) }
+        let count = LayerTree.Float(periods.count)
+        var result = [Stop]()
+        for (index, k) in periods.enumerated() {
+            let source = spread == .reflect && k % 2 != 0 ? mirrored : period
+            for stop in source {
+                result.append(Stop(offset: (LayerTree.Float(index) + stop.offset) / count,
+                                   color: stop.color, opacity: stop.opacity))
+            }
+        }
+        return LayerTree.Gradient(stops: result)
+    }
+
+    /// The stops completed so the first and last colours fill 0 and 1.
+    var completedPeriod: [Stop] {
+        var period = stops
+        if let first = period.first, first.offset > 0 {
+            period.insert(Stop(offset: 0, color: first.color, opacity: first.opacity), at: 0)
+        }
+        if let last = period.last, last.offset < 1 {
+            period.append(Stop(offset: 1, color: last.color, opacity: last.opacity))
+        }
+        return period
+    }
+
+    /// A flat gradient of the average colour of one period (premultiplied, the same for `reflect`),
+    /// for spreads too fine to draw.
+    func averaged() -> LayerTree.Gradient {
+        let period = completedPeriod
+        var sum: (r: LayerTree.Float, g: LayerTree.Float, b: LayerTree.Float, a: LayerTree.Float) = (0, 0, 0, 0)
+        var space = LayerTree.ColorSpace.srgb
+        for (lhs, rhs) in zip(period, period.dropFirst()) {
+            let weight = (rhs.offset - lhs.offset) / 2
+            for stop in [lhs, rhs] {
+                let c = stop.premultiplied
+                sum = (sum.r + c.r * weight, sum.g + c.g * weight, sum.b + c.b * weight, sum.a + c.a * weight)
+            }
+            if case .rgba(_, _, _, _, let s) = lhs.color { space = s }
+        }
+        let color: LayerTree.Color = sum.a > 0
+            ? .rgba(r: sum.r / sum.a, g: sum.g / sum.a, b: sum.b / sum.a, a: sum.a, space: space)
+            : .none
+        return LayerTree.Gradient(stops: [Stop(offset: 0, color: color, opacity: 1),
+                                          Stop(offset: 1, color: color, opacity: 1)])
+    }
+}
+
+private extension LayerTree.Gradient.Stop {
+    var premultiplied: (r: LayerTree.Float, g: LayerTree.Float, b: LayerTree.Float, a: LayerTree.Float) {
+        switch color {
+        case .none:
+            return (0, 0, 0, 0)
+        case let .rgba(r, g, b, a, _):
+            let alpha = a * opacity
+            return (r * alpha, g * alpha, b * alpha, alpha)
+        case let .gray(white, a):
+            let alpha = a * opacity
+            return (white * alpha, white * alpha, white * alpha, alpha)
+        }
+    }
+}
+
 private extension LayerTree.Gradient {
     func convertColor(using converter: any ColorConverter) -> LayerTree.Gradient {
         let stops: [LayerTree.Gradient.Stop] = stops.map { stop in
@@ -632,6 +933,33 @@ private extension LayerTree.Gradient {
             return stop
         }
         return LayerTree.Gradient(stops: stops)
+    }
+}
+
+private extension LayerTree.StrokeAttributes {
+    /// How far the stroke may reach beyond the path's bounds: half the width, √2 times that at
+    /// square caps, up to the miter limit at miter joins.
+    var coverage: LayerTree.Float {
+        let cap: LayerTree.Float = self.cap == .square ? LayerTree.Float(2).squareRoot() : 1
+        let join: LayerTree.Float = self.join == .miter ? max(1, miterLimit) : 1
+        return width / 2 * max(cap, join)
+    }
+}
+
+private extension LayerTree.Point {
+    func offset(_ vector: LayerTree.Point, times factor: LayerTree.Float) -> LayerTree.Point {
+        LayerTree.Point(x + vector.x * factor, y + vector.y * factor)
+    }
+}
+
+private extension LayerTree.Transform.Matrix {
+    func inverted() -> Self? {
+        let determinant = a * d - b * c
+        guard determinant != 0, determinant.isFinite else { return nil }
+        return Self(a: d / determinant, b: -b / determinant,
+                    c: -c / determinant, d: a / determinant,
+                    tx: (c * ty - d * tx) / determinant,
+                    ty: (b * tx - a * ty) / determinant)
     }
 }
 
@@ -658,13 +986,44 @@ private extension LayerTree.Shape {
 private extension LayerTree.Filter {
     var name: String {
         switch self {
-        case .gaussianBlur:
+        case .gaussianBlur(_, _):
             return "<feGaussianBlur>"
+        case .unsupported(let name):
+            return "<\(name)>"
+        }
+    }
+
+    // stdDeviation in user units with both values explicit.
+    // Filter Effects 1 §9.16: a negative value disables the primitive, zero disables one direction.
+    func resolved(scale: LayerTree.Size) -> Self {
+        switch self {
+        case let .gaussianBlur(stdDeviation: x, stdDeviationY: y):
+            let y = y ?? x
+            guard x >= 0, y >= 0 else {
+                return .gaussianBlur(stdDeviation: 0, stdDeviationY: 0)
+            }
+            // renderers clamp to their pixel limits; keep the values finite
+            let maximum = LayerTree.Float.greatestFiniteMagnitude
+            return .gaussianBlur(stdDeviation: min(x * scale.width, maximum),
+                                 stdDeviationY: min(y * scale.height, maximum))
+        case .unsupported:
+            return self
         }
     }
 }
 
 private extension LayerTree.Rect {
+
+    var isEmpty: Bool {
+        width <= 0 || height <= 0
+    }
+
+    var corners: [LayerTree.Point] {
+        [origin,
+         LayerTree.Point(maxX, minY),
+         LayerTree.Point(maxX, maxY),
+         LayerTree.Point(minX, maxY)]
+    }
 
     var gradientEndpoints: (start: LayerTree.Point, end: LayerTree.Point) {
         let start = LayerTree.Point(midX, minY)
@@ -722,13 +1081,16 @@ extension LayerTree.CommandGenerator {
 
         var contentTransform = LayerTree.Transform.Matrix.identity
         if let viewBox = pattern.viewBox {
-            // preserveAspectRatio is not parsed yet: its default, xMidYMid meet
+            // the viewBox is fitted into the tile per the pattern's preserveAspectRatio (SVG 1.1 §7.8)
             guard viewBox.width > 0, viewBox.height > 0 else { return nil }
-            let scale = min(tile.width / viewBox.width, tile.height / viewBox.height)
+            let fit = pattern.preserveAspectRatio.fit(
+                contentWidth: viewBox.width, contentHeight: viewBox.height,
+                viewportWidth: tile.width, viewportHeight: tile.height
+            )
             contentTransform = LayerTree.Transform.Matrix(
-                a: scale, b: 0, c: 0, d: scale,
-                tx: (tile.width - viewBox.width * scale) / 2 - viewBox.x * scale,
-                ty: (tile.height - viewBox.height * scale) / 2 - viewBox.y * scale
+                a: fit.sx, b: 0, c: 0, d: fit.sy,
+                tx: fit.tx - viewBox.x * fit.sx,
+                ty: fit.ty - viewBox.y * fit.sy
             )
         } else if pattern.contentUnits == .objectBoundingBox {
             guard bounds.width > 0, bounds.height > 0 else { return nil }

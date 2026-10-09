@@ -82,6 +82,30 @@ struct ParserXMLLinearGradientTests {
     }
 
     @Test
+    func parseSpreadMethodAndTransform() throws {
+        let a = try XMLParser().parseLinearGradient(XML.Element(name: "linearGradient", attributes: ["id": "a", "spreadMethod": "reflect", "gradientTransform": "none"]))
+        #expect(a.spreadMethod == .reflect)
+        #expect(a.gradientTransform == [])
+        let b = try XMLParser().parseLinearGradient(XML.Element(name: "linearGradient", attributes: ["id": "b", "spreadMethod": "sideways"]))
+        #expect(b.spreadMethod == nil)
+        #expect(b.gradientTransform == nil)
+    }
+
+    @Test
+    func stopOffsetAndOpacityAreClamped() throws {
+        let svg = try DOM.SVG.parse(xml: """
+        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10">
+          <linearGradient id="a">
+            <stop offset="150%" stop-opacity="1.5"/><stop offset="-0.5" stop-opacity="-1"/><stop offset="40%" stop-opacity="50%"/>
+          </linearGradient>
+        </svg>
+        """)
+        let stops = svg.defs.linearGradients.first?.stops ?? []
+        #expect(stops.map(\.offset) == [1, 0, 0.4])
+        #expect(stops.map(\.opacity) == [1, 0, 0.5])
+    }
+
+    @Test
     func parseFile() throws {
         let dom = try DOM.SVG.parse(fileNamed: "linearGradient.svg", in: .test)
 

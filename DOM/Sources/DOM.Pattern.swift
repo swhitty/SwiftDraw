@@ -48,6 +48,7 @@ package extension DOM {
 
         package var href: URL?
         package var viewBox: DOM.SVG.ViewBox?
+        package var preserveAspectRatio: DOM.PreserveAspectRatio?
         package var patternTransform: [Transform]?
         /// Names of the x / y / width / height attributes written as percentages; their value
         /// is stored as a fraction and resolved against the viewport under userSpaceOnUse.

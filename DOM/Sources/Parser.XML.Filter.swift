@@ -36,7 +36,7 @@ extension XMLParser {
 
         for n in e.children {
             if n.name == "filter" {
-                filters.append(try parseFilter(n))
+                try appendSkippingInvalid(&filters, n, parseFilter)
             } else {
                 filters.append(contentsOf: try parseFilters(n))
             }
@@ -52,8 +52,26 @@ extension XMLParser {
         let nodeAtt: any AttributeParser = try parseAttributes(e)
         let node = DOM.Filter(id: try nodeAtt.parseString("id"))
 
+        // invalid values fall back to the spec defaults rather than dropping the document
+        node.x = try? nodeAtt.parseCoordinateOrPercentage("x")
+        node.y = try? nodeAtt.parseCoordinateOrPercentage("y")
+        node.width = try? nodeAtt.parseCoordinateOrPercentage("width")
+        node.height = try? nodeAtt.parseCoordinateOrPercentage("height")
+        node.filterUnits = try? nodeAtt.parseRaw("filterUnits")
+        node.primitiveUnits = try? nodeAtt.parseRaw("primitiveUnits")
+
+        var previousResult: String?
         for n in e.children {
-            if let effect = try parseEffect(n) {
+            if var effect = try parseEffect(n) {
+                // only a linear chain is supported: each primitive must consume the previous result
+                if let input = n.attributes["in"] {
+                    let isSource = node.effects.isEmpty && input == "SourceGraphic"
+                    let isPrevious = previousResult != nil && input == previousResult
+                    if !isSource && !isPrevious {
+                        effect = .unsupported(name: n.name)
+                    }
+                }
+                previousResult = n.attributes["result"]
                 node.effects.append(effect)
             }
         }
@@ -65,9 +83,14 @@ extension XMLParser {
         switch e.name {
         case "feGaussianBlur":
             let att: any AttributeParser = try parseAttributes(e)
-            return try .gaussianBlur(stdDeviation: att.parseFloat("stdDeviation"))
+            // SVG 1.1 §15.17: one or two numbers; missing, invalid or negative values disable the blur
+            let values: [DOM.Float] = (try? att.parseFloats("stdDeviation")) ?? []
+            let x = values.first ?? 0
+            let y = values.count > 1 ? values[1] : nil
+            return .gaussianBlur(stdDeviation: x, stdDeviationY: y)
         default:
-            return nil
+            guard e.name.hasPrefix("fe") else { return nil }
+            return .unsupported(name: e.name)
         }
     }
 }
