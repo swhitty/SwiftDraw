@@ -56,13 +56,13 @@ multi-hop and cross-kind inheritance of stops **and** attributes (coordinates, `
 `gradientTransform`, `spreadMethod`), `spreadMethod` `reflect`/`repeat`, a single stop painting a solid colour, zero
 stops painting `none`, and `fx`/`fy` focal points if missing.
 
-### SD7 — `display` and `visibility` · status: PR #10, fixes requested
+### SD7 — `display` and `visibility` · status: merged (#10)
 `display="none"` is ignored and the element draws — and the early return that should hide it skips transform,
 clip, mask and opacity, so hidden geometry reappears misplaced and unclipped. `visibility="hidden"`/`collapse` is
 not parsed (and a child may set `visible` again). Elements in an editor namespace (`<inkscape:foo>`) must drop
 their subtree; today their children are re-parented onto the nearest ancestor and drawn.
 
-### SD8 — clip paths and masks to spec · status: PR #11, fixes requested
+### SD8 — clip paths and masks to spec · status: merged (#11)
 `clipPathUnits="objectBoundingBox"` is parsed and never used by CoreGraphics (geometry read as user units: clipped
 to nearly nothing); same check for `maskUnits`/`maskContentUnits`. A `<clipPath>` containing a `<use>` or `<text>`
 degenerates to no clip at all. `clip-path` on a `<clipPath>` itself. `clip-rule` belongs to the shapes inside the
@@ -74,7 +74,7 @@ move them with it.
 Not present in the codebase: the viewBox always maps as `none`, so a non-square drawing in a differently-shaped
 frame is skewed. Root `<svg>`, nested `<svg>`, `<image>`; all nine alignments × `meet`/`slice`.
 
-### SD10 — CSS cascade · status: PR #9, third round requested
+### SD10 — CSS cascade · status: merged (#9)
 `transform`, `mask` and `clip-rule` written in CSS (`style=` or a class) are never applied. One bad declaration
 (`var(--x)` is enough) discards the entire `<style>` sheet. Selectors beyond bare type, `.class` and `#id` never
 match: add descendant, child, compound, attribute selectors and `:first-child`, with specificity and source order.
@@ -85,7 +85,7 @@ without `href`) or an unparseable optional geometry value (`x=""`) still throws 
 has no catch, so the **whole document** vanishes — `parseError`/`skipInvalidElements` exist and are dead code. Skip
 the offending element (and only it), keep its siblings; make `skipInvalidElements` real and the default.
 
-### SD16 — wave 2 follow-ups · status: todo (after wave 2)
+### SD16 — wave 2 follow-ups · status: todo
 Small defects found reviewing merged items, none blocking. **SD6:** each gradient `href` hop scans `svg.defs`
 linearly (`first(where:)`), so N chained gradients cost ~64·N² compares: index ids once in `GradientCache`;
 `makePeriods` always includes period 0, so a linear `repeat`/`reflect` far from its vector (fine period, shape
@@ -95,7 +95,21 @@ walks to use it; mixed sRGB/P3 stops are averaged as raw components. **SD9:** a 
 skips the `slice` viewport clip (`l.clip.isEmpty`), so the overflow bleeds again — intersect instead; a `none` or
 `slice` pattern fit can reach `inf` on a tiny viewBox (no `isFinite` check); CGText never letterboxes `<image>`
 (the bitmap size is unknown there) and still references an undeclared `image`;
-`testPatternParsesAndInheritsPreserveAspectRatio` does not check the inherited value.
+`testPatternParsesAndInheritsPreserveAspectRatio` does not check the inherited value. **SD10:** the SF Symbol
+class rule absorbs `:ident` even before `(`, so `.monochrome-0:not(.x)` leaves a dangling `(` and drops its whole
+selector group — guard on `(`; the matcher's `evaluations` counter misses memo hits and walk steps, so removing only
+the walk memo in `any()` goes quadratic unnoticed; `font-family:'Foo` (quote open at the end) keeps the stray quote
+in the family name; an empty `!important` partition still runs a full parse; `style=""` parsing still costs about
++20 % over 0.29.0 end to end (10,000 rects × 12 declarations, release). **SD7:** a `visibility:hidden` leaf with a
+mask, filter or opacity still builds its layer (an `feFlood` on it could paint); a hidden root `<svg>` still gets
+its viewBox transform; `visibility="hidden"` on the `<clipPath>` itself is not inherited by its children; no
+CoreGraphics pixel test that the zero-rect clip clips everything; `visibility:hidden` geometry still leaves the
+bounding box (SVG 2 keeps it). **SD8:** bbox measurement reads `display` and `transform` from attributes, not the
+cascade; `Rect.union` results are not re-checked for `inf`; `Layer` equality ignores `maskIsClip`;
+`testFilterWithMaskTypeClip` passes with the filter ignored and `testGroupWithTextHasUnknownBoundingBox` does not
+check that the text stays; `clip-path` on a `<clipPath>`'s children and `clip-rule` inherited from the
+`<clipPath>`'s ancestors or set on it by CSS are left undone. **SD15:** a bad `gradientUnits` still drops the whole
+gradient, where SD8 (`clipPathUnits`) and SD6 (`stop-opacity`) now drop only the attribute.
 
 ## Wave 3
 
@@ -122,6 +136,23 @@ give 200×100.
 inheritance) and mixed runs; parse `font-weight`/`font-style`; draw stroked text.
 
 ## Integrator's log
+
+- 2026-10-08 — SD10 (#9, head b8aa11d after its third round), SD7 (#10, d521b91) and SD8 (#11, 0c31a83) merged;
+  wave 2 complete. CI 20/20 on each final head; every point of the fix lists checked by a reviewer and spot-checked
+  (SF Symbol export keeps the four `sun-horizon` rules and `checkmark`'s `.multicolor-0:custom`; `style=""` cost
+  measured). Integrator commits on the PR branches: SD7 d521b91 (a `<clipPath>` holding only a `<use>` cleared
+  everything — 76 Noto hand glyphs, Illustrator's clip idiom, vanished; two tests that could not fail replaced; display
+  on gradients, `<pattern>`, `<filter>` tested) and SD8 0c31a83 (round 1 left bbox measurement unbounded: `<use>`
+  fan-out hung over 60 s, now a document-wide 250,000-step budget; a 2,000-link `clip-path` chain overflowed a 512 KB
+  thread, now capped at `ReferenceGuard.maxDepth`; both tests failed before). Merge resolutions: SD10 × SD7
+  (`makeLayer` cascades the attributes once, then returns before `makeBaseLayer` for `display:none`); SD8 × SD10 ×
+  SD7 (`makeClip` from the cascaded attributes, clip members skip hidden `visibility` and read the cascaded
+  transform, the mask keeps `display` inline, `<clipPath style>` through `parseStyleDeclarations`, SD10's
+  clip-rule test and `.holed` sample moved onto the clip child). Main: 501 XCTest + 310 Swift Testing pass on macOS.
+  Corpus against the previous main (e05a08b): SD10 0 drawings changed, SD7 0, SD8 67 Noto glyphs (hand shading now
+  clipped to the hand instead of spilling over it) and one wishlist drawing (`easter-eggs-under-sky`: an Inkscape
+  mask with `maskUnits="userSpaceOnUse"` and no region; the default region misses its content, so the sun goes —
+  WebKit and Blink draw it the same way); 0 verdict regressions on every bank. SD16 gains this round's 🔵 findings.
 
 - 2026-10-08 — SD6 (#8, head 029e35a), SD9 (#7, af85330) and SD15 (#6, 0000ed3) merged after their fix rounds
   (CI 20/20 each, every point of the fix lists done). Integrator resolutions: SD9 × SD6 adjacent test additions in
