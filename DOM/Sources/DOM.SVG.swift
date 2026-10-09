@@ -85,6 +85,9 @@ package extension DOM {
         package var attributes = PresentationAttributes()
         package var style = PresentationAttributes()
 
+        /// attributes < stylesheet rules < style="" (the parser folds rules into `attributes` and `style`)
+        package var cascaded: PresentationAttributes { attributes.applyingAttributes(style) }
+
         package enum Units: String {
             case userSpaceOnUse
             case objectBoundingBox

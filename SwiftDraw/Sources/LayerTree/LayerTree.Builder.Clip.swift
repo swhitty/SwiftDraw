@@ -49,6 +49,8 @@ extension LayerTree.Builder {
         var element: DOM.GraphicsElement
         var transform: LayerTree.Transform.Matrix
         var rule: LayerTree.FillRule
+        /// A `clip-path` on the member itself (SVG 1.1 §14.3.5): it clips the member before the union.
+        var clipID: String?
     }
 
     func makeClip(for element: DOM.GraphicsElement) -> Clip? {
@@ -78,13 +80,17 @@ extension LayerTree.Builder {
                                                tx: bounds.x, ty: bounds.y)
         }
 
-        let transform = clip.style.transform ?? clip.attributes.transform ?? []
+        // the <clipPath>'s own cascade (attributes < CSS rules < style=""), done by the parser
+        let own = clip.cascaded
+        let transform = own.transform ?? []
         // the bounding box mapping comes first, then the <clipPath>'s transform in user units
         // (as Blink, Gecko and resvg do: clipTransform × translate(bbox) × scale(bbox))
         let space = units.concatenated(Self.createTransforms(from: transform).toMatrix())
-        let rule = clip.style.clipRule ?? clip.attributes.clipRule ?? .nonzero
-        let members = clip.childElements.flatMap { makeClipMembers(for: $0, inheriting: rule) }
-        let nested = (clip.style.clipPath ?? clip.attributes.clipPath)?.fragmentID
+        let rule = own.clipRule ?? .nonzero
+        // `visibility` is inherited: a hidden <clipPath> hides its children unless they say `visible`
+        let visibility = own.visibility ?? .visible
+        let members = clip.childElements.flatMap { makeClipMembers(for: $0, inheriting: rule, visibility: visibility) }
+        let nested = own.clipPath?.fragmentID
 
         let shapes = members.compactMap { member -> LayerTree.ClipShape? in
             guard let shape = Self.makeShape(from: member.element) else { return nil }
@@ -92,7 +98,7 @@ extension LayerTree.Builder {
         }
         let rules = Set(members.map(\.rule))
 
-        if shapes.count == members.count, rules.count <= 1, nested == nil {
+        if shapes.count == members.count, rules.count <= 1, nested == nil, members.allSatisfy({ $0.clipID == nil }) {
             // a clip path without any shape clips everything away
             return .shapes(shapes.isEmpty ? [.empty] : shapes, rules.first ?? .nonzero)
         }
@@ -118,10 +124,12 @@ extension LayerTree.Builder {
 
     /// The shapes and text a `<clipPath>` child contributes: a `<use>` contributes the shape or text
     /// it references directly; any other element is ignored (SVG 1.1 §14.3.5).
-    func makeClipMembers(for element: DOM.GraphicsElement, inheriting rule: LayerTree.FillRule) -> [ClipMember] {
+    func makeClipMembers(for element: DOM.GraphicsElement, inheriting rule: LayerTree.FillRule,
+                         visibility inherited: DOM.Visibility = .visible) -> [ClipMember] {
         let attributes = DOM.presentationAttributes(for: element, styles: svg.styles)
+        let visibility = attributes.visibility ?? inherited
         // SVG 1.1 §14.3.5: children with `display="none"` or hidden `visibility` do not contribute to the clip
-        guard attributes.display != DOM.DisplayMode.none, (attributes.visibility ?? .visible) == .visible else { return [] }
+        guard attributes.display != DOM.DisplayMode.none, visibility == .visible else { return [] }
         let transform = Self.createTransforms(from: attributes.transform ?? []).toMatrix()
         let rule = attributes.clipRule ?? rule
 
@@ -130,13 +138,14 @@ extension LayerTree.Builder {
                   let referenced = svg.firstGraphicsElement(with: id),
                   !(referenced is DOM.Use) else { return [] }
             let translate = LayerTree.Transform.translate(tx: use.x ?? 0, ty: use.y ?? 0).toMatrix()
-            return makeClipMembers(for: referenced, inheriting: rule).map {
+            return makeClipMembers(for: referenced, inheriting: rule, visibility: visibility).map {
                 var member = $0
                 member.transform = member.transform.concatenated(translate).concatenated(transform)
                 return member
             }
         } else if Self.makeShape(from: element) != nil || element is DOM.Text {
-            return [ClipMember(element: element, transform: transform, rule: rule)]
+            return [ClipMember(element: element, transform: transform, rule: rule,
+                               clipID: attributes.clipPath?.fragmentID)]
         }
         return []
     }
@@ -151,14 +160,23 @@ extension LayerTree.Builder {
             state.fill = .color(.keyword(.white))
             state.fillRule = member.rule
             l.appendContents(makeShapeContents(from: shape, with: state))
+            applyMemberClip(of: member, to: l)
         } else if let text = member.element as? DOM.Text {
             let state = createState(for: text, inheriting: State())
             if case .text(let string, let point, var attributes) = makeTextContents(from: text, with: state) {
                 attributes.color = .white
                 l.appendContents(.text(string, point, attributes))
             }
+            applyMemberClip(of: member, to: l)
         }
         return l
+    }
+
+    /// A `clip-path` on a `<clipPath>` child clips that child only, in the child's user space.
+    private func applyMemberClip(of member: ClipMember, to layer: LayerTree.Layer) {
+        guard let id = member.clipID,
+              let clip = makeClip(id: id, bounds: { makeBoundingBox(for: member.element) }) else { return }
+        apply(clip, to: layer)
     }
 
     func apply(_ clip: Clip, to layer: LayerTree.Layer) {
@@ -255,12 +273,14 @@ extension LayerTree.Builder {
             defer { visited.remove(id) }
             let referencedBounds = makeBounds(for: referenced, depth: depth + 1, visited: &visited)
             guard case .known(let bounds) = referencedBounds else { return referencedBounds }
-            let transform = Self.createTransforms(from: referenced.attributes.transform ?? []).toMatrix()
+            let transform = Self.createTransforms(from: DOM.presentationAttributes(for: referenced, styles: svg.styles).transform ?? []).toMatrix()
                 .concatenated(LayerTree.Transform.translate(tx: use.x ?? 0, ty: use.y ?? 0).toMatrix())
             return Bounds(bounds.applying(transform))
         } else if let container = element as? any ContainerElement {
             var result: LayerTree.Rect?
-            for child in container.childElements where child.attributes.display != DOM.DisplayMode.none {
+            for child in container.childElements {
+                let childAttributes = DOM.presentationAttributes(for: child, styles: svg.styles)
+                guard childAttributes.display != DOM.DisplayMode.none else { continue }
                 switch makeBounds(for: child, depth: depth + 1, visited: &visited) {
                 case .unknown:
                     return .unknown
@@ -272,10 +292,13 @@ extension LayerTree.Builder {
                         transform = Self.makeTransform(x: svg.x, y: svg.y, viewBox: svg.viewBox,
                                                        width: svg.width, height: svg.height).toMatrix()
                     } else {
-                        transform = Self.createTransforms(from: child.attributes.transform ?? []).toMatrix()
+                        transform = Self.createTransforms(from: childAttributes.transform ?? []).toMatrix()
                     }
                     guard case .known(let childBounds) = Bounds(bounds.applying(transform)) else { continue }
-                    result = result.map { $0.union(childBounds) } ?? childBounds
+                    let union = result.map { $0.union(childBounds) } ?? childBounds
+                    // a union reaching infinity (1e308 + 1e308) carries no usable geometry
+                    guard case .known(let checked) = Bounds(union) else { continue }
+                    result = checked
                 }
             }
             return result.map(Bounds.known) ?? .empty

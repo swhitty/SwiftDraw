@@ -52,7 +52,18 @@ extension LayerTree {
             makeLayer(svg: svg, inheriting: State())
         }
 
+        /// SVG 1.1 §11.6.2: hidden shapes, text and images paint nothing, whatever mask, filter or
+        /// opacity they carry (a filter such as feFlood could otherwise still paint).
+        static func isHiddenLeaf(_ element: DOM.GraphicsElement, _ state: State) -> Bool {
+            guard state.visibility != .visible else { return false }
+            return makeShape(from: element) != nil || element is DOM.Text || element is DOM.Image
+        }
+
         func makeLayer(svg: DOM.SVG, inheriting previousState: State) -> Layer {
+            // a root removed by `display` has no viewport mapping either
+            if DOM.presentationAttributes(for: svg, styles: self.svg.styles).display == DOM.DisplayMode.none {
+                return Layer()
+            }
             let l = makeLayer(from: svg, inheriting: previousState)
             l.transform = Builder.makeTransform(
                 x: svg.x,
@@ -178,7 +189,7 @@ extension LayerTree {
                 let newState = Self.createState(for: attributes, inheriting: currentState)
                 // SVG 1.1 §11.6.2: `display="none"` removes the element and its whole subtree from rendering,
                 // before any transform, clip, mask, filter or opacity is built for it
-                if newState.display == .none {
+                if newState.display == .none || Self.isHiddenLeaf(currentElement, newState) {
                     if parentLayer == nil {
                         resultLayer = Layer()
                     }
