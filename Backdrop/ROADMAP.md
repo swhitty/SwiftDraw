@@ -17,7 +17,7 @@ in CoreGraphics (`setLineDash`) and CGText. Spec details to honour: odd-length l
 values invalidate the attribute (render solid), all-zero lists render solid, `none`, CSS `style=` form, inheritance
 from groups, percentages relative to the viewport diagonal.
 
-### SD2 — `feGaussianBlur` rendered · corpus 99 · status: PR #5, second round of fixes requested
+### SD2 — `feGaussianBlur` rendered · corpus 99 · status: merged (#5)
 The one filter primitive SwiftDraw parses is never applied: the only consumer of `layer.filters` is a stderr
 warning (`LayerTree.CommandGenerator.swift:75`, `:558`) and `hideUnsupportedFilters` is a no-op. Inkscape uses it
 for every soft shadow and glow, so those draw as hard-edged blobs. Render a filtered layer into an offscreen
@@ -48,35 +48,38 @@ land misplaced; a pattern without `width`/`height` is fatal (it should simply pa
 writes most patterns as `<pattern xlink:href="#base" patternTransform="…"/>`: implement `href` inheritance of
 attributes **and** content.
 
-## Wave 2 — SD6, SD9, SD10, SD15 start now; SD7 and SD8 wait for SD2 (they share its layer and clip code)
+## Wave 2 — parallel (SD2 is merged, so SD7 and SD8 start now)
 
-### SD6 — gradients to spec · status: todo
+### SD6 — gradients to spec · status: PR #8, fixes requested
 `xlink:href` inheritance follows one hop, same kind only, stops only (`LayerTree.Builder.swift:372-412`). Implement
 multi-hop and cross-kind inheritance of stops **and** attributes (coordinates, `gradientUnits`,
 `gradientTransform`, `spreadMethod`), `spreadMethod` `reflect`/`repeat`, a single stop painting a solid colour, zero
 stops painting `none`, and `fx`/`fy` focal points if missing.
 
-### SD7 — `display` and `visibility` · status: todo
+### SD7 — `display` and `visibility` · status: todo (start now)
 `display="none"` is ignored and the element draws — and the early return that should hide it skips transform,
 clip, mask and opacity, so hidden geometry reappears misplaced and unclipped. `visibility="hidden"`/`collapse` is
 not parsed (and a child may set `visible` again). Elements in an editor namespace (`<inkscape:foo>`) must drop
 their subtree; today their children are re-parented onto the nearest ancestor and drawn.
 
-### SD8 — clip paths and masks to spec · status: todo
+### SD8 — clip paths and masks to spec · status: todo (start now)
 `clipPathUnits="objectBoundingBox"` is parsed and never used by CoreGraphics (geometry read as user units: clipped
 to nearly nothing); same check for `maskUnits`/`maskContentUnits`. A `<clipPath>` containing a `<use>` or `<text>`
-degenerates to no clip at all. `clip-path` on a `<clipPath>` itself.
+degenerates to no clip at all. `clip-path` on a `<clipPath>` itself. `clip-rule` belongs to the shapes inside the
+`<clipPath>` (inherited from it, SVG 1.1 §14.3.5), not to the element that references it; SD10 left it on the
+referencing element, and its test `testClipRuleFromStyleSheet` and the `.holed` sample pin that interim placement —
+move them with it.
 
-### SD9 — `preserveAspectRatio` · status: todo
+### SD9 — `preserveAspectRatio` · status: PR #7, fixes requested
 Not present in the codebase: the viewBox always maps as `none`, so a non-square drawing in a differently-shaped
 frame is skewed. Root `<svg>`, nested `<svg>`, `<image>`; all nine alignments × `meet`/`slice`.
 
-### SD10 — CSS cascade · status: todo
+### SD10 — CSS cascade · status: PR #9, fixes requested
 `transform`, `mask` and `clip-rule` written in CSS (`style=` or a class) are never applied. One bad declaration
 (`var(--x)` is enough) discards the entire `<style>` sheet. Selectors beyond bare type, `.class` and `#id` never
 match: add descendant, child, compound, attribute selectors and `:first-child`, with specificity and source order.
 
-### SD15 — an invalid element is skipped, not the document · status: todo
+### SD15 — an invalid element is skipped, not the document · status: PR #6, fixes requested
 Found reviewing SD4: a missing mandatory attribute (`<path>` without `d`, `<rect>` without `width`, `<image>`
 without `href`) or an unparseable optional geometry value (`x=""`) still throws out of `parseGraphicsElements`, which
 has no catch, so the **whole document** vanishes — `parseError`/`skipInvalidElements` exist and are dead code. Skip
@@ -102,6 +105,11 @@ Non-root lengths ignore units: `width="20%"` becomes 20. Implement %, px, pt, pc
 inheritance) and mixed runs; parse `font-weight`/`font-style`; draw stroked text.
 
 ## Integrator's log
+
+- 2026-10-08 — SD2 merged (#5, head 977b7de after its second round; CI 20/20; corpus: only the blurred party hat
+  changes). Wave 2 reviewed (four PRs, CI green): all four "merge after fix", fix lists sent back. Trial merge of
+  SD2 and wave 2 builds and passes on macOS once one semantic conflict is resolved: SD2 and SD6 each add a private
+  `LayerTree.Rect.corners` in `LayerTree.CommandGenerator.swift` (SD6 merges main and keeps SD2's). SD7 and SD8 start.
 
 - 2026-10-08 — SD4 (#3) and SD1 (#2) merged; the SD4 × SD1 conflict resolved by the integrator, plus a follow-up
   (983e027): the SD1 fix had put the dash reset in the radial-gradient *fill* branch and left the radial-gradient

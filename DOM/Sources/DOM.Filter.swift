@@ -36,13 +36,29 @@ package extension DOM {
 
         package var effects: [Effect]
 
+        package var x: DOM.Coordinate?
+        package var y: DOM.Coordinate?
+        package var width: DOM.Coordinate?
+        package var height: DOM.Coordinate?
+        package var filterUnits: Units?
+        package var primitiveUnits: Units?
+
         package init(id: String) {
             self.id = id
             self.effects = []
         }
         
         package enum Effect: Hashable {
-            case gaussianBlur(stdDeviation: DOM.Float)
+            // stdDeviationY is nil when stdDeviation has a single value
+            case gaussianBlur(stdDeviation: DOM.Float, stdDeviationY: DOM.Float? = nil)
+
+            // a filter primitive SwiftDraw cannot render yet, or one whose `in` is not the previous result
+            case unsupported(name: String)
+        }
+
+        package enum Units: String {
+            case userSpaceOnUse
+            case objectBoundingBox
         }
     }
 }
