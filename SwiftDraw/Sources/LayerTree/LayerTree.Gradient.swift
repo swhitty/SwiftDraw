@@ -65,6 +65,12 @@ extension LayerTree {
             case objectBoundingBox
         }
 
+        enum Spread: Hashable {
+            case pad
+            case reflect
+            case `repeat`
+        }
+
         var isOpaque: Bool {
             stops.allSatisfy(\.isOpaque)
         }
@@ -76,6 +82,7 @@ extension LayerTree {
         var end: Point
         var units: Gradient.Units = .objectBoundingBox
         var transform: [Transform] = []
+        var spread: Gradient.Spread = .pad
     }
 
     struct RadialGradient: Hashable {
@@ -86,6 +93,7 @@ extension LayerTree {
         var endRadius: Float
         var units: Gradient.Units = .objectBoundingBox
         var transform: [Transform] = []
+        var spread: Gradient.Spread = .pad
     }
 }
 

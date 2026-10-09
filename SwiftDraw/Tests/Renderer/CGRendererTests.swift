@@ -30,6 +30,7 @@
 //
 
 @testable import SwiftDraw
+import SwiftDrawDOM
 
 #if canImport(AppKit) && !targetEnvironment(macCatalyst)
 import AppKit
@@ -62,6 +63,58 @@ final class CGRendererTests: XCTestCase {
     XCTAssertEqual(renderer.getColor(x: 2, y: 2), .red)
     XCTAssertNotEqual(renderer.getColor(x: 7, y: 2), .red)
     XCTAssertEqual(renderer.getColor(x: 12, y: 2), .red)
+  }
+
+  func testRepeatGradientRepeats() throws {
+    // red→blue every 10 units: pad would leave x ≥ 10 blue, repeat restarts red at x = 10 and 20
+    func redness(_ spread: String, x: Int) throws -> CGFloat {
+      let renderer = ImageRenderer(pixelsWide: 40, pixelsHigh: 4)
+      let svg = try DOM.SVG.parse(xml: """
+      <svg xmlns="http://www.w3.org/2000/svg" width="40" height="4">
+        <defs><linearGradient id="g" gradientUnits="userSpaceOnUse" x1="0" x2="10" spreadMethod="\(spread)">
+          <stop offset="0" stop-color="red"/><stop offset="1" stop-color="blue"/>
+        </linearGradient></defs>
+        <rect width="40" height="4" fill="url(#g)"/>
+      </svg>
+      """)
+      let layer = LayerTree.Builder(svg: svg).makeLayer()
+      let generator = LayerTree.CommandGenerator(provider: CGProvider(), size: LayerTree.Size(40, 4), options: .default)
+      renderer.renderer.perform(generator.renderCommands(for: layer, colorConverter: .default))
+      let color = try XCTUnwrap(renderer.getColor(x: x, y: 2)?.converted(to: CGColorSpace(name: CGColorSpace.sRGB)!, intent: .defaultIntent, options: nil))
+      let c = try XCTUnwrap(color.components)
+      return c[0] - c[2]
+    }
+    XCTAssertGreaterThan(try redness("repeat", x: 1), 0.5)
+    XCTAssertGreaterThan(try redness("repeat", x: 21), 0.5)
+    XCTAssertLessThan(try redness("pad", x: 21), -0.5)
+    // reflect: x = 11 mirrors x = 9 (blue)
+    XCTAssertLessThan(try redness("reflect", x: 11), -0.5)
+    XCTAssertGreaterThan(try redness("reflect", x: 19), 0.5)
+  }
+
+  func testRadialReflectGradientMirrors() throws {
+    // red at the centre, blue at r = 10, mirrored back to red at r = 20 (pad stays blue)
+    func redness(_ spread: String, x: Int) throws -> CGFloat {
+      let renderer = ImageRenderer(pixelsWide: 40, pixelsHigh: 40)
+      let svg = try DOM.SVG.parse(xml: """
+      <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40">
+        <defs><radialGradient id="g" gradientUnits="userSpaceOnUse" cx="20" cy="20" r="10" spreadMethod="\(spread)">
+          <stop offset="0" stop-color="red"/><stop offset="1" stop-color="blue"/>
+        </radialGradient></defs>
+        <rect width="40" height="40" fill="url(#g)"/>
+      </svg>
+      """)
+      let layer = LayerTree.Builder(svg: svg).makeLayer()
+      let generator = LayerTree.CommandGenerator(provider: CGProvider(), size: LayerTree.Size(40, 40), options: .default)
+      renderer.renderer.perform(generator.renderCommands(for: layer, colorConverter: .default))
+      let color = try XCTUnwrap(renderer.getColor(x: x, y: 20)?.converted(to: CGColorSpace(name: CGColorSpace.sRGB)!, intent: .defaultIntent, options: nil))
+      let c = try XCTUnwrap(color.components)
+      return c[0] - c[2]
+    }
+    XCTAssertGreaterThan(try redness("reflect", x: 20), 0.5)
+    XCTAssertLessThan(try redness("reflect", x: 30), -0.5)
+    XCTAssertGreaterThan(try redness("reflect", x: 39), 0.5)
+    XCTAssertLessThan(try redness("pad", x: 39), -0.5)
   }
 
   func testAlphaClips() {

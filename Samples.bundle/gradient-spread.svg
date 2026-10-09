@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="240" height="200" viewBox="0 0 240 200">
+  <defs>
+    <!-- stops live on one gradient; the others inherit them through multi-hop and cross-kind href -->
+    <linearGradient id="stops">
+      <stop offset="0" stop-color="#e63946"/>
+      <stop offset="0.5" stop-color="#f1c40f"/>
+      <stop offset="1" stop-color="#1d3557"/>
+    </linearGradient>
+    <linearGradient id="base" xlink:href="#stops" gradientUnits="userSpaceOnUse" x1="40" x2="80"/>
+    <linearGradient id="pad" xlink:href="#base"/>
+    <linearGradient id="reflect" xlink:href="#base" spreadMethod="reflect"/>
+    <linearGradient id="repeat" xlink:href="#base" spreadMethod="repeat"/>
+    <radialGradient id="radial" xlink:href="#stops" r="0.2" fx="0.4" spreadMethod="reflect"/>
+    <linearGradient id="solid"><stop offset="0" stop-color="#2a9d8f"/></linearGradient>
+    <linearGradient id="empty"/>
+  </defs>
+  <rect x="0" y="0" width="120" height="40" fill="url(#pad)"/>
+  <rect x="0" y="50" width="120" height="40" fill="url(#reflect)"/>
+  <rect x="0" y="100" width="120" height="40" fill="url(#repeat)"/>
+  <rect x="130" y="0" width="100" height="140" fill="url(#radial)"/>
+  <rect x="0" y="150" width="110" height="40" fill="url(#solid)"/>
+  <rect x="120" y="150" width="110" height="40" fill="url(#empty)" stroke="#888"/>
+</svg>

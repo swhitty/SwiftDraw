@@ -597,6 +597,20 @@ extension RendererCGTextTests {
         XCTAssertEqual(lines[stroke + 1], "ctx.setLineDash(phase: 0, lengths: [])")
     }
 
+    func testRepeatGradientCode() throws {
+        let svg = #"""
+        <svg xmlns="http://www.w3.org/2000/svg" width="100" height="10">
+          <defs><linearGradient id="g" gradientUnits="userSpaceOnUse" x1="0" x2="25" spreadMethod="repeat">
+            <stop offset="0" stop-color="red"/><stop offset="1" stop-color="blue"/>
+          </linearGradient></defs>
+          <rect width="100" height="10" fill="url(#g)"/>
+        </svg>
+        """#
+        let code = try CGTextRenderer.render(data: Data(svg.utf8), options: .default, api: .uiKit, precision: 2)
+        XCTAssertTrue(code.contains("[0.0, 0.25, 0.25, 0.5, 0.5, 0.75, 0.75, 1.0]"), code)
+        XCTAssertTrue(code.contains("end: CGPoint(x: 100, y: 0)"), code)
+    }
+
     func testDashedGradientStrokesAreReset() throws {
         // A stroke-only shape is the lone push/pop pair the optimizer strips, so each gradient stroke
         // branch must reset the dash itself or it leaks into the caller's context.
