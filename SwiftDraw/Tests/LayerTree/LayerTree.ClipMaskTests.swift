@@ -456,6 +456,47 @@ final class LayerTreeClipMaskTests: XCTestCase {
 
     // MARK: - helpers
 
+    func testBoundingBoxOfUseFanOutStaysBounded() throws {
+        // 4 uses per level over 12 levels is 4^12 walks: measuring gives up instead and the box is unknown
+        var defs = ##"<g id="l12"><rect width="1" height="1"/></g>"##
+        for level in stride(from: 11, through: 0, by: -1) {
+            defs += ##"<g id="l\##(level)">"## + String(repeating: ##"<use xlink:href="#l\##(level + 1)"/>"##, count: 4) + "</g>"
+        }
+        let svg = try DOM.SVG.parse(xml: """
+        <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="100" height="100">
+        <defs>\(defs)</defs><use id="u" xlink:href="#l0"/>
+        </svg>
+        """)
+        let builder = LayerTree.Builder(svg: svg)
+        let use = try XCTUnwrap(svg.firstGraphicsElement(with: "u"))
+        XCTAssertNil(builder.makeBoundingBox(for: use))
+        XCTAssertEqual(builder.measurement.steps, LayerTree.Builder.MeasurementBudget.maxSteps)
+    }
+
+    func testClipPathChainFitsASmallSecondaryThreadStack() throws {
+        // each nested clip-path costs native stack: the chain is cut at ReferenceGuard.maxDepth
+        let chain = (0..<2_000).map {
+            ##"<clipPath id="c\##($0)" clip-path="url(#c\##($0 + 1))"><rect width="90" height="90"/></clipPath>"##
+        }.joined()
+        nonisolated(unsafe) let svg = try DOM.SVG.parse(xml: """
+        <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">
+        <defs>\(chain)</defs><rect width="50" height="50" clip-path="url(#c0)"/>
+        </svg>
+        """)
+        nonisolated(unsafe) var result = [Command]()
+        let done = DispatchSemaphore(value: 0)
+        let thread = Thread {
+            let layer = LayerTree.Builder(svg: svg).makeLayer()
+            let generator = LayerTree.CommandGenerator(provider: LayerTreeProvider(), size: .zero, options: .default)
+            result = generator.renderCommands(for: layer, colorConverter: .default)
+            done.signal()
+        }
+        thread.stackSize = 512 * 1024
+        thread.start()
+        XCTAssertEqual(done.wait(timeout: .now() + 30), .success)
+        XCTAssertFalse(fills(result).isEmpty)
+    }
+
     private func findLayer(in layer: LayerTree.Layer, where predicate: (LayerTree.Layer) -> Bool) -> LayerTree.Layer? {
         if predicate(layer) { return layer }
         for case let .layer(child) in layer.contents {
