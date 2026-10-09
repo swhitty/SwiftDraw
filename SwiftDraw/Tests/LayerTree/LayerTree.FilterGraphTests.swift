@@ -367,6 +367,18 @@ final class LayerTreeFilterGraphTests: XCTestCase {
         XCTAssertFalse(subregion.isBlurChain)
     }
 
+    func testPrimaryTreeIsCapped() throws {
+        func chain(_ count: Int) -> String {
+            let offsets = String(repeating: #"<feOffset dx="1" />"#, count: count)
+            return #"<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><filter id="f">"#
+                + offsets + #"</filter><rect width="10" height="10" filter="url(#f)" /></svg>"#
+        }
+        let max = LayerTree.FilterLayer.maxPrimitives
+        XCTAssertEqual(try makeCommands(chain(max)).filterLayers.first?.primitives.count, max)
+        // over the cap: drawn unfiltered, like an unsupported primitive
+        XCTAssertTrue(try makeCommands(chain(max + 1)).filterLayers.isEmpty)
+    }
+
     func testPeakBitmapCount() {
         let region = LayerTree.Rect(x: 0, y: 0, width: 10, height: 10)
         func primitive(_ inputs: [LayerTree.FilterLayer.Input]) -> Primitive {
@@ -391,6 +403,8 @@ final class LayerTreeFilterGraphTests: XCTestCase {
             .deletingLastPathComponent()
             .deletingLastPathComponent()
             .appendingPathComponent("Samples.bundle")
+        // read from the source tree, which a device or emulator run does not have
+        try XCTSkipUnless(FileManager.default.fileExists(atPath: samples.path), "Samples.bundle not reachable")
         for (name, count) in [("filter-drop-shadow", 3), ("filter-primitives", 8)] {
             let xml = try String(contentsOf: samples.appendingPathComponent("\(name).svg"), encoding: .utf8)
             let filters = try makeCommands(xml, options: .hideUnsupportedFilters).filterLayers
