@@ -31,13 +31,15 @@
 
 import Foundation
 
-package extension URL {
-
+package extension DOM {
     // the `none` value of clip-path, mask and filter: references nothing,
     // but still overrides a reference from a lower-priority rule
-    static let none = URL(string: "none:")!
+    static let noneURL = URL(string: "none:")!
+}
 
-    var isNone: Bool { self == Self.none }
+package extension URL {
+
+    var isNone: Bool { self == DOM.noneURL }
 
     var fragmentID: String? {
         #if canImport(Darwin)

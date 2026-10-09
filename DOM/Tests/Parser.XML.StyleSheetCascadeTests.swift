@@ -366,9 +366,9 @@ struct ParserXMLStyleSheetCascadeTests {
         #r { clip-path: none; mask: none; filter: none; transform: none }
         """
         let att = try cascaded("r", style: style, body: #"<rect id="r" width="1" height="1"/>"#)
-        #expect(att.clipPath == DOM.URL.none)
-        #expect(att.mask == DOM.URL.none)
-        #expect(att.filter == DOM.URL.none)
+        #expect(att.clipPath == DOM.noneURL)
+        #expect(att.mask == DOM.noneURL)
+        #expect(att.filter == DOM.noneURL)
         #expect(att.transform == [])
     }
 
@@ -427,5 +427,100 @@ struct ParserXMLStyleSheetCascadeTests {
         #expect(DOM.presentationAttributes(for: group.childElements[0], styles: svg.styles).stroke == nil)
         // generous bound for debug builds on CI; the quadratic matcher took far longer
         #expect(elapsed < 20)
+    }
+
+    // MARK: - Third review
+
+    @Test
+    func sfSymbolLayerClassesKeepTheirAnnotation() throws {
+        let s = try #require(Selector.parse(".multicolor-0:systemYellowColor"))
+        #expect(s.compounds[0].classes == ["multicolor-0:systemYellowColor"])
+        #expect(s.compounds[0].pseudoClasses.isEmpty)
+        #expect(s.simple == .class("multicolor-0:systemYellowColor"))
+        #expect(try #require(Selector.parse(".hierarchical-0:secondary")).simple == .class("hierarchical-0:secondary"))
+        #expect(try #require(Selector.parse(".monochrome-1:primary")).simple == .class("monochrome-1:primary"))
+        // other classes still take a pseudo-class
+        #expect(try #require(Selector.parse(".a:first-child")).compounds[0].pseudoClasses == [.firstChild])
+
+        let body = #"<rect id="r" class="hierarchical-0:secondary" width="1" height="1"/>"#
+        #expect(try fill(of: "r", style: ".hierarchical-0:secondary { fill: red }", body: body) == .color(.keyword(.red)))
+    }
+
+    @Test
+    func cssWideKeywordsAreDropped() throws {
+        let body = #"<text id="t" class="a" x="0" y="0">t</text>"#
+        let att = try cascaded("t", style: "text { font-family: Helvetica; fill: red } .a { font-family: inherit; fill: unset }", body: body)
+        #expect(att.fontFamily == [.name("Helvetica")])
+        #expect(att.fill == .color(.keyword(.red)))
+        let inline = #"<text id="t" style="fill: initial" x="0" y="0">t</text>"#
+        #expect(try cascaded("t", style: "text { fill: red }", body: inline).fill == .color(.keyword(.red)))
+    }
+
+    @Test
+    func quoteOpenAtEndOfValueIsKept() throws {
+        let decls = XMLParser.parseCSSDeclarations("font-family:'Foo")
+        #expect(decls.count == 1)
+        #expect(decls.first?.value == "'Foo")
+    }
+
+    @Test
+    func escapedBraceOutsideAString() throws {
+        let sheet = try XMLParser().parseStyleSheetElement(#".a\{b { fill: red } .c { fill: blue }"#)
+        #expect(sheet.attributes[.class("a{b")]?.fill == .color(.keyword(.red)))
+        #expect(sheet.attributes[.class("c")]?.fill == .color(.keyword(.blue)))
+    }
+
+    private func matcher(style: String, body: String) throws -> (DOM.StyleSheet.Matcher, XML.Element) {
+        let root = try XML.SAXParser.parse(data: Data("""
+        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10">\(body)</svg>
+        """.utf8))
+        let sheet = try XMLParser().parseStyleSheetElement(style)
+        return (DOM.StyleSheet.Matcher(sheets: [sheet], root: root), root)
+    }
+
+    private func allElements(_ root: XML.Element) -> [XML.Element] {
+        var result = [XML.Element]()
+        var stack = [root]
+        while let e = stack.popLast() {
+            result.append(e)
+            stack.append(contentsOf: e.children)
+        }
+        return result
+    }
+
+    @Test
+    func classRulesUseTheIndex() throws {
+        let rules = (0..<300).map { ".c\($0) { fill: red }" }.joined(separator: " ")
+        let body = (0..<5000).map { #"<rect class="c\#($0 % 300)"/>"# }.joined()
+        let (m, root) = try matcher(style: rules, body: body)
+        let elements = allElements(root)
+        for e in elements { _ = m.match(e) }
+        // one candidate rule per rect; scanning every rule would be 300 × 5,000
+        #expect(m.evaluations <= elements.count)
+    }
+
+    @Test
+    func failingSiblingWalkIsLinear() throws {
+        let body = "<g>" + String(repeating: #"<rect/>"#, count: 5000) + "</g>"
+        let (m, root) = try matcher(style: "g > circle ~ rect { fill: red }", body: body)
+        let elements = allElements(root)
+        for e in elements {
+            #expect(m.match(e)?.attributes.fill == nil)
+        }
+        // without the memo every rect walks back over all its previous siblings (~12.5 M)
+        #expect(m.evaluations < 3 * elements.count)
+    }
+
+    @Test
+    func failingAncestorWalkIsLinear() throws {
+        let open = String(repeating: "<g><rect/>", count: 500)
+        let close = String(repeating: "</g>", count: 500)
+        let (m, root) = try matcher(style: "circle rect { fill: red }", body: open + close)
+        let elements = allElements(root)
+        for e in elements {
+            #expect(m.match(e)?.attributes.fill == nil)
+        }
+        // without the memo every rect walks up all its ancestors (~125 k)
+        #expect(m.evaluations < 3 * elements.count)
     }
 }

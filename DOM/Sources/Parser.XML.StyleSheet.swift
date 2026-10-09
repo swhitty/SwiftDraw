@@ -161,6 +161,12 @@ extension XMLParser {
                         // an unescaped newline ends a string (CSS Syntax §4.3.5, bad-string)
                         quote = nil
                     }
+                } else if c == "\\", i + 1 < chars.count {
+                    // an escaped character is never a delimiter
+                    result.append(c)
+                    result.append(chars[i + 1])
+                    i += 2
+                    continue
                 } else if c == "\"" || c == "'" {
                     quote = c
                 } else if c == "(" || c == "[" {
@@ -195,6 +201,11 @@ extension XMLParser {
                     } else if c == q || c.isNewline {
                         quote = nil
                     }
+                } else if c == "\\", i < chars.count {
+                    result.append(c)
+                    result.append(chars[i])
+                    i += 1
+                    continue
                 } else if c == "\"" || c == "'" {
                     quote = c
                 } else if c == "{" {
@@ -261,7 +272,8 @@ extension XMLParser {
                 quote = c
             }
         }
-        return quote != nil
+        // a string still open at the end of the value is closed by EOF, not bad
+        return false
     }
 
     // A declaration without a name or a value is skipped; the others are kept (CSS Syntax §5.4.5).
@@ -274,12 +286,14 @@ extension XMLParser {
             guard !name.isEmpty, !name.contains("{"), !name.contains("}") else { return nil }
 
             // a string cut by a newline makes the declaration invalid
-            guard !Self.hasBadString(value) else { return nil }
+            guard !Self.hasBadString(String(declaration[declaration.index(after: colon)...])) else { return nil }
 
             let stripped = XMLParser.Attributes.removingImportant(from: value)
             let important = stripped != value
             value = stripped.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !value.isEmpty else { return nil }
+            // CSS-wide keywords are not supported: drop them so a lower rule still applies
+            guard !["inherit", "initial", "unset", "revert", "revert-layer"].contains(value.lowercased()) else { return nil }
             return CSSDeclaration(name: name.hasPrefix("--") ? name : name.lowercased(), value: value, important: important)
         }
     }

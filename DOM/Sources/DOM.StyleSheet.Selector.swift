@@ -250,6 +250,10 @@ private struct SelectorScanner {
         return nil
     }
 
+    static func isSFSymbolLayerClass(_ name: String) -> Bool {
+        name.hasPrefix("hierarchical-") || name.hasPrefix("monochrome-") || name.hasPrefix("multicolor-")
+    }
+
     static func isNameCharacter(_ c: Character) -> Bool {
         c.isLetter || c.isNumber || c == "-" || c == "_" || !c.isASCII
     }
@@ -290,7 +294,18 @@ private struct SelectorScanner {
             switch c {
             case ".":
                 index += 1
-                guard let name = scanIdentifier() else { return nil }
+                guard var name = scanIdentifier() else { return nil }
+                // SF Symbol layer classes (`.hierarchical-0:secondary`, `.multicolor-0:systemYellowColor`)
+                // carry their annotation after a colon: it is part of the class name, not a pseudo-class
+                if Self.isSFSymbolLayerClass(name), current == ":" {
+                    let start = index
+                    index += 1
+                    if let annotation = scanIdentifier() {
+                        name += ":" + annotation
+                    } else {
+                        index = start
+                    }
+                }
                 compound.classes.append(name)
             case "#":
                 index += 1
@@ -414,6 +429,9 @@ package extension DOM.StyleSheet {
         private var classTokens = [ObjectIdentifier: Set<String>]()
         private var memo = [MemoKey: Bool]()
 
+        // compound selectors tested so far (memo hits excluded), for performance tests
+        package private(set) var evaluations = 0
+
         private struct MemoKey: Hashable {
             var rule: Int
             var compound: Int
@@ -492,6 +510,7 @@ package extension DOM.StyleSheet {
             let key = MemoKey(rule: rule, compound: i, kind: .element, element: ObjectIdentifier(element))
             if !isLast, let known = memo[key] { return known }
 
+            evaluations += 1
             let result: Bool
             if !matches(selector.compounds[i], element) {
                 result = false
