@@ -86,7 +86,20 @@ has no catch, so the **whole document** vanishes — `parseError`/`skipInvalidEl
 the offending element (and only it), keep its siblings; make `skipInvalidElements` real and the default.
 
 ### SD16 — wave 2 follow-ups · status: next
-Small defects found reviewing merged items, none blocking. **SD6:** each gradient `href` hop scans `svg.defs`
+**Two rendering bugs first** — found by comparing Backdrop's FreeSVG picks against FreeSVG's own previews,
+Chrome and WebKit (all three agree; the fork alone differs), both present in upstream 0.29.0 too:
+1. `LayerTree.CommandOptimizer.filterStateCommand` does not treat `.setFillPattern` as changing the fill, so the
+   tracked fill colour survives a pattern fill and a later `.setFill` of that same colour is dropped as redundant:
+   the next solid shape is painted **with the pattern**. Inkscape stipple art is full of it (a black outline after
+   a dotted body comes out dotted; a white muzzle comes out dotted). Fix: reset the tracked fill on
+   `.setFillPattern` (one line; checked locally, it makes the FreeSVG picks `chicken-family` and
+   `spotty-donkey-line-art-vector-clip-art` match Chrome). Test: solid colour A, pattern, solid colour A again —
+   the second `setFill` survives optimisation, and a CoreGraphics pixel test sees colour A.
+2. A paint with a fallback, `fill="url(#g) #000000"` (also `style=`, `url(#g) none`; Inkscape writes it), fails to
+   parse, so the attribute is dropped and the shape paints black. Per SVG 1.1 §11.2 the server is used when it
+   resolves, the fallback colour only when it does not, and `none` then paints nothing. Tests for each case.
+
+Then the small defects found reviewing merged items, none blocking. **SD6:** each gradient `href` hop scans `svg.defs`
 linearly (`first(where:)`), so N chained gradients cost ~64·N² compares: index ids once in `GradientCache`;
 `makePeriods` always includes period 0, so a linear `repeat`/`reflect` far from its vector (fine period, shape
 beyond x≈10 000) falls to the average colour — use `floor(lower)...ceil(upper)−1`; `testHrefChainResolvesInsideDeepUse`
