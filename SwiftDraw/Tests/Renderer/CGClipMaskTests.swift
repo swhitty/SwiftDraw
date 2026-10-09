@@ -126,21 +126,20 @@ final class CGClipMaskTests: XCTestCase {
     }
 
     func testFilterWithMaskTypeClip() throws {
-        // mixed clip-rules make the clip a mask; the flood fills the filter region, so it only shows
-        // where the mask lets it through, and it is blue: with the filter ignored these pixels stay red
+        // mixed clip-rules make the clip a mask. A 2-px red bar blurred with σ = 3 spreads to a faint pink,
+        // so its pixels are no longer solid red; with the filter ignored they would be
         let colors = try render(#"""
-            <filter id="f" x="0" y="0" width="1" height="1"><feFlood flood-color="blue" /></filter>
+            <filter id="f" x="-2" y="0" width="5" height="1"><feGaussianBlur stdDeviation="3" /></filter>
             <clipPath id="c">
               <rect width="6" height="16" clip-rule="evenodd" />
               <rect x="10" width="6" height="16" />
             </clipPath>
-            <rect width="16" height="16" fill="red" filter="url(#f)" clip-path="url(#c)" />
+            <rect x="1" width="2" height="16" fill="red" filter="url(#f)" clip-path="url(#c)" />
             """#)
-        XCTAssertEqual(colors(2), .other)
+        XCTAssertNotEqual(colors(1), .red)
         XCTAssertNotEqual(colors(2), .red)
         XCTAssertEqual(colors(8), .white)
-        XCTAssertNotEqual(colors(13), .red)
-        XCTAssertEqual(colors(13), .other)
+        XCTAssertEqual(colors(13), .white)
     }
 
     func testClipPathWithoutShapesClipsEverything() throws {
