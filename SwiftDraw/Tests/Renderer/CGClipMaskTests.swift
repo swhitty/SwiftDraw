@@ -115,6 +115,31 @@ final class CGClipMaskTests: XCTestCase {
         XCTAssertEqual(colors(8), .white)
     }
 
+    func testMaskZeroRegionHidesElement() throws {
+        let colors = try render(#"""
+            <mask id="m" width="0"><rect width="16" height="16" fill="white" /></mask>
+            <rect width="16" height="16" fill="red" mask="url(#m)" />
+            """#)
+        XCTAssertEqual(colors(2), .white)
+        XCTAssertEqual(colors(8), .white)
+        XCTAssertEqual(colors(14), .white)
+    }
+
+    func testFilterWithMaskTypeClip() throws {
+        // mixed clip-rules make the clip a mask; the blur stays inside the clipped columns
+        let colors = try render(#"""
+            <filter id="f"><feGaussianBlur stdDeviation="0.5" /></filter>
+            <clipPath id="c">
+              <rect width="6" height="16" clip-rule="evenodd" />
+              <rect x="10" width="6" height="16" />
+            </clipPath>
+            <rect width="16" height="16" fill="red" filter="url(#f)" clip-path="url(#c)" />
+            """#)
+        XCTAssertEqual(colors(2), .red)
+        XCTAssertEqual(colors(8), .white)
+        XCTAssertEqual(colors(13), .red)
+    }
+
     enum Pixel: Equatable {
         case red
         case white

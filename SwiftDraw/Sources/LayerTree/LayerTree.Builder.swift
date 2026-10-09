@@ -40,6 +40,7 @@ extension LayerTree {
 
         let svg: DOM.SVG
         let references = ReferenceGuard()
+        let activeClips = ActiveClipSet()
         let gradients = GradientCache()
 
         init(svg: DOM.SVG) {

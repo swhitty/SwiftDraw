@@ -61,13 +61,14 @@ extension LayerTree.Builder {
     func makeClip(id: String, bounds: () -> LayerTree.Rect?) -> Clip? {
         guard let clip = svg.defs.clipPaths.first(where: { $0.id == id }) else { return nil }
 
-        // a clip path that (indirectly) clips itself is ignored
-        guard references.enter("clip:\(id)") else { return nil }
-        defer { references.leave("clip:\(id)") }
+        // a clip path that (indirectly) clips itself is ignored; the active set is not counted
+        // against the document-wide reference budget, so any number of elements may share a clip
+        guard activeClips.insert(id).inserted else { return nil }
+        defer { activeClips.remove(id) }
 
         var units = LayerTree.Transform.Matrix.identity
         if clip.clipPathUnits == .objectBoundingBox {
-            // the bounding box of text is unknown here: keep the element unclipped
+            // the bounding box of text is unknown here: keep the element unclipped rather than lose content
             guard let bounds = bounds() else { return nil }
             // an empty bounding box clips everything away
             guard bounds.width > 0, bounds.height > 0 else { return .shapes([.empty], .nonzero) }
@@ -76,7 +77,9 @@ extension LayerTree.Builder {
         }
 
         let transform = clip.style.transform ?? clip.attributes.transform ?? []
-        let space = Self.createTransforms(from: transform).toMatrix().concatenated(units)
+        // the bounding box mapping comes first, then the <clipPath>'s transform in user units
+        // (as Blink, Gecko and resvg do: clipTransform × translate(bbox) × scale(bbox))
+        let space = units.concatenated(Self.createTransforms(from: transform).toMatrix())
         let rule = clip.style.clipRule ?? clip.attributes.clipRule ?? .nonzero
         let members = clip.childElements.flatMap { makeClipMembers(for: $0, inheriting: rule) }
         let nested = (clip.style.clipPath ?? clip.attributes.clipPath)?.fragmentID
@@ -163,6 +166,7 @@ extension LayerTree.Builder {
         case let .mask(mask):
             guard let existing = layer.mask else {
                 layer.mask = mask
+                layer.maskIsClip = true
                 return
             }
             // a mask and a clip together: the clip masks the mask's own contents
@@ -213,41 +217,94 @@ extension LayerTree.Builder {
     }
 
     /// The object bounding box of an element in its own user space: the fill geometry of its shapes,
-    /// without stroke (SVG 1.1 §7.11). Nil when unknown (text, or nothing with geometry).
-    func makeBoundingBox(for element: DOM.GraphicsElement, depth: Int = 0) -> LayerTree.Rect? {
-        guard depth < 32 else { return nil }
+    /// without stroke (SVG 1.1 §7.11). Nil when unknown: text, or a container holding text, since
+    /// a box measured without it would cut the text away.
+    func makeBoundingBox(for element: DOM.GraphicsElement) -> LayerTree.Rect? {
+        var visited = Set<String>()
+        switch makeBounds(for: element, depth: 0, visited: &visited) {
+        case .known(let rect): return rect
+        case .empty, .unknown: return nil
+        }
+    }
+
+    enum Bounds {
+        case known(LayerTree.Rect)
+        /// no geometry (an empty group, a move-only path): ignored by the enclosing container
+        case empty
+        /// geometry this platform-independent builder cannot measure (text)
+        case unknown
+    }
+
+    /// Measurement keeps its own visited set and depth cap: it never spends the document-wide
+    /// reference budget that `<use>`, masks and patterns share.
+    private func makeBounds(for element: DOM.GraphicsElement, depth: Int, visited: inout Set<String>) -> Bounds {
+        guard depth < 32 else { return .unknown }
 
         if let shape = Self.makeShape(from: element) {
-            return shape.path.bounds
+            return Bounds(shape.path.bounds)
         } else if let image = element as? DOM.Image {
-            guard let width = image.width, let height = image.height else { return nil }
-            return LayerTree.Rect(x: image.x ?? 0, y: image.y ?? 0, width: width, height: height)
+            guard let width = image.width, let height = image.height else { return .unknown }
+            return Bounds(LayerTree.Rect(x: image.x ?? 0, y: image.y ?? 0, width: width, height: height))
         } else if let use = element as? DOM.Use {
             guard let id = use.href.fragmentID,
-                  let referenced = svg.firstGraphicsElement(with: id) else { return nil }
-            guard references.enter("bounds:\(id)") else { return nil }
-            defer { references.leave("bounds:\(id)") }
-            guard let bounds = makeBoundingBox(for: referenced, depth: depth + 1) else { return nil }
+                  let referenced = svg.firstGraphicsElement(with: id) else { return .empty }
+            guard visited.insert(id).inserted else { return .empty }
+            defer { visited.remove(id) }
+            let referencedBounds = makeBounds(for: referenced, depth: depth + 1, visited: &visited)
+            guard case .known(let bounds) = referencedBounds else { return referencedBounds }
             let transform = Self.createTransforms(from: referenced.attributes.transform ?? []).toMatrix()
                 .concatenated(LayerTree.Transform.translate(tx: use.x ?? 0, ty: use.y ?? 0).toMatrix())
-            return bounds.applying(transform)
+            return Bounds(bounds.applying(transform))
         } else if let container = element as? any ContainerElement {
             var result: LayerTree.Rect?
             for child in container.childElements where child.attributes.display != DOM.DisplayMode.none {
-                guard let bounds = makeBoundingBox(for: child, depth: depth + 1) else { continue }
-                let transform: LayerTree.Transform.Matrix
-                if let svg = child as? DOM.SVG {
-                    transform = Self.makeTransform(x: svg.x, y: svg.y, viewBox: svg.viewBox,
-                                                   width: svg.width, height: svg.height).toMatrix()
-                } else {
-                    transform = Self.createTransforms(from: child.attributes.transform ?? []).toMatrix()
+                switch makeBounds(for: child, depth: depth + 1, visited: &visited) {
+                case .unknown:
+                    return .unknown
+                case .empty:
+                    continue
+                case .known(let bounds):
+                    let transform: LayerTree.Transform.Matrix
+                    if let svg = child as? DOM.SVG {
+                        transform = Self.makeTransform(x: svg.x, y: svg.y, viewBox: svg.viewBox,
+                                                       width: svg.width, height: svg.height).toMatrix()
+                    } else {
+                        transform = Self.createTransforms(from: child.attributes.transform ?? []).toMatrix()
+                    }
+                    guard case .known(let childBounds) = Bounds(bounds.applying(transform)) else { continue }
+                    result = result.map { $0.union(childBounds) } ?? childBounds
                 }
-                let childBounds = bounds.applying(transform)
-                result = result.map { $0.union(childBounds) } ?? childBounds
             }
-            return result
+            return result.map(Bounds.known) ?? .empty
+        } else if element is DOM.Text {
+            return .unknown
         }
-        return nil
+        return .empty
+    }
+}
+
+extension LayerTree.Builder.Bounds {
+    /// Non-finite or negative-sized bounds (a move-only path, NaN from 0 × inf) carry no geometry.
+    init(_ rect: LayerTree.Rect) {
+        let values = [rect.x, rect.y, rect.width, rect.height]
+        guard values.allSatisfy(\.isFinite), rect.width >= 0, rect.height >= 0 else {
+            self = .empty
+            return
+        }
+        self = .known(rect)
+    }
+}
+
+/// Ids of the clip paths being resolved, to drop cycles.
+final class ActiveClipSet {
+    private var ids = Set<String>()
+
+    func insert(_ id: String) -> (inserted: Bool, memberAfterInsert: String) {
+        ids.insert(id)
+    }
+
+    func remove(_ id: String) {
+        ids.remove(id)
     }
 }
 

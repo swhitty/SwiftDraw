@@ -114,7 +114,8 @@ final class LayerTreeClipMaskTests: XCTestCase {
         <clipPath id="c" clipPathUnits="objectBoundingBox" transform="translate(0.5 0)"><rect width="0.5" height="1"/></clipPath>
         <rect width="40" height="40" clip-path="url(#c)"/>
         """)
-        assertRect(clips(c).first?.bounds, 20, 0, 20, 40)
+        // the bbox mapping comes first, then the transform in user units (Blink, Gecko, resvg)
+        assertRect(clips(c).first?.bounds, 0.5, 0, 20, 40)
     }
 
     func testClipPathUnitsObjectBoundingBoxOfEmptyBoxClipsEverything() throws {
@@ -342,9 +343,11 @@ final class LayerTreeClipMaskTests: XCTestCase {
         <mask id="m" width="0"><rect width="100" height="100" fill="white"/></mask>
         <rect x="10" y="20" width="50" height="40" fill="red" mask="url(#m)"/>
         """)
-        // the element is drawn but the mask draws nothing, so nothing survives
-        XCTAssertEqual(fills(c).count, 1)
-        XCTAssertGreaterThan(transparencyLayers(c), 0)
+        // the element is drawn into a transparency layer, but the mask draws nothing into its
+        // destination-in layer, so nothing survives
+        let blend = try XCTUnwrap(c.firstIndex { if case .setBlend = $0 { return true } else { return false } })
+        XCTAssertEqual(fills(Array(c[..<blend])).count, 1)
+        XCTAssertTrue(fills(Array(c[blend...])).isEmpty)
     }
 
     func testMaskContentUnitsObjectBoundingBoxOnEmptyBoxHidesElement() throws {
@@ -364,6 +367,91 @@ final class LayerTreeClipMaskTests: XCTestCase {
         <rect x="10" y="20" width="50" height="40" mask="url(#m)"/>
         """)
         assertRect(clips(c).first?.bounds, 5, 16, 60, 48)
+    }
+
+    // MARK: - review round 1
+
+    func testUseOfTextInsideClipPathBecomesMask() throws {
+        let svg = try DOM.SVG.parse(xml: """
+        <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="100" height="100">
+          <defs><text id="t" x="10" y="50" fill="black">Hi</text></defs>
+          <clipPath id="c"><use xlink:href="#t" x="5"/></clipPath>
+          <rect width="100" height="100" fill="red" clip-path="url(#c)"/>
+        </svg>
+        """)
+        let layer = LayerTree.Builder(svg: svg).makeLayer()
+        let clipped = try XCTUnwrap(findLayer(in: layer) { $0.mask != nil })
+        XCTAssertTrue(clipped.maskIsClip)
+        let mask = try XCTUnwrap(clipped.mask)
+        let texts = allContents(of: mask).compactMap { c -> LayerTree.TextAttributes? in
+            if case let .text(_, _, att) = c { return att } else { return nil }
+        }
+        XCTAssertEqual(texts.map(\.color), [.white])
+        // the <use> offset reaches the text's layer
+        XCTAssertNotNil(findLayer(in: mask) { $0.transform == [.matrix(.init(a: 1, b: 0, c: 0, d: 1, tx: 5, ty: 0))] })
+    }
+
+    func testMutualClipCycleKeepsDocument() throws {
+        let c = try commands("""
+        <clipPath id="a" clip-path="url(#b)"><rect width="10" height="10"/></clipPath>
+        <clipPath id="b" clip-path="url(#a)"><rect width="20" height="20"/></clipPath>
+        <rect width="50" height="50" fill="red" clip-path="url(#a)"/>
+        """)
+        // a → b → (a dropped): b clips a, both are drawn as masks
+        XCTAssertEqual(fills(c).map(\.bounds.width), [50, 10, 20])
+    }
+
+    func testClipPathInsideMaskContents() throws {
+        let c = try commands("""
+        <clipPath id="c"><rect width="10" height="10"/></clipPath>
+        <mask id="m" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100">
+          <rect width="100" height="100" fill="white" clip-path="url(#c)"/>
+        </mask>
+        <rect width="50" height="50" fill="red" mask="url(#m)"/>
+        """)
+        XCTAssertEqual(clips(c).map(\.bounds.width), [100, 10])
+    }
+
+    func testManyElementsSharingOneClipAllRender() throws {
+        // above what the old document-wide budget (20,000 references, three per element here) allowed
+        let count = 7_000
+        let rects = (0..<count).map { ##"<use xlink:href="#r" x="\##($0 % 100)" clip-path="url(#c)"/>"## }.joined()
+        let c = try commands("""
+        <defs><rect id="r" width="1" height="1"/></defs>
+        <clipPath id="c" clipPathUnits="objectBoundingBox"><rect width="0.5" height="1"/></clipPath>
+        \(rects)
+        """)
+        XCTAssertEqual(clips(c).count, count)
+        XCTAssertEqual(fills(c).count, count)
+    }
+
+    func testGroupWithTextHasUnknownBoundingBox() throws {
+        // a bbox measured without the text would cut it away: the region and the bbox clip are skipped
+        let svg = try DOM.SVG.parse(xml: """
+        <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">
+          <mask id="m"><rect width="100" height="100" fill="white"/></mask>
+          <clipPath id="c" clipPathUnits="objectBoundingBox"><rect width="0.5" height="1"/></clipPath>
+          <g id="masked" mask="url(#m)"><rect width="10" height="10"/><text x="50" y="50">Hi</text></g>
+          <g id="clipped" clip-path="url(#c)"><rect width="10" height="10"/><text x="50" y="50">Hi</text></g>
+        </svg>
+        """)
+        let builder = LayerTree.Builder(svg: svg)
+        XCTAssertNil(builder.makeBoundingBox(for: svg.childElements[0]))
+        let layer = builder.makeLayer()
+        let masked = try XCTUnwrap(findLayer(in: layer) { $0.mask != nil })
+        XCTAssertNil(findLayer(in: try XCTUnwrap(masked.mask)) { !$0.clip.isEmpty })
+        XCTAssertNil(findLayer(in: layer) { !$0.clip.isEmpty })
+    }
+
+    func testMoveOnlyPathDoesNotCollapseGroupBoundingBox() throws {
+        let c = try commands("""
+        <clipPath id="c" clipPathUnits="objectBoundingBox"><rect width="0.5" height="1"/></clipPath>
+        <g clip-path="url(#c)">
+          <rect width="40" height="40"/>
+          <path d="M 5 5" transform="scale(2)"/>
+        </g>
+        """)
+        assertRect(clips(c).first?.bounds, 0, 0, 20, 40)
     }
 
     // MARK: - helpers
