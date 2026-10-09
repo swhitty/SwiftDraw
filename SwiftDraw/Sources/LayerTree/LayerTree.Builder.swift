@@ -253,9 +253,19 @@ extension LayerTree {
             let attributes = DOM.presentationAttributes(for: element, styles: svg.styles)
             guard let clipID = attributes.clipPath?.fragmentID,
                   let clip = svg.defs.clipPaths.first(where: { $0.id == clipID }) else { return [] }
-            let shapes = clip.childElements.compactMap(makeClipShape)
-            // SVG 1.1 §14.3.5: a clipPath without contributing children clips everything away
-            return shapes.isEmpty ? [ClipShape(shape: .rect(within: .zero, radii: .zero), transform: .identity)] : shapes
+            let contributing = clip.childElements.filter(contributesToClip)
+            // SVG 1.1 §14.3.5: a clipPath without contributing children clips everything away; a child
+            // this builder cannot clip with (`<use>`, `<text>`) still contributes, so the element stays unclipped
+            guard !contributing.isEmpty else {
+                return [ClipShape(shape: .rect(within: .zero, radii: .zero), transform: .identity)]
+            }
+            return contributing.compactMap(makeClipShape)
+        }
+
+        func contributesToClip(_ element: DOM.GraphicsElement) -> Bool {
+            // SVG 1.1 §14.3.5: children with `display="none"` or hidden `visibility` do not contribute to the clip
+            let att = DOM.presentationAttributes(for: element, styles: svg.styles)
+            return att.display != DOM.DisplayMode.none && (att.visibility ?? .visible) == .visible
         }
 
         func makeClipUnits(for element: DOM.GraphicsElement) -> ClipUnits {
@@ -269,11 +279,6 @@ extension LayerTree {
         }
 
         func makeClipShape(for element: DOM.GraphicsElement) -> ClipShape? {
-            // SVG 1.1 §14.3.5: children with `display="none"` or hidden `visibility` do not contribute to the clip
-            let att = DOM.presentationAttributes(for: element, styles: svg.styles)
-            guard att.display != DOM.DisplayMode.none, (att.visibility ?? .visible) == .visible else {
-                return nil
-            }
             guard let shape = Builder.makeShape(from: element) else {
                 return nil
             }

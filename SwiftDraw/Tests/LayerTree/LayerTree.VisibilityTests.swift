@@ -177,13 +177,37 @@ final class LayerTreeVisibilityTests: XCTestCase {
     }
 
     func testHiddenTextAndImageDrawNothing() throws {
+        // the layer tree, not the commands: LayerTreeProvider draws no path for text, visible or not
         let png = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
-        let cmds = try commands(#"""
-        <text x="0" y="10" visibility="hidden">hi</text><image width="1" height="1" visibility="hidden" href="\#(png)"/>
-        <text x="0" y="10" display="none">hi</text><image width="1" height="1" display="none" href="\#(png)"/>
-        """#)
-        XCTAssertTrue(cmds.filter { if case .draw = $0 { return true } else { return false } }.isEmpty)
-        XCTAssertEqual(cmds.count, 0)
+        func contents(_ attribute: String) throws -> (text: Int, image: Int) {
+            let svg = try DOM.SVG.parse(xml: """
+            <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">
+            <text x="0" y="10" \(attribute)>hi</text><image width="1" height="1" \(attribute) href="\(png)"/>
+            </svg>
+            """)
+            func count(_ layer: LayerTree.Layer) -> (text: Int, image: Int) {
+                layer.contents.reduce(into: (0, 0)) { total, content in
+                    switch content {
+                    case .text: total.text += 1
+                    case .image: total.image += 1
+                    case .layer(let child):
+                        let c = count(child)
+                        total.text += c.text
+                        total.image += c.image
+                    case .shape: break
+                    }
+                }
+            }
+            return count(LayerTree.Builder(svg: svg).makeLayer())
+        }
+        let visible = try contents("")
+        XCTAssertEqual(visible.text, 1)
+        XCTAssertEqual(visible.image, 1)
+        for attribute in [#"visibility="hidden""#, #"display="none""#] {
+            let hidden = try contents(attribute)
+            XCTAssertEqual(hidden.text, 0, attribute)
+            XCTAssertEqual(hidden.image, 0, attribute)
+        }
     }
 
     func testUseOfDisplayNoneElementWithOpacityAndMaskDrawsNothing() throws {
@@ -203,11 +227,47 @@ final class LayerTreeVisibilityTests: XCTestCase {
     }
 
     func testForeignObjectWithSVGNamespaceChild() throws {
+        // <foreignObject> is not rendered, so an SVG-namespace child inside it goes with it; the sibling draws
         let body = #"""
         <foreignObject width="10" height="10"><rect xmlns="http://www.w3.org/2000/svg" width="5" height="5"/></foreignObject>
         <rect width="1" height="1"/>
         """#
-        XCTAssertGreaterThanOrEqual(try fillCount(body), 1)
+        XCTAssertEqual(try fillCount(body), 1)
+    }
+
+    func testDisplayDoesNotApplyToGradientPatternOrFilter() throws {
+        // SVG 1.1 §11.5: display does not apply to gradients, <pattern> or <filter>
+        let body = #"""
+        <linearGradient id="g" display="none"><stop offset="0" stop-color="red"/><stop offset="1" stop-color="blue"/></linearGradient>
+        <pattern id="p" display="none" width="4" height="4" patternUnits="userSpaceOnUse"><rect width="2" height="2"/></pattern>
+        <filter id="f" display="none"><feGaussianBlur stdDeviation="2"/></filter>
+        <rect width="10" height="10" fill="url(#g)"/>
+        <rect width="10" height="10" fill="url(#p)"/>
+        <rect width="10" height="10" filter="url(#f)"/>
+        """#
+        let cmds = try commands(body)
+        XCTAssertTrue(cmds.contains { if case .drawLinearGradient = $0 { return true } else { return false } })
+        XCTAssertTrue(cmds.contains { if case .setFillPattern = $0 { return true } else { return false } })
+        let svg = try DOM.SVG.parse(xml: """
+        <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">\(body)</svg>
+        """)
+        func hasFilter(_ layer: LayerTree.Layer) -> Bool {
+            !layer.filters.isEmpty || layer.contents.contains {
+                if case .layer(let child) = $0 { return hasFilter(child) } else { return false }
+            }
+        }
+        XCTAssertTrue(hasFilter(LayerTree.Builder(svg: svg).makeLayer()))
+    }
+
+    func testClipPathWithOnlyAUseChildStillDraws() throws {
+        // a child this builder cannot clip with is not a hidden one: the element must not vanish
+        let body = #"""
+        <defs><rect id="r" width="5" height="5"/></defs>
+        <clipPath id="c"><use href="#r"/></clipPath>
+        <rect width="10" height="10" clip-path="url(#c)"/>
+        """#
+        XCTAssertEqual(try fillCount(body), 1)
+        XCTAssertFalse(try clipShapes(body).contains { $0 == [LayerTree.ClipShape(shape: .rect(within: .zero, radii: .zero), transform: .identity)] })
     }
 
     func testVisibilityParsesInDOM() throws {
