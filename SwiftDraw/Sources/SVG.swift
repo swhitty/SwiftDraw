@@ -160,7 +160,7 @@ extension SVG {
     }
 
     init(dom: DOM.SVG, options: Options) {
-        self.size = CGSize(width: dom.width, height: dom.height)
+        self.size = CGSize(width: CGFloat(dom.width), height: CGFloat(dom.height))
 
         //To create the draw commands;
         // - XML is parsed into DOM.SVG
@@ -188,7 +188,7 @@ public struct SVG: Sendable {
     public let size: CGSize
 
     init(dom: DOM.SVG, options: Options) {
-        size = CGSize(width: dom.width, height: dom.height)
+        size = CGSize(width: CGFloat(dom.width), height: CGFloat(dom.height))
     }
 
     public struct Options: OptionSet {

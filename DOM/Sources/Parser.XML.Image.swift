@@ -35,10 +35,10 @@ extension XMLParser {
     let href: DOM.URL = try att.parseHref()
 
     let image = DOM.Image(href: href)
-    image.x = try att.parseCoordinate("x")
-    image.y = try att.parseCoordinate("y")
-    image.width = try att.parseCoordinate("width")
-    image.height = try att.parseCoordinate("height")
+    image.x = try parseLength(att, "x", .horizontal)
+    image.y = try parseLength(att, "y", .vertical)
+    image.width = try parseLength(att, "width", .horizontal)
+    image.height = try parseLength(att, "height", .vertical)
     image.preserveAspectRatio = parsePreserveAspectRatio(try? att.parseString("preserveAspectRatio"))
 
     return image

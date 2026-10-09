@@ -103,8 +103,8 @@ extension LayerTree {
             x: DOM.Coordinate?,
             y: DOM.Coordinate?,
             viewBox: DOM.SVG.ViewBox?,
-            width: DOM.Length,
-            height: DOM.Length,
+            width: DOM.Coordinate,
+            height: DOM.Coordinate,
             preserveAspectRatio: DOM.PreserveAspectRatio? = nil
         ) -> [LayerTree.Transform] {
             let fit = makeViewBoxFit(viewBox: viewBox, width: width, height: height, preserveAspectRatio: preserveAspectRatio)
@@ -133,8 +133,8 @@ extension LayerTree {
         /// `viewport = (user - viewBox.origin) * scale + offset`. A missing or empty viewBox is the viewport itself.
         static func makeViewBoxFit(
             viewBox: DOM.SVG.ViewBox?,
-            width: DOM.Length,
-            height: DOM.Length,
+            width: DOM.Coordinate,
+            height: DOM.Coordinate,
             preserveAspectRatio: DOM.PreserveAspectRatio?
         ) -> (viewBox: DOM.SVG.ViewBox, sx: LayerTree.Float, sy: LayerTree.Float, tx: LayerTree.Float, ty: LayerTree.Float) {
             var box = DOM.SVG.ViewBox(x: 0, y: 0, width: .init(width), height: .init(height))
@@ -164,8 +164,8 @@ extension LayerTree {
         /// where its `overflow: hidden` clip applies. Larger than the viewBox when `meet` letterboxes it.
         static func makeViewportClip(
             viewBox: DOM.SVG.ViewBox?,
-            width: DOM.Length,
-            height: DOM.Length,
+            width: DOM.Coordinate,
+            height: DOM.Coordinate,
             preserveAspectRatio: DOM.PreserveAspectRatio?
         ) -> LayerTree.Rect {
             let fit = makeViewBoxFit(viewBox: viewBox, width: width, height: height, preserveAspectRatio: preserveAspectRatio)
