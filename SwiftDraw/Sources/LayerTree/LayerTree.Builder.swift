@@ -40,8 +40,20 @@ extension LayerTree {
 
         let svg: DOM.SVG
 
+        // The use, mask and pattern elements being built. Reaching one again is a cycle.
+        private final class Active {
+            var elements = Set<AnyHashable>()
+        }
+        private let active = Active()
+
         init(svg: DOM.SVG) {
             self.svg = svg
+        }
+
+        func building<R>(_ key: some Hashable, cycle: R, _ build: () throws -> R) rethrows -> R {
+            guard active.elements.insert(key).inserted else { return cycle }
+            defer { active.elements.remove(key) }
+            return try build()
         }
 
         func makeLayer() -> Layer {
@@ -199,15 +211,18 @@ extension LayerTree {
             guard let maskId = element.attributes.mask?.fragmentID,
                   let mask = svg.defs.masks.first(where: { $0.id == maskId }) else { return nil }
 
-            let l = Layer()
+            // A mask inside itself is empty, so it hides what it masks
+            return building(ObjectIdentifier(mask), cycle: Layer()) {
+                let l = Layer()
 
-            let maskState = createState(for: mask, inheriting: State())
-            mask.childElements.forEach {
-                let contents = Layer.Contents.layer(makeLayer(from: $0, inheriting: maskState))
-                l.appendContents(contents)
+                let maskState = createState(for: mask, inheriting: State())
+                mask.childElements.forEach {
+                    let contents = Layer.Contents.layer(makeLayer(from: $0, inheriting: maskState))
+                    l.appendContents(contents)
+                }
+
+                return l
             }
-
-            return l
         }
 
         func makeFilters(for state: State) -> [Filter] {
@@ -365,7 +380,10 @@ extension LayerTree.Builder {
         let frame = LayerTree.Rect(x: 0, y: 0, width: element.width, height: element.height)
         let contentUnits: LayerTree.PatternUnits = element.patternContentUnits == .objectBoundingBox ? .objectBoundingBox : .userSpaceOnUse
         let pattern = LayerTree.Pattern(frame: frame, contentUnits: contentUnits)
-        pattern.contents = element.childElements.compactMap { .layer(makeLayer(from: $0, inheriting: .init())) }
+        // A pattern inside itself is empty
+        building(element.id, cycle: ()) {
+            pattern.contents = element.childElements.compactMap { .layer(makeLayer(from: $0, inheriting: .init())) }
+        }
         return pattern
     }
 
