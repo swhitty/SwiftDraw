@@ -376,7 +376,8 @@ extension LayerTree.Builder {
             return nil
         }
 
-        let linear = chain.compactMap(\.linear)
+        // geometry is only inherited while the chain stays the same kind of gradient
+        let linear = chain.prefix { $0.linear != nil }.compactMap(\.linear)
         var gradient = LayerTree.LinearGradient(
             gradient: .init(stops: stops),
             start: Point(linear.lazy.compactMap(\.x1).first ?? 0, linear.lazy.compactMap(\.y1).first ?? 0),
@@ -395,7 +396,8 @@ extension LayerTree.Builder {
             return nil
         }
 
-        let radial = chain.compactMap(\.radial)
+        // geometry is only inherited while the chain stays the same kind of gradient
+        let radial = chain.prefix { $0.radial != nil }.compactMap(\.radial)
         let cx = radial.lazy.compactMap(\.cx).first ?? 0.5
         let cy = radial.lazy.compactMap(\.cy).first ?? 0.5
         var gradient = LayerTree.RadialGradient(

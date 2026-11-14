@@ -144,4 +144,23 @@ final class LayerTreeBuilderGradientTests: XCTestCase {
         XCTAssertNil(builder.makeGradient(for: svg.defs.linearGradients[0]))
         XCTAssertNil(builder.makeGradient(for: svg.defs.radialGradients[0]))
     }
+
+    func testLinearGradient_DoesNotInheritGeometry_ThroughDifferentKind() throws {
+        let svg = try DOM.SVG.parse(xml: #"""
+        <svg width="10" height="10" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+            <defs>
+                <linearGradient id="a" x1="7" gradientUnits="userSpaceOnUse">
+                    <stop offset="0" stop-color="red"/><stop offset="1" stop-color="blue"/>
+                </linearGradient>
+                <radialGradient id="b" xlink:href="#a"/>
+                <linearGradient id="c" xlink:href="#b"/>
+            </defs>
+        </svg>
+        """#)
+        let builder = LayerTree.Builder(svg: svg)
+
+        let gradient = try XCTUnwrap(builder.makeGradient(for: svg.defs.linearGradients[1]))
+        XCTAssertEqual(gradient.start.x, 0)
+        XCTAssertEqual(gradient.units, .userSpaceOnUse)
+    }
 }
