@@ -56,7 +56,15 @@ package extension XMLParser {
             throw XMLParser.Error.unresolvableDimension(reason: makeUnresolvedReason(attribute: "height", raw: heightRaw, hasViewBox: viewBox != nil))
         }
 
-        let svg = DOM.SVG(width: DOM.Length(w), height: DOM.Length(h))
+        // Int(w) traps when w is huge, infinite or NaN
+        guard let intWidth = DOM.Length(exactly: w.rounded(.towardZero)) else {
+            throw Error.invalidAttribute(name: "width", value: widthRaw ?? "\(w)")
+        }
+        guard let intHeight = DOM.Length(exactly: h.rounded(.towardZero)) else {
+            throw Error.invalidAttribute(name: "height", value: heightRaw ?? "\(h)")
+        }
+
+        let svg = DOM.SVG(width: intWidth, height: intHeight)
         svg.x = try att.parseCoordinate("x")
         svg.y = try att.parseCoordinate("y")
         svg.childElements = try parseGraphicsElements(e.children)
