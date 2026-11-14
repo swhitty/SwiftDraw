@@ -570,19 +570,19 @@ extension LayerTree.CommandGenerator {
         #endif
         }
 
-        print("Warning:", name, "is not supported. Elements with this filter can be hidden with \(hint)", to: &.standardError)
+        LogSink.warning("\(name) is not supported. Elements with this filter can be hidden with \(hint)")
         hasLoggedFilterWarning = true
     }
 
     func logUnsupportedGradient() {
         guard !hasLoggedGradientWarning else { return }
-        print("Warning:", "PDF does not support gradients with stop-opacity", to: &.standardError)
+        LogSink.warning("PDF does not support gradients with stop-opacity")
         hasLoggedGradientWarning = true
     }
 
     func logUnsupportedMask() {
         guard !hasLoggedMaskWarning else { return }
-        print("Warning:", "PDF does not support transparency masks", to: &.standardError)
+        LogSink.warning("PDF does not support transparency masks")
         hasLoggedMaskWarning = true
     }
 }

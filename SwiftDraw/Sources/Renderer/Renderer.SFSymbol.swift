@@ -95,7 +95,7 @@ public struct SFSymbolRenderer {
     private func makeVariant(regular: URL, explicit: URL?, scale: StrokeWidthScale?, variant: Variant) throws -> DOM.SVG? {
         if let explicit {
             if scale != nil {
-                print("Warning:", "explicit --\(variant.rawValue) overrides --\(variant.rawValue)-stroke-width.", to: &.standardError)
+                LogSink.warning("explicit --\(variant.rawValue) overrides --\(variant.rawValue)-stroke-width.")
             }
             return try DOM.SVG.parse(fileURL: explicit)
         }
@@ -103,7 +103,7 @@ public struct SFSymbolRenderer {
         let dom = try DOM.SVG.parse(fileURL: regular)
         let count = StrokeWidthScaler.scale(dom, by: scale)
         if count == 0 {
-            print("Warning:", "--\(variant.rawValue)-stroke-width has no effect: source SVG has no stroke-width values.", to: &.standardError)
+            LogSink.warning("--\(variant.rawValue)-stroke-width has no effect: source SVG has no stroke-width values.")
         }
         return dom
     }
@@ -232,7 +232,7 @@ extension SFSymbolRenderer {
         let isSFSymbolLayer = containsAcceptedName(layer.class)
         guard isSFSymbolLayer || layer.opacity > 0 else { return [] }
         guard layer.mask == nil else {
-            print("Warning:", "mask unsupported in SF Symbols.", to: &.standardError)
+            LogSink.warning("mask unsupported in SF Symbols.")
             return []
         }
 
@@ -296,7 +296,7 @@ extension SFSymbolRenderer {
         }
         return result
 #else
-        print("Warning:", "clip-path requires CoreGraphics.", to: &.standardError)
+        LogSink.warning("clip-path requires CoreGraphics.")
         return paths
 #endif
     }
@@ -317,7 +317,7 @@ extension SFSymbolRenderer {
 #if canImport(CoreGraphics)
             return expandOutlines(for: shape.path, stroke: stroke)
 #else
-            print("Warning:", "expanding stroke outlines requires macOS.", to: &.standardError)
+            LogSink.warning("expanding stroke outlines requires macOS.")
             return nil
 #endif
         }
@@ -332,7 +332,7 @@ extension SFSymbolRenderer {
         let cgPath = CGProvider().createPath(from: text, at: point, with: attributes)
         return cgPath?.makePath()
 #else
-        print("Warning:", "expanding text outlines requires macOS.", to: &.standardError)
+        LogSink.warning("expanding text outlines requires macOS.")
         return nil
 #endif
     }
@@ -410,11 +410,11 @@ extension SFSymbolRenderer {
 
         switch variant {
         case .regular:
-            print("Alignment: --insets \(top),\(left),\(bottom),\(right)")
+            LogSink.info("Alignment: --insets \(top),\(left),\(bottom),\(right)")
         case .ultralight:
-            print("Alignment: --ultralight-insets \(top),\(left),\(bottom),\(right)")
+            LogSink.info("Alignment: --ultralight-insets \(top),\(left),\(bottom),\(right)")
         case .black:
-            print("Alignment: --black-insets \(top),\(left),\(bottom),\(right)")
+            LogSink.info("Alignment: --black-insets \(top),\(left),\(bottom),\(right)")
         }
     }
 

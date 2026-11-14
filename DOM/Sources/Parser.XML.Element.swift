@@ -289,27 +289,31 @@ extension XMLParser {
     }
 
     package static func logParsingError(for error: any Swift.Error, filename: String?, parsing element: XML.Element? = nil) {
+        LogSink.error(makeParsingErrorMessage(for: error, filename: filename, parsing: element))
+    }
+
+    package static func makeParsingErrorMessage(for error: any Swift.Error, filename: String?, parsing element: XML.Element? = nil) -> String {
         let elementName = element.map { "<\($0.name)>" } ?? ""
         let filename = filename ?? ""
         switch error {
         case let XMLParser.Error.invalidDocument(error, element, line, column):
             let element = element.map { "<\($0)>" } ?? ""
             if let error = error {
-                print("[parsing error]", filename, element, "line:", line, "column:", column, "error:", error, to: &.standardError)
+                return "[parsing error] \(filename) \(element) line: \(line) column: \(column) error: \(error)"
             } else {
-                print("[parsing error]", filename, element, "line:", line, "column:", column, to: &.standardError)
+                return "[parsing error] \(filename) \(element) line: \(line) column: \(column)"
             }
         case let XMLParser.Error.invalidElement(name, error, line, column):
             if let line = line {
-                print("[parsing error]", filename, "<\(name)>", "line:", line, "column:", column ?? -1, "error:", error, to: &.standardError)
+                return "[parsing error] \(filename) <\(name)> line: \(line) column: \(column ?? -1) error: \(error)"
             } else {
-                print("[parsing error]", filename, "<\(name)>", "error:", error, to: &.standardError)
+                return "[parsing error] \(filename) <\(name)> error: \(error)"
             }
         default:
             if let location = element?.parsedLocation {
-                print("[parsing error]", filename, elementName, "line:", location.line, "column:", location.column, "error:", error, to: &.standardError)
+                return "[parsing error] \(filename) \(elementName) line: \(location.line) column: \(location.column) error: \(error)"
             } else {
-                print("[parsing error]", filename, elementName, "error:", error, to: &.standardError)
+                return "[parsing error] \(filename) \(elementName) error: \(error)"
             }
         }
     }
