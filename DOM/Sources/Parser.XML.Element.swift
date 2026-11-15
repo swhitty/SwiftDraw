@@ -337,6 +337,8 @@ extension XMLParser {
         // absolute units (`12pt`) in px; `em` and `%` keep their raw number as before
         // absolute units (`12pt`) in px; `em` and `%` keep their raw number as before
         el.fontSize = lenient { try att.parseCoordinate("font-size") }
+        el.fontWeight = lenient { try att.parseString("font-weight") as String? }.flatMap(DOM.FontWeight.init)
+        el.fontStyle = lenient { try att.parseString("font-style") as String? }.flatMap(DOM.FontStyle.init)
         el.textAnchor = lenient { try att.parseRaw("text-anchor") }
         el.dominantBaseline = lenient { try att.parseRaw("dominant-baseline") }
 
@@ -368,8 +370,33 @@ extension XMLParser {
     func parseFontFace(_ att: any AttributeParser) throws -> DOM.FontFace {
         try DOM.FontFace(
             family: att.parseString("font-family").unquoted,
-            src: att.parseFontSource("src")
+            src: att.parseFontSource("src"),
+            weight: (try? att.parseString("font-weight")).flatMap(Self.parseFontFaceWeight) ?? 400...400,
+            style: (try? att.parseString("font-style")).flatMap(DOM.FontStyle.init) ?? .normal
         )
+    }
+
+    /// The `font-weight` descriptor of `@font-face`: a weight, or two for a variable font's range (`100 900`).
+    /// `bolder` and `lighter` are not valid here.
+    static func parseFontFaceWeight(_ text: String) -> ClosedRange<Int>? {
+        let weights = text.split(separator: " ").map { DOM.FontWeight(String($0)) }
+        func number(_ weight: DOM.FontWeight?) -> Int? {
+            switch weight {
+            case .normal: return 400
+            case .bold: return 700
+            case .number(let value): return value
+            default: return nil
+            }
+        }
+        switch weights.count {
+        case 1:
+            return number(weights[0]).map { $0...$0 }
+        case 2:
+            guard let a = number(weights[0]), let b = number(weights[1]) else { return nil }
+            return min(a, b)...max(a, b)
+        default:
+            return nil
+        }
     }
 
     package static func logParsingError(for error: any Swift.Error, filename: String?, parsing element: XML.Element? = nil) {

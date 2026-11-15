@@ -221,33 +221,71 @@ struct CGProvider: RendererTypeProvider {
     }
 
     func createPath(from text: String, at origin: LayerTree.Point, with attributes: LayerTree.TextAttributes) -> Types.Path? {
-        let font = CGProvider.createCTFont(for: attributes.font, size: attributes.size)
+        let font = CGProvider.createCTFont(for: attributes)
         guard let path = text.toPath(font: font) else { return nil }
         var transform = CGAffineTransform(translationX: createFloat(from: origin.x), y: createFloat(from: origin.y))
         return path.copy(using: &transform)
     }
 
-    private static func createCTFont(for font: LayerTree.TextAttributes.Font, size: CGFloat) -> CTFont? {
+    private static func createCTFont(for font: LayerTree.TextAttributes.Font, size: CGFloat, weight: Int, isItalic: Bool) -> CTFont? {
         switch font {
         case .truetype(let data):
+            // an @font-face font is already the face matching the weight and style
             guard let provider = CGDataProvider(data: data as CFData),
                   let cgFont = CGFont(provider) else { return nil }
             return CTFontCreateWithGraphicsFont(cgFont, size, nil, nil)
         case .name(let name):
             let ctFont = CTFontCreateWithName(name as CFString, size, nil)
-            let postScriptName = CTFontCopyPostScriptName(ctFont) as String
-            if postScriptName.caseInsensitiveCompare(name) == .orderedSame
-                || CTFontCopyFamilyName(ctFont) as String == name {
-                return ctFont
+            // a family ("Helvetica", also the PostScript name of its regular face): pick the face by weight and slant
+            if CTFontCopyFamilyName(ctFont) as String == name {
+                guard weight != 400 || isItalic else { return ctFont }
+                return createCTFont(family: name, size: size, weight: weight, isItalic: isItalic) ?? ctFont
             }
-            return nil
+            // a specific face by PostScript name ("Helvetica-Bold"): used as named
+            let postScriptName = CTFontCopyPostScriptName(ctFont) as String
+            return postScriptName.caseInsensitiveCompare(name) == .orderedSame ? ctFont : nil
         }
     }
 
-    static func createCTFont(for fonts: [LayerTree.TextAttributes.Font], size: Float) -> CTFont {
+    /// The face of a system font family closest to a CSS weight and slant, as CoreText matches it
+    /// (e.g. Helvetica 700 is Helvetica-Bold, 300 is Helvetica-Light, italic is Helvetica-Oblique).
+    static func createCTFont(family: String, size: CGFloat, weight: Int, isItalic: Bool) -> CTFont? {
+        var traits: [CFString: Any] = [kCTFontWeightTrait: coreTextWeight(for: weight)]
+        if isItalic {
+            traits[kCTFontSymbolicTrait] = CTFontSymbolicTraits.traitItalic.rawValue
+        }
+        let descriptor = CTFontDescriptorCreateWithAttributes([
+            kCTFontFamilyNameAttribute: family,
+            kCTFontTraitsAttribute: traits
+        ] as CFDictionary)
+        let font = CTFontCreateWithFontDescriptor(descriptor, size, nil)
+        // CoreText falls back to another family when this one is not installed
+        guard CTFontCopyFamilyName(font) as String == family else { return nil }
+        return font
+    }
+
+    /// CSS weights (1–1000) on CoreText's weight trait (−1…1), at the points of `NSFont.Weight`
+    /// (ultraLight 100 … black 900), interpolated between them.
+    static func coreTextWeight(for weight: Int) -> CGFloat {
+        let points: [(css: CGFloat, ct: CGFloat)] = [
+            (1, -1), (100, -0.8), (200, -0.6), (300, -0.4), (400, 0),
+            (500, 0.23), (600, 0.3), (700, 0.4), (800, 0.56), (900, 0.62), (1000, 1)
+        ]
+        let w = min(max(CGFloat(weight), 1), 1000)
+        guard let upper = points.firstIndex(where: { $0.css >= w }), upper > 0 else { return points[0].ct }
+        let (a, b) = (points[upper - 1], points[upper])
+        return a.ct + (b.ct - a.ct) * (w - a.css) / (b.css - a.css)
+    }
+
+    static func createCTFont(for attributes: LayerTree.TextAttributes) -> CTFont {
+        createCTFont(for: attributes.font, size: attributes.size, weight: attributes.weight, isItalic: attributes.isItalic)
+    }
+
+    static func createCTFont(for fonts: [LayerTree.TextAttributes.Font], size: Float, weight: Int = 400, isItalic: Bool = false) -> CTFont {
         let cgSize = CGFloat(size)
-        let fallback = CTFontCreateWithName("Times" as CFString, cgSize, nil)
-        let ctFonts = fonts.compactMap { createCTFont(for: $0, size: cgSize) }
+        let fallback = createCTFont(for: .name("Times"), size: cgSize, weight: weight, isItalic: isItalic)
+            ?? CTFontCreateWithName("Times" as CFString, cgSize, nil)
+        let ctFonts = fonts.compactMap { createCTFont(for: $0, size: cgSize, weight: weight, isItalic: isItalic) }
         guard let primary = ctFonts.first else { return fallback }
         guard ctFonts.count > 1 else { return primary }
         let descriptors = ctFonts.dropFirst().map { CTFontCopyFontDescriptor($0) }

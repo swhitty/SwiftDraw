@@ -530,17 +530,19 @@ extension LayerTree.Builder {
 
         return LayerTree.TextAttributes(
             color: fill,
-            font: state.fontFamily.flatMap(makeFonts),
+            font: state.fontFamily.flatMap { makeFonts(with: $0, weight: state.fontWeight, style: state.fontStyle) },
             size: state.fontSize,
+            weight: state.fontWeight,
+            isItalic: state.fontStyle != .normal,
             anchor: state.textAnchor,
             baseline: state.textBaseline
         )
     }
 
-    func makeFonts(with font: DOM.FontFamily) -> [LayerTree.TextAttributes.Font] {
+    func makeFonts(with font: DOM.FontFamily, weight: Int = 400, style: DOM.FontStyle = .normal) -> [LayerTree.TextAttributes.Font] {
         switch font {
         case .name(let name):
-            return makeFonts(faceName: name)
+            return makeFonts(faceName: name, weight: weight, style: style)
         case .keyword(.serif):
             return [.name("Times")]
         case .keyword(.sansSerif):
@@ -554,14 +556,50 @@ extension LayerTree.Builder {
         }
     }
 
-    func makeFonts(faceName: String) -> [LayerTree.TextAttributes.Font] {
-        let fonts = svg.fontSources(for: faceName)
-            .compactMap { try? makeFont(for: $0) }
+    /// The `@font-face` fonts of a family that best match the weight and style, or the family by name
+    /// when the document declares none (the renderer then picks the weight and style from the system).
+    func makeFonts(faceName: String, weight: Int = 400, style: DOM.FontStyle = .normal) -> [LayerTree.TextAttributes.Font] {
+        let faces = Self.matchFontFaces(svg.fontFaces(for: faceName), weight: weight, style: style)
+        let fonts = faces.compactMap { try? makeFont(for: $0.src) }
 
         guard !fonts.isEmpty else {
             return [.name(faceName)]
         }
         return fonts
+    }
+
+    /// CSS Fonts 4 §5.2 font matching: the faces of one family closest in style, then in weight. Every face
+    /// with that style and weight is kept, so faces split by `unicode-range` still cascade together.
+    static func matchFontFaces(_ faces: [DOM.FontFace], weight: Int, style: DOM.FontStyle) -> [DOM.FontFace] {
+        let stylePreference: [DOM.FontStyle]
+        switch style {
+        case .normal: stylePreference = [.normal, .oblique, .italic]
+        case .italic: stylePreference = [.italic, .oblique, .normal]
+        case .oblique: stylePreference = [.oblique, .italic, .normal]
+        }
+        guard let bestStyle = stylePreference.first(where: { s in faces.contains { $0.style == s } }) else {
+            return []
+        }
+        let candidates = faces.filter { $0.style == bestStyle }
+
+        // lower is better: (tier, distance) where tier orders the search directions of §5.2 step 4
+        func rank(_ range: ClosedRange<Int>) -> (Int, Int) {
+            if range.contains(weight) { return (0, 0) }
+            let below = range.upperBound < weight
+            let distance = below ? weight - range.upperBound : range.lowerBound - weight
+            switch weight {
+            case 400...500:
+                // heavier up to 500, then lighter, then heavier past 500
+                if !below && range.lowerBound <= 500 { return (1, distance) }
+                return below ? (2, distance) : (3, distance)
+            case ..<400:
+                return below ? (1, distance) : (2, distance)
+            default:
+                return below ? (2, distance) : (1, distance)
+            }
+        }
+        guard let best = candidates.map({ rank($0.weight) }).min(by: { $0 < $1 }) else { return [] }
+        return candidates.filter { rank($0.weight) == best }
     }
 
     func makeFont(for source: DOM.FontFace.Source) throws -> LayerTree.TextAttributes.Font {
@@ -828,6 +866,9 @@ extension LayerTree.Builder {
 
         var fontFamily: [DOM.FontFamily]
         var fontSize: DOM.Float
+        /// The numeric weight, with `bolder` and `lighter` already resolved
+        var fontWeight: Int
+        var fontStyle: DOM.FontStyle
         var textAnchor: DOM.TextAnchor
         var textBaseline: DOM.TextBaseline
 
@@ -855,6 +896,8 @@ extension LayerTree.Builder {
 
             fontFamily = [.keyword(.serif)]
             fontSize = 12.0
+            fontWeight = 400
+            fontStyle = .normal
         }
     }
 
@@ -885,6 +928,8 @@ extension LayerTree.Builder {
 
         state.fontFamily = attributes.fontFamily ?? existing.fontFamily
         state.fontSize = attributes.fontSize ?? existing.fontSize
+        state.fontWeight = attributes.fontWeight?.resolved(inheriting: existing.fontWeight) ?? existing.fontWeight
+        state.fontStyle = attributes.fontStyle ?? existing.fontStyle
         state.textAnchor = attributes.textAnchor ?? existing.textAnchor
         state.textBaseline = attributes.dominantBaseline ?? existing.textBaseline
 
@@ -976,13 +1021,7 @@ private extension DOM.Fill {
 
 private extension DOM.SVG {
 
-    func fontSources(for family: String) -> [DOM.FontFace.Source] {
-        var sources = [DOM.FontFace.Source]()
-        for style in styles {
-            for font in style.fonts where font.family == family {
-                sources.append(font.src)
-            }
-        }
-        return sources
+    func fontFaces(for family: String) -> [DOM.FontFace] {
+        styles.flatMap { $0.fonts.filter { $0.family == family } }
     }
 }
