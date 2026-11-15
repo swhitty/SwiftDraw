@@ -70,25 +70,27 @@ extension XMLParser {
         node.filterUnits = try? nodeAtt.parseRaw("filterUnits")
         node.primitiveUnits = try? nodeAtt.parseRaw("primitiveUnits")
 
-        var previousResult: String?
+        let context = PrimitiveContext(
+            primitiveUnits: node.primitiveUnits ?? .userSpaceOnUse,
+            colorInterpolation: parseColorInterpolation(e) ?? colorInterpolation,
+            color: try? nodeAtt.parseColor("color")
+        )
         var primitives = e.children[...]
+        // the source graphic stands in for the blend's result until a later primitive reuses its name
+        var sourceAlias: String?
         if hasNoOpSourcePrelude(primitives) {
-            // the chain continues from the source graphic, under the blend's result name
-            previousResult = primitives[primitives.startIndex + 1].attributes["result"]
+            sourceAlias = primitives[primitives.startIndex + 1].attributes["result"]?.trimmingCharacters(in: .whitespaces)
             primitives = primitives.dropFirst(2)
         }
         for n in primitives {
-            if var effect = try parseEffect(n) {
-                // only a linear chain is supported: each primitive must consume the previous result
-                if let input = n.attributes["in"] {
-                    let isSource = node.effects.isEmpty && input == "SourceGraphic"
-                    let isPrevious = previousResult != nil && input == previousResult
-                    if !isSource && !isPrevious {
-                        effect = .unsupported(name: n.name)
+            if var primitive = try parsePrimitive(n, context: context) {
+                if let alias = sourceAlias {
+                    primitive.inputs = primitive.inputs.map { $0 == .result(alias) ? .sourceGraphic : $0 }
+                    if primitive.result == alias {
+                        sourceAlias = nil
                     }
                 }
-                previousResult = n.attributes["result"]
-                node.effects.append(effect)
+                node.primitives.append(primitive)
             }
         }
 
@@ -114,7 +116,64 @@ extension XMLParser {
               ["x", "y", "width", "height"].allSatisfy({ blend.attributes[$0] == nil }) else {
             return false
         }
-        return true
+        // the flood is dropped with the blend, so nothing after them may read it
+        return !primitives.dropFirst(2).contains { referencesResult(floodResult, in: $0) }
+    }
+
+    func referencesResult(_ result: String, in e: XML.Element) -> Bool {
+        let inputs = [e.attributes["in"], e.attributes["in2"]] + e.children.map { $0.attributes["in"] }
+        return inputs.contains { $0?.trimmingCharacters(in: .whitespaces) == result }
+    }
+
+    // what a primitive inherits from its <filter>
+    struct PrimitiveContext {
+        var primitiveUnits: DOM.Filter.Units
+        var colorInterpolation: DOM.Filter.ColorInterpolation
+        // the <filter>'s `color`, for flood-color="currentColor"
+        var color: DOM.Color?
+    }
+
+    func parsePrimitive(_ e: XML.Element, context: PrimitiveContext) throws -> DOM.Filter.Primitive? {
+        guard let effect = try parseEffect(e) else { return nil }
+        let att: any AttributeParser = try parseAttributes(e)
+
+        var primitive = DOM.Filter.Primitive(effect: effect)
+        switch effect {
+        case .merge:
+            primitive.inputs = e.children
+                .filter { $0.name == "feMergeNode" }
+                .map { Self.parseFilterInput($0.attributes["in"]) }
+        case .composite, .blend:
+            primitive.inputs = [Self.parseFilterInput(e.attributes["in"]), Self.parseFilterInput(e.attributes["in2"])]
+        case .flood:
+            // flood-color="currentColor" takes the `color` of the primitive, else of the <filter>
+            if case .flood(.currentColor, let opacity) = effect {
+                let color = (try? att.parseColor("color")) ?? context.color ?? .keyword(.black)
+                primitive.effect = .flood(color: color == .currentColor ? .keyword(.black) : color, opacity: opacity)
+            }
+        default:
+            primitive.inputs = [Self.parseFilterInput(e.attributes["in"])]
+        }
+
+        let result = e.attributes["result"]?.trimmingCharacters(in: .whitespaces)
+        primitive.result = result?.isEmpty == false ? result : nil
+
+        // Filter Effects 1 §9.4: the subregion is in primitiveUnits; an unreadable value takes the default
+        switch context.primitiveUnits {
+        case .objectBoundingBox:
+            primitive.x = try? att.parseCoordinateOrPercentage("x")
+            primitive.y = try? att.parseCoordinateOrPercentage("y")
+            primitive.width = try? att.parseCoordinateOrPercentage("width")
+            primitive.height = try? att.parseCoordinateOrPercentage("height")
+        case .userSpaceOnUse:
+            primitive.x = try? parseLength(att, "x", .horizontal) as DOM.Coordinate
+            primitive.y = try? parseLength(att, "y", .vertical) as DOM.Coordinate
+            primitive.width = try? parseLength(att, "width", .horizontal) as DOM.Coordinate
+            primitive.height = try? parseLength(att, "height", .vertical) as DOM.Coordinate
+        }
+
+        primitive.colorInterpolation = parseColorInterpolation(e) ?? context.colorInterpolation
+        return primitive
     }
 
     func parseEffect(_ e: XML.Element) throws -> DOM.Filter.Effect? {

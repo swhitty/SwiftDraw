@@ -270,7 +270,7 @@ struct LayerTreeFilterTests {
             return
         }
         #expect(x.isFinite)
-        #expect(y?.isFinite == true)
+        #expect(y.isFinite)
     }
 
     // renderers isolate a filter layer, but the optimizer does not elide state after it
@@ -291,7 +291,9 @@ struct LayerTreeFilterTests {
     }
 
     // hideUnsupportedFilters hides only unsupported filters: a blur is rendered
-    @Test(arguments: [("feGaussianBlur stdDeviation=\"2\"", true), ("feFlood flood-color=\"blue\"", false)])
+    @Test(arguments: [("feGaussianBlur stdDeviation=\"2\"", true),
+                      ("feFlood flood-color=\"blue\"", true),
+                      ("feTurbulence baseFrequency=\"0.1\"", false)])
     func hideUnsupportedFiltersKeepsSupportedFilterContents(primitive: String, hasContents: Bool) throws {
         let svg = try DOM.SVG.parse(xml: """
         <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
@@ -326,8 +328,8 @@ struct LayerTreeFilterTests {
     func disableFiltersTakesPrecedenceOverHideUnsupportedFilters() throws {
         let xml = #"""
         <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
-            <filter id="flood"><feFlood flood-color="blue" /></filter>
-            <rect x="10" y="10" width="20" height="20" filter="url(#flood)" />
+            <filter id="noise"><feTurbulence baseFrequency="0.1" /></filter>
+            <rect x="10" y="10" width="20" height="20" filter="url(#noise)" />
         </svg>
         """#
         #expect(!(try makeCommands(xml, options: .hideUnsupportedFilters).names.contains("fillPath")))

@@ -613,10 +613,13 @@ struct CGRenderer: Renderer {
             deviceRect = deviceRect.intersection(visible.applying(toDevice).insetBy(dx: -spread.width, dy: -spread.height))
         }
 
-        // PDF and other vector contexts: blurred groups are rasterized at 2x (2 px per point)
+        // the offscreen itself, plus the bitmaps of the primitive tree
+        let maxPixels = isBlurChain ? maxFilterLayerPixels : maxFilterLayerPixels / (filter.peakBitmapCount + 1)
+
+        // PDF and other vector contexts: filtered groups are rasterized at 2x (2 px per point)
         // Only a bitmap context has a colour space to match: asking a SwiftUI Canvas or other non-bitmap
         // context for one logs "CGBitmapContextGetColorSpace: invalid context". The layer is sRGB then.
-        guard let layer = CGFilterLayer.make(deviceRect: deviceRect,
+        guard var layer = CGFilterLayer.make(deviceRect: deviceRect,
                                              deviations: deviations,
                                              maxPixels: maxPixels,
                                              oversample: oversample,

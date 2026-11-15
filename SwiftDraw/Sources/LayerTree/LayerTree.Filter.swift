@@ -182,10 +182,13 @@ extension LayerTree.FilterLayer {
 
 extension LayerTree.Layer {
 
-    // a primitive SwiftDraw cannot render in the primary tree; primitives outside it are never drawn
+    // a primitive SwiftDraw cannot render in the primary tree, or more primitives than it evaluates;
+    // primitives outside the tree are never drawn
     var hasUnsupportedFilters: Bool {
         let inputs = LayerTree.FilterLayer.makeInputs(for: filters)
-        return LayerTree.FilterLayer.primaryTree(of: inputs).contains { !filters[$0].effect.isSupported }
+        let tree = LayerTree.FilterLayer.primaryTree(of: inputs)
+        // a tree over the cap is drawn unfiltered too
+        return tree.count > LayerTree.FilterLayer.maxPrimitives || tree.contains { !filters[$0].effect.isSupported }
     }
 
     var containsText: Bool {

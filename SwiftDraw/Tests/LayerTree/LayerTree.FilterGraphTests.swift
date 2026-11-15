@@ -332,9 +332,11 @@ final class LayerTreeFilterGraphTests: XCTestCase {
         let generator = LayerTree.CommandGenerator(provider: LayerTreeProvider(), size: .init(100, 100), options: .default)
         let filter = try XCTUnwrap(generator.makeFilterLayer(for: filtered, colorConverter: .luminance))
 
-        guard case .flood(.gray(white: 0, a: let alpha)) = try XCTUnwrap(filter.effects.first) else {
+        // white has a luminance of 1 (#162: the luminance is the grey, the alpha is kept)
+        guard case .flood(.gray(white: let white, a: let alpha)) = try XCTUnwrap(filter.effects.first) else {
             return XCTFail("expected a luminance flood")
         }
+        XCTAssertEqual(white, 1, accuracy: 0.0001)
         XCTAssertEqual(alpha, 1, accuracy: 0.0001)
     }
 

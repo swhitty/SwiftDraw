@@ -432,7 +432,7 @@ struct ParserXMLFilterNoOpPreludeTests {
         #expect(try XMLParser().parseFilter(filter).effects == [.gaussianBlur(stdDeviation: 2)])
     }
 
-    // anything but the exact no-op pair stays unsupported
+    // anything but the exact no-op pair is kept and evaluated as the full graph
     @Test(arguments: [
         ("opaque flood", ["flood-opacity": "0.5", "result": "BackgroundImageFix"], blend),
         ("flood without opacity", ["result": "BackgroundImageFix"], blend),
@@ -441,8 +441,42 @@ struct ParserXMLFilterNoOpPreludeTests {
         ("in2 not the flood", flood, ["mode": "normal", "in": "SourceGraphic", "in2": "Other"]),
         ("blend subregion", flood, ["mode": "normal", "in": "SourceGraphic", "in2": "BackgroundImageFix", "width": "5"])
     ])
-    func otherFloodOrBlendStaysUnsupported(name: String, flood: [String: String], blend: [String: String]) throws {
+    func otherFloodOrBlendIsKept(name: String, flood: [String: String], blend: [String: String]) throws {
         let effects = try effects(flood: flood, blend: blend)
-        #expect(effects.contains(.unsupported(name: "feFlood")) || effects.contains(.unsupported(name: "feBlend")))
+        #expect(effects.count == 3)
+        guard effects.count == 3 else { return }
+        guard case .flood = effects[0], case .blend = effects[1] else {
+            Issue.record("expected the flood and the blend, got \(effects)")
+            return
+        }
+    }
+
+    @Test
+    func blurReadsTheSourceGraphicForTheBlendResult() throws {
+        let filter = XML.Element(name: "filter", attributes: ["id": "f"])
+        filter.children = [
+            .makeElement("feFlood", Self.flood),
+            .makeElement("feBlend", Self.blend),
+            .makeElement("feGaussianBlur", ["in": "shape", "stdDeviation": "2"])
+        ]
+        let primitives = try XMLParser().parseFilter(filter).primitives
+        #expect(primitives.map(\.inputs) == [[.sourceGraphic]])
+    }
+
+    // the flood is dropped with the blend, so a later read of it keeps the whole graph
+    @Test
+    func floodReadLaterKeepsThePrelude() throws {
+        let filter = XML.Element(name: "filter", attributes: ["id": "f"])
+        filter.children = [
+            .makeElement("feFlood", Self.flood),
+            .makeElement("feBlend", Self.blend),
+            .makeElement("feGaussianBlur", ["in": "shape", "stdDeviation": "2", "result": "blur"]),
+            .makeElement("feMerge")
+        ]
+        filter.children[3].children = [
+            .makeElement("feMergeNode", ["in": "BackgroundImageFix"]),
+            .makeElement("feMergeNode", ["in": "blur"])
+        ]
+        #expect(try XMLParser().parseFilter(filter).primitives.count == 4)
     }
 }

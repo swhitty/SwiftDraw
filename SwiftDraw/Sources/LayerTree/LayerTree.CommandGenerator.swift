@@ -843,7 +843,11 @@ extension LayerTree.CommandGenerator {
 
     func logUnsupportedFilters(_ filters: [LayerTree.FilterPrimitive]) {
         guard !hasLoggedFilterWarning else { return }
-        let name = filters.map(\.effect.name).joined(separator: ", ")
+        // name only what is unsupported: the rest of the filter renders
+        let unsupported = filters.map(\.effect).filter { !$0.isSupported }
+        let name = unsupported.isEmpty
+            ? "A filter of more than \(LayerTree.FilterLayer.maxPrimitives) primitives"
+            : Set(unsupported.map(\.name)).sorted().joined(separator: ", ")
 
         let hint: String
         if options.contains(.commandLine) {
