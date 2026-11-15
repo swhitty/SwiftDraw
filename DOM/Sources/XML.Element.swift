@@ -38,6 +38,8 @@ package extension XML {
         package var attributes: [String: String]
         package var children = [Element]()
         package var innerText: String?
+        /// The child elements and the text between them, in document order
+        package var nodes = [Node]()
 
         package var parsedLocation: (line: Int, column: Int)?
 
@@ -45,6 +47,27 @@ package extension XML {
             self.name = name
             self.attributes = attributes
             self.innerText = nil
+        }
+
+        package enum Node {
+            case text(String)
+            case element(Element)
+        }
+
+        /// Appends character data to `innerText` and to the last text node.
+        package func appendText(_ string: String) {
+            innerText = innerText.map { $0.appending(string) } ?? string
+            if case .text(let text)? = nodes.last {
+                nodes[nodes.count - 1] = .text(text + string)
+            } else {
+                nodes.append(.text(string))
+            }
+        }
+
+        /// Appends a child element to `children` and to `nodes`.
+        package func appendChild(_ element: Element) {
+            children.append(element)
+            nodes.append(.element(element))
         }
     }
 }

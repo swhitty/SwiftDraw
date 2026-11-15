@@ -100,7 +100,7 @@ package extension XML {
             let element = Element(name: elementName, attributes: attributeDict)
             element.parsedLocation = (line: parser.lineNumber, column: parser.columnNumber)
 
-            elements.last?.children.append(element)
+            elements.last?.appendChild(element)
             elements.append(element)
 
             if rootNode == nil {
@@ -122,8 +122,7 @@ package extension XML {
 
         package func parser(_ parser: FoundationXMLParser, foundCharacters string: String) {
             guard foreignDepth == 0, let element = elements.last else { return }
-            let text = element.innerText.map { $0.appending(string) }
-            element.innerText = text ?? string
+            element.appendText(string)
         }
     }
 }

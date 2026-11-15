@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="240" height="240" viewBox="0 0 240 240">
+  <!-- text laid out along a circle (two arcs, clockwise from the left) and along an arc with xlink:href -->
+  <defs>
+    <path id="circle" d="M 40 120 A 80 80 0 1 1 200 120 A 80 80 0 1 1 40 120" />
+    <path id="arc" d="M 70 150 A 50 50 0 0 0 170 150" />
+  </defs>
+  <use href="#circle" fill="none" stroke="#ccc" stroke-width="1" />
+  <use href="#arc" fill="none" stroke="#ccc" stroke-width="1" />
+  <text font-family="Helvetica" font-size="20" fill="#1a5fb4">
+    <textPath href="#circle">Text on a circle, all the way round</textPath>
+  </text>
+  <text font-family="Helvetica" font-size="16" font-weight="bold" fill="#c01c28">
+    <textPath xlink:href="#arc">under the arc</textPath>
+  </text>
+</svg>
