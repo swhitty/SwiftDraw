@@ -273,7 +273,7 @@ extension LayerTree {
             }
             l.opacity = state.opacity
             if let filter = makeFilter(for: element) {
-                l.filters = filter.effects
+                l.filters = filter.primitives
                 l.filterRegion = makeFilterRegion(for: filter)
             }
             return l

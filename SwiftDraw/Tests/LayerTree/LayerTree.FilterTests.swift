@@ -145,7 +145,7 @@ struct LayerTreeFilterTests {
         <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
             <filter id="shadow">
                 <feGaussianBlur in="SourceAlpha" stdDeviation="2" />
-                <feOffset dx="2" dy="2" />
+                <feTurbulence baseFrequency="0.1" />
             </filter>
             <rect x="0" y="0" width="10" height="10" filter="url(#shadow)" />
         </svg>
@@ -158,8 +158,8 @@ struct LayerTreeFilterTests {
     func unsupportedPrimitiveIsHiddenWithOption() throws {
         let commands = try makeCommands(#"""
         <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
-            <filter id="offset"><feOffset dx="2" dy="2" /></filter>
-            <rect x="0" y="0" width="10" height="10" filter="url(#offset)" />
+            <filter id="noise"><feTurbulence baseFrequency="0.1" /></filter>
+            <rect x="0" y="0" width="10" height="10" filter="url(#noise)" />
             <rect x="20" y="0" width="10" height="10" />
         </svg>
         """#, options: .hideUnsupportedFilters)
@@ -270,7 +270,7 @@ struct LayerTreeFilterTests {
             return
         }
         #expect(x.isFinite)
-        #expect(y?.isFinite == true)
+        #expect(y.isFinite)
     }
 
     // renderers isolate a filter layer, but the optimizer does not elide state after it
@@ -291,7 +291,9 @@ struct LayerTreeFilterTests {
     }
 
     // hideUnsupportedFilters hides only unsupported filters: a blur is rendered
-    @Test(arguments: [("feGaussianBlur stdDeviation=\"2\"", true), ("feFlood flood-color=\"blue\"", false)])
+    @Test(arguments: [("feGaussianBlur stdDeviation=\"2\"", true),
+                      ("feFlood flood-color=\"blue\"", true),
+                      ("feTurbulence baseFrequency=\"0.1\"", false)])
     func hideUnsupportedFiltersKeepsSupportedFilterContents(primitive: String, hasContents: Bool) throws {
         let svg = try DOM.SVG.parse(xml: """
         <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
@@ -326,8 +328,8 @@ struct LayerTreeFilterTests {
     func disableFiltersTakesPrecedenceOverHideUnsupportedFilters() throws {
         let xml = #"""
         <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
-            <filter id="flood"><feFlood flood-color="blue" /></filter>
-            <rect x="10" y="10" width="20" height="20" filter="url(#flood)" />
+            <filter id="noise"><feTurbulence baseFrequency="0.1" /></filter>
+            <rect x="10" y="10" width="20" height="20" filter="url(#noise)" />
         </svg>
         """#
         #expect(!(try makeCommands(xml, options: .hideUnsupportedFilters).names.contains("fillPath")))

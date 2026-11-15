@@ -1,0 +1,42 @@
+<svg width="320" height="120" viewBox="0 0 320 120" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Inkscape: Filters ▸ Shadows and Glows ▸ Drop Shadow -->
+    <filter style="color-interpolation-filters:sRGB" id="inkscape" x="-0.3" y="-0.3" width="1.6" height="1.6">
+      <feFlood flood-opacity="0.498039" flood-color="rgb(0,0,0)" result="flood" />
+      <feComposite in="flood" in2="SourceGraphic" operator="in" result="composite1" />
+      <feGaussianBlur in="composite1" stdDeviation="3" result="blur" />
+      <feOffset dx="6" dy="6" result="offset" />
+      <feComposite in="SourceGraphic" in2="offset" operator="over" result="composite2" />
+    </filter>
+    <!-- Illustrator: AI_Shadow_1 -->
+    <filter id="illustrator" filterUnits="objectBoundingBox" x="-0.3" y="-0.3" width="1.6" height="1.6">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="2" result="blur" />
+      <feOffset dx="4" dy="4" in="blur" result="offsetBlurredAlpha" />
+      <feMerge>
+        <feMergeNode in="offsetBlurredAlpha" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+    <!-- Figma: drop shadow, then inner shadow -->
+    <filter id="figma" x="200" y="10" width="100" height="100" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feFlood flood-opacity="0" result="BackgroundImageFix" />
+      <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha" />
+      <feOffset dy="4" />
+      <feGaussianBlur stdDeviation="4" />
+      <feComposite in2="hardAlpha" operator="out" />
+      <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.25 0" />
+      <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow" />
+      <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow" result="shape" />
+      <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha" />
+      <feOffset dx="3" dy="3" />
+      <feGaussianBlur stdDeviation="2" />
+      <feComposite in2="hardAlpha" operator="arithmetic" k2="-1" k3="1" />
+      <feColorMatrix type="matrix" values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.6 0" />
+      <feBlend mode="normal" in2="shape" result="effect2_innerShadow" />
+    </filter>
+  </defs>
+  <rect width="320" height="120" fill="#f4f1ea" />
+  <circle cx="55" cy="55" r="35" fill="#e63946" filter="url(#inkscape)" />
+  <path d="M130 20 L165 90 L95 90 Z" fill="#2a9d8f" filter="url(#illustrator)" />
+  <rect x="220" y="25" width="60" height="60" rx="12" fill="#457b9d" filter="url(#figma)" />
+</svg>

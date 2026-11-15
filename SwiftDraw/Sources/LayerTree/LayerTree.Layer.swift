@@ -44,7 +44,7 @@ extension LayerTree {
         /// The mask stands for a clip path one clipping path cannot express (SD8): renderers
         /// without masks may draw the content unclipped instead of dropping it.
         var maskIsClip = false
-        var filters: [Filter] = []
+        var filters: [FilterPrimitive] = []
         var filterRegion = FilterRegion()
 
         enum MaskType: Hashable {
