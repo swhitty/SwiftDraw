@@ -390,11 +390,14 @@ extension LayerTree.Builder {
                     .withAlpha(state.strokeOpacity).maybeNone()
                 stroke = .color(color)
             case .url(let gradientId):
-                if let gradient = makeLinearGradient(for: gradientId) {
+                switch makeGradientPaint(for: gradientId) {
+                case .linear(let gradient):
                     stroke = .linearGradient(gradient)
-                } else if let gradient = makeRadialGradient(for: gradientId) {
+                case .radial(let gradient):
                     stroke = .radialGradient(gradient)
-                } else {
+                case .color(let color):
+                    stroke = .color(color.withAlpha(state.strokeOpacity).maybeNone())
+                case nil:
                     stroke = .color(.none)
                 }
             case .urlWithFallback:
@@ -456,8 +459,7 @@ extension LayerTree.Builder {
         guard case .urlWithFallback(let url, let color) = paint else { return paint }
         let resolves = url.fragmentID.map { id in
             svg.defs.patterns.contains(where: { $0.id == id }) ||
-                makeLinearGradient(for: url) != nil ||
-                makeRadialGradient(for: url) != nil
+                makeGradientPaint(for: url) != nil
         } ?? false
         return resolves ? .url(url) : .color(color)
     }
@@ -474,32 +476,49 @@ extension LayerTree.Builder {
             let pattern = makePattern(for: element)
             return LayerTree.FillAttributes(pattern: pattern, rule: state.fillRule, opacity: state.fillOpacity)
         } else if case .url(let gradientId) = state.fill,
-                  let element = svg.defs.linearGradients.first(where: { $0.id == gradientId.fragmentID }),
-                  let gradient = makeGradient(for: element) {
-            return LayerTree.FillAttributes(linear: gradient, rule: state.fillRule, opacity: state.fillOpacity)
-        } else if case .url(let gradientId) = state.fill,
-                  let element = svg.defs.radialGradients.first(where: { $0.id == gradientId.fragmentID }),
-                  let gradient = makeGradient(for: element) {
-            return LayerTree.FillAttributes(radial: gradient, rule: state.fillRule, opacity: state.fillOpacity)
+                  let paint = makeGradientPaint(for: gradientId) {
+            switch paint {
+            case .linear(let gradient):
+                return LayerTree.FillAttributes(linear: gradient, rule: state.fillRule, opacity: state.fillOpacity)
+            case .radial(let gradient):
+                return LayerTree.FillAttributes(radial: gradient, rule: state.fillRule, opacity: state.fillOpacity)
+            case .color(let color):
+                return LayerTree.FillAttributes(color: color.withAlpha(state.fillOpacity).maybeNone(), rule: state.fillRule)
+            }
         } else {
             return LayerTree.FillAttributes(color: fill, rule: state.fillRule)
         }
     }
 
-    func makeLinearGradient(for gradientId: URL) -> LayerTree.LinearGradient? {
-        guard let element = svg.defs.linearGradients.first(where: { $0.id == gradientId.fragmentID }),
-              let gradient = makeGradient(for: element) else {
-            return nil
-        }
-        return gradient
+    /// What a gradient paints: the gradient itself, or a solid colour when it has a single stop.
+    enum GradientPaint {
+        case linear(LayerTree.LinearGradient)
+        case radial(LayerTree.RadialGradient)
+        case color(LayerTree.Color)
     }
 
-    func makeRadialGradient(for gradientId: URL) -> LayerTree.RadialGradient? {
-        guard let element = svg.defs.radialGradients.first(where: { $0.id == gradientId.fragmentID }),
-              let gradient = makeGradient(for: element) else {
-            return nil
+    /// nil when the url does not name a gradient, or the gradient has no stops.
+    func makeGradientPaint(for gradientId: URL) -> GradientPaint? {
+        let id = gradientId.fragmentID
+        if let element = svg.defs.linearGradients.first(where: { $0.id == id }) {
+            if let color = makeSolidColor(for: .linear(element)) {
+                return .color(color)
+            }
+            return makeGradient(for: element).map(GradientPaint.linear)
+        } else if let element = svg.defs.radialGradients.first(where: { $0.id == id }) {
+            if let color = makeSolidColor(for: .radial(element)) {
+                return .color(color)
+            }
+            return makeGradient(for: element).map(GradientPaint.radial)
         }
-        return gradient
+        return nil
+    }
+
+    // SVG 1.1 §13.2.4: a gradient with a single stop paints the colour of that stop.
+    func makeSolidColor(for element: GradientElement) -> LayerTree.Color? {
+        let stops = makeGradientStops(for: makeGradientChain(from: element))
+        guard stops.count == 1, let stop = stops.first else { return nil }
+        return stop.color.withMultiplyingAlpha(stop.opacity)
     }
 
     func makeTextAttributes(with state: State) -> LayerTree.TextAttributes {
@@ -650,6 +669,7 @@ extension LayerTree.Builder {
 
         gradient.units = Self.createUnits(from: chain.lazy.compactMap(\.units).first)
         gradient.transform = Self.createTransforms(from: chain.lazy.map(\.transform).first { !$0.isEmpty } ?? [])
+        gradient.spread = Self.createSpread(from: chain.lazy.compactMap(\.spreadMethod).first)
         return gradient
     }
 
@@ -716,6 +736,13 @@ extension LayerTree.Builder {
             case let .radial(element): return element.gradientTransform
             }
         }
+
+        var spreadMethod: DOM.LinearGradient.SpreadMethod? {
+            switch self {
+            case let .linear(element): return element.spreadMethod
+            case let .radial(element): return element.spreadMethod
+            }
+        }
     }
 
     // SVG 1.1 §13.2.2 / §13.2.3: attributes and stops not specified on a gradient are
@@ -745,10 +772,22 @@ extension LayerTree.Builder {
             case let .radial(element): stops = makeGradientStops(for: element)
             }
             if !stops.isEmpty {
-                return stops
+                return Self.makeMonotonic(stops)
             }
         }
         return []
+    }
+
+    /// SVG 1.1 §13.2.4: offsets are clamped to 0...1, and an offset less than any before it
+    /// takes the largest offset before it.
+    static func makeMonotonic(_ stops: [LayerTree.Gradient.Stop]) -> [LayerTree.Gradient.Stop] {
+        var previous: LayerTree.Float = 0
+        return stops.map {
+            var stop = $0
+            stop.offset = max(previous, min(1, stop.offset.isFinite ? stop.offset : 0))
+            previous = stop.offset
+            return stop
+        }
     }
 
     func makeGradientStops(for element: DOM.LinearGradient) -> [LayerTree.Gradient.Stop] {
@@ -900,6 +939,17 @@ extension LayerTree.Builder {
             return .objectBoundingBox
         case .userSpaceOnUse:
             return .userSpaceOnUse
+        }
+    }
+
+    static func createSpread(from spread: DOM.LinearGradient.SpreadMethod?) -> LayerTree.Gradient.Spread {
+        switch spread {
+        case .reflect:
+            return .reflect
+        case .repeat:
+            return .repeat
+        case .pad, nil:
+            return .pad
         }
     }
 
