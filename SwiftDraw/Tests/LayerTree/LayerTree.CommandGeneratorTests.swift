@@ -39,9 +39,10 @@ final class LayerTreeCommandGeneratorTests: XCTestCase {
         let generator = LayerTree.CommandGenerator(provider: LayerTreeProvider(), size: .zero, options: .default)
         let commands = generator.renderCommands(for: layer, colorConverter: .default)
 
+        // includes a translate and scale into the bounding box for each of the two objectBoundingBox gradients
         XCTAssertEqual(
             commands.count,
-            165
+            169
         )
     }
 

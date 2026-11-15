@@ -253,7 +253,7 @@ extension LayerTree {
 
                     let pathBounds = provider.getBounds(from: shape)
                     commands.append(contentsOf: renderCommands(forLinear: gradient,
-                                                               endpoints: pathBounds.endpoints,
+                                                               in: pathBounds,
                                                                opacity: fill.opacity,
                                                                colorConverter: colorConverter))
                     commands.append(.popState)
@@ -298,7 +298,7 @@ extension LayerTree {
                     commands.append(.popState)
                 }
             case .linearGradient(let gradient):
-                if let endpoints = shape.gradientEndpoints, canRenderGradient(gradient.gradient) {
+                if let pathBounds = shape.bounds, canRenderGradient(gradient.gradient) {
                     let width = provider.createFloat(from: stroke.width)
                     let cap = provider.createLineCap(from: stroke.cap)
                     let join = provider.createLineJoin(from: stroke.join)
@@ -313,7 +313,7 @@ extension LayerTree {
                     commands.append(.clipStrokeOutline(path))
 
                     commands.append(contentsOf: renderCommands(forLinear: gradient,
-                                                               endpoints: endpoints,
+                                                               in: pathBounds,
                                                                opacity: fill.opacity,
                                                                colorConverter: colorConverter))
                     commands.append(contentsOf: renderCommands(forDashResetOf: stroke))
@@ -538,29 +538,33 @@ extension LayerTree {
             return true
         }
 
+        // objectBoundingBox gradients are drawn in the unit space of the bounding box (SVG 1.1 §13.2.2),
+        // with gradientTransform applied within it, so they stretch with a wide or tall box.
+        // A box with no width or height ignores the gradient and paints nothing.
+        func renderCommands(forGradientUnits units: LayerTree.Gradient.Units,
+                            transform: [LayerTree.Transform],
+                            in bounds: LayerTree.Rect) -> [RendererCommand<P.Types>]? {
+            var commands = [RendererCommand<P.Types>]()
+            if units == .objectBoundingBox {
+                guard bounds.width > 0, bounds.height > 0 else { return nil }
+                commands.append(contentsOf: renderCommands(forTransforms: [
+                    .translate(tx: bounds.x, ty: bounds.y),
+                    .scale(sx: bounds.width, sy: bounds.height)
+                ]))
+            }
+            commands.append(contentsOf: renderCommands(forTransforms: transform))
+            return commands
+        }
+
         func renderCommands(forLinear gradient: LayerTree.LinearGradient,
-                            endpoints: (start: LayerTree.Point, end: LayerTree.Point),
+                            in bounds: LayerTree.Rect,
                             opacity: LayerTree.Float,
                             colorConverter: any ColorConverter) -> [RendererCommand<P.Types>] {
-            let pathStart: LayerTree.Point
-            let pathEnd: LayerTree.Point
-            switch gradient.units  {
-            case .objectBoundingBox:
-                let width = endpoints.end.x - endpoints.start.x
-                let height = endpoints.end.y - endpoints.start.y
-                pathStart = LayerTree.Point(endpoints.start.x + width * gradient.start.x,
-                                            endpoints.start.y + height * gradient.start.y)
-                pathEnd = LayerTree.Point(endpoints.start.x + width * gradient.end.x,
-                                          endpoints.start.y + height * gradient.end.y)
-            case .userSpaceOnUse:
-                pathStart = gradient.start
-                pathEnd = gradient.end
-            }
-
-            var commands = [RendererCommand<P.Types>]()
-            if !gradient.transform.isEmpty {
-                commands.append(contentsOf: renderCommands(forTransforms: gradient.transform))
-            }
+            guard var commands = renderCommands(forGradientUnits: gradient.units,
+                                                transform: gradient.transform,
+                                                in: bounds) else { return [] }
+            let pathStart = gradient.start
+            let pathEnd = gradient.end
 
             let converted =  gradient.gradient.convertColor(using: colorConverter)
             let gradient = provider.createGradient(from: converted)
@@ -576,35 +580,13 @@ extension LayerTree {
                             in bounds: LayerTree.Rect,
                             opacity: LayerTree.Float,
                             colorConverter: any ColorConverter) -> [RendererCommand<P.Types>] {
-            let startCenter: LayerTree.Point
-            let startRadius: LayerTree.Float
-            let endCenter: LayerTree.Point
-            let endRadius: LayerTree.Float
-
-            switch gradient.units  {
-            case .objectBoundingBox:
-                let h = max(bounds.width, bounds.height)
-                startCenter = LayerTree.Point(
-                    bounds.x + (gradient.center.x * bounds.width),
-                    bounds.y + (gradient.center.y * bounds.height)
-                )
-                startRadius = h * gradient.radius
-                endCenter = LayerTree.Point(
-                    bounds.x + (gradient.endCenter.x * bounds.width),
-                    bounds.y + (gradient.endCenter.y * bounds.height)
-                )
-                endRadius = h * gradient.endRadius
-            case .userSpaceOnUse:
-                startCenter = gradient.center
-                startRadius = gradient.radius
-                endCenter = gradient.endCenter
-                endRadius = gradient.endRadius
-            }
-
-            var commands = [RendererCommand<P.Types>]()
-            if !gradient.transform.isEmpty {
-                commands.append(contentsOf: renderCommands(forTransforms: gradient.transform))
-            }
+            guard var commands = renderCommands(forGradientUnits: gradient.units,
+                                                transform: gradient.transform,
+                                                in: bounds) else { return [] }
+            let startCenter = gradient.center
+            let startRadius = gradient.radius
+            let endCenter = gradient.endCenter
+            let endRadius = gradient.endRadius
 
             let converted =  gradient.gradient.convertColor(using: colorConverter)
             let gradient = provider.createGradient(from: converted)
@@ -732,19 +714,6 @@ extension LayerTree.CommandGenerator {
     }
 }
 
-private extension LayerTree.Rect {
-
-    func getPoint(offset: LayerTree.Point) -> LayerTree.Point {
-        return LayerTree.Point(origin.x + size.width * offset.x,
-                               origin.y + size.height * offset.y)
-    }
-
-    var endpoints: (start: LayerTree.Point, end: LayerTree.Point) {
-        let max = LayerTree.Point(origin.x + size.width, origin.y + size.height)
-        return (start: origin, end: max)
-    }
-}
-
 
 private extension LayerTree.Gradient {
     func convertColor(using converter: any ColorConverter) -> LayerTree.Gradient {
@@ -758,10 +727,6 @@ private extension LayerTree.Gradient {
 }
 
 private extension LayerTree.Shape {
-
-    var gradientEndpoints: (start: LayerTree.Point, end: LayerTree.Point)? {
-        bounds?.gradientEndpoints
-    }
 
     var bounds: LayerTree.Rect? {
         switch self {
@@ -817,12 +782,6 @@ private extension LayerTree.Rect {
          LayerTree.Point(maxX, minY),
          LayerTree.Point(maxX, maxY),
          LayerTree.Point(minX, maxY)]
-    }
-
-    var gradientEndpoints: (start: LayerTree.Point, end: LayerTree.Point) {
-        let start = LayerTree.Point(midX, minY)
-        let end = LayerTree.Point(midX, maxY)
-        return (start, end)
     }
 
     static func makeBounds(between points: [LayerTree.Point]) -> Self? {
