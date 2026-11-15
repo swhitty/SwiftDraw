@@ -522,11 +522,13 @@ struct CGRenderer: Renderer {
         }
 
         // PDF and other vector contexts: blurred groups are rasterized at 2x (2 px per point)
+        // Only a bitmap context has a colour space to match: asking a SwiftUI Canvas or other non-bitmap
+        // context for one logs "CGBitmapContextGetColorSpace: invalid context". The layer is sRGB then.
         guard let layer = CGFilterLayer.make(deviceRect: deviceRect,
                                              deviations: deviations,
                                              maxPixels: maxFilterLayerPixels,
                                              oversample: oversample,
-                                             colorSpace: parent.colorSpace) else {
+                                             colorSpace: isVector ? nil : parent.colorSpace) else {
             // empty clip or region: draw nothing and allocate nothing
             parent.clip(to: .zero)
             filterLayers.entries.append(CGFilterLayer())
