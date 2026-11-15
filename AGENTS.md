@@ -50,7 +50,7 @@ The first run builds SwiftDraw at the base revision (about a minute); later runs
 - Exit code `1` means at least one file **regressed**: further from WebKit by more than `--tolerance` percentage points (default 0.5), or it stopped parsing. Exit `0` means no regressions.
 - The summary lists only **Regressed**, **Improved** and **Changed** files (Changed = pixels differ but the score stayed within tolerance), each as `base% → head%` and the change. Unchanged files are only counted.
 - Judge by the change between base and head, not the absolute score. Many samples are already imperfect (e.g. `display`, `use`, `mask-composite`); a file staying at a high score is not a regression.
-- Text-heavy samples (e.g. `cjk-fallback`) differ because of fonts and are noisy.
+- Text is compared with WebKit's font smoothing off (`-webkit-font-smoothing: antialiased`), because SwiftDraw fills glyph outlines and macOS smoothing makes WebKit's glyphs heavier. Pass `--font-smoothing` to compare against WebKit's default, as browsers show it. Text samples still keep a few percent from glyph positioning; judge them by eye at `--scale 4`.
 - A **Redrawn** list means an image first drew blank in the scoring page (a WebKit timing glitch under load) and was scored from a later draw. That's informational. An image that stays blank after the retries is scored as blank, so a real blank render still shows up as a regression.
 - Ignore `Warning: <…> is not supported` lines; they come from SwiftDraw's logging.
 

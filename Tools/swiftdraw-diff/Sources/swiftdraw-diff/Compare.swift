@@ -91,7 +91,9 @@ struct Comparer {
         let svgDir = out.appendingPathComponent("svg")
         try fm.createDirectory(at: svgDir, withIntermediateDirectories: true)
         for url in files {
-            try? fm.copyItem(at: url, to: svgDir.appendingPathComponent(url.lastPathComponent))
+            guard let data = try? Data(contentsOf: url) else { continue }
+            try? ReferenceSVG.prepare(data, fontSmoothing: options.fontSmoothing)
+                .write(to: svgDir.appendingPathComponent(url.lastPathComponent))
         }
 
         // The page is also the scoring engine; without --html it's temporary.
@@ -139,7 +141,7 @@ struct Comparer {
     // MARK: - Summary
 
     func printSummary(_ output: Output) {
-        print("\nReference: \(output.engine) · \(output.os) · tolerance \(fmt(output.tolerance)) pts\n")
+        print("\nReference: \(output.engine) · \(output.os) · font smoothing \(options.fontSmoothing ? "on" : "off") · tolerance \(fmt(output.tolerance)) pts\n")
         let width = max(10, output.results.map(\.name.count).max() ?? 10)
 
         func line(_ e: Entry) -> String {
