@@ -234,9 +234,11 @@ extension FilterBitmap {
         var result = FilterBitmap(width: source.width, height: source.height)
         source.pixels.withUnsafeBufferPointer { src in
             result.pixels.withUnsafeMutableBufferPointer { dst in
+                guard let s = src.baseAddress, let d = dst.baseAddress else { return }
+                let count = src.count
                 var i = 3
-                while i < src.count {
-                    dst[i] = src[i]
+                while i < count {
+                    d[i] = s[i]
                     i += 4
                 }
             }
@@ -248,14 +250,12 @@ extension FilterBitmap {
     // color-interpolation-filters does not apply to feFlood (Filter Effects 1 §10).
     static func flood(width: Int, height: Int, color: SIMD4<Float>) -> FilterBitmap {
         var result = FilterBitmap(width: width, height: height)
-        var premultiplied = color
-        premultiplied.x *= color.w
-        premultiplied.y *= color.w
-        premultiplied.z *= color.w
+        let premultiplied = FilterPixel(r: color.x * color.w, g: color.y * color.w, b: color.z * color.w, a: color.w)
         // not stored through a pointer into a local array: optimized builds (Swift 6.4, -O) kept only the
         // first byte, so every flood was transparent in Release while Debug tests passed
-        let bytes = quantize(premultiplied, linear: false)
-        let pixel: [UInt8] = [bytes.x, bytes.y, bytes.z, bytes.w]
+        let bytes = quantize(premultiplied, linear: false, encoding: encodingTable)
+        let pixel: [UInt8] = [UInt8(truncatingIfNeeded: bytes), UInt8(truncatingIfNeeded: bytes >> 8),
+                              UInt8(truncatingIfNeeded: bytes >> 16), UInt8(truncatingIfNeeded: bytes >> 24)]
         guard pixel != [0, 0, 0, 0] else { return result }
         result.pixels.withUnsafeMutableBufferPointer { dst in
             var i = 0
@@ -314,15 +314,21 @@ extension FilterBitmap {
 
                 // a whole pixel offset copies row segments
                 if wx == 0 && wy == 0 {
-                    for y in 0..<height where y - sy >= 0 && y - sy < height {
+                    var y = Swift.max(0, sy)
+                    let yEnd = Swift.min(height, height + sy)
+                    while y < yEnd {
                         memcpy(dstBase + y * rowBytes + xStart * 4,
                                srcBase + (y - sy) * rowBytes + (xStart - sx) * 4,
                                (xEnd - xStart) * 4)
+                        y += 1
                     }
                     return
                 }
 
-                for y in 0..<height {
+                // while loops and raw pointers: ranges and buffer subscripts are slow in unoptimized builds
+                var y = 0
+                while y < height {
+                    defer { y += 1 }
                     let y1 = y - sy
                     let y0 = y1 - 1
                     let hasRow1 = y1 >= 0 && y1 < height
@@ -330,7 +336,9 @@ extension FilterBitmap {
                     guard hasRow1 || hasRow0 else { continue }
                     let row1 = y1 * rowBytes
                     let row0 = y0 * rowBytes
-                    for x in xStart..<xEnd {
+                    var x = xStart
+                    while x < xEnd {
+                        defer { x += 1 }
                         let x1 = x - sx
                         let x0 = x1 - 1
                         let hasColumn1 = x1 < width
@@ -349,17 +357,19 @@ extension FilterBitmap {
                             }
                             continue
                         }
-                        for c in 0..<4 {
+                        let i11 = hasRow1 && hasColumn1 ? row1 + x1 * 4 : -1
+                        let i01 = hasRow1 && hasColumn0 ? row1 + x0 * 4 : -1
+                        let i10 = hasRow0 && hasColumn1 ? row0 + x1 * 4 : -1
+                        let i00 = hasRow0 && hasColumn0 ? row0 + x0 * 4 : -1
+                        var c = 0
+                        while c < 4 {
                             var sum = 0
-                            if hasRow1 {
-                                if hasColumn1 { sum += Int(src[row1 + x1 * 4 + c]) * w11 }
-                                if hasColumn0 { sum += Int(src[row1 + x0 * 4 + c]) * w01 }
-                            }
-                            if hasRow0 {
-                                if hasColumn1 { sum += Int(src[row0 + x1 * 4 + c]) * w10 }
-                                if hasColumn0 { sum += Int(src[row0 + x0 * 4 + c]) * w00 }
-                            }
-                            dst[o + c] = UInt8(truncatingIfNeeded: (sum + 32768) >> 16)
+                            if i11 >= 0 { sum += Int(srcBase[i11 + c]) * w11 }
+                            if i01 >= 0 { sum += Int(srcBase[i01 + c]) * w01 }
+                            if i10 >= 0 { sum += Int(srcBase[i10 + c]) * w10 }
+                            if i00 >= 0 { sum += Int(srcBase[i00 + c]) * w00 }
+                            dstBase[o + c] = UInt8(truncatingIfNeeded: (sum + 32768) >> 16)
+                            c += 1
                         }
                     }
                 }
@@ -373,22 +383,19 @@ extension FilterBitmap {
     static func composite(_ a: FilterBitmap, _ b: FilterBitmap, op: DOM.Filter.CompositeOperator, linear: Bool) -> FilterBitmap {
         switch op {
         case .over:
-            return combine(a, b, linear: linear) { s, d in s + d * (1 - s.w) }
+            return combine(a, b, linear: linear, .over)
         case .in:
-            return combine(a, b, linear: linear) { s, d in s * d.w }
+            return combine(a, b, linear: linear, .in)
         case .out:
-            return combine(a, b, linear: linear) { s, d in s * (1 - d.w) }
+            return combine(a, b, linear: linear, .out)
         case .atop:
-            return combine(a, b, linear: linear) { s, d in s * d.w + d * (1 - s.w) }
+            return combine(a, b, linear: linear, .atop)
         case .xor:
-            return combine(a, b, linear: linear) { s, d in s * (1 - d.w) + d * (1 - s.w) }
+            return combine(a, b, linear: linear, .xor)
         case .lighter:
-            return combine(a, b, linear: linear) { s, d in s + d }
+            return combine(a, b, linear: linear, .lighter)
         case let .arithmetic(k1: k1, k2: k2, k3: k3, k4: k4):
-            let k1 = Float(k1), k2 = Float(k2), k3 = Float(k3), k4 = Float(k4)
-            return combine(a, b, linear: linear) { i1, i2 in
-                k1 * i1 * i2 + k2 * i1 + k3 * i2 + SIMD4(repeating: k4)
-            }
+            return combine(a, b, linear: linear, .arithmetic(Float(k1), Float(k2), Float(k3), Float(k4)))
         }
     }
 
@@ -396,7 +403,7 @@ extension FilterBitmap {
     static func merge(_ inputs: [FilterBitmap], width: Int, height: Int, linear: Bool) -> FilterBitmap {
         guard var result = inputs.first else { return FilterBitmap(width: width, height: height) }
         for input in inputs.dropFirst() {
-            result = combine(input, result, linear: linear) { s, d in s + d * (1 - s.w) }
+            result = combine(input, result, linear: linear, .over)
         }
         return result
     }
@@ -404,45 +411,14 @@ extension FilterBitmap {
     // Filter Effects 1 §9.5, Compositing and Blending 1 §5.8 and §10: `a` (in) is the source Cs,
     // `b` (in2) the backdrop Cb, blended then composited with source-over.
     static func blend(_ a: FilterBitmap, _ b: FilterBitmap, mode: DOM.Filter.BlendMode, linear: Bool) -> FilterBitmap {
-        combine(a, b, linear: linear) { s, d in
-            let alphaS = s.w
-            let alphaB = d.w
-            var result = s * (1 - alphaB) + d * (1 - alphaS)
-            guard alphaS > 0, alphaB > 0 else { return result }
-            let cs = SIMD3(s.x, s.y, s.z) / alphaS
-            let cb = SIMD3(d.x, d.y, d.z) / alphaB
-            let mixed = blendColor(cb, cs, mode: mode) * (alphaS * alphaB)
-            result.x += mixed.x
-            result.y += mixed.y
-            result.z += mixed.z
-            result.w += alphaS * alphaB
-            return result
-        }
+        combine(a, b, linear: linear, .blend(mode))
     }
 
     // Filter Effects 1 §9.6: on non-premultiplied values, clamped to 0...1
     static func colorMatrix(_ source: FilterBitmap, matrix: [Float], linear: Bool) -> FilterBitmap {
         guard matrix.count == 20 else { return source }
-        let m = matrix
-        return map(source, linear: linear) { p in
-            var c = p
-            if c.w > 0 {
-                c.x /= c.w
-                c.y /= c.w
-                c.z /= c.w
-            }
-            var out = SIMD4<Float>(
-                m[0] * c.x + m[1] * c.y + m[2] * c.z + m[3] * c.w + m[4],
-                m[5] * c.x + m[6] * c.y + m[7] * c.z + m[8] * c.w + m[9],
-                m[10] * c.x + m[11] * c.y + m[12] * c.z + m[13] * c.w + m[14],
-                m[15] * c.x + m[16] * c.y + m[17] * c.z + m[18] * c.w + m[19]
-            )
-            out.replace(with: 0, where: out .!= out)
-            out.clamp(lowerBound: .zero, upperBound: SIMD4(repeating: 1))
-            out.x *= out.w
-            out.y *= out.w
-            out.z *= out.w
-            return out
+        return matrix.withUnsafeBufferPointer { m in
+            map(source, linear: linear, matrix: m.baseAddress!)
         }
     }
 
@@ -467,14 +443,17 @@ extension FilterBitmap {
             guard minX > 0 || minY > 0 || maxX < width || maxY < height else { return }
             let w = width
             pixels.withUnsafeMutableBufferPointer { dst in
-                for y in 0..<height {
-                    let row = y * w * 4
+                guard let base = dst.baseAddress else { return }
+                var y = 0
+                while y < height {
+                    let row = base + y * w * 4
                     if y < minY || y >= maxY {
-                        for i in row..<(row + w * 4) { dst[i] = 0 }
-                        continue
+                        row.update(repeating: 0, count: w * 4)
+                    } else {
+                        row.update(repeating: 0, count: minX * 4)
+                        (row + maxX * 4).update(repeating: 0, count: (w - maxX) * 4)
                     }
-                    for i in row..<(row + minX * 4) { dst[i] = 0 }
-                    for i in (row + maxX * 4)..<(row + w * 4) { dst[i] = 0 }
+                    y += 1
                 }
             }
             return
@@ -517,36 +496,64 @@ extension FilterBitmap {
 
 // MARK: - Pixel access
 
+// A premultiplied pixel, 0...1, in linear light when linear.
+// The kernels below use it rather than SIMD4<Float>, name their operation with an enum rather than a closure,
+// and read through raw pointers: generic SIMD operations, per-pixel closures and array subscripts are not
+// specialized or inlined in unoptimized builds, where they made filters around 20x slower. Apps build their
+// packages unoptimized in Debug, and SwiftPM refuses unsafe flags (-O) in packages used by version.
+struct FilterPixel {
+    var r: Float
+    var g: Float
+    var b: Float
+    var a: Float
+
+    static let zero = FilterPixel(r: 0, g: 0, b: 0, a: 0)
+}
+
 private extension FilterBitmap {
 
+    enum CombineOperation {
+        case over
+        case `in`
+        case out
+        case atop
+        case xor
+        case lighter
+        case arithmetic(Float, Float, Float, Float)
+        case blend(DOM.Filter.BlendMode)
+    }
+
     // Runs of equal pixels (transparent areas, solid fills) are computed once.
-    static func combine(_ a: FilterBitmap, _ b: FilterBitmap, linear: Bool,
-                        _ op: (SIMD4<Float>, SIMD4<Float>) -> SIMD4<Float>) -> FilterBitmap {
+    static func combine(_ a: FilterBitmap, _ b: FilterBitmap, linear: Bool, _ op: CombineOperation) -> FilterBitmap {
         precondition(a.pixels.count == b.pixels.count)
         var result = FilterBitmap(width: a.width, height: a.height)
+        let unit = unitTable
+        let decoding = linearTable
+        let encoding = encodingTable
         a.pixels.withUnsafeBufferPointer { pa in
             b.pixels.withUnsafeBufferPointer { pb in
                 result.pixels.withUnsafeMutableBufferPointer { dst in
-                    guard let baseA = pa.baseAddress, let baseB = pb.baseAddress, let out = dst.baseAddress else { return }
+                    guard let baseA = pa.baseAddress, let baseB = pb.baseAddress, let base = dst.baseAddress else { return }
+                    let out = UnsafeMutableRawPointer(base)
                     let rawA = UnsafeRawPointer(baseA)
                     let rawB = UnsafeRawPointer(baseB)
+                    let count = dst.count
                     var keyA: UInt32 = 0
                     var keyB: UInt32 = 0
-                    var value = quantize(op(.zero, .zero), linear: linear)
+                    var value = quantize(apply(op, .zero, .zero), linear: linear, encoding: encoding)
                     var i = 0
-                    while i < dst.count {
+                    while i < count {
                         let pixelA = rawA.loadUnaligned(fromByteOffset: i, as: UInt32.self)
                         let pixelB = rawB.loadUnaligned(fromByteOffset: i, as: UInt32.self)
                         if pixelA != keyA || pixelB != keyB {
                             keyA = pixelA
                             keyB = pixelB
-                            value = quantize(op(load(baseA, i, linear: linear), load(baseB, i, linear: linear)), linear: linear)
+                            let s = load(pixelA, linear: linear, unit: unit, decoding: decoding)
+                            let d = load(pixelB, linear: linear, unit: unit, decoding: decoding)
+                            value = quantize(apply(op, s, d), linear: linear, encoding: encoding)
                         }
-                        if value != .zero {
-                            out[i] = value.x
-                            out[i + 1] = value.y
-                            out[i + 2] = value.z
-                            out[i + 3] = value.w
+                        if value != 0 {
+                            store(value, out, i)
                         }
                         i += 4
                     }
@@ -556,26 +563,87 @@ private extension FilterBitmap {
         return result
     }
 
-    static func map(_ source: FilterBitmap, linear: Bool, _ op: (SIMD4<Float>) -> SIMD4<Float>) -> FilterBitmap {
+    @inline(__always)
+    static func apply(_ op: CombineOperation, _ s: FilterPixel, _ d: FilterPixel) -> FilterPixel {
+        switch op {
+        case .over:
+            let k = 1 - s.a
+            return FilterPixel(r: s.r + d.r * k, g: s.g + d.g * k, b: s.b + d.b * k, a: s.a + d.a * k)
+        case .in:
+            let k = d.a
+            return FilterPixel(r: s.r * k, g: s.g * k, b: s.b * k, a: s.a * k)
+        case .out:
+            let k = 1 - d.a
+            return FilterPixel(r: s.r * k, g: s.g * k, b: s.b * k, a: s.a * k)
+        case .atop:
+            let ks = d.a
+            let kd = 1 - s.a
+            return FilterPixel(r: s.r * ks + d.r * kd, g: s.g * ks + d.g * kd, b: s.b * ks + d.b * kd, a: s.a * ks + d.a * kd)
+        case .xor:
+            let ks = 1 - d.a
+            let kd = 1 - s.a
+            return FilterPixel(r: s.r * ks + d.r * kd, g: s.g * ks + d.g * kd, b: s.b * ks + d.b * kd, a: s.a * ks + d.a * kd)
+        case .lighter:
+            return FilterPixel(r: s.r + d.r, g: s.g + d.g, b: s.b + d.b, a: s.a + d.a)
+        case let .arithmetic(k1, k2, k3, k4):
+            return FilterPixel(r: k1 * s.r * d.r + k2 * s.r + k3 * d.r + k4,
+                               g: k1 * s.g * d.g + k2 * s.g + k3 * d.g + k4,
+                               b: k1 * s.b * d.b + k2 * s.b + k3 * d.b + k4,
+                               a: k1 * s.a * d.a + k2 * s.a + k3 * d.a + k4)
+        case .blend(let mode):
+            return blend(s, d, mode: mode)
+        }
+    }
+
+    @inline(__always)
+    static func blend(_ s: FilterPixel, _ d: FilterPixel, mode: DOM.Filter.BlendMode) -> FilterPixel {
+        let alphaS = s.a
+        let alphaB = d.a
+        let ks = 1 - alphaB
+        let kd = 1 - alphaS
+        var result = FilterPixel(r: s.r * ks + d.r * kd, g: s.g * ks + d.g * kd, b: s.b * ks + d.b * kd, a: s.a * ks + d.a * kd)
+        guard alphaS > 0, alphaB > 0 else { return result }
+        let alpha = alphaS * alphaB
+        let sr = s.r / alphaS, sg = s.g / alphaS, sb = s.b / alphaS
+        let br = d.r / alphaB, bg = d.g / alphaB, bb = d.b / alphaB
+        if let separable = mode.separable {
+            result.r += blendChannel(br, sr, separable) * alpha
+            result.g += blendChannel(bg, sg, separable) * alpha
+            result.b += blendChannel(bb, sb, separable) * alpha
+        } else {
+            let mixed = blendColor(SIMD3(br, bg, bb), SIMD3(sr, sg, sb), mode: mode) * alpha
+            result.r += mixed.x
+            result.g += mixed.y
+            result.b += mixed.z
+        }
+        result.a += alpha
+        return result
+    }
+
+    // Each run of equal pixels is computed once.
+    static func map(_ source: FilterBitmap, linear: Bool, matrix m: UnsafePointer<Float>) -> FilterBitmap {
         var result = FilterBitmap(width: source.width, height: source.height)
+        let unit = unitTable
+        let decoding = linearTable
+        let encoding = encodingTable
         source.pixels.withUnsafeBufferPointer { src in
             result.pixels.withUnsafeMutableBufferPointer { dst in
-                guard let base = src.baseAddress, let out = dst.baseAddress else { return }
+                guard let base = src.baseAddress, let outBase = dst.baseAddress else { return }
                 let raw = UnsafeRawPointer(base)
+                let out = UnsafeMutableRawPointer(outBase)
+                let count = dst.count
                 var key: UInt32 = 0
-                var value = quantize(op(.zero), linear: linear)
+                var value = quantize(applyMatrix(m, .zero), linear: linear, encoding: encoding)
                 var i = 0
-                while i < dst.count {
+                while i < count {
                     let pixel = raw.loadUnaligned(fromByteOffset: i, as: UInt32.self)
                     if pixel != key {
                         key = pixel
-                        value = quantize(op(load(base, i, linear: linear)), linear: linear)
+                        value = quantize(applyMatrix(m, load(pixel, linear: linear, unit: unit, decoding: decoding)),
+                                         linear: linear, encoding: encoding)
                     }
-                    if value != .zero {
-                        out[i] = value.x
-                        out[i + 1] = value.y
-                        out[i + 2] = value.z
-                        out[i + 3] = value.w
+                    if value != 0 {
+                        store(value, out, i)
                     }
                     i += 4
                 }
@@ -584,67 +652,123 @@ private extension FilterBitmap {
         return result
     }
 
-    // premultiplied, 0...1, in linear light when linear
+    // the 4x5 matrix on straight colour, clamped to 0...1 and premultiplied again
     @inline(__always)
-    static func load(_ p: UnsafePointer<UInt8>, _ i: Int, linear: Bool) -> SIMD4<Float> {
-        let a = p[i + 3]
+    static func applyMatrix(_ m: UnsafePointer<Float>, _ p: FilterPixel) -> FilterPixel {
+        var c = p
+        if c.a > 0 {
+            c.r /= c.a
+            c.g /= c.a
+            c.b /= c.a
+        }
+        let r = clamp01(m[0] * c.r + m[1] * c.g + m[2] * c.b + m[3] * c.a + m[4])
+        let g = clamp01(m[5] * c.r + m[6] * c.g + m[7] * c.b + m[8] * c.a + m[9])
+        let b = clamp01(m[10] * c.r + m[11] * c.g + m[12] * c.b + m[13] * c.a + m[14])
+        let a = clamp01(m[15] * c.r + m[16] * c.g + m[17] * c.b + m[18] * c.a + m[19])
+        return FilterPixel(r: r * a, g: g * a, b: b * a, a: a)
+    }
+
+    // the pixel's 4 bytes as loaded from memory, premultiplied, 0...1, in linear light when linear.
+    // Channels come from the loaded word rather than pointer subscripts, generic calls when unoptimized.
+    @inline(__always)
+    static func load(_ pixel: UInt32, linear: Bool, unit: UnsafePointer<Float>, decoding: UnsafePointer<Float>) -> FilterPixel {
+        let bytes = UInt32(littleEndian: pixel)
+        let r = Int(bytes & 0xFF)
+        let g = Int((bytes >> 8) & 0xFF)
+        let b = Int((bytes >> 16) & 0xFF)
+        let a = Int(bytes >> 24)
         guard linear, a > 0 else {
-            return SIMD4(Float(p[i]), Float(p[i + 1]), Float(p[i + 2]), Float(a)) / 255
+            return FilterPixel(r: unit[r], g: unit[g], b: unit[b], a: unit[a])
         }
-        let alpha = Float(a) / 255
-        return SIMD4(decode(p[i], a) * alpha, decode(p[i + 1], a) * alpha, decode(p[i + 2], a) * alpha, alpha)
+        let alpha = unit[a]
+        return FilterPixel(r: decode(r, a, decoding) * alpha,
+                           g: decode(g, a, decoding) * alpha,
+                           b: decode(b, a, decoding) * alpha,
+                           a: alpha)
+    }
+
+    // the bytes of quantize, r first in memory
+    @inline(__always)
+    static func store(_ value: UInt32, _ p: UnsafeMutableRawPointer, _ i: Int) {
+        p.storeBytes(of: value.littleEndian, toByteOffset: i, as: UInt32.self)
+    }
+
+    // NaN as 0, then clamped to 0...1
+    @inline(__always)
+    static func clamp01(_ x: Float) -> Float {
+        if x != x { return 0 }
+        return x < 0 ? 0 : (x > 1 ? 1 : x)
+    }
+
+    // Swift.min and Swift.max, which are generic calls when unoptimized
+    @inline(__always)
+    static func minimum(_ x: Float, _ y: Float) -> Float {
+        y < x ? y : x
     }
 
     @inline(__always)
-    static func store(_ value: SIMD4<Float>, _ p: UnsafeMutablePointer<UInt8>, _ i: Int, linear: Bool) {
-        let bytes = quantize(value, linear: linear)
-        p[i] = bytes.x
-        p[i + 1] = bytes.y
-        p[i + 2] = bytes.z
-        p[i + 3] = bytes.w
+    static func maximum(_ x: Float, _ y: Float) -> Float {
+        y >= x ? y : x
     }
 
-    // clamped to 0...1 with colour never above alpha (premultiplied), then rounded
+    // clamped to 0...1 with colour never above alpha (premultiplied), then rounded:
+    // r, g, b, a in the low to high bytes, 0 when transparent black
     @inline(__always)
-    static func quantize(_ value: SIMD4<Float>, linear: Bool) -> SIMD4<UInt8> {
-        var v = value
-        v.replace(with: 0, where: v .!= v)
-        v.clamp(lowerBound: .zero, upperBound: SIMD4(repeating: 1))
-        v.x = Swift.min(v.x, v.w)
-        v.y = Swift.min(v.y, v.w)
-        v.z = Swift.min(v.z, v.w)
-        if linear && v.w > 0 {
-            v.x = encode(v.x / v.w) * v.w
-            v.y = encode(v.y / v.w) * v.w
-            v.z = encode(v.z / v.w) * v.w
+    static func quantize(_ value: FilterPixel, linear: Bool, encoding: UnsafePointer<Float>) -> UInt32 {
+        let a = clamp01(value.a)
+        var r = minimum(clamp01(value.r), a)
+        var g = minimum(clamp01(value.g), a)
+        var b = minimum(clamp01(value.b), a)
+        if linear && a > 0 {
+            r = encode(r / a, encoding) * a
+            g = encode(g / a, encoding) * a
+            b = encode(b / a, encoding) * a
         }
-        let rounded = v * 255 + 0.5
-        return SIMD4(UInt8(rounded.x), UInt8(rounded.y), UInt8(rounded.z), UInt8(rounded.w))
+        return UInt32(UInt8(r * 255 + 0.5))
+            | UInt32(UInt8(g * 255 + 0.5)) << 8
+            | UInt32(UInt8(b * 255 + 0.5)) << 16
+            | UInt32(UInt8(a * 255 + 0.5)) << 24
     }
 
     // a premultiplied channel to its straight value in linear light
     @inline(__always)
-    static func decode(_ c: UInt8, _ a: UInt8) -> Float {
-        let straight = Swift.min(255, (Int(c) * 255 + Int(a) / 2) / Int(a))
-        return linearTable[straight]
+    static func decode(_ c: Int, _ a: Int, _ table: UnsafePointer<Float>) -> Float {
+        let straight = (c * 255 + a / 2) / a
+        return table[straight < 255 ? straight : 255]
     }
 
     // linear light 0...1 to the sRGB encoding 0...1
     @inline(__always)
-    static func encode(_ linear: Float) -> Float {
-        let index = Int(linear * Float(encodingTable.count - 1) + 0.5)
-        return encodingTable[Swift.max(0, Swift.min(encodingTable.count - 1, index))]
+    static func encode(_ linear: Float, _ table: UnsafePointer<Float>) -> Float {
+        let index = Int(linear * Float(encodingTableCount - 1) + 0.5)
+        let last = encodingTableCount - 1
+        return table[index < 0 ? 0 : (index > last ? last : index)]
     }
 
-    // sRGB transfer function (IEC 61966-2-1)
-    static let linearTable: [Float] = (0...255).map { value in
+    // Tables are allocated once and never freed, so kernels can read them through a pointer.
+
+    // a byte to 0...1
+    nonisolated(unsafe) static let unitTable: UnsafePointer<Float> = makeTable(count: 256) { Float($0) / 255 }
+
+    // sRGB transfer function (IEC 61966-2-1), 256 entries
+    nonisolated(unsafe) static let linearTable: UnsafePointer<Float> = makeTable(count: 256) { value in
         let c = Float(value) / 255
         return c <= 0.04045 ? c / 12.92 : Float(pow(Double((c + 0.055) / 1.055), 2.4))
     }
 
-    static let encodingTable: [Float] = (0..<8192).map { index in
+    static let encodingTableCount = 8192
+
+    nonisolated(unsafe) static let encodingTable: UnsafePointer<Float> = makeTable(count: encodingTableCount) { index in
         let l = Float(index) / 8191
         return l <= 0.0031308 ? l * 12.92 : 1.055 * Float(pow(Double(l), 1 / 2.4)) - 0.055
+    }
+
+    static func makeTable(count: Int, _ value: (Int) -> Float) -> UnsafePointer<Float> {
+        let table = UnsafeMutablePointer<Float>.allocate(capacity: count)
+        for index in 0..<count {
+            table[index] = value(index)
+        }
+        return UnsafePointer(table)
     }
 }
 
@@ -657,7 +781,61 @@ private extension Float {
 
 // MARK: - Blend modes
 
+private extension DOM.Filter.BlendMode {
+
+    // modes blending each channel on its own, computed without SIMD3
+    var separable: DOM.Filter.BlendMode? {
+        switch self {
+        case .hue, .saturation, .color, .luminosity:
+            return nil
+        default:
+            return self
+        }
+    }
+}
+
 private extension FilterBitmap {
+
+    // Compositing and Blending 1 §10: B(cb, cs) of one channel, for separable modes
+    @inline(__always)
+    static func blendChannel(_ b: Float, _ s: Float, _ mode: DOM.Filter.BlendMode) -> Float {
+        switch mode {
+        case .normal:
+            return s
+        case .multiply:
+            return b * s
+        case .screen:
+            return b + s - b * s
+        case .overlay:
+            return hardLight(s, b)
+        case .darken:
+            return minimum(b, s)
+        case .lighten:
+            return maximum(b, s)
+        case .colorDodge:
+            if b == 0 { return 0 }
+            if s >= 1 { return 1 }
+            return minimum(1, b / (1 - s))
+        case .colorBurn:
+            if b >= 1 { return 1 }
+            if s <= 0 { return 0 }
+            return 1 - minimum(1, (1 - b) / s)
+        case .hardLight:
+            return hardLight(b, s)
+        case .softLight:
+            if s <= 0.5 {
+                return b - (1 - 2 * s) * b * (1 - b)
+            }
+            let d = b <= 0.25 ? ((16 * b - 12) * b + 4) * b : b.squareRoot()
+            return b + (2 * s - 1) * (d - b)
+        case .difference:
+            return abs(b - s)
+        case .exclusion:
+            return b + s - 2 * b * s
+        case .hue, .saturation, .color, .luminosity:
+            return s
+        }
+    }
 
     // Compositing and Blending 1 §10: B(Cb, Cs) on straight colours
     static func blendColor(_ cb: SIMD3<Float>, _ cs: SIMD3<Float>, mode: DOM.Filter.BlendMode) -> SIMD3<Float> {

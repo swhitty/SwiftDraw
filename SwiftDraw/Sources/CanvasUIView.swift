@@ -69,7 +69,10 @@ final class CanvasUIView: UIView {
             svg,
             in: rect,
             capInsets: capInsets,
-            byTiling: resizeMode == .tile
+            byTiling: resizeMode == .tile,
+            tileScale: nil,
+            // filtered results are kept between redraws, and for views showing it again
+            filters: CGFilterLayerDraw(.shared(for: svg, size: bounds.size))
         )
     }
 }

@@ -46,13 +46,27 @@ public struct SVGView: View {
     private var resizable: (capInsets: EdgeInsets, mode: ResizingMode)?
     private var renderingMode: TemplateRenderingMode = .original
 
+    // filled in the background after the first draw deferred filters; each fill redraws
+    @State private var filterFills = 0
+
+    private var didFillFilters: @Sendable () -> Void {
+        let fills = UncheckedSendableBinding(binding: $filterFills)
+        return {
+            Task { @MainActor in
+                fills.binding.wrappedValue += 1
+            }
+        }
+    }
+
     public var body: some View {
         if let svg {
             if let resizable {
-                SVGView.makeCanvas(svg: svg, capInsets: resizable.capInsets, resizingMode: resizable.mode, renderingMode: renderingMode)
+                SVGView.makeCanvas(svg: svg, capInsets: resizable.capInsets, resizingMode: resizable.mode, renderingMode: renderingMode,
+                                   filterFills: filterFills, didFillFilters: didFillFilters)
                     .frame(idealWidth: svg.size.width, idealHeight: svg.size.height)
             } else {
-                SVGView.makeCanvas(svg: svg, resizingMode: .stretch, renderingMode: renderingMode)
+                SVGView.makeCanvas(svg: svg, resizingMode: .stretch, renderingMode: renderingMode,
+                                   filterFills: filterFills, didFillFilters: didFillFilters)
                     .frame(width: svg.size.width, height: svg.size.height)
             }
         }
@@ -105,7 +119,9 @@ public struct SVGView: View {
         svg: SVG,
         capInsets: EdgeInsets = .init(),
         resizingMode: ResizingMode,
-        renderingMode: TemplateRenderingMode
+        renderingMode: TemplateRenderingMode,
+        filterFills: Int,
+        didFillFilters: @escaping @Sendable () -> Void
     ) -> some View {
         if #available(iOS 15.0, macOS 12.0, tvOS 15.0, watchOS 8.0, *) {
             Canvas(
@@ -118,7 +134,20 @@ public struct SVGView: View {
                     in: CGRect(origin: .zero, size: size),
                     capInsets: capInsets,
                     byTiling: resizingMode == .tile,
-                    renderingMode: renderingMode
+                    renderingMode: renderingMode,
+                    // Filtered results are kept between redraws, and for views showing it again.
+                    // A first draw does not evaluate filters missing from them: those are drawn unfiltered
+                    // while the cache is filled in the background, then drawn again.
+                    filters: CanvasFilters(
+                        cache: .shared(for: svg, size: size),
+                        defersMisses: filterFills == 0,
+                        onDeferred: { fill in
+                            Task {
+                                await fill.perform()
+                                didFillFilters()
+                            }
+                        }
+                    )
                 )
             }
         } else {
@@ -156,14 +185,7 @@ public extension GraphicsContext {
     }
 
     func draw(_ svg: SVG, in rect: CGRect, capInsets: EdgeInsets, byTiling: Bool = false)  {
-        withCGContext {
-            $0.draw(
-                svg,
-                in: rect,
-                capInsets: (capInsets.top, capInsets.leading, capInsets.bottom, capInsets.trailing),
-                byTiling: byTiling
-            )
-        }
+        draw(svg, in: rect, capInsets: capInsets, byTiling: byTiling, filters: nil)
     }
 
     mutating func draw(
@@ -173,18 +195,69 @@ public extension GraphicsContext {
         byTiling: Bool = false,
         renderingMode: SVGView.TemplateRenderingMode
     )  {
+        draw(svg, in: rect, capInsets: capInsets, byTiling: byTiling, renderingMode: renderingMode, filters: nil)
+    }
+}
+
+// a Binding is only set on the main actor
+private struct UncheckedSendableBinding<Value>: @unchecked Sendable {
+    var binding: Binding<Value>
+}
+
+// How a Canvas draw uses a filter layer cache
+struct CanvasFilters {
+    var cache: CGFilterLayerCache
+    // filter layers missing from the cache are drawn unfiltered, then filled in the background by onDeferred
+    var defersMisses: Bool
+    var onDeferred: @Sendable (CGFilterLayerFill) -> Void
+}
+
+@available(iOS 15.0, macOS 12.0, tvOS 15.0, watchOS 8.0, *)
+extension GraphicsContext {
+
+    func draw(_ svg: SVG, in rect: CGRect, capInsets: EdgeInsets, byTiling: Bool, filters: CanvasFilters?)  {
+        // a Canvas context is not a bitmap: its CTM need not carry the display scale tiles are rasterized at
+        let scale = environment.displayScale
+        let insets = (capInsets.top, capInsets.leading, capInsets.bottom, capInsets.trailing)
+        let draw: @Sendable (CGContext, CGFilterLayerDraw?) -> Void = { context, filters in
+            context.draw(svg, in: rect, capInsets: insets, byTiling: byTiling, tileScale: scale, filters: filters)
+        }
+        withCGContext { context in
+            guard let filters else {
+                draw(context, nil)
+                return
+            }
+            // a fill replays this draw in a bitmap with the context's device space and clip, as they are now
+            let fill = filters.defersMisses ? CGFilterLayerFill(context: context, cache: filters.cache, draw: draw) : nil
+            let layers = CGFilterLayerDraw(filters.cache, defersMisses: fill != nil)
+            draw(context, layers)
+            if layers.didDefer, let fill {
+                filters.onDeferred(fill)
+            }
+        }
+    }
+
+    mutating func draw(
+        _ svg: SVG,
+        in rect: CGRect,
+        capInsets: EdgeInsets,
+        byTiling: Bool,
+        renderingMode: SVGView.TemplateRenderingMode,
+        filters: CanvasFilters?
+    )  {
         switch renderingMode {
         case .original:
-            draw(svg, in: rect, capInsets: capInsets, byTiling: byTiling)
+            draw(svg, in: rect, capInsets: capInsets, byTiling: byTiling, filters: filters)
         case .template:
             if Self.requiresClipToLayerWorkaround(svg, in: rect, byTiling: byTiling) {
                 clipToLayer { mask in
                     mask.scaleBy(x: rect.size.width / svg.size.width, y: rect.size.height / svg.size.height)
-                    mask.draw(svg, in: CGRect(origin: .zero, size: svg.size), capInsets: capInsets, byTiling: false)
+                    mask.draw(svg, in: CGRect(origin: .zero, size: svg.size), capInsets: capInsets, byTiling: false,
+                              filters: filters)
                 }
             } else {
                 clipToLayer { mask in
-                    mask.draw(svg, in: rect, capInsets: capInsets, byTiling: byTiling)
+                    mask.draw(svg, in: rect, capInsets: capInsets, byTiling: byTiling, filters: filters)
                 }
             }
             fill(Path(rect), with: .foreground)
