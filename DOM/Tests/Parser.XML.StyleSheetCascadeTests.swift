@@ -137,9 +137,10 @@ struct ParserXMLStyleSheetCascadeTests {
         #expect(sheet.rules[0].attributes.stroke == .color(.keyword(.blue)))
     }
 
+    // main (#173): an invalid @font-face is dropped on its own with .skipInvalidElements, and throws without it
     @Test
     func badFontFaceKeepsTheSheet() throws {
-        let sheet = try XMLParser().parseStyleSheetElement(
+        let sheet = try XMLParser(options: .skipInvalidElements).parseStyleSheetElement(
             """
             @font-face { font-family: Broken; }
             .a { fill: red }
