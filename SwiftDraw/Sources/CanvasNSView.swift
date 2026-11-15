@@ -58,7 +58,11 @@ struct CanvasFallbackView: NSViewRepresentable {
 
 final class CanvasNSView: NSView {
 
-    var svg: SVG?
+    var svg: SVG? {
+        didSet { if svg == nil { filterCache.removeAll() } }
+    }
+    // filtered results kept between redraws; emptied when the SVG or size changes
+    private let filterCache = CGFilterLayerCache()
     var resizeMode: SVGView.ResizingMode = .stretch
     var capInsets: (top: CGFloat, left: CGFloat, bottom: CGFloat, right: CGFloat) = (0, 0, 0, 0)
 
@@ -72,7 +76,9 @@ final class CanvasNSView: NSView {
             svg,
             in: bounds,
             capInsets: capInsets,
-            byTiling: resizeMode == .tile
+            byTiling: resizeMode == .tile,
+            tileScale: nil,
+            filterCache: filterCache
         )
     }
 }

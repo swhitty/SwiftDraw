@@ -460,6 +460,7 @@ struct CGRenderer: Renderer {
     private let rootCTM: CGAffineTransform
     private let filterLayers = CGFilterLayerStack()
     let maxFilterLayerPixels: Int
+    let filterCache: CGFilterLayerCache?
 
     // drawing goes into the innermost offscreen filter layer, if any
     var ctx: CGContext { filterLayers.context ?? rootContext }
@@ -470,10 +471,37 @@ struct CGRenderer: Renderer {
 
     /// - Parameter baseCTM: the context's default space; defaults to the current CTM.
     ///   Pass the CTM from before any transform the caller applied itself, e.g. a top-left flip.
-    init(context: CGContext, baseCTM: CGAffineTransform? = nil, maxFilterLayerPixels: Int = CGRenderer.defaultMaxFilterLayerPixels) {
+    /// - Parameter filterCache: filtered results to reuse and keep, when the same commands are drawn repeatedly.
+    init(context: CGContext,
+         baseCTM: CGAffineTransform? = nil,
+         maxFilterLayerPixels: Int = CGRenderer.defaultMaxFilterLayerPixels,
+         filterCache: CGFilterLayerCache? = nil) {
         self.rootContext = context
         self.rootCTM = baseCTM ?? context.ctm
         self.maxFilterLayerPixels = maxFilterLayerPixels
+        self.filterCache = filterCache
+    }
+
+    // With a cache, a filter layer drawn before in the same device space is composited from it
+    // and its commands skipped. Cache keys are command indices, so these must be the cache's commands.
+    func perform(_ commands: [RendererCommand<CGTypes>]) {
+        guard filterCache != nil else {
+            for command in commands { perform(command) }
+            return
+        }
+        var index = 0
+        while index < commands.count {
+            if case .pushFilterLayer(let filter) = commands[index] {
+                if let end = RendererCommand.matchingPop(in: commands, from: index),
+                   drawCachedFilterLayer(filter, index: index) {
+                    index = end + 1
+                    continue
+                }
+                filterLayers.pendingIndex = index
+            }
+            perform(commands[index])
+            index += 1
+        }
     }
 
     func pushState() {
@@ -649,20 +677,15 @@ struct CGRenderer: Renderer {
     // their primitive tree (SD12), which keeps several bitmaps alive: the budget is shared between them.
     func pushFilterLayer(_ filter: LayerTree.FilterLayer) {
         let parent = ctx
-        let region = CGRect(x: CGFloat(filter.region.x),
-                            y: CGFloat(filter.region.y),
-                            width: CGFloat(filter.region.width),
-                            height: CGFloat(filter.region.height))
-        let toDevice = parent.userSpaceToDeviceSpaceTransform
-        let isBlurChain = filter.isBlurChain
-        let deviations = isBlurChain ? filter.effects.compactMap { $0.deviceStdDeviation(toDevice) } : []
-        let visible = parent.boundingBoxOfClipPath
+        let geometry = FilterLayerGeometry(filter: filter, parent: parent, maxFilterLayerPixels: maxFilterLayerPixels)
+        let cacheIndex = filterLayers.pendingIndex
+        filterLayers.pendingIndex = nil
 
         parent.saveGState()
-        parent.clip(to: region)
+        parent.clip(to: geometry.region)
 
         // empty clip: draw nothing and allocate nothing
-        guard !visible.isNull, !visible.isEmpty else {
+        guard let deviceRect = geometry.deviceRect else {
             parent.clip(to: .zero)
             filterLayers.entries.append(CGFilterLayer())
             return
@@ -670,45 +693,35 @@ struct CGRenderer: Renderer {
 
         // blurs too small to change a pixel (every box size 1) are a pass-through:
         // draw straight into the parent, clipped to the region
-        let isVector = !parent.isBitmapContext
-        let oversample: CGFloat = isVector ? 2 : 1
-        if isBlurChain && !deviations.contains(where: { CGContext.isVisibleBlur($0, scale: oversample) }) {
+        if geometry.isPassThrough {
             filterLayers.entries.append(CGFilterLayer())
             return
         }
 
-        var deviceRect = region.applying(toDevice)
-        if !visible.isInfinite {
-            let spread = filter.deviceSpread(toDevice)
-            deviceRect = deviceRect.intersection(visible.applying(toDevice).insetBy(dx: -spread.width, dy: -spread.height))
-        }
-
-        // the offscreen itself, plus the bitmaps of the primitive tree
-        let maxPixels = isBlurChain ? maxFilterLayerPixels : maxFilterLayerPixels / (filter.peakBitmapCount + 1)
-
         // PDF and other vector contexts: filtered groups are rasterized at 2x (2 px per point)
-        // Only a bitmap context has a colour space to match: asking a SwiftUI Canvas or other non-bitmap
-        // context for one logs "CGBitmapContextGetColorSpace: invalid context". The layer is sRGB then.
         guard var layer = CGFilterLayer.make(deviceRect: deviceRect,
-                                             deviations: deviations,
-                                             maxPixels: maxPixels,
-                                             oversample: oversample,
-                                             colorSpace: isVector ? nil : parent.colorSpace) else {
+                                             deviations: geometry.deviations,
+                                             maxPixels: geometry.maxPixels,
+                                             oversample: geometry.oversample,
+                                             colorSpace: geometry.colorSpace) else {
             // empty clip or region: draw nothing and allocate nothing
             parent.clip(to: .zero)
             filterLayers.entries.append(CGFilterLayer())
             return
         }
-        if !isBlurChain {
+        if !geometry.isBlurChain {
             layer.filter = filter
-            layer.toDevice = toDevice
+            layer.toDevice = geometry.toDevice
+        }
+        if filterCache != nil, let cacheIndex {
+            layer.cacheKey = geometry.cacheKey(index: cacheIndex)
         }
 
-        layer.offscreen?.concatenate(toDevice)
+        layer.offscreen?.concatenate(geometry.toDevice)
         // input outside the region is excluded (it matters under rotation or skew); the edge is anti-aliased
         // once, by the parent clip at composite time
         layer.offscreen?.setShouldAntialias(false)
-        layer.offscreen?.clip(to: region)
+        layer.offscreen?.clip(to: geometry.region)
         layer.offscreen?.setShouldAntialias(true)
         filterLayers.entries.append(layer)
     }
@@ -727,19 +740,41 @@ struct CGRenderer: Renderer {
                 }
             }
             if let image = offscreen.makeImage() {
-                let size = CGSize(width: CGFloat(image.width) / layer.scale,
-                                  height: CGFloat(image.height) / layer.scale)
-                parent.saveGState()
-                parent.concatenate(parent.userSpaceToDeviceSpaceTransform.inverted())
-                if layer.scale == 1 {
-                    parent.interpolationQuality = .none
+                Self.composite(image, deviceRect: layer.deviceRect, scale: layer.scale, into: parent)
+                if let filterCache, let key = layer.cacheKey {
+                    filterCache.store(.init(key: key, image: image, deviceRect: layer.deviceRect, scale: layer.scale))
                 }
-                parent.draw(image, in: CGRect(origin: layer.deviceRect.origin, size: size))
-                parent.restoreGState()
             }
         }
 
         // removes the region clip set by pushFilterLayer
+        parent.restoreGState()
+    }
+
+    // composites the filter layer's result from the cache, as pushFilterLayer…popFilterLayer would; false on a miss
+    private func drawCachedFilterLayer(_ filter: LayerTree.FilterLayer, index: Int) -> Bool {
+        guard let filterCache else { return false }
+        let parent = ctx
+        let geometry = FilterLayerGeometry(filter: filter, parent: parent, maxFilterLayerPixels: maxFilterLayerPixels)
+        guard geometry.deviceRect != nil, !geometry.isPassThrough,
+              let entry = filterCache.entry(for: geometry.cacheKey(index: index)) else { return false }
+        parent.saveGState()
+        parent.clip(to: geometry.region)
+        Self.composite(entry.image, deviceRect: entry.deviceRect, scale: entry.scale, into: parent)
+        parent.restoreGState()
+        return true
+    }
+
+    // draws a filter layer's pixels at its device rect
+    private static func composite(_ image: CGImage, deviceRect: CGRect, scale: CGFloat, into parent: CGContext) {
+        let size = CGSize(width: CGFloat(image.width) / scale,
+                          height: CGFloat(image.height) / scale)
+        parent.saveGState()
+        parent.concatenate(parent.userSpaceToDeviceSpaceTransform.inverted())
+        if scale == 1 {
+            parent.interpolationQuality = .none
+        }
+        parent.draw(image, in: CGRect(origin: deviceRect.origin, size: size))
         parent.restoreGState()
     }
 
@@ -749,9 +784,71 @@ struct CGRenderer: Renderer {
 
 final class CGFilterLayerStack {
     var entries = [CGFilterLayer]()
+    // the command index of the pushFilterLayer about to be performed, when drawing with a cache
+    var pendingIndex: Int?
 
     var context: CGContext? {
         entries.last(where: { $0.offscreen != nil })?.offscreen
+    }
+}
+
+// The device space a filter layer is drawn in, which decides its pixels.
+// The region's bitmap covers the region in device pixels, intersected with the visible clip grown by how
+// far the filter moves pixels (blur extent, offsets).
+struct FilterLayerGeometry {
+    var region: CGRect
+    var toDevice: CGAffineTransform
+    var isBlurChain: Bool
+    var deviations: [CGSize]
+    var isVector: Bool
+    var oversample: CGFloat
+    var maxPixels: Int
+    var colorSpace: CGColorSpace?
+    // nil when nothing is visible
+    var deviceRect: CGRect?
+
+    init(filter: LayerTree.FilterLayer, parent: CGContext, maxFilterLayerPixels: Int) {
+        region = CGRect(x: CGFloat(filter.region.x),
+                        y: CGFloat(filter.region.y),
+                        width: CGFloat(filter.region.width),
+                        height: CGFloat(filter.region.height))
+        let toDevice = parent.userSpaceToDeviceSpaceTransform
+        self.toDevice = toDevice
+        isBlurChain = filter.isBlurChain
+        deviations = isBlurChain ? filter.effects.compactMap { $0.deviceStdDeviation(toDevice) } : []
+        isVector = !parent.isBitmapContext
+        oversample = isVector ? 2 : 1
+        // the offscreen itself, plus the bitmaps of the primitive tree
+        maxPixels = isBlurChain ? maxFilterLayerPixels : maxFilterLayerPixels / (filter.peakBitmapCount + 1)
+        // Only a bitmap context has a colour space to match: asking a SwiftUI Canvas or other non-bitmap
+        // context for one logs "CGBitmapContextGetColorSpace: invalid context". The layer is sRGB then.
+        colorSpace = isVector ? nil : parent.colorSpace
+
+        let visible = parent.boundingBoxOfClipPath
+        guard !visible.isNull, !visible.isEmpty else {
+            deviceRect = nil
+            return
+        }
+        var rect = region.applying(toDevice)
+        if !visible.isInfinite {
+            let spread = filter.deviceSpread(toDevice)
+            rect = rect.intersection(visible.applying(toDevice).insetBy(dx: -spread.width, dy: -spread.height))
+        }
+        deviceRect = rect
+    }
+
+    // blur chains too small to change a pixel (every box size 1) draw straight into the parent
+    var isPassThrough: Bool {
+        isBlurChain && !deviations.contains(where: { CGContext.isVisibleBlur($0, scale: oversample) })
+    }
+
+    func cacheKey(index: Int) -> CGFilterLayerCache.Key {
+        CGFilterLayerCache.Key(index: index,
+                               toDevice: toDevice,
+                               deviceRect: deviceRect ?? .null,
+                               maxPixels: maxPixels,
+                               isVector: isVector,
+                               colorSpace: colorSpace)
     }
 }
 
@@ -766,6 +863,8 @@ struct CGFilterLayer {
     // nil for blur chains, blurred in place by deviations
     var filter: LayerTree.FilterLayer?
     var toDevice: CGAffineTransform = .identity
+    // where the result is kept, when drawing with a cache
+    var cacheKey: CGFilterLayerCache.Key?
 
     // user space to offscreen pixels: x right, y down from the first row in memory
     var pixelTransform: CGAffineTransform {

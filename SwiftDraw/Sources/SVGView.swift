@@ -46,13 +46,17 @@ public struct SVGView: View {
     private var resizable: (capInsets: EdgeInsets, mode: ResizingMode)?
     private var renderingMode: TemplateRenderingMode = .original
 
+    // filtered results kept between redraws of this view
+    @State private var filterCache = CGFilterLayerCache()
+
     public var body: some View {
         if let svg {
             if let resizable {
-                SVGView.makeCanvas(svg: svg, capInsets: resizable.capInsets, resizingMode: resizable.mode, renderingMode: renderingMode)
+                SVGView.makeCanvas(svg: svg, capInsets: resizable.capInsets, resizingMode: resizable.mode, renderingMode: renderingMode,
+                                   filterCache: filterCache)
                     .frame(idealWidth: svg.size.width, idealHeight: svg.size.height)
             } else {
-                SVGView.makeCanvas(svg: svg, resizingMode: .stretch, renderingMode: renderingMode)
+                SVGView.makeCanvas(svg: svg, resizingMode: .stretch, renderingMode: renderingMode, filterCache: filterCache)
                     .frame(width: svg.size.width, height: svg.size.height)
             }
         }
@@ -105,7 +109,8 @@ public struct SVGView: View {
         svg: SVG,
         capInsets: EdgeInsets = .init(),
         resizingMode: ResizingMode,
-        renderingMode: TemplateRenderingMode
+        renderingMode: TemplateRenderingMode,
+        filterCache: CGFilterLayerCache
     ) -> some View {
         if #available(iOS 15.0, macOS 12.0, tvOS 15.0, watchOS 8.0, *) {
             Canvas(
@@ -118,7 +123,8 @@ public struct SVGView: View {
                     in: CGRect(origin: .zero, size: size),
                     capInsets: capInsets,
                     byTiling: resizingMode == .tile,
-                    renderingMode: renderingMode
+                    renderingMode: renderingMode,
+                    filterCache: filterCache
                 )
             }
         } else {
@@ -156,17 +162,7 @@ public extension GraphicsContext {
     }
 
     func draw(_ svg: SVG, in rect: CGRect, capInsets: EdgeInsets, byTiling: Bool = false)  {
-        // a Canvas context is not a bitmap: its CTM need not carry the display scale tiles are rasterized at
-        let scale = environment.displayScale
-        withCGContext {
-            $0.draw(
-                svg,
-                in: rect,
-                capInsets: (capInsets.top, capInsets.leading, capInsets.bottom, capInsets.trailing),
-                byTiling: byTiling,
-                tileScale: scale
-            )
-        }
+        draw(svg, in: rect, capInsets: capInsets, byTiling: byTiling, filterCache: nil)
     }
 
     mutating func draw(
@@ -176,18 +172,49 @@ public extension GraphicsContext {
         byTiling: Bool = false,
         renderingMode: SVGView.TemplateRenderingMode
     )  {
+        draw(svg, in: rect, capInsets: capInsets, byTiling: byTiling, renderingMode: renderingMode, filterCache: nil)
+    }
+}
+
+@available(iOS 15.0, macOS 12.0, tvOS 15.0, watchOS 8.0, *)
+extension GraphicsContext {
+
+    func draw(_ svg: SVG, in rect: CGRect, capInsets: EdgeInsets, byTiling: Bool, filterCache: CGFilterLayerCache?)  {
+        // a Canvas context is not a bitmap: its CTM need not carry the display scale tiles are rasterized at
+        let scale = environment.displayScale
+        withCGContext {
+            $0.draw(
+                svg,
+                in: rect,
+                capInsets: (capInsets.top, capInsets.leading, capInsets.bottom, capInsets.trailing),
+                byTiling: byTiling,
+                tileScale: scale,
+                filterCache: filterCache
+            )
+        }
+    }
+
+    mutating func draw(
+        _ svg: SVG,
+        in rect: CGRect,
+        capInsets: EdgeInsets,
+        byTiling: Bool,
+        renderingMode: SVGView.TemplateRenderingMode,
+        filterCache: CGFilterLayerCache?
+    )  {
         switch renderingMode {
         case .original:
-            draw(svg, in: rect, capInsets: capInsets, byTiling: byTiling)
+            draw(svg, in: rect, capInsets: capInsets, byTiling: byTiling, filterCache: filterCache)
         case .template:
             if Self.requiresClipToLayerWorkaround(svg, in: rect, byTiling: byTiling) {
                 clipToLayer { mask in
                     mask.scaleBy(x: rect.size.width / svg.size.width, y: rect.size.height / svg.size.height)
-                    mask.draw(svg, in: CGRect(origin: .zero, size: svg.size), capInsets: capInsets, byTiling: false)
+                    mask.draw(svg, in: CGRect(origin: .zero, size: svg.size), capInsets: capInsets, byTiling: false,
+                              filterCache: filterCache)
                 }
             } else {
                 clipToLayer { mask in
-                    mask.draw(svg, in: rect, capInsets: capInsets, byTiling: byTiling)
+                    mask.draw(svg, in: rect, capInsets: capInsets, byTiling: byTiling, filterCache: filterCache)
                 }
             }
             fill(Path(rect), with: .foreground)
