@@ -144,12 +144,10 @@ struct Runner {
 
         let pw = Int(size.width * options.scale), ph = Int(size.height * options.scale)
 
-        // SwiftDraw: draw with a top-left origin, as SVG.pngData does.
+        // SwiftDraw: draw unflipped, then flip the rows for a top-left origin (see renderSwiftDraw).
         guard let swiftdraw = Bitmap.render(width: pw, height: ph, draw: { ctx in
-            ctx.translateBy(x: 0, y: CGFloat(ph))
-            ctx.scaleBy(x: 1, y: -1)
             ctx.draw(svg, in: CGRect(x: 0, y: 0, width: pw, height: ph))
-        }) else {
+        })?.flippedVertically() else {
             result.status = "bitmap-failed"; return result
         }
         try? swiftdraw.writePNG(to: imagesDir.appendingPathComponent("\(name).swiftdraw.png"))
