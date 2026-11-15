@@ -34,34 +34,37 @@
 
 #if canImport(AppKit) && !targetEnvironment(macCatalyst)
 import AppKit
-import XCTest
+import Testing
 
 /// Pixel checks of clip paths and masks through the CoreGraphics renderer (SVG 1.1 §14.3.5, §14.4).
 /// Every drawing is 16×16 on white, with a red element whose clip or mask leaves only some columns red.
-final class CGClipMaskTests: XCTestCase {
+struct CGClipMaskTests {
 
-    func testClipPathUnitsObjectBoundingBox() throws {
+    @Test
+    func clipPathUnitsObjectBoundingBox() throws {
         // bbox (0,0,16,16): clip to x in 8...16
         let colors = try render(#"""
             <clipPath id="c" clipPathUnits="objectBoundingBox"><rect x="0.5" width="0.5" height="1" /></clipPath>
             <rect width="16" height="16" fill="red" clip-path="url(#c)" />
             """#)
-        XCTAssertEqual(colors(4), .white)
-        XCTAssertEqual(colors(12), .red)
+        #expect(colors(4) == .white)
+        #expect(colors(12) == .red)
     }
 
-    func testClipRuleFromClipPathContents() throws {
+    @Test
+    func clipRuleFromClipPathContents() throws {
         // outer 0...16, hole 4...12; evenodd on the path cuts the hole
         let colors = try render(#"""
             <clipPath id="c"><path clip-rule="evenodd" d="M0 0h16v16h-16z M4 0h8v16h-8z" /></clipPath>
             <rect width="16" height="16" fill="red" clip-path="url(#c)" />
             """#)
-        XCTAssertEqual(colors(2), .red)
-        XCTAssertEqual(colors(8), .white)
-        XCTAssertEqual(colors(14), .red)
+        #expect(colors(2) == .red)
+        #expect(colors(8) == .white)
+        #expect(colors(14) == .red)
     }
 
-    func testMixedClipRulesUnion() throws {
+    @Test
+    func mixedClipRulesUnion() throws {
         let colors = try render(#"""
             <clipPath id="c">
               <rect width="4" height="16" clip-rule="evenodd" />
@@ -69,63 +72,69 @@ final class CGClipMaskTests: XCTestCase {
             </clipPath>
             <rect width="16" height="16" fill="red" clip-path="url(#c)" />
             """#)
-        XCTAssertEqual(colors(2), .red)
-        XCTAssertEqual(colors(8), .white)
-        XCTAssertEqual(colors(14), .red)
+        #expect(colors(2) == .red)
+        #expect(colors(8) == .white)
+        #expect(colors(14) == .red)
     }
 
-    func testUseInsideClipPath() throws {
+    @Test
+    func useInsideClipPath() throws {
         let colors = try render(#"""
             <defs><rect id="r" width="4" height="16" /></defs>
             <clipPath id="c"><use xlink:href="#r" x="8" /></clipPath>
             <rect width="16" height="16" fill="red" clip-path="url(#c)" />
             """#)
-        XCTAssertEqual(colors(4), .white)
-        XCTAssertEqual(colors(10), .red)
-        XCTAssertEqual(colors(14), .white)
+        #expect(colors(4) == .white)
+        #expect(colors(10) == .red)
+        #expect(colors(14) == .white)
     }
 
-    func testClipPathOnClipPath() throws {
+    @Test
+    func clipPathOnClipPath() throws {
         let colors = try render(#"""
             <clipPath id="inner"><rect x="4" width="12" height="16" /></clipPath>
             <clipPath id="c" clip-path="url(#inner)"><rect width="10" height="16" /></clipPath>
             <rect width="16" height="16" fill="red" clip-path="url(#c)" />
             """#)
-        XCTAssertEqual(colors(2), .white)
-        XCTAssertEqual(colors(6), .red)
-        XCTAssertEqual(colors(12), .white)
+        #expect(colors(2) == .white)
+        #expect(colors(6) == .red)
+        #expect(colors(12) == .white)
     }
 
-    func testMaskContentUnitsObjectBoundingBox() throws {
+    @Test
+    func maskContentUnitsObjectBoundingBox() throws {
         let colors = try render(#"""
             <mask id="m" maskContentUnits="objectBoundingBox"><rect width="0.5" height="1" fill="white" /></mask>
             <rect x="8" width="8" height="16" fill="red" mask="url(#m)" />
             """#)
-        XCTAssertEqual(colors(4), .white)
-        XCTAssertEqual(colors(10), .red)
-        XCTAssertEqual(colors(14), .white)
+        #expect(colors(4) == .white)
+        #expect(colors(10) == .red)
+        #expect(colors(14) == .white)
     }
 
-    func testMaskRegionClipsMask() throws {
+    @Test
+    func maskRegionClipsMask() throws {
         let colors = try render(#"""
             <mask id="m" x="0" y="0" width="0.25" height="1"><rect width="16" height="16" fill="white" /></mask>
             <rect width="16" height="16" fill="red" mask="url(#m)" />
             """#)
-        XCTAssertEqual(colors(2), .red)
-        XCTAssertEqual(colors(8), .white)
+        #expect(colors(2) == .red)
+        #expect(colors(8) == .white)
     }
 
-    func testMaskZeroRegionHidesElement() throws {
+    @Test
+    func maskZeroRegionHidesElement() throws {
         let colors = try render(#"""
             <mask id="m" width="0"><rect width="16" height="16" fill="white" /></mask>
             <rect width="16" height="16" fill="red" mask="url(#m)" />
             """#)
-        XCTAssertEqual(colors(2), .white)
-        XCTAssertEqual(colors(8), .white)
-        XCTAssertEqual(colors(14), .white)
+        #expect(colors(2) == .white)
+        #expect(colors(8) == .white)
+        #expect(colors(14) == .white)
     }
 
-    func testFilterWithMaskTypeClip() throws {
+    @Test
+    func filterWithMaskTypeClip() throws {
         // mixed clip-rules make the clip a mask; the blur stays inside the clipped columns
         let colors = try render(#"""
             <filter id="f"><feGaussianBlur stdDeviation="0.5" /></filter>
@@ -135,21 +144,22 @@ final class CGClipMaskTests: XCTestCase {
             </clipPath>
             <rect width="16" height="16" fill="red" filter="url(#f)" clip-path="url(#c)" />
             """#)
-        XCTAssertEqual(colors(2), .red)
-        XCTAssertEqual(colors(8), .white)
-        XCTAssertEqual(colors(13), .red)
+        #expect(colors(2) == .red)
+        #expect(colors(8) == .white)
+        #expect(colors(13) == .red)
     }
 
-    func testClipPathWithoutShapesClipsEverything() throws {
+    @Test
+    func clipPathWithoutShapesClipsEverything() throws {
         let colors = try render(#"""
             <clipPath id="c"><rect width="0" height="0" /></clipPath>
             <clipPath id="empty" />
             <rect width="16" height="16" fill="red" clip-path="url(#c)" />
             <rect width="16" height="16" fill="red" clip-path="url(#empty)" />
             """#)
-        XCTAssertEqual(colors(2), .white)
-        XCTAssertEqual(colors(8), .white)
-        XCTAssertEqual(colors(13), .white)
+        #expect(colors(2) == .white)
+        #expect(colors(8) == .white)
+        #expect(colors(13) == .white)
     }
 
     enum Pixel: Equatable {
@@ -165,7 +175,7 @@ final class CGClipMaskTests: XCTestCase {
             \(body)
         </svg>
         """
-        let svg = try XCTUnwrap(SVG(xml: xml))
+        let svg = try #require(SVG(xml: xml))
         let image = svg.rasterize(with: CGSize(width: 16, height: 16), scale: 1)
         let canvas = NSBitmapImageRep(pixelsWide: 16, pixelsHigh: 16)
         canvas.lockFocus()
