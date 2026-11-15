@@ -140,6 +140,18 @@ final class CGClipMaskTests: XCTestCase {
         XCTAssertEqual(colors(13), .red)
     }
 
+    func testClipPathWithoutShapesClipsEverything() throws {
+        let colors = try render(#"""
+            <clipPath id="c"><rect width="0" height="0" /></clipPath>
+            <clipPath id="empty" />
+            <rect width="16" height="16" fill="red" clip-path="url(#c)" />
+            <rect width="16" height="16" fill="red" clip-path="url(#empty)" />
+            """#)
+        XCTAssertEqual(colors(2), .white)
+        XCTAssertEqual(colors(8), .white)
+        XCTAssertEqual(colors(13), .white)
+    }
+
     enum Pixel: Equatable {
         case red
         case white

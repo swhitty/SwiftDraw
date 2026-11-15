@@ -265,6 +265,7 @@ package extension XMLParser {
         let children = try parseGraphicsElements(e.children)
         var clip = DOM.ClipPath(id: id, childElements: children)
         clip.clipPathUnits = units
+        clip.class = e.attributes["class"]
         clip.attributes = (try? parsePresentationAttributes(e)) ?? DOM.PresentationAttributes()
         clip.style = (try? parseStyleAttributes(e)) ?? DOM.PresentationAttributes()
         return clip

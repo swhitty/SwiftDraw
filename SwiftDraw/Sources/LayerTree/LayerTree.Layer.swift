@@ -93,6 +93,7 @@ extension LayerTree {
             clip.hash(into: &hasher)
             clipUnits.hash(into: &hasher)
             mask.hash(into: &hasher)
+            maskIsClip.hash(into: &hasher)
             maskType.hash(into: &hasher)
             filters.hash(into: &hasher)
             filterRegion.hash(into: &hasher)
@@ -107,6 +108,7 @@ extension LayerTree {
             lhs.clipRule == rhs.clipRule &&
             lhs.clipUnits == rhs.clipUnits &&
             lhs.mask == rhs.mask &&
+            lhs.maskIsClip == rhs.maskIsClip &&
             lhs.maskType == rhs.maskType &&
             lhs.filters == rhs.filters &&
             lhs.filterRegion == rhs.filterRegion

@@ -79,6 +79,7 @@ package extension DOM {
     
     struct ClipPath: ContainerElement {
         package var id: String
+        package var `class`: String?
         package var clipPathUnits: Units?
         package var childElements = [GraphicsElement]()
 
