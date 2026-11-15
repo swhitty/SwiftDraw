@@ -56,6 +56,8 @@ package extension DOM {
 
         package var fontFamily: [DOM.FontFamily]?
         package var fontSize: Float?
+        package var fontWeight: FontWeight?
+        package var fontStyle: FontStyle?
         package var textAnchor: TextAnchor?
         package var dominantBaseline: TextBaseline?
 
@@ -155,6 +157,8 @@ extension DOM.PresentationAttributes {
         
         merged.fontFamily = att.fontFamily ?? fontFamily
         merged.fontSize = att.fontSize ?? fontSize
+        merged.fontWeight = att.fontWeight ?? fontWeight
+        merged.fontStyle = att.fontStyle ?? fontStyle
         merged.textAnchor = att.textAnchor ?? textAnchor
         merged.dominantBaseline = att.dominantBaseline ?? dominantBaseline
 

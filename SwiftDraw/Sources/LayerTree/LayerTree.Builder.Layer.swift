@@ -66,7 +66,7 @@ extension LayerTree.Builder {
         var att = makeTextAttributes(with: state)
 
         if let fontFamily = text.attributes.fontFamily {
-            att.font = fontFamily.flatMap(makeFonts)
+            att.font = fontFamily.flatMap { makeFonts(with: $0, weight: state.fontWeight, style: state.fontStyle) }
         }
         att.size = text.attributes.fontSize ?? att.size
         att.anchor = text.attributes.textAnchor ?? att.anchor

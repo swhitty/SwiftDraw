@@ -121,6 +121,63 @@ extension DOM {
         case end
     }
 
+    /// CSS `font-weight`: a keyword, or a number from 1 to 1000. `bolder` and `lighter` are relative to the
+    /// inherited weight.
+    package enum FontWeight: Hashable {
+        case normal
+        case bold
+        case bolder
+        case lighter
+        case number(Int)
+
+        package init?(_ text: String) {
+            switch text.trimmingCharacters(in: .whitespaces).lowercased() {
+            case "normal": self = .normal
+            case "bold": self = .bold
+            case "bolder": self = .bolder
+            case "lighter": self = .lighter
+            case let value:
+                guard let number = Double(value), number >= 1, number <= 1000 else { return nil }
+                self = .number(Int(number.rounded()))
+            }
+        }
+
+        /// The numeric weight, given the inherited one (CSS Fonts 4 §2.2).
+        package func resolved(inheriting parent: Int) -> Int {
+            switch self {
+            case .normal: return 400
+            case .bold: return 700
+            case .number(let value): return value
+            case .bolder:
+                if parent < 350 { return 400 }
+                if parent < 550 { return 700 }
+                return max(parent, 900)
+            case .lighter:
+                if parent < 550 { return min(parent, 100) }
+                if parent < 750 { return 400 }
+                return 700
+            }
+        }
+    }
+
+    /// CSS `font-style`. An oblique angle (`oblique 10deg`) is accepted and treated as oblique.
+    package enum FontStyle: Hashable {
+        case normal
+        case italic
+        case oblique
+
+        package init?(_ text: String) {
+            let keyword = text.trimmingCharacters(in: .whitespaces).lowercased()
+                .split(separator: " ").first.map(String.init) ?? ""
+            switch keyword {
+            case "normal": self = .normal
+            case "italic": self = .italic
+            case "oblique": self = .oblique
+            default: return nil
+            }
+        }
+    }
+
     package enum TextBaseline: String {
         case auto
         case middle

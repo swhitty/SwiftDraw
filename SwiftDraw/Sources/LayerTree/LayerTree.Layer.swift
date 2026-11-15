@@ -175,6 +175,10 @@ extension LayerTree {
         var color: Color
         var font: [Font]
         var size: Float
+        /// CSS weight (1–1000) and slant, used to pick a system font's face. `@font-face` fonts are
+        /// already the matching face.
+        var weight: Int = 400
+        var isItalic: Bool = false
         var anchor: DOM.TextAnchor
         var baseline: DOM.TextBaseline
 
