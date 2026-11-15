@@ -14,6 +14,8 @@ enum Scorer {
         /// nil when the page could not compare (e.g. SwiftDraw failed to parse).
         var score: Double?
         var error: String?
+        /// Images that first drew blank in the scoring page and were redrawn, e.g. "swiftdraw png: 1 retry".
+        var redrawn: [String]?
     }
 
     struct Report: Codable {
@@ -45,7 +47,7 @@ enum Scorer {
     static func score(report url: URL, timeout: TimeInterval = 600, progress: (Int, Int) -> Void) async throws -> Report {
         let page = try await evaluate(
             page: url,
-            rowsExpression: "ROWS.map(r => ({ name: r.name, status: r.status, score: r.score, error: r.error ?? null }))",
+            rowsExpression: "ROWS.map(r => ({ name: r.name, status: r.status, score: r.score, error: r.error ?? null, redrawn: r.redrawn ?? null }))",
             timeout: timeout,
             progress: progress
         )
@@ -53,7 +55,8 @@ enum Scorer {
             let status = row["status"] as? String ?? ""
             // The page uses score 1 as a sort key for files SwiftDraw could not parse.
             let score = status == "swiftdraw-nil" ? nil : row["score"] as? Double
-            return Score(name: row["name"] as? String ?? "?", status: status, score: score, error: row["error"] as? String)
+            return Score(name: row["name"] as? String ?? "?", status: status, score: score, error: row["error"] as? String,
+                         redrawn: row["redrawn"] as? [String])
         }
         return Report(engine: page.engine, os: page.os, generated: Date(), results: results)
     }

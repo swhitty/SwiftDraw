@@ -25,6 +25,8 @@ struct Comparer {
         var pixelsChanged: Int?
         var baseStatus: String
         var headStatus: String
+        /// Images that first drew blank in the scoring page and were redrawn, e.g. "head png: 1 retry".
+        var redrawn: [String]?
     }
 
     struct Output: Codable {
@@ -98,7 +100,7 @@ struct Comparer {
 
         let result = try await Scorer.evaluate(
             page: page,
-            rowsExpression: "ROWS.map(r => ({ name: r.name, category: r.category, base: r.baseScore, head: r.headScore, pixelsChanged: r.changed, baseStatus: r.baseStatus, headStatus: r.headStatus }))",
+            rowsExpression: "ROWS.map(r => ({ name: r.name, category: r.category, base: r.baseScore, head: r.headScore, pixelsChanged: r.changed, baseStatus: r.baseStatus, headStatus: r.headStatus, redrawn: r.redrawn ?? null }))",
             progress: progressPrinter("Scoring against WebKit")
         )
         let entries = result.rows.map { row -> Entry in
@@ -112,7 +114,8 @@ struct Comparer {
                 delta: base.flatMap { b in head.map { $0 - b } },
                 pixelsChanged: row["pixelsChanged"] as? Int,
                 baseStatus: row["baseStatus"] as? String ?? "",
-                headStatus: row["headStatus"] as? String ?? ""
+                headStatus: row["headStatus"] as? String ?? "",
+                redrawn: row["redrawn"] as? [String]
             )
         }
 
@@ -162,6 +165,8 @@ struct Comparer {
             items.forEach { print(line($0)) }
             print("")
         }
+        printRedrawn(output.results.compactMap { e in e.redrawn.map { (e.name, $0) } })
+        if output.results.contains(where: { $0.redrawn != nil }) { print("") }
         let unchanged = output.results.filter { $0.category == "unchanged" }.count
         let regressed = output.results.filter { $0.category == "regressed" }.count
         print("Unchanged: \(unchanged) of \(output.results.count)")
