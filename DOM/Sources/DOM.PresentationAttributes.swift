@@ -68,6 +68,11 @@ package extension DOM {
         package var mask: DOM.URL?
         package var maskType: DOM.MaskType?
         package var filter: DOM.URL?
+        package var overflow: DOM.Overflow?
+
+        package var markerStart: DOM.URL?
+        package var markerMid: DOM.URL?
+        package var markerEnd: DOM.URL?
 
         package var stopColor: DOM.Color?
         package var stopOpacity: DOM.Float?
@@ -197,6 +202,11 @@ extension DOM.PresentationAttributes {
         merged.mask = att.mask ?? mask
         merged.maskType = att.maskType ?? maskType
         merged.filter = att.filter ?? filter
+        merged.overflow = att.overflow ?? overflow
+
+        merged.markerStart = att.markerStart ?? markerStart
+        merged.markerMid = att.markerMid ?? markerMid
+        merged.markerEnd = att.markerEnd ?? markerEnd
 
         merged.stopColor = att.stopColor ?? stopColor
         merged.stopOpacity = att.stopOpacity ?? stopOpacity
@@ -237,6 +247,8 @@ extension DOM.GraphicsElement {
             return "mask"
         case is DOM.Symbol:
             return "symbol"
+        case is DOM.Marker:
+            return "marker"
         default:
             return nil
         }

@@ -72,6 +72,7 @@ package extension DOM {
             package var masks = [Mask]()
             package var patterns = [Pattern]()
             package var filters = [Filter]()
+            package var markers = [Marker]()
 
             package var elements = [String: GraphicsElement]()
         }

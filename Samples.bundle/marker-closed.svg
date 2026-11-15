@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="140" viewBox="0 0 200 140">
+  <defs>
+    <marker id="tick" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="4" markerHeight="4" orient="auto">
+      <path d="M 2 0 L 8 5 L 2 10 z" fill="crimson"/>
+    </marker>
+    <marker id="ring" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="5" markerHeight="5">
+      <circle cx="5" cy="5" r="3.5" fill="none" stroke="navy" stroke-width="2"/>
+    </marker>
+  </defs>
+  <path d="M 20 20 L 80 20 L 80 80 L 20 80 Z" fill="lightyellow" stroke="black" stroke-width="2" marker-start="url(#ring)" marker-mid="url(#tick)" marker-end="url(#ring)"/>
+  <polygon points="140,15 185,80 95,80" fill="none" stroke="black" stroke-width="2" marker-mid="url(#tick)"/>
+  <path d="M 20 110 C 50 90 70 130 100 110 S 150 90 180 110 M 30 130 L 170 130" fill="none" stroke="black" stroke-width="1.5" marker-mid="url(#tick)" marker-end="url(#ring)"/>
+</svg>

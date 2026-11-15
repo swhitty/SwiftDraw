@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="140" viewBox="0 0 200 140">
+  <style>
+    .series { fill: none; stroke: royalblue; stroke-width: 2; marker: url(#point); }
+    .series.alt { stroke: tomato; marker-start: none; marker-end: url(#square); }
+  </style>
+  <defs>
+    <marker id="point" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="4" markerHeight="4" markerUnits="strokeWidth">
+      <circle cx="5" cy="5" r="4" fill="white" stroke="black" stroke-width="2"/>
+    </marker>
+    <marker id="square" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="5" markerHeight="5">
+      <rect x="1" y="1" width="8" height="8" fill="black"/>
+    </marker>
+  </defs>
+  <path d="M 10 130 H 190 M 10 130 V 10" stroke="#999" stroke-width="1" fill="none"/>
+  <polyline class="series" points="20,110 50,70 80,90 110,40 140,60 170,20"/>
+  <polyline class="series alt" points="20,120 50,100 80,115 110,80 140,95 170,70"/>
+  <g style="marker-mid: url(#square)">
+    <path d="M 20 30 L 50 45 L 80 30" stroke="green" stroke-width="1.5" fill="none"/>
+  </g>
+</svg>

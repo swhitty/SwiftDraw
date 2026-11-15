@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="160" viewBox="0 0 200 160">
+  <defs>
+    <marker id="sw" viewBox="0 0 10 10" refX="0" refY="5" markerWidth="3" markerHeight="3" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="purple"/>
+    </marker>
+    <marker id="user" viewBox="0 0 10 10" refX="0" refY="5" markerWidth="12" markerHeight="12" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="teal"/>
+    </marker>
+    <marker id="clipped" markerWidth="10" markerHeight="10" refX="5" refY="5" markerUnits="userSpaceOnUse">
+      <circle cx="5" cy="5" r="8" fill="goldenrod"/>
+    </marker>
+    <marker id="visible" markerWidth="10" markerHeight="10" refX="5" refY="5" markerUnits="userSpaceOnUse" style="overflow: visible">
+      <circle cx="5" cy="5" r="8" fill="goldenrod"/>
+    </marker>
+    <marker id="aspect" viewBox="0 0 20 10" refX="10" refY="5" markerWidth="16" markerHeight="16" markerUnits="userSpaceOnUse" preserveAspectRatio="xMidYMax meet">
+      <rect x="0" y="0" width="20" height="10" fill="slateblue"/>
+    </marker>
+  </defs>
+  <line x1="20" y1="20" x2="140" y2="20" stroke="black" stroke-width="1" marker-end="url(#sw)"/>
+  <line x1="20" y1="45" x2="140" y2="45" stroke="black" stroke-width="3" marker-end="url(#sw)"/>
+  <line x1="20" y1="75" x2="140" y2="75" stroke="black" stroke-width="5" marker-end="url(#sw)"/>
+  <line x1="20" y1="100" x2="80" y2="100" stroke="black" stroke-width="1" marker-end="url(#user)"/>
+  <line x1="110" y1="100" x2="170" y2="100" stroke="black" stroke-width="4" marker-end="url(#user)"/>
+  <line x1="20" y1="135" x2="60" y2="135" stroke="black" marker-start="url(#clipped)" marker-end="url(#visible)"/>
+  <line x1="100" y1="135" x2="160" y2="135" stroke="black" marker-end="url(#aspect)"/>
+</svg>

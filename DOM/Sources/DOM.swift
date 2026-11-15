@@ -97,6 +97,14 @@ extension DOM {
         case collapse
     }
 
+    /// CSS Overflow §3: `visible` and `auto` do not clip; `hidden` and `scroll` clip to the viewport
+    package enum Overflow: String {
+        case visible
+        case hidden
+        case scroll
+        case auto
+    }
+
     // CSS Masking §7.2: whether a mask uses the luminance or the alpha of its contents
     package enum MaskType: String {
         case luminance

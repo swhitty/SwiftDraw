@@ -208,6 +208,7 @@ package extension XMLParser {
         defs.masks = try parseMasks(e)
         defs.patterns = try parsePatterns(e)
         defs.filters = try parseFilters(e)
+        defs.markers = try parseMarkers(e)
 
         defs.elements = try findDefElements(within: e).reduce(into: [String: DOM.GraphicsElement]()) {
             let defs = try parseDefsElements($1)
