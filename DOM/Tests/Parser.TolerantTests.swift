@@ -263,3 +263,54 @@ struct TolerantParsingTests {
         #expect(svg.childElements[1].attributes.strokeWidth == 0)
     }
 }
+
+/// A geometry value with a default falls back to it when missing or invalid; a size without one is still required.
+struct TolerantGeometryTests {
+
+    private let parser = SwiftDrawDOM.XMLParser()
+
+    @Test(arguments: ["", "abc", "px", "NaN-ish"])
+    func invalidRectPositionFallsBackToDefault(value: String) throws {
+        let rect = try parser.parseRect(["width": "5", "height": "5", "x": value, "y": value, "rx": value, "ry": value])
+        #expect(rect.x == nil)
+        #expect(rect.y == nil)
+        #expect(rect.rx == nil)
+        #expect(rect.ry == nil)
+    }
+
+    @Test
+    func lineEndpointsDefaultToZero() throws {
+        let missing = try parser.parseLine(["x2": "10", "y2": "20"])
+        #expect([missing.x1, missing.y1, missing.x2, missing.y2] == [0, 0, 10, 20])
+        let invalid = try parser.parseLine(["x1": "a", "y1": "", "x2": "10", "y2": "20"])
+        #expect([invalid.x1, invalid.y1, invalid.x2, invalid.y2] == [0, 0, 10, 20])
+    }
+
+    @Test
+    func invalidCentreFallsBackToDefault() throws {
+        let circle = try parser.parseCircle(["cx": "bogus", "cy": "", "r": "5"])
+        #expect(circle.cx == nil)
+        #expect(circle.cy == nil)
+        let ellipse = try parser.parseEllipse(["cx": "bogus", "rx": "5", "ry": "2"])
+        #expect(ellipse.cx == nil)
+    }
+
+    @Test
+    func invalidUseAndImagePositionFallsBackToDefault() throws {
+        let use = try parser.parseUse(["href": "#a", "x": "oops", "y": ""])
+        #expect(use.x == nil)
+        #expect(use.y == nil)
+        let image = try parser.parseImage(["href": "a.png", "x": "?", "width": "wide", "height": ""])
+        #expect(image.x == nil)
+        #expect(image.width == nil)
+        #expect(image.height == nil)
+    }
+
+    @Test
+    func invalidSizeStillInvalidatesTheElement() {
+        #expect(throws: (any Error).self) { try parser.parseRect(["width": "abc", "height": "5"]) }
+        #expect(throws: (any Error).self) { try parser.parseRect(["height": "5"]) }
+        #expect(throws: (any Error).self) { try parser.parseCircle(["r": "abc"]) }
+        #expect(throws: (any Error).self) { try parser.parseEllipse(["rx": "5"]) }
+    }
+}

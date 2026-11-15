@@ -31,27 +31,30 @@
 
 extension XMLParser {
 
+    /// A geometry value with a default (a position, a corner radius, an image size): a missing or invalid value
+    /// leaves it unset so the default applies, rather than invalidating the element.
+    /// Sizes without a usable default (`width`, `height`, `r`) are still required.
+    func parseDefaultedCoordinate(_ att: any AttributeParser, _ key: String) -> DOM.Coordinate? {
+        try? att.parseCoordinate(key) as DOM.Coordinate?
+    }
+
     func parseLine(_ att: any AttributeParser) throws -> DOM.Line {
-        let x1: DOM.Coordinate = try att.parseCoordinate("x1")
-        let y1: DOM.Coordinate = try att.parseCoordinate("y1")
-        let x2: DOM.Coordinate = try att.parseCoordinate("x2")
-        let y2: DOM.Coordinate = try att.parseCoordinate("y2")
-        return DOM.Line(x1: x1, y1: y1, x2: x2, y2: y2)
+        // x1, y1, x2 and y2 default to 0
+        DOM.Line(x1: parseDefaultedCoordinate(att, "x1") ?? 0,
+                 y1: parseDefaultedCoordinate(att, "y1") ?? 0,
+                 x2: parseDefaultedCoordinate(att, "x2") ?? 0,
+                 y2: parseDefaultedCoordinate(att, "y2") ?? 0)
     }
 
     func parseCircle(_ att: any AttributeParser) throws -> DOM.Circle {
-        let cx: DOM.Coordinate? = try att.parseCoordinate("cx")
-        let cy: DOM.Coordinate? = try att.parseCoordinate("cy")
         let r: DOM.Coordinate = try att.parseCoordinate("r")
-        return DOM.Circle(cx: cx, cy: cy, r: r)
+        return DOM.Circle(cx: parseDefaultedCoordinate(att, "cx"), cy: parseDefaultedCoordinate(att, "cy"), r: r)
     }
 
     func parseEllipse(_ att: any AttributeParser) throws -> DOM.Ellipse {
-        let cx: DOM.Coordinate? = try att.parseCoordinate("cx")
-        let cy: DOM.Coordinate? = try att.parseCoordinate("cy")
         let rx: DOM.Coordinate = try att.parseCoordinate("rx")
         let ry: DOM.Coordinate = try att.parseCoordinate("ry")
-        return DOM.Ellipse(cx: cx, cy: cy, rx: rx, ry: ry)
+        return DOM.Ellipse(cx: parseDefaultedCoordinate(att, "cx"), cy: parseDefaultedCoordinate(att, "cy"), rx: rx, ry: ry)
     }
 
     func parseRect(_ att: any AttributeParser) throws -> DOM.Rect {
@@ -59,10 +62,10 @@ extension XMLParser {
         let height: DOM.Coordinate = try att.parseCoordinate("height")
         let rect = DOM.Rect(width: width, height: height)
 
-        rect.x = try att.parseCoordinate("x")
-        rect.y = try att.parseCoordinate("y")
-        rect.rx = try att.parseCoordinate("rx")
-        rect.ry = try att.parseCoordinate("ry")
+        rect.x = parseDefaultedCoordinate(att, "x")
+        rect.y = parseDefaultedCoordinate(att, "y")
+        rect.rx = parseDefaultedCoordinate(att, "rx")
+        rect.ry = parseDefaultedCoordinate(att, "ry")
 
         return rect
     }

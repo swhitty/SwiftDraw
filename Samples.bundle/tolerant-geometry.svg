@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="240" height="160" viewBox="0 0 240 160">
+  <!-- An invalid or missing position falls back to its default (0); every shape below is drawn. -->
+  <defs><rect id="tile" width="30" height="30" fill="teal"/></defs>
+  <g transform="translate(10 10)"><rect x="" y="0" width="40" height="40" fill="green"/></g>
+  <g transform="translate(70 10)"><rect x="0" y="abc" width="40" height="40" fill="green" rx="nope"/></g>
+  <g transform="translate(150 30)"><circle cx="bogus" cy="0" r="20" fill="green"/></g>
+  <g transform="translate(10 80)"><line x2="60" y2="60" stroke="green" stroke-width="6"/></g>
+  <g transform="translate(90 80)"><line x1="a" y1="0" x2="60" y2="60" stroke="green" stroke-width="6"/></g>
+  <g transform="translate(170 90)"><use xlink:href="#tile" x="oops"/></g>
+</svg>
