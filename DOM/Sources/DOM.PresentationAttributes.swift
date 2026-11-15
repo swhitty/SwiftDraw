@@ -80,21 +80,38 @@ package extension DOM {
         return attributes
     }
     
+    /// The cascade of a `<clipPath>` itself: attributes < stylesheet rules < style="" (SD8).
+    static func presentationAttributes(for clipPath: ClipPath,
+                                       styles: [StyleSheet]) -> PresentationAttributes {
+        var attributes = clipPath.attributes
+
+        for selector in makeSelectors(elementName: "clipPath", class: clipPath.class, id: clipPath.id) {
+            let new = makeAttributes(for: selector, styles: styles)
+            attributes = attributes.applyingAttributes(new)
+        }
+
+        return attributes.applyingAttributes(clipPath.style)
+    }
+
     static func makeSelectors(for element: DOM.GraphicsElement) -> [StyleSheet.Selector] {
+        makeSelectors(elementName: element.elementName, class: element.class, id: element.id)
+    }
+
+    static func makeSelectors(elementName: String?, class: String?, id: String?) -> [StyleSheet.Selector] {
         var selectors = [StyleSheet.Selector]()
         
-        if let elementName = element.elementName {
+        if let elementName {
             selectors.append(.element(elementName))
         }
         
-        if let classes = element.class?.split(separator: " ") {
+        if let classes = `class`?.split(separator: " ") {
             selectors.append(contentsOf: classes
                 .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
                 .map(StyleSheet.Selector.class)
             )
         }
         
-        if let id = element.id {
+        if let id {
             selectors.append(.id(id.trimmingCharacters(in: .whitespacesAndNewlines)))
         }
         

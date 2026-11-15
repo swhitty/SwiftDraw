@@ -79,8 +79,13 @@ package extension DOM {
     
     struct ClipPath: ContainerElement {
         package var id: String
+        package var `class`: String?
         package var clipPathUnits: Units?
         package var childElements = [GraphicsElement]()
+
+        // `clip-rule`, `transform` and `clip-path` of the <clipPath> itself (SVG 1.1 §14.3.5)
+        package var attributes = PresentationAttributes()
+        package var style = PresentationAttributes()
 
         package enum Units: String {
             case userSpaceOnUse
@@ -90,6 +95,14 @@ package extension DOM {
     
     final class Mask: GraphicsElement, ContainerElement {
         package var childElements = [GraphicsElement]()
+
+        // SVG 1.1 §14.4: the mask region and the coordinate systems of the region and the contents
+        package var maskUnits: ClipPath.Units?
+        package var maskContentUnits: ClipPath.Units?
+        package var x: DashLength?
+        package var y: DashLength?
+        package var width: DashLength?
+        package var height: DashLength?
 
         init(id: String, childElements: [GraphicsElement] = []) {
             super.init()

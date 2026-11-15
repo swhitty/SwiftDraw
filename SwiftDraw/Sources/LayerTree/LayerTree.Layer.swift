@@ -41,6 +41,9 @@ extension LayerTree {
         var mask: Layer?
         // how this layer masks when it is used as a mask
         var maskType: MaskType = .luminance
+        /// The mask stands for a clip path one clipping path cannot express (SD8): renderers
+        /// without masks may draw the content unclipped instead of dropping it.
+        var maskIsClip = false
         var filters: [Filter] = []
         var filterRegion = FilterRegion()
 
@@ -90,6 +93,7 @@ extension LayerTree {
             clip.hash(into: &hasher)
             clipUnits.hash(into: &hasher)
             mask.hash(into: &hasher)
+            maskIsClip.hash(into: &hasher)
             maskType.hash(into: &hasher)
             filters.hash(into: &hasher)
             filterRegion.hash(into: &hasher)
@@ -104,6 +108,7 @@ extension LayerTree {
             lhs.clipRule == rhs.clipRule &&
             lhs.clipUnits == rhs.clipUnits &&
             lhs.mask == rhs.mask &&
+            lhs.maskIsClip == rhs.maskIsClip &&
             lhs.maskType == rhs.maskType &&
             lhs.filters == rhs.filters &&
             lhs.filterRegion == rhs.filterRegion

@@ -231,7 +231,10 @@ extension SFSymbolRenderer {
 
         let isSFSymbolLayer = containsAcceptedName(layer.class)
         guard isSFSymbolLayer || layer.opacity > 0 else { return [] }
-        guard layer.mask == nil else {
+        if layer.mask != nil && layer.maskIsClip {
+            // a clip drawn as a mask (text, mixed clip-rules, nested clip-path): keep the content unclipped
+            LogSink.warning("clip-path unsupported in SF Symbols, drawn unclipped.")
+        } else if layer.mask != nil {
             LogSink.warning("mask unsupported in SF Symbols.")
             return []
         }
