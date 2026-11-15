@@ -38,7 +38,6 @@ import Testing
 struct LayerTreeFilterTests {
 
     @Test
-
     func blurGeneratesFilterLayerWithDefaultRegion() throws {
         let commands = try makeCommands(#"""
         <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
@@ -55,7 +54,6 @@ struct LayerTreeFilterTests {
     }
 
     @Test
-
     func blurTwoValuesAndUserSpaceRegion() throws {
         let commands = try makeCommands(#"""
         <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
@@ -72,7 +70,6 @@ struct LayerTreeFilterTests {
     }
 
     @Test
-
     func primitiveUnitsObjectBoundingBoxScalesDeviation() throws {
         let commands = try makeCommands(#"""
         <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
@@ -89,7 +86,6 @@ struct LayerTreeFilterTests {
     }
 
     @Test
-
     func negativeDeviationDisablesBlur() throws {
         let commands = try makeCommands(#"""
         <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
@@ -102,7 +98,6 @@ struct LayerTreeFilterTests {
     }
 
     @Test
-
     func filterRegionIncludesChildTransforms() throws {
         let commands = try makeCommands(#"""
         <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
@@ -118,7 +113,6 @@ struct LayerTreeFilterTests {
     }
 
     @Test
-
     func filterIsNotInheritedByChildren() throws {
         let commands = try makeCommands(#"""
         <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
@@ -134,7 +128,6 @@ struct LayerTreeFilterTests {
     }
 
     @Test
-
     func emptyFilterRegionDrawsNothing() throws {
         let commands = try makeCommands(#"""
         <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
@@ -147,7 +140,6 @@ struct LayerTreeFilterTests {
     }
 
     @Test
-
     func unsupportedPrimitiveDrawsUnfiltered() throws {
         let commands = try makeCommands(#"""
         <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
@@ -163,7 +155,6 @@ struct LayerTreeFilterTests {
     }
 
     @Test
-
     func unsupportedPrimitiveIsHiddenWithOption() throws {
         let commands = try makeCommands(#"""
         <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
@@ -177,7 +168,6 @@ struct LayerTreeFilterTests {
     }
 
     @Test
-
     func filterIsAppliedBeforeOpacityClipAndMask() throws {
         let commands = try makeCommands(#"""
         <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
@@ -198,7 +188,6 @@ struct LayerTreeFilterTests {
     }
 
     @Test
-
     func nestedFilterLayers() throws {
         let commands = try makeCommands(#"""
         <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
@@ -251,7 +240,6 @@ struct LayerTreeFilterTests {
     }
 
     @Test
-
     func groupWithTextKeepsUserSpaceFilter() throws {
         let commands = try makeCommands(#"""
         <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
@@ -269,7 +257,6 @@ struct LayerTreeFilterTests {
     }
 
     @Test
-
     func hugeDeviationStaysFinite() throws {
         let commands = try makeCommands(#"""
         <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">

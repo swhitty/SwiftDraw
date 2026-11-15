@@ -59,7 +59,6 @@ struct CGRendererFilterTests {
     }
 
     @Test
-
     func gaussianBlurHonoursDeviceScale() throws {
         let bitmap = try render(#"""
         <svg width="50" height="50" xmlns="http://www.w3.org/2000/svg">
@@ -76,7 +75,6 @@ struct CGRendererFilterTests {
     }
 
     @Test
-
     func verticalOnlyBlur() throws {
         let bitmap = try render(#"""
         <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
@@ -92,7 +90,6 @@ struct CGRendererFilterTests {
     }
 
     @Test
-
     func unfilteredDrawingAfterFilterLayer() throws {
         let bitmap = try render(#"""
         <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
@@ -107,7 +104,6 @@ struct CGRendererFilterTests {
     }
 
     @Test
-
     func boxSizes() {
         #expect(CGContext.boxSizes(for: 0) == [1, 1, 1])
         #expect(CGContext.boxSizes(for: 2) == [5, 3, 5])
@@ -178,7 +174,6 @@ struct CGRendererFilterTests {
     }
 
     @Test
-
     func blurWithOpacityAndClip() throws {
         let bitmap = try render(#"""
         <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
@@ -195,7 +190,6 @@ struct CGRendererFilterTests {
     }
 
     @Test
-
     func blurWithMask() throws {
         let bitmap = try render(#"""
         <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
@@ -226,7 +220,6 @@ struct CGRendererFilterTests {
     }
 
     @Test
-
     func nestedBlurs() throws {
         let bitmap = try render(#"""
         <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
@@ -263,7 +256,6 @@ struct CGRendererFilterTests {
     }
 
     @Test
-
     func hugeValuesDoNotTrap() throws {
         let bitmap = try render(#"""
         <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
@@ -280,7 +272,6 @@ struct CGRendererFilterTests {
     }
 
     @Test
-
     func emptyClipDrawsNothing() throws {
         let bitmap = try render(#"""
         <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
