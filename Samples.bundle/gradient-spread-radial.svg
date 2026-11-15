@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="160" viewBox="0 0 240 160">
+  <defs>
+    <radialGradient id="pad" r="0.2">
+      <stop offset="0" stop-color="#e63946"/><stop offset="0.5" stop-color="#f1c40f"/><stop offset="1" stop-color="#1d3557"/>
+    </radialGradient>
+    <radialGradient id="reflect" href="#pad" spreadMethod="reflect"/>
+    <radialGradient id="repeat" href="#pad" spreadMethod="repeat"/>
+    <radialGradient id="user" href="#pad" gradientUnits="userSpaceOnUse" cx="200" cy="120" r="15" fx="195" spreadMethod="repeat"/>
+  </defs>
+  <rect x="0" y="0" width="75" height="75" fill="url(#pad)"/>
+  <rect x="80" y="0" width="75" height="75" fill="url(#reflect)"/>
+  <rect x="160" y="0" width="75" height="75" fill="url(#repeat)"/>
+  <rect x="0" y="80" width="150" height="75" fill="url(#reflect)"/>
+  <rect x="160" y="80" width="75" height="75" fill="url(#user)"/>
+</svg>
