@@ -43,11 +43,11 @@ public extension CGContext {
 extension CGContext {
 
     /// `baseCTM` is the context's default space (see `CGRenderer`); nil uses the current CTM.
-    /// `filterCache` keeps filtered results between draws of the same SVG, e.g. by a view.
-    func draw(_ svg: SVG, in rect: CGRect?, baseCTM: CGAffineTransform?, filterCache: CGFilterLayerCache? = nil) {
+    /// `filters` keeps filtered results between draws of the same SVG, e.g. by a view.
+    func draw(_ svg: SVG, in rect: CGRect?, baseCTM: CGAffineTransform?, filters: CGFilterLayerDraw? = nil) {
         let defaultRect = CGRect(x: 0, y: 0, width: svg.size.width, height: svg.size.height)
-        filterCache?.prepare(for: svg, size: rect?.size ?? svg.size)
-        let renderer = CGRenderer(context: self, baseCTM: baseCTM, filterCache: filterCache)
+        filters?.cache.prepare(for: svg, size: rect?.size ?? svg.size)
+        let renderer = CGRenderer(context: self, baseCTM: baseCTM, filters: filters)
         saveGState()
 
         if let rect = rect, rect != defaultRect {
@@ -82,12 +82,12 @@ public extension CGContext {
 extension CGContext {
 
     /// `tileScale` is the device pixels per point to rasterize a tile at; nil reads it from the CTM.
-    func draw(_ svg: SVG, in rect: CGRect, byTiling: Bool, tileScale: CGFloat?, filterCache: CGFilterLayerCache? = nil) {
+    func draw(_ svg: SVG, in rect: CGRect, byTiling: Bool, tileScale: CGFloat?, filters: CGFilterLayerDraw? = nil) {
         guard byTiling else {
-            draw(svg, in: rect, baseCTM: nil, filterCache: filterCache)
+            draw(svg, in: rect, baseCTM: nil, filters: filters)
             return
         }
-        filterCache?.prepare(for: svg, size: rect.size)
+        filters?.cache.prepare(for: svg, size: rect.size)
         let size = svg.size
         guard size.width > 0, size.height > 0 else { return }
 
@@ -101,7 +101,7 @@ extension CGContext {
         )
         saveGState()
         clip(to: grid)
-        drawTiles(svg, from: CGRect(origin: .zero, size: size), in: grid, tileScale: tileScale, filterCache: filterCache)
+        drawTiles(svg, from: CGRect(origin: .zero, size: size), in: grid, tileScale: tileScale, filters: filters)
         restoreGState()
     }
 
@@ -111,36 +111,36 @@ extension CGContext {
         capInsets: (top: CGFloat, left: CGFloat, bottom: CGFloat, right: CGFloat),
         byTiling: Bool,
         tileScale: CGFloat?,
-        filterCache: CGFilterLayerCache? = nil
+        filters: CGFilterLayerDraw? = nil
     ) {
         guard capInsets != (0, 0, 0, 0) else {
-            draw(svg, in: rect, byTiling: byTiling, tileScale: tileScale, filterCache: filterCache)
+            draw(svg, in: rect, byTiling: byTiling, tileScale: tileScale, filters: filters)
             return
         }
-        filterCache?.prepare(for: svg, size: rect.size)
+        filters?.cache.prepare(for: svg, size: rect.size)
 
         let source = Slice9(source: CGRect(origin: .zero, size: svg.size), capInsets: capInsets)
         let dest = Slice9(source: rect, capInsets: capInsets)
 
-        draw(svg, from: source.topLeft, in: dest.topLeft, byTiling: false, tileScale: tileScale, filterCache: filterCache)
-        draw(svg, from: source.topMid, in: dest.topMid, byTiling: byTiling, tileScale: tileScale, filterCache: filterCache)
-        draw(svg, from: source.topRight, in: dest.topRight, byTiling: false, tileScale: tileScale, filterCache: filterCache)
-        draw(svg, from: source.midLeft, in: dest.midLeft, byTiling: byTiling, tileScale: tileScale, filterCache: filterCache)
-        draw(svg, from: source.center, in: dest.center, byTiling: byTiling, tileScale: tileScale, filterCache: filterCache)
-        draw(svg, from: source.midRight, in: dest.midRight, byTiling: byTiling, tileScale: tileScale, filterCache: filterCache)
-        draw(svg, from: source.bottomLeft, in: dest.bottomLeft, byTiling: false, tileScale: tileScale, filterCache: filterCache)
-        draw(svg, from: source.bottomMid, in: dest.bottomMid, byTiling: byTiling, tileScale: tileScale, filterCache: filterCache)
-        draw(svg, from: source.bottomRight, in: dest.bottomRight, byTiling: false, tileScale: tileScale, filterCache: filterCache)
+        draw(svg, from: source.topLeft, in: dest.topLeft, byTiling: false, tileScale: tileScale, filters: filters)
+        draw(svg, from: source.topMid, in: dest.topMid, byTiling: byTiling, tileScale: tileScale, filters: filters)
+        draw(svg, from: source.topRight, in: dest.topRight, byTiling: false, tileScale: tileScale, filters: filters)
+        draw(svg, from: source.midLeft, in: dest.midLeft, byTiling: byTiling, tileScale: tileScale, filters: filters)
+        draw(svg, from: source.center, in: dest.center, byTiling: byTiling, tileScale: tileScale, filters: filters)
+        draw(svg, from: source.midRight, in: dest.midRight, byTiling: byTiling, tileScale: tileScale, filters: filters)
+        draw(svg, from: source.bottomLeft, in: dest.bottomLeft, byTiling: false, tileScale: tileScale, filters: filters)
+        draw(svg, from: source.bottomMid, in: dest.bottomMid, byTiling: byTiling, tileScale: tileScale, filters: filters)
+        draw(svg, from: source.bottomRight, in: dest.bottomRight, byTiling: false, tileScale: tileScale, filters: filters)
     }
 
     private func draw(_ svg: SVG, from source: CGRect, in rect: CGRect, byTiling: Bool, tileScale: CGFloat?,
-                      filterCache: CGFilterLayerCache?) {
+                      filters: CGFilterLayerDraw?) {
         saveGState()
         clip(to: [rect])
         if byTiling {
-            drawTiles(svg, from: source, in: rect, tileScale: tileScale, filterCache: filterCache)
+            drawTiles(svg, from: source, in: rect, tileScale: tileScale, filters: filters)
         } else {
-            drawStretched(svg, from: source, in: rect, filterCache: filterCache)
+            drawStretched(svg, from: source, in: rect, filters: filters)
         }
         restoreGState()
     }
@@ -150,38 +150,38 @@ extension CGContext {
     // a window, so a single tile is rasterized at device scale and CoreGraphics repeats the image.
     // PDF keeps vector tiles; any tile count of 1 or less renders directly.
     private func drawTiles(_ svg: SVG, from source: CGRect, in rect: CGRect, tileScale: CGFloat?,
-                           filterCache: CGFilterLayerCache?) {
+                           filters: CGFilterLayerDraw?) {
         guard source.width > 0, source.height > 0 else { return }
         let visible = rect.intersection(boundingBoxOfClipPath)
         guard !visible.isNull, !visible.isEmpty else { return }
         let tiles = Self.tiles(of: source.size, in: rect, visible: visible)
 
         if tiles.count > 1, !isPDFContext,
-           let image = makeTileImage(svg, from: source, scale: tileScale ?? deviceScale, filterCache: filterCache) {
+           let image = makeTileImage(svg, from: source, scale: tileScale ?? deviceScale, filters: filters) {
             draw(image, in: CGRect(origin: rect.origin, size: source.size), byTiling: true)
             return
         }
         for tile in tiles {
             saveGState()
             clip(to: tile)
-            drawStretched(svg, from: source, in: tile, filterCache: filterCache)
+            drawStretched(svg, from: source, in: tile, filters: filters)
             restoreGState()
         }
     }
 
-    private func drawStretched(_ svg: SVG, from source: CGRect, in rect: CGRect, filterCache: CGFilterLayerCache?) {
+    private func drawStretched(_ svg: SVG, from source: CGRect, in rect: CGRect, filters: CGFilterLayerDraw?) {
         translateBy(x: rect.origin.x, y: rect.origin.y)
         scaleBy(
             x: rect.width / source.width,
             y: rect.height / source.height
         )
         translateBy(x: -source.minX, y: -source.minY)
-        CGRenderer(context: self, filterCache: filterCache).perform(svg.commands)
+        CGRenderer(context: self, filters: filters).perform(svg.commands)
     }
 
     // source of svg rasterized at scale pixels per point. Drawn with draw(_:in:) the image lands
     // exactly where the vector drawing would, whichever way the context is flipped.
-    func makeTileImage(_ svg: SVG, from source: CGRect, scale: CGFloat, filterCache: CGFilterLayerCache? = nil) -> CGImage? {
+    func makeTileImage(_ svg: SVG, from source: CGRect, scale: CGFloat, filters: CGFilterLayerDraw? = nil) -> CGImage? {
         let width = Int(ceil(source.width * scale))
         let height = Int(ceil(source.height * scale))
         guard width > 0, height > 0, width * height <= Self.maxTilePixels,
@@ -191,7 +191,7 @@ extension CGContext {
         }
         bitmap.scaleBy(x: CGFloat(width) / source.width, y: CGFloat(height) / source.height)
         bitmap.translateBy(x: -source.minX, y: -source.minY)
-        CGRenderer(context: bitmap, filterCache: filterCache).perform(svg.commands)
+        CGRenderer(context: bitmap, filters: filters).perform(svg.commands)
         return bitmap.makeImage()
     }
 

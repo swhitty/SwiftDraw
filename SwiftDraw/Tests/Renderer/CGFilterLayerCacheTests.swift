@@ -13,6 +13,7 @@ import CoreGraphics
 import Foundation
 import Testing
 @testable import SwiftDraw
+import SwiftDrawDOM
 
 struct CGFilterLayerCacheTests {
 
@@ -24,13 +25,13 @@ struct CGFilterLayerCacheTests {
 
         let uncached = try Self.render(flipped: flipped) { $0.draw(svg, in: rect) }
         let first = try Self.render(flipped: flipped) {
-            $0.draw(svg, in: rect, baseCTM: nil, filterCache: cache)
+            $0.draw(svg, in: rect, baseCTM: nil, filters: CGFilterLayerDraw(cache))
         }
         #expect(cache.hitCount == 0)
         #expect(cache.count == 3)
 
         let second = try Self.render(flipped: flipped) {
-            $0.draw(svg, in: rect, baseCTM: nil, filterCache: cache)
+            $0.draw(svg, in: rect, baseCTM: nil, filters: CGFilterLayerDraw(cache))
         }
         // the outer filter is drawn from the cache; its nested filter is skipped with it
         #expect(cache.hitCount == 2)
@@ -44,10 +45,10 @@ struct CGFilterLayerCacheTests {
         let other = try #require(SVG(xml: Self.filtered.replacingOccurrences(of: "red", with: "blue")))
         let cache = CGFilterLayerCache()
 
-        _ = try Self.render { $0.draw(svg, in: nil, baseCTM: nil, filterCache: cache) }
+        _ = try Self.render { $0.draw(svg, in: nil, baseCTM: nil, filters: CGFilterLayerDraw(cache)) }
         #expect(cache.count == 3)
 
-        let drawn = try Self.render { $0.draw(other, in: nil, baseCTM: nil, filterCache: cache) }
+        let drawn = try Self.render { $0.draw(other, in: nil, baseCTM: nil, filters: CGFilterLayerDraw(cache)) }
         #expect(cache.hitCount == 0)
         let expected = try Self.render { $0.draw(other, in: nil) }
         #expect(drawn == expected)
@@ -59,8 +60,8 @@ struct CGFilterLayerCacheTests {
         let reparsed = try #require(SVG(xml: Self.filtered))
         let cache = CGFilterLayerCache()
 
-        _ = try Self.render { $0.draw(svg, in: nil, baseCTM: nil, filterCache: cache) }
-        _ = try Self.render { $0.draw(reparsed, in: nil, baseCTM: nil, filterCache: cache) }
+        _ = try Self.render { $0.draw(svg, in: nil, baseCTM: nil, filters: CGFilterLayerDraw(cache)) }
+        _ = try Self.render { $0.draw(reparsed, in: nil, baseCTM: nil, filters: CGFilterLayerDraw(cache)) }
         #expect(cache.hitCount == 2)
     }
 
@@ -69,9 +70,9 @@ struct CGFilterLayerCacheTests {
         let svg = try #require(SVG(xml: Self.filtered))
         let cache = CGFilterLayerCache()
 
-        _ = try Self.render { $0.draw(svg, in: CGRect(x: 0, y: 0, width: 40, height: 30), baseCTM: nil, filterCache: cache) }
+        _ = try Self.render { $0.draw(svg, in: CGRect(x: 0, y: 0, width: 40, height: 30), baseCTM: nil, filters: CGFilterLayerDraw(cache)) }
         let resized = try Self.render {
-            $0.draw(svg, in: CGRect(x: 0, y: 0, width: 60, height: 45), baseCTM: nil, filterCache: cache)
+            $0.draw(svg, in: CGRect(x: 0, y: 0, width: 60, height: 45), baseCTM: nil, filters: CGFilterLayerDraw(cache))
         }
         #expect(cache.hitCount == 0)
         #expect(cache.count == 3)
@@ -84,10 +85,10 @@ struct CGFilterLayerCacheTests {
         let svg = try #require(SVG(xml: Self.filtered))
         let cache = CGFilterLayerCache()
 
-        _ = try Self.render { $0.draw(svg, in: nil, baseCTM: nil, filterCache: cache) }
+        _ = try Self.render { $0.draw(svg, in: nil, baseCTM: nil, filters: CGFilterLayerDraw(cache)) }
         let moved = try Self.render {
             $0.translateBy(x: 0.5, y: 0)
-            $0.draw(svg, in: nil, baseCTM: nil, filterCache: cache)
+            $0.draw(svg, in: nil, baseCTM: nil, filters: CGFilterLayerDraw(cache))
         }
         #expect(cache.hitCount == 0)
         let expected = try Self.render {
@@ -106,10 +107,10 @@ struct CGFilterLayerCacheTests {
 
         let uncached = try Self.render { $0.draw(svg, in: rect, capInsets: insets, byTiling: false) }
         _ = try Self.render {
-            $0.draw(svg, in: rect, capInsets: insets, byTiling: false, tileScale: nil, filterCache: cache)
+            $0.draw(svg, in: rect, capInsets: insets, byTiling: false, tileScale: nil, filters: CGFilterLayerDraw(cache))
         }
         let second = try Self.render {
-            $0.draw(svg, in: rect, capInsets: insets, byTiling: false, tileScale: nil, filterCache: cache)
+            $0.draw(svg, in: rect, capInsets: insets, byTiling: false, tileScale: nil, filters: CGFilterLayerDraw(cache))
         }
         #expect(cache.hitCount > 0)
         #expect(second == uncached)
@@ -122,7 +123,7 @@ struct CGFilterLayerCacheTests {
         for offset in 0..<20 {
             _ = try Self.render {
                 $0.translateBy(x: CGFloat(offset), y: 0)
-                $0.draw(svg, in: nil, baseCTM: nil, filterCache: cache)
+                $0.draw(svg, in: nil, baseCTM: nil, filters: CGFilterLayerDraw(cache))
             }
         }
         #expect(cache.count <= 3 * CGFilterLayerCache.maxEntriesPerLayer)
@@ -133,7 +134,7 @@ struct CGFilterLayerCacheTests {
         let svg = try #require(SVG(xml: Self.filtered))
         let size = CGSize(width: 41, height: 31)
         let cache = CGFilterLayerCache.shared(for: svg, size: size)
-        _ = try Self.render { $0.draw(svg, in: CGRect(origin: .zero, size: size), baseCTM: nil, filterCache: cache) }
+        _ = try Self.render { $0.draw(svg, in: CGRect(origin: .zero, size: size), baseCTM: nil, filters: CGFilterLayerDraw(cache)) }
         #expect(cache.byteCount > 0)
 
         // e.g. a LazyVStack row scrolled away and back: a new view, the same SVG
@@ -150,10 +151,95 @@ struct CGFilterLayerCacheTests {
         let svg = try #require(SVG(xml: Self.filtered))
         let cache = CGFilterLayerCache()
         #expect(cache.byteCount == 0)
-        _ = try Self.render { $0.draw(svg, in: nil, baseCTM: nil, filterCache: cache) }
+        _ = try Self.render { $0.draw(svg, in: nil, baseCTM: nil, filters: CGFilterLayerDraw(cache)) }
         #expect(cache.byteCount >= cache.count * 4)
         cache.removeAll()
         #expect(cache.byteCount == 0)
+    }
+
+    @Test(arguments: [false, true])
+    func deferredDrawIsFilledInBackgroundThenHits(flipped: Bool) async throws {
+        let svg = try #require(SVG(xml: Self.filtered))
+        let rect = CGRect(x: 0, y: 0, width: 40, height: 30)
+        let cache = CGFilterLayerCache()
+        let uncached = try Self.render(flipped: flipped) { $0.draw(svg, in: rect) }
+
+        var fill: CGFilterLayerFill?
+        var deferred = false
+        _ = try Self.render(flipped: flipped) { context in
+            let layers = CGFilterLayerDraw(cache, defersMisses: true)
+            fill = CGFilterLayerFill(context: context, cache: cache) { context, filters in
+                context.draw(svg, in: rect, baseCTM: nil, filters: filters)
+            }
+            context.draw(svg, in: rect, baseCTM: nil, filters: layers)
+            deferred = layers.didDefer
+        }
+        // nothing evaluated while drawing
+        #expect(deferred)
+        #expect(cache.count == 0)
+
+        let deferredFill = try #require(fill)
+        await deferredFill.perform()
+        #expect(cache.count > 0)
+
+        let redrawn = try Self.render(flipped: flipped) {
+            $0.draw(svg, in: rect, baseCTM: nil, filters: CGFilterLayerDraw(cache))
+        }
+        #expect(cache.hitCount == 2)
+        #expect(redrawn == uncached)
+    }
+
+    @Test
+    func fillForVectorContextMatchesItsKeys() async throws {
+        // a PDF context stands in for a SwiftUI Canvas: both are vector contexts
+        let svg = try #require(SVG(xml: Self.filtered))
+        let cache = CGFilterLayerCache()
+        let data = NSMutableData()
+        var mediaBox = CGRect(x: 0, y: 0, width: 40, height: 30)
+        let consumer = try #require(CGDataConsumer(data: data as CFMutableData))
+        let pdf = try #require(CGContext(consumer: consumer, mediaBox: &mediaBox, nil))
+        pdf.beginPage(mediaBox: &mediaBox)
+
+        let layers = CGFilterLayerDraw(cache, defersMisses: true)
+        let fill = try #require(CGFilterLayerFill(context: pdf, cache: cache) { context, filters in
+            context.draw(svg, in: nil, baseCTM: nil, filters: filters)
+        })
+        pdf.draw(svg, in: nil, baseCTM: nil, filters: layers)
+        #expect(layers.didDefer)
+        #expect(fill.isVector)
+
+        await fill.perform()
+        let stored = cache.count
+        #expect(stored == 3)
+
+        pdf.draw(svg, in: nil, baseCTM: nil, filters: CGFilterLayerDraw(cache))
+        pdf.endPage()
+        pdf.closePDF()
+        #expect(cache.hitCount == 2)
+        #expect(cache.count == stored)
+    }
+
+    @Test
+    func concurrentFillsRunOnce() async throws {
+        let cache = CGFilterLayerCache()
+        let runs = RunCounter()
+        await withTaskGroup(of: Void.self) { group in
+            for _ in 0..<5 {
+                group.addTask {
+                    await cache.fill {
+                        runs.increment()
+                        Thread.sleep(forTimeInterval: 0.05)
+                    }
+                }
+            }
+        }
+        #expect(runs.value == 1)
+    }
+
+    final class RunCounter: Sendable {
+        private let count = Mutex(0)
+        var value: Int { count.withLock { $0 } }
+        func increment() { count.withLock { $0 += 1 } }
     }
 
     @Test
