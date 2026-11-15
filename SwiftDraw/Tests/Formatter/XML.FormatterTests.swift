@@ -81,6 +81,20 @@ final class XMLFormatterTests: XCTestCase {
         )
     }
 
+    func testFractionalRootSizeRoundTrips() throws {
+        let svg = DOM.SVG(width: 5.8, height: 80.5)
+        svg.viewBox = .init(x: 0, y: 0, width: 10, height: 10)
+
+        let element = try XML.Formatter.SVG().makeElement(from: svg)
+        XCTAssertEqual(element.attributes["width"], "5.8")
+        XCTAssertEqual(element.attributes["height"], "80.5")
+
+        let data = XML.Formatter(spaces: 2).encodeRootElement(element)
+        let parsed = try DOM.SVG.parse(data: Data(data.utf8))
+        XCTAssertEqual(parsed.width, 5.8)
+        XCTAssertEqual(parsed.height, 80.5)
+    }
+
     func testSymbol() throws {
         let url = try Bundle.test.url(forResource: "symbol-test.svg")
         let svg = try DOM.SVG.parse(fileURL: url)
