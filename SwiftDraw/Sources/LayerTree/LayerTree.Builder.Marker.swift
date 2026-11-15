@@ -330,7 +330,8 @@ extension LayerTree.Builder {
     /// (as WebKit, the mean of the two angles taken the short way round).
     static func makeBisector(incoming: LayerTree.Point?, outgoing: LayerTree.Point?) -> LayerTree.Float {
         func degrees(_ p: LayerTree.Point) -> LayerTree.Float {
-            // in Double: Android's libc has no Float overload of atan2
+            // in Double: a reversal (0° then 180°) must stay exactly on the 180° wrap
+            // threshold below, and Float atan2 rounds across it differently per platform
             LayerTree.Float(atan2(Double(p.y), Double(p.x)) * 180 / .pi)
         }
         switch (incoming.map(degrees), outgoing.map(degrees)) {

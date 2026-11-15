@@ -127,6 +127,7 @@ func cos(_ value: Float) -> Float { cosf(value) }
 func acos(_ value: Float) -> Float { acosf(value) }
 func sin(_ value: Float) -> Float { sinf(value) }
 func asin(_ value: Float) -> Float { asinf(value) }
+func atan2(_ y: Float, _ x: Float) -> Float { atan2f(y, x) }
 func ceil(_ value: Float) -> Float { ceilf(value) }
 #endif
 

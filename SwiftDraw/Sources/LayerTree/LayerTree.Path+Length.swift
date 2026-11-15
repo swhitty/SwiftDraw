@@ -115,8 +115,7 @@ extension LayerTree.Path {
             let t = min(max((distance - line.offset) / line.length, 0), 1)
             let point = Point(line.start.x + (line.end.x - line.start.x) * t,
                               line.start.y + (line.end.y - line.start.y) * t)
-            // Double: Android and Windows have no Float overload
-            let angle = Float(atan2(Double(line.end.y - line.start.y), Double(line.end.x - line.start.x)))
+            let angle = atan2(line.end.y - line.start.y, line.end.x - line.start.x)
             return (point, angle)
         }
 
