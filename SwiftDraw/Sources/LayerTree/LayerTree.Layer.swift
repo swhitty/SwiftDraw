@@ -184,7 +184,11 @@ extension LayerTree {
 
         enum Font: Hashable {
             case truetype(Data)
+            /// A family name ("Helvetica"), or a face's PostScript name ("Helvetica-Bold")
             case name(String)
+            /// One installed face by PostScript name, from `local()` in `@font-face`: used as named,
+            /// never re-weighted
+            case postScript(String)
         }
     }
 }

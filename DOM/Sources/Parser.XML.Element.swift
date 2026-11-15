@@ -376,6 +376,34 @@ extension XMLParser {
         )
     }
 
+    /// Splits a `src` list at its top-level commas. Commas inside `url(…)` (data URLs) or quotes are kept.
+    static func splitFontSources(_ text: String) -> [String] {
+        var entries = [String]()
+        var current = ""
+        var depth = 0
+        var quote: Character?
+        for character in text {
+            if let open = quote {
+                if character == open { quote = nil }
+            } else if character == "\"" || character == "'" {
+                quote = character
+            } else if character == "(" {
+                depth += 1
+            } else if character == ")" {
+                depth = max(0, depth - 1)
+            } else if character == "," && depth == 0 {
+                entries.append(current)
+                current = ""
+                continue
+            }
+            current.append(character)
+        }
+        entries.append(current)
+        return entries
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+    }
+
     /// The `font-weight` descriptor of `@font-face`: a weight, or two for a variable font's range (`100 900`).
     /// `bolder` and `lighter` are not valid here.
     static func parseFontFaceWeight(_ text: String) -> ClosedRange<Int>? {

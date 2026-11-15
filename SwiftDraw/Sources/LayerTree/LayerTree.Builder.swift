@@ -560,7 +560,10 @@ extension LayerTree.Builder {
     /// when the document declares none (the renderer then picks the weight and style from the system).
     func makeFonts(faceName: String, weight: Int = 400, style: DOM.FontStyle = .normal) -> [LayerTree.TextAttributes.Font] {
         let faces = Self.matchFontFaces(svg.fontFaces(for: faceName), weight: weight, style: style)
-        let fonts = faces.compactMap { try? makeFont(for: $0.src) }
+        // each face uses the first of its sources that loads (a local font that is installed, a URL that decodes)
+        let fonts = faces.compactMap { face in
+            face.src.lazy.compactMap { try? self.makeFont(for: $0) }.first
+        }
 
         guard !fonts.isEmpty else {
             return [.name(faceName)]
@@ -605,7 +608,16 @@ extension LayerTree.Builder {
     func makeFont(for source: DOM.FontFace.Source) throws -> LayerTree.TextAttributes.Font {
         switch source {
         case .local(let name):
-            return .name(name)
+            // CSS Fonts 4 §4.3.2: an installed face by full name or PostScript name; when it is not
+            // installed this source fails and the next one in `src` is tried
+            #if canImport(CoreText)
+            guard let postScriptName = CGProvider.installedFontPostScriptName(name) else {
+                throw LayerTree.Error.invalid("font not installed: \(name)")
+            }
+            return .postScript(postScriptName)
+            #else
+            return .postScript(name)
+            #endif
         case let .url(url: url, format: format):
             if let (mime, data) = url.decodedData {
                 if mime == "font/truetype" || format == "truetype" {

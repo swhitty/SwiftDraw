@@ -172,14 +172,26 @@ package extension AttributeParser {
         return try parse(key) { return try parser.parsePoints($0) }
     }
 
-    func parseFontSource(_ key: String) throws -> DOM.FontFace.Source {
+    /// The `src` descriptor of `@font-face`: a comma-separated list of `url(…) format(…)` and `local(…)`.
+    /// Entries that cannot be read are skipped; the list is invalid only when none remain.
+    func parseFontSource(_ key: String) throws -> [DOM.FontFace.Source] {
         return try parse(key) { value in
-            var scanner = XMLParser.Scanner(text: value)
-            let urlText = try scanner.scanStringFunction("url")
-            let url = try parser.parseUrl(urlText)
-            _ = try? scanner.scanString(";")
-            let format = try? scanner.scanStringFunction("format")
-            return .url(url: url, format: format)
+            let sources = XMLParser.splitFontSources(value).compactMap { entry -> DOM.FontFace.Source? in
+                var scanner = XMLParser.Scanner(text: entry)
+                if let name = try? scanner.scanStringFunction("local") {
+                    // `local( 'Name' )`: trim before removing the quotes
+                    let name = name.trimmingCharacters(in: .whitespaces).unquoted
+                    return name.isEmpty ? nil : .local(name)
+                }
+                scanner = XMLParser.Scanner(text: entry)
+                guard let urlText = try? scanner.scanStringFunction("url"),
+                      let url = try? parser.parseUrl(urlText) else { return nil }
+                _ = try? scanner.scanString(";")
+                let format = try? scanner.scanStringFunction("format")
+                return .url(url: url, format: format)
+            }
+            guard !sources.isEmpty else { throw XMLParser.Error.invalid }
+            return sources
         }
     }
 
