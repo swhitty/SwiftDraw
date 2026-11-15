@@ -287,6 +287,8 @@ extension XMLParser {
 
         el.opacity = try att.parsePercentage("opacity")
         el.display = try att.parseRaw("display")
+        // an unknown visibility value is ignored (inherited), not an invalid element
+        el.visibility = try? att.parseRaw("visibility")
         el.color = try att.parseColor("color")
 
         el.stroke = try att.parseFill("stroke")
@@ -379,6 +381,7 @@ extension DOM.PresentationAttributes {
     mutating func updateAttributes(from attributes: Self) {
         opacity = attributes.opacity
         display = attributes.display
+        visibility = attributes.visibility
         color = attributes.color
         stroke = attributes.stroke
         strokeWidth = attributes.strokeWidth

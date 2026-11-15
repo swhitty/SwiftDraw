@@ -97,7 +97,16 @@ extension LayerTree {
             var resultLayer: Layer? = nil
 
             while let (currentElement, currentState, parentLayer) = stack.popLast() {
-                let (layer, newState) = makeBaseLayer(from: currentElement, inheriting: currentState)
+                let newState = createState(for: currentElement, inheriting: currentState)
+                // SVG 1.1 §11.6.2: `display="none"` removes the element and its whole subtree from rendering,
+                // before any transform, clip, mask, filter or opacity is built for it
+                if newState.display == .none {
+                    if parentLayer == nil {
+                        resultLayer = Layer()
+                    }
+                    continue
+                }
+                let layer = makeBaseLayer(from: currentElement, with: newState)
 
                 if let contents = makeContents(from: currentElement, with: newState) {
                     layer.appendContents(contents)
@@ -132,13 +141,10 @@ extension LayerTree {
             return resultLayer!
         }
 
-        func makeBaseLayer(from element: DOM.GraphicsElement, inheriting previousState: State) -> (Layer, State) {
-            let state = createState(for: element, inheriting: previousState)
+        func makeBaseLayer(from element: DOM.GraphicsElement, with state: State) -> Layer {
             let attributes = element.attributes
             let l = Layer()
             l.class = element.class
-            guard state.display != .none else { return (l, state) }
-
             l.transform = Builder.createTransforms(from: attributes.transform ?? [])
             l.clip = makeClipShapes(for: element)
             l.clipRule = attributes.clipRule
@@ -146,16 +152,18 @@ extension LayerTree {
             l.mask = createMaskLayer(for: element)
             l.opacity = state.opacity
             l.filters = makeFilters(for: state)
-            return (l, state)
+            return l
         }
 
         func makeContents(from element: DOM.GraphicsElement, with state: State) -> Layer.Contents? {
+            // SVG 1.1 §11.6.2: `visibility` hides graphics only; a child may set `visible` again
+            let isVisible = state.visibility == .visible
             if let shape = Builder.makeShape(from: element) {
-                return makeShapeContents(from: shape, with: state)
+                return isVisible ? makeShapeContents(from: shape, with: state) : nil
             } else if let text = element as? DOM.Text {
-                return makeTextContents(from: text, with: state)
+                return isVisible ? makeTextContents(from: text, with: state) : nil
             } else if let image = element as? DOM.Image {
-                return try? Builder.makeImageContents(from: image)
+                return isVisible ? try? Builder.makeImageContents(from: image) : nil
             } else if let use = element as? DOM.Use {
                 return try? makeUseLayerContents(from: use, with: state)
             } else if let sw = element as? DOM.Switch,
@@ -171,7 +179,19 @@ extension LayerTree {
             let attributes = DOM.presentationAttributes(for: element, styles: svg.styles)
             guard let clipID = attributes.clipPath?.fragmentID,
                   let clip = svg.defs.clipPaths.first(where: { $0.id == clipID }) else { return [] }
-            return clip.childElements.compactMap(makeClipShape)
+            let contributing = clip.childElements.filter(contributesToClip)
+            // SVG 1.1 §14.3.5: a clipPath without contributing children clips everything away; a child
+            // this builder cannot clip with (`<use>`, `<text>`) still contributes, so the element stays unclipped
+            guard !contributing.isEmpty else {
+                return [ClipShape(shape: .rect(within: .zero, radii: .zero), transform: .identity)]
+            }
+            return contributing.compactMap(makeClipShape)
+        }
+
+        func contributesToClip(_ element: DOM.GraphicsElement) -> Bool {
+            // SVG 1.1 §14.3.5: children with `display="none"` or hidden `visibility` do not contribute to the clip
+            let att = DOM.presentationAttributes(for: element, styles: svg.styles)
+            return att.display != DOM.DisplayMode.none && (att.visibility ?? .visible) == .visible
         }
 
         func makeClipUnits(for element: DOM.GraphicsElement) -> ClipUnits {
@@ -201,7 +221,9 @@ extension LayerTree {
 
             let l = Layer()
 
-            let maskState = createState(for: mask, inheriting: State())
+            var maskState = createState(for: mask, inheriting: State())
+            // SVG 1.1 §11.5: `display` does not apply to `<mask>`; only its children can be hidden
+            maskState.display = .inline
             mask.childElements.forEach {
                 let contents = Layer.Contents.layer(makeLayer(from: $0, inheriting: maskState))
                 l.appendContents(contents)
@@ -609,6 +631,7 @@ extension LayerTree.Builder {
     struct State {
         var opacity: DOM.Float
         var display: DOM.DisplayMode
+        var visibility: DOM.Visibility
         var color: DOM.Color
 
         var stroke: DOM.Fill
@@ -635,6 +658,7 @@ extension LayerTree.Builder {
             //default root SVG element state
             opacity = 1.0
             display = .inline
+            visibility = .visible
             color = .keyword(.black)
 
             stroke = .color(.none)
@@ -667,6 +691,7 @@ extension LayerTree.Builder {
 
         state.opacity = attributes.opacity ?? 1.0
         state.display = attributes.display ?? existing.display
+        state.visibility = attributes.visibility ?? existing.visibility
         state.color = attributes.color ?? existing.color
 
         state.stroke = attributes.stroke ?? existing.stroke

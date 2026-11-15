@@ -120,6 +120,7 @@ extension XML.Formatter {
             var attributes: [String: String] = [:]
             attributes["opacity"] = formatter.format(graphic.opacity)
             attributes["display"] = graphic.display?.rawValue
+            attributes["visibility"] = graphic.visibility?.rawValue
             attributes["stroke"] = graphic.stroke.map(encodeFill)
             attributes["stroke-width"] = formatter.format(graphic.strokeWidth)
             attributes["stroke-opacity"] = formatter.format(graphic.strokeOpacity)

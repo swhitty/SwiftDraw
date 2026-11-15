@@ -19,6 +19,10 @@ swift test
 
 The library is cross-platform: CI builds and tests on macOS, Linux (Swift 6.0.3 and later), Windows and Android. Code in `SwiftDraw/Sources` that uses Apple frameworks must be guarded, usually with `#if canImport(CoreGraphics)`. `container-run-tests.sh` runs the tests in a Linux container.
 
+### Writing tests
+
+Write all new tests with Swift Testing (`import Testing`, `@Test`, `#expect`, `#require`), including tests brought in from other branches or pull requests. Follow the existing suites: a `struct`, `@Test` functions named for the behaviour without a `test` prefix, and `@Test(arguments:)` instead of looping over inputs. Some older suites still use XCTest; when adding to one, a new Swift Testing suite is preferred over more XCTest cases.
+
 ## Checking rendering changes
 
 Unit tests don't catch most visual regressions. For any change under `SwiftDraw/Sources` or `DOM/Sources` that can affect rendered output, run `swiftdraw-diff`, which renders `Samples.bundle` with SwiftDraw at `main` and with your working copy, scores both against WebKit (Safari's engine) and reports what changed. It needs macOS with a logged-in GUI session.
