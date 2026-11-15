@@ -70,14 +70,15 @@ extension XMLParser {
         if let val = try? nodeAtt.parseString("gradientTransform") {
           if let t = try? parseTransform(val) { node.gradientTransform = t }
         }
+        node.spreadMethod = try? nodeAtt.parseRaw("spreadMethod")
 
         return node
     }
 
     func parseRadialGradientStop(_ att: any AttributeParser) throws -> DOM.RadialGradient.Stop {
-        let offset: DOM.Float? = try? att.parsePercentage("offset")
+        let offset: DOM.Float? = parseClampedFraction(att, "offset")
         let color: DOM.Color? = try? att.parseFill("stop-color").getColor()
-        let opacity: DOM.Float? = try att.parsePercentage("stop-opacity")
+        let opacity: DOM.Float? = parseClampedFraction(att, "stop-opacity")
         return DOM.RadialGradient.Stop(offset: offset ?? 0, color: color ?? .keyword(.black), opacity: opacity ?? 1.0)
     }
 }
