@@ -294,6 +294,7 @@ extension XMLParser {
     // validated one at a time, so an invalid later value (`fill: red; fill: var(--x)`)
     // leaves the earlier valid one in place.
     func parsePresentationAttributes(_ declarations: [CSSDeclaration]) -> DOM.PresentationAttributes {
+        let declarations = Self.expandingShorthands(declarations)
         var counts = [String: Int]()
         for d in declarations {
             counts[d.name, default: 0] += 1
@@ -309,6 +310,19 @@ extension XMLParser {
             }
         }
         return result
+    }
+
+    /// The `marker` shorthand sets `marker-start`, `marker-mid` and `marker-end` (SVG 2 §11.6.4).
+    /// It is a CSS property only, not a presentation attribute; expanded in place so a later
+    /// longhand still overrides it, and an earlier one is overridden.
+    static func expandingShorthands(_ declarations: [CSSDeclaration]) -> [CSSDeclaration] {
+        guard declarations.contains(where: { $0.name == "marker" }) else { return declarations }
+        return declarations.flatMap { d -> [CSSDeclaration] in
+            guard d.name == "marker" else { return [d] }
+            return ["marker-start", "marker-mid", "marker-end"].map {
+                CSSDeclaration(name: $0, value: d.value, important: d.important)
+            }
+        }
     }
 
     // inline style and the stylesheet rules matched against the document tree
@@ -406,6 +420,11 @@ extension XMLParser {
         el.mask = urlOrNone(att, "mask")
         el.maskType = lenient { try att.parseRaw("mask-type") }
         el.filter = urlOrNone(att, "filter")
+        el.overflow = lenient { try att.parseRaw("overflow") }
+
+        el.markerStart = urlOrNone(att, "marker-start")
+        el.markerMid = urlOrNone(att, "marker-mid")
+        el.markerEnd = urlOrNone(att, "marker-end")
 
         el.stopColor = lenient { try att.parseFill("stop-color").getColor() }
         el.stopOpacity = opacity(att, "stop-opacity")

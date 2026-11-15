@@ -288,7 +288,9 @@ extension LayerTree {
             // SVG 1.1 §11.6.2: `visibility` hides graphics only; a child may set `visible` again
             let isVisible = state.visibility == .visible
             if let shape = Builder.makeShape(from: element) {
-                return isVisible ? makeShapeContents(from: shape, with: state) : nil
+                guard isVisible else { return nil }
+                let contents = makeShapeContents(from: shape, with: state)
+                return makeMarkedContents(contents, for: element, with: state) ?? contents
             } else if let text = element as? DOM.Text {
                 return isVisible ? makeTextContents(from: text, with: state) : nil
             } else if let image = element as? DOM.Image {
@@ -908,6 +910,10 @@ extension LayerTree.Builder {
         var textAnchor: DOM.TextAnchor
         var textBaseline: DOM.TextBaseline
 
+        var markerStart: DOM.URL?
+        var markerMid: DOM.URL?
+        var markerEnd: DOM.URL?
+
         init() {
             //default root SVG element state
             opacity = 1.0
@@ -968,6 +974,10 @@ extension LayerTree.Builder {
         state.fontStyle = attributes.fontStyle ?? existing.fontStyle
         state.textAnchor = attributes.textAnchor ?? existing.textAnchor
         state.textBaseline = attributes.dominantBaseline ?? existing.textBaseline
+
+        state.markerStart = attributes.markerStart ?? existing.markerStart
+        state.markerMid = attributes.markerMid ?? existing.markerMid
+        state.markerEnd = attributes.markerEnd ?? existing.markerEnd
 
         return state
     }
