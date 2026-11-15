@@ -44,6 +44,7 @@ extension LayerTree {
 
         private var hasLoggedFilterWarning = false
         private var hasLoggedGradientWarning = false
+        private var hasLoggedSpreadWarning = false
         private var hasLoggedMaskWarning = false
 
         private var paths: [LayerTree.Shape: P.Types.Path] = [:]
@@ -254,6 +255,7 @@ extension LayerTree {
                     let pathBounds = provider.getBounds(from: shape)
                     commands.append(contentsOf: renderCommands(forLinear: gradient,
                                                                in: pathBounds,
+                                                               covering: pathBounds,
                                                                opacity: fill.opacity,
                                                                colorConverter: colorConverter))
                     commands.append(.popState)
@@ -314,6 +316,7 @@ extension LayerTree {
 
                     commands.append(contentsOf: renderCommands(forLinear: gradient,
                                                                in: pathBounds,
+                                                               covering: pathBounds.outset(by: stroke.coverage),
                                                                opacity: fill.opacity,
                                                                colorConverter: colorConverter))
                     commands.append(contentsOf: renderCommands(forDashResetOf: stroke))
@@ -544,29 +547,41 @@ extension LayerTree {
         func renderCommands(forGradientUnits units: LayerTree.Gradient.Units,
                             transform: [LayerTree.Transform],
                             in bounds: LayerTree.Rect) -> [RendererCommand<P.Types>]? {
-            var commands = [RendererCommand<P.Types>]()
-            if units == .objectBoundingBox {
-                guard bounds.width > 0, bounds.height > 0 else { return nil }
-                commands.append(contentsOf: renderCommands(forTransforms: [
-                    .translate(tx: bounds.x, ty: bounds.y),
-                    .scale(sx: bounds.width, sy: bounds.height)
-                ]))
+            guard let transforms = Self.makeGradientTransforms(units: units, transform: transform, in: bounds) else {
+                return nil
             }
-            commands.append(contentsOf: renderCommands(forTransforms: transform))
-            return commands
+            return renderCommands(forTransforms: transforms)
         }
 
+        // CoreGraphics only pads, so reflect and repeat (SVG 1.1 §13.2.2 spreadMethod) are drawn by
+        // laying the periods that cover `area` end to end as one padded gradient. (after SD6, PR #142)
         func renderCommands(forLinear gradient: LayerTree.LinearGradient,
                             in bounds: LayerTree.Rect,
+                            covering area: LayerTree.Rect?,
                             opacity: LayerTree.Float,
                             colorConverter: any ColorConverter) -> [RendererCommand<P.Types>] {
-            guard var commands = renderCommands(forGradientUnits: gradient.units,
-                                                transform: gradient.transform,
-                                                in: bounds) else { return [] }
-            let pathStart = gradient.start
-            let pathEnd = gradient.end
+            guard let transforms = Self.makeGradientTransforms(units: gradient.units,
+                                                               transform: gradient.transform,
+                                                               in: bounds) else { return [] }
+            var commands = renderCommands(forTransforms: transforms)
+            var pathStart = gradient.start
+            var pathEnd = gradient.end
 
-            let converted =  gradient.gradient.convertColor(using: colorConverter)
+            var stops = gradient.gradient
+            if gradient.spread != .pad, let area,
+               let periods = Self.spreadPeriods(start: pathStart, end: pathEnd, transform: transforms, covering: area) {
+                if periods.count <= Self.maxSpreadPeriods(stopCount: stops.stops.count) {
+                    let vector = LayerTree.Point(pathEnd.x - pathStart.x, pathEnd.y - pathStart.y)
+                    stops = stops.spread(gradient.spread, periods: periods)
+                    pathEnd = pathStart.offset(vector, times: LayerTree.Float(periods.upperBound + 1))
+                    pathStart = pathStart.offset(vector, times: LayerTree.Float(periods.lowerBound))
+                } else {
+                    logUnsupportedSpread()
+                    stops = stops.averaged()
+                }
+            }
+
+            let converted = stops.convertColor(using: colorConverter)
             let gradient = provider.createGradient(from: converted)
             let start = provider.createPoint(from: pathStart)
             let end = provider.createPoint(from: pathEnd)
@@ -605,6 +620,47 @@ extension LayerTree {
 }
 
 extension LayerTree.CommandGenerator {
+
+    /// The transforms from gradient space to user space: the bounding box for objectBoundingBox
+    /// (SVG 1.1 §13.2.2), then gradientTransform. nil when the box has no width or height.
+    static func makeGradientTransforms(units: LayerTree.Gradient.Units,
+                                       transform: [LayerTree.Transform],
+                                       in bounds: LayerTree.Rect) -> [LayerTree.Transform]? {
+        guard units == .objectBoundingBox else { return transform }
+        guard bounds.width > 0, bounds.height > 0 else { return nil }
+        return [.translate(tx: bounds.x, ty: bounds.y), .scale(sx: bounds.width, sy: bounds.height)] + transform
+    }
+
+    /// Most stops a `reflect` or `repeat` gradient expands to.
+    static var maxSpreadStops: Int { 4096 }
+
+    /// Most periods drawn for a gradient of `stopCount` stops (each period may gain two stops when
+    /// completed to 0...1); a gradient needing more paints its average colour instead.
+    static func maxSpreadPeriods(stopCount: Int) -> Int {
+        max(1, maxSpreadStops / (stopCount + 2))
+    }
+
+    /// The periods of a linear gradient (0 being start...end) needed to cover `area`, which is in
+    /// user space; `transform` maps gradient space to user space. nil when they cannot be computed.
+    static func spreadPeriods(start: LayerTree.Point, end: LayerTree.Point,
+                              transform: [LayerTree.Transform],
+                              covering area: LayerTree.Rect) -> ClosedRange<Int>? {
+        let dx = end.x - start.x
+        let dy = end.y - start.y
+        let length = dx * dx + dy * dy
+        guard length > 0, let inverse = transform.toMatrix().inverted() else { return nil }
+        let offsets = area.corners.map {
+            let p = inverse.transform(point: $0)
+            return ((p.x - start.x) * dx + (p.y - start.y) * dy) / length
+        }
+        guard let lower = offsets.min(), let upper = offsets.max(),
+              lower.isFinite, upper.isFinite else { return nil }
+        // bounded so the conversion to Int cannot trap; anything this large is averaged anyway
+        let limit: LayerTree.Float = 1_000_000
+        let first = Int(max(-limit, lower.rounded(.down)))
+        let last = Int(min(limit, upper.rounded(.up))) - 1
+        return first...max(first, last)
+    }
 
     // Resolves the layer's filter into its user space; nil when a primitive is unsupported
     // or the filter region cannot be resolved (e.g. text-only contents under objectBoundingBox),
@@ -707,6 +763,12 @@ extension LayerTree.CommandGenerator {
         hasLoggedGradientWarning = true
     }
 
+    func logUnsupportedSpread() {
+        guard !hasLoggedSpreadWarning else { return }
+        LogSink.warning("spreadMethod needs more than \(Self.maxSpreadStops) gradient stops; painting the average colour")
+        hasLoggedSpreadWarning = true
+    }
+
     func logUnsupportedMask() {
         guard !hasLoggedMaskWarning else { return }
         LogSink.warning("PDF does not support transparency masks")
@@ -714,6 +776,128 @@ extension LayerTree.CommandGenerator {
     }
 }
 
+
+extension LayerTree.Gradient {
+
+    /// The stops of the given periods of this gradient laid end to end over 0...1, every odd period
+    /// mirrored for `reflect` (SVG 1.1 §13.2.2 spreadMethod).
+    func spread(_ spread: Spread, periods: ClosedRange<Int>) -> LayerTree.Gradient {
+        guard spread != .pad, !stops.isEmpty else { return self }
+        let period = completedPeriod
+        let mirrored = period.reversed().map { Stop(offset: 1 - $0.offset, color: $0.color, opacity: $0.opacity) }
+        let count = LayerTree.Float(periods.count)
+        var result = [Stop]()
+        for (index, k) in periods.enumerated() {
+            let source = spread == .reflect && k % 2 != 0 ? mirrored : period
+            for stop in source {
+                result.append(Stop(offset: (LayerTree.Float(index) + stop.offset) / count,
+                                   color: stop.color, opacity: stop.opacity))
+            }
+        }
+        return LayerTree.Gradient(stops: result)
+    }
+
+    /// The stops completed so the first and last colours fill 0 and 1.
+    var completedPeriod: [Stop] {
+        var period = stops
+        if let first = period.first, first.offset > 0 {
+            period.insert(Stop(offset: 0, color: first.color, opacity: first.opacity), at: 0)
+        }
+        if let last = period.last, last.offset < 1 {
+            period.append(Stop(offset: 1, color: last.color, opacity: last.opacity))
+        }
+        return period
+    }
+
+    /// A flat gradient of the average colour of one period (premultiplied, the same for `reflect`),
+    /// for spreads too fine to draw.
+    func averaged() -> LayerTree.Gradient {
+        let period = completedPeriod
+        var sum: (r: LayerTree.Float, g: LayerTree.Float, b: LayerTree.Float, a: LayerTree.Float) = (0, 0, 0, 0)
+        // the gradient's own space (P3 when any stop is P3); the other stops are converted into it
+        let space = colorSpace
+        for (lhs, rhs) in zip(period, period.dropFirst()) {
+            let weight = (rhs.offset - lhs.offset) / 2
+            for stop in [lhs, rhs] {
+                let c = stop.premultiplied(in: space)
+                sum = (sum.r + c.r * weight, sum.g + c.g * weight, sum.b + c.b * weight, sum.a + c.a * weight)
+            }
+        }
+        let color: LayerTree.Color = sum.a > 0
+            ? .rgba(r: sum.r / sum.a, g: sum.g / sum.a, b: sum.b / sum.a, a: sum.a, space: space)
+            : .none
+        return LayerTree.Gradient(stops: [Stop(offset: 0, color: color, opacity: 1),
+                                          Stop(offset: 1, color: color, opacity: 1)])
+    }
+}
+
+private extension LayerTree.Gradient.Stop {
+    func premultiplied(in space: LayerTree.ColorSpace) -> (r: LayerTree.Float, g: LayerTree.Float, b: LayerTree.Float, a: LayerTree.Float) {
+        switch color {
+        case .none:
+            return (0, 0, 0, 0)
+        case let .rgba(r, g, b, a, source):
+            let alpha = a * opacity
+            let (r, g, b) = LayerTree.Color.convert(r: r, g: g, b: b, from: source, to: space)
+            return (r * alpha, g * alpha, b * alpha, alpha)
+        case let .gray(white, a):
+            let alpha = a * opacity
+            return (white * alpha, white * alpha, white * alpha, alpha)
+        }
+    }
+}
+
+extension LayerTree.Color {
+
+    /// Display P3 shares sRGB's transfer curve: convert through linear light. Clamped to 0...1.
+    static func convert(r: LayerTree.Float, g: LayerTree.Float, b: LayerTree.Float,
+                        from: LayerTree.ColorSpace, to: LayerTree.ColorSpace) -> (LayerTree.Float, LayerTree.Float, LayerTree.Float) {
+        guard from != to else { return (r, g, b) }
+        func linear(_ v: LayerTree.Float) -> LayerTree.Float {
+            v <= 0.04045 ? v / 12.92 : LayerTree.Float(pow(Double((v + 0.055) / 1.055), 2.4))
+        }
+        func encode(_ v: LayerTree.Float) -> LayerTree.Float {
+            let c = min(1, max(0, v))
+            return c <= 0.0031308 ? c * 12.92 : LayerTree.Float(1.055 * pow(Double(c), 1 / 2.4) - 0.055)
+        }
+        let (lr, lg, lb) = (linear(r), linear(g), linear(b))
+        if from == .p3 {
+            return (encode(1.2249401 * lr - 0.2249404 * lg),
+                    encode(-0.0420569 * lr + 1.0420571 * lg),
+                    encode(-0.0196376 * lr - 0.0786361 * lg + 1.0982735 * lb))
+        }
+        return (encode(0.8224621 * lr + 0.1775380 * lg),
+                encode(0.0331941 * lr + 0.9668058 * lg),
+                encode(0.0170827 * lr + 0.0723974 * lg + 0.9105199 * lb))
+    }
+}
+
+private extension LayerTree.StrokeAttributes {
+    /// How far the stroke may reach beyond the path's bounds: half the width, √2 times that at
+    /// square caps, up to the miter limit at miter joins.
+    var coverage: LayerTree.Float {
+        let cap: LayerTree.Float = self.cap == .square ? LayerTree.Float(2).squareRoot() : 1
+        let join: LayerTree.Float = self.join == .miter ? max(1, miterLimit) : 1
+        return width / 2 * max(cap, join)
+    }
+}
+
+private extension LayerTree.Point {
+    func offset(_ vector: LayerTree.Point, times factor: LayerTree.Float) -> LayerTree.Point {
+        LayerTree.Point(x + vector.x * factor, y + vector.y * factor)
+    }
+}
+
+private extension LayerTree.Transform.Matrix {
+    func inverted() -> Self? {
+        let determinant = a * d - b * c
+        guard determinant != 0, determinant.isFinite else { return nil }
+        return Self(a: d / determinant, b: -b / determinant,
+                    c: -c / determinant, d: a / determinant,
+                    tx: (c * ty - d * tx) / determinant,
+                    ty: (b * tx - a * ty) / determinant)
+    }
+}
 
 private extension LayerTree.Gradient {
     func convertColor(using converter: any ColorConverter) -> LayerTree.Gradient {
@@ -775,6 +959,10 @@ private extension LayerTree.Rect {
 
     var isEmpty: Bool {
         width <= 0 || height <= 0
+    }
+
+    func outset(by amount: LayerTree.Float) -> LayerTree.Rect {
+        LayerTree.Rect(x: x - amount, y: y - amount, width: width + amount * 2, height: height + amount * 2)
     }
 
     var corners: [LayerTree.Point] {

@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="200" viewBox="0 0 240 200">
+  <defs>
+    <linearGradient id="stops">
+      <stop offset="0" stop-color="#e63946"/>
+      <stop offset="0.5" stop-color="#f1c40f"/>
+      <stop offset="1" stop-color="#1d3557"/>
+    </linearGradient>
+    <!-- objectBoundingBox: periods are counted in the stretched box -->
+    <linearGradient id="box-reflect" href="#stops" x2="0.25" spreadMethod="reflect"/>
+    <!-- gradientTransform rotates the vector; the periods still cover every corner -->
+    <linearGradient id="rotate-repeat" href="#stops" x1="0.4" x2="0.6" spreadMethod="repeat" gradientTransform="rotate(30 0.5 0.5)"/>
+    <!-- userSpaceOnUse diagonal vector, start after the shape -->
+    <linearGradient id="user-repeat" href="#stops" gradientUnits="userSpaceOnUse" x1="200" y1="180" x2="215" y2="195" spreadMethod="repeat"/>
+    <!-- a stroke reaches beyond the path's bounds -->
+    <linearGradient id="stroke-reflect" href="#stops" gradientUnits="userSpaceOnUse" x1="20" x2="40" spreadMethod="reflect"/>
+  </defs>
+  <rect x="0" y="0" width="150" height="40" fill="url(#box-reflect)"/>
+  <rect x="160" y="0" width="80" height="80" fill="url(#rotate-repeat)"/>
+  <rect x="0" y="50" width="150" height="40" fill="url(#user-repeat)"/>
+  <rect x="20" y="115" width="200" height="60" fill="none" stroke="url(#stroke-reflect)" stroke-width="20" stroke-linejoin="miter"/>
+</svg>

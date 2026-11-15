@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="160" viewBox="0 0 240 160">
+  <defs>
+    <!-- a single stop paints its colour, with its stop-opacity, for fill and stroke -->
+    <linearGradient id="single"><stop offset="0.7" stop-color="#2a9d8f" stop-opacity="0.5"/></linearGradient>
+    <radialGradient id="single-radial"><stop offset="0" stop-color="#e76f51"/></radialGradient>
+    <!-- zero radius paints the last stop -->
+    <radialGradient id="r0" r="0">
+      <stop offset="0" stop-color="#e63946"/><stop offset="1" stop-color="#457b9d"/>
+    </radialGradient>
+    <!-- an offset less than one before it takes that offset -->
+    <linearGradient id="order">
+      <stop offset="0.6" stop-color="#e63946"/><stop offset="0.2" stop-color="#f1c40f"/><stop offset="1.5" stop-color="#1d3557"/>
+    </linearGradient>
+    <!-- offsets and stop-opacity outside 0...1 are clamped -->
+    <linearGradient id="clamp">
+      <stop offset="-50%" stop-color="#e63946"/><stop offset="40%" stop-color="#f1c40f" stop-opacity="2"/><stop offset="200%" stop-color="#1d3557" stop-opacity="-1"/>
+    </linearGradient>
+  </defs>
+  <rect x="0" y="0" width="75" height="75" fill="url(#single)" stroke="url(#single)" stroke-width="6"/>
+  <rect x="85" y="0" width="70" height="75" fill="url(#single-radial)"/>
+  <rect x="165" y="0" width="75" height="75" fill="url(#r0)"/>
+  <rect x="0" y="85" width="240" height="30" fill="url(#order)"/>
+  <rect x="0" y="125" width="240" height="30" fill="url(#clamp)"/>
+</svg>

@@ -137,7 +137,9 @@ struct InvalidElementTests {
         #expect(svg.childElements.compactMap { $0.id } == ["r"])
         #expect(svg.defs.clipPaths.isEmpty)
         #expect(svg.defs.masks.isEmpty)
-        #expect(svg.defs.radialGradients.isEmpty)
+        // an unreadable stop-opacity takes its initial value, so "rg" survives with an opaque stop
+        #expect(svg.defs.radialGradients.map { $0.id } == ["rg"])
+        #expect(svg.defs.radialGradients.first?.stops.map(\.opacity) == [1])
         #expect(svg.defs.filters.isEmpty)
         // since SD16 a bad gradientUnits drops only that attribute, so "lg" survives (objectBoundingBox by default)
         #expect(svg.defs.linearGradients.map { $0.id } == ["lg", "good"])

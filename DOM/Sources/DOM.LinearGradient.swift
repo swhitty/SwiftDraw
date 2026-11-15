@@ -42,6 +42,7 @@ package extension DOM {
         package var stops: [Stop]
         package var gradientUnits: Units?
         package var gradientTransform: [Transform]
+        package var spreadMethod: SpreadMethod?
 
         //references another LinearGradient element id within defs
         package var href: URL?
@@ -82,5 +83,12 @@ package extension DOM.LinearGradient {
     enum Units: String {
         case userSpaceOnUse
         case objectBoundingBox
+    }
+
+    // SVG 1.1 §13.2.2
+    enum SpreadMethod: String {
+        case pad
+        case reflect
+        case `repeat`
     }
 }
