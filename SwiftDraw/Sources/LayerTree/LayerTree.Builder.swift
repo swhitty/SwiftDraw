@@ -290,7 +290,11 @@ extension LayerTree {
             if let shape = Builder.makeShape(from: element) {
                 return isVisible ? makeShapeContents(from: shape, with: state) : nil
             } else if let text = element as? DOM.Text {
-                return isVisible ? makeTextContents(from: text, with: state) : nil
+                guard isVisible else { return nil }
+                if let textPath = text.textPath {
+                    return makeTextPathContents(from: textPath, with: state)
+                }
+                return makeTextContents(from: text, with: state)
             } else if let image = element as? DOM.Image {
                 return isVisible ? try? Builder.makeImageContents(from: image) : nil
             } else if let use = element as? DOM.Use {

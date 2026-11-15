@@ -116,27 +116,44 @@ private extension LayerTree.Point {
 
 extension String {
 
-    func toLine(font: CTFont) -> CTLine {
-        let attributes = [kCTFontAttributeName: font]
+    func toLine(font: CTFont, kerning: Bool = true) -> CTLine {
+        var attributes: [CFString: Any] = [kCTFontAttributeName: font]
+        if !kerning {
+            // a kern of zero turns the font's own kerning off
+            attributes[kCTKernAttributeName] = 0
+        }
         let attString = CFAttributedStringCreate(nil, self as CFString, attributes as CFDictionary)!
         return CTLineCreateWithAttributedString(attString)
     }
 
     /// The glyph outlines of the text, with the bold and oblique each run's font needs synthesized
     func toPath(font: CTFont, synthesis: (CTFont) -> LayerTree.FontSynthesis = { _ in [] }) -> CGPath? {
-        let line = toLine(font: font)
-        let glyphRuns = CTLineGetGlyphRuns(line)
-
-        var ascent = CGFloat(0)
-        var descent = CGFloat(0)
-        var leading = CGFloat(0)
-        CTLineGetTypographicBounds(line, &ascent, &descent, &leading)
-        let baseline = ascent
-
-
         let path = CGMutablePath()
+        for glyph in toGlyphs(font: font, synthesis: synthesis) {
+            path.addPath(glyph.path, transform: CGAffineTransform(translationX: glyph.x, y: 0))
+        }
+        return path
+    }
+
+    /// One glyph of a line of text: its outline about its own origin on the baseline (y down),
+    /// where that origin sits along the line, and how far it advances the line.
+    struct Glyph {
+        var path: CGPath
+        var x: CGFloat
+        var advance: CGFloat
+    }
+
+    /// The glyphs of the text in line order, with the bold and oblique each run's font needs synthesized
+    func toGlyphs(font: CTFont,
+                  kerning: Bool = true,
+                  synthesis: (CTFont) -> LayerTree.FontSynthesis = { _ in [] }) -> [Glyph] {
+        let line = toLine(font: font, kerning: kerning)
+        let glyphRuns = CTLineGetGlyphRuns(line)
+        var glyphs = [Glyph]()
         // synthesized bold widens each glyph's advance, moving the glyphs after it
         var boldAdvance = CGFloat(0)
+        // glyph space is y up: flip it about the baseline
+        let flip = CGAffineTransform(a: 1, b: 0, c: 0, d: -1, tx: 0, ty: 0)
 
         for idx in 0..<CFArrayGetCount(glyphRuns) {
             let val = CFArrayGetValueAtIndex(glyphRuns, idx)
@@ -151,23 +168,25 @@ extension String {
                 let glyphRange = CFRange(location: idx, length: 1)
                 var glyph: CGGlyph = 0
                 var position: CGPoint = .zero
+                var advance: CGSize = .zero
                 CTRunGetGlyphs(run, glyphRange, &glyph)
                 CTRunGetPositions(run, glyphRange, &position)
+                CTRunGetAdvances(run, glyphRange, &advance)
+                let outline = CGMutablePath()
                 var t = skew
                 if let glyphPath = CTFontCreatePathForGlyph(runFont, glyph, &t) {
-                    let t = CGAffineTransform(a: 1, b: 0, c: 0, d: -1, tx: position.x + boldAdvance, ty: baseline)
-                    let t1 = t.translatedBy(x: 0, y: baseline)
-                    path.addPath(glyphPath, transform: t1)
+                    outline.addPath(glyphPath, transform: flip)
                     if boldOffset > 0 {
                         // a second copy, offset; filled nonzero, the two copies merge
-                        path.addPath(glyphPath, transform: t1.translatedBy(x: boldOffset, y: 0))
+                        outline.addPath(glyphPath, transform: flip.concatenating(CGAffineTransform(translationX: boldOffset, y: 0)))
                     }
                 }
+                glyphs.append(Glyph(path: outline, x: position.x + boldAdvance, advance: advance.width + boldOffset))
                 boldAdvance += boldOffset
             }
         }
 
-        return path
+        return glyphs
     }
 
     /// The width of the text, including the advance synthesized bold adds to each glyph

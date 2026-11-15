@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="260" height="200" viewBox="0 0 260 200">
+  <!-- glyphs whose midpoint falls past either end of the path are not drawn; tspans keep their own fill -->
+  <defs>
+    <path id="short" d="M 30 70 C 80 20 160 20 210 70" />
+    <path id="low" d="M 40 160 L 220 160" />
+  </defs>
+  <use href="#short" fill="none" stroke="#ccc" />
+  <use href="#low" fill="none" stroke="#ccc" />
+  <text font-family="Helvetica" font-size="20" fill="#333">
+    <textPath href="#short">This sentence is far too long for its path</textPath>
+  </text>
+  <text font-family="Helvetica" font-size="20" fill="#333">
+    <textPath href="#low" startOffset="-40">Starts <tspan fill="#c01c28" font-weight="bold">before</tspan> the path</textPath>
+  </text>
+</svg>

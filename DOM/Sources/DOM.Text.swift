@@ -37,12 +37,54 @@ package extension DOM {
         package var x: Coordinate?
         package var y: Coordinate?
         package var value: String
+        /// The text is laid out along a path instead (its runs replace `value`)
+        package var textPath: TextPath?
 
         package init(x: Coordinate? = nil, y: Coordinate? = nil, value: String) {
             self.x = x
             self.y = y
             self.value = value
         }
+    }
+
+    /// SVG 1.1 §10.13 `<textPath>`: text laid out along the path `href` references, or (SVG 2) its own `path`.
+    final class TextPath: GraphicsElement {
+        package var href: URL?
+        package var path: Path?
+        package var startOffset: Offset?
+        package var side: Side?
+        package var runs: [TextRun]
+
+        package init(href: URL? = nil, runs: [TextRun] = []) {
+            self.href = href
+            self.runs = runs
+        }
+
+        /// `startOffset`: a distance along the path, or a percentage of its length
+        package enum Offset: Equatable {
+            case length(Float)
+            case percentage(Float)
+        }
+
+        package enum Side: String {
+            case left
+            case right
+        }
+    }
+
+    /// A `<tspan>` within text content: its own presentation attributes over its runs.
+    final class TextSpan: GraphicsElement {
+        package var runs: [TextRun]
+
+        package init(runs: [TextRun] = []) {
+            self.runs = runs
+        }
+    }
+
+    /// Character data and `<tspan>` elements, in document order
+    enum TextRun {
+        case text(String)
+        case span(TextSpan)
     }
     
     final class Anchor: GraphicsElement, ContainerElement {

@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="300" height="200" viewBox="0 0 300 200">
+  <!-- text-anchor middle with startOffset 50% centres the text on the path; end anchors at the end -->
+  <defs>
+    <path id="smile" d="M 20 60 Q 150 160 280 60" />
+    <path id="line" d="M 20 170 L 280 150" />
+  </defs>
+  <use href="#smile" fill="none" stroke="#ccc" />
+  <use href="#line" fill="none" stroke="#ccc" />
+  <circle cx="150" cy="110" r="2" fill="#999" />
+  <text font-family="Helvetica" font-size="20" text-anchor="middle" fill="#1a5fb4">
+    <textPath href="#smile" startOffset="50%">centred on the curve</textPath>
+  </text>
+  <text font-family="Helvetica" font-size="16" fill="#e66100">
+    <textPath href="#line" startOffset="100%" text-anchor="end">anchored at the end</textPath>
+  </text>
+</svg>

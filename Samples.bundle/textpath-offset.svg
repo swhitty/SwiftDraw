@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="300" height="240" viewBox="0 0 300 240">
+  <!-- startOffset as a length and as a percentage of the path length, along curves -->
+  <defs>
+    <path id="wave" d="M 10 70 C 80 0 140 140 210 70 S 290 40 290 40" />
+    <path id="bump" d="M 10 190 Q 150 90 290 190" />
+  </defs>
+  <use href="#wave" fill="none" stroke="#ccc" />
+  <use href="#bump" fill="none" stroke="#ccc" />
+  <text font-family="Helvetica" font-size="18" fill="#26a269">
+    <textPath href="#wave" startOffset="30">Offset by thirty</textPath>
+  </text>
+  <text font-family="Helvetica" font-size="18" fill="#813d9c">
+    <textPath href="#bump" startOffset="25%">quarter way along</textPath>
+  </text>
+</svg>
