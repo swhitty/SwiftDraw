@@ -54,12 +54,12 @@ package extension DOM {
             self.childElements = childElements
         }
 
-        package enum Units: String {
+        package enum Units: String, Sendable {
             case strokeWidth
             case userSpaceOnUse
         }
 
-        package enum Orient: Equatable {
+        package enum Orient: Equatable, Sendable {
             case auto
             case autoStartReverse
             /// degrees

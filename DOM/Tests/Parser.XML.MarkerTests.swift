@@ -95,15 +95,17 @@ struct ParserXMLMarkerTests {
         #expect(svg.defs.markers.map(\.id) == ["a", "b"])
     }
 
-    @Test(arguments: [
-        ("auto", DOM.Marker.Orient.auto),
+    static let orients: [(text: String, orient: DOM.Marker.Orient)] = [
+        ("auto", .auto),
         ("auto-start-reverse", .autoStartReverse),
         ("45", .angle(45)),
         (" -30 ", .angle(-30)),
         ("45deg", .angle(45)),
         ("100grad", .angle(90)),
         ("0.5turn", .angle(180))
-    ])
+    ]
+
+    @Test(arguments: orients)
     func orient(text: String, orient: DOM.Marker.Orient) {
         #expect(XMLParser.parseMarkerOrient(text) == orient)
     }

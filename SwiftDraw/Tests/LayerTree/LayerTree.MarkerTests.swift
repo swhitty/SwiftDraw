@@ -192,15 +192,20 @@ struct LayerTreeMarkerTests {
         #expect(point.isEmpty)
     }
 
-    @Test(arguments: [
-        (Float(0), Float(90), Float(45)),
+    static let bisectors: [(incoming: Float, outgoing: Float, expected: Float)] = [
+        (0, 90, 45),
         (170, -170, 180),
         (-170, 170, 180),
         (0, 180, 90)
-    ])
+    ]
+
+    @Test(arguments: bisectors)
     func bisector(incoming: Float, outgoing: Float, expected: Float) {
         func direction(_ degrees: Float) -> LayerTree.Point {
-            LayerTree.Point(cos(degrees * .pi / 180), sin(degrees * .pi / 180))
+            let radians: Double = Double(degrees) * .pi / 180
+            let x: Float = Float(cos(radians))
+            let y: Float = Float(sin(radians))
+            return LayerTree.Point(x, y)
         }
         let angle = LayerTree.Builder.makeBisector(incoming: direction(incoming), outgoing: direction(outgoing))
         let delta = (angle - expected).truncatingRemainder(dividingBy: 360)
