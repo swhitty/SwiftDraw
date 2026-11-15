@@ -32,11 +32,14 @@
 
 @testable import SwiftDrawDOM
 @testable import SwiftDraw
-import XCTest
+import Foundation
+import Testing
 
-final class LayerTreeFilterTests: XCTestCase {
+struct LayerTreeFilterTests {
 
-    func testBlurGeneratesFilterLayerWithDefaultRegion() throws {
+    @Test
+
+    func blurGeneratesFilterLayerWithDefaultRegion() throws {
         let commands = try makeCommands(#"""
         <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
             <filter id="blur"><feGaussianBlur stdDeviation="5" /></filter>
@@ -44,14 +47,16 @@ final class LayerTreeFilterTests: XCTestCase {
         </svg>
         """#)
 
-        let filter = try XCTUnwrap(commands.filterLayers.first)
-        XCTAssertEqual(commands.filterLayers.count, 1)
-        XCTAssertEqual(filter.region, LayerTree.Rect(x: 21, y: 21, width: 48, height: 48))
-        XCTAssertEqual(filter.effects, [.gaussianBlur(stdDeviation: 5, stdDeviationY: 5)])
-        XCTAssertEqual(commands.names, ["pushFilterLayer", "setFillColor", "fillPath", "popFilterLayer"])
+        let filter = try #require(commands.filterLayers.first)
+        #expect(commands.filterLayers.count == 1)
+        #expect(filter.region == LayerTree.Rect(x: 21, y: 21, width: 48, height: 48))
+        #expect(filter.effects == [.gaussianBlur(stdDeviation: 5, stdDeviationY: 5)])
+        #expect(commands.names == ["pushFilterLayer", "setFillColor", "fillPath", "popFilterLayer"])
     }
 
-    func testBlurTwoValuesAndUserSpaceRegion() throws {
+    @Test
+
+    func blurTwoValuesAndUserSpaceRegion() throws {
         let commands = try makeCommands(#"""
         <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
             <filter id="blur" filterUnits="userSpaceOnUse" x="0" y="10" width="90" height="80">
@@ -61,12 +66,14 @@ final class LayerTreeFilterTests: XCTestCase {
         </svg>
         """#)
 
-        let filter = try XCTUnwrap(commands.filterLayers.first)
-        XCTAssertEqual(filter.region, LayerTree.Rect(x: 0, y: 10, width: 90, height: 80))
-        XCTAssertEqual(filter.effects, [.gaussianBlur(stdDeviation: 4, stdDeviationY: 2)])
+        let filter = try #require(commands.filterLayers.first)
+        #expect(filter.region == LayerTree.Rect(x: 0, y: 10, width: 90, height: 80))
+        #expect(filter.effects == [.gaussianBlur(stdDeviation: 4, stdDeviationY: 2)])
     }
 
-    func testPrimitiveUnitsObjectBoundingBoxScalesDeviation() throws {
+    @Test
+
+    func primitiveUnitsObjectBoundingBoxScalesDeviation() throws {
         let commands = try makeCommands(#"""
         <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
             <filter id="blur" primitiveUnits="objectBoundingBox" x="0" y="0" width="1" height="1">
@@ -76,12 +83,14 @@ final class LayerTreeFilterTests: XCTestCase {
         </svg>
         """#)
 
-        let filter = try XCTUnwrap(commands.filterLayers.first)
-        XCTAssertEqual(filter.region, LayerTree.Rect(x: 0, y: 0, width: 50, height: 20))
-        XCTAssertEqual(filter.effects, [.gaussianBlur(stdDeviation: 5, stdDeviationY: 2)])
+        let filter = try #require(commands.filterLayers.first)
+        #expect(filter.region == LayerTree.Rect(x: 0, y: 0, width: 50, height: 20))
+        #expect(filter.effects == [.gaussianBlur(stdDeviation: 5, stdDeviationY: 2)])
     }
 
-    func testNegativeDeviationDisablesBlur() throws {
+    @Test
+
+    func negativeDeviationDisablesBlur() throws {
         let commands = try makeCommands(#"""
         <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
             <filter id="blur"><feGaussianBlur stdDeviation="-3" /></filter>
@@ -89,10 +98,12 @@ final class LayerTreeFilterTests: XCTestCase {
         </svg>
         """#)
 
-        XCTAssertEqual(commands.filterLayers.first?.effects, [.gaussianBlur(stdDeviation: 0, stdDeviationY: 0)])
+        #expect(commands.filterLayers.first?.effects == [.gaussianBlur(stdDeviation: 0, stdDeviationY: 0)])
     }
 
-    func testFilterRegionIncludesChildTransforms() throws {
+    @Test
+
+    func filterRegionIncludesChildTransforms() throws {
         let commands = try makeCommands(#"""
         <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
             <filter id="blur" x="0" y="0" width="1" height="1"><feGaussianBlur stdDeviation="1" /></filter>
@@ -103,10 +114,12 @@ final class LayerTreeFilterTests: XCTestCase {
         </svg>
         """#)
 
-        XCTAssertEqual(commands.filterLayers.first?.region, LayerTree.Rect(x: 0, y: 0, width: 40, height: 50))
+        #expect(commands.filterLayers.first?.region == LayerTree.Rect(x: 0, y: 0, width: 40, height: 50))
     }
 
-    func testFilterIsNotInheritedByChildren() throws {
+    @Test
+
+    func filterIsNotInheritedByChildren() throws {
         let commands = try makeCommands(#"""
         <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
             <filter id="blur"><feGaussianBlur stdDeviation="2" /></filter>
@@ -117,10 +130,12 @@ final class LayerTreeFilterTests: XCTestCase {
         </svg>
         """#)
 
-        XCTAssertEqual(commands.filterLayers.count, 1)
+        #expect(commands.filterLayers.count == 1)
     }
 
-    func testEmptyFilterRegionDrawsNothing() throws {
+    @Test
+
+    func emptyFilterRegionDrawsNothing() throws {
         let commands = try makeCommands(#"""
         <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
             <filter id="blur"><feGaussianBlur stdDeviation="2" /></filter>
@@ -128,10 +143,12 @@ final class LayerTreeFilterTests: XCTestCase {
         </svg>
         """#)
 
-        XCTAssertEqual(commands.names, [])
+        #expect(commands.names == [])
     }
 
-    func testUnsupportedPrimitiveDrawsUnfiltered() throws {
+    @Test
+
+    func unsupportedPrimitiveDrawsUnfiltered() throws {
         let commands = try makeCommands(#"""
         <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
             <filter id="shadow">
@@ -142,10 +159,12 @@ final class LayerTreeFilterTests: XCTestCase {
         </svg>
         """#)
 
-        XCTAssertEqual(commands.names, ["setFillColor", "fillPath"])
+        #expect(commands.names == ["setFillColor", "fillPath"])
     }
 
-    func testUnsupportedPrimitiveIsHiddenWithOption() throws {
+    @Test
+
+    func unsupportedPrimitiveIsHiddenWithOption() throws {
         let commands = try makeCommands(#"""
         <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
             <filter id="offset"><feOffset dx="2" dy="2" /></filter>
@@ -154,10 +173,12 @@ final class LayerTreeFilterTests: XCTestCase {
         </svg>
         """#, options: .hideUnsupportedFilters)
 
-        XCTAssertEqual(commands.names, ["setFillColor", "fillPath"])
+        #expect(commands.names == ["setFillColor", "fillPath"])
     }
 
-    func testFilterIsAppliedBeforeOpacityClipAndMask() throws {
+    @Test
+
+    func filterIsAppliedBeforeOpacityClipAndMask() throws {
         let commands = try makeCommands(#"""
         <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
             <filter id="blur"><feGaussianBlur stdDeviation="2" /></filter>
@@ -167,7 +188,7 @@ final class LayerTreeFilterTests: XCTestCase {
         </svg>
         """#)
 
-        XCTAssertEqual(commands.names, [
+        #expect(commands.names == [
             "pushState", "setAlpha", "pushTransparencyLayer", "setClip", "pushTransparencyLayer",
             "pushFilterLayer", "setFillColor", "fillPath", "popFilterLayer",
             "setBlendMode", "pushTransparencyLayer", "setBlendMode", "setFillColor", "fillPath",
@@ -176,7 +197,9 @@ final class LayerTreeFilterTests: XCTestCase {
         ])
     }
 
-    func testNestedFilterLayers() throws {
+    @Test
+
+    func nestedFilterLayers() throws {
         let commands = try makeCommands(#"""
         <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
             <filter id="blur"><feGaussianBlur stdDeviation="2" /></filter>
@@ -187,14 +210,15 @@ final class LayerTreeFilterTests: XCTestCase {
         </svg>
         """#)
 
-        XCTAssertEqual(commands.names, [
+        #expect(commands.names == [
             "pushFilterLayer", "pushFilterLayer", "setFillColor", "fillPath", "popFilterLayer",
             "setFillColor", "fillPath", "popFilterLayer"
         ])
     }
 
     // text has no measured bounds: drawn unfiltered, neither warned about nor hidden as unsupported
-    func testTextWithObjectBoundingBoxBlurIsDrawnUnfiltered() throws {
+    @Test
+    func textWithObjectBoundingBoxBlurIsDrawnUnfiltered() throws {
         let svg = try DOM.SVG.parse(xml: #"""
         <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
             <filter id="blur"><feGaussianBlur stdDeviation="2" /></filter>
@@ -202,15 +226,16 @@ final class LayerTreeFilterTests: XCTestCase {
         </svg>
         """#)
         let root = LayerTree.Builder(svg: svg).makeLayer()
-        let layer = try XCTUnwrap(root.allLayers.first { !$0.filters.isEmpty })
+        let layer = try #require(root.allLayers.first { !$0.filters.isEmpty })
         let generator = LayerTree.CommandGenerator(provider: LayerTreeProvider(), size: .init(100, 100), options: .hideUnsupportedFilters)
 
-        XCTAssertFalse(layer.hasUnsupportedFilters)
-        XCTAssertNil(generator.makeFilterLayer(for: layer))
+        #expect(!layer.hasUnsupportedFilters)
+        #expect(generator.makeFilterLayer(for: layer) == nil)
     }
 
     // a group mixing shapes and text has unknown bounds: draw it unfiltered rather than clip the text away
-    func testGroupWithTextIsDrawnUnfiltered() throws {
+    @Test
+    func groupWithTextIsDrawnUnfiltered() throws {
         let commands = try makeCommands(#"""
         <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
             <filter id="blur"><feGaussianBlur stdDeviation="2" /></filter>
@@ -221,11 +246,13 @@ final class LayerTreeFilterTests: XCTestCase {
         </svg>
         """#, options: .hideUnsupportedFilters)
 
-        XCTAssertTrue(commands.filterLayers.isEmpty)
-        XCTAssertEqual(commands.names.prefix(2), ["setFillColor", "fillPath"])
+        #expect(commands.filterLayers.isEmpty)
+        #expect(commands.names.prefix(2) == ["setFillColor", "fillPath"])
     }
 
-    func testGroupWithTextKeepsUserSpaceFilter() throws {
+    @Test
+
+    func groupWithTextKeepsUserSpaceFilter() throws {
         let commands = try makeCommands(#"""
         <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
             <filter id="blur" filterUnits="userSpaceOnUse" x="0" y="0" width="100" height="100">
@@ -238,10 +265,12 @@ final class LayerTreeFilterTests: XCTestCase {
         </svg>
         """#)
 
-        XCTAssertEqual(commands.filterLayers.first?.region, LayerTree.Rect(x: 0, y: 0, width: 100, height: 100))
+        #expect(commands.filterLayers.first?.region == LayerTree.Rect(x: 0, y: 0, width: 100, height: 100))
     }
 
-    func testHugeDeviationStaysFinite() throws {
+    @Test
+
+    func hugeDeviationStaysFinite() throws {
         let commands = try makeCommands(#"""
         <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
             <filter id="blur" primitiveUnits="objectBoundingBox"><feGaussianBlur stdDeviation="1e38" /></filter>
@@ -249,14 +278,18 @@ final class LayerTreeFilterTests: XCTestCase {
         </svg>
         """#)
 
-        let effect = try XCTUnwrap(commands.filterLayers.first?.effects.first)
-        guard case let .gaussianBlur(x, y) = effect else { return XCTFail() }
-        XCTAssertTrue(x.isFinite)
-        XCTAssertTrue(y?.isFinite == true)
+        let effect = try #require(commands.filterLayers.first?.effects.first)
+        guard case let .gaussianBlur(x, y) = effect else {
+            Issue.record("not a gaussian blur")
+            return
+        }
+        #expect(x.isFinite)
+        #expect(y?.isFinite == true)
     }
 
     // renderers isolate a filter layer, but the optimizer does not elide state after it
-    func testOptimizerResetsStateAroundFilterLayer() {
+    @Test
+    func optimizerResetsStateAroundFilterLayer() {
         let filter = LayerTree.FilterLayer(region: .init(x: 0, y: 0, width: 10, height: 10),
                                            effects: [.gaussianBlur(stdDeviation: 1, stdDeviationY: 1)])
         let commands: [RendererCommand<LayerTreeTypes>] = [
@@ -268,7 +301,7 @@ final class LayerTreeFilterTests: XCTestCase {
         ]
 
         let optimized = LayerTree.CommandOptimizer<LayerTreeTypes>().optimizeCommands(commands)
-        XCTAssertEqual(optimized.names, ["setFillColor", "pushFilterLayer", "setFillColor", "popFilterLayer", "setFillColor"])
+        #expect(optimized.names == ["setFillColor", "pushFilterLayer", "setFillColor", "popFilterLayer", "setFillColor"])
     }
 }
 

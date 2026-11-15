@@ -33,12 +33,14 @@
 #if canImport(CoreGraphics)
 @testable import SwiftDraw
 import CoreGraphics
-import XCTest
+import Foundation
+import Testing
 
-final class CGRendererFilterTests: XCTestCase {
+struct CGRendererFilterTests {
 
     // 100x100 bitmap, black square 25...75 blurred by stdDeviation 5, filter region 20...80
-    func testGaussianBlurSoftensEdges() throws {
+    @Test
+    func gaussianBlurSoftensEdges() throws {
         let bitmap = try render(#"""
         <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
             <filter id="blur"><feGaussianBlur stdDeviation="5" /></filter>
@@ -47,16 +49,18 @@ final class CGRendererFilterTests: XCTestCase {
         """#)
 
         // centre is opaque, the edge is half covered, the blur spreads outside the shape
-        XCTAssertGreaterThan(bitmap.alpha(x: 50, y: 50), 0.95)
-        XCTAssertEqual(bitmap.alpha(x: 25, y: 50), 0.5, accuracy: 0.15)
-        XCTAssertGreaterThan(bitmap.alpha(x: 22, y: 50), 0.05)
-        XCTAssertLessThan(bitmap.alpha(x: 28, y: 50), 0.95)
+        #expect(bitmap.alpha(x: 50, y: 50) > 0.95)
+        #expect(abs(bitmap.alpha(x: 25, y: 50) - (0.5)) <= 0.15)
+        #expect(bitmap.alpha(x: 22, y: 50) > 0.05)
+        #expect(bitmap.alpha(x: 28, y: 50) < 0.95)
         // nothing is drawn outside the filter region
-        XCTAssertEqual(bitmap.alpha(x: 10, y: 50), 0)
-        XCTAssertEqual(bitmap.alpha(x: 50, y: 90), 0)
+        #expect(bitmap.alpha(x: 10, y: 50) == 0)
+        #expect(bitmap.alpha(x: 50, y: 90) == 0)
     }
 
-    func testGaussianBlurHonoursDeviceScale() throws {
+    @Test
+
+    func gaussianBlurHonoursDeviceScale() throws {
         let bitmap = try render(#"""
         <svg width="50" height="50" xmlns="http://www.w3.org/2000/svg">
             <filter id="blur"><feGaussianBlur stdDeviation="2.5" /></filter>
@@ -65,13 +69,15 @@ final class CGRendererFilterTests: XCTestCase {
         """#, scale: 2)
 
         // same picture as above in 2x device pixels
-        XCTAssertGreaterThan(bitmap.alpha(x: 50, y: 50), 0.95)
-        XCTAssertEqual(bitmap.alpha(x: 25, y: 50), 0.5, accuracy: 0.15)
-        XCTAssertGreaterThan(bitmap.alpha(x: 22, y: 50), 0.05)
-        XCTAssertEqual(bitmap.alpha(x: 10, y: 50), 0)
+        #expect(bitmap.alpha(x: 50, y: 50) > 0.95)
+        #expect(abs(bitmap.alpha(x: 25, y: 50) - (0.5)) <= 0.15)
+        #expect(bitmap.alpha(x: 22, y: 50) > 0.05)
+        #expect(bitmap.alpha(x: 10, y: 50) == 0)
     }
 
-    func testVerticalOnlyBlur() throws {
+    @Test
+
+    func verticalOnlyBlur() throws {
         let bitmap = try render(#"""
         <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
             <filter id="blur"><feGaussianBlur stdDeviation="0 5" /></filter>
@@ -80,12 +86,14 @@ final class CGRendererFilterTests: XCTestCase {
         """#)
 
         // left edge stays hard, top edge is soft
-        XCTAssertEqual(bitmap.alpha(x: 24, y: 50), 0)
-        XCTAssertGreaterThan(bitmap.alpha(x: 26, y: 50), 0.95)
-        XCTAssertEqual(bitmap.alpha(x: 50, y: 25), 0.5, accuracy: 0.15)
+        #expect(bitmap.alpha(x: 24, y: 50) == 0)
+        #expect(bitmap.alpha(x: 26, y: 50) > 0.95)
+        #expect(abs(bitmap.alpha(x: 50, y: 25) - (0.5)) <= 0.15)
     }
 
-    func testUnfilteredDrawingAfterFilterLayer() throws {
+    @Test
+
+    func unfilteredDrawingAfterFilterLayer() throws {
         let bitmap = try render(#"""
         <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
             <filter id="blur"><feGaussianBlur stdDeviation="5" /></filter>
@@ -94,24 +102,27 @@ final class CGRendererFilterTests: XCTestCase {
         </svg>
         """#)
 
-        XCTAssertEqual(bitmap.alpha(x: 61, y: 61), 1)
-        XCTAssertEqual(bitmap.alpha(x: 59, y: 61), 0)
+        #expect(bitmap.alpha(x: 61, y: 61) == 1)
+        #expect(bitmap.alpha(x: 59, y: 61) == 0)
     }
 
-    func testBoxSizes() {
-        XCTAssertEqual(CGContext.boxSizes(for: 0), [1, 1, 1])
-        XCTAssertEqual(CGContext.boxSizes(for: 2), [5, 3, 5])
-        XCTAssertEqual(CGContext.boxSizes(for: 5), [9, 9, 9])
-        XCTAssertEqual(CGContext.boxSizes(for: .infinity), [1, 1, 1])
-        XCTAssertEqual(CGContext.boxSizes(for: .nan), [1, 1, 1])
-        XCTAssertEqual(CGContext.boxSizes(for: 1e300, limit: 201), [201, 201, 201])
-        XCTAssertEqual(CGContext.boxSizes(for: 1e6, limit: 1024 | 1), [1025, 1025, 1025])
-        XCTAssertFalse(CGContext.isVisibleBlur(CGSize(width: 0.3, height: 0.3), scale: 1))
-        XCTAssertTrue(CGContext.isVisibleBlur(CGSize(width: 0, height: 2), scale: 1))
+    @Test
+
+    func boxSizes() {
+        #expect(CGContext.boxSizes(for: 0) == [1, 1, 1])
+        #expect(CGContext.boxSizes(for: 2) == [5, 3, 5])
+        #expect(CGContext.boxSizes(for: 5) == [9, 9, 9])
+        #expect(CGContext.boxSizes(for: .infinity) == [1, 1, 1])
+        #expect(CGContext.boxSizes(for: .nan) == [1, 1, 1])
+        #expect(CGContext.boxSizes(for: 1e300, limit: 201) == [201, 201, 201])
+        #expect(CGContext.boxSizes(for: 1e6, limit: 1024 | 1) == [1025, 1025, 1025])
+        #expect(!(CGContext.isVisibleBlur(CGSize(width: 0.3, height: 0.3), scale: 1)))
+        #expect(CGContext.isVisibleBlur(CGSize(width: 0, height: 2), scale: 1))
     }
 
     // the clip-path applies to the blurred result: a hard edge at the clip, the blur kept inside it
-    func testBlurThenClip() throws {
+    @Test
+    func blurThenClip() throws {
         let bitmap = try render(#"""
         <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
             <filter id="blur" x="-1" y="-1" width="3" height="3"><feGaussianBlur stdDeviation="2" /></filter>
@@ -122,16 +133,17 @@ final class CGRendererFilterTests: XCTestCase {
         """#)
 
         // edge at x=51 (outside the clip): blurred first, so x=49 stays dark and x=50 is cut
-        XCTAssertGreaterThan(bitmap.alpha(x: 49, y: 25), 0.65)
-        XCTAssertEqual(bitmap.alpha(x: 50, y: 25), 0)
+        #expect(bitmap.alpha(x: 49, y: 25) > 0.65)
+        #expect(bitmap.alpha(x: 50, y: 25) == 0)
         // edge at x=49 (inside the clip): the blur falls off before the clip
-        XCTAssertEqual(bitmap.alpha(x: 49, y: 75), 0.4, accuracy: 0.15)
-        XCTAssertEqual(bitmap.alpha(x: 50, y: 75), 0)
+        #expect(abs(bitmap.alpha(x: 49, y: 75) - (0.4)) <= 0.15)
+        #expect(bitmap.alpha(x: 50, y: 75) == 0)
     }
 
     // blurred groups are rasterized at 2x in PDF contexts
-    func testPDFContextSmoke() throws {
-        let svg = try XCTUnwrap(SVG(xml: #"""
+    @Test
+    func pDFContextSmoke() throws {
+        let svg = try #require(SVG(xml: #"""
         <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
             <filter id="blur"><feGaussianBlur stdDeviation="5" /></filter>
             <rect x="25" y="25" width="50" height="50" fill="black" filter="url(#blur)" />
@@ -139,18 +151,19 @@ final class CGRendererFilterTests: XCTestCase {
         """#))
         let data = NSMutableData()
         var box = CGRect(x: 0, y: 0, width: 100, height: 100)
-        let consumer = try XCTUnwrap(CGDataConsumer(data: data as CFMutableData))
-        let ctx = try XCTUnwrap(CGContext(consumer: consumer, mediaBox: &box, nil))
+        let consumer = try #require(CGDataConsumer(data: data as CFMutableData))
+        let ctx = try #require(CGContext(consumer: consumer, mediaBox: &box, nil))
         ctx.beginPDFPage(nil)
         ctx.draw(svg)
         ctx.endPDFPage()
         ctx.closePDF()
 
-        XCTAssertGreaterThan(data.length, 1000)
+        #expect(data.length > 1000)
     }
 
     // shape near the top: catches a vertically flipped composite
-    func testOffCentreBlurIsNotFlipped() throws {
+    @Test
+    func offCentreBlurIsNotFlipped() throws {
         let bitmap = try render(#"""
         <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
             <filter id="blur"><feGaussianBlur stdDeviation="3" /></filter>
@@ -158,13 +171,15 @@ final class CGRendererFilterTests: XCTestCase {
         </svg>
         """#)
 
-        XCTAssertGreaterThan(bitmap.alpha(x: 50, y: 20), 0.9)
-        XCTAssertEqual(bitmap.alpha(x: 50, y: 10), 0.5, accuracy: 0.15)
-        XCTAssertEqual(bitmap.alpha(x: 50, y: 30), 0.5, accuracy: 0.15)
-        XCTAssertEqual(bitmap.alpha(x: 50, y: 80), 0)
+        #expect(bitmap.alpha(x: 50, y: 20) > 0.9)
+        #expect(abs(bitmap.alpha(x: 50, y: 10) - (0.5)) <= 0.15)
+        #expect(abs(bitmap.alpha(x: 50, y: 30) - (0.5)) <= 0.15)
+        #expect(bitmap.alpha(x: 50, y: 80) == 0)
     }
 
-    func testBlurWithOpacityAndClip() throws {
+    @Test
+
+    func blurWithOpacityAndClip() throws {
         let bitmap = try render(#"""
         <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
             <filter id="blur"><feGaussianBlur stdDeviation="2" /></filter>
@@ -174,12 +189,14 @@ final class CGRendererFilterTests: XCTestCase {
         </svg>
         """#)
 
-        XCTAssertEqual(bitmap.alpha(x: 40, y: 50), 0.5, accuracy: 0.05)
-        XCTAssertEqual(bitmap.alpha(x: 60, y: 50), 0)
-        XCTAssertEqual(bitmap.alpha(x: 20, y: 50), 0.25, accuracy: 0.1)
+        #expect(abs(bitmap.alpha(x: 40, y: 50) - (0.5)) <= 0.05)
+        #expect(bitmap.alpha(x: 60, y: 50) == 0)
+        #expect(abs(bitmap.alpha(x: 20, y: 50) - (0.25)) <= 0.1)
     }
 
-    func testBlurWithMask() throws {
+    @Test
+
+    func blurWithMask() throws {
         let bitmap = try render(#"""
         <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
             <filter id="blur"><feGaussianBlur stdDeviation="2" /></filter>
@@ -188,13 +205,14 @@ final class CGRendererFilterTests: XCTestCase {
         </svg>
         """#)
 
-        XCTAssertGreaterThan(bitmap.alpha(x: 50, y: 40), 0.9)
-        XCTAssertEqual(bitmap.alpha(x: 50, y: 60), 0)
-        XCTAssertEqual(bitmap.alpha(x: 20, y: 40), 0.5, accuracy: 0.15)
+        #expect(bitmap.alpha(x: 50, y: 40) > 0.9)
+        #expect(bitmap.alpha(x: 50, y: 60) == 0)
+        #expect(abs(bitmap.alpha(x: 20, y: 40) - (0.5)) <= 0.15)
     }
 
     // stdDeviation "0 5" is vertical in user space, horizontal after rotate(90)
-    func testBlurFollowsRotation() throws {
+    @Test
+    func blurFollowsRotation() throws {
         let bitmap = try render(#"""
         <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
             <filter id="blur"><feGaussianBlur stdDeviation="0 5" /></filter>
@@ -202,12 +220,14 @@ final class CGRendererFilterTests: XCTestCase {
         </svg>
         """#)
 
-        XCTAssertEqual(bitmap.alpha(x: 25, y: 50), 0.5, accuracy: 0.15)
-        XCTAssertEqual(bitmap.alpha(x: 50, y: 24), 0)
-        XCTAssertGreaterThan(bitmap.alpha(x: 50, y: 26), 0.95)
+        #expect(abs(bitmap.alpha(x: 25, y: 50) - (0.5)) <= 0.15)
+        #expect(bitmap.alpha(x: 50, y: 24) == 0)
+        #expect(bitmap.alpha(x: 50, y: 26) > 0.95)
     }
 
-    func testNestedBlurs() throws {
+    @Test
+
+    func nestedBlurs() throws {
         let bitmap = try render(#"""
         <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
             <filter id="blur" x="-0.5" y="-0.5" width="2" height="2"><feGaussianBlur stdDeviation="2" /></filter>
@@ -220,14 +240,15 @@ final class CGRendererFilterTests: XCTestCase {
         """#)
 
         // the inner rect is blurred twice, so softer than the outer one at the same edge offset
-        XCTAssertLessThan(bitmap.alpha(x: 21, y: 30), bitmap.alpha(x: 61, y: 70))
-        XCTAssertGreaterThan(bitmap.alpha(x: 30, y: 30), 0.9)
-        XCTAssertGreaterThan(bitmap.alpha(x: 70, y: 70), 0.9)
-        XCTAssertEqual(bitmap.alpha(x: 5, y: 95), 1)
+        #expect(bitmap.alpha(x: 21, y: 30) < bitmap.alpha(x: 61, y: 70))
+        #expect(bitmap.alpha(x: 30, y: 30) > 0.9)
+        #expect(bitmap.alpha(x: 70, y: 70) > 0.9)
+        #expect(bitmap.alpha(x: 5, y: 95) == 1)
     }
 
     // over the pixel cap the layer is rendered at a reduced scale, still blurred
-    func testOverPixelCapStillBlurs() throws {
+    @Test
+    func overPixelCapStillBlurs() throws {
         let bitmap = try render(#"""
         <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
             <filter id="blur"><feGaussianBlur stdDeviation="5" /></filter>
@@ -235,13 +256,15 @@ final class CGRendererFilterTests: XCTestCase {
         </svg>
         """#, maxFilterLayerPixels: 900)
 
-        XCTAssertGreaterThan(bitmap.alpha(x: 50, y: 50), 0.9)
-        XCTAssertEqual(bitmap.alpha(x: 25, y: 50), 0.5, accuracy: 0.2)
-        XCTAssertEqual(bitmap.alpha(x: 10, y: 50), 0)
-        XCTAssertEqual(CGFilterLayer.makeScale(size: CGSize(width: 60, height: 60), maxPixels: 900, oversample: 1), 0.5)
+        #expect(bitmap.alpha(x: 50, y: 50) > 0.9)
+        #expect(abs(bitmap.alpha(x: 25, y: 50) - (0.5)) <= 0.2)
+        #expect(bitmap.alpha(x: 10, y: 50) == 0)
+        #expect(CGFilterLayer.makeScale(size: CGSize(width: 60, height: 60), maxPixels: 900, oversample: 1) == 0.5)
     }
 
-    func testHugeValuesDoNotTrap() throws {
+    @Test
+
+    func hugeValuesDoNotTrap() throws {
         let bitmap = try render(#"""
         <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
             <filter id="a"><feGaussianBlur stdDeviation="1e30" /></filter>
@@ -253,10 +276,12 @@ final class CGRendererFilterTests: XCTestCase {
         </svg>
         """#)
 
-        XCTAssertGreaterThan(bitmap.alpha(x: 60, y: 60), 0.9)
+        #expect(bitmap.alpha(x: 60, y: 60) > 0.9)
     }
 
-    func testEmptyClipDrawsNothing() throws {
+    @Test
+
+    func emptyClipDrawsNothing() throws {
         let bitmap = try render(#"""
         <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
             <filter id="blur"><feGaussianBlur stdDeviation="2" /></filter>
@@ -267,7 +292,7 @@ final class CGRendererFilterTests: XCTestCase {
         </svg>
         """#)
 
-        XCTAssertEqual(bitmap.alpha(x: 50, y: 50), 0)
+        #expect(bitmap.alpha(x: 50, y: 50) == 0)
     }
 }
 
@@ -285,7 +310,7 @@ private struct Bitmap {
 private extension CGRendererFilterTests {
 
     func render(_ xml: String, scale: CGFloat = 1, maxFilterLayerPixels: Int = CGRenderer.defaultMaxFilterLayerPixels) throws -> Bitmap {
-        let svg = try XCTUnwrap(SVG(xml: xml))
+        let svg = try #require(SVG(xml: xml))
         let width = Int(svg.size.width * scale)
         let height = Int(svg.size.height * scale)
         var bytes = [UInt8](repeating: 0, count: width * height * 4)
