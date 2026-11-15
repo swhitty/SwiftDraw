@@ -36,7 +36,7 @@ extension XMLParser {
 
         for n in e.children {
             if n.name == "linearGradient" {
-                gradients.append(try parseLinearGradient(n))
+                try appendSkippingInvalid(&gradients, n, parseLinearGradient)
             } else {
                 gradients.append(contentsOf: try parseLinearGradients(n))
             }

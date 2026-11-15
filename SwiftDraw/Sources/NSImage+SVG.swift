@@ -99,9 +99,10 @@ public extension SVG {
             throw Error("Failed to create CGContext")
         }
 
+        let base = ctx.ctm
         let flip = CGAffineTransform(a: 1, b: 0, c: 0, d: -1, tx: 0, ty: CGFloat(bitmap.pixelsHigh))
         ctx.concatenate(flip)
-        ctx.draw(self, in: bounds)
+        ctx.draw(self, in: bounds, baseCTM: base)
 
         guard let data = bitmap.representation(using: .png, properties: [:]) else {
             throw Error("Failed to retrieve jpeg data")
@@ -117,11 +118,12 @@ public extension SVG {
             throw Error("Failed to create CGContext")
         }
 
+        let base = ctx.ctm
         let flip = CGAffineTransform(a: 1, b: 0, c: 0, d: -1, tx: 0, ty: CGFloat(bitmap.pixelsHigh))
         ctx.concatenate(flip)
         ctx.setFillColor(.white)
         ctx.fill(bounds)
-        ctx.draw(self, in: bounds)
+        ctx.draw(self, in: bounds, baseCTM: base)
 
         guard let data = bitmap.representation(using: .jpeg, properties: [NSBitmapImageRep.PropertyKey.compressionFactor: quality]) else {
             throw Error("Failed to retrieve jpeg data")

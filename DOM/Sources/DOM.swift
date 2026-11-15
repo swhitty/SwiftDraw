@@ -43,6 +43,18 @@ package extension DOM {
 }
 
 extension DOM {
+    /// A `stroke-dasharray` / `stroke-dashoffset` length; a percentage is relative to the viewport diagonal.
+    package enum DashLength: Equatable {
+        case absolute(Float)
+        case percentage(Float)
+
+        var isNegative: Bool {
+            switch self {
+            case .absolute(let v), .percentage(let v): return v < 0
+            }
+        }
+    }
+
     package struct Point: Equatable {
         package var x: Coordinate
         package var y: Coordinate
@@ -56,10 +68,11 @@ extension DOM {
     package enum Fill: Equatable {
         case url(URL)
         case color(DOM.Color)
+        case urlWithFallback(URL, DOM.Color)
         
         package func getColor() throws -> DOM.Color {
             switch self {
-            case .url:
+            case .url, .urlWithFallback:
                 throw Error.missing("Color")
             case .color(let c):
                 return c
@@ -78,6 +91,12 @@ extension DOM {
         case block
     }
     
+    package enum Visibility: String {
+        case visible
+        case hidden
+        case collapse
+    }
+
     package enum LineCap: String {
         case butt
         case round

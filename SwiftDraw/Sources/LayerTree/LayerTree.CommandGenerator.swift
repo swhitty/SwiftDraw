@@ -207,27 +207,24 @@ extension LayerTree {
                     commands.append(.fill(path, rule: rule))
                 }
             case .pattern(let fillPattern):
-                var resolvedPattern = fillPattern
-                if fillPattern.contentUnits == .objectBoundingBox {
-                    let bounds = provider.getBounds(from: shape)
-                    let scaledFrame = LayerTree.Rect(
-                        x: fillPattern.frame.x * bounds.width + bounds.x,
-                        y: fillPattern.frame.y * bounds.height + bounds.y,
-                        width: fillPattern.frame.width * bounds.width,
-                        height: fillPattern.frame.height * bounds.height
-                    )
-                    resolvedPattern = LayerTree.Pattern(frame: scaledFrame)
-                    resolvedPattern.contents = fillPattern.contents
-                }
-                var patternCommands = [RendererCommand<P.Types>]()
-                for contents in resolvedPattern.contents {
-                    patternCommands.append(contentsOf: renderCommands(for: contents, colorConverter: colorConverter))
-                }
+                if let (resolvedPattern, contentTransform) = Self.resolvePattern(fillPattern, in: provider.getBounds(from: shape)) {
+                    var patternCommands = [RendererCommand<P.Types>]()
+                    if contentTransform != .identity {
+                        patternCommands.append(.pushState)
+                        patternCommands.append(.concatenate(transform: provider.createTransform(from: contentTransform)))
+                    }
+                    for contents in resolvedPattern.contents {
+                        patternCommands.append(contentsOf: renderCommands(for: contents, colorConverter: colorConverter))
+                    }
+                    if contentTransform != .identity {
+                        patternCommands.append(.popState)
+                    }
 
-                let pattern = provider.createPattern(from: resolvedPattern, contents: patternCommands)
-                let rule = provider.createFillRule(from: fill.rule)
-                commands.append(.setFillPattern(pattern))
-                commands.append(.fill(path, rule: rule))
+                    let pattern = provider.createPattern(from: resolvedPattern, contents: patternCommands)
+                    let rule = provider.createFillRule(from: fill.rule)
+                    commands.append(.setFillPattern(pattern))
+                    commands.append(.fill(path, rule: rule))
+                }
             case .linearGradient(let gradient):
                 if canRenderGradient(gradient.gradient) {
                     commands.append(.pushState)
@@ -264,12 +261,22 @@ extension LayerTree {
                 let join = provider.createLineJoin(from: stroke.join)
                 let limit = provider.createFloat(from: stroke.miterLimit)
 
+                let dash = renderCommands(forDash: stroke)
+
+                if !dash.isEmpty {
+                    commands.append(.pushState)
+                }
                 commands.append(.setLineCap(cap))
                 commands.append(.setLineJoin(join))
                 commands.append(.setLine(width: width))
                 commands.append(.setLineMiter(limit: limit))
+                commands.append(contentsOf: dash)
                 commands.append(.setStroke(color: color))
                 commands.append(.stroke(path))
+                if !dash.isEmpty {
+                    commands.append(contentsOf: renderCommands(forDashResetOf: stroke))
+                    commands.append(.popState)
+                }
             case .linearGradient(let gradient):
                 if let endpoints = shape.gradientEndpoints, canRenderGradient(gradient.gradient) {
                     let width = provider.createFloat(from: stroke.width)
@@ -282,12 +289,14 @@ extension LayerTree {
                     commands.append(.setLineJoin(join))
                     commands.append(.setLine(width: width))
                     commands.append(.setLineMiter(limit: limit))
+                    commands.append(contentsOf: renderCommands(forDash: stroke))
                     commands.append(.clipStrokeOutline(path))
 
                     commands.append(contentsOf: renderCommands(forLinear: gradient,
                                                                endpoints: endpoints,
                                                                opacity: fill.opacity,
                                                                colorConverter: colorConverter))
+                    commands.append(contentsOf: renderCommands(forDashResetOf: stroke))
                     commands.append(.popState)
                 }
             case .radialGradient(let gradient):
@@ -302,12 +311,14 @@ extension LayerTree {
                     commands.append(.setLineJoin(join))
                     commands.append(.setLine(width: width))
                     commands.append(.setLineMiter(limit: limit))
+                    commands.append(contentsOf: renderCommands(forDash: stroke))
                     commands.append(.clipStrokeOutline(path))
 
                     commands.append(contentsOf: renderCommands(forRadial: gradient,
                                                                in: pathBounds,
                                                                opacity: fill.opacity,
                                                                colorConverter: colorConverter))
+                    commands.append(contentsOf: renderCommands(forDashResetOf: stroke))
                     commands.append(.popState)
                 }
             default:
@@ -317,14 +328,53 @@ extension LayerTree {
             return commands
         }
 
+        func renderCommands(forDash stroke: StrokeAttributes) -> [RendererCommand<P.Types>] {
+            guard !stroke.dashArray.isEmpty else { return [] }
+            return [.setLineDash(phase: provider.createFloat(from: stroke.dashOffset),
+                                 lengths: stroke.dashArray.map(provider.createFloat))]
+        }
+
+        /// The optimizer may strip a lone push/pop pair (CGText), so a dash must be reset explicitly.
+        func renderCommands(forDashResetOf stroke: StrokeAttributes) -> [RendererCommand<P.Types>] {
+            guard !stroke.dashArray.isEmpty else { return [] }
+            return [.setLineDash(phase: provider.createFloat(from: 0), lengths: [])]
+        }
+
         func renderCommands(for image: Image) -> [RendererCommand<P.Types>] {
             guard let renderImage = makeCachedImage(from: image) else { return  [] }
             let size = provider.createSize(from: renderImage)
             guard size.width > 0 && size.height > 0 else { return [] }
 
+            let (dest, clip) = makeImagePlacement(for: image, bitmapSize: size)
+            let draw = RendererCommand<P.Types>.draw(image: renderImage, in: provider.createRect(from: dest))
+            guard let clip else { return [draw] }
+            return [.pushState,
+                    .setClip(path: makeCachedPath(from: .rect(within: clip, radii: .zero)), rule: provider.createFillRule(from: .nonzero)),
+                    draw,
+                    .popState]
+        }
+
+        /// Where the bitmap is drawn and, for `slice` overflowing its frame, the rect that clips it.
+        /// With both width and height the bitmap is fitted to the frame per preserveAspectRatio (SVG 1.1 §7.8).
+        func makeImagePlacement(for image: Image, bitmapSize size: LayerTree.Size) -> (dest: LayerTree.Rect, clip: LayerTree.Rect?) {
             let frame = makeImageFrame(for: image, bitmapSize: size)
-            let rect = provider.createRect(from: frame)
-            return [.draw(image: renderImage, in: rect)]
+            guard image.width != nil, image.height != nil, frame.width > 0, frame.height > 0 else {
+                return (frame, nil)
+            }
+            let fit = image.preserveAspectRatio.fit(
+                contentWidth: size.width, contentHeight: size.height,
+                viewportWidth: frame.width, viewportHeight: frame.height
+            )
+            let dest = LayerTree.Rect(
+                x: frame.x + fit.tx,
+                y: frame.y + fit.ty,
+                width: size.width * fit.sx,
+                height: size.height * fit.sy
+            )
+            // a meet or equal-aspect fit only differs from the frame by rounding noise
+            let epsilon = 1e-4 * max(frame.width, frame.height)
+            let overflows = image.preserveAspectRatio.align != .none && (dest.width > frame.width + epsilon || dest.height > frame.height + epsilon)
+            return (dest, overflows ? frame : nil)
         }
 
         private func makeCachedPath(from shape: LayerTree.Shape) -> P.Types.Path {
@@ -570,19 +620,19 @@ extension LayerTree.CommandGenerator {
         #endif
         }
 
-        print("Warning:", name, "is not supported. Elements with this filter can be hidden with \(hint)", to: &.standardError)
+        LogSink.warning("\(name) is not supported. Elements with this filter can be hidden with \(hint)")
         hasLoggedFilterWarning = true
     }
 
     func logUnsupportedGradient() {
         guard !hasLoggedGradientWarning else { return }
-        print("Warning:", "PDF does not support gradients with stop-opacity", to: &.standardError)
+        LogSink.warning("PDF does not support gradients with stop-opacity")
         hasLoggedGradientWarning = true
     }
 
     func logUnsupportedMask() {
         guard !hasLoggedMaskWarning else { return }
-        print("Warning:", "PDF does not support transparency masks", to: &.standardError)
+        LogSink.warning("PDF does not support transparency masks")
         hasLoggedMaskWarning = true
     }
 }
@@ -662,5 +712,67 @@ private extension LayerTree.Rect {
             width: max.x - min.x,
             height: max.y - min.y
         )
+    }
+}
+
+extension LayerTree.CommandGenerator {
+
+    /// Resolves a pattern against the bounding box of the element it fills (SVG 1.1 §13.3).
+    ///
+    /// Returns a pattern whose `frame` is the tile in pattern space (user units) and whose `transform`
+    /// is the patternTransform, plus the transform that maps the pattern contents into that tile
+    /// (tile origin, then viewBox or objectBoundingBox content units). Returns nil when the
+    /// pattern disables rendering: a zero or negative tile, an empty bounding box with
+    /// objectBoundingBox units, an empty viewBox, or a non-finite or non-invertible patternTransform.
+    /// `bounds` is only evaluated when objectBoundingBox units need it.
+    static func resolvePattern(_ pattern: LayerTree.Pattern, in boundingBox: @autoclosure () -> LayerTree.Rect) -> (LayerTree.Pattern, LayerTree.Transform.Matrix)? {
+        let t = pattern.transform
+        let determinant = t.a * t.d - t.b * t.c
+        guard [t.a, t.b, t.c, t.d, t.tx, t.ty].allSatisfy(\.isFinite),
+              determinant.isFinite, determinant != 0 else { return nil }
+
+        let needsBounds = pattern.units == .objectBoundingBox ||
+            (pattern.viewBox == nil && pattern.contentUnits == .objectBoundingBox)
+        let bounds = needsBounds ? boundingBox() : .zero
+
+        var tile = pattern.frame
+        if pattern.units == .objectBoundingBox {
+            tile = LayerTree.Rect(
+                x: bounds.x + pattern.frame.x * bounds.width,
+                y: bounds.y + pattern.frame.y * bounds.height,
+                width: pattern.frame.width * bounds.width,
+                height: pattern.frame.height * bounds.height
+            )
+        }
+        guard [tile.x, tile.y, tile.width, tile.height].allSatisfy(\.isFinite),
+              tile.width > 0, tile.height > 0 else { return nil }
+
+        var contentTransform = LayerTree.Transform.Matrix.identity
+        if let viewBox = pattern.viewBox {
+            // the viewBox is fitted into the tile per the pattern's preserveAspectRatio (SVG 1.1 §7.8)
+            guard viewBox.width > 0, viewBox.height > 0 else { return nil }
+            let fit = pattern.preserveAspectRatio.fit(
+                contentWidth: viewBox.width, contentHeight: viewBox.height,
+                viewportWidth: tile.width, viewportHeight: tile.height
+            )
+            // a tiny viewBox in a large tile can overflow the scale: no pattern, not an infinite matrix
+            guard [fit.sx, fit.sy, fit.tx, fit.ty].allSatisfy(\.isFinite) else { return nil }
+            contentTransform = LayerTree.Transform.Matrix(
+                a: fit.sx, b: 0, c: 0, d: fit.sy,
+                tx: fit.tx - viewBox.x * fit.sx,
+                ty: fit.ty - viewBox.y * fit.sy
+            )
+        } else if pattern.contentUnits == .objectBoundingBox {
+            guard bounds.width > 0, bounds.height > 0 else { return nil }
+            contentTransform = LayerTree.Transform.Matrix(a: bounds.width, b: 0, c: 0, d: bounds.height, tx: 0, ty: 0)
+        }
+        contentTransform = contentTransform.concatenated(
+            LayerTree.Transform.translate(tx: tile.x, ty: tile.y).toMatrix()
+        )
+
+        let resolved = LayerTree.Pattern(frame: tile)
+        resolved.transform = pattern.transform
+        resolved.contents = pattern.contents
+        return (resolved, contentTransform)
     }
 }

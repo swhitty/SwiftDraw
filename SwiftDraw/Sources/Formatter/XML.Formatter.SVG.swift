@@ -120,14 +120,26 @@ extension XML.Formatter {
             var attributes: [String: String] = [:]
             attributes["opacity"] = formatter.format(graphic.opacity)
             attributes["display"] = graphic.display?.rawValue
+            attributes["visibility"] = graphic.visibility?.rawValue
             attributes["stroke"] = graphic.stroke.map(encodeFill)
             attributes["stroke-width"] = formatter.format(graphic.strokeWidth)
             attributes["stroke-opacity"] = formatter.format(graphic.strokeOpacity)
             attributes["stroke-linecap"] = graphic.strokeLineCap?.rawValue
             attributes["stroke-linejoin"] = graphic.strokeLineJoin?.rawValue
-            attributes["stroke-dasharray"] = graphic.strokeDashArray?
-                                                            .map { formatter.format($0) }
-                                                            .joined(separator: " ")
+            attributes["stroke-dasharray"] = graphic.strokeDashArray.map { lengths in
+                lengths.isEmpty ? "none" : lengths.map { length -> String in
+                    switch length {
+                    case .absolute(let v): return formatter.format(v)
+                    case .percentage(let v): return formatter.format(v) + "%"
+                    }
+                }.joined(separator: " ")
+            }
+            attributes["stroke-dashoffset"] = graphic.strokeDashOffset.map { length -> String in
+                switch length {
+                case .absolute(let v): return formatter.format(v)
+                case .percentage(let v): return formatter.format(v) + "%"
+                }
+            }
 
             attributes["fill-opacity"] = formatter.format(graphic.fillOpacity)
             attributes["fill"] = graphic.fill.map(encodeFill)
@@ -172,9 +184,9 @@ extension XML.Formatter {
                 do {
                     elements.append(try makeElement(from: graphic))
                 } catch Error.unsupportedGraphicsElement {
-                    print("Warning:", elementName, "has no encoder, ignoring element.", to: &.standardError)
+                    LogSink.warning("\(elementName) has no encoder, ignoring element.")
                 } catch {
-                    print("[encoding error]", elementName, "error:", error, to: &.standardError)
+                    LogSink.error("[encoding error] \(elementName) error: \(error)")
                     throw error
                 }
             }
@@ -281,6 +293,8 @@ extension XML.Formatter {
                 return encodeColor(from: color)
             case .url(let url):
                 return encodeURL(url)
+            case .urlWithFallback(let url, let color):
+                return "\(encodeURL(url)) \(encodeColor(from: color))"
             }
         }
 

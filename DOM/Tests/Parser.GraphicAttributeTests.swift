@@ -79,7 +79,7 @@ struct ParserGraphicAttributeTests {
         #expect(parsed.strokeOpacity == 0.756)
         #expect(parsed.strokeLineCap == .butt)
         #expect(parsed.strokeLineJoin == .miter)
-        #expect(parsed.strokeDashArray == [1, 5, 10])
+        #expect(parsed.strokeDashArray == [.absolute(1), .absolute(5), .absolute(10)])
         #expect(parsed.fill == .color(.keyword(.purple)))
         #expect(parsed.fillOpacity == 0.25)
         #expect(parsed.fillRule == .evenodd)

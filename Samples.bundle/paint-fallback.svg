@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="160" viewBox="0 0 240 160">
+  <!-- A paint can name a fallback colour after url(): used when the reference is missing, ignored when it resolves. -->
+  <defs>
+    <linearGradient id="g">
+      <stop offset="0" stop-color="orange"/>
+      <stop offset="1" stop-color="purple"/>
+    </linearGradient>
+  </defs>
+  <rect x="10" y="10" width="60" height="60" fill="url(#missing) green"/>
+  <rect x="90" y="10" width="60" height="60" fill="url(#g) green"/>
+  <rect x="170" y="10" width="60" height="60" style="fill: url(#missing) #0000ff"/>
+  <rect x="10" y="90" width="60" height="60" fill="url(#missing) none" stroke="black" stroke-width="4"/>
+  <rect x="90" y="90" width="60" height="60" fill="none" stroke="url(#missing) green" stroke-width="8"/>
+  <rect x="170" y="90" width="60" height="60" fill="url(#missing) currentColor" color="teal"/>
+</svg>

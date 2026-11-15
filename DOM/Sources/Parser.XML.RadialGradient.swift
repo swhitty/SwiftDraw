@@ -36,7 +36,7 @@ extension XMLParser {
 
         for n in e.children {
             if n.name == "radialGradient" {
-                gradients.append(try parseRadialGradient(n))
+                try appendSkippingInvalid(&gradients, n, parseRadialGradient)
             } else {
                 gradients.append(contentsOf: try parseRadialGradients(n))
             }

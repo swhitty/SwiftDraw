@@ -49,10 +49,11 @@ extension CommandLine {
         case blackStrokeWidth
         case hideUnsupportedFilters
         case legacy
+        case quiet
 
         var hasValue: Bool {
             switch self {
-            case .hideUnsupportedFilters, .legacy:
+            case .hideUnsupportedFilters, .legacy, .quiet:
                 return false
             default:
                 return true

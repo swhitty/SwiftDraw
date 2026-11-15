@@ -120,7 +120,18 @@ extension XMLParser {
         while let (element, parent) = stack.popLast() {
             try Task.checkCancellation()
 
-            guard let ge = try parseGraphicsElement(element) else {
+            // not routed through skippingInvalid(_:_:): nested <svg> recurses through here and
+            // the extra generic/closure frames overflow the small stacks of test threads
+            let ge: DOM.GraphicsElement
+            do {
+                guard let parsed = try parseGraphicsElement(element) else { continue }
+                ge = parsed
+            } catch is CancellationError {
+                throw CancellationError()
+            } catch {
+                if let parseError = parseError(for: error, parsing: element, with: options) {
+                    throw parseError
+                }
                 continue
             }
 
@@ -137,6 +148,22 @@ extension XMLParser {
         }
 
         return result
+    }
+
+    /// Appends `parse(element)` to `array`; with `.skipInvalidElements` an error drops the element instead of throwing.
+    /// Kept out of line: the recursive `parse…s(_:)` walkers call it so their own frames stay small
+    /// (500 nested groups must still fit the small stacks of test threads).
+    @inline(never)
+    func appendSkippingInvalid<T>(_ array: inout [T], _ element: XML.Element, _ parse: (XML.Element) throws -> T) throws {
+        do {
+            array.append(try parse(element))
+        } catch is CancellationError {
+            throw CancellationError()
+        } catch {
+            if let parseError = parseError(for: error, parsing: element, with: options) {
+                throw parseError
+            }
+        }
     }
 
     func parseError(for error: any Swift.Error, parsing element: XML.Element, with options: Options) -> XMLParser.Error? {
@@ -192,6 +219,35 @@ extension XMLParser {
                           style: style)
     }
 
+    /// SVG 1.1 §11.4: `none` or a list of non-negative lengths / percentages; returns nil when invalid.
+    static func parseDashArray(_ text: String) -> [DOM.DashLength]? {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmed == "none" {
+            return []
+        }
+        let tokens = trimmed
+            .split(whereSeparator: { $0 == "," || $0 == " " || $0 == "\t" || $0 == "\n" || $0 == "\r" })
+            .map(String.init)
+        guard !tokens.isEmpty else { return nil }
+        var lengths = [DOM.DashLength]()
+        for token in tokens {
+            guard let length = parseDashLength(token), !length.isNegative else { return nil }
+            lengths.append(length)
+        }
+        return lengths
+    }
+
+    static func parseDashLength(_ text: String) -> DOM.DashLength? {
+        let text = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        if text.hasSuffix("%") {
+            guard let value = Float(text.dropLast()), value.isFinite else { return nil }
+            return .percentage(value)
+        }
+        var scanner = XMLParser.Scanner(text: text)
+        guard let value = try? scanner.scanCoordinate(), value.isFinite, scanner.isEOF else { return nil }
+        return .absolute(value)
+    }
+
     func parsePresentationAttributes(_ e: XML.Element) throws -> DOM.PresentationAttributes {
         return try parsePresentationAttributes(e.attributes)
     }
@@ -231,6 +287,8 @@ extension XMLParser {
 
         el.opacity = try att.parsePercentage("opacity")
         el.display = try att.parseRaw("display")
+        // an unknown visibility value is ignored (inherited), not an invalid element
+        el.visibility = try? att.parseRaw("visibility")
         el.color = try att.parseColor("color")
 
         el.stroke = try att.parseFill("stroke")
@@ -239,13 +297,12 @@ extension XMLParser {
         el.strokeLineCap = try att.parseRaw("stroke-linecap")
         el.strokeLineJoin = try att.parseRaw("stroke-linejoin")
 
-        //maybe handle this better
-        // att.parseDashArray?
-        if let dash = try att.parseString("stroke-dasharray") as String?,
-           dash.trimmingCharacters(in: .whitespaces) == "none" {
-            el.strokeDashArray = nil
-        } else {
-            el.strokeDashArray = try att.parseFloats("stroke-dasharray")
+        // an invalid dash value is dropped (inherited), never fatal for the document
+        if let dash = try att.parseString("stroke-dasharray") as String? {
+            el.strokeDashArray = Self.parseDashArray(dash)
+        }
+        if let offset = try att.parseString("stroke-dashoffset") as String? {
+            el.strokeDashOffset = Self.parseDashLength(offset)
         }
 
         el.fill = try att.parseFill("fill")
@@ -289,27 +346,31 @@ extension XMLParser {
     }
 
     package static func logParsingError(for error: any Swift.Error, filename: String?, parsing element: XML.Element? = nil) {
+        LogSink.error(makeParsingErrorMessage(for: error, filename: filename, parsing: element))
+    }
+
+    package static func makeParsingErrorMessage(for error: any Swift.Error, filename: String?, parsing element: XML.Element? = nil) -> String {
         let elementName = element.map { "<\($0.name)>" } ?? ""
         let filename = filename ?? ""
         switch error {
         case let XMLParser.Error.invalidDocument(error, element, line, column):
             let element = element.map { "<\($0)>" } ?? ""
             if let error = error {
-                print("[parsing error]", filename, element, "line:", line, "column:", column, "error:", error, to: &.standardError)
+                return "[parsing error] \(filename) \(element) line: \(line) column: \(column) error: \(error)"
             } else {
-                print("[parsing error]", filename, element, "line:", line, "column:", column, to: &.standardError)
+                return "[parsing error] \(filename) \(element) line: \(line) column: \(column)"
             }
         case let XMLParser.Error.invalidElement(name, error, line, column):
             if let line = line {
-                print("[parsing error]", filename, "<\(name)>", "line:", line, "column:", column ?? -1, "error:", error, to: &.standardError)
+                return "[parsing error] \(filename) <\(name)> line: \(line) column: \(column ?? -1) error: \(error)"
             } else {
-                print("[parsing error]", filename, "<\(name)>", "error:", error, to: &.standardError)
+                return "[parsing error] \(filename) <\(name)> error: \(error)"
             }
         default:
             if let location = element?.parsedLocation {
-                print("[parsing error]", filename, elementName, "line:", location.line, "column:", location.column, "error:", error, to: &.standardError)
+                return "[parsing error] \(filename) \(elementName) line: \(location.line) column: \(location.column) error: \(error)"
             } else {
-                print("[parsing error]", filename, elementName, "error:", error, to: &.standardError)
+                return "[parsing error] \(filename) \(elementName) error: \(error)"
             }
         }
     }
@@ -320,6 +381,7 @@ extension DOM.PresentationAttributes {
     mutating func updateAttributes(from attributes: Self) {
         opacity = attributes.opacity
         display = attributes.display
+        visibility = attributes.visibility
         color = attributes.color
         stroke = attributes.stroke
         strokeWidth = attributes.strokeWidth
@@ -327,6 +389,7 @@ extension DOM.PresentationAttributes {
         strokeLineCap = attributes.strokeLineCap
         strokeLineJoin = attributes.strokeLineJoin
         strokeDashArray = attributes.strokeDashArray
+        strokeDashOffset = attributes.strokeDashOffset
         fill = attributes.fill
         fillOpacity = attributes.fillOpacity
         fillRule = attributes.fillRule
