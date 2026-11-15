@@ -245,7 +245,7 @@ struct ParserXMLStyleSheetTests {
                 src: url('data:font/woff2;base64,ZXZlcnkgZ3JhaW4gb2Ygc2FuZA==') format('woff2');
             }
             """
-        )
+        ).map { try $0.get() }
         #expect(
             entries == [
                 [

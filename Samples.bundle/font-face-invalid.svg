@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="170" viewBox="0 0 320 170">
+  <!-- invalid @font-face rules are dropped on their own; the valid face and the other rules still apply -->
+  <style>
+    @font-face { font-family: 'NoSource'; }
+    @font-face { src: local('Helvetica'); }
+    @font-face { font-family: 'Unusable'; src: bogus(x); }
+    @font-face { font-family: 'Valid'; src: local('Helvetica-Bold'); }
+    @font-face { this is not a descriptor }
+    .a { fill: tomato; }
+    .b { fill: steelblue; stroke: navy; stroke-width: 4; }
+    text { fill: seagreen; font-family: Valid, serif; }
+  </style>
+  <rect class="a" x="10" y="10" width="140" height="60" />
+  <rect class="b" x="170" y="10" width="140" height="60" />
+  <text x="10" y="120" font-size="28">Valid face</text>
+  <text x="10" y="155" font-size="22" font-family="NoSource, Unusable, Courier">fallback</text>
+</svg>

@@ -49,7 +49,7 @@ extension XMLParser {
 
         for e in findStyleElements(within: element) {
             do {
-                try sheets.append(parseStyleSheetElement(e.innerText))
+                try sheets.append(parseStyleSheetElement(e.innerText, element: e))
             } catch {
                 Self.logParsingError(for: error, filename: filename, parsing: e)
             }
@@ -58,14 +58,32 @@ extension XMLParser {
         return sheets
     }
 
-    func parseStyleSheetElement(_ text: String?) throws -> DOM.StyleSheet {
+    func parseStyleSheetElement(_ text: String?, element: XML.Element? = nil) throws -> DOM.StyleSheet {
         let selectorEntries = try Self.parseSelectorEntries(text)
         let fontEntries = try Self.parseFontFaceEntries(text)
 
         var sheet = DOM.StyleSheet()
         sheet.attributes = try selectorEntries.mapValues(parsePresentationAttributes)
-        sheet.fonts = try fontEntries.map(parseFontFace)
+        sheet.fonts = try fontEntries.compactMap { try parseFontFace($0, in: element) }
         return sheet
+    }
+
+    /// With `.skipInvalidElements` an unusable `@font-face` is logged and dropped on its own,
+    /// keeping the rest of the sheet. Otherwise it throws, like an invalid element.
+    private func parseFontFace(_ entry: Result<[String: String], any Swift.Error>, in element: XML.Element?) throws -> DOM.FontFace? {
+        do {
+            return try parseFontFace(entry.get())
+        } catch {
+            let error = InvalidFontFace(error: error)
+            guard options.contains(.skipInvalidElements) else { throw error }
+            Self.logParsingError(for: error, filename: filename, parsing: element)
+            return nil
+        }
+    }
+
+    struct InvalidFontFace: Swift.Error, CustomStringConvertible {
+        var error: any Swift.Error
+        var description: String { "invalid @font-face: \(error)" }
     }
 
     static func parseSelectorEntries(_ text: String?) throws -> [DOM.StyleSheet.Selector: [String: String]] {
@@ -83,7 +101,7 @@ extension XMLParser {
                     }
                     entries[selector] = copy
                 }
-            case .atRule:
+            case .atRule, .fontFace:
                 ()
             }
         }
@@ -91,15 +109,16 @@ extension XMLParser {
         return entries
     }
 
-    static func parseFontFaceEntries(_ text: String?) throws -> [[String: String]] {
+    /// The descriptors of each `@font-face`, or the error for a block that could not be read.
+    static func parseFontFaceEntries(_ text: String?) throws -> [Result<[String: String], any Swift.Error>] {
         guard let text = text else { return [] }
         var scanner = XMLParser.Scanner(text: removeCSSComments(from: text))
-        var entries = [[String: String]]()
+        var entries = [Result<[String: String], any Swift.Error>]()
 
-        while let (decl, attributes) = try scanner.scanNextBlockDecl() {
+        while let (decl, _) = try scanner.scanNextBlockDecl() {
             switch decl {
-            case .atRule("font-face"):
-                entries.append(attributes)
+            case .fontFace(let descriptors):
+                entries.append(descriptors)
             default:
                 ()
             }
@@ -120,11 +139,12 @@ extension XMLParser.Scanner {
     enum BlockDeclaration {
         case selector([DOM.StyleSheet.Selector])
         case atRule(String)
+        case fontFace(Result<[String: String], any Swift.Error>)
     }
 
     mutating func scanNextBlockDecl() throws -> (BlockDeclaration, [String: String])? {
-        if let attributes = try scanNextFontFace() {
-            return (.atRule("font-face"), attributes)
+        if let descriptors = scanNextFontFace() {
+            return (.fontFace(descriptors), [:])
         }
         if let name = scanUnknownAtRule() {
             return (.atRule(name), [:])
@@ -144,11 +164,50 @@ extension XMLParser.Scanner {
         return try scanSelectorName()
     }
 
-    mutating func scanNextFontFace() throws -> [String: String]? {
+    /// Consumes a whole `@font-face` rule. Its descriptors are read from the block alone,
+    /// so a garbled block fails by itself without consuming or failing the rules after it.
+    mutating func scanNextFontFace() -> Result<[String: String], any Swift.Error>? {
         guard doScanString("@font-face") else {
             return nil
         }
-        return try scanAtttributes()
+        let prelude = (try? scanString(upTo: .init(charactersIn: "{"))) ?? ""
+        guard let block = scanBlock(), prelude.isEmpty else {
+            return .failure(XMLParser.Error.invalid)
+        }
+        var descriptors = XMLParser.Scanner(text: block + "}")
+        return Result { try descriptors.scanAtttributes() }
+    }
+
+    /// Consumes a `{ … }` block, including nested braces and quoted strings, and returns its contents
+    /// without the outer braces. A block left open runs to the end of the text.
+    mutating func scanBlock() -> String? {
+        guard doScanString("{") else { return nil }
+        let text = scanner.string
+        let start = currentIndex
+        var index = start
+        var depth = 1
+        var quote: Character?
+        while index < text.endIndex {
+            let character = text[index]
+            if let open = quote {
+                if character == open { quote = nil }
+            } else if character == "\"" || character == "'" {
+                quote = character
+            } else if character == "{" {
+                depth += 1
+            } else if character == "}" {
+                depth -= 1
+                if depth == 0 {
+                    currentIndex = text.index(after: index)
+                    scanner.currentIndex = currentIndex
+                    return String(text[start..<index])
+                }
+            }
+            index = text.index(after: index)
+        }
+        currentIndex = text.endIndex
+        scanner.currentIndex = currentIndex
+        return String(text[start...])
     }
 
     /// Skips unknown @ rules (e.g. @media, @supports) including nested blocks.
