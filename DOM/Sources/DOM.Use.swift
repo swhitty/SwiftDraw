@@ -33,6 +33,9 @@ package extension DOM {
     final class Use: GraphicsElement {
         package var x: Coordinate?
         package var y: Coordinate?
+        // the viewport of a referenced <symbol>; a missing width or height is 100% (SVG 2 §5.6)
+        package var width: Coordinate?
+        package var height: Coordinate?
 
         //references element ids within defs
         package var href: URL

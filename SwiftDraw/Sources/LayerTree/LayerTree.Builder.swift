@@ -211,6 +211,10 @@ extension LayerTree {
             var resultLayer: Layer? = nil
 
             while let (currentElement, currentState, parentLayer) = stack.popLast() {
+                // a <symbol> is only drawn as the root of a <use> that references it
+                if currentElement is DOM.Symbol, parentLayer != nil {
+                    continue
+                }
                 let newState = createState(for: currentElement, inheriting: currentState)
                 // SVG 1.1 §11.6.2: `display="none"` removes the element and its whole subtree from rendering,
                 // before any transform, clip, mask, filter or opacity is built for it

@@ -235,6 +235,8 @@ extension DOM.GraphicsElement {
             return "svg"
         case is DOM.Mask:
             return "mask"
+        case is DOM.Symbol:
+            return "symbol"
         default:
             return nil
         }
