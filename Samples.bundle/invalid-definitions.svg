@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="160" viewBox="0 0 240 160">
+  <!-- Each invalid definition below is dropped; it must not take the document with it. Every square is green. -->
+  <defs>
+    <path d="M0 0 H10"/>
+    <clipPath><rect width="10" height="10"/></clipPath>
+    <clipPath id="badUnits" clipPathUnits="bogus"><rect width="10" height="10"/></clipPath>
+    <mask><rect width="10" height="10"/></mask>
+    <linearGradient><stop offset="0" stop-color="red"/></linearGradient>
+    <linearGradient id="badGradientUnits" gradientUnits="bogus"/>
+    <radialGradient/>
+    <filter/>
+    <pattern width="10" height="10"><rect width="10" height="10" fill="red"/></pattern>
+  </defs>
+  <rect x="10" y="10" width="60" height="60" fill="green"/>
+  <rect x="90" y="10" width="60" height="60" fill="green"/>
+  <rect x="170" y="10" width="60" height="60" fill="green"/>
+  <a><rect x="10" y="90" width="60" height="60" fill="green"/></a>
+  <a href=""><rect x="90" y="90" width="60" height="60" fill="green"/></a>
+  <rect x="170" y="90" width="60" height="60" fill="green"/>
+</svg>
