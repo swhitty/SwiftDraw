@@ -31,6 +31,9 @@
 
 import Foundation
 import Testing
+#if !canImport(Darwin) && compiler(>=6.1)
+import Synchronization
+#endif
 @testable import SwiftDrawDOM
 
 struct LogSinkTests {
@@ -167,12 +170,10 @@ private struct DescribedError: Error, CustomStringConvertible {
     var description: String { "missing width" }
 }
 
-private final class Streams: @unchecked Sendable {
+private final class Streams: Sendable {
 
     var lines: [String] {
-        lock.lock()
-        defer { lock.unlock() }
-        return stored
+        stored.copy()
     }
 
     func makeHandler(minimumLevel: LogSink.Level = .info) -> LogSink.Handler {
@@ -185,11 +186,8 @@ private final class Streams: @unchecked Sendable {
 
     @Sendable
     func append(_ line: String) {
-        lock.lock()
-        defer { lock.unlock() }
-        stored.append(line)
+        stored.withLock { $0.append(line) }
     }
 
-    private let lock = NSLock()
-    private var stored = [String]()
+    private let stored = Mutex([String]())
 }
