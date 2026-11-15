@@ -441,7 +441,7 @@ struct CGRenderer: Renderer {
 
         let toDevice = ctx.userSpaceToDeviceSpaceTransform
         let deviceRect = visible.applying(toDevice).integral
-        let oversample: CGFloat = ctx.bitsPerPixel == 0 ? 2 : 1
+        let oversample: CGFloat = ctx.isBitmapContext ? 1 : 2
         guard let mask = CGContext.makeLuminanceMask(deviceRect: deviceRect,
                                                      oversample: oversample,
                                                      maxPixels: CGRenderer.maxMaskPixels) else {
@@ -541,7 +541,7 @@ struct CGRenderer: Renderer {
 
         // blurs too small to change a pixel (every box size 1) are a pass-through:
         // draw straight into the parent, clipped to the region
-        let isVector = parent.bitsPerPixel == 0
+        let isVector = !parent.isBitmapContext
         let oversample: CGFloat = isVector ? 2 : 1
         guard deviations.contains(where: { CGContext.isVisibleBlur($0, scale: oversample) }) else {
             filterLayers.entries.append(CGFilterLayer())
@@ -679,6 +679,14 @@ private extension LayerTree.Filter {
 }
 
 extension CGContext {
+
+    /// Whether this is a bitmap context, found without calling CGBitmapContext functions: on a PDF,
+    /// CGLayer or SwiftUI Canvas context those log "invalid context" (with a backtrace under Xcode).
+    /// The context's description names its type, e.g. `<CGContext 0x…> (kCGContextTypeBitmap)`.
+    /// If that ever changes, contexts are treated as vector, which only rasterizes offscreen layers at 2x.
+    var isBitmapContext: Bool {
+        (CFCopyDescription(self) as String).contains("(kCGContextTypeBitmap)")
+    }
 
     static func makeFilterLayer(width: Int, height: Int, colorSpace: CGColorSpace?) -> CGContext? {
         let sRGB = CGColorSpace(name: CGColorSpace.sRGB)!
