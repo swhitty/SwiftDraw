@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240" viewBox="0 0 240 240">
+  <defs>
+    <!-- opacity on a later child must composite over earlier mask content -->
+    <mask id="half">
+      <rect x="0" y="0" width="100" height="100" fill="white" />
+      <rect x="0" y="0" width="50" height="100" fill="black" opacity="0.5" />
+    </mask>
+    <!-- group opacity: overlapping children are flattened before the opacity applies -->
+    <mask id="group">
+      <rect x="0" y="0" width="100" height="100" fill="white" />
+      <g opacity="0.5">
+        <rect x="10" y="10" width="60" height="60" fill="black" />
+        <rect x="30" y="30" width="60" height="60" fill="black" />
+      </g>
+    </mask>
+    <!-- translucent fills stack: grey over white, white over black -->
+    <mask id="stack">
+      <rect x="0" y="0" width="100" height="100" fill="black" />
+      <rect x="0" y="0" width="70" height="100" fill="white" fill-opacity="0.6" />
+      <rect x="30" y="0" width="70" height="100" fill="white" fill-opacity="0.6" />
+      <circle cx="50" cy="50" r="25" fill="gray" opacity="0.8" />
+    </mask>
+    <!-- a translucent black stroke drawn over white -->
+    <mask id="stroke">
+      <rect x="0" y="0" width="100" height="100" fill="white" />
+      <circle cx="50" cy="50" r="30" fill="none" stroke="black" stroke-width="16" stroke-opacity="0.7" />
+    </mask>
+  </defs>
+
+  <rect x="0" y="0" width="240" height="240" fill="#ddd" />
+  <rect x="10" y="10" width="100" height="100" fill="green" mask="url(#half)" />
+  <rect x="0" y="0" width="100" height="100" fill="blue" mask="url(#group)" transform="translate(130 10)" />
+  <rect x="0" y="0" width="100" height="100" fill="crimson" mask="url(#stack)" transform="translate(10 130)" />
+  <rect x="0" y="0" width="100" height="100" fill="darkorange" mask="url(#stroke)" transform="translate(130 130)" />
+</svg>
