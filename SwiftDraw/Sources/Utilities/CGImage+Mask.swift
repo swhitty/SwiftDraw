@@ -67,4 +67,34 @@ extension CGImage {
   }
 }
 
+extension CGContext {
+
+  // A DeviceGray bitmap covering deviceRect, filled black, with its CTM mapping device space onto it.
+  // Rendered at up to oversample pixels per device pixel, scaled down to stay within maxPixels.
+  static func makeLuminanceMask(deviceRect: CGRect, oversample: CGFloat, maxPixels: Int) -> CGContext? {
+    guard !deviceRect.isNull, !deviceRect.isInfinite,
+          deviceRect.minX.isFinite, deviceRect.minY.isFinite,
+          deviceRect.width >= 1, deviceRect.height >= 1,
+          deviceRect.width.isFinite, deviceRect.height.isFinite else { return nil }
+
+    let pixels = deviceRect.width * deviceRect.height
+    let scale = min(oversample, (CGFloat(maxPixels) / pixels).squareRoot())
+    let width = max(1, Int((deviceRect.width * scale).rounded(.up)))
+    let height = max(1, Int((deviceRect.height * scale).rounded(.up)))
+    guard let ctx = CGContext(data: nil,
+                              width: width,
+                              height: height,
+                              bitsPerComponent: 8,
+                              bytesPerRow: 0,
+                              space: CGColorSpaceCreateDeviceGray(),
+                              bitmapInfo: CGImageAlphaInfo.none.rawValue) else { return nil }
+
+    ctx.setFillColor(gray: 0, alpha: 1)
+    ctx.fill(CGRect(x: 0, y: 0, width: width, height: height))
+    ctx.scaleBy(x: scale, y: scale)
+    ctx.translateBy(x: -deviceRect.minX, y: -deviceRect.minY)
+    return ctx
+  }
+}
+
 #endif

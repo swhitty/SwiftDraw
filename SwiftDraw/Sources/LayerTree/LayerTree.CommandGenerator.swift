@@ -91,6 +91,7 @@ extension LayerTree {
                     commands.append(contentsOf: renderCommands(forClip: layer.clip, using: layer.clipRule))
 
                     if state.hasMask {
+                        commands.append(contentsOf: renderCommands(forMask: layer.mask))
                         commands.append(.pushTransparencyLayer)
                     }
 
@@ -117,9 +118,8 @@ extension LayerTree {
                         commands.append(.popFilterLayer)
                     }
 
-                    //render apply mask
+                    // composite the contents through the mask clip
                     if state.hasMask {
-                        commands.append(contentsOf: renderCommands(forMask: layer.mask))
                         commands.append(.popTransparencyLayer)
                     }
 
@@ -498,23 +498,17 @@ extension LayerTree {
         }
 
 
+        // The mask contents are drawn with normal compositing in greyscale (colours converted to their luminance),
+        // so overlapping, translucent and opacity-grouped mask contents combine as they would in colour.
+        // The renderer turns the result into a clip; the masked contents are drawn into a transparency layer
+        // within it, so they are masked as a group.
         func renderCommands(forMask layer: Layer?) -> [RendererCommand<P.Types>] {
             guard let layer = layer else { return [] }
-
-            let copy = provider.createBlendMode(from: .copy)
-            let destinationIn = provider.createBlendMode(from: .destinationIn)
-
-            var commands = [RendererCommand<P.Types>]()
-            commands.append(.setBlend(mode: destinationIn))
-            commands.append(.pushTransparencyLayer)
-            commands.append(.setBlend(mode: copy))
             //commands.append(contentsOf: renderCommands(forClip: layer.clip))
             let drawMask = layer.contents.flatMap{
                 renderCommands(for: $0, colorConverter: .luminance)
             }
-            commands.append(contentsOf: drawMask)
-            commands.append(.popTransparencyLayer)
-            return commands
+            return [.clipToMask(drawMask)]
         }
 
         func canRenderMask(_ commands: [RendererCommand<P.Types>]) -> Bool {

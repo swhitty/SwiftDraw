@@ -429,6 +429,40 @@ struct CGRenderer: Renderer {
         ctx.clip(using: rule)
     }
 
+    // The mask contents are drawn into a greyscale bitmap covering the visible clip in device pixels, starting
+    // black (fully masked). Its grey levels become the alpha of the clip. Vector contexts (PDF) get a 2x bitmap.
+    func clip(toMask contents: [RendererCommand<CGTypes>]) {
+        let visible = ctx.boundingBoxOfClipPath
+        guard !visible.isNull, !visible.isEmpty else { return }
+        guard !visible.isInfinite else {
+            // no bounds to size the mask by: leave the contents unmasked
+            return
+        }
+
+        let toDevice = ctx.userSpaceToDeviceSpaceTransform
+        let deviceRect = visible.applying(toDevice).integral
+        let oversample: CGFloat = ctx.bitsPerPixel == 0 ? 2 : 1
+        guard let mask = CGContext.makeLuminanceMask(deviceRect: deviceRect,
+                                                     oversample: oversample,
+                                                     maxPixels: CGRenderer.maxMaskPixels) else {
+            ctx.clip(to: .zero)
+            return
+        }
+        mask.concatenate(toDevice)
+        // the bitmap's default space is its pixel grid: CGPattern matrices are relative to that
+        CGRenderer(context: mask, baseCTM: .identity).perform(contents)
+
+        guard let image = mask.makeImage() else {
+            ctx.clip(to: .zero)
+            return
+        }
+        ctx.concatenate(toDevice.inverted())
+        ctx.clip(to: deviceRect, mask: image)
+        ctx.concatenate(toDevice)
+    }
+
+    static let maxMaskPixels = 16_777_216
+
     func setAlpha(_ alpha: CGFloat) {
         ctx.setAlpha(alpha)
     }

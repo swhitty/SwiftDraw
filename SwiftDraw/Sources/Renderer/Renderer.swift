@@ -93,6 +93,7 @@ protocol Renderer {
     func setLine(miterLimit: Types.Float)
     func setLineDash(phase: Types.Float, lengths: [Types.Float])
     func setClip(path: Types.Path, rule: Types.FillRule)
+    func clip(toMask contents: [RendererCommand<Types>])
     func setAlpha(_ alpha: Types.Float)
     func setBlend(mode: Types.BlendMode)
 
@@ -144,6 +145,8 @@ extension Renderer {
             setLineDash(phase: p, lengths: l)
         case .setClip(path: let p, rule: let r):
             setClip(path: p, rule: r)
+        case .clipToMask(let c):
+            clip(toMask: c)
         case .setAlpha(let a):
             setAlpha(a)
         case .setBlend(mode: let m):
@@ -192,6 +195,9 @@ enum RendererCommand<Types: RendererTypes>: @unchecked Sendable {
     case setLineMiter(limit: Types.Float)
     case setLineDash(phase: Types.Float, lengths: [Types.Float])
     case setClip(path: Types.Path, rule: Types.FillRule)
+    // intersects the clip with a luminance mask: the contents are drawn with normal compositing onto black,
+    // and the luminance of the result becomes the mask's alpha
+    case clipToMask([RendererCommand<Types>])
     case setAlpha(Types.Float)
     case setBlend(mode: Types.BlendMode)
 
