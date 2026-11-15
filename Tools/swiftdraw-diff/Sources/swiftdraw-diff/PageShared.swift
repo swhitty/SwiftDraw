@@ -53,6 +53,43 @@ function loadImage(src) {
   });
 }
 
+// Loads an image for drawing into a canvas. PNGs are decoded with createImageBitmap:
+// under load, WebKit sometimes paints nothing when an <img> is drawn straight after
+// load and decode() resolve (the same element draws correctly a moment later).
+async function decodeImage(src) {
+  if (/^data:image\/png/.test(src) && window.createImageBitmap) {
+    try { return await createImageBitmap(await (await fetch(src)).blob()); } catch (e) { /* fall back */ }
+  }
+  return loadImage(src);
+}
+
+function isBlank(image) {
+  const d = image.data;
+  for (let i = 0; i < d.length; i += 4) if (d[i] < 250 || d[i + 1] < 250 || d[i + 2] < 250) return false;
+  return true;
+}
+
+const REDRAW_DELAYS = [100, 400, 1000]; // ms; at most three extra attempts
+
+// Draws src at w×h and returns its ImageData. A draw that comes out entirely white is
+// retried from a fresh load, up to REDRAW_DELAYS.length times. Retries are recorded in
+// r.redrawn (as "label: N retries") only when one recovers a non-blank image, so an
+// image that really is blank costs a little time but is still scored, and still reported.
+async function drawChecked(src, w, h, r, label) {
+  let image = pixels(await decodeImage(src), w, h);
+  let attempts = 0;
+  for (const delay of REDRAW_DELAYS) {
+    if (!isBlank(image)) break;
+    await new Promise(resolve => setTimeout(resolve, delay));
+    image = pixels(await decodeImage(src), w, h);
+    attempts++;
+  }
+  if (attempts > 0 && !isBlank(image)) {
+    (r.redrawn = r.redrawn || []).push(`${label}: ${attempts} ${attempts === 1 ? 'retry' : 'retries'}`);
+  }
+  return image;
+}
+
 function pixels(img, w, h) {
   const c = document.createElement('canvas');
   c.width = w; c.height = h;

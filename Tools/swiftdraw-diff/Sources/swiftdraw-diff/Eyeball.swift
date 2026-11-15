@@ -110,11 +110,9 @@ async function compare(r) {
   if (r.status === 'swiftdraw-nil' || !r.w) { r.score = 1; scoreEl.textContent = 'n/a'; scoreEl.className = 'score bad'; return; }
   try {
     const pw = Math.round(r.w * SCALE), ph = Math.round(r.h * SCALE);
-    const [svgImg, pngImg] = await Promise.all([
-      loadImage(svgSrc(r)),
-      loadImage(pngSrc(r))
-    ]);
-    const d = diff(pixels(svgImg, pw, ph), pixels(pngImg, pw, ph), pw, ph);
+    const browser = await drawChecked(svgSrc(r), pw, ph, r, 'browser svg');
+    const swiftdraw = await drawChecked(pngSrc(r), pw, ph, r, 'swiftdraw png');
+    const d = diff(browser, swiftdraw, pw, ph);
     const canvas = r.el.querySelector('canvas.diff');
     canvas.width = pw; canvas.height = ph;
     canvas.getContext('2d').putImageData(d.image, 0, 0);

@@ -51,6 +51,7 @@ The first run builds SwiftDraw at the base revision (about a minute); later runs
 - The summary lists only **Regressed**, **Improved** and **Changed** files (Changed = pixels differ but the score stayed within tolerance), each as `base% → head%` and the change. Unchanged files are only counted.
 - Judge by the change between base and head, not the absolute score. Many samples are already imperfect (e.g. `display`, `use`, `mask-composite`); a file staying at a high score is not a regression.
 - Text-heavy samples (e.g. `cjk-fallback`) differ because of fonts and are noisy.
+- A **Redrawn** list means an image first drew blank in the scoring page (a WebKit timing glitch under load) and was scored from a later draw. That's informational. An image that stays blank after the retries is scored as blank, so a real blank render still shows up as a regression.
 - Ignore `Warning: <…> is not supported` lines; they come from SwiftDraw's logging.
 
 ### Keeping it cheap

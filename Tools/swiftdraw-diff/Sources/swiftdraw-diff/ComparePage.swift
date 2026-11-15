@@ -135,14 +135,9 @@ async function compareRow(r) {
       throw { handled: true };
     }
     if (!a.svg || !pw) throw new Error('nothing to compare');
-    const [svgImg, baseImg, headImg] = await Promise.all([
-      loadImage(a.svg),
-      a.base ? loadImage(a.base) : null,
-      a.head ? loadImage(a.head) : null
-    ]);
-    const browser = pixels(svgImg, pw, ph);
-    const base = baseImg && pixels(baseImg, pw, ph);
-    const head = headImg && pixels(headImg, pw, ph);
+    const browser = await drawChecked(a.svg, pw, ph, r, 'browser svg');
+    const base = a.base ? await drawChecked(a.base, pw, ph, r, 'base png') : null;
+    const head = a.head ? await drawChecked(a.head, pw, ph, r, 'head png') : null;
     if (base) r.baseScore = diff(browser, base, pw, ph).score;
     if (head) {
       const d = diff(browser, head, pw, ph);

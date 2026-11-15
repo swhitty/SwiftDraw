@@ -63,6 +63,13 @@ struct Options {
     }
 }
 
+/// Prints the images the scoring page had to redraw because their first draw came out blank.
+func printRedrawn(_ items: [(name: String, redrawn: [String])]) {
+    guard !items.isEmpty else { return }
+    print("Redrawn (\(items.count)) — first draw was blank, scored from a later one")
+    for item in items { print("  \(item.name): \(item.redrawn.joined(separator: ", "))") }
+}
+
 struct Result {
     var name: String
     var size: CGSize
@@ -233,6 +240,8 @@ struct Runner {
         let scored = scores.results.compactMap(\.score)
         let under1 = scored.filter { $0 < 0.01 }.count, under5 = scored.filter { $0 < 0.05 }.count
         let mean = scored.isEmpty ? 0 : scored.reduce(0, +) / Double(scored.count)
+        if scores.results.contains(where: { $0.redrawn != nil }) { print("") }
+        printRedrawn(scores.results.compactMap { s in s.redrawn.map { (s.name, $0) } })
         print(String(format: "\n%d files · %d under 1%% · %d under 5%% · mean %.2f%%", scores.results.count, under1, under5, mean * 100))
         print("Scores: \(jsonURL.standardizedFileURL.path)")
     }
