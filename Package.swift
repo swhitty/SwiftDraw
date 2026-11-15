@@ -1,4 +1,4 @@
-// swift-tools-version:6.0
+// swift-tools-version:6.2
 
 import PackageDescription
 
@@ -61,6 +61,9 @@ extension Array where Element == SwiftSetting {
             .enableUpcomingFeature("ExistentialAny"),
             .enableUpcomingFeature("InternalImportsByDefault"),
             .enableUpcomingFeature("MemberImportVisibility"),
+            .enableUpcomingFeature("NonisolatedNonsendingByDefault"),
+            .enableUpcomingFeature("InferIsolatedConformances"),
+            .enableUpcomingFeature("ImmutableWeakCaptures"),
             .swiftLanguageMode(.v6)
         ]
     }

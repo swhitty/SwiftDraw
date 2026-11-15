@@ -1,4 +1,4 @@
-// swift-tools-version:6.0
+// swift-tools-version:6.2
 
 // Private, macOS-only dev tool: renders SVGs with SwiftDraw and writes an
 // "eyeball" page comparing them with the browser's own live rendering.

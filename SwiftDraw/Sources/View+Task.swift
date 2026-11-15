@@ -39,7 +39,7 @@ extension View {
     func compatibilityTask<ID: Equatable>(
         id: ID,
         priority: TaskPriority = .userInitiated,
-        @_inheritActorContext _ action: @escaping @Sendable () async -> Void
+        @_inheritActorContext _ action: @escaping @isolated(any) @Sendable () async -> Void
     ) -> some View {
         if #available(iOS 15.0, macOS 12.0, tvOS 15.0, watchOS 8.0, *) {
             task(id: id, priority: priority, action)
@@ -57,7 +57,7 @@ private struct CompatibilityTaskModifier<ID: Equatable>: ViewModifier {
 
     let id: ID
     let priority: TaskPriority
-    let action: @Sendable () async -> Void
+    let action: @isolated(any) @Sendable () async -> Void
 
     @State private var currentID: ID?
     @State private var isVisible = false

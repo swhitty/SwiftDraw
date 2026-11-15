@@ -114,7 +114,7 @@ extension LayerTree {
                 case let .contents(cmd):
                     commands.append(contentsOf: cmd)
 
-                case let .endLayer(layer, state):
+                case let .endLayer(_, state):
                     if state.filterLayer != nil {
                         commands.append(.popFilterLayer)
                     }
