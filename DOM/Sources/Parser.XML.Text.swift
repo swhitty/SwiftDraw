@@ -50,8 +50,8 @@ extension XMLParser {
 
     func parseAnchor(_ att: any AttributeParser, element: XML.Element) throws -> DOM.Anchor? {
         let anchor = DOM.Anchor()
-        // an <a> without a valid href is a plain group (SVG 2)
-        anchor.href = try? att.parseUrl("href")
+        // an <a> without a valid href (or xlink:href) is a plain group (SVG 2)
+        anchor.href = try? att.parseHref()
         return anchor
     }
 

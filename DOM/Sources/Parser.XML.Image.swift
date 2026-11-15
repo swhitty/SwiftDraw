@@ -32,15 +32,8 @@
 extension XMLParser {
   
   func parseImage(_ att: any AttributeParser) throws -> DOM.Image {
-    let href: DOM.URL = try {
-        do {
-            return try att.parseUrl("href")
-        } catch XMLParser.Error.missingAttribute(_) {
-            /// Backward compatibility for the deprecated "xlink:href"
-            /// https://www.w3.org/TR/SVG/linking.html#XLinkRefAttrs
-            return try att.parseUrl("xlink:href")
-        }
-    }()
+    // SVG 2 href, falling back to the deprecated xlink:href when it is missing or invalid
+    let href: DOM.URL = try att.parseHref()
 
     let image = DOM.Image(href: href)
     image.x = try att.parseCoordinate("x")

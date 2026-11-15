@@ -291,11 +291,10 @@ extension XMLParser {
     func parsePresentationAttributes(_ att: any AttributeParser) throws -> DOM.PresentationAttributes {
         var el = DOM.PresentationAttributes()
 
-        el.opacity = try att.parsePercentage("opacity")
-        el.display = try att.parseRaw("display")
-        // an unknown visibility value is ignored (inherited), not an invalid element
-        el.visibility = try? att.parseRaw("visibility")
-        el.color = try att.parseColor("color")
+        el.opacity = opacity(att, "opacity")
+        el.display = lenient { try att.parseRaw("display") }
+        el.visibility = lenient { try att.parseRaw("visibility") }
+        el.color = lenient { try att.parseColor("color") }
 
         el.stroke = lenient { try att.parseFill("stroke") }
         // a negative stroke-width is an error: drop it (SVG 1.1 §11.4)
@@ -305,10 +304,10 @@ extension XMLParser {
         el.strokeLineJoin = lenient { try att.parseRaw("stroke-linejoin") }
 
         // an invalid dash value is dropped (inherited), never fatal for the document
-        if let dash = try att.parseString("stroke-dasharray") as String? {
+        if let dash = lenient({ try att.parseString("stroke-dasharray") as String? }) {
             el.strokeDashArray = Self.parseDashArray(dash)
         }
-        if let offset = try att.parseString("stroke-dashoffset") as String? {
+        if let offset = lenient({ try att.parseString("stroke-dashoffset") as String? }) {
             el.strokeDashOffset = Self.parseDashLength(offset)
         }
 
