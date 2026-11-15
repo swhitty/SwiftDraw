@@ -20,6 +20,8 @@ jobs:
       - name: Build
         run: swift build --build-tests --enable-code-coverage
       - name: Test
+        # the tests take under a minute; fail a hung run quickly (GitHub would wait 6 hours)
+        timeout-minutes: 5
         run: swift test --skip-build --enable-code-coverage
       - name: Gather code coverage
         run: xcrun llvm-cov export -format="lcov" .build/debug/SwiftDrawTests.xctest/Contents/MacOS/SwiftDrawTests -object .build/debug/SwiftDrawDOMTests.xctest/Contents/MacOS/SwiftDrawDOMTests -instr-profile .build/debug/codecov/default.profdata > coverage_report.lcov
@@ -41,6 +43,8 @@ jobs:
       - name: Build
         run: swift build --build-tests
       - name: Test
+        # the tests take under a minute; fail a hung run quickly (GitHub would wait 6 hours)
+        timeout-minutes: 5
         run: swift test --skip-build
 
   # Apps ship optimized builds: SD12's floods were transparent under -O while every Debug job passed
@@ -56,6 +60,8 @@ jobs:
       - name: Build
         run: swift build -c release --build-tests -Xswiftc -enable-testing
       - name: Test
+        # the tests take under a minute; fail a hung run quickly (GitHub would wait 6 hours)
+        timeout-minutes: 5
         run: swift test -c release --skip-build -Xswiftc -enable-testing
 
   xcode_26_2:
@@ -70,6 +76,8 @@ jobs:
       - name: Build
         run: swift build --build-tests
       - name: Test
+        # the tests take under a minute; fail a hung run quickly (GitHub would wait 6 hours)
+        timeout-minutes: 5
         run: swift test --skip-build
 
   xcode_16_4:
@@ -84,6 +92,8 @@ jobs:
       - name: Build
         run: swift build --build-tests
       - name: Test
+        # the tests take under a minute; fail a hung run quickly (GitHub would wait 6 hours)
+        timeout-minutes: 5
         run: swift test --skip-build
 
   xcode_16_2:
@@ -98,6 +108,8 @@ jobs:
       - name: Build
         run: swift build --build-tests
       - name: Test
+        # the tests take under a minute; fail a hung run quickly (GitHub would wait 6 hours)
+        timeout-minutes: 5
         run: swift test --skip-build
 
 
@@ -112,6 +124,8 @@ jobs:
       - name: Build
         run: swift build --build-tests
       - name: Test
+        # the tests take under a minute; fail a hung run quickly (GitHub would wait 6 hours)
+        timeout-minutes: 5
         run: swift test --skip-build
 
   linux_6_1:
@@ -125,6 +139,8 @@ jobs:
       - name: Build
         run: swift build --build-tests
       - name: Test
+        # the tests take under a minute; fail a hung run quickly (GitHub would wait 6 hours)
+        timeout-minutes: 5
         run: swift test --skip-build
 
   linux_swift_6_2:
@@ -138,6 +154,8 @@ jobs:
       - name: Build
         run: swift build --build-tests
       - name: Test
+        # the tests take under a minute; fail a hung run quickly (GitHub would wait 6 hours)
+        timeout-minutes: 5
         run: swift test --skip-build
 
   linux_swift_6_3:
@@ -151,6 +169,8 @@ jobs:
       - name: Build
         run: swift build --build-tests
       - name: Test
+        # the tests take under a minute; fail a hung run quickly (GitHub would wait 6 hours)
+        timeout-minutes: 5
         run: swift test --skip-build
 
   linux_swift_6_4:
@@ -164,6 +184,8 @@ jobs:
       - name: Build
         run: swift build --build-tests
       - name: Test
+        # the tests take under a minute; fail a hung run quickly (GitHub would wait 6 hours)
+        timeout-minutes: 5
         run: swift test --skip-build
 
   linux_swift_6_4_android:
@@ -207,4 +229,6 @@ jobs:
       - name: Build
         run: swift build --build-tests
       - name: Test
+        # the tests take under a minute; fail a hung run quickly (GitHub would wait 6 hours)
+        timeout-minutes: 5
         run: swift test --skip-build
