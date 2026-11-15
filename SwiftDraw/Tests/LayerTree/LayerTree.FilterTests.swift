@@ -303,6 +303,23 @@ struct LayerTreeFilterTests {
         let optimized = LayerTree.CommandOptimizer<LayerTreeTypes>().optimizeCommands(commands)
         #expect(optimized.names == ["setFillColor", "pushFilterLayer", "setFillColor", "popFilterLayer", "setFillColor"])
     }
+
+    // hideUnsupportedFilters hides only unsupported filters: a blur is rendered
+    @Test(arguments: [("feGaussianBlur stdDeviation=\"2\"", true), ("feFlood flood-color=\"blue\"", false)])
+    func hideUnsupportedFiltersKeepsSupportedFilterContents(primitive: String, hasContents: Bool) throws {
+        let svg = try DOM.SVG.parse(xml: """
+        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+            <filter id="f"><\(primitive) /></filter>
+            <rect x="10" y="10" width="20" height="20" filter="url(#f)" />
+        </svg>
+        """)
+        let root = LayerTree.Builder(svg: svg).makeLayer()
+        let layer = try #require(root.allLayers.first { !$0.filters.isEmpty })
+        let generator = LayerTree.CommandGenerator(provider: LayerTreeProvider(),
+                                                   size: .init(100, 100),
+                                                   options: .hideUnsupportedFilters)
+        #expect(generator.makeCommandState(for: layer, colorConverter: .default).hasContents == hasContents)
+    }
 }
 
 private extension LayerTreeFilterTests {

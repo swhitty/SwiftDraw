@@ -162,7 +162,8 @@ extension LayerTree {
                 hasContents = false
             }
 
-            if hasFilters && options.contains(.hideUnsupportedFilters) {
+            // a supported filter (feGaussianBlur) is rendered, so only unsupported ones hide the layer
+            if hasFilters && layer.hasUnsupportedFilters && options.contains(.hideUnsupportedFilters) {
                 hasContents = false
             }
 
