@@ -276,12 +276,20 @@ extension LayerTree.Builder {
             defer { visited.remove(id) }
             let referencedBounds = makeBounds(for: referenced, depth: depth + 1, visited: &visited)
             guard case .known(let bounds) = referencedBounds else { return referencedBounds }
+            if let symbol = referenced as? DOM.Symbol {
+                let viewport = makeSymbolViewport(for: use)
+                guard viewport.width > 0, viewport.height > 0 else { return .empty }
+                // the bounding box is the geometry, not clipped by the viewport (as for a nested <svg>)
+                let transform = Self.makeSymbolTransform(symbol, x: use.x, y: use.y,
+                                                         width: viewport.width, height: viewport.height).toMatrix()
+                return Bounds(bounds.applying(transform))
+            }
             let transform = Self.createTransforms(from: DOM.presentationAttributes(for: referenced, styles: svg.styles).transform ?? []).toMatrix()
                 .concatenated(LayerTree.Transform.translate(tx: use.x ?? 0, ty: use.y ?? 0).toMatrix())
             return Bounds(bounds.applying(transform))
         } else if let container = element as? any ContainerElement {
             var result: LayerTree.Rect?
-            for child in container.childElements {
+            for child in container.childElements where !(child is DOM.Symbol) {
                 let childAttributes = DOM.presentationAttributes(for: child, styles: svg.styles)
                 guard childAttributes.display != DOM.DisplayMode.none else { continue }
                 switch makeBounds(for: child, depth: depth + 1, visited: &visited) {

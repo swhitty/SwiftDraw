@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="400" height="300" viewBox="0 0 400 300">
+  <!-- an icon sprite sheet: symbols are only drawn by <use>, at any size -->
+  <defs>
+    <symbol id="heart" viewBox="0 0 24 24">
+      <path d="M12 21 L3.5 12.5 A5 5 0 0 1 12 5.5 A5 5 0 0 1 20.5 12.5 Z"/>
+    </symbol>
+    <symbol id="check" viewBox="0 0 24 24" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10" stroke-width="2"/>
+      <path d="M7 12.5 L10.5 16 L17 8.5"/>
+    </symbol>
+  </defs>
+
+  <!-- a symbol outside <defs> is not drawn on its own either -->
+  <symbol id="star" viewBox="0 0 24 24">
+    <polygon points="12,2 14.9,8.6 22,9.3 16.6,14 18.2,21 12,17.3 5.8,21 7.4,14 2,9.3 9.1,8.6"/>
+  </symbol>
+
+  <use href="#heart" x="10" y="20" width="16" height="16" fill="crimson"/>
+  <use href="#heart" x="40" y="12" width="32" height="32" fill="crimson"/>
+  <use href="#heart" x="86" y="4" width="48" height="48" fill="crimson"/>
+  <use href="#heart" x="150" y="-8" width="72" height="72" fill="crimson"/>
+
+  <use xlink:href="#check" x="10" y="110" width="16" height="16" stroke="seagreen"/>
+  <use xlink:href="#check" x="40" y="102" width="32" height="32" stroke="seagreen"/>
+  <use xlink:href="#check" x="86" y="94" width="48" height="48" stroke="seagreen"/>
+  <use xlink:href="#check" x="150" y="82" width="72" height="72" stroke="royalblue"/>
+
+  <use href="#star" x="10" y="200" width="16" height="16" fill="orange"/>
+  <use href="#star" x="40" y="192" width="32" height="32" fill="orange" stroke="black" stroke-width="1"/>
+  <use href="#star" x="86" y="184" width="48" height="48" fill="gold"/>
+  <use href="#star" x="150" y="172" width="72" height="72" fill="gold" opacity="0.5"/>
+
+  <!-- transform on the <use> and no width / height (100% of the viewport) -->
+  <use href="#heart" transform="translate(240 20) scale(0.4)" fill="purple"/>
+</svg>
