@@ -300,10 +300,22 @@ struct CGProvider: RendererTypeProvider {
         }
     }
 
+    // CoreText font lookups, one at a time. macOS deadlocks when every thread of Swift's cooperative pool is in
+    // a font lookup at once: each waits on a synchronous XPC request to the font server that is never answered,
+    // e.g. when as many tasks as there are cores render text, or tests run in parallel. One lookup at a time
+    // never does. Line layout (CTLine), fallback fonts included, is not affected.
+    private static let fontLookup = Mutex(())
+
     /// The PostScript name of an installed face, matched by PostScript name or full name, case-insensitively
     /// (`local()` in `@font-face`); nil when no such face is installed. CoreText substitutes another font
     /// for an unknown name, so the match is checked.
     static func installedFontPostScriptName(_ name: String) -> String? {
+        fontLookup.withLock { _ in
+            makeInstalledFontPostScriptName(name)
+        }
+    }
+
+    private static func makeInstalledFontPostScriptName(_ name: String) -> String? {
         let font = CTFontCreateWithName(name as CFString, 12, nil)
         let postScriptName = CTFontCopyPostScriptName(font) as String
         let fullName = CTFontCopyFullName(font) as String
@@ -316,7 +328,8 @@ struct CGProvider: RendererTypeProvider {
 
     /// The face of a system font family closest to a CSS weight and slant, as CoreText matches it
     /// (e.g. Helvetica 700 is Helvetica-Bold, 300 is Helvetica-Light, italic is Helvetica-Oblique).
-    static func createCTFont(family: String, size: CGFloat, weight: Int, isItalic: Bool) -> CTFont? {
+    /// Within `fontLookup`.
+    private static func createCTFont(family: String, size: CGFloat, weight: Int, isItalic: Bool) -> CTFont? {
         var traits: [CFString: Any] = [kCTFontWeightTrait: coreTextWeight(for: weight)]
         if isItalic {
             traits[kCTFontSymbolicTrait] = CTFontSymbolicTraits.traitItalic.rawValue
@@ -357,6 +370,15 @@ struct CGProvider: RendererTypeProvider {
     }
 
     static func createFont(for fonts: [LayerTree.TextAttributes.Font], size: Float, weight: Int = 400, isItalic: Bool = false) -> SyntheticFont {
+        var font: SyntheticFont?
+        fontLookup.withLock { _ in
+            font = makeFont(for: fonts, size: size, weight: weight, isItalic: isItalic)
+        }
+        return font!
+    }
+
+    // within fontLookup
+    private static func makeFont(for fonts: [LayerTree.TextAttributes.Font], size: Float, weight: Int, isItalic: Bool) -> SyntheticFont {
         let cgSize = CGFloat(size)
         var faces = fonts.compactMap { font -> (CTFont, LayerTree.FontSynthesis)? in
             guard let ctFont = createCTFont(for: font, size: cgSize, weight: weight, isItalic: isItalic) else { return nil }
