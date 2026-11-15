@@ -179,10 +179,9 @@ struct LayerTreeFilterTests {
         """#)
 
         #expect(commands.names == [
-            "pushState", "setAlpha", "pushTransparencyLayer", "setClip", "pushTransparencyLayer",
+            "pushState", "setAlpha", "pushTransparencyLayer", "setClip", "clipToMask", "pushTransparencyLayer",
             "pushFilterLayer", "setFillColor", "fillPath", "popFilterLayer",
-            "setBlendMode", "pushTransparencyLayer", "setBlendMode", "setFillColor", "fillPath",
-            "popTransparencyLayer", "popTransparencyLayer",
+            "popTransparencyLayer",
             "popTransparencyLayer", "popState"
         ])
     }

@@ -41,11 +41,18 @@ struct LayerTreeVisibilityTests {
         return generator.renderCommands(for: layer, colorConverter: .default)
     }
 
+    /// Fills, including those drawing mask contents.
     private func fillCount(_ body: String) throws -> Int {
-        try commands(body).filter {
-            if case .fill = $0 { return true }
-            return false
-        }.count
+        func count(_ commands: [RendererCommand<LayerTreeTypes>]) -> Int {
+            commands.reduce(0) { total, command in
+                switch command {
+                case .fill: return total + 1
+                case .clipToMask(let contents): return total + count(contents)
+                default: return total
+                }
+            }
+        }
+        return count(try commands(body))
     }
 
     /// The `clip` of every layer that has one, in tree order.

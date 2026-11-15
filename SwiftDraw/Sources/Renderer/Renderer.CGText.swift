@@ -265,6 +265,7 @@ public final class CGTextRenderer: Renderer {
   private var transforms: [String: String] = [:]
   private var gradients: [LayerTree.Gradient: String] = [:]
   private var patterns: [String: String] = [:]
+  private var maskCount = 0
 
   enum ColorSpace: String, Hashable {
     case rgb
@@ -525,6 +526,51 @@ public final class CGTextRenderer: Renderer {
     } else {
       lines.append("ctx.clip(using: \(rule))")
     }
+  }
+
+  // The generated code draws the mask contents into a greyscale bitmap and clips to it, as CGRenderer does.
+  // The contents are generated in a nested scope where `ctx` is the bitmap; identifiers declared there
+  // are out of scope afterwards, so the caches are restored when it ends.
+  func clip(toMask contents: [RendererCommand<CGTextTypes>]) {
+    maskCount += 1
+    let device = "maskDevice".makeIdentifier(maskCount)
+    let rect = "maskRect".makeIdentifier(maskCount)
+    let context = "maskContext".makeIdentifier(maskCount)
+    let code = """
+    let \(device) = ctx.userSpaceToDeviceSpaceTransform
+    let \(rect) = ctx.boundingBoxOfClipPath.applying(\(device)).integral
+    let \(context) = CGContext(
+      data: nil,
+      width: max(1, Int(\(rect).width)),
+      height: max(1, Int(\(rect).height)),
+      bitsPerComponent: 8,
+      bytesPerRow: 0,
+      space: CGColorSpaceCreateDeviceGray(),
+      bitmapInfo: CGImageAlphaInfo.none.rawValue
+    )!
+    \(context).fill(CGRect(x: 0, y: 0, width: \(context).width, height: \(context).height))
+    \(context).translateBy(x: -\(rect).minX, y: -\(rect).minY)
+    \(context).concatenate(\(device))
+    """.split(separator: "\n").map(String.init)
+    lines.append(contentsOf: code)
+
+    let outer = (lines, colorSpaces, colors, paths, transforms, gradients, patterns)
+    lines = []
+    perform(contents)
+    var inner = ["let ctx = \(context)"]
+    if patterns.count > outer.6.count {
+      // CGPattern matrices are relative to the bitmap's default space
+      inner.append("let baseCTM = CGAffineTransform.identity")
+    }
+    inner.append(contentsOf: lines)
+    (lines, colorSpaces, colors, paths, transforms, gradients, patterns) = outer
+
+    lines.append("do {")
+    lines.append(contentsOf: inner.map { "  \($0)" })
+    lines.append("}")
+    lines.append("ctx.concatenate(\(device).inverted())")
+    lines.append("ctx.clip(to: \(rect), mask: \(context).makeImage()!)")
+    lines.append("ctx.concatenate(\(device))")
   }
 
   func setClip(mask: [AnyHashable], frame: String) {
