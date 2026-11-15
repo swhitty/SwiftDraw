@@ -255,7 +255,10 @@ extension LayerTree {
             l.clipUnits = makeClipUnits(for: element)
             l.mask = createMaskLayer(for: element)
             l.opacity = state.opacity
-            l.filters = makeFilters(for: state)
+            if let filter = makeFilter(for: element) {
+                l.filters = filter.effects
+                l.filterRegion = makeFilterRegion(for: filter)
+            }
             return l
         }
 

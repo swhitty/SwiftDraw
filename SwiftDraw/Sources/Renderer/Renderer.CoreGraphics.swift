@@ -330,15 +330,24 @@ private extension CGImage {
 struct CGRenderer: Renderer {
     typealias Types = CGTypes
 
-    let ctx: CGContext
-    /// The context's default coordinate space, which CGPattern matrices are relative to.
-    let baseCTM: CGAffineTransform
+    private let rootContext: CGContext
+    private let rootCTM: CGAffineTransform
+    private let filterLayers = CGFilterLayerStack()
+    let maxFilterLayerPixels: Int
+
+    // drawing goes into the innermost offscreen filter layer, if any
+    var ctx: CGContext { filterLayers.context ?? rootContext }
+
+    /// The current context's default coordinate space, which CGPattern matrices are relative to.
+    /// Offscreen filter layers are bitmaps whose base space is the identity.
+    var baseCTM: CGAffineTransform { filterLayers.context == nil ? rootCTM : .identity }
 
     /// - Parameter baseCTM: the context's default space; defaults to the current CTM.
     ///   Pass the CTM from before any transform the caller applied itself, e.g. a top-left flip.
-    init(context: CGContext, baseCTM: CGAffineTransform? = nil) {
-        self.ctx = context
-        self.baseCTM = baseCTM ?? context.ctm
+    init(context: CGContext, baseCTM: CGAffineTransform? = nil, maxFilterLayerPixels: Int = CGRenderer.defaultMaxFilterLayerPixels) {
+        self.rootContext = context
+        self.rootCTM = baseCTM ?? context.ctm
+        self.maxFilterLayerPixels = maxFilterLayerPixels
     }
 
     func pushState() {
