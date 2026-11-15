@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="80" viewBox="0 0 240 80">
+  <!-- The third square repeats the first square's colour after a pattern fill; it must be solid red, not the pattern. -->
+  <defs>
+    <pattern id="stripes" width="10" height="10" patternUnits="userSpaceOnUse">
+      <rect width="10" height="10" fill="white"/>
+      <rect width="5" height="10" fill="blue"/>
+    </pattern>
+  </defs>
+  <rect x="10" y="10" width="60" height="60" fill="red"/>
+  <rect x="90" y="10" width="60" height="60" fill="url(#stripes)"/>
+  <rect x="170" y="10" width="60" height="60" fill="red"/>
+</svg>
