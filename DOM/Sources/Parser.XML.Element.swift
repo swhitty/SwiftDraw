@@ -144,7 +144,8 @@ extension XMLParser {
                 result.append(ge)
             }
 
-            if let container = ge as? any ContainerElement {
+            // a nested <svg> has already parsed its own children (with its own defs and styles)
+            if let container = ge as? any ContainerElement, !(ge is DOM.SVG) {
                 stack.append(contentsOf: element.children.reversed().map { ($0, container) })
             }
 
