@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="160" viewBox="0 0 240 160">
+  <!-- patternContentUnits, percentages, unknown unit values and a degenerate patternTransform. -->
+  <defs>
+    <!-- content in bounding-box fractions: a quarter-size square in the corner of each tile -->
+    <pattern id="bboxContent" width="0.5" height="0.5" patternContentUnits="objectBoundingBox">
+      <rect width="0.25" height="0.25" fill="#8C67C2"/>
+    </pattern>
+    <!-- percentages under userSpaceOnUse resolve against the viewport: 10% of 240 x 160 -->
+    <pattern id="percent" width="10%" height="10%" patternUnits="userSpaceOnUse">
+      <circle cx="6" cy="6" r="5" fill="#34D3F2"/>
+    </pattern>
+    <!-- unknown values drop the attribute: falls back to objectBoundingBox -->
+    <pattern id="bogus" width="0.25" height="0.25" patternUnits="bogus">
+      <rect width="8" height="8" fill="#F2A134"/>
+    </pattern>
+    <!-- a non-invertible transform paints nothing -->
+    <pattern id="collapsed" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="scale(0)">
+      <rect width="10" height="10" fill="black"/>
+    </pattern>
+  </defs>
+  <rect x="10" y="10" width="100" height="60" fill="url(#bboxContent)" stroke="black"/>
+  <rect x="130" y="10" width="100" height="60" fill="url(#percent)" stroke="black"/>
+  <rect x="10" y="90" width="100" height="60" fill="url(#bogus)" stroke="black"/>
+  <rect x="130" y="90" width="100" height="60" fill="url(#collapsed)" stroke="black"/>
+</svg>

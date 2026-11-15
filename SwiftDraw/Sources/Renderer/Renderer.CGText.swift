@@ -146,6 +146,13 @@ struct CGTextProvider: RendererTypeProvider {
       .map { "  \($0)" }
       .joined(separator: "\n")
 
+    var matrix = "ctx.ctm.concatenating(baseCTM.inverted())"
+    if pattern.transform != .identity {
+      let t = pattern.transform
+      let patternTransform = "CGAffineTransform(a: \(createFloat(from: t.a)), b: \(createFloat(from: t.b)), c: \(createFloat(from: t.c)), d: \(createFloat(from: t.d)), tx: \(createFloat(from: t.tx)), ty: \(createFloat(from: t.ty)))"
+      matrix = "\(patternTransform).concatenating(\(matrix))"
+    }
+
     return """
     let patternDraw1: CGPatternDrawPatternCallback = { _, ctx in
     \(lines)
@@ -154,7 +161,7 @@ struct CGTextProvider: RendererTypeProvider {
     let pattern1 = CGPattern(
       info: nil,
       bounds: \(createRect(from: pattern.frame)),
-      matrix: ctx.ctm.concatenating(baseCTM.inverted()),
+      matrix: \(matrix),
       xStep: \(formatter.format(pattern.frame.width)),
       yStep: \(formatter.format(pattern.frame.height)),
       tiling: .constantSpacing,
@@ -219,7 +226,7 @@ struct CGTextProvider: RendererTypeProvider {
 #if canImport(CoreGraphics)
     return CGProvider().getBounds(from: shape)
 #else
-    return .zero
+    return shape.path.bounds
 #endif
   }
 }

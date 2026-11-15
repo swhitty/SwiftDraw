@@ -39,6 +39,17 @@ struct Bitmap {
         !pixels.contains { $0 < 250 }
     }
 
+    /// The same image with its rows in reverse order.
+    func flippedVertically() -> Bitmap {
+        let stride = width * 4
+        var flipped = [UInt8]()
+        flipped.reserveCapacity(pixels.count)
+        for row in (0..<height).reversed() {
+            flipped.append(contentsOf: pixels[(row * stride)..<((row + 1) * stride)])
+        }
+        return Bitmap(width: width, height: height, pixels: flipped)
+    }
+
     func makeCGImage() -> CGImage? {
         let data = Data(pixels) as CFData
         guard let provider = CGDataProvider(data: data) else { return nil }
