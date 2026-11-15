@@ -16,6 +16,8 @@ struct Options {
     var maxDimension: CGFloat = 1024
     var blur = 1
     var webkit = false
+    /// Keep WebKit's font smoothing in the reference (off by default; see ReferenceSVG)
+    var fontSmoothing = false
     var hideBelow = 1.0
     var score = true
     /// Write the visual HTML report (large: every image is embedded). Off by default.
@@ -42,6 +44,7 @@ struct Options {
             case "--blur": guard let v = it.next().flatMap(Int.init) else { return nil }; o.blur = v
             case "--no-window": o.useWindow = false
             case "--webkit": o.webkit = true
+            case "--font-smoothing": o.fontSmoothing = true
             case "--no-score": o.score = false
             case "--html": o.html = true
             case "--hide-below": guard let v = it.next().flatMap(Double.init) else { return nil }; o.hideBelow = v
@@ -137,7 +140,8 @@ struct Runner {
         guard let data = try? Data(contentsOf: url) else {
             return Result(name: name, size: .zero, status: "read-failed")
         }
-        try? data.write(to: svgDir.appendingPathComponent("\(name).svg"))
+        let reference = ReferenceSVG.prepare(data, fontSmoothing: options.fontSmoothing)
+        try? reference.write(to: svgDir.appendingPathComponent("\(name).svg"))
         guard let svg = SVG(data: data) else {
             return Result(name: name, size: .zero, status: "swiftdraw-nil")
         }
@@ -168,7 +172,7 @@ struct Runner {
         for _ in 0..<options.repeatCount {
             let start = Date()
             do {
-                let snap = try await renderer.render(svg: data, size: size)
+                let snap = try await renderer.render(svg: reference, size: size)
                 result.webkitMillis.append(Date().timeIntervalSince(start) * 1000)
                 result.info = snap.info
                 guard let bmp = Bitmap.render(width: pw, height: ph, draw: { ctx in
@@ -227,7 +231,7 @@ struct Runner {
 
         let sorted = scores.results.sorted { ($0.score ?? 2) > ($1.score ?? 2) }
         let width = max(8, sorted.map(\.name.count).max() ?? 8)
-        print("\nDifference from \(scores.engine) (\(scores.os))\n")
+        print("\nDifference from \(scores.engine) (\(scores.os)), font smoothing \(options.fontSmoothing ? "on" : "off")\n")
         print("file".padding(toLength: width, withPad: " ", startingAt: 0) + "   diff")
         print(String(repeating: "-", count: width + 9))
         for s in sorted {
@@ -306,7 +310,9 @@ guard let options = Options.parse(Swift.CommandLine.arguments) else {
       swiftdraw-diff render <file.svg | dir>... --out dir
           Render PNGs plus manifest.json only (used internally by compare).
 
-    common: [--scale 2] [--max 1024]
+    common: [--scale 2] [--max 1024] [--font-smoothing]
+            --font-smoothing  keep WebKit's font smoothing in the reference (off by default, so text
+                              is compared against its outlines, as SwiftDraw draws it)
             --html  also write index.html, a visual side-by-side report for people
                     (large: every image is embedded; agents should not read it)
     """)
