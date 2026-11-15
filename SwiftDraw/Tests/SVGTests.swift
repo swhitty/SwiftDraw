@@ -364,6 +364,41 @@ struct SVGHostileTests {
         #expect(load("\(Self.head) width=\"9\" height=\"9\"><marker id=\"m\"><path d=\"M0 0L1 1\" marker-end=\"url(#m)\"/></marker><path d=\"M0 0L5 5\" marker-end=\"url(#m)\"/></svg>") != nil)
     }
 
+    /// Level n is a group that uses level n - 1 `fanOut` times: `fanOut ^ depth` rects from a tiny file.
+    private func fanOut(depth: Int, fanOut: Int) -> String {
+        var defs = #"<rect id="l0" width="1" height="1"/>"#
+        for level in 1...depth {
+            let uses = String(repeating: ##"<use href="#l\##(level - 1)"/>"##, count: fanOut)
+            defs += #"<g id="l\#(level)">\#(uses)</g>"#
+        }
+        return "\(Self.head) width=\"9\" height=\"9\"><defs>\(defs)</defs><use href=\"#l\(depth)\"/></svg>"
+    }
+
+    private func fillCount(_ svg: SVG) -> Int {
+        svg.commands.filter { if case .fill = $0 { return true } else { return false } }.count
+    }
+
+    @Test
+    func useFanOutIsBounded() throws {
+        // 4^9 = 262,144 rects without a budget
+        let svg = try #require(load(fanOut(depth: 9, fanOut: 4)))
+        #expect(fillCount(svg) <= LayerTree.Builder.maxReferences)
+    }
+
+    @Test
+    func largeUseFanOutStillLoads() {
+        // 4^14 = 268 million rects without a budget
+        #expect(load(fanOut(depth: 14, fanOut: 4)) != nil)
+    }
+
+    @Test
+    func deepUseChainIsCapped() throws {
+        let shallow = try #require(load(fanOut(depth: 10, fanOut: 1)))
+        #expect(fillCount(shallow) == 1)
+        let deep = try #require(load(fanOut(depth: 30, fanOut: 1)))
+        #expect(fillCount(deep) == 0)
+    }
+
     @Test
     func gradientHrefCycleDoesNotRecurse() {
         #expect(load("\(Self.head) width=\"9\" height=\"9\"><linearGradient id=\"a\" href=\"#b\"/><linearGradient id=\"b\" href=\"#a\"/><rect width=\"9\" height=\"9\" fill=\"url(#a)\"/></svg>") != nil)

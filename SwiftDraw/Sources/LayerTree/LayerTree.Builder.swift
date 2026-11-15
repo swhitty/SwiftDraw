@@ -43,16 +43,33 @@ extension LayerTree {
         // The use, mask and pattern elements being built. Reaching one again is a cycle.
         private final class Active {
             var elements = Set<AnyHashable>()
+            var depth = 0
+            var total = 0
         }
         private let active = Active()
+
+        /// References nested deeper than this are dropped: each level costs native stack.
+        static let maxReferenceDepth = 16
+        /// References expanded beyond this in one document are dropped: fan-out without a cycle,
+        /// such as each level using the previous one several times, grows exponentially.
+        static let maxReferences = 20_000
 
         init(svg: DOM.SVG) {
             self.svg = svg
         }
 
+        /// Builds a referenced use, mask or pattern, or returns `cycle` when the reference is
+        /// already being built or exceeds the depth or document budget.
         func building<R>(_ key: some Hashable, cycle: R, _ build: () throws -> R) rethrows -> R {
-            guard active.elements.insert(key).inserted else { return cycle }
-            defer { active.elements.remove(key) }
+            guard active.depth < Self.maxReferenceDepth,
+                  active.total < Self.maxReferences,
+                  active.elements.insert(key).inserted else { return cycle }
+            active.depth += 1
+            active.total += 1
+            defer {
+                active.elements.remove(key)
+                active.depth -= 1
+            }
             return try build()
         }
 
