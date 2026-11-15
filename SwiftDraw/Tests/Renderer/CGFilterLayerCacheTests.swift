@@ -127,6 +127,34 @@ struct CGFilterLayerCacheTests {
     }
 
     @Test
+    func sharedCacheIsFoundAgainForSameSVGAndSize() throws {
+        let svg = try #require(SVG(xml: Self.filtered))
+        let size = CGSize(width: 41, height: 31)
+        let cache = CGFilterLayerCache.shared(for: svg, size: size)
+        _ = try Self.render { $0.draw(svg, in: CGRect(origin: .zero, size: size), baseCTM: nil, filterCache: cache) }
+        #expect(cache.byteCount > 0)
+
+        // e.g. a LazyVStack row scrolled away and back: a new view, the same SVG
+        let reparsed = try #require(SVG(xml: Self.filtered))
+        #expect(CGFilterLayerCache.shared(for: svg, size: size) === cache)
+        #expect(CGFilterLayerCache.shared(for: reparsed, size: size) === cache)
+        #expect(CGFilterLayerCache.shared(for: svg, size: CGSize(width: 42, height: 31)) !== cache)
+        let other = try #require(SVG(xml: Self.filtered.replacingOccurrences(of: "red", with: "blue")))
+        #expect(CGFilterLayerCache.shared(for: other, size: size) !== cache)
+    }
+
+    @Test
+    func byteCountIsTheBitmapsHeld() throws {
+        let svg = try #require(SVG(xml: Self.filtered))
+        let cache = CGFilterLayerCache()
+        #expect(cache.byteCount == 0)
+        _ = try Self.render { $0.draw(svg, in: nil, baseCTM: nil, filterCache: cache) }
+        #expect(cache.byteCount >= cache.count * 4)
+        cache.removeAll()
+        #expect(cache.byteCount == 0)
+    }
+
+    @Test
     func matchingPopSkipsNestedLayers() throws {
         let svg = try #require(SVG(xml: Self.filtered))
         let commands = svg.commands

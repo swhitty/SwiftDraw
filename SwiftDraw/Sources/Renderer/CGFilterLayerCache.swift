@@ -30,13 +30,15 @@
 import CoreGraphics
 import Foundation
 
-/// The filtered results of one SVG's filter layers, kept by a view that redraws the same SVG.
+/// The filtered results of one SVG's filter layers, drawn at one size.
 ///
 /// Filters are evaluated per pixel on the CPU, so redrawing an SVG with filters is slow; the result of
 /// each filter layer only depends on its commands and the device space it is drawn in, so a redraw in
 /// the same space reuses it. A few entries are kept per filter layer (one per slice when drawn 9-sliced),
 /// the oldest replaced when the device space changes, so the bitmaps held are bounded by the SVG's filter
-/// layers. It is emptied when the SVG or the size it is drawn at changes.
+/// layers. It is emptied when drawn with another SVG or at another size.
+///
+/// Views draw with `shared(for:size:)`, which outlives them (see there).
 final class CGFilterLayerCache: @unchecked Sendable {
 
     struct Key: Equatable {
@@ -63,6 +65,8 @@ final class CGFilterLayerCache: @unchecked Sendable {
     private var size: CGSize?
     private var entries = [Int: [Entry]]()
     private var hits = 0
+    // set when held by the shared caches, to update its cost there
+    private var sharedKey: SharedKey?
 
     init() { }
 
@@ -90,6 +94,13 @@ final class CGFilterLayerCache: @unchecked Sendable {
         return entries.values.reduce(0) { $0 + $1.count }
     }
 
+    // the bytes of the bitmaps held
+    var byteCount: Int {
+        lock.lock()
+        defer { lock.unlock() }
+        return entries.values.joined().reduce(0) { $0 + $1.image.bytesPerRow * $1.image.height }
+    }
+
     // filter layers drawn from the cache so far
     var hitCount: Int {
         lock.lock()
@@ -107,7 +118,6 @@ final class CGFilterLayerCache: @unchecked Sendable {
 
     func store(_ entry: Entry) {
         lock.lock()
-        defer { lock.unlock() }
         var layer = entries[entry.key.index, default: []]
         layer.removeAll { $0.key == entry.key }
         if layer.count >= Self.maxEntriesPerLayer {
@@ -115,10 +125,64 @@ final class CGFilterLayerCache: @unchecked Sendable {
         }
         layer.append(entry)
         entries[entry.key.index] = layer
+        let sharedKey = self.sharedKey
+        lock.unlock()
+
+        if let sharedKey {
+            Self.sharedCaches.setObject(self, forKey: sharedKey, cost: byteCount)
+        }
     }
 
     // a 9-slice draws each filter layer in 9 device spaces per frame
     static let maxEntriesPerLayer = 9
+
+    /// The cache for drawing svg at size, shared by every view that does.
+    ///
+    /// A view's own state does not last: a row of a LazyVStack is destroyed when scrolled away and created
+    /// again when scrolled back, which would evaluate every filter again. The shared caches are held in an
+    /// NSCache costed by the bytes of their bitmaps, so they are bounded and evicted under memory pressure.
+    static func shared(for svg: SVG, size: CGSize) -> CGFilterLayerCache {
+        let key = SharedKey(commands: svg.commands, size: size)
+        if let cache = sharedCaches.object(forKey: key) {
+            return cache
+        }
+        let cache = CGFilterLayerCache()
+        cache.sharedKey = key
+        sharedCaches.setObject(cache, forKey: key, cost: 0)
+        return cache
+    }
+
+    static let sharedCostLimit = 128 * 1024 * 1024
+
+    // NSCache is thread-safe
+    nonisolated(unsafe) static let sharedCaches: NSCache<SharedKey, CGFilterLayerCache> = {
+        let cache = NSCache<SharedKey, CGFilterLayerCache>()
+        cache.totalCostLimit = sharedCostLimit
+        return cache
+    }()
+
+    final class SharedKey: NSObject {
+        let commands: [RendererCommand<CGTypes>]
+        let size: CGSize
+        private let hashValue_: Int
+
+        init(commands: [RendererCommand<CGTypes>], size: CGSize) {
+            self.commands = commands
+            self.size = size
+            var hasher = Hasher()
+            hasher.combine(commands.count)
+            hasher.combine(size.width)
+            hasher.combine(size.height)
+            self.hashValue_ = hasher.finalize()
+        }
+
+        override var hash: Int { hashValue_ }
+
+        override func isEqual(_ object: Any?) -> Bool {
+            guard let other = object as? SharedKey else { return false }
+            return size == other.size && CGFilterLayerCache.isSame(commands, other.commands)
+        }
+    }
 
     // the same storage (the usual case, cheap) or equal commands (draws the same, compared only on change)
     static func isSame(_ lhs: [RendererCommand<CGTypes>], _ rhs: [RendererCommand<CGTypes>]) -> Bool {

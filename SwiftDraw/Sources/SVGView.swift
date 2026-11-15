@@ -46,17 +46,13 @@ public struct SVGView: View {
     private var resizable: (capInsets: EdgeInsets, mode: ResizingMode)?
     private var renderingMode: TemplateRenderingMode = .original
 
-    // filtered results kept between redraws of this view
-    @State private var filterCache = CGFilterLayerCache()
-
     public var body: some View {
         if let svg {
             if let resizable {
-                SVGView.makeCanvas(svg: svg, capInsets: resizable.capInsets, resizingMode: resizable.mode, renderingMode: renderingMode,
-                                   filterCache: filterCache)
+                SVGView.makeCanvas(svg: svg, capInsets: resizable.capInsets, resizingMode: resizable.mode, renderingMode: renderingMode)
                     .frame(idealWidth: svg.size.width, idealHeight: svg.size.height)
             } else {
-                SVGView.makeCanvas(svg: svg, resizingMode: .stretch, renderingMode: renderingMode, filterCache: filterCache)
+                SVGView.makeCanvas(svg: svg, resizingMode: .stretch, renderingMode: renderingMode)
                     .frame(width: svg.size.width, height: svg.size.height)
             }
         }
@@ -109,8 +105,7 @@ public struct SVGView: View {
         svg: SVG,
         capInsets: EdgeInsets = .init(),
         resizingMode: ResizingMode,
-        renderingMode: TemplateRenderingMode,
-        filterCache: CGFilterLayerCache
+        renderingMode: TemplateRenderingMode
     ) -> some View {
         if #available(iOS 15.0, macOS 12.0, tvOS 15.0, watchOS 8.0, *) {
             Canvas(
@@ -124,7 +119,8 @@ public struct SVGView: View {
                     capInsets: capInsets,
                     byTiling: resizingMode == .tile,
                     renderingMode: renderingMode,
-                    filterCache: filterCache
+                    // filtered results are kept between redraws, and for views showing it again
+                    filterCache: .shared(for: svg, size: size)
                 )
             }
         } else {
