@@ -370,57 +370,120 @@ extension LayerTree.Builder {
     }
 
     func makeGradient(for element: DOM.LinearGradient) -> LayerTree.LinearGradient? {
-        let x1 = element.x1 ?? 0
-        let y1 = element.y1 ?? 0
-        let x2 = element.x2 ?? 1
-        let y2 = element.y2 ?? 0
-
-        var stops = [LayerTree.Gradient.Stop]()
-        if let id = element.href?.fragmentID,
-           let reference = svg.defs.linearGradients.first(where: { $0.id == id }) {
-            stops = makeGradientStops(for: reference)
-        } else {
-            stops = makeGradientStops(for: element)
-        }
+        let chain = makeGradientChain(from: .linear(element))
+        let stops = makeGradientStops(for: chain)
         guard stops.count > 1 else {
             return nil
         }
 
+        let linear = chain.compactMap(\.linear)
         var gradient = LayerTree.LinearGradient(
             gradient: .init(stops: stops),
-            start: Point(x1, y1),
-            end: Point(x2, y2)
+            start: Point(linear.lazy.compactMap(\.x1).first ?? 0, linear.lazy.compactMap(\.y1).first ?? 0),
+            end: Point(linear.lazy.compactMap(\.x2).first ?? 1, linear.lazy.compactMap(\.y2).first ?? 0)
         )
 
-        gradient.units = Self.createUnits(from: element.gradientUnits)
-        gradient.transform = Self.createTransforms(from: element.gradientTransform)
+        gradient.units = Self.createUnits(from: chain.lazy.compactMap(\.units).first)
+        gradient.transform = Self.createTransforms(from: chain.lazy.map(\.transform).first { !$0.isEmpty } ?? [])
         return gradient
     }
 
     func makeGradient(for element: DOM.RadialGradient) -> LayerTree.RadialGradient? {
-        var stops = [LayerTree.Gradient.Stop]()
-        if let id = element.href?.fragmentID,
-           let reference = svg.defs.radialGradients.first(where: { $0.id == id }) {
-            stops = makeGradientStops(for: reference)
-        } else {
-            stops = makeGradientStops(for: element)
-        }
+        let chain = makeGradientChain(from: .radial(element))
+        let stops = makeGradientStops(for: chain)
         guard stops.count > 1 else {
             return nil
         }
 
-        let cx = element.cx ?? 0.5
-        let cy = element.cy ?? 0.5
+        let radial = chain.compactMap(\.radial)
+        let cx = radial.lazy.compactMap(\.cx).first ?? 0.5
+        let cy = radial.lazy.compactMap(\.cy).first ?? 0.5
         var gradient = LayerTree.RadialGradient(
             gradient: .init(stops: stops),
-            center: LayerTree.Point(element.fx ?? cx, element.fy ?? cy),
-            radius: LayerTree.Float(element.fr ?? 0),
+            center: LayerTree.Point(radial.lazy.compactMap(\.fx).first ?? cx, radial.lazy.compactMap(\.fy).first ?? cy),
+            radius: LayerTree.Float(radial.lazy.compactMap(\.fr).first ?? 0),
             endCenter: LayerTree.Point(cx, cy),
-            endRadius: LayerTree.Float(element.r ?? 0.5)
+            endRadius: LayerTree.Float(radial.lazy.compactMap(\.r).first ?? 0.5)
         )
-        gradient.units = Self.createUnits(from: element.gradientUnits)
-        gradient.transform = Self.createTransforms(from: element.gradientTransform)
+        gradient.units = Self.createUnits(from: chain.lazy.compactMap(\.units).first)
+        gradient.transform = Self.createTransforms(from: chain.lazy.map(\.transform).first { !$0.isEmpty } ?? [])
         return gradient
+    }
+
+    enum GradientElement {
+        case linear(DOM.LinearGradient)
+        case radial(DOM.RadialGradient)
+
+        var linear: DOM.LinearGradient? {
+            guard case let .linear(element) = self else { return nil }
+            return element
+        }
+
+        var radial: DOM.RadialGradient? {
+            guard case let .radial(element) = self else { return nil }
+            return element
+        }
+
+        var id: String {
+            switch self {
+            case let .linear(element): return element.id
+            case let .radial(element): return element.id
+            }
+        }
+
+        var href: URL? {
+            switch self {
+            case let .linear(element): return element.href
+            case let .radial(element): return element.href
+            }
+        }
+
+        var units: DOM.LinearGradient.Units? {
+            switch self {
+            case let .linear(element): return element.gradientUnits
+            case let .radial(element): return element.gradientUnits
+            }
+        }
+
+        var transform: [DOM.Transform] {
+            switch self {
+            case let .linear(element): return element.gradientTransform
+            case let .radial(element): return element.gradientTransform
+            }
+        }
+    }
+
+    // SVG 1.1 §13.2.2 / §13.2.3: attributes and stops not specified on a gradient are
+    // inherited through xlink:href from gradients of either kind; geometry only from the same kind.
+    func makeGradientChain(from element: GradientElement) -> [GradientElement] {
+        var chain = [element]
+        var visited: Set<String> = [element.id]
+        var next = element.href?.fragmentID
+        while let id = next, visited.insert(id).inserted {
+            if let linear = svg.defs.linearGradients.first(where: { $0.id == id }) {
+                chain.append(.linear(linear))
+            } else if let radial = svg.defs.radialGradients.first(where: { $0.id == id }) {
+                chain.append(.radial(radial))
+            } else {
+                break
+            }
+            next = chain.last?.href?.fragmentID
+        }
+        return chain
+    }
+
+    func makeGradientStops(for chain: [GradientElement]) -> [LayerTree.Gradient.Stop] {
+        for element in chain {
+            let stops: [LayerTree.Gradient.Stop]
+            switch element {
+            case let .linear(element): stops = makeGradientStops(for: element)
+            case let .radial(element): stops = makeGradientStops(for: element)
+            }
+            if !stops.isEmpty {
+                return stops
+            }
+        }
+        return []
     }
 
     func makeGradientStops(for element: DOM.LinearGradient) -> [LayerTree.Gradient.Stop] {

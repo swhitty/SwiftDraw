@@ -6,13 +6,15 @@ on:
   workflow_dispatch:
 
 jobs:
-  xcode_26_6:
-    runs-on: macos-26
-    env:
-      DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
+  xcode-27:
+    runs-on: xcode-27
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
+      - name: 🔍 Xcode Select
+        run: |
+          XCODE_PATH=`mdfind "kMDItemCFBundleIdentifier == 'com.apple.dt.Xcode' && kMDItemVersion = '27.2*'" -onlyin /Applications | head -1`
+          echo "DEVELOPER_DIR=$XCODE_PATH/Contents/Developer" >> $GITHUB_ENV
       - name: Version
         run: swift --version
       - name: Build
@@ -20,12 +22,26 @@ jobs:
       - name: Test
         run: swift test --skip-build --enable-code-coverage
       - name: Gather code coverage
-        run: xcrun llvm-cov export -format="lcov" .build/debug/SwiftDrawPackageTests.xctest/Contents/MacOS/SwiftDrawPackageTests -instr-profile .build/debug/codecov/default.profdata > coverage_report.lcov
+        run: xcrun llvm-cov export -format="lcov" .build/debug/SwiftDrawTests.xctest/Contents/MacOS/SwiftDrawTests -object .build/debug/SwiftDrawDOMTests.xctest/Contents/MacOS/SwiftDrawDOMTests -instr-profile .build/debug/codecov/default.profdata > coverage_report.lcov
       - name: Upload Coverage
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v7
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage_report.lcov
+
+  xcode_26_6:
+    runs-on: macos-26
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Version
+        run: swift --version
+      - name: Build
+        run: swift build --build-tests
+      - name: Test
+        run: swift test --skip-build
 
   xcode_26_2:
     runs-on: macos-26
@@ -33,7 +49,7 @@ jobs:
       DEVELOPER_DIR: /Applications/Xcode_26.2.app/Contents/Developer
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Version
         run: swift --version
       - name: Build
@@ -47,7 +63,7 @@ jobs:
       DEVELOPER_DIR: /Applications/Xcode_16.4.app/Contents/Developer
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Version
         run: swift --version
       - name: Build
@@ -61,7 +77,7 @@ jobs:
       DEVELOPER_DIR: /Applications/Xcode_16.2.app/Contents/Developer
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Version
         run: swift --version
       - name: Build
@@ -75,7 +91,7 @@ jobs:
     container: swift:6.0.3
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Version
         run: swift --version
       - name: Build
@@ -88,7 +104,7 @@ jobs:
     container: swift:6.1.2
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Version
         run: swift --version
       - name: Build
@@ -101,7 +117,7 @@ jobs:
     container: swift:6.2
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Version
         run: swift --version
       - name: Build
@@ -114,7 +130,7 @@ jobs:
     container: swift:6.3
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Version
         run: swift --version
       - name: Build
@@ -122,28 +138,55 @@ jobs:
       - name: Test
         run: swift test --skip-build
 
-  android:
+  linux_swift_6_4:
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    container: swift:6.4
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
-      - name: Build and Test
-        uses: skiptools/swift-android-action@v2
-        with:
-          swift-version: 6.3
+        uses: actions/checkout@v7
+      - name: Version
+        run: swift --version
+      - name: Build
+        run: swift build --build-tests
+      - name: Test
+        run: swift test --skip-build
 
-  windows:
+  linux_swift_6_4_android:
+    runs-on: ubuntu-latest
+    container: swift:6.4.2
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Version
+        run: swift --version
+      - name: Install NDK
+        run: |
+          apt-get update && apt-get install -y curl unzip
+          curl -sSL -o /tmp/ndk.zip https://dl.google.com/android/repository/android-ndk-r27d-linux.zip
+          unzip -q /tmp/ndk.zip -d /opt
+          echo "ANDROID_NDK_HOME=/opt/android-ndk-r27d" >> $GITHUB_ENV
+      - name: Install SDK
+        # download with curl: swift sdk install aborts on exit after a remote download in 6.4.2
+        run: |
+          curl -sSL -o /tmp/android-sdk.tar.gz https://download.swift.org/swift-6.4.2-release/android-sdk/swift-6.4.2-RELEASE/swift-6.4.2-RELEASE_android.artifactbundle.tar.gz
+          echo "4d6ad63ea74becd58e123ff58b1b48c3be5ec0db0dff0ea5abe37ac007dd3233  /tmp/android-sdk.tar.gz" | sha256sum -c
+          swift sdk install /tmp/android-sdk.tar.gz
+          # SwiftPM installs under the user's home directory (/root), not $HOME
+          SDK_BUNDLE=$(find /root "$HOME" -maxdepth 3 -type d -name swift-6.4.2-RELEASE_android.artifactbundle -print -quit 2>/dev/null)
+          "$SDK_BUNDLE/swift-android/scripts/setup-android-sdk.sh"
+      - name: Build
+        run: swift build --swift-sdk aarch64-unknown-linux-android24
+
+  windows_swift_6_4:
     runs-on: windows-latest
     timeout-minutes: 8
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
-      - name: Setup Swift
-        uses: compnerd/gha-setup-swift@main
+        uses: actions/checkout@v7
+      - name: Install Swift
+        uses: SwiftyLab/setup-swift@latest
         with:
-          branch: swift-6.1.2-release
-          tag: 6.1.2-RELEASE
+          swift-version: "6.4"
       - name: Version
         run: swift --version
       - name: Build
