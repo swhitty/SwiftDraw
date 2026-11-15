@@ -61,9 +61,10 @@ struct ParserSVGTests {
         let node = XML.Element(name: "svg", attributes: ["width": "5.8", "height": "5.8"])
         let parser = DOMXMLParser()
         let parsed = try parser.parseSVG(node)
-        #expect(Float(parsed.width) == 5.8)
-        #expect(Float(parsed.height) == 5.8)
+        #expect(parsed.width == 5.8)
+        #expect(parsed.height == 5.8)
     }
+
     @Test
     func svgWithUnits() throws {
         let node = XML.Element(name: "svg", attributes: ["width": "10cm", "height": "2in"])

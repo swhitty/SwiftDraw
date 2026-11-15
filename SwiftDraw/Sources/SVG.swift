@@ -187,7 +187,7 @@ public struct SVG: Sendable {
     public let size: CGSize
 
     init(dom: DOM.SVG, options: Options) {
-        size = CGSize(width: dom.width, height: dom.height)
+        size = CGSize(width: CGFloat(dom.width), height: CGFloat(dom.height))
     }
 
     public struct Options: OptionSet {
