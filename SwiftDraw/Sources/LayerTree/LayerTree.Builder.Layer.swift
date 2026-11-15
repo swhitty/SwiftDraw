@@ -47,7 +47,10 @@ extension LayerTree.Builder {
             throw LayerTree.Error.invalid("missing referenced element: \(use.href)")
         }
 
-        let l = makeLayer(from: element, inheriting: state)
+        // A use inside itself draws nothing
+        let l = building(ObjectIdentifier(element), cycle: LayerTree.Layer()) {
+            makeLayer(from: element, inheriting: state)
+        }
         let x = use.x ?? 0.0
         let y = use.y ?? 0.0
 

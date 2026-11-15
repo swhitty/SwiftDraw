@@ -283,3 +283,89 @@ private extension SVG {
     }
 }
 #endif
+
+// Hostile documents must return nil or draw nothing, never trap or recurse forever.
+// A trap ends the whole test process, so each document has its own test.
+struct SVGHostileTests {
+
+    private static let head = "<svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\""
+
+    private func load(_ xml: String) -> SVG? {
+        SVG(data: Data(xml.utf8))
+    }
+
+    @Test
+    func hugeWidthDoesNotTrap() {
+        #expect(load("\(Self.head) width=\"1e30\" height=\"1\"><rect width=\"1\" height=\"1\"/></svg>") == nil)
+    }
+
+    @Test
+    func hugeViewBoxDoesNotTrap() {
+        #expect(load("\(Self.head) viewBox=\"0 0 1e999 1\"><rect width=\"1\" height=\"1\"/></svg>") == nil)
+    }
+
+    @Test
+    func hugeStyleLengthDoesNotTrap() {
+        #expect(load("\(Self.head)><style>svg { width: 1e30px }</style></svg>") == nil)
+    }
+
+    @Test
+    func hugeEntityLengthDoesNotTrap() {
+        #expect(load("<!DOCTYPE svg [<!ENTITY n \"1e30\">]>\(Self.head) width=\"&n;\" height=\"&n;\"/>") == nil)
+    }
+
+    @Test
+    func useCycleDoesNotRecurse() {
+        #expect(load("\(Self.head) width=\"9\" height=\"9\"><g id=\"a\"><use xlink:href=\"#a\"/></g></svg>") != nil)
+    }
+
+    @Test
+    func mutualUseCycleDoesNotRecurse() {
+        #expect(load("\(Self.head) width=\"9\" height=\"9\"><g id=\"a\"><use href=\"#b\"/></g><g id=\"b\"><use href=\"#a\"/></g><use href=\"#a\"/></svg>") != nil)
+    }
+
+    @Test
+    func patternUseCycleDoesNotRecurse() {
+        #expect(load("\(Self.head) width=\"9\" height=\"9\"><pattern id=\"p\" width=\"2\" height=\"2\"><use href=\"#r\"/></pattern><rect id=\"r\" width=\"9\" height=\"9\" fill=\"url(#p)\"/><use href=\"#r\"/></svg>") != nil)
+    }
+
+    @Test
+    func useGradientCycleDoesNotRecurse() {
+        #expect(load("\(Self.head) width=\"9\" height=\"9\"><g id=\"a\"><use href=\"#b\"/></g><g id=\"b\" fill=\"url(#a)\"/></svg>") != nil)
+    }
+
+    @Test
+    func useExternalFileCycleDoesNotRecurse() {
+        #expect(load("\(Self.head) width=\"9\" height=\"9\"><g id=\"a\"><use xlink:href=\"p.svg#a\"/></g></svg>") != nil)
+    }
+
+    @Test
+    func maskCycleDoesNotRecurse() {
+        #expect(load("\(Self.head) width=\"9\" height=\"9\"><mask id=\"m\"><rect width=\"5\" height=\"5\" mask=\"url(#m)\"/></mask><rect width=\"9\" height=\"9\" mask=\"url(#m)\"/></svg>") != nil)
+    }
+
+    @Test
+    func maskPercentEncodedCycleDoesNotRecurse() {
+        #expect(load("\(Self.head) width=\"9\" height=\"9\"><mask id=\"m\"><rect width=\"5\" height=\"5\" mask=\"url(#%6d)\"/></mask><rect width=\"9\" height=\"9\" mask=\"url(#m)\"/></svg>") != nil)
+    }
+
+    @Test
+    func clipPathCycleDoesNotRecurse() {
+        #expect(load("\(Self.head) width=\"9\" height=\"9\"><clipPath id=\"c\"><rect width=\"5\" height=\"5\" clip-path=\"url(#c)\"/></clipPath><rect width=\"9\" height=\"9\" clip-path=\"url(#c)\"/></svg>") != nil)
+    }
+
+    @Test
+    func patternCycleDoesNotRecurse() {
+        #expect(load("\(Self.head) width=\"9\" height=\"9\"><pattern id=\"p\" width=\"2\" height=\"2\"><rect width=\"1\" height=\"1\" fill=\"url(#p)\"/></pattern><rect width=\"9\" height=\"9\" fill=\"url(#p)\"/></svg>") != nil)
+    }
+
+    @Test
+    func markerCycleDoesNotRecurse() {
+        #expect(load("\(Self.head) width=\"9\" height=\"9\"><marker id=\"m\"><path d=\"M0 0L1 1\" marker-end=\"url(#m)\"/></marker><path d=\"M0 0L5 5\" marker-end=\"url(#m)\"/></svg>") != nil)
+    }
+
+    @Test
+    func gradientHrefCycleDoesNotRecurse() {
+        #expect(load("\(Self.head) width=\"9\" height=\"9\"><linearGradient id=\"a\" href=\"#b\"/><linearGradient id=\"b\" href=\"#a\"/><rect width=\"9\" height=\"9\" fill=\"url(#a)\"/></svg>") != nil)
+    }
+}
