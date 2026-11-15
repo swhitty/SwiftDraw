@@ -35,6 +35,7 @@ package extension DOM {
 
     // PresentationAttributes cascade;
     // element.attributes --> .element() --> .class() ---> .id() ---> element.style ---> layerTree.state
+    // (parsed documents: element.attributes --> matched rules --> element.style --> !important rules --> !important style)
     
     struct PresentationAttributes {
         package var opacity: DOM.Float?
@@ -67,32 +68,60 @@ package extension DOM {
         package var mask: DOM.URL?
         package var maskType: DOM.MaskType?
         package var filter: DOM.URL?
+
+        package var stopColor: DOM.Color?
+        package var stopOpacity: DOM.Float?
     }
     
     static func presentationAttributes(for element: DOM.GraphicsElement,
                                        styles: [StyleSheet]) -> PresentationAttributes {
-        var attributes = element.attributes
-        
-        for selector in makeSelectors(for: element) {
-            let new = makeAttributes(for: selector, styles: styles)
-            attributes = attributes.applyingAttributes(new)
-        }
-        
-        attributes = attributes.applyingAttributes(element.style)
-        return attributes
+        cascade(attributes: element.attributes,
+                matched: element.matchedStyle,
+                selectors: makeSelectors(for: element),
+                style: element.style,
+                importantStyle: element.importantStyle,
+                styles: styles)
     }
-    
-    /// The cascade of a `<clipPath>` itself: attributes < stylesheet rules < style="" (SD8).
+
+    /// The cascade of a `<clipPath>` itself (SD8), in the same order as other elements.
     static func presentationAttributes(for clipPath: ClipPath,
                                        styles: [StyleSheet]) -> PresentationAttributes {
-        var attributes = clipPath.attributes
+        cascade(attributes: clipPath.attributes,
+                matched: clipPath.matchedStyle,
+                selectors: makeSelectors(elementName: "clipPath", class: clipPath.class, id: clipPath.id),
+                style: clipPath.style,
+                importantStyle: clipPath.importantStyle,
+                styles: styles)
+    }
 
-        for selector in makeSelectors(elementName: "clipPath", class: clipPath.class, id: clipPath.id) {
-            let new = makeAttributes(for: selector, styles: styles)
-            attributes = attributes.applyingAttributes(new)
+    private static func cascade(attributes: PresentationAttributes,
+                                matched: StyleSheet.Matched?,
+                                selectors: @autoclosure () -> [StyleSheet.Selector],
+                                style: PresentationAttributes,
+                                importantStyle: PresentationAttributes,
+                                styles: [StyleSheet]) -> PresentationAttributes {
+        var attributes = attributes
+
+        if let matched {
+            // parsed documents: every selector form, by specificity then source order (CSS Cascade 3 §6)
+            attributes = attributes.applyingAttributes(matched.attributes)
+        } else {
+            // elements built in code: element name, class and id rules
+            for selector in selectors() {
+                let new = makeAttributes(for: selector, styles: styles)
+                attributes = attributes.applyingAttributes(new)
+            }
         }
 
-        return attributes.applyingAttributes(clipPath.style)
+        attributes = attributes.applyingAttributes(style)
+
+        if let matched {
+            // `!important` stylesheet declarations override style=""
+            attributes = attributes.applyingAttributes(matched.importantAttributes)
+        }
+
+        // and `!important` in style="" overrides them (CSS Cascade 3 §6.1)
+        return attributes.applyingAttributes(importantStyle)
     }
 
     static func makeSelectors(for element: DOM.GraphicsElement) -> [StyleSheet.Selector] {
@@ -168,6 +197,9 @@ extension DOM.PresentationAttributes {
         merged.mask = att.mask ?? mask
         merged.maskType = att.maskType ?? maskType
         merged.filter = att.filter ?? filter
+
+        merged.stopColor = att.stopColor ?? stopColor
+        merged.stopOpacity = att.stopOpacity ?? stopOpacity
         
         return merged
     }

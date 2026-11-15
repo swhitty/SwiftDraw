@@ -50,6 +50,10 @@ package extension DOM {
 
         package var attributes = PresentationAttributes()
         package var style = PresentationAttributes()
+        // stylesheet declarations matched at parse time; nil for elements built in code
+        package var matchedStyle: StyleSheet.Matched?
+        // style="" declarations marked !important
+        package var importantStyle = PresentationAttributes()
     }
     
     final class Line: GraphicsElement {

@@ -88,9 +88,10 @@ extension XMLParser {
 
         let att = try parseAttributes(e)
         let attributes = try parsePresentationAttributes(e)
-        let style = try parseStyleAttributes(e)
+        let style = parseStyleDeclarations(e)
+        let matched = styleContext.matcher?.match(e)
         // `em` and `ex` lengths of this element (and font-size inherited by its children)
-        lengthContext.fontSize = fontSize(of: e, attributes: attributes, style: style) ?? lengthContext.fontSize
+        lengthContext.fontSize = fontSize(attributes: attributes, style: style, matched: matched) ?? lengthContext.fontSize
 
         switch e.name {
         case "g": ge = try parseGroup(e)
@@ -119,7 +120,9 @@ extension XMLParser {
         ge.class = elementAtt.class
 
         ge.attributes = attributes
-        ge.style = style
+        ge.style = style.normal
+        ge.importantStyle = style.important
+        ge.matchedStyle = matched
         return ge
     }
 
@@ -270,13 +273,49 @@ extension XMLParser {
         return try parsePresentationAttributes(e.attributes)
     }
 
-    func parseStyleAttributes(_ e: XML.Element) throws -> DOM.PresentationAttributes {
+    // style="" in source order: the last valid declaration of a property wins,
+    // `!important` ones are kept apart so they can override `!important` stylesheet rules
+    func parseStyleDeclarations(_ e: XML.Element) -> (normal: DOM.PresentationAttributes, important: DOM.PresentationAttributes) {
         guard let styleText = e.attributes["style"] else {
-            return DOM.PresentationAttributes()
+            return (DOM.PresentationAttributes(), DOM.PresentationAttributes())
         }
+        let declarations = Self.parseCSSDeclarations(styleText)
+        let important = declarations.filter(\.important)
+        // most style attributes have no !important: skip a second parse of an empty partition
+        guard !important.isEmpty else {
+            return (parsePresentationAttributes(declarations), DOM.PresentationAttributes())
+        }
+        return (parsePresentationAttributes(declarations.filter { !$0.important }),
+                parsePresentationAttributes(important))
+    }
 
-        let style = try parseStyleAttributes(styleText)
-        return try parsePresentationAttributes(style)
+    // Declarations are parsed once as a dictionary; only properties that repeat are
+    // validated one at a time, so an invalid later value (`fill: red; fill: var(--x)`)
+    // leaves the earlier valid one in place.
+    func parsePresentationAttributes(_ declarations: [CSSDeclaration]) -> DOM.PresentationAttributes {
+        var counts = [String: Int]()
+        for d in declarations {
+            counts[d.name, default: 0] += 1
+        }
+        var unique = [String: String]()
+        for d in declarations where counts[d.name] == 1 {
+            unique[d.name] = d.value
+        }
+        var result = (try? parsePresentationAttributes(unique)) ?? DOM.PresentationAttributes()
+        for d in declarations where counts[d.name, default: 0] > 1 {
+            if let att = try? parsePresentationAttributes([d.name: d.value]) {
+                result = result.applyingAttributes(att)
+            }
+        }
+        return result
+    }
+
+    // inline style and the stylesheet rules matched against the document tree
+    func applyStyle(of e: XML.Element, to element: DOM.GraphicsElement) {
+        let style = parseStyleDeclarations(e)
+        element.style = style.normal
+        element.importantStyle = style.important
+        element.matchedStyle = styleContext.matcher?.match(e)
     }
 
     // A malformed declaration (`fill:`, `fill`, empty) is skipped; the others are kept.
@@ -304,6 +343,20 @@ extension XMLParser {
             return value
         }
         return lenient { try att.parseFloat(key) as DOM.Float? }.map { min(max($0, 0), 1) }
+    }
+
+    static func isNone(_ value: String) -> Bool {
+        XMLParser.Attributes.removingImportant(from: value)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased() == "none"
+    }
+
+    // `none` is kept as DOM.noneURL so it overrides a reference from a lower rule
+    private func urlOrNone(_ att: any AttributeParser, _ key: String) -> DOM.URL? {
+        if let raw = lenient({ try att.parseString(key) as String? }), Self.isNone(raw) {
+            return DOM.noneURL
+        }
+        return lenient { try att.parseUrlSelector(key) }
     }
 
     func parsePresentationAttributes(_ att: any AttributeParser) throws -> DOM.PresentationAttributes {
@@ -343,14 +396,18 @@ extension XMLParser {
         el.dominantBaseline = lenient { try att.parseRaw("dominant-baseline") }
 
         if let val = try? att.parseString("transform") {
-            el.transform = try? parseTransform(val)
+            // `none` is the identity, and still overrides a lower rule
+            el.transform = Self.isNone(val) ? [] : try? parseTransform(val)
         }
 
-        el.clipPath = lenient { try att.parseUrlSelector("clip-path") }
+        el.clipPath = urlOrNone(att, "clip-path")
         el.clipRule = lenient { try att.parseRaw("clip-rule") }
-        el.mask = lenient { try att.parseUrlSelector("mask") }
+        el.mask = urlOrNone(att, "mask")
         el.maskType = lenient { try att.parseRaw("mask-type") }
-        el.filter = lenient { try att.parseUrlSelector("filter") }
+        el.filter = urlOrNone(att, "filter")
+
+        el.stopColor = lenient { try att.parseFill("stop-color").getColor() }
+        el.stopOpacity = opacity(att, "stop-opacity")
 
         return el
     }

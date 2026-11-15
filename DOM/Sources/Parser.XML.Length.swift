@@ -71,25 +71,17 @@ package extension XMLParser {
         }
     }
 
-    /// The font-size `em` and `ex` of `e` resolve against, in the order LayerTree applies them
-    /// (`DOM.presentationAttributes(for:styles:)`): presentation attribute, then stylesheet rules
-    /// for its element name, classes and id, then its style attribute. nil when none sets it.
-    func fontSize(of e: XML.Element, attributes: DOM.PresentationAttributes, style: DOM.PresentationAttributes) -> DOM.Float? {
-        if let fontSize = style.fontSize {
-            return fontSize
-        }
-        var selectors: [DOM.StyleSheet.Selector] = [.element(e.name)]
-        if let classes = e.attributes["class"]?.split(separator: " ") {
-            selectors.append(contentsOf: classes.map { .class($0.trimmingCharacters(in: .whitespacesAndNewlines)) })
-        }
-        if let id = e.attributes["id"] {
-            selectors.append(.id(id.trimmingCharacters(in: .whitespacesAndNewlines)))
-        }
-        let sheets = lengthContext.styleSheets
-        let matched = sheets.isEmpty ? nil : selectors.reversed().lazy
-            .compactMap { DOM.makeAttributes(for: $0, styles: sheets).fontSize }
-            .first
-        return matched ?? attributes.fontSize
+    /// The font-size `em` and `ex` of an element resolve against, in the order LayerTree applies them
+    /// (`DOM.presentationAttributes(for:styles:)`): presentation attribute < matched stylesheet rules
+    /// < style="" < `!important` rules < `!important` style="". nil when none sets it.
+    func fontSize(attributes: DOM.PresentationAttributes,
+                  style: (normal: DOM.PresentationAttributes, important: DOM.PresentationAttributes),
+                  matched: DOM.StyleSheet.Matched?) -> DOM.Float? {
+        style.important.fontSize
+            ?? matched?.importantAttributes.fontSize
+            ?? style.normal.fontSize
+            ?? matched?.attributes.fontSize
+            ?? attributes.fontSize
     }
 
     func parseLength(_ att: any AttributeParser, _ key: String, _ direction: LengthDirection) throws -> DOM.Coordinate {

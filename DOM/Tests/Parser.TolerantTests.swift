@@ -103,10 +103,11 @@ struct TolerantParsingTests {
         #expect(att.display == nil)
         #expect(att.strokeLineCap == nil)
         #expect(att.dominantBaseline == nil)
-        #expect(att.clipPath == nil)
-        #expect(att.mask == nil)
-        #expect(att.filter == nil)
-        #expect(att.transform == nil)
+        // `none` is a valid value: it is kept so it overrides a lower stylesheet rule (SD10)
+        #expect(att.clipPath == DOM.noneURL)
+        #expect(att.mask == DOM.noneURL)
+        #expect(att.filter == DOM.noneURL)
+        #expect(att.transform == [])
     }
 
     @Test
@@ -142,7 +143,8 @@ struct TolerantParsingTests {
           <rect width="5" height="5" style="fill: red !important; stroke-width: 2 ! important"/>
         </svg>
         """)
-        let att = svg.childElements[0].style
+        // the priority flag is kept apart (SD10) so inline !important beats stylesheet !important
+        let att = svg.childElements[0].importantStyle
         #expect(att.fill == .color(.keyword(.red)))
         #expect(att.strokeWidth == 2)
     }

@@ -86,6 +86,10 @@ package extension DOM {
         // `clip-rule`, `transform` and `clip-path` of the <clipPath> itself (SVG 1.1 §14.3.5)
         package var attributes = PresentationAttributes()
         package var style = PresentationAttributes()
+        // stylesheet declarations matched at parse time; nil for clip paths built in code
+        package var matchedStyle: StyleSheet.Matched?
+        // style="" declarations marked !important
+        package var importantStyle = PresentationAttributes()
 
         package enum Units: String {
             case userSpaceOnUse
@@ -121,5 +125,7 @@ package extension DOM {
         
         package var attributes: [Selector: PresentationAttributes] = [:]
         package var fonts: [DOM.FontFace] = []
+        // every rule in source order, including selectors `attributes` cannot key
+        package var rules: [Rule] = []
     }
 }

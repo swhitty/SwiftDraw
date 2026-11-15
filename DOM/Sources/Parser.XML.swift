@@ -57,11 +57,15 @@ package struct XMLParser {
         var viewports = [Viewport]()
         // the computed font-size of the element being parsed, for `em` and `ex`
         var fontSize: DOM.Float = LengthContext.initialFontSize
-        // the document's stylesheets, for a font-size set by a selector
-        var styleSheets = [DOM.StyleSheet]()
-
         // `medium` in Chrome and Safari
         static let initialFontSize: DOM.Float = 16
+    }
+
+    // stylesheet matcher for the document being parsed (set while parsing the root <svg>)
+    let styleContext = StyleContext()
+
+    final class StyleContext {
+        var matcher: DOM.StyleSheet.Matcher?
     }
 
     package struct Viewport: Equatable, Sendable {
