@@ -175,8 +175,8 @@ extension LayerTree {
         var color: Color
         var font: [Font]
         var size: Float
-        /// CSS weight (1–1000) and slant, used to pick a system font's face. `@font-face` fonts are
-        /// already the matching face.
+        /// CSS weight (1–1000) and slant, used to pick a system font's face and to decide whether its
+        /// bold or oblique is synthesized. `@font-face` fonts are already the matching face.
         var weight: Int = 400
         var isItalic: Bool = false
         var anchor: DOM.TextAnchor
@@ -189,6 +189,36 @@ extension LayerTree {
             /// One installed face by PostScript name, from `local()` in `@font-face`: used as named,
             /// never re-weighted
             case postScript(String)
+            /// An `@font-face` face drawn with synthesized bold or oblique, because it lacks the weight or
+            /// slant asked for (CSS Fonts 4 §5.2, `font-synthesis`)
+            indirect case synthesized(Font, FontSynthesis)
+        }
+    }
+
+    /// Faux bold and oblique, drawn on a face's glyph outlines as WebKit does: bold adds a copy of each
+    /// glyph offset horizontally by 1/36 of the font size (and widens its advance as much), oblique skews
+    /// each glyph by 14° about the baseline.
+    struct FontSynthesis: OptionSet, Hashable {
+        let rawValue: Int
+        static let bold = FontSynthesis(rawValue: 1 << 0)
+        static let oblique = FontSynthesis(rawValue: 1 << 1)
+
+        /// Bold is synthesized from a face lighter than 600 when 600 or heavier is asked for
+        static let boldThreshold = 600
+        /// The synthesized bold offset, as a fraction of the font size
+        static let boldOffsetRatio: Float = 1 / 36
+        /// The synthesized oblique angle, in degrees
+        static let obliqueAngle: Float = 14
+
+        /// The synthesis needed to draw a face of `faceWeight` and slant as one of `weight` and slant
+        init(weight: Int, isItalic: Bool, faceWeight: Int, faceIsItalic: Bool) {
+            self = []
+            if weight >= Self.boldThreshold && faceWeight < Self.boldThreshold { insert(.bold) }
+            if isItalic && !faceIsItalic { insert(.oblique) }
+        }
+
+        init(rawValue: Int) {
+            self.rawValue = rawValue
         }
     }
 }

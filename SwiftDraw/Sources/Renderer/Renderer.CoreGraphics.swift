@@ -221,8 +221,8 @@ struct CGProvider: RendererTypeProvider {
     }
 
     func createPath(from text: String, at origin: LayerTree.Point, with attributes: LayerTree.TextAttributes) -> Types.Path? {
-        let font = CGProvider.createCTFont(for: attributes)
-        guard let path = text.toPath(font: font) else { return nil }
+        let font = CGProvider.createFont(for: attributes)
+        guard let path = text.toPath(font: font.font, synthesis: font.synthesis(for:)) else { return nil }
         var transform = CGAffineTransform(translationX: createFloat(from: origin.x), y: createFloat(from: origin.y))
         return path.copy(using: &transform)
     }
@@ -248,6 +248,55 @@ struct CGProvider: RendererTypeProvider {
             // a local() face, resolved when the layer tree was built
             let ctFont = CTFontCreateWithName(name as CFString, size, nil)
             return CTFontCopyPostScriptName(ctFont) as String == name ? ctFont : nil
+        case .synthesized(let font, _):
+            return createCTFont(for: font, size: size, weight: weight, isItalic: isItalic)
+        }
+    }
+
+    /// A font with the bold and oblique each of its faces needs synthesized
+    struct SyntheticFont {
+        /// The first face, cascading to the others
+        var font: CTFont
+        /// The synthesis of each face, by PostScript name, in cascade order
+        var faces: [(postScriptName: String, synthesis: LayerTree.FontSynthesis)]
+        var weight: Int
+        var isItalic: Bool
+
+        /// The synthesis for a run's font: that of its face, or for a font CoreText substituted for
+        /// missing glyphs (a system font), whatever its own weight and slant lack
+        func synthesis(for runFont: CTFont) -> LayerTree.FontSynthesis {
+            let name = CTFontCopyPostScriptName(runFont) as String
+            if let face = faces.first(where: { $0.postScriptName == name }) {
+                return face.synthesis
+            }
+            return CGProvider.fontSynthesis(for: runFont, weight: weight, isItalic: isItalic)
+        }
+    }
+
+    /// The synthesis an installed face needs to be drawn at a CSS weight and slant, from its CoreText
+    /// traits, as WebKit decides it for system fonts (e.g. Chalkduster has one face, so its bold and
+    /// italic are synthesized; Impact is already heavy, so only its italic is).
+    static func fontSynthesis(for font: CTFont, weight: Int, isItalic: Bool) -> LayerTree.FontSynthesis {
+        let traits = CTFontCopyTraits(font) as NSDictionary
+        let coreTextWeight = (traits[kCTFontWeightTrait] as? NSNumber).map { CGFloat($0.doubleValue) } ?? 0
+        let isBold = coreTextWeight >= self.coreTextWeight(for: LayerTree.FontSynthesis.boldThreshold)
+        return LayerTree.FontSynthesis(
+            weight: weight,
+            isItalic: isItalic,
+            faceWeight: isBold ? LayerTree.FontSynthesis.boldThreshold : 400,
+            faceIsItalic: CTFontGetSymbolicTraits(font).contains(.traitItalic)
+        )
+    }
+
+    private static func fontSynthesis(for font: LayerTree.TextAttributes.Font, ctFont: CTFont, weight: Int, isItalic: Bool) -> LayerTree.FontSynthesis {
+        switch font {
+        case .synthesized(_, let synthesis):
+            return synthesis
+        case .name:
+            return fontSynthesis(for: ctFont, weight: weight, isItalic: isItalic)
+        case .truetype, .postScript:
+            // an @font-face face that has the weight and slant it was matched for
+            return []
         }
     }
 
@@ -296,21 +345,42 @@ struct CGProvider: RendererTypeProvider {
     }
 
     static func createCTFont(for attributes: LayerTree.TextAttributes) -> CTFont {
-        createCTFont(for: attributes.font, size: attributes.size, weight: attributes.weight, isItalic: attributes.isItalic)
+        createFont(for: attributes).font
+    }
+
+    static func createFont(for attributes: LayerTree.TextAttributes) -> SyntheticFont {
+        createFont(for: attributes.font, size: attributes.size, weight: attributes.weight, isItalic: attributes.isItalic)
     }
 
     static func createCTFont(for fonts: [LayerTree.TextAttributes.Font], size: Float, weight: Int = 400, isItalic: Bool = false) -> CTFont {
+        createFont(for: fonts, size: size, weight: weight, isItalic: isItalic).font
+    }
+
+    static func createFont(for fonts: [LayerTree.TextAttributes.Font], size: Float, weight: Int = 400, isItalic: Bool = false) -> SyntheticFont {
         let cgSize = CGFloat(size)
-        let fallback = createCTFont(for: .name("Times"), size: cgSize, weight: weight, isItalic: isItalic)
-            ?? CTFontCreateWithName("Times" as CFString, cgSize, nil)
-        let ctFonts = fonts.compactMap { createCTFont(for: $0, size: cgSize, weight: weight, isItalic: isItalic) }
-        guard let primary = ctFonts.first else { return fallback }
-        guard ctFonts.count > 1 else { return primary }
-        let descriptors = ctFonts.dropFirst().map { CTFontCopyFontDescriptor($0) }
-        let cascade = CTFontDescriptorCreateWithAttributes(
-            [kCTFontCascadeListAttribute: descriptors] as CFDictionary
+        var faces = fonts.compactMap { font -> (CTFont, LayerTree.FontSynthesis)? in
+            guard let ctFont = createCTFont(for: font, size: cgSize, weight: weight, isItalic: isItalic) else { return nil }
+            return (ctFont, fontSynthesis(for: font, ctFont: ctFont, weight: weight, isItalic: isItalic))
+        }
+        if faces.isEmpty {
+            let fallback = createCTFont(for: .name("Times"), size: cgSize, weight: weight, isItalic: isItalic)
+                ?? CTFontCreateWithName("Times" as CFString, cgSize, nil)
+            faces = [(fallback, fontSynthesis(for: fallback, weight: weight, isItalic: isItalic))]
+        }
+        var font = faces[0].0
+        if faces.count > 1 {
+            let descriptors = faces.dropFirst().map { CTFontCopyFontDescriptor($0.0) }
+            let cascade = CTFontDescriptorCreateWithAttributes(
+                [kCTFontCascadeListAttribute: descriptors] as CFDictionary
+            )
+            font = CTFontCreateCopyWithAttributes(font, cgSize, nil, cascade)
+        }
+        return SyntheticFont(
+            font: font,
+            faces: faces.map { (CTFontCopyPostScriptName($0.0) as String, $0.1) },
+            weight: weight,
+            isItalic: isItalic
         )
-        return CTFontCreateCopyWithAttributes(primary, cgSize, nil, cascade)
     }
 
     func createPattern(from pattern: LayerTree.Pattern, contents: [RendererCommand<Types>]) -> CGTransformingPattern {

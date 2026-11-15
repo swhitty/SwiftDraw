@@ -41,16 +41,15 @@ extension LayerTree.Builder {
 
 #if canImport(CoreText)
     static func makeOffset(for text: String, with attributes: LayerTree.TextAttributes) -> LayerTree.Size {
-        let font = CGProvider.createCTFont(for: attributes)
-        let line = text.toLine(font: font)
+        let font = CGProvider.createFont(for: attributes)
+        let width = text.toWidth(font: font.font, synthesis: font.synthesis(for:))
         return LayerTree.Size(
-            makeXOffset(line: line, anchor: attributes.anchor),
-            makeYOffset(font: font, baseline: attributes.baseline)
+            makeXOffset(width: width, anchor: attributes.anchor),
+            makeYOffset(font: font.font, baseline: attributes.baseline)
         )
     }
 
-    static func makeXOffset(line: CTLine, anchor: DOM.TextAnchor) -> LayerTree.Float {
-        let width = CTLineGetTypographicBounds(line, nil, nil, nil)
+    static func makeXOffset(width: Double, anchor: DOM.TextAnchor) -> LayerTree.Float {
         switch anchor {
         case .start:
            return 0

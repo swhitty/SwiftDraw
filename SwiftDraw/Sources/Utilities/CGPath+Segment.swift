@@ -122,7 +122,8 @@ extension String {
         return CTLineCreateWithAttributedString(attString)
     }
 
-    func toPath(font: CTFont) -> CGPath? {
+    /// The glyph outlines of the text, with the bold and oblique each run's font needs synthesized
+    func toPath(font: CTFont, synthesis: (CTFont) -> LayerTree.FontSynthesis = { _ in [] }) -> CGPath? {
         let line = toLine(font: font)
         let glyphRuns = CTLineGetGlyphRuns(line)
 
@@ -134,12 +135,17 @@ extension String {
 
 
         let path = CGMutablePath()
+        // synthesized bold widens each glyph's advance, moving the glyphs after it
+        var boldAdvance = CGFloat(0)
 
         for idx in 0..<CFArrayGetCount(glyphRuns) {
             let val = CFArrayGetValueAtIndex(glyphRuns, idx)
             let run = unsafeBitCast(val, to: CTRun.self)
             let attributes = CTRunGetAttributes(run) as NSDictionary
             let runFont = resolveRunFont(attributes: attributes, fallback: font)
+            let runSynthesis = synthesis(runFont)
+            let boldOffset = runSynthesis.contains(.bold) ? Self.syntheticBoldOffset(for: runFont) : 0
+            let skew = runSynthesis.contains(.oblique) ? Self.syntheticObliqueTransform : .identity
 
             for idx in 0..<CTRunGetGlyphCount(run) {
                 let glyphRange = CFRange(location: idx, length: 1)
@@ -147,16 +153,47 @@ extension String {
                 var position: CGPoint = .zero
                 CTRunGetGlyphs(run, glyphRange, &glyph)
                 CTRunGetPositions(run, glyphRange, &position)
-                var t = CGAffineTransform.identity
+                var t = skew
                 if let glyphPath = CTFontCreatePathForGlyph(runFont, glyph, &t) {
-                    let t = CGAffineTransform(a: 1, b: 0, c: 0, d: -1, tx: position.x, ty: baseline)
+                    let t = CGAffineTransform(a: 1, b: 0, c: 0, d: -1, tx: position.x + boldAdvance, ty: baseline)
                     let t1 = t.translatedBy(x: 0, y: baseline)
                     path.addPath(glyphPath, transform: t1)
+                    if boldOffset > 0 {
+                        // a second copy, offset; filled nonzero, the two copies merge
+                        path.addPath(glyphPath, transform: t1.translatedBy(x: boldOffset, y: 0))
+                    }
                 }
+                boldAdvance += boldOffset
             }
         }
 
         return path
+    }
+
+    /// The width of the text, including the advance synthesized bold adds to each glyph
+    func toWidth(font: CTFont, synthesis: (CTFont) -> LayerTree.FontSynthesis = { _ in [] }) -> CGFloat {
+        let line = toLine(font: font)
+        var width = CGFloat(CTLineGetTypographicBounds(line, nil, nil, nil))
+        let glyphRuns = CTLineGetGlyphRuns(line)
+        for idx in 0..<CFArrayGetCount(glyphRuns) {
+            let run = unsafeBitCast(CFArrayGetValueAtIndex(glyphRuns, idx), to: CTRun.self)
+            let runFont = resolveRunFont(attributes: CTRunGetAttributes(run) as NSDictionary, fallback: font)
+            if synthesis(runFont).contains(.bold) {
+                width += Self.syntheticBoldOffset(for: runFont) * CGFloat(CTRunGetGlyphCount(run))
+            }
+        }
+        return width
+    }
+
+    /// WebKit's synthesized bold: each glyph drawn again this far to the right
+    static func syntheticBoldOffset(for font: CTFont) -> CGFloat {
+        CTFontGetSize(font) * CGFloat(LayerTree.FontSynthesis.boldOffsetRatio)
+    }
+
+    /// WebKit's synthesized oblique: glyphs skewed about the baseline (in glyph space, y up)
+    static var syntheticObliqueTransform: CGAffineTransform {
+        let angle = CGFloat(LayerTree.FontSynthesis.obliqueAngle) * .pi / 180
+        return CGAffineTransform(a: 1, b: 0, c: tan(angle), d: 1, tx: 0, ty: 0)
     }
 
     // Use the font CoreText resolved for this run, else fall back to the requested font.
