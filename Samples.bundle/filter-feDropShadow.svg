@@ -1,0 +1,14 @@
+<svg width="240" height="100" viewBox="0 0 240 100" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- defaults: dx = dy = 2, stdDeviation = 2, opaque black -->
+    <filter id="defaults">
+      <feDropShadow />
+    </filter>
+    <filter id="explicit" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="6" dy="4" stdDeviation="3" />
+    </filter>
+  </defs>
+  <rect width="240" height="100" fill="#f4f1ea" />
+  <circle cx="60" cy="50" r="30" fill="#e63946" filter="url(#defaults)" />
+  <rect x="140" y="20" width="60" height="60" rx="10" fill="#2a9d8f" filter="url(#explicit)" />
+</svg>

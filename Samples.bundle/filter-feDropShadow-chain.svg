@@ -1,0 +1,22 @@
+<svg width="240" height="100" viewBox="0 0 240 100" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- a named drop shadow read by a later primitive: the whole result turned to grey -->
+    <filter id="chained" x="-30%" y="-30%" width="160%" height="160%" color-interpolation-filters="sRGB">
+      <feDropShadow dx="6" dy="6" stdDeviation="2" flood-color="#e63946" result="shadow" />
+      <feColorMatrix in="shadow" type="saturate" values="0" />
+    </filter>
+    <!-- the drop shadow of an earlier result: a blurred source casting a blue shadow -->
+    <filter id="input" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="1.5" result="soft" />
+      <feOffset dx="-4" dy="-4" result="moved" />
+      <feDropShadow in="soft" dx="8" dy="8" stdDeviation="1" flood-color="#457b9d" result="cast" />
+      <feMerge>
+        <feMergeNode in="cast" />
+        <feMergeNode in="moved" />
+      </feMerge>
+    </filter>
+  </defs>
+  <rect width="240" height="100" fill="#f4f1ea" />
+  <rect x="25" y="20" width="60" height="55" rx="8" fill="#2a9d8f" filter="url(#chained)" />
+  <circle cx="170" cy="48" r="28" fill="#f4a261" filter="url(#input)" />
+</svg>
