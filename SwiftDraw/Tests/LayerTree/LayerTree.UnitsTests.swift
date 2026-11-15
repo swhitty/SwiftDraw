@@ -30,12 +30,12 @@
 //
 
 
-import XCTest
 @testable import SwiftDraw
 @testable import SwiftDrawDOM
+import Testing
 
 // SD13 — SVG 1.1 §7.10: units and percentages reach the renderers in user units
-final class LayerTreeUnitsTests: XCTestCase {
+struct LayerTreeUnitsTests {
 
     typealias Command = RendererCommand<LayerTreeTypes>
 
@@ -49,8 +49,17 @@ final class LayerTreeUnitsTests: XCTestCase {
     private func fills(_ commands: [Command]) -> [LayerTree.Rect] {
         commands.compactMap {
             guard case let .fill(shapes, rule: _) = $0 else { return nil }
-            return shapes.map(\.path.bounds).reduce(nil as LayerTree.Rect?) { acc, b in acc.map { $0.union(b) } ?? b }
+            let bounds = shapes.map(\.path.bounds)
+            guard let first = bounds.first else { return nil }
+            return bounds.dropFirst().reduce(first, union)
         }
+    }
+
+    private func union(_ a: LayerTree.Rect, _ b: LayerTree.Rect) -> LayerTree.Rect {
+        let minX = min(a.minX, b.minX), minY = min(a.minY, b.minY)
+        return LayerTree.Rect(x: minX, y: minY,
+                              width: max(a.maxX, b.maxX) - minX,
+                              height: max(a.maxY, b.maxY) - minY)
     }
 
     private func transforms(_ commands: [Command]) -> [String] {
@@ -64,7 +73,8 @@ final class LayerTreeUnitsTests: XCTestCase {
         }
     }
 
-    func testPercentagesAndUnitsReachTheFillCommand() throws {
+    @Test
+    func percentagesAndUnitsReachTheFillCommand() throws {
         let commands = try commands("""
         <svg xmlns="http://www.w3.org/2000/svg" width="200" height="100">
         <rect x="10%" y="1in" width="50%" height="25.4mm" fill="red"/>
@@ -72,37 +82,40 @@ final class LayerTreeUnitsTests: XCTestCase {
         </svg>
         """)
         let fills = fills(commands)
-        XCTAssertEqual(fills.count, 2)
-        XCTAssertEqual(fills.first?.x ?? 0, 20, accuracy: 0.001)
-        XCTAssertEqual(fills.first?.y ?? 0, 96, accuracy: 0.001)
-        XCTAssertEqual(fills.first?.width ?? 0, 100, accuracy: 0.001)
-        XCTAssertEqual(fills.first?.height ?? 0, 96, accuracy: 0.001)
+        #expect(fills.count == 2)
+        #expect(abs(try #require(fills.first?.x) - 20) < 0.001)
+        #expect(abs(try #require(fills.first?.y) - 96) < 0.001)
+        #expect(abs(try #require(fills.first?.width) - 100) < 0.001)
+        #expect(abs(try #require(fills.first?.height) - 96) < 0.001)
         // r = 2em = 32 at the initial 16px font-size
-        XCTAssertEqual(fills.last?.midX ?? 0, 100, accuracy: 0.01)
-        XCTAssertEqual(fills.last?.width ?? 0, 64, accuracy: 0.01)
+        #expect(abs(try #require(fills.last?.midX) - 100) < 0.01)
+        #expect(abs(try #require(fills.last?.width) - 64) < 0.01)
     }
 
-    func testFractionalRootWithMatchingViewBoxHasNoTransform() throws {
+    @Test
+    func fractionalRootWithMatchingViewBoxHasNoTransform() throws {
         // stored as Int, 145.11934 became 145 and the viewBox was letterboxed by a fraction of a unit
         let svg = try DOM.SVG.parse(xml: """
         <svg xmlns="http://www.w3.org/2000/svg" width="145.11934" height="80" viewBox="0 0 145.11934 80">
         <rect width="10" height="10"/></svg>
         """)
-        XCTAssertEqual(svg.width, 145.11934)
-        XCTAssertEqual(LayerTree.Builder(svg: svg).makeLayer().transform, [])
+        #expect(svg.width == 145.11934)
+        #expect(LayerTree.Builder(svg: svg).makeLayer().transform == [])
     }
 
-    func testRootWithOnlyWidthScalesTheViewBoxUniformly() throws {
+    @Test
+    func rootWithOnlyWidthScalesTheViewBoxUniformly() throws {
         // browsers draw width="200" viewBox="0 0 100 50" at 200x100, a uniform x2
         let svg = try DOM.SVG.parse(xml: """
         <svg xmlns="http://www.w3.org/2000/svg" width="200" viewBox="0 0 100 50"><rect width="100" height="50"/></svg>
         """)
-        XCTAssertEqual(svg.width, 200)
-        XCTAssertEqual(svg.height, 100)
-        XCTAssertEqual(LayerTree.Builder(svg: svg).makeLayer().transform, [.scale(sx: 2, sy: 2)])
+        #expect(svg.width == 200)
+        #expect(svg.height == 100)
+        #expect(LayerTree.Builder(svg: svg).makeLayer().transform == [.scale(sx: 2, sy: 2)])
     }
 
-    func testNestedSVGPercentagesUseTheEnclosingViewport() throws {
+    @Test
+    func nestedSVGPercentagesUseTheEnclosingViewport() throws {
         // nested viewport: x=50 y=10 100x80; its 10x10 viewBox meets at x8, centred 10 units right
         let commands = try commands("""
         <svg xmlns="http://www.w3.org/2000/svg" width="200" height="100">
@@ -110,7 +123,7 @@ final class LayerTreeUnitsTests: XCTestCase {
         <rect width="50%" height="100%" fill="red"/></svg>
         </svg>
         """)
-        XCTAssertEqual(transforms(commands), ["translate(60.0, 10.0)", "scale(8.0, 8.0)"])
-        XCTAssertEqual(fills(commands), [LayerTree.Rect(x: 0, y: 0, width: 5, height: 10)])
+        #expect(transforms(commands) == ["translate(60.0, 10.0)", "scale(8.0, 8.0)"])
+        #expect(fills(commands) == [LayerTree.Rect(x: 0, y: 0, width: 5, height: 10)])
     }
 }
