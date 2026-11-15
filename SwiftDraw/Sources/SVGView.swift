@@ -50,10 +50,10 @@ public struct SVGView: View {
     @State private var filterFills = 0
 
     private var didFillFilters: @Sendable () -> Void {
-        let fills = UncheckedSendableBinding(binding: $filterFills)
+        let fills = $filterFills
         return {
             Task { @MainActor in
-                fills.binding.wrappedValue += 1
+                fills.wrappedValue += 1
             }
         }
     }
@@ -197,11 +197,6 @@ public extension GraphicsContext {
     )  {
         draw(svg, in: rect, capInsets: capInsets, byTiling: byTiling, renderingMode: renderingMode, filters: nil)
     }
-}
-
-// a Binding is only set on the main actor
-private struct UncheckedSendableBinding<Value>: @unchecked Sendable {
-    var binding: Binding<Value>
 }
 
 // How a Canvas draw uses a filter layer cache

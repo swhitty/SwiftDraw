@@ -1,7 +1,7 @@
 [![Build](https://github.com/swhitty/SwiftDraw/actions/workflows/build.yml/badge.svg)](https://github.com/swhitty/SwiftDraw/actions/workflows/build.yml)
 [![CodeCov](https://codecov.io/gh/swhitty/SwiftDraw/graphs/badge.svg)](https://codecov.io/gh/swhitty/SwiftDraw)
 [![Platforms](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fswhitty%2FSwiftDraw%2Fbadge%3Ftype%3Dplatforms)](https://swiftpackageindex.com/swhitty/SwiftDraw)
-[![Swift 6.0](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fswhitty%2FSwiftDraw%2Fbadge%3Ftype%3Dswift-versions)](https://swiftpackageindex.com/swhitty/SwiftDraw)
+[![Swift 6.2](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fswhitty%2FSwiftDraw%2Fbadge%3Ftype%3Dswift-versions)](https://swiftpackageindex.com/swhitty/SwiftDraw)
 
 # Introduction
 

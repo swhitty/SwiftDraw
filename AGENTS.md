@@ -17,7 +17,7 @@ swift build
 swift test
 ```
 
-The library is cross-platform: CI builds and tests on macOS, Linux (Swift 6.0.3 and later), Windows and Android. Code in `SwiftDraw/Sources` that uses Apple frameworks must be guarded, usually with `#if canImport(CoreGraphics)`. Passing on macOS is not enough: Linux and Windows have no CoreGraphics, so `SVG` is a stub there and AppKit does not import Foundation for you. Before opening a pull request that touches sources or tests, run the tests on Linux too:
+The library is cross-platform: CI builds and tests on macOS, Linux (Swift 6.2 and later), Windows and Android. Code in `SwiftDraw/Sources` that uses Apple frameworks must be guarded, usually with `#if canImport(CoreGraphics)`. Passing on macOS is not enough: Linux and Windows have no CoreGraphics, so `SVG` is a stub there and AppKit does not import Foundation for you. Before opening a pull request that touches sources or tests, run the tests on Linux too:
 
 ```bash
 ./container-run-tests.sh
@@ -27,10 +27,10 @@ It runs `swift test` in a `swift:6.4` container (Apple's `container` tool, as CI
 
 ### Locking
 
-Guard shared mutable state with `Mutex` (`DOM/Sources/Mutex.swift`, `package` in SwiftDrawDOM), not `NSLock`, `os_unfair_lock`, `DispatchQueue` or `@unchecked Sendable` with a hand-rolled lock. Keep the state inside the mutex (`Mutex(State())` and `withLock { $0… }`) so it can't be read without holding the lock, and a class holding only a `Mutex` and immutable properties can be plain `Sendable`. It backports `Synchronization.Mutex` on Darwin and Swift 6.0 and is `Synchronization.Mutex` elsewhere, so on Linux a file that calls `withLock` must import `Synchronization` itself:
+Guard shared mutable state with `Mutex` (`DOM/Sources/Mutex.swift`, `package` in SwiftDrawDOM), not `NSLock`, `os_unfair_lock`, `DispatchQueue` or `@unchecked Sendable` with a hand-rolled lock. Keep the state inside the mutex (`Mutex(State())` and `withLock { $0… }`) so it can't be read without holding the lock, and a class holding only a `Mutex` and immutable properties can be plain `Sendable`. It backports `Synchronization.Mutex` on Darwin and is `Synchronization.Mutex` elsewhere, so on Linux a file that calls `withLock` must import `Synchronization` itself:
 
 ```swift
-#if !canImport(Darwin) && compiler(>=6.1)
+#if !canImport(Darwin)
 import Synchronization
 #endif
 ```

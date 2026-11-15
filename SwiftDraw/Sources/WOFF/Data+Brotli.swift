@@ -40,18 +40,13 @@ extension Data {
     /// - Returns: The decompressed data.
     /// - Throws: `BrotliError.decompressionFailed` if decompression fails.
     func decompressBrotli(decompressedSize: Int) throws(BrotliError) -> Data {
-#if compiler(>=6.2)
         if #available(macOS 26.0, iOS 26.0, tvOS 26.0, watchOS 26.0, visionOS 26.0, *) {
             return try _decompressBrotliSpan(decompressedSize: decompressedSize)
         } else {
             return try _decompressBrotliLegacy(decompressedSize: decompressedSize)
         }
-#else
-        return try _decompressBrotliLegacy(decompressedSize: decompressedSize)
-#endif
     }
 
-#if compiler(>=6.2)
     @available(macOS 26.0, iOS 26.0, tvOS 26.0, watchOS 26.0, visionOS 26.0, *)
     private func _decompressBrotliSpan(decompressedSize: Int) throws(BrotliError) -> Data {
         let srcSpan = self.bytes
@@ -83,7 +78,6 @@ extension Data {
         decompressedData.count = actualSize
         return decompressedData
     }
-#endif
 
     private func _decompressBrotliLegacy(decompressedSize: Int) throws(BrotliError) -> Data {
         var decompressedData = Data(count: decompressedSize)

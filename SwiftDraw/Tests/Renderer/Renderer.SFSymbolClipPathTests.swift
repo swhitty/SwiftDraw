@@ -223,7 +223,7 @@ final class RendererSFSymbolClipPathTests: XCTestCase {
     private func assertBounds(_ actual: LayerTree.Rect,
                               equals expected: LayerTree.Rect,
                               accuracy: LayerTree.Float = 0.01,
-                              file: StaticString = #file,
+                              file: StaticString = #filePath,
                               line: UInt = #line) {
         XCTAssertEqual(actual.minX, expected.minX, accuracy: accuracy, "minX", file: file, line: line)
         XCTAssertEqual(actual.minY, expected.minY, accuracy: accuracy, "minY", file: file, line: line)
@@ -244,7 +244,7 @@ final class RendererSFSymbolClipPathTests: XCTestCase {
 #endif
 
 private extension DOM.SVG {
-    static func parse(_ text: String, filename: String = #file) throws -> DOM.SVG {
+    static func parse(_ text: String, filename: String = #filePath) throws -> DOM.SVG {
         let element = try XML.SAXParser.parse(data: text.data(using: .utf8)!)
         let parser = XMLParser(options: [], filename: filename)
         return try parser.parseSVG(element)

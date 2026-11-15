@@ -31,7 +31,7 @@
 
 import Foundation
 import Testing
-#if !canImport(Darwin) && compiler(>=6.1)
+#if !canImport(Darwin)
 import Synchronization
 #endif
 @testable import SwiftDrawDOM
