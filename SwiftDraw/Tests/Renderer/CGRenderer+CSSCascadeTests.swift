@@ -32,12 +32,14 @@
 #if canImport(CoreGraphics)
 @testable import SwiftDraw
 import CoreGraphics
-import XCTest
+import Foundation
+import Testing
 
-final class CGRendererCSSCascadeTests: XCTestCase {
+struct CGRendererCSSCascadeTests {
 
     // a stylesheet transform and a descendant selector reach the pixels
-    func testStyleSheetTransformAndSelectorDrawPixels() throws {
+    @Test
+    func styleSheetTransformAndSelectorDrawPixels() throws {
         let bitmap = try render(#"""
         <svg width="40" height="20" xmlns="http://www.w3.org/2000/svg">
             <style>
@@ -50,28 +52,25 @@ final class CGRendererCSSCascadeTests: XCTestCase {
         """#)
 
         // the red square moved from x 0…10 to x 20…30
-        XCTAssertEqual(bitmap.rgba(x: 5, y: 5), [0, 0, 0, 0])
-        XCTAssertEqual(bitmap.rgba(x: 25, y: 5), [255, 0, 0, 255])
+        #expect(bitmap.rgba(x: 5, y: 5) == [0, 0, 0, 0])
+        #expect(bitmap.rgba(x: 25, y: 5) == [255, 0, 0, 255])
         // the second rect keeps the type rule
-        XCTAssertEqual(bitmap.rgba(x: 5, y: 15), [0, 0, 255, 255])
+        #expect(bitmap.rgba(x: 5, y: 15) == [0, 0, 255, 255])
     }
-}
 
-private struct Bitmap {
-    var width: Int
-    var bytes: [UInt8]
+    private struct Bitmap {
+        var width: Int
+        var bytes: [UInt8]
 
-    // y is measured from the top, like SVG
-    func rgba(x: Int, y: Int) -> [UInt8] {
-        let i = (y * width + x) * 4
-        return Array(bytes[i..<i + 4])
+        // y is measured from the top, like SVG
+        func rgba(x: Int, y: Int) -> [UInt8] {
+            let i = (y * width + x) * 4
+            return Array(bytes[i..<i + 4])
+        }
     }
-}
 
-private extension CGRendererCSSCascadeTests {
-
-    func render(_ xml: String) throws -> Bitmap {
-        let svg = try XCTUnwrap(SVG(xml: xml))
+    private func render(_ xml: String) throws -> Bitmap {
+        let svg = try #require(SVG(xml: xml))
         let width = Int(svg.size.width)
         let height = Int(svg.size.height)
         var bytes = [UInt8](repeating: 0, count: width * height * 4)

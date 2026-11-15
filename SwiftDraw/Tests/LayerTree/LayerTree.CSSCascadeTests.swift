@@ -29,12 +29,12 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-import SwiftDrawDOM
-import XCTest
-@testable import SwiftDraw
 import Foundation
+import SwiftDrawDOM
+import Testing
+@testable import SwiftDraw
 
-final class LayerTreeCSSCascadeTests: XCTestCase {
+struct LayerTreeCSSCascadeTests {
 
     private struct NoChildLayer: Error {}
 
@@ -59,90 +59,6 @@ final class LayerTreeCSSCascadeTests: XCTestCase {
         throw NoChildLayer()
     }
 
-    func testTransformFromStyleSheet() throws {
-        let layer = try firstChild(#"<style>.t { transform: translate(10px, 20px) }</style><rect class="t" width="5" height="5"/>"#)
-        XCTAssertEqual(layer.transform, [.translate(tx: 10, ty: 20)])
-    }
-
-    func testTransformFromStyleAttribute() throws {
-        let layer = try firstChild(#"<rect style="transform: rotate(90deg)" width="5" height="5"/>"#)
-        XCTAssertEqual(layer.transform, [.rotate(radians: .pi / 2)])
-    }
-
-    func testStyleSheetTransformOverridesAttribute() throws {
-        let layer = try firstChild(#"<style>rect { transform: scale(2) }</style><rect transform="translate(5 5)" width="5" height="5"/>"#)
-        XCTAssertEqual(layer.transform, [.scale(sx: 2, sy: 2)])
-    }
-
-    func testMaskFromStyleSheet() throws {
-        let layer = try firstChild("""
-        <defs><mask id="m"><rect width="5" height="5" fill="white"/></mask></defs>
-        <style>.masked { mask: url(#m) }</style>
-        <rect class="masked" width="10" height="10"/>
-        """)
-        XCTAssertNotNil(layer.mask)
-    }
-
-    // clip-rule comes from the <clipPath> children (SD8), here through a descendant selector
-    func testClipRuleFromStyleSheet() throws {
-        let layer = try firstChild("""
-        <defs><clipPath id="c"><rect width="5" height="5"/></clipPath></defs>
-        <style>#c rect { clip-rule: evenodd }</style>
-        <rect id="r" clip-path="url(#c)" width="10" height="10"/>
-        """)
-        XCTAssertEqual(layer.clipRule, .evenodd)
-        XCTAssertTrue(try commandStream("""
-        <defs><clipPath id="c"><rect width="5" height="5"/></clipPath></defs>
-        <style>#c rect { clip-rule: evenodd }</style>
-        <rect id="r" clip-path="url(#c)" width="10" height="10"/>
-        """).contains {
-            if case .setClip(path: _, rule: .evenodd) = $0 { return true }
-            return false
-        })
-    }
-
-    func testClipChildTransformFromStyleSheet() throws {
-        let layer = try firstChild("""
-        <defs><clipPath id="c"><rect class="moved" width="5" height="5"/></clipPath></defs>
-        <style>.moved { transform: translate(3px, 4px) }</style>
-        <rect clip-path="url(#c)" width="10" height="10"/>
-        """)
-        XCTAssertEqual(layer.clip.first?.transform, .init(a: 1, b: 0, c: 0, d: 1, tx: 3, ty: 4))
-    }
-
-    func testStyleSheetFontSizeBeatsPresentationAttribute() throws {
-        let root = try makeLayer(#"<style>text { font-size: 30px }</style><text font-size="10" x="0" y="20">Hi</text>"#)
-        let sizes = root.contents.compactMap { contents -> LayerTree.Float? in
-            if case let .text(_, _, att) = contents { return att.size }
-            return nil
-        }
-        XCTAssertEqual(sizes, [30])
-    }
-
-    func testDescendantSelectorFillsCommandStream() throws {
-        let commands = try commandStream("""
-        <style>g.icon > rect:first-child { fill: #ff0000 }</style>
-        <g class="icon"><rect width="5" height="5"/><rect width="5" height="5"/></g>
-        """)
-        let fills = commands.compactMap { command -> LayerTree.Color? in
-            if case let .setFill(color: c) = command { return c }
-            return nil
-        }
-        XCTAssertEqual(fills, [.rgba(r: 1, g: 0, b: 0, a: 1, space: .srgb), .black])
-    }
-
-    func testOneBadDeclarationKeepsTheSheet() throws {
-        let commands = try commandStream("""
-        <style>:root { --c: red } .a { fill: var(--c); stroke: #00ff00 } .b { fill: #0000ff }</style>
-        <rect class="a" width="5" height="5"/><rect class="b" width="5" height="5"/>
-        """)
-        let fills = commands.compactMap { command -> LayerTree.Color? in
-            if case let .setFill(color: c) = command { return c }
-            return nil
-        }
-        XCTAssertEqual(fills, [.black, .rgba(r: 0, g: 0, b: 1, a: 1, space: .srgb)])
-    }
-
     private func fills(_ body: String) throws -> [LayerTree.Color] {
         try commandStream(body).compactMap {
             if case let .setFill(color: c) = $0 { return c }
@@ -150,51 +66,140 @@ final class LayerTreeCSSCascadeTests: XCTestCase {
         }
     }
 
-    func testUseKeepsTheStyleOfItsOriginalElement() throws {
+    private static let red = LayerTree.Color.rgba(r: 1, g: 0, b: 0, a: 1, space: .srgb)
+    private static let blue = LayerTree.Color.rgba(r: 0, g: 0, b: 1, a: 1, space: .srgb)
+
+    @Test
+    func transformFromStyleSheet() throws {
+        let layer = try firstChild(#"<style>.t { transform: translate(10px, 20px) }</style><rect class="t" width="5" height="5"/>"#)
+        #expect(layer.transform == [.translate(tx: 10, ty: 20)])
+    }
+
+    @Test
+    func transformFromStyleAttribute() throws {
+        let layer = try firstChild(#"<rect style="transform: rotate(90deg)" width="5" height="5"/>"#)
+        #expect(layer.transform == [.rotate(radians: .pi / 2)])
+    }
+
+    @Test
+    func styleSheetTransformOverridesAttribute() throws {
+        let layer = try firstChild(#"<style>rect { transform: scale(2) }</style><rect transform="translate(5 5)" width="5" height="5"/>"#)
+        #expect(layer.transform == [.scale(sx: 2, sy: 2)])
+    }
+
+    @Test
+    func maskFromStyleSheet() throws {
+        let layer = try firstChild("""
+        <defs><mask id="m"><rect width="5" height="5" fill="white"/></mask></defs>
+        <style>.masked { mask: url(#m) }</style>
+        <rect class="masked" width="10" height="10"/>
+        """)
+        #expect(layer.mask != nil)
+    }
+
+    // clip-rule comes from the <clipPath> children (SD8), here through a descendant selector
+    @Test
+    func clipRuleFromStyleSheet() throws {
+        let body = """
+        <defs><clipPath id="c"><rect width="5" height="5"/></clipPath></defs>
+        <style>#c rect { clip-rule: evenodd }</style>
+        <rect id="r" clip-path="url(#c)" width="10" height="10"/>
+        """
+        let layer = try firstChild(body)
+        #expect(layer.clipRule == .evenodd)
+        #expect(try commandStream(body).contains {
+            if case .setClip(path: _, rule: .evenodd) = $0 { return true }
+            return false
+        })
+    }
+
+    @Test
+    func clipChildTransformFromStyleSheet() throws {
+        let layer = try firstChild("""
+        <defs><clipPath id="c"><rect class="moved" width="5" height="5"/></clipPath></defs>
+        <style>.moved { transform: translate(3px, 4px) }</style>
+        <rect clip-path="url(#c)" width="10" height="10"/>
+        """)
+        #expect(layer.clip.first?.transform == .init(a: 1, b: 0, c: 0, d: 1, tx: 3, ty: 4))
+    }
+
+    @Test
+    func styleSheetFontSizeBeatsPresentationAttribute() throws {
+        let root = try makeLayer(#"<style>text { font-size: 30px }</style><text font-size="10" x="0" y="20">Hi</text>"#)
+        let sizes = root.contents.compactMap { contents -> LayerTree.Float? in
+            if case let .text(_, _, att) = contents { return att.size }
+            return nil
+        }
+        #expect(sizes == [30])
+    }
+
+    @Test
+    func descendantSelectorFillsCommandStream() throws {
+        let colors = try fills("""
+        <style>g.icon > rect:first-child { fill: #ff0000 }</style>
+        <g class="icon"><rect width="5" height="5"/><rect width="5" height="5"/></g>
+        """)
+        #expect(colors == [Self.red, .black])
+    }
+
+    @Test
+    func oneBadDeclarationKeepsTheSheet() throws {
+        let colors = try fills("""
+        <style>:root { --c: red } .a { fill: var(--c); stroke: #00ff00 } .b { fill: #0000ff }</style>
+        <rect class="a" width="5" height="5"/><rect class="b" width="5" height="5"/>
+        """)
+        #expect(colors == [.black, Self.blue])
+    }
+
+    @Test
+    func useKeepsTheStyleOfItsOriginalElement() throws {
         let colors = try fills("""
         <style>defs > .a { fill: #ff0000 } use { fill: #0000ff }</style>
         <defs><rect id="r" class="a" width="5" height="5"/><circle id="c" r="2"/></defs>
         <use href="#r"/><use href="#c"/>
         """)
         // the referenced rect matches in <defs>; the circle inherits fill from the styled <use>
-        XCTAssertEqual(colors, [.rgba(r: 1, g: 0, b: 0, a: 1, space: .srgb), .rgba(r: 0, g: 0, b: 1, a: 1, space: .srgb)])
+        #expect(colors == [Self.red, Self.blue])
     }
 
-    func testRulesApplyInsideNestedSVG() throws {
+    @Test
+    func rulesApplyInsideNestedSVG() throws {
         let colors = try fills("""
         <style>svg svg > rect { fill: #ff0000 }</style>
         <rect width="5" height="5"/>
         <svg x="10" width="10" height="10"><rect width="5" height="5"/></svg>
         """)
-        // (a nested <svg>'s children are currently emitted twice, a parser bug outside SD10)
-        XCTAssertEqual(colors.first, .black)
-        XCTAssertGreaterThan(colors.count, 1)
-        XCTAssertTrue(colors.dropFirst().allSatisfy { $0 == .rgba(r: 1, g: 0, b: 0, a: 1, space: .srgb) })
+        #expect(colors == [.black, Self.red])
     }
 
-    func testNoneTransformOverridesLowerRule() throws {
+    @Test
+    func noneTransformOverridesLowerRule() throws {
         let root = try makeLayer(#"<style>rect { transform: scale(2) } #r { transform: none }</style><rect id="r" width="5" height="5"/>"#)
         // without a transform the rect is a plain shape, not a transformed layer
-        XCTAssertEqual(root.contents.count, 1)
+        #expect(root.contents.count == 1)
         guard case .shape = root.contents.first else {
-            return XCTFail("expected an untransformed shape, got \(root.contents)")
+            Issue.record("expected an untransformed shape, got \(root.contents)")
+            return
         }
     }
 
-    func testNoneMaskOverridesLowerRule() throws {
+    @Test
+    func noneMaskOverridesLowerRule() throws {
         let root = try makeLayer("""
         <defs><mask id="m"><rect width="5" height="5" fill="white"/></mask></defs>
         <style>rect { mask: url(#m) } #r { mask: none }</style>
         <rect id="r" width="10" height="10"/>
         """)
         // without a mask the rect is a plain shape, not a masked layer
-        XCTAssertEqual(root.contents.count, 1)
+        #expect(root.contents.count == 1)
         guard case .shape = root.contents.first else {
-            return XCTFail("expected an unmasked shape, got \(root.contents)")
+            Issue.record("expected an unmasked shape, got \(root.contents)")
+            return
         }
     }
 
-    func testStylesheetStrokeWidthIsScaledForSFSymbols() throws {
+    @Test
+    func stylesheetStrokeWidthIsScaledForSFSymbols() throws {
         let svg = try DOM.SVG.parse(xml: """
         <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">
         <style>g > line { stroke-width: 4 } line.b { stroke-width: 6 !important }</style>
@@ -202,13 +207,14 @@ final class LayerTreeCSSCascadeTests: XCTestCase {
         </svg>
         """)
         StrokeWidthScaler.scale(svg, by: .init(multiplier: 0.5))
-        let group = try XCTUnwrap(svg.childElements.first as? DOM.Group)
-        XCTAssertEqual(DOM.presentationAttributes(for: group.childElements[0], styles: svg.styles).strokeWidth, 2)
-        XCTAssertEqual(DOM.presentationAttributes(for: group.childElements[1], styles: svg.styles).strokeWidth, 3)
-        XCTAssertEqual(svg.styles[0].rules[0].attributes.strokeWidth, 2)
+        let group = try #require(svg.childElements.first as? DOM.Group)
+        #expect(DOM.presentationAttributes(for: group.childElements[0], styles: svg.styles).strokeWidth == 2)
+        #expect(DOM.presentationAttributes(for: group.childElements[1], styles: svg.styles).strokeWidth == 3)
+        #expect(svg.styles[0].rules[0].attributes.strokeWidth == 2)
     }
 
-    func testComplexSelectorStrokeWidthCountsForSFSymbols() throws {
+    @Test
+    func complexSelectorStrokeWidthCountsForSFSymbols() throws {
         let svg = try DOM.SVG.parse(xml: """
         <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">
         <style>g > line { stroke-width: 4 }</style>
@@ -216,6 +222,6 @@ final class LayerTreeCSSCascadeTests: XCTestCase {
         </svg>
         """)
         // the renderer warns "no effect" when this is 0
-        XCTAssertEqual(StrokeWidthScaler.scale(svg, by: .init(multiplier: 0.5)), 1)
+        #expect(StrokeWidthScaler.scale(svg, by: .init(multiplier: 0.5)) == 1)
     }
 }
