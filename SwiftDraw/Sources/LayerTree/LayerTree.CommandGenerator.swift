@@ -156,7 +156,8 @@ extension LayerTree {
         func makeCommandState(for layer: Layer, colorConverter: any ColorConverter) -> CommandState {
             var hasContents = !layer.contents.isEmpty && layer.opacity > 0.0
             let hasMask = layer.mask != nil
-            let hasFilters = !layer.filters.isEmpty
+            // disableFilters draws the layer as if it had no filter
+            let hasFilters = !layer.filters.isEmpty && !options.contains(.disableFilters)
 
             if hasMask && options.contains(.disableTransparencyLayers) {
                 hasContents = false

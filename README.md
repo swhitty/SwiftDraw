@@ -179,6 +179,7 @@ Options:
  --quiet       suppress warnings and progress, reporting failures only
 
  --hide-unsupported-filters   hide elements with unsupported filters.
+ --disable-filters            draw elements with filters without applying them.
 
 Available keys for --format swift:
  --api                api of generated code:  swiftui | appkit | uikit

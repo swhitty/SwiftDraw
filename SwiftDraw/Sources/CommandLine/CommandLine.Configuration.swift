@@ -284,6 +284,9 @@ extension CommandLine {
         if modifiers.keys.contains(.hideUnsupportedFilters) {
             options.insert(.hideUnsupportedFilters)
         }
+        if modifiers.keys.contains(.disableFilters) {
+            options.insert(.disableFilters)
+        }
 
         return options
     }

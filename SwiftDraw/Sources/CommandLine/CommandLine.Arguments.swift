@@ -48,12 +48,13 @@ extension CommandLine {
         case blackInsets
         case blackStrokeWidth
         case hideUnsupportedFilters
+        case disableFilters
         case legacy
         case quiet
 
         var hasValue: Bool {
             switch self {
-            case .hideUnsupportedFilters, .legacy, .quiet:
+            case .hideUnsupportedFilters, .disableFilters, .legacy, .quiet:
                 return false
             default:
                 return true
@@ -76,6 +77,8 @@ extension CommandLine {
                 return .blackStrokeWidth
             case "hide-unsupported-filters":
                 return .hideUnsupportedFilters
+            case "disable-filters":
+                return .disableFilters
             default:
                 return nil
             }

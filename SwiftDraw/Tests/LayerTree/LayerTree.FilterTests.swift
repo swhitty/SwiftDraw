@@ -307,6 +307,33 @@ struct LayerTreeFilterTests {
                                                    options: .hideUnsupportedFilters)
         #expect(generator.makeCommandState(for: layer, colorConverter: .default).hasContents == hasContents)
     }
+
+    // disableFilters draws the element as SwiftDraw did before filters were rendered
+    @Test
+    func disableFiltersDrawsWithoutFilterLayer() throws {
+        let xml = #"""
+        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+            <filter id="blur"><feGaussianBlur stdDeviation="2" /></filter>
+            <rect x="10" y="10" width="20" height="20" filter="url(#blur)" />
+        </svg>
+        """#
+        #expect(try makeCommands(xml).names.contains("pushFilterLayer"))
+        let disabled = try makeCommands(xml, options: .disableFilters)
+        #expect(!disabled.names.contains("pushFilterLayer"))
+        #expect(disabled.names.contains("fillPath"))
+    }
+
+    @Test
+    func disableFiltersTakesPrecedenceOverHideUnsupportedFilters() throws {
+        let xml = #"""
+        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+            <filter id="flood"><feFlood flood-color="blue" /></filter>
+            <rect x="10" y="10" width="20" height="20" filter="url(#flood)" />
+        </svg>
+        """#
+        #expect(!(try makeCommands(xml, options: .hideUnsupportedFilters).names.contains("fillPath")))
+        #expect(try makeCommands(xml, options: [.hideUnsupportedFilters, .disableFilters]).names.contains("fillPath"))
+    }
 }
 
 private extension LayerTreeFilterTests {
