@@ -17,7 +17,13 @@ swift build
 swift test
 ```
 
-The library is cross-platform: CI builds and tests on macOS, Linux (Swift 6.0.3 and later), Windows and Android. Code in `SwiftDraw/Sources` that uses Apple frameworks must be guarded, usually with `#if canImport(CoreGraphics)`. `container-run-tests.sh` runs the tests in a Linux container.
+The library is cross-platform: CI builds and tests on macOS, Linux (Swift 6.0.3 and later), Windows and Android. Code in `SwiftDraw/Sources` that uses Apple frameworks must be guarded, usually with `#if canImport(CoreGraphics)`. Passing on macOS is not enough: Linux and Windows have no CoreGraphics, so `SVG` is a stub there and AppKit does not import Foundation for you. Before opening a pull request that touches sources or tests, run the tests on Linux too:
+
+```bash
+./container-run-tests.sh
+```
+
+It runs `swift test` in a `swift:6.4` container (Apple's `container` tool, as CI's `linux_swift_6_4` job) and passes extra arguments on, e.g. `--filter SVGHostileTests`. Tests that must run everywhere should go through `DOM.SVG.parse` and `LayerTree` (with `LayerTreeProvider`) rather than `SVG(data:)`.
 
 ### Writing tests
 
