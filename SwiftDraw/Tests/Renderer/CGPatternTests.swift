@@ -99,6 +99,29 @@ final class CGPatternTests: XCTestCase {
         XCTAssertEqual(colors(1), .white)
         XCTAssertEqual(colors(5), .white)
     }
+
+    // pngData and jpegData flip a bitmap context themselves; pattern tiles must follow that flip
+
+    func testPNGDataPatternTileIsNotFlipped() throws {
+        // a single tile with red in its top quarter
+        let colors = try render(pattern: #"<pattern id="p" width="16" height="16" patternUnits="userSpaceOnUse"><rect width="16" height="4" fill="red" /></pattern>"#, column: true, output: .png)
+        XCTAssertEqual(colors(1), .red)
+        XCTAssertEqual(colors(14), .white)
+    }
+
+    func testPNGDataPatternYOffsetsTiles() throws {
+        let colors = try render(pattern: #"<pattern id="p" y="4" width="16" height="8" patternUnits="userSpaceOnUse"><rect width="16" height="4" fill="red" /></pattern>"#, column: true, output: .png)
+        XCTAssertEqual(colors(1), .white)
+        XCTAssertEqual(colors(5), .red)
+        XCTAssertEqual(colors(9), .white)
+        XCTAssertEqual(colors(13), .red)
+    }
+
+    func testJPEGDataPatternTileIsNotFlipped() throws {
+        let colors = try render(pattern: #"<pattern id="p" width="16" height="16" patternUnits="userSpaceOnUse"><rect width="16" height="4" fill="red" /></pattern>"#, column: true, output: .jpeg)
+        XCTAssertEqual(colors(1), .red)
+        XCTAssertEqual(colors(14), .white)
+    }
 }
 
 private extension CGPatternTests {
@@ -109,10 +132,16 @@ private extension CGPatternTests {
         case other
     }
 
+    enum Output {
+        case rasterize
+        case png
+        case jpeg
+    }
+
     var stripe: String { #"<rect width="4" height="16" fill="red" />"# }
 
     /// Samples the middle row, or the middle column when `column` is true.
-    func render(pattern: String, column: Bool = false) throws -> (Int) -> Pixel {
+    func render(pattern: String, column: Bool = false, output: Output = .rasterize) throws -> (Int) -> Pixel {
         let xml = """
         <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="16" height="16">
             <defs>\(pattern)</defs>
@@ -121,15 +150,32 @@ private extension CGPatternTests {
         </svg>
         """
         let svg = try XCTUnwrap(SVG(xml: xml))
-        let image = svg.rasterize(with: CGSize(width: 16, height: 16), scale: 1)
-        let canvas = NSBitmapImageRep(pixelsWide: 16, pixelsHigh: 16)
-        canvas.lockFocus()
-        image.draw(in: NSRect(x: 0, y: 0, width: 16, height: 16))
-        canvas.unlockFocus()
+        let canvas: NSBitmapImageRep
+        switch output {
+        case .rasterize:
+            let image = svg.rasterize(with: CGSize(width: 16, height: 16), scale: 1)
+            canvas = NSBitmapImageRep(pixelsWide: 16, pixelsHigh: 16)
+            canvas.lockFocus()
+            image.draw(in: NSRect(x: 0, y: 0, width: 16, height: 16))
+            canvas.unlockFocus()
+        case .png:
+            canvas = try XCTUnwrap(NSBitmapImageRep(data: svg.pngData(scale: 1)))
+        case .jpeg:
+            canvas = try XCTUnwrap(NSBitmapImageRep(data: svg.jpegData(scale: 1)))
+        }
 
         return { i in
-            guard let color = canvas.colorAt(x: column ? 8 : i, y: column ? i : 8)?.usingColorSpace(.deviceRGB) else { return .other }
-            let (r, g, b) = (color.redComponent, color.greenComponent, color.blueComponent)
+            let (x, y) = (column ? 8 : i, column ? i : 8)
+            let r, g, b: CGFloat
+            if output == .rasterize {
+                guard let color = canvas.colorAt(x: x, y: y)?.usingColorSpace(.deviceRGB) else { return .other }
+                (r, g, b) = (color.redComponent, color.greenComponent, color.blueComponent)
+            } else {
+                // decoded PNG / JPEG: compare the stored samples, without a colour space conversion
+                var samples = [Int](repeating: 0, count: canvas.samplesPerPixel)
+                canvas.getPixel(&samples, atX: x, y: y)
+                (r, g, b) = (CGFloat(samples[0]) / 255, CGFloat(samples[1]) / 255, CGFloat(samples[2]) / 255)
+            }
             if r > 0.9, g < 0.1, b < 0.1 { return .red }
             if r > 0.9, g > 0.9, b > 0.9 { return .white }
             return .other

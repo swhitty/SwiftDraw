@@ -330,11 +330,14 @@ struct CGRenderer: Renderer {
     typealias Types = CGTypes
 
     let ctx: CGContext
+    /// The context's default coordinate space, which CGPattern matrices are relative to.
     let baseCTM: CGAffineTransform
 
-    init(context: CGContext) {
+    /// - Parameter baseCTM: the context's default space; defaults to the current CTM.
+    ///   Pass the CTM from before any transform the caller applied itself, e.g. a top-left flip.
+    init(context: CGContext, baseCTM: CGAffineTransform? = nil) {
         self.ctx = context
-        self.baseCTM = ctx.ctm
+        self.baseCTM = baseCTM ?? context.ctm
     }
 
     func pushState() {
