@@ -114,6 +114,54 @@ extension LayerTree {
             return transform
         }
 
+        /// Maps the viewBox into the `width` x `height` viewport (SVG 1.1 §7.8, `preserveAspectRatio`):
+        /// `viewport = (user - viewBox.origin) * scale + offset`. A missing or empty viewBox is the viewport itself.
+        static func makeViewBoxFit(
+            viewBox: DOM.SVG.ViewBox?,
+            width: DOM.Length,
+            height: DOM.Length,
+            preserveAspectRatio: DOM.PreserveAspectRatio?
+        ) -> (viewBox: DOM.SVG.ViewBox, sx: LayerTree.Float, sy: LayerTree.Float, tx: LayerTree.Float, ty: LayerTree.Float) {
+            var box = DOM.SVG.ViewBox(x: 0, y: 0, width: .init(width), height: .init(height))
+            if let viewBox, viewBox.x.isFinite, viewBox.y.isFinite,
+               viewBox.width.isFinite, viewBox.height.isFinite,
+               viewBox.width > 0, viewBox.height > 0 {
+                box = viewBox
+            }
+            // an empty or non-finite viewport (or one that overflows the fit) has no mapping: identity
+            guard box.width > 0, box.height > 0, width > 0, height > 0 else {
+                return (box, 1, 1, 0, 0)
+            }
+            let fit = (preserveAspectRatio ?? .default).fit(
+                contentWidth: box.width, contentHeight: box.height,
+                viewportWidth: .init(width), viewportHeight: .init(height)
+            )
+            // the free space of an exact fit is only rounding noise
+            let tx = abs(fit.tx) < 1e-4 ? 0 : fit.tx
+            let ty = abs(fit.ty) < 1e-4 ? 0 : fit.ty
+            guard [fit.sx, fit.sy, tx, ty].allSatisfy(\.isFinite), fit.sx > 0, fit.sy > 0 else {
+                return (DOM.SVG.ViewBox(x: 0, y: 0, width: .init(width), height: .init(height)), 1, 1, 0, 0)
+            }
+            return (box, fit.sx, fit.sy, tx, ty)
+        }
+
+        /// The viewport of a nested `<svg>` in the coordinates of its contents (the viewBox space),
+        /// where its `overflow: hidden` clip applies. Larger than the viewBox when `meet` letterboxes it.
+        static func makeViewportClip(
+            viewBox: DOM.SVG.ViewBox?,
+            width: DOM.Length,
+            height: DOM.Length,
+            preserveAspectRatio: DOM.PreserveAspectRatio?
+        ) -> LayerTree.Rect {
+            let fit = makeViewBoxFit(viewBox: viewBox, width: width, height: height, preserveAspectRatio: preserveAspectRatio)
+            return LayerTree.Rect(
+                x: fit.viewBox.x - fit.tx / fit.sx,
+                y: fit.viewBox.y - fit.ty / fit.sy,
+                width: LayerTree.Float(width) / fit.sx,
+                height: LayerTree.Float(height) / fit.sy
+            )
+        }
+
         func makeLayer(from root: DOM.GraphicsElement, inheriting previousState: State) -> Layer {
             var stack: [(DOM.GraphicsElement, State, Layer?)] = [(root, previousState, nil)]
             var resultLayer: Layer? = nil
