@@ -39,8 +39,15 @@ extension LayerTree {
         var clipRule: FillRule?
         var clipUnits: ClipUnits = .userSpaceOnUse
         var mask: Layer?
+        // how this layer masks when it is used as a mask
+        var maskType: MaskType = .luminance
         var filters: [Filter] = []
         var filterRegion = FilterRegion()
+
+        enum MaskType: Hashable {
+            case luminance
+            case alpha
+        }
 
         enum Contents: Hashable {
             case shape(Shape, StrokeAttributes, FillAttributes)
@@ -83,6 +90,7 @@ extension LayerTree {
             clip.hash(into: &hasher)
             clipUnits.hash(into: &hasher)
             mask.hash(into: &hasher)
+            maskType.hash(into: &hasher)
             filters.hash(into: &hasher)
             filterRegion.hash(into: &hasher)
         }
@@ -96,6 +104,7 @@ extension LayerTree {
             lhs.clipRule == rhs.clipRule &&
             lhs.clipUnits == rhs.clipUnits &&
             lhs.mask == rhs.mask &&
+            lhs.maskType == rhs.maskType &&
             lhs.filters == rhs.filters &&
             lhs.filterRegion == rhs.filterRegion
         }

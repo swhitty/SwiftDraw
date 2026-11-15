@@ -108,6 +108,58 @@ struct LayerTreeMaskTests {
         #expect(LuminanceColorConverter().createColor(from: color) == expected)
     }
 
+    @Test(arguments: [
+        #"<mask id="m" mask-type="alpha">"#,
+        #"<mask id="m" style="mask-type: alpha">"#,
+        #"<style>mask { mask-type: alpha }</style><mask id="m">"#,
+        #"<style>.a { mask-type: alpha }</style><mask id="m" class="a">"#,
+    ])
+    func alphaMaskContentColoursAreWhite(mask: String) throws {
+        let commands = try makeCommands(#"""
+        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+            \#(mask)
+                <rect width="100" height="100" fill="black" fill-opacity="0.5" />
+                <rect width="50" height="100" fill="red" />
+            </mask>
+            <rect width="100" height="100" fill="green" mask="url(#m)" />
+        </svg>
+        """#)
+
+        let contents = try #require(commands.compactMap(\.maskContents).first)
+        let fills = contents.compactMap(\.fillColor)
+        #expect(fills == [.gray(white: 1, a: 0.5), .gray(white: 1, a: 1)])
+    }
+
+    @Test(arguments: [
+        #"<mask id="m">"#,
+        #"<mask id="m" mask-type="luminance">"#,
+        #"<mask id="m" mask-type="bogus">"#,
+    ])
+    func luminanceMaskIsTheDefault(mask: String) throws {
+        let commands = try makeCommands(#"""
+        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+            \#(mask)
+                <rect width="100" height="100" fill="black" fill-opacity="0.5" />
+            </mask>
+            <rect width="100" height="100" fill="green" mask="url(#m)" />
+        </svg>
+        """#)
+
+        let contents = try #require(commands.compactMap(\.maskContents).first)
+        #expect(contents.compactMap(\.fillColor) == [.gray(white: 0, a: 0.5)])
+    }
+
+    @Test(arguments: [
+        (LayerTree.Color.white, LayerTree.Color.gray(white: 1.0, a: 1.0)),
+        (.black, .gray(white: 1.0, a: 1.0)),
+        (.srgb(r: 0, g: 1, b: 0, a: 0.5), .gray(white: 1.0, a: 0.5)),
+        (.gray(white: 0.3, a: 0.4), .gray(white: 1.0, a: 0.4)),
+        (.none, .none)
+    ])
+    func alphaConverter(color: LayerTree.Color, expected: LayerTree.Color) {
+        #expect(AlphaColorConverter().createColor(from: color) == expected)
+    }
+
     func makeCommands(_ xml: String) throws -> [Command] {
         let svg = try DOM.SVG.parse(xml: xml)
         let layer = LayerTree.Builder(svg: svg).makeLayer()

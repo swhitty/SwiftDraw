@@ -340,6 +340,9 @@ extension LayerTree {
             // A mask inside itself is empty, so it hides what it masks
             return building(ObjectIdentifier(mask), cycle: Layer()) {
                 let l = Layer()
+                if DOM.presentationAttributes(for: mask, styles: svg.styles).maskType == .alpha {
+                    l.maskType = .alpha
+                }
 
                 var maskState = createState(for: mask, inheriting: State())
                 // SVG 1.1 §11.5: `display` does not apply to `<mask>`; only its children can be hidden

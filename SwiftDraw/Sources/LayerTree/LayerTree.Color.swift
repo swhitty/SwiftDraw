@@ -179,3 +179,19 @@ struct LuminanceColorConverter: ColorConverter {
 extension ColorConverter where Self == LuminanceColorConverter {
     static var luminance: LuminanceColorConverter { LuminanceColorConverter() }
 }
+
+// `mask-type: alpha` keeps only the alpha: white over the mask's black backdrop has the luminance of its alpha
+struct AlphaColorConverter: ColorConverter {
+  func createColor(from color: LayerTree.Color) -> LayerTree.Color {
+    switch color {
+    case .none:
+      return .none
+    case .rgba(_, _, _, let a, _), .gray(_, let a):
+      return .gray(white: 1, a: a)
+    }
+  }
+}
+
+extension ColorConverter where Self == AlphaColorConverter {
+    static var alpha: AlphaColorConverter { AlphaColorConverter() }
+}

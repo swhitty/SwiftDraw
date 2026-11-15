@@ -97,6 +97,12 @@ extension DOM {
         case collapse
     }
 
+    // CSS Masking §7.2: whether a mask uses the luminance or the alpha of its contents
+    package enum MaskType: String {
+        case luminance
+        case alpha
+    }
+
     package enum LineCap: String {
         case butt
         case round

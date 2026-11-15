@@ -51,6 +51,22 @@ struct CGRendererMaskTests {
     }
 
     @Test
+    func alphaMaskUsesContentAlpha() throws {
+        let bitmap = try render(#"""
+        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+            <mask id="m" style="mask-type:alpha">
+                <rect width="50" height="100" fill="black" fill-opacity="0.5" />
+                <rect x="50" width="50" height="100" fill="black" />
+            </mask>
+            <rect width="100" height="100" fill="green" mask="url(#m)" />
+        </svg>
+        """#)
+
+        #expect(bitmap.alpha(x: 25, y: 50).isClose(to: 0.5))
+        #expect(bitmap.alpha(x: 75, y: 50).isClose(to: 1))
+    }
+
+    @Test
     func groupOpacityFlattensOverlap() throws {
         let bitmap = try render(mask: #"""
             <rect width="100" height="100" fill="white" />
