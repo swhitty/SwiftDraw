@@ -43,30 +43,70 @@ package extension XMLParser {
         let heightRaw = try? att.parseString("height")
         let viewBox: DOM.SVG.ViewBox? = try parseViewBox(try att.parseString("viewBox"))
 
-        var width = try resolveRootDimension(widthRaw, viewport: defaultViewport?.width, attribute: "width")
-        var height = try resolveRootDimension(heightRaw, viewport: defaultViewport?.height, attribute: "height")
-
-        width = width ?? viewBox?.width ?? defaultViewport?.width
-        height = height ?? viewBox?.height ?? defaultViewport?.height
-
-        guard let w = width else {
-            throw XMLParser.Error.unresolvableDimension(reason: makeUnresolvedReason(attribute: "width", raw: widthRaw, hasViewBox: viewBox != nil))
+        let isRoot = lengthContext.viewports.isEmpty
+        if isRoot {
+            lengthContext.styleSheets = parseStyleSheetElements(within: e)
+            lengthContext.fontSize = rootFontSize(e)
         }
-        guard let h = height else {
-            throw XMLParser.Error.unresolvableDimension(reason: makeUnresolvedReason(attribute: "height", raw: heightRaw, hasViewBox: viewBox != nil))
+        defer {
+            if isRoot { lengthContext.styleSheets = [] }
         }
 
-        // Int(w) traps when w is huge, infinite or NaN
-        guard let intWidth = DOM.Length(exactly: w.rounded(.towardZero)) else {
-            throw Error.invalidAttribute(name: "width", value: widthRaw ?? "\(w)")
-        }
-        guard let intHeight = DOM.Length(exactly: h.rounded(.towardZero)) else {
-            throw Error.invalidAttribute(name: "height", value: heightRaw ?? "\(h)")
+        let svg: DOM.SVG
+        if let parent = lengthContext.viewports.last {
+            // SVG 1.1 §7.9: a nested <svg> resolves its percentages against the enclosing viewport,
+            // and a missing (or invalid) width or height is 100%
+            let width = widthRaw.flatMap { try? resolveLength($0, .horizontal) }.flatMap(finite) ?? parent.width
+            let height = heightRaw.flatMap { try? resolveLength($0, .vertical) }.flatMap(finite) ?? parent.height
+            svg = DOM.SVG(width: width, height: height)
+            svg.x = parseDefaultedLength(att, "x", .horizontal)
+            svg.y = parseDefaultedLength(att, "y", .vertical)
+        } else {
+            var width = try resolveRootDimension(widthRaw, viewport: defaultViewport?.width, attribute: "width")
+            var height = try resolveRootDimension(heightRaw, viewport: defaultViewport?.height, attribute: "height")
+
+            // only one side given: the other follows the viewBox's aspect ratio (SVG 2 §8.2, CSS
+            // replaced elements with an intrinsic ratio), as in Chrome and Safari
+            if let viewBox, viewBox.width > 0, viewBox.height > 0 {
+                if let w = width, height == nil {
+                    height = w * viewBox.height / viewBox.width
+                } else if let h = height, width == nil {
+                    width = h * viewBox.width / viewBox.height
+                }
+            }
+
+            width = width ?? viewBox?.width ?? defaultViewport?.width
+            height = height ?? viewBox?.height ?? defaultViewport?.height
+
+            guard let w = width else {
+                throw XMLParser.Error.unresolvableDimension(reason: makeUnresolvedReason(attribute: "width", raw: widthRaw, hasViewBox: viewBox != nil))
+            }
+            guard let h = height else {
+                throw XMLParser.Error.unresolvableDimension(reason: makeUnresolvedReason(attribute: "height", raw: heightRaw, hasViewBox: viewBox != nil))
+            }
+
+            // fractional sizes are kept, but a size past Int (or infinite or NaN) is rejected:
+            // callers make pixel buffers from it, and Int(size) traps
+            guard DOM.Length(exactly: w.rounded(.towardZero)) != nil else {
+                throw Error.invalidAttribute(name: "width", value: widthRaw ?? "\(w)")
+            }
+            guard DOM.Length(exactly: h.rounded(.towardZero)) != nil else {
+                throw Error.invalidAttribute(name: "height", value: heightRaw ?? "\(h)")
+            }
+
+            svg = DOM.SVG(width: w, height: h)
+            svg.x = try att.parseCoordinate("x")
+            svg.y = try att.parseCoordinate("y")
         }
 
-        let svg = DOM.SVG(width: intWidth, height: intHeight)
-        svg.x = try att.parseCoordinate("x")
-        svg.y = try att.parseCoordinate("y")
+        // the viewport that percentages of the contents resolve against, in their user units
+        if let viewBox, viewBox.width > 0, viewBox.height > 0 {
+            lengthContext.viewports.append(Viewport(width: viewBox.width, height: viewBox.height))
+        } else {
+            lengthContext.viewports.append(Viewport(width: svg.width, height: svg.height))
+        }
+        defer { lengthContext.viewports.removeLast() }
+
         svg.childElements = try parseGraphicsElements(e.children)
         svg.viewBox = viewBox
         svg.preserveAspectRatio = parsePreserveAspectRatio(try? att.parseString("preserveAspectRatio"))
@@ -113,12 +153,31 @@ package extension XMLParser {
             guard scanner.isEOF else {
                 throw Error.invalidAttribute(name: attribute, value: raw)
             }
-            return DOM.Coordinate(number.apply(unit: unit))
+            switch unit {
+            case .em:
+                return DOM.Coordinate(number) * lengthContext.fontSize
+            case .ex:
+                return DOM.Coordinate(number) * lengthContext.fontSize / 2
+            default:
+                return DOM.Coordinate(number.apply(unit: unit))
+            }
         }
         guard scanner.isEOF else {
             throw Error.invalidAttribute(name: attribute, value: raw)
         }
         return DOM.Coordinate(number)
+    }
+
+    // the font-size of the root <svg> for its own `em` sizes and those of its contents
+    func rootFontSize(_ e: XML.Element) -> DOM.Float {
+        fontSize(of: e,
+                 attributes: (try? parsePresentationAttributes(e)) ?? DOM.PresentationAttributes(),
+                 style: (try? parseStyleAttributes(e)) ?? DOM.PresentationAttributes())
+            ?? LengthContext.initialFontSize
+    }
+
+    private func finite(_ value: DOM.Coordinate) -> DOM.Coordinate? {
+        value.isFinite ? value : nil
     }
 
     func makeUnresolvedReason(attribute: String, raw: String?, hasViewBox: Bool) -> String {

@@ -34,38 +34,43 @@ extension XMLParser {
     /// A geometry value with a default (a position, a corner radius, an image size): a missing or invalid value
     /// leaves it unset so the default applies, rather than invalidating the element.
     /// Sizes without a usable default (`width`, `height`, `r`) are still required.
-    func parseDefaultedCoordinate(_ att: any AttributeParser, _ key: String) -> DOM.Coordinate? {
-        try? att.parseCoordinate(key) as DOM.Coordinate?
+    /// Units, percentages and `em`/`ex` resolve as in `resolveLength(_:_:)`.
+    func parseDefaultedLength(_ att: any AttributeParser, _ key: String, _ direction: LengthDirection) -> DOM.Coordinate? {
+        try? parseLength(att, key, direction) as DOM.Coordinate?
     }
 
     func parseLine(_ att: any AttributeParser) throws -> DOM.Line {
         // x1, y1, x2 and y2 default to 0
-        DOM.Line(x1: parseDefaultedCoordinate(att, "x1") ?? 0,
-                 y1: parseDefaultedCoordinate(att, "y1") ?? 0,
-                 x2: parseDefaultedCoordinate(att, "x2") ?? 0,
-                 y2: parseDefaultedCoordinate(att, "y2") ?? 0)
+        DOM.Line(x1: parseDefaultedLength(att, "x1", .horizontal) ?? 0,
+                 y1: parseDefaultedLength(att, "y1", .vertical) ?? 0,
+                 x2: parseDefaultedLength(att, "x2", .horizontal) ?? 0,
+                 y2: parseDefaultedLength(att, "y2", .vertical) ?? 0)
     }
 
     func parseCircle(_ att: any AttributeParser) throws -> DOM.Circle {
-        let r: DOM.Coordinate = try att.parseCoordinate("r")
-        return DOM.Circle(cx: parseDefaultedCoordinate(att, "cx"), cy: parseDefaultedCoordinate(att, "cy"), r: r)
+        let r: DOM.Coordinate = try parseLength(att, "r", .other)
+        return DOM.Circle(cx: parseDefaultedLength(att, "cx", .horizontal),
+                          cy: parseDefaultedLength(att, "cy", .vertical),
+                          r: r)
     }
 
     func parseEllipse(_ att: any AttributeParser) throws -> DOM.Ellipse {
-        let rx: DOM.Coordinate = try att.parseCoordinate("rx")
-        let ry: DOM.Coordinate = try att.parseCoordinate("ry")
-        return DOM.Ellipse(cx: parseDefaultedCoordinate(att, "cx"), cy: parseDefaultedCoordinate(att, "cy"), rx: rx, ry: ry)
+        let rx: DOM.Coordinate = try parseLength(att, "rx", .horizontal)
+        let ry: DOM.Coordinate = try parseLength(att, "ry", .vertical)
+        return DOM.Ellipse(cx: parseDefaultedLength(att, "cx", .horizontal),
+                           cy: parseDefaultedLength(att, "cy", .vertical),
+                           rx: rx, ry: ry)
     }
 
     func parseRect(_ att: any AttributeParser) throws -> DOM.Rect {
-        let width: DOM.Coordinate = try att.parseCoordinate("width")
-        let height: DOM.Coordinate = try att.parseCoordinate("height")
+        let width: DOM.Coordinate = try parseLength(att, "width", .horizontal)
+        let height: DOM.Coordinate = try parseLength(att, "height", .vertical)
         let rect = DOM.Rect(width: width, height: height)
 
-        rect.x = parseDefaultedCoordinate(att, "x")
-        rect.y = parseDefaultedCoordinate(att, "y")
-        rect.rx = parseDefaultedCoordinate(att, "rx")
-        rect.ry = parseDefaultedCoordinate(att, "ry")
+        rect.x = parseDefaultedLength(att, "x", .horizontal)
+        rect.y = parseDefaultedLength(att, "y", .vertical)
+        rect.rx = parseDefaultedLength(att, "rx", .horizontal)
+        rect.ry = parseDefaultedLength(att, "ry", .vertical)
 
         return rect
     }
@@ -82,6 +87,10 @@ extension XMLParser {
         var ge: DOM.GraphicsElement
 
         let att = try parseAttributes(e)
+        let attributes = try parsePresentationAttributes(e)
+        let style = try parseStyleAttributes(e)
+        // `em` and `ex` lengths of this element (and font-size inherited by its children)
+        lengthContext.fontSize = fontSize(of: e, attributes: attributes, style: style) ?? lengthContext.fontSize
 
         switch e.name {
         case "g": ge = try parseGroup(e)
@@ -109,19 +118,23 @@ extension XMLParser {
         ge.id = elementAtt.id
         ge.class = elementAtt.class
 
-        ge.attributes = try parsePresentationAttributes(e)
-        ge.style = try parseStyleAttributes(e)
+        ge.attributes = attributes
+        ge.style = style
         return ge
     }
 
     func parseGraphicsElements(_ elements: [XML.Element]) throws -> [DOM.GraphicsElement] {
         var result = [DOM.GraphicsElement]()
-        var stack: [(XML.Element, parent: (any ContainerElement)?)] = elements
+        // each element inherits the font-size of its parent for `em` and `ex` lengths
+        let fontSize = lengthContext.fontSize
+        defer { lengthContext.fontSize = fontSize }
+        var stack: [(XML.Element, parent: (any ContainerElement)?, fontSize: DOM.Float)] = elements
             .reversed()
-            .map { ($0, parent: nil) }
+            .map { ($0, parent: nil, fontSize: fontSize) }
 
-        while let (element, parent) = stack.popLast() {
+        while let (element, parent, inheritedFontSize) = stack.popLast() {
             try Task.checkCancellation()
+            lengthContext.fontSize = inheritedFontSize
 
             // not routed through skippingInvalid(_:_:): nested <svg> recurses through here and
             // the extra generic/closure frames overflow the small stacks of test threads
@@ -146,7 +159,8 @@ extension XMLParser {
 
             // a nested <svg> has already parsed its own children (with its own defs and styles)
             if let container = ge as? any ContainerElement, !(ge is DOM.SVG) {
-                stack.append(contentsOf: element.children.reversed().map { ($0, container) })
+                let fontSize = lengthContext.fontSize
+                stack.append(contentsOf: element.children.reversed().map { ($0, container, fontSize) })
             }
 
         }
@@ -301,8 +315,8 @@ extension XMLParser {
         el.color = lenient { try att.parseColor("color") }
 
         el.stroke = lenient { try att.parseFill("stroke") }
-        // a negative stroke-width is an error: drop it (SVG 1.1 §11.4)
-        el.strokeWidth = lenient { try att.parseFloat("stroke-width") }.flatMap { $0 < 0 ? nil : $0 }
+        // a negative stroke-width is an error: drop it (SVG 1.1 §11.4); absolute units in px
+        el.strokeWidth = lenient { try att.parseCoordinate("stroke-width") }.flatMap { $0 < 0 ? nil : $0 }
         el.strokeOpacity = opacity(att, "stroke-opacity")
         el.strokeLineCap = lenient { try att.parseRaw("stroke-linecap") }
         el.strokeLineJoin = lenient { try att.parseRaw("stroke-linejoin") }
@@ -320,7 +334,9 @@ extension XMLParser {
         el.fillRule = lenient { try att.parseRaw("fill-rule") }
 
         el.fontFamily = lenient { try att.parseFontFamily("font-family") }
-        el.fontSize = lenient { try att.parseFloat("font-size") }
+        // absolute units (`12pt`) in px; `em` and `%` keep their raw number as before
+        // absolute units (`12pt`) in px; `em` and `%` keep their raw number as before
+        el.fontSize = lenient { try att.parseCoordinate("font-size") }
         el.textAnchor = lenient { try att.parseRaw("text-anchor") }
         el.dominantBaseline = lenient { try att.parseRaw("dominant-baseline") }
 

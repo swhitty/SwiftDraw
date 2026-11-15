@@ -43,8 +43,8 @@ extension XMLParser {
       }()
       
     let use = DOM.Use(href: href)
-    use.x = parseDefaultedCoordinate(att, "x")
-    use.y = parseDefaultedCoordinate(att, "y")
+    use.x = parseDefaultedLength(att, "x", .horizontal)
+    use.y = parseDefaultedLength(att, "y", .vertical)
     
     return use
   }
