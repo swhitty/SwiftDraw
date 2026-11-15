@@ -225,7 +225,7 @@ extension LayerTree.Builder {
         let stroke: LayerTree.StrokeAttributes.Stroke
 
         if state.strokeWidth > 0.0 {
-            switch state.stroke {
+            switch resolveFallback(state.stroke) {
             case .color(let c):
                 let color = LayerTree.Color
                     .create(from: c, current: state.color)
@@ -239,6 +239,8 @@ extension LayerTree.Builder {
                 } else {
                     stroke = .color(.none)
                 }
+            case .urlWithFallback:
+                stroke = .color(.none) // resolved to .url or .color above
             }
         } else {
             stroke = .color(.none)
@@ -291,7 +293,20 @@ extension LayerTree.Builder {
         return lengths
     }
 
+    /// SVG 1.1 §11.2: a paint server that resolves wins; otherwise the fallback colour (`none` paints nothing).
+    func resolveFallback(_ paint: DOM.Fill) -> DOM.Fill {
+        guard case .urlWithFallback(let url, let color) = paint else { return paint }
+        let resolves = url.fragmentID.map { id in
+            svg.defs.patterns.contains(where: { $0.id == id }) ||
+                makeLinearGradient(for: url) != nil ||
+                makeRadialGradient(for: url) != nil
+        } ?? false
+        return resolves ? .url(url) : .color(color)
+    }
+
     func makeFillAttributes(with state: State) -> LayerTree.FillAttributes {
+        var state = state
+        state.fill = resolveFallback(state.fill)
         let fill = LayerTree.Color
             .create(from: state.fill.makeColor(), current: state.color)
             .withAlpha(state.fillOpacity).maybeNone()
@@ -330,6 +345,8 @@ extension LayerTree.Builder {
     }
 
     func makeTextAttributes(with state: State) -> LayerTree.TextAttributes {
+        var state = state
+        state.fill = resolveFallback(state.fill)
         let fill = LayerTree.Color
             .create(from: state.fill.makeColor(), current: state.color)
             .withAlpha(state.fillOpacity).maybeNone()
@@ -694,6 +711,8 @@ private extension DOM.Fill {
             return c
         case .url:
             return .none
+        case .urlWithFallback(_, let c):
+            return c
         }
     }
 }
