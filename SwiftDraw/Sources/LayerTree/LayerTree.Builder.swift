@@ -561,8 +561,10 @@ extension LayerTree.Builder {
     func makeFonts(faceName: String, weight: Int = 400, style: DOM.FontStyle = .normal) -> [LayerTree.TextAttributes.Font] {
         let faces = Self.matchFontFaces(svg.fontFaces(for: faceName), weight: weight, style: style)
         // each face uses the first of its sources that loads (a local font that is installed, a URL that decodes)
-        let fonts = faces.compactMap { face in
-            face.src.lazy.compactMap { try? self.makeFont(for: $0) }.first
+        let fonts = faces.compactMap { face -> LayerTree.TextAttributes.Font? in
+            guard let font = face.src.lazy.compactMap({ try? self.makeFont(for: $0) }).first else { return nil }
+            let synthesis = Self.makeFontSynthesis(for: face, weight: weight, style: style)
+            return synthesis.isEmpty ? font : .synthesized(font, synthesis)
         }
 
         guard !fonts.isEmpty else {
@@ -603,6 +605,18 @@ extension LayerTree.Builder {
         }
         guard let best = candidates.map({ rank($0.weight) }).min(by: { $0 < $1 }) else { return [] }
         return candidates.filter { rank($0.weight) == best }
+    }
+
+    /// The bold and oblique an `@font-face` face needs synthesized, from its declared `font-weight` and
+    /// `font-style` (not the font file's own): bold when 600 or heavier is asked for and the face is
+    /// lighter, oblique when italic or oblique is asked for and the face is normal.
+    static func makeFontSynthesis(for face: DOM.FontFace, weight: Int, style: DOM.FontStyle) -> LayerTree.FontSynthesis {
+        LayerTree.FontSynthesis(
+            weight: weight,
+            isItalic: style != .normal,
+            faceWeight: min(max(weight, face.weight.lowerBound), face.weight.upperBound),
+            faceIsItalic: face.style != .normal
+        )
     }
 
     func makeFont(for source: DOM.FontFace.Source) throws -> LayerTree.TextAttributes.Font {
