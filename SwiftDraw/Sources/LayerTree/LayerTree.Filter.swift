@@ -166,6 +166,11 @@ extension LayerTree.FilterLayer {
         return inputs
     }
 
+    // the primitives these resolve into, counted against maxPrimitives
+    static func primitiveCount(of primitives: [LayerTree.FilterPrimitive]) -> Int {
+        primitives.reduce(0) { $0 + $1.effect.primitiveCount }
+    }
+
     // Filter Effects 1 §9.3: only the tree rooted at the last primitive contributes; ascending indices
     static func primaryTree(of inputs: [[Input]]) -> [Int] {
         guard !inputs.isEmpty else { return [] }
@@ -188,7 +193,8 @@ extension LayerTree.Layer {
         let inputs = LayerTree.FilterLayer.makeInputs(for: filters)
         let tree = LayerTree.FilterLayer.primaryTree(of: inputs)
         // a tree over the cap is drawn unfiltered too
-        return tree.count > LayerTree.FilterLayer.maxPrimitives || tree.contains { !filters[$0].effect.isSupported }
+        return LayerTree.FilterLayer.primitiveCount(of: tree.map { filters[$0] }) > LayerTree.FilterLayer.maxPrimitives
+            || tree.contains { !filters[$0].effect.isSupported }
     }
 
     var containsText: Bool {
@@ -213,8 +219,18 @@ extension LayerTree.Filter {
             return true
         case .unsupported:
             return false
-        case .offset, .flood, .composite, .merge, .blend, .colorMatrix:
+        case .offset, .flood, .composite, .merge, .blend, .colorMatrix, .dropShadow:
             return true
+        }
+    }
+
+    // feDropShadow resolves into the five primitives that define it (Filter Effects 1 §9.12)
+    var primitiveCount: Int {
+        switch self {
+        case .dropShadow:
+            return 5
+        case .gaussianBlur, .unsupported, .offset, .flood, .composite, .merge, .blend, .colorMatrix:
+            return 1
         }
     }
 }
