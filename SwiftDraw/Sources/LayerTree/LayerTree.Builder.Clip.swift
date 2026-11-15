@@ -63,8 +63,8 @@ extension LayerTree.Builder {
 
         // a clip path that (indirectly) clips itself is ignored; the active set is not counted
         // against the document-wide reference budget, so any number of elements may share a clip.
-        // Each nested clip-path costs native stack, so nesting stops at ReferenceGuard.maxDepth.
-        guard activeClips.count < ReferenceGuard.maxDepth,
+        // Each nested clip-path costs native stack, so nesting stops at maxReferenceDepth.
+        guard activeClips.count < Self.maxReferenceDepth,
               activeClips.insert(id).inserted else { return nil }
         defer { activeClips.remove(id) }
 
@@ -120,8 +120,9 @@ extension LayerTree.Builder {
     /// it references directly; any other element is ignored (SVG 1.1 §14.3.5).
     func makeClipMembers(for element: DOM.GraphicsElement, inheriting rule: LayerTree.FillRule) -> [ClipMember] {
         let attributes = DOM.presentationAttributes(for: element, styles: svg.styles)
-        guard attributes.display != DOM.DisplayMode.none else { return [] }
-        let transform = Self.createTransforms(from: element.attributes.transform ?? []).toMatrix()
+        // SVG 1.1 §14.3.5: children with `display="none"` or hidden `visibility` do not contribute to the clip
+        guard attributes.display != DOM.DisplayMode.none, (attributes.visibility ?? .visible) == .visible else { return [] }
+        let transform = Self.createTransforms(from: attributes.transform ?? []).toMatrix()
         let rule = attributes.clipRule ?? rule
 
         if let use = element as? DOM.Use {
@@ -129,10 +130,13 @@ extension LayerTree.Builder {
                   let referenced = svg.firstGraphicsElement(with: id),
                   !(referenced is DOM.Use) else { return [] }
             let translate = LayerTree.Transform.translate(tx: use.x ?? 0, ty: use.y ?? 0).toMatrix()
-            return makeClipMembers(for: referenced, inheriting: rule).map {
-                var member = $0
-                member.transform = member.transform.concatenated(translate).concatenated(transform)
-                return member
+            // the cycle guard and reference budget that every <use> expansion spends
+            return building(ObjectIdentifier(use), cycle: []) {
+                makeClipMembers(for: referenced, inheriting: rule).map {
+                    var member = $0
+                    member.transform = member.transform.concatenated(translate).concatenated(transform)
+                    return member
+                }
             }
         } else if Self.makeShape(from: element) != nil || element is DOM.Text {
             return [ClipMember(element: element, transform: transform, rule: rule)]

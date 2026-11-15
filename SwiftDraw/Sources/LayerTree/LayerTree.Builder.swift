@@ -47,6 +47,10 @@ extension LayerTree {
             var total = 0
         }
         private let active = Active()
+        // The clip paths being resolved (SD8): cycles are dropped without spending the reference budget.
+        let activeClips = ActiveClipSet()
+        // Bounds the elements visited measuring objectBoundingBox clips and mask regions (SD8).
+        let measurement = MeasurementBudget()
 
         /// References nested deeper than this are dropped: each level costs native stack.
         static let maxReferenceDepth = 16
@@ -296,48 +300,21 @@ extension LayerTree {
         }
 
         func makeClipShapes(for element: DOM.GraphicsElement) -> [ClipShape] {
-            let attributes = DOM.presentationAttributes(for: element, styles: svg.styles)
-            guard let clipID = attributes.clipPath?.fragmentID,
-                  let clip = svg.defs.clipPaths.first(where: { $0.id == clipID }) else { return [] }
-            let contributing = clip.childElements.filter(contributesToClip)
-            // SVG 1.1 §14.3.5: a clipPath without contributing children clips everything away; a child
-            // this builder cannot clip with (`<use>`, `<text>`) still contributes, so the element stays unclipped
-            guard !contributing.isEmpty else {
-                return [ClipShape(shape: .rect(within: .zero, radii: .zero), transform: .identity)]
-            }
-            return contributing.compactMap(makeClipShape)
-        }
-
-        func contributesToClip(_ element: DOM.GraphicsElement) -> Bool {
-            // SVG 1.1 §14.3.5: children with `display="none"` or hidden `visibility` do not contribute to the clip
-            let att = DOM.presentationAttributes(for: element, styles: svg.styles)
-            return att.display != DOM.DisplayMode.none && (att.visibility ?? .visible) == .visible
-        }
-
-        func makeClipUnits(for element: DOM.GraphicsElement) -> ClipUnits {
-            let attributes = DOM.presentationAttributes(for: element, styles: svg.styles)
-            guard let clipID = attributes.clipPath?.fragmentID,
-                  let clip = svg.defs.clipPaths.first(where: { $0.id == clipID }) else { return .userSpaceOnUse }
-            switch clip.clipPathUnits {
-            case .objectBoundingBox: return .objectBoundingBox
-            case .userSpaceOnUse, nil: return .userSpaceOnUse
-            }
-        }
-
-        func makeClipShape(for element: DOM.GraphicsElement) -> ClipShape? {
-            guard let shape = Builder.makeShape(from: element) else {
-                return nil
-            }
-
-            let transform = Self.createTransforms(from: element.attributes.transform ?? [])
-                .toMatrix()
-
-            return ClipShape(shape: shape, transform: transform)
+            guard case .shapes(let shapes, _) = makeClip(for: element) else { return [] }
+            return shapes
         }
 
         func createMaskLayer(for element: DOM.GraphicsElement) -> Layer? {
             guard let maskId = element.attributes.mask?.fragmentID,
                   let mask = svg.defs.masks.first(where: { $0.id == maskId }) else { return nil }
+
+            // SVG 1.1 §14.4: maskUnits places the mask region, maskContentUnits the contents
+            let regionUnits = mask.maskUnits ?? .objectBoundingBox
+            let contentUnits = mask.maskContentUnits ?? .userSpaceOnUse
+            let bounds = (regionUnits == .objectBoundingBox || contentUnits == .objectBoundingBox)
+                ? makeBoundingBox(for: element) : nil
+            // the bounding box of text is unknown here: ignore the mask
+            if contentUnits == .objectBoundingBox && bounds == nil { return nil }
 
             // A mask inside itself is empty, so it hides what it masks
             return building(ObjectIdentifier(mask), cycle: Layer()) {
@@ -346,12 +323,33 @@ extension LayerTree {
                     l.maskType = .alpha
                 }
 
+                let content = Layer()
+                if contentUnits == .objectBoundingBox, let bounds {
+                    // an empty bounding box masks everything away
+                    guard bounds.width > 0, bounds.height > 0 else { return l }
+                    content.transform = [.matrix(Transform.Matrix(a: bounds.width, b: 0, c: 0, d: bounds.height,
+                                                                  tx: bounds.x, ty: bounds.y))]
+                }
+
                 var maskState = createState(for: mask, inheriting: State())
                 // SVG 1.1 §11.5: `display` does not apply to `<mask>`; only its children can be hidden
                 maskState.display = .inline
                 mask.childElements.forEach {
                     let contents = Layer.Contents.layer(makeLayer(from: $0, inheriting: maskState))
-                    l.appendContents(contents)
+                    content.appendContents(contents)
+                }
+
+                if let region = makeMaskRegion(for: mask, bounds: bounds) {
+                    // a zero or negative region disables rendering of the element
+                    guard region.width > 0, region.height > 0 else { return l }
+                    let clipped = Layer()
+                    clipped.clip = [ClipShape(shape: .rect(within: region, radii: .zero), transform: .identity)]
+                    clipped.appendContents(.layer(content))
+                    l.appendContents(.layer(clipped))
+                } else if content.transform.isEmpty {
+                    content.contents.forEach(l.appendContents)
+                } else {
+                    l.appendContents(.layer(content))
                 }
 
                 return l

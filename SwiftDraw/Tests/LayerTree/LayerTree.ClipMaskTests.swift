@@ -43,7 +43,15 @@ final class LayerTreeClipMaskTests: XCTestCase {
         """)
         let layer = LayerTree.Builder(svg: svg).makeLayer()
         let generator = LayerTree.CommandGenerator(provider: LayerTreeProvider(), size: .zero, options: .default)
-        return generator.renderCommands(for: layer, colorConverter: .default)
+        return flattened(generator.renderCommands(for: layer, colorConverter: .default))
+    }
+
+    /// Mask contents are drawn inside `.clipToMask` (#162): inline them so assertions see every command.
+    private func flattened(_ commands: [Command]) -> [Command] {
+        commands.flatMap { command -> [Command] in
+            if case let .clipToMask(contents) = command { return [command] + flattened(contents) }
+            return [command]
+        }
     }
 
     private func clips(_ commands: [Command]) -> [(bounds: LayerTree.Rect, rule: LayerTree.FillRule)] {
@@ -62,6 +70,12 @@ final class LayerTreeClipMaskTests: XCTestCase {
 
     private func bounds(_ shapes: [LayerTree.Shape]) -> LayerTree.Rect {
         shapes.map(\.path.bounds).reduce(nil as LayerTree.Rect?) { acc, b in acc.map { $0.union(b) } ?? b } ?? .zero
+    }
+
+    private func maskContents(_ commands: [Command]) -> [Command]? {
+        commands.lazy.compactMap { command -> [Command]? in
+            if case let .clipToMask(contents) = command { return contents } else { return nil }
+        }.first
     }
 
     private func transparencyLayers(_ commands: [Command]) -> Int {
@@ -273,7 +287,8 @@ final class LayerTreeClipMaskTests: XCTestCase {
         // the outer clip is drawn as a mask, clipped by the inner one
         XCTAssertGreaterThan(transparencyLayers(c), 0)
         assertRect(clips(c).first?.bounds, 5, 5, 10, 10)
-        XCTAssertEqual(fills(c).map(\.bounds.width), [50, 10])
+        // the mask is drawn before the element it clips (#162)
+        XCTAssertEqual(fills(c).map(\.bounds.width), [10, 50])
     }
 
     func testSelfReferencingClipPathKeepsDocument() throws {
@@ -335,7 +350,8 @@ final class LayerTreeClipMaskTests: XCTestCase {
             if case let .concatenate(transform: t) = cmd { return t } else { return nil }
         }
         XCTAssertEqual(scale, [.matrix(.init(a: 50, b: 0, c: 0, d: 40, tx: 10, ty: 20))])
-        XCTAssertEqual(fills(c).map(\.bounds.width), [50, 0.5])
+        // the mask is drawn before the element it masks (#162)
+        XCTAssertEqual(fills(c).map(\.bounds.width), [0.5, 50])
     }
 
     func testMaskZeroRegionHidesElement() throws {
@@ -343,11 +359,10 @@ final class LayerTreeClipMaskTests: XCTestCase {
         <mask id="m" width="0"><rect width="100" height="100" fill="white"/></mask>
         <rect x="10" y="20" width="50" height="40" fill="red" mask="url(#m)"/>
         """)
-        // the element is drawn into a transparency layer, but the mask draws nothing into its
-        // destination-in layer, so nothing survives
-        let blend = try XCTUnwrap(c.firstIndex { if case .setBlend = $0 { return true } else { return false } })
-        XCTAssertEqual(fills(Array(c[..<blend])).count, 1)
-        XCTAssertTrue(fills(Array(c[blend...])).isEmpty)
+        // the mask draws nothing, so nothing of the element survives
+        let mask = try XCTUnwrap(maskContents(c))
+        XCTAssertTrue(fills(mask).isEmpty)
+        XCTAssertEqual(fills(c).count, 1)
     }
 
     func testMaskContentUnitsObjectBoundingBoxOnEmptyBoxHidesElement() throws {
@@ -355,9 +370,9 @@ final class LayerTreeClipMaskTests: XCTestCase {
         <mask id="m" maskContentUnits="objectBoundingBox"><rect width="1" height="1" fill="white"/></mask>
         <line x1="0" y1="10" x2="100" y2="10" stroke="red" mask="url(#m)"/>
         """)
-        // the mask draws nothing between its destination-in blend and the end of the stream
-        let blend = try XCTUnwrap(c.lastIndex { if case .setBlend = $0 { return true } else { return false } })
-        XCTAssertTrue(fills(Array(c[blend...])).isEmpty)
+        // the mask draws nothing, so nothing of the element survives
+        let mask = try XCTUnwrap(maskContents(c))
+        XCTAssertTrue(fills(mask).isEmpty)
         XCTAssertGreaterThan(transparencyLayers(c), 0)
     }
 
@@ -397,8 +412,8 @@ final class LayerTreeClipMaskTests: XCTestCase {
         <clipPath id="b" clip-path="url(#a)"><rect width="20" height="20"/></clipPath>
         <rect width="50" height="50" fill="red" clip-path="url(#a)"/>
         """)
-        // a → b → (a dropped): b clips a, both are drawn as masks
-        XCTAssertEqual(fills(c).map(\.bounds.width), [50, 10, 20])
+        // a → b → (a dropped): b clips a, both are drawn as masks, before the element (#162)
+        XCTAssertEqual(fills(c).map(\.bounds.width), [20, 10, 50])
     }
 
     func testClipPathInsideMaskContents() throws {
