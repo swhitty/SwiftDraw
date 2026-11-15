@@ -30,12 +30,12 @@ func renderSwiftDraw(_ url: URL, scale: CGFloat, maxDimension: CGFloat) -> (Rend
     let w = max(1, Int(size.width.rounded())), h = max(1, Int(size.height.rounded()))
     let pw = Int(CGFloat(w) * scale), ph = Int(CGFloat(h) * scale)
 
-    // Draw with a top-left origin, as SVG.pngData does.
+    // Draw unflipped, then flip the rows for a top-left origin. Flipping the CTM before
+    // ctx.draw(svg) would leave CGPattern tiles in the unflipped default space, so patterns
+    // would render upside down here although they render correctly in views and image APIs.
     let bitmap = Bitmap.render(width: pw, height: ph) { ctx in
-        ctx.translateBy(x: 0, y: CGFloat(ph))
-        ctx.scaleBy(x: 1, y: -1)
         ctx.draw(svg, in: CGRect(x: 0, y: 0, width: pw, height: ph))
-    }
+    }?.flippedVertically()
     return (RenderedFile(name: name, width: w, height: h, status: bitmap == nil ? "bitmap-failed" : "rendered"), bitmap)
 }
 
