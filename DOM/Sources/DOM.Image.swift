@@ -36,6 +36,7 @@ package extension DOM {
 
         package var x: Coordinate?
         package var y: Coordinate?
+        package var preserveAspectRatio: PreserveAspectRatio?
 
         package init(href: URL) {
             self.href = href
