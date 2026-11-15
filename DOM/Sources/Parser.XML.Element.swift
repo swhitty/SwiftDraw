@@ -88,9 +88,10 @@ extension XMLParser {
 
         let att = try parseAttributes(e)
         let attributes = try parsePresentationAttributes(e)
-        let style = try parseStyleAttributes(e)
+        let style = parseStyleDeclarations(e)
+        let matched = styleContext.matcher?.match(e)
         // `em` and `ex` lengths of this element (and font-size inherited by its children)
-        lengthContext.fontSize = fontSize(of: e, attributes: attributes, style: style) ?? lengthContext.fontSize
+        lengthContext.fontSize = fontSize(attributes: attributes, style: style, matched: matched) ?? lengthContext.fontSize
 
         switch e.name {
         case "g": ge = try parseGroup(e)
@@ -119,7 +120,9 @@ extension XMLParser {
         ge.class = elementAtt.class
 
         ge.attributes = attributes
-        ge.style = style
+        ge.style = style.normal
+        ge.importantStyle = style.important
+        ge.matchedStyle = matched
         return ge
     }
 
@@ -399,9 +402,12 @@ extension XMLParser {
 
         el.clipPath = urlOrNone(att, "clip-path")
         el.clipRule = lenient { try att.parseRaw("clip-rule") }
-        el.mask = lenient { try att.parseUrlSelector("mask") }
+        el.mask = urlOrNone(att, "mask")
         el.maskType = lenient { try att.parseRaw("mask-type") }
-        el.filter = lenient { try att.parseUrlSelector("filter") }
+        el.filter = urlOrNone(att, "filter")
+
+        el.stopColor = lenient { try att.parseFill("stop-color").getColor() }
+        el.stopOpacity = opacity(att, "stop-opacity")
 
         return el
     }

@@ -83,17 +83,17 @@ final class LayerTreeCSSCascadeTests: XCTestCase {
         XCTAssertNotNil(layer.mask)
     }
 
-    // interim: clip-rule is read from the referencing element; SD8 moves it to the <clipPath> children
+    // clip-rule comes from the <clipPath> children (SD8), here through a descendant selector
     func testClipRuleFromStyleSheet() throws {
         let layer = try firstChild("""
         <defs><clipPath id="c"><rect width="5" height="5"/></clipPath></defs>
-        <style>#r { clip-rule: evenodd }</style>
+        <style>#c rect { clip-rule: evenodd }</style>
         <rect id="r" clip-path="url(#c)" width="10" height="10"/>
         """)
         XCTAssertEqual(layer.clipRule, .evenodd)
         XCTAssertTrue(try commandStream("""
         <defs><clipPath id="c"><rect width="5" height="5"/></clipPath></defs>
-        <style>#r { clip-rule: evenodd }</style>
+        <style>#c rect { clip-rule: evenodd }</style>
         <rect id="r" clip-path="url(#c)" width="10" height="10"/>
         """).contains {
             if case .setClip(path: _, rule: .evenodd) = $0 { return true }

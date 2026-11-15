@@ -75,41 +75,53 @@ package extension DOM {
     
     static func presentationAttributes(for element: DOM.GraphicsElement,
                                        styles: [StyleSheet]) -> PresentationAttributes {
-        var attributes = element.attributes
+        cascade(attributes: element.attributes,
+                matched: element.matchedStyle,
+                selectors: makeSelectors(for: element),
+                style: element.style,
+                importantStyle: element.importantStyle,
+                styles: styles)
+    }
 
-        if let matched = element.matchedStyle {
+    /// The cascade of a `<clipPath>` itself (SD8), in the same order as other elements.
+    static func presentationAttributes(for clipPath: ClipPath,
+                                       styles: [StyleSheet]) -> PresentationAttributes {
+        cascade(attributes: clipPath.attributes,
+                matched: clipPath.matchedStyle,
+                selectors: makeSelectors(elementName: "clipPath", class: clipPath.class, id: clipPath.id),
+                style: clipPath.style,
+                importantStyle: clipPath.importantStyle,
+                styles: styles)
+    }
+
+    private static func cascade(attributes: PresentationAttributes,
+                                matched: StyleSheet.Matched?,
+                                selectors: @autoclosure () -> [StyleSheet.Selector],
+                                style: PresentationAttributes,
+                                importantStyle: PresentationAttributes,
+                                styles: [StyleSheet]) -> PresentationAttributes {
+        var attributes = attributes
+
+        if let matched {
             // parsed documents: every selector form, by specificity then source order (CSS Cascade 3 §6)
             attributes = attributes.applyingAttributes(matched.attributes)
         } else {
-            for selector in makeSelectors(for: element) {
+            // elements built in code: element name, class and id rules
+            for selector in selectors() {
                 let new = makeAttributes(for: selector, styles: styles)
                 attributes = attributes.applyingAttributes(new)
             }
         }
 
-        attributes = attributes.applyingAttributes(element.style)
+        attributes = attributes.applyingAttributes(style)
 
-        if let matched = element.matchedStyle {
+        if let matched {
             // `!important` stylesheet declarations override style=""
             attributes = attributes.applyingAttributes(matched.importantAttributes)
         }
 
         // and `!important` in style="" overrides them (CSS Cascade 3 §6.1)
-        attributes = attributes.applyingAttributes(element.importantStyle)
-        return attributes
-    }
-    
-    /// The cascade of a `<clipPath>` itself: attributes < stylesheet rules < style="" (SD8).
-    static func presentationAttributes(for clipPath: ClipPath,
-                                       styles: [StyleSheet]) -> PresentationAttributes {
-        var attributes = clipPath.attributes
-
-        for selector in makeSelectors(elementName: "clipPath", class: clipPath.class, id: clipPath.id) {
-            let new = makeAttributes(for: selector, styles: styles)
-            attributes = attributes.applyingAttributes(new)
-        }
-
-        return attributes.applyingAttributes(clipPath.style)
+        return attributes.applyingAttributes(importantStyle)
     }
 
     static func makeSelectors(for element: DOM.GraphicsElement) -> [StyleSheet.Selector] {

@@ -58,13 +58,45 @@ extension XMLParser {
         return sheets
     }
 
-    func parseStyleSheetElement(_ text: String?, element: XML.Element? = nil) throws -> DOM.StyleSheet {
-        let selectorEntries = try Self.parseSelectorEntries(text)
-        let fontEntries = try Self.parseFontFaceEntries(text)
+    // stop-color and stop-opacity through the cascade (attribute < rules < style="" < !important),
+    // e.g. Illustrator's <stop class="st0"/> with .st0 { stop-color: … }; nil without a stylesheet
+    func cascadedStop(_ e: XML.Element) -> (color: DOM.Color?, opacity: DOM.Float?)? {
+        guard let matched = styleContext.matcher?.match(e) else { return nil }
+        let style = parseStyleDeclarations(e)
+        let attributes = ((try? parsePresentationAttributes(e.attributes)) ?? DOM.PresentationAttributes())
+            .applyingAttributes(matched.attributes)
+            .applyingAttributes(style.normal)
+            .applyingAttributes(matched.importantAttributes)
+            .applyingAttributes(style.important)
+        return (attributes.stopColor, attributes.stopOpacity)
+    }
 
+    // CSS Syntax Level 3 error recovery: a malformed rule or declaration is dropped on its own,
+    // the rest of the sheet is kept.
+    func parseStyleSheetElement(_ text: String?, element: XML.Element? = nil) throws -> DOM.StyleSheet {
         var sheet = DOM.StyleSheet()
-        sheet.attributes = try selectorEntries.mapValues(parsePresentationAttributes)
-        sheet.fonts = try fontEntries.compactMap { try parseFontFace($0, in: element) }
+        guard let text else { return sheet }
+        let blocks = Self.parseCSSBlocks(text)
+
+        for (prelude, declarations) in blocks.rules {
+            guard let selectors = DOM.StyleSheet.ComplexSelector.parseList(prelude) else { continue }
+            let important = declarations.filter(\.important)
+            let attributes = parsePresentationAttributes(important.isEmpty ? declarations : declarations.filter { !$0.important })
+            let importantAttributes = important.isEmpty ? DOM.PresentationAttributes() : parsePresentationAttributes(important)
+
+            for selector in selectors {
+                sheet.rules.append(DOM.StyleSheet.Rule(selector: selector,
+                                                       attributes: attributes,
+                                                       importantAttributes: importantAttributes))
+                if let simple = selector.simple {
+                    sheet.attributes[simple] = (sheet.attributes[simple] ?? DOM.PresentationAttributes())
+                        .applyingAttributes(attributes)
+                        .applyingAttributes(importantAttributes)
+                }
+            }
+        }
+
+        sheet.fonts = try blocks.fontFaces.compactMap { try parseFontFace($0, in: element) }
         return sheet
     }
 
@@ -97,8 +129,7 @@ extension XMLParser {
                 for d in declarations {
                     copy[d.name] = d.value
                 }
-            case .atRule, .fontFace:
-                ()
+                entries[selector] = copy
             }
         }
 
@@ -108,15 +139,67 @@ extension XMLParser {
     /// The descriptors of each `@font-face`, or the error for a block that could not be read.
     static func parseFontFaceEntries(_ text: String?) throws -> [Result<[String: String], any Swift.Error>] {
         guard let text = text else { return [] }
-        var scanner = XMLParser.Scanner(text: removeCSSComments(from: text))
-        var entries = [Result<[String: String], any Swift.Error>]()
+        return parseCSSBlocks(text).fontFaces
+    }
 
-        while let (decl, _) = try scanner.scanNextBlockDecl() {
-            switch decl {
-            case .fontFace(let descriptors):
-                entries.append(descriptors)
-            default:
-                ()
+    struct CSSDeclaration: Equatable {
+        var name: String
+        var value: String
+        var important: Bool
+    }
+
+    static func makeDictionary(_ declarations: [CSSDeclaration]) -> [String: String] {
+        var dict = [String: String]()
+        for d in declarations {
+            dict[d.name] = d.value
+        }
+        return dict
+    }
+
+    // Splits a sheet into qualified rules and @font-face blocks; other at-rules
+    // (@media, @supports, @import…) are skipped with their nested blocks.
+    // Each @font-face is its descriptors, or the error for a block that could not be read.
+    static func parseCSSBlocks(_ text: String) -> (rules: [(prelude: String, declarations: [CSSDeclaration])], fontFaces: [Result<[String: String], any Swift.Error>]) {
+        let chars = Array(removeCSSComments(from: text))
+        var i = 0
+        var rules = [(prelude: String, declarations: [CSSDeclaration])]()
+        var fontFaces = [Result<[String: String], any Swift.Error>]()
+
+        // Reads up to (not including) the first top-level character in `stops`, skipping strings, (), [].
+        func scanPrelude(stops: Set<Character>) -> String {
+            var result = ""
+            var depth = 0
+            var quote: Character?
+            while i < chars.count {
+                let c = chars[i]
+                if let q = quote {
+                    if c == "\\", i + 1 < chars.count {
+                        result.append(c)
+                        result.append(chars[i + 1])
+                        i += 2
+                        continue
+                    } else if c == q || c.isNewline {
+                        // an unescaped newline ends a string (CSS Syntax §4.3.5, bad-string)
+                        quote = nil
+                    }
+                } else if c == "\\", i + 1 < chars.count {
+                    // an escaped character is never a delimiter
+                    result.append(c)
+                    result.append(chars[i + 1])
+                    i += 2
+                    continue
+                } else if c == "\"" || c == "'" {
+                    quote = c
+                } else if c == "(" || c == "[" {
+                    depth += 1
+                } else if c == ")" || c == "]" {
+                    depth = max(0, depth - 1)
+                } else if (depth == 0 || c == "{") && stops.contains(c) {
+                    // a block always starts at `{`, even after an unclosed `(` or `[`
+                    return result
+                }
+                result.append(c)
+                i += 1
             }
             return result
         }
@@ -181,7 +264,7 @@ extension XMLParser {
                 let block = scanBlock()
                 let name = prelude.dropFirst().prefix { !$0.isWhitespace }.lowercased()
                 if name == "font-face" {
-                    fontFaces.append(parseCSSDeclarations(block))
+                    fontFaces.append(parseFontFaceDescriptors(prelude: prelude, block: block))
                 }
                 continue
             }
@@ -193,6 +276,15 @@ extension XMLParser {
         }
 
         return (rules, fontFaces)
+    }
+
+    // A garbled `@font-face` (or one with a prelude) fails by itself, without failing the rules after it.
+    static func parseFontFaceDescriptors(prelude: String, block: String) -> Result<[String: String], any Swift.Error> {
+        guard prelude.dropFirst("@font-face".count).allSatisfy(\.isWhitespace) else {
+            return .failure(XMLParser.Error.invalid)
+        }
+        var descriptors = XMLParser.Scanner(text: block + "}")
+        return Result { try descriptors.scanAtttributes() }
     }
 
     static func hasBadString(_ text: String) -> Bool {

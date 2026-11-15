@@ -44,12 +44,14 @@ package extension XMLParser {
         let viewBox: DOM.SVG.ViewBox? = try parseViewBox(try att.parseString("viewBox"))
 
         let isRoot = lengthContext.viewports.isEmpty
+        let styles = parseStyleSheetElements(within: e)
         if isRoot {
-            lengthContext.styleSheets = parseStyleSheetElements(within: e)
+            // selectors are matched against the whole document tree before its elements are parsed
+            styleContext.matcher = DOM.StyleSheet.Matcher(sheets: styles, root: e)
             lengthContext.fontSize = rootFontSize(e)
         }
         defer {
-            if isRoot { lengthContext.styleSheets = [] }
+            if isRoot { styleContext.matcher = nil }
         }
 
         let svg: DOM.SVG
@@ -172,9 +174,9 @@ package extension XMLParser {
 
     // the font-size of the root <svg> for its own `em` sizes and those of its contents
     func rootFontSize(_ e: XML.Element) -> DOM.Float {
-        fontSize(of: e,
-                 attributes: (try? parsePresentationAttributes(e)) ?? DOM.PresentationAttributes(),
-                 style: (try? parseStyleAttributes(e)) ?? DOM.PresentationAttributes())
+        fontSize(attributes: (try? parsePresentationAttributes(e)) ?? DOM.PresentationAttributes(),
+                 style: parseStyleDeclarations(e),
+                 matched: styleContext.matcher?.match(e))
             ?? LengthContext.initialFontSize
     }
 
@@ -269,7 +271,10 @@ package extension XMLParser {
         clip.clipPathUnits = units
         clip.class = e.attributes["class"]
         clip.attributes = (try? parsePresentationAttributes(e)) ?? DOM.PresentationAttributes()
-        clip.style = (try? parseStyleAttributes(e)) ?? DOM.PresentationAttributes()
+        let style = parseStyleDeclarations(e)
+        clip.style = style.normal
+        clip.importantStyle = style.important
+        clip.matchedStyle = styleContext.matcher?.match(e)
         return clip
     }
 

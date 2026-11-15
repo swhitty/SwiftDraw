@@ -261,11 +261,12 @@ extension LayerTree {
         }
 
         func makeBaseLayer(from element: DOM.GraphicsElement, with state: State) -> Layer {
-            let attributes = element.attributes
+            // transform and mask may come from CSS as well as attributes
+            let attributes = DOM.presentationAttributes(for: element, styles: svg.styles)
             let l = Layer()
             l.class = element.class
             l.transform = Builder.createTransforms(from: attributes.transform ?? [])
-            l.mask = createMaskLayer(for: element)
+            l.mask = createMaskLayer(for: element, attributes: attributes)
             // clip-rule comes from the <clipPath> contents and objectBoundingBox units are resolved
             // here, so every clip reaches the renderers in user space (SVG 1.1 §14.3.5)
             if let clip = makeClip(for: element) {
@@ -305,10 +306,11 @@ extension LayerTree {
         }
 
         func createMaskLayer(for element: DOM.GraphicsElement) -> Layer? {
-            createMaskLayer(for: DOM.presentationAttributes(for: element, styles: svg.styles))
+            createMaskLayer(for: element, attributes: DOM.presentationAttributes(for: element, styles: svg.styles))
         }
 
-        func createMaskLayer(for attributes: DOM.PresentationAttributes) -> Layer? {
+        /// `attributes` is the cascade of `element`: its `mask` may come from a stylesheet rule.
+        func createMaskLayer(for element: DOM.GraphicsElement, attributes: DOM.PresentationAttributes) -> Layer? {
             guard let maskId = attributes.mask?.fragmentID,
                   let mask = svg.defs.masks.first(where: { $0.id == maskId }) else { return nil }
 
