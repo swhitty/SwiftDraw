@@ -32,6 +32,7 @@
 #if canImport(CoreGraphics)
 import Foundation
 import CoreText
+import Accelerate
 #if canImport(UIKit)
 import UIKit
 #elseif canImport(AppKit)
@@ -61,10 +62,13 @@ struct CGTransformingPattern: Hashable {
 
     var bounds: CGRect
     var contents: [RendererCommand<CGTypes>]
+    /// patternTransform: pattern space to the user space of the filled element
+    var transform: CGAffineTransform
 
-    init(bounds: CGRect, contents: [RendererCommand<CGTypes>]) {
+    init(bounds: CGRect, contents: [RendererCommand<CGTypes>], transform: CGAffineTransform = .identity) {
         self.bounds = bounds
         self.contents = contents
+        self.transform = transform
     }
 
     func draw(_ ctx: CGContext) {
@@ -217,33 +221,89 @@ struct CGProvider: RendererTypeProvider {
     }
 
     func createPath(from text: String, at origin: LayerTree.Point, with attributes: LayerTree.TextAttributes) -> Types.Path? {
-        let font = CGProvider.createCTFont(for: attributes.font, size: attributes.size)
+        let font = CGProvider.createCTFont(for: attributes)
         guard let path = text.toPath(font: font) else { return nil }
         var transform = CGAffineTransform(translationX: createFloat(from: origin.x), y: createFloat(from: origin.y))
         return path.copy(using: &transform)
     }
 
-    private static func createCTFont(for font: LayerTree.TextAttributes.Font, size: CGFloat) -> CTFont? {
+    private static func createCTFont(for font: LayerTree.TextAttributes.Font, size: CGFloat, weight: Int, isItalic: Bool) -> CTFont? {
         switch font {
         case .truetype(let data):
+            // an @font-face font is already the face matching the weight and style
             guard let provider = CGDataProvider(data: data as CFData),
                   let cgFont = CGFont(provider) else { return nil }
             return CTFontCreateWithGraphicsFont(cgFont, size, nil, nil)
         case .name(let name):
             let ctFont = CTFontCreateWithName(name as CFString, size, nil)
-            let postScriptName = CTFontCopyPostScriptName(ctFont) as String
-            if postScriptName.caseInsensitiveCompare(name) == .orderedSame
-                || CTFontCopyFamilyName(ctFont) as String == name {
-                return ctFont
+            // a family ("Helvetica", also the PostScript name of its regular face): pick the face by weight and slant
+            if CTFontCopyFamilyName(ctFont) as String == name {
+                guard weight != 400 || isItalic else { return ctFont }
+                return createCTFont(family: name, size: size, weight: weight, isItalic: isItalic) ?? ctFont
             }
-            return nil
+            // a specific face by PostScript name ("Helvetica-Bold"): used as named
+            let postScriptName = CTFontCopyPostScriptName(ctFont) as String
+            return postScriptName.caseInsensitiveCompare(name) == .orderedSame ? ctFont : nil
+        case .postScript(let name):
+            // a local() face, resolved when the layer tree was built
+            let ctFont = CTFontCreateWithName(name as CFString, size, nil)
+            return CTFontCopyPostScriptName(ctFont) as String == name ? ctFont : nil
         }
     }
 
-    static func createCTFont(for fonts: [LayerTree.TextAttributes.Font], size: Float) -> CTFont {
+    /// The PostScript name of an installed face, matched by PostScript name or full name, case-insensitively
+    /// (`local()` in `@font-face`); nil when no such face is installed. CoreText substitutes another font
+    /// for an unknown name, so the match is checked.
+    static func installedFontPostScriptName(_ name: String) -> String? {
+        let font = CTFontCreateWithName(name as CFString, 12, nil)
+        let postScriptName = CTFontCopyPostScriptName(font) as String
+        let fullName = CTFontCopyFullName(font) as String
+        guard postScriptName.caseInsensitiveCompare(name) == .orderedSame
+                || fullName.caseInsensitiveCompare(name) == .orderedSame else {
+            return nil
+        }
+        return postScriptName
+    }
+
+    /// The face of a system font family closest to a CSS weight and slant, as CoreText matches it
+    /// (e.g. Helvetica 700 is Helvetica-Bold, 300 is Helvetica-Light, italic is Helvetica-Oblique).
+    static func createCTFont(family: String, size: CGFloat, weight: Int, isItalic: Bool) -> CTFont? {
+        var traits: [CFString: Any] = [kCTFontWeightTrait: coreTextWeight(for: weight)]
+        if isItalic {
+            traits[kCTFontSymbolicTrait] = CTFontSymbolicTraits.traitItalic.rawValue
+        }
+        let descriptor = CTFontDescriptorCreateWithAttributes([
+            kCTFontFamilyNameAttribute: family,
+            kCTFontTraitsAttribute: traits
+        ] as CFDictionary)
+        let font = CTFontCreateWithFontDescriptor(descriptor, size, nil)
+        // CoreText falls back to another family when this one is not installed
+        guard CTFontCopyFamilyName(font) as String == family else { return nil }
+        return font
+    }
+
+    /// CSS weights (1–1000) on CoreText's weight trait (−1…1), at the points of `NSFont.Weight`
+    /// (ultraLight 100 … black 900), interpolated between them.
+    static func coreTextWeight(for weight: Int) -> CGFloat {
+        let points: [(css: CGFloat, ct: CGFloat)] = [
+            (1, -1), (100, -0.8), (200, -0.6), (300, -0.4), (400, 0),
+            (500, 0.23), (600, 0.3), (700, 0.4), (800, 0.56), (900, 0.62), (1000, 1)
+        ]
+        let w = min(max(CGFloat(weight), 1), 1000)
+        guard let upper = points.firstIndex(where: { $0.css >= w }), upper > 0 else { return points[0].ct }
+        let (a, b) = (points[upper - 1], points[upper])
+        return a.ct + (b.ct - a.ct) * (w - a.css) / (b.css - a.css)
+    }
+
+    static func createCTFont(for attributes: LayerTree.TextAttributes) -> CTFont {
+        createCTFont(for: attributes.font, size: attributes.size, weight: attributes.weight, isItalic: attributes.isItalic)
+    }
+
+    static func createCTFont(for fonts: [LayerTree.TextAttributes.Font], size: Float, weight: Int = 400, isItalic: Bool = false) -> CTFont {
         let cgSize = CGFloat(size)
-        let fallback = CTFontCreateWithName("Times" as CFString, cgSize, nil)
-        let ctFonts = fonts.compactMap { createCTFont(for: $0, size: cgSize) }
+        let fallback = createCTFont(for: .name("Times"), size: cgSize, weight: weight, isItalic: isItalic)
+            ?? CTFontCreateWithName("Times" as CFString, cgSize, nil)
+        let ctFonts = fonts.compactMap { createCTFont(for: $0, size: cgSize, weight: weight, isItalic: isItalic) }
         guard let primary = ctFonts.first else { return fallback }
         guard ctFonts.count > 1 else { return primary }
         let descriptors = ctFonts.dropFirst().map { CTFontCopyFontDescriptor($0) }
@@ -255,7 +315,9 @@ struct CGProvider: RendererTypeProvider {
 
     func createPattern(from pattern: LayerTree.Pattern, contents: [RendererCommand<Types>]) -> CGTransformingPattern {
         let bounds = createRect(from: pattern.frame)
-        return CGTransformingPattern(bounds: bounds, contents: contents)
+        return CGTransformingPattern(bounds: bounds,
+                                     contents: contents,
+                                     transform: createTransform(from: pattern.transform))
     }
 
     func createFillRule(from rule: LayerTree.FillRule) -> CGPathFillRule {
@@ -324,12 +386,24 @@ private extension CGImage {
 struct CGRenderer: Renderer {
     typealias Types = CGTypes
 
-    let ctx: CGContext
-    let baseCTM: CGAffineTransform
+    private let rootContext: CGContext
+    private let rootCTM: CGAffineTransform
+    private let filterLayers = CGFilterLayerStack()
+    let maxFilterLayerPixels: Int
 
-    init(context: CGContext) {
-        self.ctx = context
-        self.baseCTM = ctx.ctm
+    // drawing goes into the innermost offscreen filter layer, if any
+    var ctx: CGContext { filterLayers.context ?? rootContext }
+
+    /// The current context's default coordinate space, which CGPattern matrices are relative to.
+    /// Offscreen filter layers are bitmaps whose base space is the identity.
+    var baseCTM: CGAffineTransform { filterLayers.context == nil ? rootCTM : .identity }
+
+    /// - Parameter baseCTM: the context's default space; defaults to the current CTM.
+    ///   Pass the CTM from before any transform the caller applied itself, e.g. a top-left flip.
+    init(context: CGContext, baseCTM: CGAffineTransform? = nil, maxFilterLayerPixels: Int = CGRenderer.defaultMaxFilterLayerPixels) {
+        self.rootContext = context
+        self.rootCTM = baseCTM ?? context.ctm
+        self.maxFilterLayerPixels = maxFilterLayerPixels
     }
 
     func pushState() {
@@ -374,7 +448,7 @@ struct CGRenderer: Renderer {
         var alpha : CGFloat = 1.0
 
         let cgPattern = CGPattern.make(bounds: pattern.bounds,
-                                       matrix: ctx.ctm.concatenating(baseCTM.inverted()),
+                                       matrix: pattern.transform.concatenating(ctx.ctm.concatenating(baseCTM.inverted())),
                                        step: pattern.bounds.size,
                                        tiling: .constantSpacingMinimalDistortion,
                                        isColored: true,
@@ -402,10 +476,48 @@ struct CGRenderer: Renderer {
         ctx.setMiterLimit(miterLimit)
     }
 
+    func setLineDash(phase: CGFloat, lengths: [CGFloat]) {
+        ctx.setLineDash(phase: phase, lengths: lengths)
+    }
+
     func setClip(path: CGPath, rule: CGPathFillRule) {
         ctx.addPath(path)
         ctx.clip(using: rule)
     }
+
+    // The mask contents are drawn into a greyscale bitmap covering the visible clip in device pixels, starting
+    // black (fully masked). Its grey levels become the alpha of the clip. Vector contexts (PDF) get a 2x bitmap.
+    func clip(toMask contents: [RendererCommand<CGTypes>]) {
+        let visible = ctx.boundingBoxOfClipPath
+        guard !visible.isNull, !visible.isEmpty else { return }
+        guard !visible.isInfinite else {
+            // no bounds to size the mask by: leave the contents unmasked
+            return
+        }
+
+        let toDevice = ctx.userSpaceToDeviceSpaceTransform
+        let deviceRect = visible.applying(toDevice).integral
+        let oversample: CGFloat = ctx.isBitmapContext ? 1 : 2
+        guard let mask = CGContext.makeLuminanceMask(deviceRect: deviceRect,
+                                                     oversample: oversample,
+                                                     maxPixels: CGRenderer.maxMaskPixels) else {
+            ctx.clip(to: .zero)
+            return
+        }
+        mask.concatenate(toDevice)
+        // the bitmap's default space is its pixel grid: CGPattern matrices are relative to that
+        CGRenderer(context: mask, baseCTM: .identity).perform(contents)
+
+        guard let image = mask.makeImage() else {
+            ctx.clip(to: .zero)
+            return
+        }
+        ctx.concatenate(toDevice.inverted())
+        ctx.clip(to: deviceRect, mask: image)
+        ctx.concatenate(toDevice)
+    }
+
+    static let maxMaskPixels = 16_777_216
 
     func setAlpha(_ alpha: CGFloat) {
         ctx.setAlpha(alpha)
@@ -457,6 +569,228 @@ struct CGRenderer: Renderer {
                                endRadius: endRadius,
                                options: [.drawsAfterEndLocation, .drawsBeforeStartLocation]
         )
+    }
+
+    // The following commands are drawn into a bitmap covering the filter region in device pixels,
+    // intersected with the visible clip grown by the blur extent. The result is composited back clipped to
+    // the region. Over maxFilterLayerPixels the bitmap is rendered at a reduced scale (deviations scaled to
+    // match) and drawn back up, so large exports stay blurred without unbounded allocations.
+    func pushFilterLayer(_ filter: LayerTree.FilterLayer) {
+        let parent = ctx
+        let region = CGRect(x: CGFloat(filter.region.x),
+                            y: CGFloat(filter.region.y),
+                            width: CGFloat(filter.region.width),
+                            height: CGFloat(filter.region.height))
+        let toDevice = parent.userSpaceToDeviceSpaceTransform
+        let deviations = filter.effects.compactMap { $0.deviceStdDeviation(toDevice) }
+        let visible = parent.boundingBoxOfClipPath
+
+        parent.saveGState()
+        parent.clip(to: region)
+
+        // empty clip: draw nothing and allocate nothing
+        guard !visible.isNull, !visible.isEmpty else {
+            parent.clip(to: .zero)
+            filterLayers.entries.append(CGFilterLayer())
+            return
+        }
+
+        // blurs too small to change a pixel (every box size 1) are a pass-through:
+        // draw straight into the parent, clipped to the region
+        let isVector = !parent.isBitmapContext
+        let oversample: CGFloat = isVector ? 2 : 1
+        guard deviations.contains(where: { CGContext.isVisibleBlur($0, scale: oversample) }) else {
+            filterLayers.entries.append(CGFilterLayer())
+            return
+        }
+
+        var deviceRect = region.applying(toDevice)
+        if !visible.isInfinite {
+            let spreadX = min(deviations.reduce(0) { $0 + 3 * $1.width }, CGRenderer.maxDeviceSpread)
+            let spreadY = min(deviations.reduce(0) { $0 + 3 * $1.height }, CGRenderer.maxDeviceSpread)
+            deviceRect = deviceRect.intersection(visible.applying(toDevice).insetBy(dx: -spreadX, dy: -spreadY))
+        }
+
+        // PDF and other vector contexts: blurred groups are rasterized at 2x (2 px per point)
+        // Only a bitmap context has a colour space to match: asking a SwiftUI Canvas or other non-bitmap
+        // context for one logs "CGBitmapContextGetColorSpace: invalid context". The layer is sRGB then.
+        guard let layer = CGFilterLayer.make(deviceRect: deviceRect,
+                                             deviations: deviations,
+                                             maxPixels: maxFilterLayerPixels,
+                                             oversample: oversample,
+                                             colorSpace: isVector ? nil : parent.colorSpace) else {
+            // empty clip or region: draw nothing and allocate nothing
+            parent.clip(to: .zero)
+            filterLayers.entries.append(CGFilterLayer())
+            return
+        }
+
+        layer.offscreen?.concatenate(toDevice)
+        // input outside the region is excluded (it matters under rotation or skew); the edge is anti-aliased
+        // once, by the parent clip at composite time
+        layer.offscreen?.setShouldAntialias(false)
+        layer.offscreen?.clip(to: region)
+        layer.offscreen?.setShouldAntialias(true)
+        filterLayers.entries.append(layer)
+    }
+
+    func popFilterLayer() {
+        guard let layer = filterLayers.entries.popLast() else { return }
+        let parent = ctx
+
+        if let offscreen = layer.offscreen {
+            for deviation in layer.deviations {
+                offscreen.applyGaussianBlur(CGSize(width: deviation.width * layer.scale,
+                                                   height: deviation.height * layer.scale))
+            }
+            if let image = offscreen.makeImage() {
+                let size = CGSize(width: CGFloat(image.width) / layer.scale,
+                                  height: CGFloat(image.height) / layer.scale)
+                parent.saveGState()
+                parent.concatenate(parent.userSpaceToDeviceSpaceTransform.inverted())
+                if layer.scale == 1 {
+                    parent.interpolationQuality = .none
+                }
+                parent.draw(image, in: CGRect(origin: layer.deviceRect.origin, size: size))
+                parent.restoreGState()
+            }
+        }
+
+        // removes the region clip set by pushFilterLayer
+        parent.restoreGState()
+    }
+
+    static let defaultMaxFilterLayerPixels = 16_777_216
+    static let maxDeviceSpread: CGFloat = 100_000
+}
+
+final class CGFilterLayerStack {
+    var entries = [CGFilterLayer]()
+
+    var context: CGContext? {
+        entries.last(where: { $0.offscreen != nil })?.offscreen
+    }
+}
+
+struct CGFilterLayer {
+    // nil when contents are drawn directly into the parent context
+    var offscreen: CGContext?
+    var deviceRect: CGRect = .zero
+    var deviations: [CGSize] = []
+    // offscreen pixels per device pixel
+    var scale: CGFloat = 1
+
+    // nil when the device rect is empty or not finite
+    static func make(deviceRect: CGRect,
+                     deviations: [CGSize],
+                     maxPixels: Int,
+                     oversample: CGFloat,
+                     colorSpace: CGColorSpace?) -> CGFilterLayer? {
+        guard !deviceRect.isNull, !deviceRect.isInfinite,
+              deviceRect.minX.isFinite, deviceRect.minY.isFinite,
+              deviceRect.width.isFinite, deviceRect.height.isFinite else { return nil }
+        let rect = deviceRect.integral
+        guard rect.width >= 1, rect.height >= 1 else { return nil }
+
+        let scale = makeScale(size: rect.size, maxPixels: maxPixels, oversample: oversample)
+        let width = max(1, Int((rect.width * scale).rounded(.up)))
+        let height = max(1, Int((rect.height * scale).rounded(.up)))
+        guard let offscreen = CGContext.makeFilterLayer(width: width, height: height, colorSpace: colorSpace) else {
+            return nil
+        }
+
+        offscreen.scaleBy(x: scale, y: scale)
+        offscreen.translateBy(x: -rect.minX, y: -rect.minY)
+        return CGFilterLayer(offscreen: offscreen, deviceRect: rect, deviations: deviations, scale: scale)
+    }
+
+    // largest scale ≤ oversample that keeps the bitmap within maxPixels and each side within maxSide
+    static func makeScale(size: CGSize, maxPixels: Int, oversample: CGFloat) -> CGFloat {
+        let maxSide = CGFloat(maxPixels).squareRoot() * 4
+        let pixels = size.width * size.height
+        var scale = oversample
+        scale = min(scale, (CGFloat(maxPixels) / pixels).squareRoot())
+        scale = min(scale, maxSide / size.width, maxSide / size.height)
+        return scale
+    }
+}
+
+private extension LayerTree.Filter {
+
+    // stdDeviation converted to device pixels along the device axes; nil when it does not blur.
+    // Exact for scale and 90° rotations, an approximation under skew or other rotations.
+    func deviceStdDeviation(_ toDevice: CGAffineTransform) -> CGSize? {
+        switch self {
+        case let .gaussianBlur(stdDeviation: x, stdDeviationY: y):
+            let sx = CGFloat(x)
+            let sy = CGFloat(y ?? x)
+            let width = hypot(sx * toDevice.a, sy * toDevice.c)
+            let height = hypot(sx * toDevice.b, sy * toDevice.d)
+            let size = CGSize(width: width.isFinite ? width : 0, height: height.isFinite ? height : 0)
+            return size.width > 0 || size.height > 0 ? size : nil
+        case .unsupported:
+            return nil
+        }
+    }
+}
+
+extension CGContext {
+
+    /// Whether this is a bitmap context, found without calling CGBitmapContext functions: on a PDF,
+    /// CGLayer or SwiftUI Canvas context those log "invalid context" (with a backtrace under Xcode).
+    /// The context's description names its type, e.g. `<CGContext 0x…> (kCGContextTypeBitmap)`.
+    /// If that ever changes, contexts are treated as vector, which only rasterizes offscreen layers at 2x.
+    var isBitmapContext: Bool {
+        (CFCopyDescription(self) as String).contains("(kCGContextTypeBitmap)")
+    }
+
+    static func makeFilterLayer(width: Int, height: Int, colorSpace: CGColorSpace?) -> CGContext? {
+        let sRGB = CGColorSpace(name: CGColorSpace.sRGB)!
+        let space = colorSpace.flatMap { $0.model == .rgb ? $0 : nil } ?? sRGB
+        let info = CGImageAlphaInfo.premultipliedLast.rawValue
+        return CGContext(data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: 0, space: space, bitmapInfo: info) ??
+               CGContext(data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: 0, space: sRGB, bitmapInfo: info)
+    }
+
+    // Filter Effects 1 §9.16 / SVG 1.1 §15.17: three successive box blurs approximate the gaussian.
+    // Box sizes must be odd for vImage, so an even size d becomes d+1, d-1, d+1 (near-identical variance).
+    func applyGaussianBlur(_ deviation: CGSize) {
+        guard let data else { return }
+        // a box wider than the image only spreads it further towards transparent: clamp per axis
+        let sizesX = Self.boxSizes(for: deviation.width, limit: width | 1)
+        let sizesY = Self.boxSizes(for: deviation.height, limit: height | 1)
+        guard sizesX.contains(where: { $0 > 1 }) || sizesY.contains(where: { $0 > 1 }) else { return }
+
+        let byteCount = bytesPerRow * height
+        guard let temp = calloc(byteCount, 1) else { return }
+        defer { free(temp) }
+
+        var src = vImage_Buffer(data: data, height: vImagePixelCount(height), width: vImagePixelCount(width), rowBytes: bytesPerRow)
+        var dst = vImage_Buffer(data: temp, height: vImagePixelCount(height), width: vImagePixelCount(width), rowBytes: bytesPerRow)
+        var background: [UInt8] = [0, 0, 0, 0]
+        for pass in 0..<3 {
+            let error = vImageBoxConvolve_ARGB8888(&src, &dst, nil, 0, 0,
+                                                   UInt32(sizesY[pass]), UInt32(sizesX[pass]),
+                                                   &background, vImage_Flags(kvImageBackgroundColorFill))
+            guard error == kvImageNoError else { return }
+            swap(&src, &dst)
+        }
+        // after three passes the result is in the temporary buffer
+        memcpy(data, src.data, byteCount)
+    }
+
+    static func isVisibleBlur(_ deviation: CGSize, scale: CGFloat) -> Bool {
+        boxSizes(for: deviation.width * scale) != [1, 1, 1] || boxSizes(for: deviation.height * scale) != [1, 1, 1]
+    }
+
+    // limit is odd: the largest box size worth applying
+    static func boxSizes(for deviation: CGFloat, limit: Int = .max) -> [Int] {
+        guard deviation.isFinite, deviation > 0 else { return [1, 1, 1] }
+        let factor: CGFloat = 3 * (2 * CGFloat.pi).squareRoot() / 4
+        let value = Swift.min(deviation * factor + 0.5, CGFloat(Swift.min(limit, 1 << 24)))
+        let d = Int(value.rounded(.down))
+        guard d > 1 else { return [1, 1, 1] }
+        return d % 2 == 1 ? [d, d, d] : [d + 1, d - 1, d + 1]
     }
 }
 

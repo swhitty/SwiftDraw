@@ -47,7 +47,10 @@ extension LayerTree.Builder {
             throw LayerTree.Error.invalid("missing referenced element: \(use.href)")
         }
 
-        let l = makeLayer(from: element, inheriting: state)
+        // A use inside itself draws nothing
+        let l = building(ObjectIdentifier(element), cycle: LayerTree.Layer()) {
+            makeLayer(from: element, inheriting: state)
+        }
         let x = use.x ?? 0.0
         let y = use.y ?? 0.0
 
@@ -63,7 +66,7 @@ extension LayerTree.Builder {
         var att = makeTextAttributes(with: state)
 
         if let fontFamily = text.attributes.fontFamily {
-            att.font = fontFamily.flatMap(makeFonts)
+            att.font = fontFamily.flatMap { makeFonts(with: $0, weight: state.fontWeight, style: state.fontStyle) }
         }
         att.size = text.attributes.fontSize ?? att.size
         att.anchor = text.attributes.textAnchor ?? att.anchor
@@ -85,6 +88,7 @@ extension LayerTree.Builder {
         im.origin.y = LayerTree.Float(image.y ?? 0)
         im.width = image.width.map { LayerTree.Float($0) }
         im.height = image.height.map { LayerTree.Float($0) }
+        im.preserveAspectRatio = image.preserveAspectRatio ?? .default
 
         return .image(im)
     }

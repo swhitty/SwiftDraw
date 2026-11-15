@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="120" viewBox="0 0 240 120">
+  <!-- An unreadable gradientUnits is ignored (objectBoundingBox); the gradient itself is kept. -->
+  <defs>
+    <linearGradient id="lg" gradientUnits="bogus">
+      <stop offset="0" stop-color="navy"/>
+      <stop offset="1" stop-color="gold"/>
+    </linearGradient>
+    <radialGradient id="rg" gradientUnits="bogus">
+      <stop offset="0" stop-color="gold"/>
+      <stop offset="1" stop-color="crimson"/>
+    </radialGradient>
+  </defs>
+  <rect x="10" y="10" width="100" height="100" fill="url(#lg)"/>
+  <rect x="130" y="10" width="100" height="100" fill="url(#rg)"/>
+</svg>

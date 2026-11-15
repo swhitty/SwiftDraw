@@ -33,7 +33,11 @@ package extension XMLParser {
   
   func parseTransform(_ data: String) throws -> [DOM.Transform] {
     
-    var scanner = XMLParser.Scanner(text: data)
+    // CSS transforms may carry units: translate(10px, 10px), rotate(45deg)
+    let unitless = data
+      .replacingOccurrences(of: "px", with: "")
+      .replacingOccurrences(of: "deg", with: "")
+    var scanner = XMLParser.Scanner(text: unitless)
     var transforms = [DOM.Transform]()
     
     while let transform = try parseTransform(&scanner) {

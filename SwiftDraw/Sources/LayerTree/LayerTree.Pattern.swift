@@ -29,6 +29,8 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
+import SwiftDrawDOM
+
 extension LayerTree {
 
     enum PatternUnits: Hashable {
@@ -42,20 +44,35 @@ extension LayerTree {
         var contentUnits: PatternUnits
         var contents: [LayerTree.Layer.Contents]
 
-        init(frame: LayerTree.Rect, contentUnits: PatternUnits = .userSpaceOnUse) {
+        /// patternUnits: the coordinate system of `frame`
+        var units: PatternUnits
+        var viewBox: LayerTree.Rect?
+        var preserveAspectRatio: DOM.PreserveAspectRatio = .default
+        /// patternTransform: maps the pattern tile space into the user space of the filled element
+        var transform: LayerTree.Transform.Matrix
+
+        init(frame: LayerTree.Rect, contentUnits: PatternUnits = .userSpaceOnUse, units: PatternUnits = .userSpaceOnUse) {
             self.frame = frame
             self.contentUnits = contentUnits
             self.contents = []
+            self.units = units
+            self.viewBox = nil
+            self.transform = .identity
         }
 
         func hash(into hasher: inout Hasher) {
             frame.hash(into: &hasher)
             contentUnits.hash(into: &hasher)
             contents.hash(into: &hasher)
+            units.hash(into: &hasher)
+            viewBox.hash(into: &hasher)
+            preserveAspectRatio.hash(into: &hasher)
+            transform.hash(into: &hasher)
         }
 
         static func == (lhs: LayerTree.Pattern, rhs: LayerTree.Pattern) -> Bool {
-            return lhs.frame == rhs.frame && lhs.contentUnits == rhs.contentUnits && lhs.contents == rhs.contents
+            return lhs.frame == rhs.frame && lhs.contentUnits == rhs.contentUnits && lhs.contents == rhs.contents &&
+                lhs.units == rhs.units && lhs.viewBox == rhs.viewBox && lhs.preserveAspectRatio == rhs.preserveAspectRatio && lhs.transform == rhs.transform
         }
     }
 }

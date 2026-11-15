@@ -112,10 +112,9 @@ struct XMLParserElementTests {
         node.attributes["fill-rule"] = "evenodd"
         #expect(try XMLParser().parseGraphicsElement(node)!.attributes.fillRule == .evenodd)
 
+        // an unknown value drops the attribute, not the element
         node.attributes["fill-rule"] = "asdf"
-        #expect(throws: (any Error).self) {
-            _ = try XMLParser().parseGraphicsElement(node)!.attributes.fillRule
-        }
+        #expect(try XMLParser().parseGraphicsElement(node)!.attributes.fillRule == nil)
     }
 
     @Test

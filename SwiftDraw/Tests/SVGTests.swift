@@ -29,6 +29,7 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
+import Foundation
 import SwiftDrawDOM
 @testable import SwiftDraw
 import Testing
@@ -60,7 +61,7 @@ struct SVGTests {
     }
 
     @Test
-    func root_em_ex_dimensions_parse_as_raw_values() {
+    func root_em_ex_dimensions_resolve_against_font_size() {
         let ex = #"<svg xmlns="http://www.w3.org/2000/svg" width="2ex" height="1ex"><rect width="5" height="5"/></svg>"#
         let em = #"<svg xmlns="http://www.w3.org/2000/svg" width="2em" height="1em"><rect width="5" height="5"/></svg>"#
         let px = #"<svg xmlns="http://www.w3.org/2000/svg" width="2px" height="1px"><rect width="5" height="5"/></svg>"#
@@ -69,8 +70,9 @@ struct SVGTests {
         let emSVG = SVG(data: Data(em.utf8))
         let pxSVG = SVG(data: Data(px.utf8))
 
-        #expect(exSVG?.size == CGSize(width: 2, height: 1))
-        #expect(emSVG?.size == CGSize(width: 2, height: 1))
+        // SVG 1.1 §7.10: 1em is the initial 16px font-size, 1ex half of it
+        #expect(exSVG?.size == CGSize(width: 16, height: 8))
+        #expect(emSVG?.size == CGSize(width: 32, height: 16))
         #expect(pxSVG?.size == CGSize(width: 2, height: 1))
     }
 
@@ -283,3 +285,128 @@ private extension SVG {
     }
 }
 #endif
+
+// Hostile documents must return nil or draw nothing, never trap or recurse forever.
+// A trap ends the whole test process, so each document has its own test.
+struct SVGHostileTests {
+
+    private static let head = "<svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\""
+
+    /// The steps of `SVG(data:)` (parse, layer tree, commands) without CoreGraphics, so these run on every platform.
+    private func load(_ xml: String) -> [RendererCommand<LayerTreeProvider.Types>]? {
+        guard let svg = try? DOM.SVG.parse(data: Data(xml.utf8)) else { return nil }
+        let layer = LayerTree.Builder(svg: svg).makeLayer()
+        let generator = LayerTree.CommandGenerator(provider: LayerTreeProvider(), size: .zero, options: .default)
+        return generator.renderCommands(for: layer, colorConverter: .default)
+    }
+
+    @Test
+    func hugeWidthDoesNotTrap() {
+        #expect(load("\(Self.head) width=\"1e30\" height=\"1\"><rect width=\"1\" height=\"1\"/></svg>") == nil)
+    }
+
+    @Test
+    func hugeViewBoxDoesNotTrap() {
+        #expect(load("\(Self.head) viewBox=\"0 0 1e999 1\"><rect width=\"1\" height=\"1\"/></svg>") == nil)
+    }
+
+    @Test
+    func hugeStyleLengthDoesNotTrap() {
+        #expect(load("\(Self.head)><style>svg { width: 1e30px }</style></svg>") == nil)
+    }
+
+    @Test
+    func hugeEntityLengthDoesNotTrap() {
+        #expect(load("<!DOCTYPE svg [<!ENTITY n \"1e30\">]>\(Self.head) width=\"&n;\" height=\"&n;\"/>") == nil)
+    }
+
+    @Test
+    func useCycleDoesNotRecurse() {
+        #expect(load("\(Self.head) width=\"9\" height=\"9\"><g id=\"a\"><use xlink:href=\"#a\"/></g></svg>") != nil)
+    }
+
+    @Test
+    func mutualUseCycleDoesNotRecurse() {
+        #expect(load("\(Self.head) width=\"9\" height=\"9\"><g id=\"a\"><use href=\"#b\"/></g><g id=\"b\"><use href=\"#a\"/></g><use href=\"#a\"/></svg>") != nil)
+    }
+
+    @Test
+    func patternUseCycleDoesNotRecurse() {
+        #expect(load("\(Self.head) width=\"9\" height=\"9\"><pattern id=\"p\" width=\"2\" height=\"2\"><use href=\"#r\"/></pattern><rect id=\"r\" width=\"9\" height=\"9\" fill=\"url(#p)\"/><use href=\"#r\"/></svg>") != nil)
+    }
+
+    @Test
+    func useGradientCycleDoesNotRecurse() {
+        #expect(load("\(Self.head) width=\"9\" height=\"9\"><g id=\"a\"><use href=\"#b\"/></g><g id=\"b\" fill=\"url(#a)\"/></svg>") != nil)
+    }
+
+    @Test
+    func useExternalFileCycleDoesNotRecurse() {
+        #expect(load("\(Self.head) width=\"9\" height=\"9\"><g id=\"a\"><use xlink:href=\"p.svg#a\"/></g></svg>") != nil)
+    }
+
+    @Test
+    func maskCycleDoesNotRecurse() {
+        #expect(load("\(Self.head) width=\"9\" height=\"9\"><mask id=\"m\"><rect width=\"5\" height=\"5\" mask=\"url(#m)\"/></mask><rect width=\"9\" height=\"9\" mask=\"url(#m)\"/></svg>") != nil)
+    }
+
+    @Test
+    func maskPercentEncodedCycleDoesNotRecurse() {
+        #expect(load("\(Self.head) width=\"9\" height=\"9\"><mask id=\"m\"><rect width=\"5\" height=\"5\" mask=\"url(#%6d)\"/></mask><rect width=\"9\" height=\"9\" mask=\"url(#m)\"/></svg>") != nil)
+    }
+
+    @Test
+    func clipPathCycleDoesNotRecurse() {
+        #expect(load("\(Self.head) width=\"9\" height=\"9\"><clipPath id=\"c\"><rect width=\"5\" height=\"5\" clip-path=\"url(#c)\"/></clipPath><rect width=\"9\" height=\"9\" clip-path=\"url(#c)\"/></svg>") != nil)
+    }
+
+    @Test
+    func patternCycleDoesNotRecurse() {
+        #expect(load("\(Self.head) width=\"9\" height=\"9\"><pattern id=\"p\" width=\"2\" height=\"2\"><rect width=\"1\" height=\"1\" fill=\"url(#p)\"/></pattern><rect width=\"9\" height=\"9\" fill=\"url(#p)\"/></svg>") != nil)
+    }
+
+    @Test
+    func markerCycleDoesNotRecurse() {
+        #expect(load("\(Self.head) width=\"9\" height=\"9\"><marker id=\"m\"><path d=\"M0 0L1 1\" marker-end=\"url(#m)\"/></marker><path d=\"M0 0L5 5\" marker-end=\"url(#m)\"/></svg>") != nil)
+    }
+
+    /// Level n is a group that uses level n - 1 `fanOut` times: `fanOut ^ depth` rects from a tiny file.
+    private func fanOut(depth: Int, fanOut: Int) -> String {
+        var defs = #"<rect id="l0" width="1" height="1"/>"#
+        for level in 1...depth {
+            let uses = String(repeating: ##"<use href="#l\##(level - 1)"/>"##, count: fanOut)
+            defs += #"<g id="l\#(level)">\#(uses)</g>"#
+        }
+        return "\(Self.head) width=\"9\" height=\"9\"><defs>\(defs)</defs><use href=\"#l\(depth)\"/></svg>"
+    }
+
+    private func fillCount(_ commands: [RendererCommand<LayerTreeProvider.Types>]) -> Int {
+        commands.filter { if case .fill = $0 { return true } else { return false } }.count
+    }
+
+    @Test
+    func useFanOutIsBounded() throws {
+        // 4^9 = 262,144 rects without a budget
+        let svg = try #require(load(fanOut(depth: 9, fanOut: 4)))
+        #expect(fillCount(svg) <= LayerTree.Builder.maxReferences)
+    }
+
+    @Test
+    func largeUseFanOutStillLoads() {
+        // 4^14 = 268 million rects without a budget
+        #expect(load(fanOut(depth: 14, fanOut: 4)) != nil)
+    }
+
+    @Test
+    func deepUseChainIsCapped() throws {
+        let shallow = try #require(load(fanOut(depth: 10, fanOut: 1)))
+        #expect(fillCount(shallow) == 1)
+        let deep = try #require(load(fanOut(depth: 30, fanOut: 1)))
+        #expect(fillCount(deep) == 0)
+    }
+
+    @Test
+    func gradientHrefCycleDoesNotRecurse() {
+        #expect(load("\(Self.head) width=\"9\" height=\"9\"><linearGradient id=\"a\" href=\"#b\"/><linearGradient id=\"b\" href=\"#a\"/><rect width=\"9\" height=\"9\" fill=\"url(#a)\"/></svg>") != nil)
+    }
+}

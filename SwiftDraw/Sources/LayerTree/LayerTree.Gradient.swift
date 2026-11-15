@@ -65,6 +65,13 @@ extension LayerTree {
             case objectBoundingBox
         }
 
+        // SVG 1.1 §13.2.2 spreadMethod
+        enum Spread: Hashable {
+            case pad
+            case reflect
+            case `repeat`
+        }
+
         var isOpaque: Bool {
             stops.allSatisfy(\.isOpaque)
         }
@@ -76,6 +83,7 @@ extension LayerTree {
         var end: Point
         var units: Gradient.Units = .objectBoundingBox
         var transform: [Transform] = []
+        var spread: Gradient.Spread = .pad
     }
 
     struct RadialGradient: Hashable {

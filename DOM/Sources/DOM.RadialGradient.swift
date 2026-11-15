@@ -33,6 +33,7 @@ package extension DOM {
 
     final class RadialGradient: Element {
         package typealias Units = LinearGradient.Units
+        package typealias SpreadMethod = LinearGradient.SpreadMethod
         
         package var id: String
         package var r: Coordinate?
@@ -45,6 +46,7 @@ package extension DOM {
         package var stops: [Stop]
         package var gradientUnits: Units?
         package var gradientTransform: [Transform]
+        package var spreadMethod: SpreadMethod?
 
         //references another RadialGradient element id within defs
         package var href: URL?

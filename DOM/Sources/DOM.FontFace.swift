@@ -48,16 +48,28 @@ package extension DOM {
 
     struct FontFace: Hashable {
         package var family: String
-        package var src: Source
+        /// The `src` descriptor: sources in order of preference; the first one that loads is used.
+        package var src: [Source]
+        /// The `font-weight` descriptor: one weight, or a range for a variable font. Defaults to 400.
+        package var weight: ClosedRange<Int>
+        /// The `font-style` descriptor. Defaults to normal.
+        package var style: FontStyle
 
         package enum Source: Hashable {
             case url(url: DOM.URL, format: String?)
+            /// An installed font by its full name or PostScript name (CSS Fonts 4 §4.3.2).
             case local(String)
         }
 
-        package init(family: String, src: Source) {
+        package init(family: String, src: [Source], weight: ClosedRange<Int> = 400...400, style: FontStyle = .normal) {
             self.family = family
             self.src = src
+            self.weight = weight
+            self.style = style
+        }
+
+        package init(family: String, src: Source, weight: ClosedRange<Int> = 400...400, style: FontStyle = .normal) {
+            self.init(family: family, src: [src], weight: weight, style: style)
         }
     }
 }

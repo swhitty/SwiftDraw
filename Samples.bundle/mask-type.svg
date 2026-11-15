@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="160" viewBox="0 0 320 160">
+  <defs>
+    <linearGradient id="fade" x1="0" x2="1">
+      <stop offset="0" stop-color="black" stop-opacity="1" />
+      <stop offset="1" stop-color="black" stop-opacity="0" />
+    </linearGradient>
+    <!-- black contents: invisible as luminance, opaque as alpha -->
+    <mask id="alpha-attr" mask-type="alpha">
+      <circle cx="60" cy="50" r="40" fill="black" />
+    </mask>
+    <mask id="alpha-style" style="mask-type:alpha">
+      <rect x="120" y="10" width="80" height="80" fill="url(#fade)" />
+    </mask>
+    <mask id="luminance" mask-type="luminance">
+      <circle cx="260" cy="50" r="40" fill="black" />
+      <circle cx="260" cy="50" r="25" fill="white" fill-opacity="0.5" />
+    </mask>
+    <style>.alpha-css { mask-type: alpha; }</style>
+    <mask id="alpha-css" class="alpha-css">
+      <path d="M20 150 L60 100 L100 150 Z" fill="navy" fill-opacity="0.6" />
+    </mask>
+  </defs>
+  <rect width="320" height="160" fill="#eee" />
+  <rect width="320" height="160" fill="crimson" mask="url(#alpha-attr)" />
+  <rect width="320" height="160" fill="seagreen" mask="url(#alpha-style)" />
+  <rect width="320" height="160" fill="royalblue" mask="url(#luminance)" />
+  <rect width="320" height="160" fill="darkorange" mask="url(#alpha-css)" />
+</svg>

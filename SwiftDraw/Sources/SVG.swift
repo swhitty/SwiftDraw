@@ -96,6 +96,9 @@ public struct SVG: Hashable, Sendable {
         }
 
         public static var hideUnsupportedFilters: Options { Options(rawValue: 1 << 0) }
+        /// Draws elements that reference a `<filter>` without applying it, as SwiftDraw did before filters were rendered.
+        /// Skips the offscreen filter layers, and takes precedence over `hideUnsupportedFilters`.
+        public static var disableFilters: Options { Options(rawValue: 1 << 1) }
 
         public static var `default`: Options { [] }
     }
@@ -161,6 +164,7 @@ extension SVG {
 
     init(dom: DOM.SVG, options: Options) {
         self.size = CGSize(width: CGFloat(dom.width), height: CGFloat(dom.height))
+
         //To create the draw commands;
         // - XML is parsed into DOM.SVG
         // - DOM.SVG is converted into a LayerTree
@@ -197,6 +201,9 @@ public struct SVG: Sendable {
         }
 
         public static var hideUnsupportedFilters: Options { Options(rawValue: 1 << 0) }
+        /// Draws elements that reference a `<filter>` without applying it, as SwiftDraw did before filters were rendered.
+        /// Skips the offscreen filter layers, and takes precedence over `hideUnsupportedFilters`.
+        public static var disableFilters: Options { Options(rawValue: 1 << 1) }
 
         public static var `default`: Options { [] }
     }

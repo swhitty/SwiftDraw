@@ -39,6 +39,7 @@ package extension DOM {
     struct PresentationAttributes {
         package var opacity: DOM.Float?
         package var display: DOM.DisplayMode?
+        package var visibility: DOM.Visibility?
         package var color: DOM.Color?
 
         package var stroke: DOM.Fill?
@@ -46,7 +47,8 @@ package extension DOM {
         package var strokeOpacity: DOM.Float?
         package var strokeLineCap: DOM.LineCap?
         package var strokeLineJoin: DOM.LineJoin?
-        package var strokeDashArray: [DOM.Float]?
+        package var strokeDashArray: [DOM.DashLength]?
+        package var strokeDashOffset: DOM.DashLength?
 
         package var fill: DOM.Fill?
         package var fillOpacity: DOM.Float?
@@ -54,6 +56,8 @@ package extension DOM {
 
         package var fontFamily: [DOM.FontFamily]?
         package var fontSize: Float?
+        package var fontWeight: FontWeight?
+        package var fontStyle: FontStyle?
         package var textAnchor: TextAnchor?
         package var dominantBaseline: TextBaseline?
 
@@ -61,6 +65,7 @@ package extension DOM {
         package var clipPath: DOM.URL?
         package var clipRule: DOM.FillRule?
         package var mask: DOM.URL?
+        package var maskType: DOM.MaskType?
         package var filter: DOM.URL?
     }
     
@@ -77,21 +82,38 @@ package extension DOM {
         return attributes
     }
     
+    /// The cascade of a `<clipPath>` itself: attributes < stylesheet rules < style="" (SD8).
+    static func presentationAttributes(for clipPath: ClipPath,
+                                       styles: [StyleSheet]) -> PresentationAttributes {
+        var attributes = clipPath.attributes
+
+        for selector in makeSelectors(elementName: "clipPath", class: clipPath.class, id: clipPath.id) {
+            let new = makeAttributes(for: selector, styles: styles)
+            attributes = attributes.applyingAttributes(new)
+        }
+
+        return attributes.applyingAttributes(clipPath.style)
+    }
+
     static func makeSelectors(for element: DOM.GraphicsElement) -> [StyleSheet.Selector] {
+        makeSelectors(elementName: element.elementName, class: element.class, id: element.id)
+    }
+
+    static func makeSelectors(elementName: String?, class: String?, id: String?) -> [StyleSheet.Selector] {
         var selectors = [StyleSheet.Selector]()
         
-        if let elementName = element.elementName {
+        if let elementName {
             selectors.append(.element(elementName))
         }
         
-        if let classes = element.class?.split(separator: " ") {
+        if let classes = `class`?.split(separator: " ") {
             selectors.append(contentsOf: classes
                 .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
                 .map(StyleSheet.Selector.class)
             )
         }
         
-        if let id = element.id {
+        if let id {
             selectors.append(.id(id.trimmingCharacters(in: .whitespacesAndNewlines)))
         }
         
@@ -118,6 +140,7 @@ extension DOM.PresentationAttributes {
         
         merged.opacity = att.opacity ?? opacity
         merged.display = att.display ?? display
+        merged.visibility = att.visibility ?? visibility
         merged.color = att.color ?? color
         
         merged.stroke = att.stroke ?? stroke
@@ -126,6 +149,7 @@ extension DOM.PresentationAttributes {
         merged.strokeLineCap = att.strokeLineCap ?? strokeLineCap
         merged.strokeLineJoin = att.strokeLineJoin ?? strokeLineJoin
         merged.strokeDashArray = att.strokeDashArray ?? strokeDashArray
+        merged.strokeDashOffset = att.strokeDashOffset ?? strokeDashOffset
         
         merged.fill = att.fill ?? fill
         merged.fillOpacity = att.fillOpacity ?? fillOpacity
@@ -133,6 +157,8 @@ extension DOM.PresentationAttributes {
         
         merged.fontFamily = att.fontFamily ?? fontFamily
         merged.fontSize = att.fontSize ?? fontSize
+        merged.fontWeight = att.fontWeight ?? fontWeight
+        merged.fontStyle = att.fontStyle ?? fontStyle
         merged.textAnchor = att.textAnchor ?? textAnchor
         merged.dominantBaseline = att.dominantBaseline ?? dominantBaseline
 
@@ -140,6 +166,7 @@ extension DOM.PresentationAttributes {
         merged.clipPath = att.clipPath ?? clipPath
         merged.clipRule = att.clipRule ?? clipRule
         merged.mask = att.mask ?? mask
+        merged.maskType = att.maskType ?? maskType
         merged.filter = att.filter ?? filter
         
         return merged
@@ -174,6 +201,8 @@ extension DOM.GraphicsElement {
             return "a"
         case is DOM.SVG:
             return "svg"
+        case is DOM.Mask:
+            return "mask"
         default:
             return nil
         }

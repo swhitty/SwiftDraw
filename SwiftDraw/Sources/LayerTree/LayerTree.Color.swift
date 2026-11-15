@@ -167,9 +167,9 @@ struct LuminanceColorConverter: ColorConverter {
   func createColor(from color: LayerTree.Color) -> LayerTree.Color {
     switch color {
     case .rgba(let r, let g, let b, let a, _):
-      //sRGB Luminance to alpha
-      let alpha = ((r*0.2126) + (g*0.7152) + (b*0.0722)) * a
-      return .gray(white: 0.0, a: alpha)
+      // sRGB luminance; masks composite these greys and use the resulting luminance as alpha
+      let luminance = (r*0.2126) + (g*0.7152) + (b*0.0722)
+      return .gray(white: luminance, a: a)
     default:
       return color
     }
@@ -178,4 +178,20 @@ struct LuminanceColorConverter: ColorConverter {
 
 extension ColorConverter where Self == LuminanceColorConverter {
     static var luminance: LuminanceColorConverter { LuminanceColorConverter() }
+}
+
+// `mask-type: alpha` keeps only the alpha: white over the mask's black backdrop has the luminance of its alpha
+struct AlphaColorConverter: ColorConverter {
+  func createColor(from color: LayerTree.Color) -> LayerTree.Color {
+    switch color {
+    case .none:
+      return .none
+    case .rgba(_, _, _, let a, _), .gray(_, let a):
+      return .gray(white: 1, a: a)
+    }
+  }
+}
+
+extension ColorConverter where Self == AlphaColorConverter {
+    static var alpha: AlphaColorConverter { AlphaColorConverter() }
 }

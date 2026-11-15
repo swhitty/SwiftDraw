@@ -43,6 +43,18 @@ package extension DOM {
 }
 
 extension DOM {
+    /// A `stroke-dasharray` / `stroke-dashoffset` length; a percentage is relative to the viewport diagonal.
+    package enum DashLength: Equatable {
+        case absolute(Float)
+        case percentage(Float)
+
+        var isNegative: Bool {
+            switch self {
+            case .absolute(let v), .percentage(let v): return v < 0
+            }
+        }
+    }
+
     package struct Point: Equatable {
         package var x: Coordinate
         package var y: Coordinate
@@ -56,10 +68,11 @@ extension DOM {
     package enum Fill: Equatable {
         case url(URL)
         case color(DOM.Color)
+        case urlWithFallback(URL, DOM.Color)
         
         package func getColor() throws -> DOM.Color {
             switch self {
-            case .url:
+            case .url, .urlWithFallback:
                 throw Error.missing("Color")
             case .color(let c):
                 return c
@@ -78,6 +91,18 @@ extension DOM {
         case block
     }
     
+    package enum Visibility: String {
+        case visible
+        case hidden
+        case collapse
+    }
+
+    // CSS Masking §7.2: whether a mask uses the luminance or the alpha of its contents
+    package enum MaskType: String {
+        case luminance
+        case alpha
+    }
+
     package enum LineCap: String {
         case butt
         case round
@@ -94,6 +119,63 @@ extension DOM {
         case start
         case middle
         case end
+    }
+
+    /// CSS `font-weight`: a keyword, or a number from 1 to 1000. `bolder` and `lighter` are relative to the
+    /// inherited weight.
+    package enum FontWeight: Hashable {
+        case normal
+        case bold
+        case bolder
+        case lighter
+        case number(Int)
+
+        package init?(_ text: String) {
+            switch text.trimmingCharacters(in: .whitespaces).lowercased() {
+            case "normal": self = .normal
+            case "bold": self = .bold
+            case "bolder": self = .bolder
+            case "lighter": self = .lighter
+            case let value:
+                guard let number = Double(value), number >= 1, number <= 1000 else { return nil }
+                self = .number(Int(number.rounded()))
+            }
+        }
+
+        /// The numeric weight, given the inherited one (CSS Fonts 4 §2.2).
+        package func resolved(inheriting parent: Int) -> Int {
+            switch self {
+            case .normal: return 400
+            case .bold: return 700
+            case .number(let value): return value
+            case .bolder:
+                if parent < 350 { return 400 }
+                if parent < 550 { return 700 }
+                return max(parent, 900)
+            case .lighter:
+                if parent < 550 { return min(parent, 100) }
+                if parent < 750 { return 400 }
+                return 700
+            }
+        }
+    }
+
+    /// CSS `font-style`. An oblique angle (`oblique 10deg`) is accepted and treated as oblique.
+    package enum FontStyle: Hashable {
+        case normal
+        case italic
+        case oblique
+
+        package init?(_ text: String) {
+            let keyword = text.trimmingCharacters(in: .whitespaces).lowercased()
+                .split(separator: " ").first.map(String.init) ?? ""
+            switch keyword {
+            case "normal": self = .normal
+            case "italic": self = .italic
+            case "oblique": self = .oblique
+            default: return nil
+            }
+        }
     }
 
     package enum TextBaseline: String {
@@ -161,11 +243,11 @@ package extension Double {
         case .inch:
             return self * 96
         case .centimeter:
-            return self * 37.795
+            return self * 96 / 2.54
         case .millimeter:
-            return self * 3.7795
+            return self * 96 / 25.4
         case .point:
-            return self * 1.3333
+            return self * 96 / 72
         case .pica:
             return self * 16
         case .em, .ex:

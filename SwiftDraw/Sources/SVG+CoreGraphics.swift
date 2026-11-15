@@ -36,8 +36,16 @@ public import Foundation
 public extension CGContext {
 
     func draw(_ svg: SVG, in rect: CGRect? = nil)  {
+        draw(svg, in: rect, baseCTM: nil)
+    }
+}
+
+extension CGContext {
+
+    /// `baseCTM` is the context's default space (see `CGRenderer`); nil uses the current CTM.
+    func draw(_ svg: SVG, in rect: CGRect?, baseCTM: CGAffineTransform?) {
         let defaultRect = CGRect(x: 0, y: 0, width: svg.size.width, height: svg.size.height)
-        let renderer = CGRenderer(context: self)
+        let renderer = CGRenderer(context: self, baseCTM: baseCTM)
         saveGState()
 
         if let rect = rect, rect != defaultRect {
@@ -51,6 +59,9 @@ public extension CGContext {
 
         restoreGState()
     }
+}
+
+public extension CGContext {
 
     func draw(_ svg: SVG, in rect: CGRect, byTiling: Bool) {
         guard byTiling else {

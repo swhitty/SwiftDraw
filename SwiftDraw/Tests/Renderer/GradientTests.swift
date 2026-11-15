@@ -81,8 +81,5 @@ final class GradientTests: XCTestCase {
     node.attributes["gradientUnits"] = "objectBoundingBox"
     gradient = try DOMXMLParser().parseLinearGradient(node)
     XCTAssertEqual(gradient.gradientUnits, .objectBoundingBox)
-
-    node.attributes["gradientUnits"] = "invalid"
-    XCTAssertThrowsError(try DOMXMLParser().parseLinearGradient(node))
   }
 }

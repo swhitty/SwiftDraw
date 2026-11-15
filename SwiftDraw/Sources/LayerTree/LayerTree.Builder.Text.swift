@@ -41,7 +41,7 @@ extension LayerTree.Builder {
 
 #if canImport(CoreText)
     static func makeOffset(for text: String, with attributes: LayerTree.TextAttributes) -> LayerTree.Size {
-        let font = CGProvider.createCTFont(for: attributes.font, size: attributes.size)
+        let font = CGProvider.createCTFont(for: attributes)
         let line = text.toLine(font: font)
         return LayerTree.Size(
             makeXOffset(line: line, anchor: attributes.anchor),

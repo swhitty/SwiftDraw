@@ -39,7 +39,18 @@ extension LayerTree {
         var clipRule: FillRule?
         var clipUnits: ClipUnits = .userSpaceOnUse
         var mask: Layer?
+        // how this layer masks when it is used as a mask
+        var maskType: MaskType = .luminance
+        /// The mask stands for a clip path one clipping path cannot express (SD8): renderers
+        /// without masks may draw the content unclipped instead of dropping it.
+        var maskIsClip = false
         var filters: [Filter] = []
+        var filterRegion = FilterRegion()
+
+        enum MaskType: Hashable {
+            case luminance
+            case alpha
+        }
 
         enum Contents: Hashable {
             case shape(Shape, StrokeAttributes, FillAttributes)
@@ -82,7 +93,10 @@ extension LayerTree {
             clip.hash(into: &hasher)
             clipUnits.hash(into: &hasher)
             mask.hash(into: &hasher)
+            maskIsClip.hash(into: &hasher)
+            maskType.hash(into: &hasher)
             filters.hash(into: &hasher)
+            filterRegion.hash(into: &hasher)
         }
 
         static func ==(lhs: Layer, rhs: Layer) -> Bool {
@@ -94,7 +108,10 @@ extension LayerTree {
             lhs.clipRule == rhs.clipRule &&
             lhs.clipUnits == rhs.clipUnits &&
             lhs.mask == rhs.mask &&
-            lhs.filters == rhs.filters
+            lhs.maskIsClip == rhs.maskIsClip &&
+            lhs.maskType == rhs.maskType &&
+            lhs.filters == rhs.filters &&
+            lhs.filterRegion == rhs.filterRegion
         }
     }
 
@@ -104,6 +121,8 @@ extension LayerTree {
         var cap: LineCap
         var join: LineJoin
         var miterLimit: Float
+        var dashArray: [Float] = []
+        var dashOffset: Float = 0
 
         enum Stroke: Hashable {
             case color(Color)
@@ -156,12 +175,20 @@ extension LayerTree {
         var color: Color
         var font: [Font]
         var size: Float
+        /// CSS weight (1–1000) and slant, used to pick a system font's face. `@font-face` fonts are
+        /// already the matching face.
+        var weight: Int = 400
+        var isItalic: Bool = false
         var anchor: DOM.TextAnchor
         var baseline: DOM.TextBaseline
 
         enum Font: Hashable {
             case truetype(Data)
+            /// A family name ("Helvetica"), or a face's PostScript name ("Helvetica-Bold")
             case name(String)
+            /// One installed face by PostScript name, from `local()` in `@font-face`: used as named,
+            /// never re-weighted
+            case postScript(String)
         }
     }
 }

@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="40" viewBox="0 0 120 40">
+  <!-- every attribute value below is "bad" but the drawing must still render -->
+  <rect x="2" y="2" width="22" height="36" fill="hsl(120, 100%, 40%)" stroke="" stroke-width="wide"/>
+  <rect x="28" y="2" width="22" height="36" fill="RebeccaPurple" opacity="3" transform="translate(0px, 0px)"/>
+  <rect x="54" y="2" width="22" height="36" fill="#ff0000ff" display="inline-block" clip-path="none"/>
+  <rect x="80" y="2" width="22" height="36" fill="#0000ff80" style="stroke: black !important" stroke-linecap="none"/>
+</svg>

@@ -31,38 +31,46 @@
 
 extension XMLParser {
 
+    /// A geometry value with a default (a position, a corner radius, an image size): a missing or invalid value
+    /// leaves it unset so the default applies, rather than invalidating the element.
+    /// Sizes without a usable default (`width`, `height`, `r`) are still required.
+    /// Units, percentages and `em`/`ex` resolve as in `resolveLength(_:_:)`.
+    func parseDefaultedLength(_ att: any AttributeParser, _ key: String, _ direction: LengthDirection) -> DOM.Coordinate? {
+        try? parseLength(att, key, direction) as DOM.Coordinate?
+    }
+
     func parseLine(_ att: any AttributeParser) throws -> DOM.Line {
-        let x1: DOM.Coordinate = try att.parseCoordinate("x1")
-        let y1: DOM.Coordinate = try att.parseCoordinate("y1")
-        let x2: DOM.Coordinate = try att.parseCoordinate("x2")
-        let y2: DOM.Coordinate = try att.parseCoordinate("y2")
-        return DOM.Line(x1: x1, y1: y1, x2: x2, y2: y2)
+        // x1, y1, x2 and y2 default to 0
+        DOM.Line(x1: parseDefaultedLength(att, "x1", .horizontal) ?? 0,
+                 y1: parseDefaultedLength(att, "y1", .vertical) ?? 0,
+                 x2: parseDefaultedLength(att, "x2", .horizontal) ?? 0,
+                 y2: parseDefaultedLength(att, "y2", .vertical) ?? 0)
     }
 
     func parseCircle(_ att: any AttributeParser) throws -> DOM.Circle {
-        let cx: DOM.Coordinate? = try att.parseCoordinate("cx")
-        let cy: DOM.Coordinate? = try att.parseCoordinate("cy")
-        let r: DOM.Coordinate = try att.parseCoordinate("r")
-        return DOM.Circle(cx: cx, cy: cy, r: r)
+        let r: DOM.Coordinate = try parseLength(att, "r", .other)
+        return DOM.Circle(cx: parseDefaultedLength(att, "cx", .horizontal),
+                          cy: parseDefaultedLength(att, "cy", .vertical),
+                          r: r)
     }
 
     func parseEllipse(_ att: any AttributeParser) throws -> DOM.Ellipse {
-        let cx: DOM.Coordinate? = try att.parseCoordinate("cx")
-        let cy: DOM.Coordinate? = try att.parseCoordinate("cy")
-        let rx: DOM.Coordinate = try att.parseCoordinate("rx")
-        let ry: DOM.Coordinate = try att.parseCoordinate("ry")
-        return DOM.Ellipse(cx: cx, cy: cy, rx: rx, ry: ry)
+        let rx: DOM.Coordinate = try parseLength(att, "rx", .horizontal)
+        let ry: DOM.Coordinate = try parseLength(att, "ry", .vertical)
+        return DOM.Ellipse(cx: parseDefaultedLength(att, "cx", .horizontal),
+                           cy: parseDefaultedLength(att, "cy", .vertical),
+                           rx: rx, ry: ry)
     }
 
     func parseRect(_ att: any AttributeParser) throws -> DOM.Rect {
-        let width: DOM.Coordinate = try att.parseCoordinate("width")
-        let height: DOM.Coordinate = try att.parseCoordinate("height")
+        let width: DOM.Coordinate = try parseLength(att, "width", .horizontal)
+        let height: DOM.Coordinate = try parseLength(att, "height", .vertical)
         let rect = DOM.Rect(width: width, height: height)
 
-        rect.x = try att.parseCoordinate("x")
-        rect.y = try att.parseCoordinate("y")
-        rect.rx = try att.parseCoordinate("rx")
-        rect.ry = try att.parseCoordinate("ry")
+        rect.x = parseDefaultedLength(att, "x", .horizontal)
+        rect.y = parseDefaultedLength(att, "y", .vertical)
+        rect.rx = parseDefaultedLength(att, "rx", .horizontal)
+        rect.ry = parseDefaultedLength(att, "ry", .vertical)
 
         return rect
     }
@@ -79,6 +87,10 @@ extension XMLParser {
         var ge: DOM.GraphicsElement
 
         let att = try parseAttributes(e)
+        let attributes = try parsePresentationAttributes(e)
+        let style = try parseStyleAttributes(e)
+        // `em` and `ex` lengths of this element (and font-size inherited by its children)
+        lengthContext.fontSize = fontSize(of: e, attributes: attributes, style: style) ?? lengthContext.fontSize
 
         switch e.name {
         case "g": ge = try parseGroup(e)
@@ -106,21 +118,36 @@ extension XMLParser {
         ge.id = elementAtt.id
         ge.class = elementAtt.class
 
-        ge.attributes = try parsePresentationAttributes(e)
-        ge.style = try parseStyleAttributes(e)
+        ge.attributes = attributes
+        ge.style = style
         return ge
     }
 
     func parseGraphicsElements(_ elements: [XML.Element]) throws -> [DOM.GraphicsElement] {
         var result = [DOM.GraphicsElement]()
-        var stack: [(XML.Element, parent: (any ContainerElement)?)] = elements
+        // each element inherits the font-size of its parent for `em` and `ex` lengths
+        let fontSize = lengthContext.fontSize
+        defer { lengthContext.fontSize = fontSize }
+        var stack: [(XML.Element, parent: (any ContainerElement)?, fontSize: DOM.Float)] = elements
             .reversed()
-            .map { ($0, parent: nil) }
+            .map { ($0, parent: nil, fontSize: fontSize) }
 
-        while let (element, parent) = stack.popLast() {
+        while let (element, parent, inheritedFontSize) = stack.popLast() {
             try Task.checkCancellation()
+            lengthContext.fontSize = inheritedFontSize
 
-            guard let ge = try parseGraphicsElement(element) else {
+            // not routed through skippingInvalid(_:_:): nested <svg> recurses through here and
+            // the extra generic/closure frames overflow the small stacks of test threads
+            let ge: DOM.GraphicsElement
+            do {
+                guard let parsed = try parseGraphicsElement(element) else { continue }
+                ge = parsed
+            } catch is CancellationError {
+                throw CancellationError()
+            } catch {
+                if let parseError = parseError(for: error, parsing: element, with: options) {
+                    throw parseError
+                }
                 continue
             }
 
@@ -130,13 +157,31 @@ extension XMLParser {
                 result.append(ge)
             }
 
-            if let container = ge as? any ContainerElement {
-                stack.append(contentsOf: element.children.reversed().map { ($0, container) })
+            // a nested <svg> has already parsed its own children (with its own defs and styles)
+            if let container = ge as? any ContainerElement, !(ge is DOM.SVG) {
+                let fontSize = lengthContext.fontSize
+                stack.append(contentsOf: element.children.reversed().map { ($0, container, fontSize) })
             }
 
         }
 
         return result
+    }
+
+    /// Appends `parse(element)` to `array`; with `.skipInvalidElements` an error drops the element instead of throwing.
+    /// Kept out of line: the recursive `parse…s(_:)` walkers call it so their own frames stay small
+    /// (500 nested groups must still fit the small stacks of test threads).
+    @inline(never)
+    func appendSkippingInvalid<T>(_ array: inout [T], _ element: XML.Element, _ parse: (XML.Element) throws -> T) throws {
+        do {
+            array.append(try parse(element))
+        } catch is CancellationError {
+            throw CancellationError()
+        } catch {
+            if let parseError = parseError(for: error, parsing: element, with: options) {
+                throw parseError
+            }
+        }
     }
 
     func parseError(for error: any Swift.Error, parsing element: XML.Element, with options: Options) -> XMLParser.Error? {
@@ -192,6 +237,35 @@ extension XMLParser {
                           style: style)
     }
 
+    /// SVG 1.1 §11.4: `none` or a list of non-negative lengths / percentages; returns nil when invalid.
+    static func parseDashArray(_ text: String) -> [DOM.DashLength]? {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmed == "none" {
+            return []
+        }
+        let tokens = trimmed
+            .split(whereSeparator: { $0 == "," || $0 == " " || $0 == "\t" || $0 == "\n" || $0 == "\r" })
+            .map(String.init)
+        guard !tokens.isEmpty else { return nil }
+        var lengths = [DOM.DashLength]()
+        for token in tokens {
+            guard let length = parseDashLength(token), !length.isNegative else { return nil }
+            lengths.append(length)
+        }
+        return lengths
+    }
+
+    static func parseDashLength(_ text: String) -> DOM.DashLength? {
+        let text = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        if text.hasSuffix("%") {
+            guard let value = Float(text.dropLast()), value.isFinite else { return nil }
+            return .percentage(value)
+        }
+        var scanner = XMLParser.Scanner(text: text)
+        guard let value = try? scanner.scanCoordinate(), value.isFinite, scanner.isEOF else { return nil }
+        return .absolute(value)
+    }
+
     func parsePresentationAttributes(_ e: XML.Element) throws -> DOM.PresentationAttributes {
         return try parsePresentationAttributes(e.attributes)
     }
@@ -205,66 +279,78 @@ extension XMLParser {
         return try parsePresentationAttributes(style)
     }
 
+    // A malformed declaration (`fill:`, `fill`, empty) is skipped; the others are kept.
     func parseStyleAttributes(_ data: String) throws -> [String: String] {
-        var scanner = XMLParser.Scanner(text: data)
         var style = [String: String]()
 
-        while !scanner.isEOF {
-            let att = try parseStyleAttribute(&scanner)
-            style[att.0] = att.1
+        for declaration in data.split(separator: ";", omittingEmptySubsequences: true) {
+            guard let colon = declaration.firstIndex(of: ":") else { continue }
+            let key = declaration[declaration.startIndex..<colon].trimmingCharacters(in: .whitespacesAndNewlines)
+            let value = declaration[declaration.index(after: colon)...].trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !key.isEmpty, !value.isEmpty else { continue }
+            style[key] = value
         }
         return style
     }
 
-    private func parseStyleAttribute(_ scanner: inout  XMLParser.Scanner) throws -> (String, String) {
-        let key = try scanner.scanString(upTo: ":")
-        _ = try? scanner.scanString(":")
-        let value = try scanner.scanString(upTo: ";")
-        _ = try? scanner.scanString(";")
+    // An invalid value drops the attribute (the spec default applies) rather than the document.
+    private func lenient<T>(_ parse: () throws -> T?) -> T? {
+        (try? parse()) ?? nil
+    }
 
-        return (key.trimmingCharacters(in: .whitespaces),
-                value.trimmingCharacters(in: .whitespaces))
+    // opacity outside 0...1 is clamped; a non-numeric value is dropped
+    private func opacity(_ att: any AttributeParser, _ key: String) -> DOM.Float? {
+        if let value = lenient({ try att.parsePercentage(key) as DOM.Float? }) {
+            return value
+        }
+        return lenient { try att.parseFloat(key) as DOM.Float? }.map { min(max($0, 0), 1) }
     }
 
     func parsePresentationAttributes(_ att: any AttributeParser) throws -> DOM.PresentationAttributes {
         var el = DOM.PresentationAttributes()
 
-        el.opacity = try att.parsePercentage("opacity")
-        el.display = try att.parseRaw("display")
-        el.color = try att.parseColor("color")
+        el.opacity = opacity(att, "opacity")
+        el.display = lenient { try att.parseRaw("display") }
+        el.visibility = lenient { try att.parseRaw("visibility") }
+        el.color = lenient { try att.parseColor("color") }
 
-        el.stroke = try att.parseFill("stroke")
-        el.strokeWidth = try att.parseFloat("stroke-width")
-        el.strokeOpacity = try att.parsePercentage("stroke-opacity")
-        el.strokeLineCap = try att.parseRaw("stroke-linecap")
-        el.strokeLineJoin = try att.parseRaw("stroke-linejoin")
+        el.stroke = lenient { try att.parseFill("stroke") }
+        // a negative stroke-width is an error: drop it (SVG 1.1 §11.4); absolute units in px
+        el.strokeWidth = lenient { try att.parseCoordinate("stroke-width") }.flatMap { $0 < 0 ? nil : $0 }
+        el.strokeOpacity = opacity(att, "stroke-opacity")
+        el.strokeLineCap = lenient { try att.parseRaw("stroke-linecap") }
+        el.strokeLineJoin = lenient { try att.parseRaw("stroke-linejoin") }
 
-        //maybe handle this better
-        // att.parseDashArray?
-        if let dash = try att.parseString("stroke-dasharray") as String?,
-           dash.trimmingCharacters(in: .whitespaces) == "none" {
-            el.strokeDashArray = nil
-        } else {
-            el.strokeDashArray = try att.parseFloats("stroke-dasharray")
+        // an invalid dash value is dropped (inherited), never fatal for the document
+        if let dash = lenient({ try att.parseString("stroke-dasharray") as String? }) {
+            el.strokeDashArray = Self.parseDashArray(dash)
+        }
+        if let offset = lenient({ try att.parseString("stroke-dashoffset") as String? }) {
+            el.strokeDashOffset = Self.parseDashLength(offset)
         }
 
-        el.fill = try att.parseFill("fill")
-        el.fillOpacity = try att.parsePercentage("fill-opacity")
-        el.fillRule = try att.parseRaw("fill-rule")
+        el.fill = lenient { try att.parseFill("fill") }
+        el.fillOpacity = opacity(att, "fill-opacity")
+        el.fillRule = lenient { try att.parseRaw("fill-rule") }
 
-        el.fontFamily = try att.parseFontFamily("font-family")
-        el.fontSize = try att.parseFloat("font-size")
-        el.textAnchor = try att.parseRaw("text-anchor")
-        el.dominantBaseline = try att.parseRaw("dominant-baseline")
+        el.fontFamily = lenient { try att.parseFontFamily("font-family") }
+        // absolute units (`12pt`) in px; `em` and `%` keep their raw number as before
+        // absolute units (`12pt`) in px; `em` and `%` keep their raw number as before
+        el.fontSize = lenient { try att.parseCoordinate("font-size") }
+        el.fontWeight = lenient { try att.parseString("font-weight") as String? }.flatMap(DOM.FontWeight.init)
+        el.fontStyle = lenient { try att.parseString("font-style") as String? }.flatMap(DOM.FontStyle.init)
+        el.textAnchor = lenient { try att.parseRaw("text-anchor") }
+        el.dominantBaseline = lenient { try att.parseRaw("dominant-baseline") }
 
         if let val = try? att.parseString("transform") {
-            el.transform = try parseTransform(val)
+            el.transform = try? parseTransform(val)
         }
 
-        el.clipPath = try att.parseUrlSelector("clip-path")
-        el.clipRule = try att.parseRaw("clip-rule")
-        el.mask = try att.parseUrlSelector("mask")
-        el.filter = try att.parseUrlSelector("filter")
+        el.clipPath = lenient { try att.parseUrlSelector("clip-path") }
+        el.clipRule = lenient { try att.parseRaw("clip-rule") }
+        el.mask = lenient { try att.parseUrlSelector("mask") }
+        el.maskType = lenient { try att.parseRaw("mask-type") }
+        el.filter = lenient { try att.parseUrlSelector("filter") }
 
         return el
     }
@@ -284,32 +370,89 @@ extension XMLParser {
     func parseFontFace(_ att: any AttributeParser) throws -> DOM.FontFace {
         try DOM.FontFace(
             family: att.parseString("font-family").unquoted,
-            src: att.parseFontSource("src")
+            src: att.parseFontSource("src"),
+            weight: (try? att.parseString("font-weight")).flatMap(Self.parseFontFaceWeight) ?? 400...400,
+            style: (try? att.parseString("font-style")).flatMap(DOM.FontStyle.init) ?? .normal
         )
     }
 
+    /// Splits a `src` list at its top-level commas. Commas inside `url(…)` (data URLs) or quotes are kept.
+    static func splitFontSources(_ text: String) -> [String] {
+        var entries = [String]()
+        var current = ""
+        var depth = 0
+        var quote: Character?
+        for character in text {
+            if let open = quote {
+                if character == open { quote = nil }
+            } else if character == "\"" || character == "'" {
+                quote = character
+            } else if character == "(" {
+                depth += 1
+            } else if character == ")" {
+                depth = max(0, depth - 1)
+            } else if character == "," && depth == 0 {
+                entries.append(current)
+                current = ""
+                continue
+            }
+            current.append(character)
+        }
+        entries.append(current)
+        return entries
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+    }
+
+    /// The `font-weight` descriptor of `@font-face`: a weight, or two for a variable font's range (`100 900`).
+    /// `bolder` and `lighter` are not valid here.
+    static func parseFontFaceWeight(_ text: String) -> ClosedRange<Int>? {
+        let weights = text.split(separator: " ").map { DOM.FontWeight(String($0)) }
+        func number(_ weight: DOM.FontWeight?) -> Int? {
+            switch weight {
+            case .normal: return 400
+            case .bold: return 700
+            case .number(let value): return value
+            default: return nil
+            }
+        }
+        switch weights.count {
+        case 1:
+            return number(weights[0]).map { $0...$0 }
+        case 2:
+            guard let a = number(weights[0]), let b = number(weights[1]) else { return nil }
+            return min(a, b)...max(a, b)
+        default:
+            return nil
+        }
+    }
+
     package static func logParsingError(for error: any Swift.Error, filename: String?, parsing element: XML.Element? = nil) {
+        LogSink.error(makeParsingErrorMessage(for: error, filename: filename, parsing: element))
+    }
+
+    package static func makeParsingErrorMessage(for error: any Swift.Error, filename: String?, parsing element: XML.Element? = nil) -> String {
         let elementName = element.map { "<\($0.name)>" } ?? ""
         let filename = filename ?? ""
         switch error {
         case let XMLParser.Error.invalidDocument(error, element, line, column):
             let element = element.map { "<\($0)>" } ?? ""
             if let error = error {
-                print("[parsing error]", filename, element, "line:", line, "column:", column, "error:", error, to: &.standardError)
+                return "[parsing error] \(filename) \(element) line: \(line) column: \(column) error: \(error)"
             } else {
-                print("[parsing error]", filename, element, "line:", line, "column:", column, to: &.standardError)
+                return "[parsing error] \(filename) \(element) line: \(line) column: \(column)"
             }
         case let XMLParser.Error.invalidElement(name, error, line, column):
             if let line = line {
-                print("[parsing error]", filename, "<\(name)>", "line:", line, "column:", column ?? -1, "error:", error, to: &.standardError)
+                return "[parsing error] \(filename) <\(name)> line: \(line) column: \(column ?? -1) error: \(error)"
             } else {
-                print("[parsing error]", filename, "<\(name)>", "error:", error, to: &.standardError)
+                return "[parsing error] \(filename) <\(name)> error: \(error)"
             }
         default:
             if let location = element?.parsedLocation {
-                print("[parsing error]", filename, elementName, "line:", location.line, "column:", location.column, "error:", error, to: &.standardError)
+                return "[parsing error] \(filename) \(elementName) line: \(location.line) column: \(location.column) error: \(error)"
             } else {
-                print("[parsing error]", filename, elementName, "error:", error, to: &.standardError)
+                return "[parsing error] \(filename) \(elementName) error: \(error)"
             }
         }
     }
@@ -320,6 +463,7 @@ extension DOM.PresentationAttributes {
     mutating func updateAttributes(from attributes: Self) {
         opacity = attributes.opacity
         display = attributes.display
+        visibility = attributes.visibility
         color = attributes.color
         stroke = attributes.stroke
         strokeWidth = attributes.strokeWidth
@@ -327,6 +471,7 @@ extension DOM.PresentationAttributes {
         strokeLineCap = attributes.strokeLineCap
         strokeLineJoin = attributes.strokeLineJoin
         strokeDashArray = attributes.strokeDashArray
+        strokeDashOffset = attributes.strokeDashOffset
         fill = attributes.fill
         fillOpacity = attributes.fillOpacity
         fillRule = attributes.fillRule

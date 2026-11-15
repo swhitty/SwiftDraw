@@ -32,13 +32,15 @@
 extension XMLParser {
   
   func parseImage(_ att: any AttributeParser) throws -> DOM.Image {
-    let href: DOM.URL = try att.parseUrl("xlink:href")
+    // SVG 2 href, falling back to the deprecated xlink:href when it is missing or invalid
+    let href: DOM.URL = try att.parseHref()
 
     let image = DOM.Image(href: href)
-    image.x = try att.parseCoordinate("x")
-    image.y = try att.parseCoordinate("y")
-    image.width = try att.parseCoordinate("width")
-    image.height = try att.parseCoordinate("height")
+    image.x = parseDefaultedLength(att, "x", .horizontal)
+    image.y = parseDefaultedLength(att, "y", .vertical)
+    image.width = parseDefaultedLength(att, "width", .horizontal)
+    image.height = parseDefaultedLength(att, "height", .vertical)
+    image.preserveAspectRatio = parsePreserveAspectRatio(try? att.parseString("preserveAspectRatio"))
 
     return image
   }

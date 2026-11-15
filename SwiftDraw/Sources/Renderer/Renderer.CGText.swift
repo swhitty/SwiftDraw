@@ -146,6 +146,13 @@ struct CGTextProvider: RendererTypeProvider {
       .map { "  \($0)" }
       .joined(separator: "\n")
 
+    var matrix = "ctx.ctm.concatenating(baseCTM.inverted())"
+    if pattern.transform != .identity {
+      let t = pattern.transform
+      let patternTransform = "CGAffineTransform(a: \(createFloat(from: t.a)), b: \(createFloat(from: t.b)), c: \(createFloat(from: t.c)), d: \(createFloat(from: t.d)), tx: \(createFloat(from: t.tx)), ty: \(createFloat(from: t.ty)))"
+      matrix = "\(patternTransform).concatenating(\(matrix))"
+    }
+
     return """
     let patternDraw1: CGPatternDrawPatternCallback = { _, ctx in
     \(lines)
@@ -154,7 +161,7 @@ struct CGTextProvider: RendererTypeProvider {
     let pattern1 = CGPattern(
       info: nil,
       bounds: \(createRect(from: pattern.frame)),
-      matrix: ctx.ctm.concatenating(baseCTM.inverted()),
+      matrix: \(matrix),
       xStep: \(formatter.format(pattern.frame.width)),
       yStep: \(formatter.format(pattern.frame.height)),
       tiling: .constantSpacing,
@@ -219,7 +226,7 @@ struct CGTextProvider: RendererTypeProvider {
 #if canImport(CoreGraphics)
     return CGProvider().getBounds(from: shape)
 #else
-    return .zero
+    return shape.path.bounds
 #endif
   }
 }
@@ -258,6 +265,7 @@ public final class CGTextRenderer: Renderer {
   private var transforms: [String: String] = [:]
   private var gradients: [LayerTree.Gradient: String] = [:]
   private var patterns: [String: String] = [:]
+  private var maskCount = 0
 
   enum ColorSpace: String, Hashable {
     case rgb
@@ -505,6 +513,11 @@ public final class CGTextRenderer: Renderer {
     lines.append("ctx.setMiterLimit(\(formatter.format(miterLimit)))")
   }
 
+  func setLineDash(phase: LayerTree.Float, lengths: [LayerTree.Float]) {
+    let values = lengths.map { formatter.format($0) }.joined(separator: ", ")
+    lines.append("ctx.setLineDash(phase: \(formatter.format(phase)), lengths: [\(values)])")
+  }
+
   func setClip(path: [LayerTree.Shape], rule: String) {
     let identifier = createOrGetPath(path)
     lines.append("ctx.addPath(\(identifier))")
@@ -513,6 +526,51 @@ public final class CGTextRenderer: Renderer {
     } else {
       lines.append("ctx.clip(using: \(rule))")
     }
+  }
+
+  // The generated code draws the mask contents into a greyscale bitmap and clips to it, as CGRenderer does.
+  // The contents are generated in a nested scope where `ctx` is the bitmap; identifiers declared there
+  // are out of scope afterwards, so the caches are restored when it ends.
+  func clip(toMask contents: [RendererCommand<CGTextTypes>]) {
+    maskCount += 1
+    let device = "maskDevice".makeIdentifier(maskCount)
+    let rect = "maskRect".makeIdentifier(maskCount)
+    let context = "maskContext".makeIdentifier(maskCount)
+    let code = """
+    let \(device) = ctx.userSpaceToDeviceSpaceTransform
+    let \(rect) = ctx.boundingBoxOfClipPath.applying(\(device)).integral
+    let \(context) = CGContext(
+      data: nil,
+      width: max(1, Int(\(rect).width)),
+      height: max(1, Int(\(rect).height)),
+      bitsPerComponent: 8,
+      bytesPerRow: 0,
+      space: CGColorSpaceCreateDeviceGray(),
+      bitmapInfo: CGImageAlphaInfo.none.rawValue
+    )!
+    \(context).fill(CGRect(x: 0, y: 0, width: \(context).width, height: \(context).height))
+    \(context).translateBy(x: -\(rect).minX, y: -\(rect).minY)
+    \(context).concatenate(\(device))
+    """.split(separator: "\n").map(String.init)
+    lines.append(contentsOf: code)
+
+    let outer = (lines, colorSpaces, colors, paths, transforms, gradients, patterns)
+    lines = []
+    perform(contents)
+    var inner = ["let ctx = \(context)"]
+    if patterns.count > outer.6.count {
+      // CGPattern matrices are relative to the bitmap's default space
+      inner.append("let baseCTM = CGAffineTransform.identity")
+    }
+    inner.append(contentsOf: lines)
+    (lines, colorSpaces, colors, paths, transforms, gradients, patterns) = outer
+
+    lines.append("do {")
+    lines.append(contentsOf: inner.map { "  \($0)" })
+    lines.append("}")
+    lines.append("ctx.concatenate(\(device).inverted())")
+    lines.append("ctx.clip(to: \(rect), mask: \(context).makeImage()!)")
+    lines.append("ctx.concatenate(\(device))")
   }
 
   func setClip(mask: [AnyHashable], frame: String) {
@@ -563,11 +621,8 @@ public final class CGTextRenderer: Renderer {
   }
   
   func draw(image: LayerTree.Image, in rect: String) {
-    lines.append("ctx.saveGState()")
-    lines.append("ctx.translateBy(x: 0, y: image.height)")
-    lines.append("ctx.scaleBy(x: 1, y: -1)")
-    lines.append("ctx.draw(image, in: CGRect(x: 0, y: 0, width: image.width, height: image.height)")
-    lines.append("ctx.restoreGState()")
+    // the generated code embeds no bitmaps: it cannot draw, nor letterbox (the bitmap size is unknown here)
+    lines.append("// warning: image dropped, <image> is not supported in generated code")
   }
 
   func draw(linear gradient: LayerTree.Gradient, from start: String, to end: String) {
@@ -590,6 +645,16 @@ public final class CGTextRenderer: Renderer {
                            endRadius: \(formatter.format(endRadius)),
                            options: [.drawsAfterEndLocation, .drawsBeforeStartLocation])
     """)
+  }
+
+  // Filters are not generated: the contents are drawn unfiltered, in their own graphics state.
+  func pushFilterLayer(_ filter: LayerTree.FilterLayer) {
+    lines.append("// warning: filter dropped (\(filter.effects.count) effect(s)), contents drawn unfiltered")
+    lines.append("ctx.saveGState()")
+  }
+
+  func popFilterLayer() {
+    lines.append("ctx.restoreGState()")
   }
 
   func makeSwiftUI() -> String {

@@ -49,6 +49,21 @@ package struct XMLParser {
     /// and SVGs with no width/height/viewBox fall back to it
     package var defaultViewport: Viewport?
 
+    // viewports and font-size that relative lengths of the element being parsed resolve against
+    let lengthContext = LengthContext()
+
+    final class LengthContext {
+        // the nearest viewport (in user units) is last; empty outside an <svg>
+        var viewports = [Viewport]()
+        // the computed font-size of the element being parsed, for `em` and `ex`
+        var fontSize: DOM.Float = LengthContext.initialFontSize
+        // the document's stylesheets, for a font-size set by a selector
+        var styleSheets = [DOM.StyleSheet]()
+
+        // `medium` in Chrome and Safari
+        static let initialFontSize: DOM.Float = 16
+    }
+
     package struct Viewport: Equatable, Sendable {
         package var width: DOM.Coordinate
         package var height: DOM.Coordinate
@@ -157,14 +172,26 @@ package extension AttributeParser {
         return try parse(key) { return try parser.parsePoints($0) }
     }
 
-    func parseFontSource(_ key: String) throws -> DOM.FontFace.Source {
+    /// The `src` descriptor of `@font-face`: a comma-separated list of `url(…) format(…)` and `local(…)`.
+    /// Entries that cannot be read are skipped; the list is invalid only when none remain.
+    func parseFontSource(_ key: String) throws -> [DOM.FontFace.Source] {
         return try parse(key) { value in
-            var scanner = XMLParser.Scanner(text: value)
-            let urlText = try scanner.scanStringFunction("url")
-            let url = try parser.parseUrl(urlText)
-            _ = try? scanner.scanString(";")
-            let format = try? scanner.scanStringFunction("format")
-            return .url(url: url, format: format)
+            let sources = XMLParser.splitFontSources(value).compactMap { entry -> DOM.FontFace.Source? in
+                var scanner = XMLParser.Scanner(text: entry)
+                if let name = try? scanner.scanStringFunction("local") {
+                    // `local( 'Name' )`: trim before removing the quotes
+                    let name = name.trimmingCharacters(in: .whitespaces).unquoted
+                    return name.isEmpty ? nil : .local(name)
+                }
+                scanner = XMLParser.Scanner(text: entry)
+                guard let urlText = try? scanner.scanStringFunction("url"),
+                      let url = try? parser.parseUrl(urlText) else { return nil }
+                _ = try? scanner.scanString(";")
+                let format = try? scanner.scanStringFunction("format")
+                return .url(url: url, format: format)
+            }
+            guard !sources.isEmpty else { throw XMLParser.Error.invalid }
+            return sources
         }
     }
 

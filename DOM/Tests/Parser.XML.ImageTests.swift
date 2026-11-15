@@ -58,6 +58,25 @@ extension CGImage {
 struct ParserXMLImageTests {
 
     @Test
+    func hrefWithoutXLink() throws {
+        let image = try XMLParser().parseImage(["href": "data:image/png;base64,iVBORw0KGgo=", "width": "10", "height": "10"])
+        #expect(image.href.isDataURL)
+    }
+
+    @Test
+    func hrefIsPreferredOverXLinkHref() throws {
+        let image = try XMLParser().parseImage(["href": "a.png", "xlink:href": "b.png", "width": "10", "height": "10"])
+        #expect(image.href.absoluteString == "a.png")
+    }
+
+    @Test
+    func missingHrefThrows() {
+        #expect(throws: (any Error).self) {
+            try XMLParser().parseImage(["width": "10", "height": "10"])
+        }
+    }
+
+    @Test
     func image() throws {
         var node = ["xlink:href": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg=="]
         node["width"] = "10"

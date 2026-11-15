@@ -134,6 +134,30 @@ import SwiftDraw
 let image = NSImage(svgNamed: "sample.svg")
 ```
 
+### Diagnostics
+
+Unsupported content and parsing errors are reported while an SVG is parsed and rendered. These messages are written to the standard streams by default; `Log.handler` routes them somewhere else instead:
+
+```swift
+import SwiftDraw
+
+Log.handler = { level, message in
+    switch level {
+    case .info:    logger.info("\(message)")
+    case .warning: logger.warning("\(message)")
+    case .error:   logger.error("\(message)")
+    }
+}
+```
+
+Or silences them entirely:
+
+```swift
+Log.handler = Log.silent
+```
+
+Assign the handler once during startup, before any SVG is loaded. The command line tool exposes the same control with `--quiet`, which reports failures only.
+
 ## Command line tool
 
 The command line tool converts SVGs to other formats: PNG, JPEG, SFSymbol and Swift source code.
@@ -152,8 +176,10 @@ Options:
  --insets      crop inset of output image: top,left,bottom,right
  --precision   maximum number of decimal places
  --output      optional path of output file
+ --quiet       suppress warnings and progress, reporting failures only
 
  --hide-unsupported-filters   hide elements with unsupported filters.
+ --disable-filters            draw elements with filters without applying them.
 
 Available keys for --format swift:
  --api                api of generated code:  swiftui | appkit | uikit

@@ -47,9 +47,11 @@ extension XMLParser {
       return .color(c)
     } else if let c = parseColorNone(data: data) {
       return .color(c)
-    } else if let url = try parseURLSelector(data: data) {
-      return .url(url)
+    } else if let paint = try parseURLPaint(data: data) {
+      return paint
     } else if let c = try parseColorRGBA(data: data) {
+      return .color(c)
+    } else if let c = parseColorHSL(data: data) {
       return .color(c)
     }
     
@@ -57,7 +59,7 @@ extension XMLParser {
   }
   
   private func parseColorNone(data: String) -> DOM.Color? {
-    let trimmed = data.trimmingCharacters(in: .whitespaces)
+    let trimmed = data.trimmingCharacters(in: .whitespaces).lowercased()
     if trimmed == "none" || trimmed == "transparent" {
       return DOM.Color.none // .none resolves to Optional.none
     }
@@ -66,14 +68,14 @@ extension XMLParser {
 
   private func parseCurrentColor(data: String) -> DOM.Color? {
     let raw = data.trimmingCharacters(in: .whitespaces)
-    guard raw == "currentColor" else {
+    guard raw.lowercased() == "currentcolor" else {
       return nil
     }
     return .currentColor
   }
 
   private func parseColorKeyword(data: String) -> DOM.Color? {
-    let raw = data.trimmingCharacters(in: .whitespaces)
+    let raw = data.trimmingCharacters(in: .whitespaces).lowercased()
     guard let keyword = DOM.Color.Keyword(rawValue: raw) else {
       return nil
     }
@@ -102,6 +104,31 @@ extension XMLParser {
     return try parseColorRGBAi(data: data)
   }
   
+  /// SVG 1.1 §11.2: `<funciri> [ none | currentColor | <color> ]`, the fallback is used when the server does not resolve.
+  /// An unreadable fallback is dropped rather than failing the paint.
+  private func parseURLPaint(data: String) throws -> DOM.Fill? {
+    var scanner = XMLParser.Scanner(text: data)
+    guard (try? scanner.scanString("url(")) == true else {
+      return nil
+    }
+    let urlText = try scanner.scanString(upTo: ")")
+    _ = try? scanner.scanString(")")
+    guard let url = URL(string: urlText.trimmingCharacters(in: .whitespaces)) else {
+      throw XMLParser.Error.invalid
+    }
+    if scanner.isEOF {
+      return .url(url)
+    }
+    let remainder = String(data[scanner.currentIndex...])
+      .trimmingCharacters(in: .whitespaces)
+    guard !remainder.isEmpty else { return .url(url) }
+    guard remainder.lowercased().hasPrefix("url(") == false,
+          case .color(let fallback)? = try? parseFill(remainder) else {
+      return .url(url)
+    }
+    return .urlWithFallback(url, fallback)
+  }
+
   private func parseURLSelector(data: String) throws -> DOM.URL? {
     var scanner = XMLParser.Scanner(text: data)
     guard (try? scanner.scanString("url(")) == true else {
@@ -194,12 +221,72 @@ extension XMLParser {
     return .p3(r, g, b)
   }
   
-  // #a5F should be parsed as #a050F0
+  // hsl(120, 100%, 50%) and hsla(120 100% 50% / 0.5), SVG 2 / CSS Color 3
+  // https://www.w3.org/TR/css-color-3/#hsl-color
+  private func parseColorHSL(data: String) -> DOM.Color? {
+    let raw = data.trimmingCharacters(in: .whitespaces).lowercased()
+    guard raw.hasPrefix("hsl"), raw.hasSuffix(")"),
+          let open = raw.firstIndex(of: "(") else {
+      return nil
+    }
+    let name = raw[raw.startIndex..<open]
+    guard name == "hsl" || name == "hsla" else { return nil }
+
+    let body = raw[raw.index(after: open)..<raw.index(before: raw.endIndex)]
+    let parts = body
+      .split(whereSeparator: { $0 == "," || $0 == "/" || $0 == " " || $0 == "\t" })
+      .map(String.init)
+    guard parts.count == 3 || parts.count == 4 else { return nil }
+
+    func number(_ text: String, suffix: String) -> DOM.Float? {
+      var t = text
+      if t.hasSuffix(suffix) { t.removeLast(suffix.count) }
+      return DOM.Float(t)
+    }
+    func percentage(_ text: String) -> DOM.Float? {
+      guard text.hasSuffix("%"), let v = number(text, suffix: "%") else { return nil }
+      return min(max(v / 100, 0), 1)
+    }
+
+    guard let h = number(parts[0], suffix: "deg"),
+          let s = percentage(parts[1]),
+          let l = percentage(parts[2]) else {
+      return nil
+    }
+
+    var alpha: DOM.Float = 1
+    if parts.count == 4 {
+      if parts[3].hasSuffix("%") {
+        guard let a = percentage(parts[3]) else { return nil }
+        alpha = a
+      } else {
+        guard let a = DOM.Float(parts[3]) else { return nil }
+        alpha = min(max(a, 0), 1)
+      }
+    }
+
+    let hue = (h.truncatingRemainder(dividingBy: 360) + 360).truncatingRemainder(dividingBy: 360) / 360
+    let q = l < 0.5 ? l * (1 + s) : l + s - l * s
+    let p = 2 * l - q
+
+    func channel(_ t: DOM.Float) -> DOM.Float {
+      var t = t
+      if t < 0 { t += 1 }
+      if t > 1 { t -= 1 }
+      if t < 1.0 / 6 { return p + (q - p) * 6 * t }
+      if t < 0.5 { return q }
+      if t < 2.0 / 3 { return p + (q - p) * (2.0 / 3 - t) * 6 }
+      return p
+    }
+
+    return .rgbf(channel(hue + 1.0 / 3), channel(hue), channel(hue - 1.0 / 3), alpha)
+  }
+
+  // #a5F should be parsed as #aa55FF, #a5F8 as #aa55FF88
   private func padHex(_ data: String) -> String? {
     let chars = data.unicodeScalars.map({ $0 })
-    guard chars.count == 3 else { return data }
-    
-    return "\(chars[0])\(chars[0])\(chars[1])\(chars[1])\(chars[2])\(chars[2])"
+    guard chars.count == 3 || chars.count == 4 else { return data }
+    return chars.map { "\($0)\($0)" }.joined()
   }
   
   private func parseColorHex(data: String) throws -> DOM.Color? {
@@ -209,10 +296,19 @@ extension XMLParser {
     let code = try scanner.scanString(matchingAny: hexadecimal)
     guard
       let paddedCode = padHex(code),
+      paddedCode.count == 6 || paddedCode.count == 8,
       let hex = Int(paddedCode, radix: 16) else {
         throw Error.invalid
     }
-    
+
+    if paddedCode.count == 8 {
+      let r = UInt8((hex >> 24) & 0xff)
+      let g = UInt8((hex >> 16) & 0xff)
+      let b = UInt8((hex >> 8) & 0xff)
+      let a = DOM.Float(hex & 0xff) / 255
+      return .rgbi(r, g, b, a)
+    }
+
     let r = UInt8((hex >> 16) & 0xff)
     let g = UInt8((hex >> 8) & 0xff)
     let b = UInt8(hex & 0xff)
