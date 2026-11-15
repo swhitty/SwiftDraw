@@ -297,7 +297,9 @@ extension LayerTree.Builder {
     func resolveFallback(_ paint: DOM.Fill) -> DOM.Fill {
         guard case .urlWithFallback(let url, let color) = paint else { return paint }
         let resolves = url.fragmentID.map { id in
-            svg.defs.patterns.contains(where: { $0.id == id }) || makeGradientPaint(for: url) != nil
+            svg.defs.patterns.contains(where: { $0.id == id }) ||
+                makeLinearGradient(for: url) != nil ||
+                makeRadialGradient(for: url) != nil
         } ?? false
         return resolves ? .url(url) : .color(color)
     }
