@@ -43,6 +43,21 @@ jobs:
       - name: Test
         run: swift test --skip-build
 
+  # Apps ship optimized builds: SD12's floods were transparent under -O while every Debug job passed
+  xcode_26_6_release:
+    runs-on: macos-26
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Version
+        run: swift --version
+      - name: Build
+        run: swift build -c release --build-tests -Xswiftc -enable-testing
+      - name: Test
+        run: swift test -c release --skip-build -Xswiftc -enable-testing
+
   xcode_26_2:
     runs-on: macos-26
     env:
