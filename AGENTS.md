@@ -25,6 +25,16 @@ The library is cross-platform: CI builds and tests on macOS, Linux (Swift 6.0.3 
 
 It runs `swift test` in a `swift:6.4` container (Apple's `container` tool, as CI's `linux_swift_6_4` job) and passes extra arguments on, e.g. `--filter SVGHostileTests`. Tests that must run everywhere should go through `DOM.SVG.parse` and `LayerTree` (with `LayerTreeProvider`) rather than `SVG(data:)`.
 
+### Locking
+
+Guard shared mutable state with `Mutex` (`DOM/Sources/Mutex.swift`, `package` in SwiftDrawDOM), not `NSLock`, `os_unfair_lock`, `DispatchQueue` or `@unchecked Sendable` with a hand-rolled lock. Keep the state inside the mutex (`Mutex(State())` and `withLock { $0… }`) so it can't be read without holding the lock, and a class holding only a `Mutex` and immutable properties can be plain `Sendable`. It backports `Synchronization.Mutex` on Darwin and Swift 6.0 and is `Synchronization.Mutex` elsewhere, so on Linux a file that calls `withLock` must import `Synchronization` itself:
+
+```swift
+#if !canImport(Darwin) && compiler(>=6.1)
+import Synchronization
+#endif
+```
+
 ### Writing tests
 
 Write all new tests with Swift Testing (`import Testing`, `@Test`, `#expect`, `#require`), including tests brought in from other branches or pull requests. Follow the existing suites: a `struct`, `@Test` functions named for the behaviour without a `test` prefix, and `@Test(arguments:)` instead of looping over inputs. Some older suites still use XCTest; when adding to one, a new Swift Testing suite is preferred over more XCTest cases.

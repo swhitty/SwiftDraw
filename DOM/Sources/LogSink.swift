@@ -55,16 +55,8 @@ package enum LogSink {
     /// is safe to access from multiple threads but messages emitted while it is
     /// being replaced may reach either handler.
     package static var handler: Handler {
-        get {
-            lock.lock()
-            defer { lock.unlock() }
-            return _handler
-        }
-        set {
-            lock.lock()
-            defer { lock.unlock() }
-            _handler = newValue
-        }
+        get { _handler.copy() }
+        set { _handler.withLock { $0 = newValue } }
     }
 
     /// Writes `info` messages to standard output and everything else to standard error.
@@ -95,8 +87,7 @@ package enum LogSink {
         }
     }
 
-    private nonisolated(unsafe) static var _handler: Handler = standardStreams()
-    private static let lock = NSLock()
+    private static let _handler = Mutex<Handler>(standardStreams())
 }
 
 package extension LogSink {

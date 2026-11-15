@@ -32,6 +32,9 @@
 import Foundation
 import SwiftDrawDOM
 import Testing
+#if !canImport(Darwin) && compiler(>=6.1)
+import Synchronization
+#endif
 @testable import SwiftDraw
 
 struct LogLevelTests {
@@ -164,27 +167,22 @@ struct LogTests {
 
 private let token = "LogTests"
 
-private final class Messages: @unchecked Sendable {
+private final class Messages: Sendable {
 
     init(filter: String? = token) {
         self.filter = filter
     }
 
     var lines: [String] {
-        lock.lock()
-        defer { lock.unlock() }
-        return stored
+        stored.copy()
     }
 
     @Sendable
     func append(_ level: Log.Level, _ message: String) {
         guard filter.map(message.contains) ?? true else { return }
-        lock.lock()
-        defer { lock.unlock() }
-        stored.append("\(level): \(message)")
+        stored.withLock { $0.append("\(level): \(message)") }
     }
 
     private let filter: String?
-    private let lock = NSLock()
-    private var stored = [String]()
+    private let stored = Mutex([String]())
 }
