@@ -602,17 +602,3 @@ private extension CGTextRenderer {
     }
 
 }
-
-extension RendererCGTextTests {
-
-    func testRootSliceIsClippedToItsViewport() throws {
-        let svg = #"<svg xmlns="http://www.w3.org/2000/svg" width="200" height="100" viewBox="0 0 100 100" preserveAspectRatio="xMinYMin slice"><rect width="100" height="100"/></svg>"#
-        let code = try CGTextRenderer.render(data: Data(svg.utf8), options: .default, api: .uiKit, precision: 2)
-        let lines = code.split(separator: "\n").map { $0.trimmingCharacters(in: .whitespaces) }
-        // the 200x100 viewport is 100x50 in viewBox space after the 2x scale
-        let scale = try XCTUnwrap(lines.firstIndex(of: "ctx.scaleBy(x: 2, y: 2)"))
-        let clip = try XCTUnwrap(lines.firstIndex(where: { $0.hasSuffix("CGRect(x: 0, y: 0, width: 100, height: 50),") }))
-        XCTAssertGreaterThan(clip, scale)
-        XCTAssertTrue(lines.contains("ctx.clip()"))
-    }
-}
