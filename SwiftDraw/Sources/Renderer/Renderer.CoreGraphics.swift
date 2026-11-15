@@ -244,7 +244,25 @@ struct CGProvider: RendererTypeProvider {
             // a specific face by PostScript name ("Helvetica-Bold"): used as named
             let postScriptName = CTFontCopyPostScriptName(ctFont) as String
             return postScriptName.caseInsensitiveCompare(name) == .orderedSame ? ctFont : nil
+        case .postScript(let name):
+            // a local() face, resolved when the layer tree was built
+            let ctFont = CTFontCreateWithName(name as CFString, size, nil)
+            return CTFontCopyPostScriptName(ctFont) as String == name ? ctFont : nil
         }
+    }
+
+    /// The PostScript name of an installed face, matched by PostScript name or full name, case-insensitively
+    /// (`local()` in `@font-face`); nil when no such face is installed. CoreText substitutes another font
+    /// for an unknown name, so the match is checked.
+    static func installedFontPostScriptName(_ name: String) -> String? {
+        let font = CTFontCreateWithName(name as CFString, 12, nil)
+        let postScriptName = CTFontCopyPostScriptName(font) as String
+        let fullName = CTFontCopyFullName(font) as String
+        guard postScriptName.caseInsensitiveCompare(name) == .orderedSame
+                || fullName.caseInsensitiveCompare(name) == .orderedSame else {
+            return nil
+        }
+        return postScriptName
     }
 
     /// The face of a system font family closest to a CSS weight and slant, as CoreText matches it

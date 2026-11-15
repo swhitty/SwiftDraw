@@ -74,7 +74,7 @@ struct LayerTreeFontWeightTests {
 
     private func match(_ faces: [DOM.FontFace], weight: Int, style: DOM.FontStyle = .normal) -> [String] {
         LayerTree.Builder.matchFontFaces(faces, weight: weight, style: style).map {
-            if case .local(let name) = $0.src { return name }
+            if case .local(let name)? = $0.src.first { return name }
             return "?"
         }
     }
