@@ -287,6 +287,8 @@ extension XMLParser {
 
         el.opacity = try att.parsePercentage("opacity")
         el.display = try att.parseRaw("display")
+        // an unknown visibility value is ignored (inherited), not an invalid element
+        el.visibility = try? att.parseRaw("visibility")
         el.color = try att.parseColor("color")
 
         el.stroke = try att.parseFill("stroke")

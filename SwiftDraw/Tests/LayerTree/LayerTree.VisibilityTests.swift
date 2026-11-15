@@ -181,8 +181,8 @@ final class LayerTreeVisibilityTests: XCTestCase {
         let png = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
         func contents(_ attribute: String) throws -> (text: Int, image: Int) {
             let svg = try DOM.SVG.parse(xml: """
-            <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">
-            <text x="0" y="10" \(attribute)>hi</text><image width="1" height="1" \(attribute) href="\(png)"/>
+            <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="100" height="100">
+            <text x="0" y="10" \(attribute)>hi</text><image width="1" height="1" \(attribute) xlink:href="\(png)"/>
             </svg>
             """)
             func count(_ layer: LayerTree.Layer) -> (text: Int, image: Int) {

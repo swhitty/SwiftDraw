@@ -97,7 +97,16 @@ extension LayerTree {
             var resultLayer: Layer? = nil
 
             while let (currentElement, currentState, parentLayer) = stack.popLast() {
-                let (layer, newState) = makeBaseLayer(from: currentElement, inheriting: currentState)
+                let newState = createState(for: currentElement, inheriting: currentState)
+                // SVG 1.1 §11.6.2: `display="none"` removes the element and its whole subtree from rendering,
+                // before any transform, clip, mask, filter or opacity is built for it
+                if newState.display == .none {
+                    if parentLayer == nil {
+                        resultLayer = Layer()
+                    }
+                    continue
+                }
+                let layer = makeBaseLayer(from: currentElement, with: newState)
 
                 if let contents = makeContents(from: currentElement, with: newState) {
                     layer.appendContents(contents)
@@ -143,10 +152,12 @@ extension LayerTree {
             l.mask = createMaskLayer(for: element)
             l.opacity = state.opacity
             l.filters = makeFilters(for: state)
-            return (l, state)
+            return l
         }
 
         func makeContents(from element: DOM.GraphicsElement, with state: State) -> Layer.Contents? {
+            // SVG 1.1 §11.6.2: `visibility` hides graphics only; a child may set `visible` again
+            let isVisible = state.visibility == .visible
             if let shape = Builder.makeShape(from: element) {
                 return isVisible ? makeShapeContents(from: shape, with: state) : nil
             } else if let text = element as? DOM.Text {
