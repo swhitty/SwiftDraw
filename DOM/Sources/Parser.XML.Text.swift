@@ -57,8 +57,8 @@ extension XMLParser {
 
     func parseText(_ att: any AttributeParser, value: String) throws -> DOM.Text {
         let element = DOM.Text(value: value)
-        element.x = try att.parseCoordinate("x")
-        element.y = try att.parseCoordinate("y")
+        element.x = parseDefaultedCoordinate(att, "x")
+        element.y = parseDefaultedCoordinate(att, "y")
         return element
     }
 }

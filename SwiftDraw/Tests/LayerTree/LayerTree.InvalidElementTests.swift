@@ -29,15 +29,16 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-import SwiftDrawDOM
-import XCTest
-@testable import SwiftDraw
 import Foundation
+import SwiftDrawDOM
+@testable import SwiftDraw
+import Testing
 
 // SD15: a document with invalid elements still draws the valid ones
-final class LayerTreeInvalidElementTests: XCTestCase {
+struct LayerTreeInvalidElementTests {
 
-    func testValidSiblingsOfInvalidElementsStillProduceCommands() throws {
+    @Test
+    func validSiblingsOfInvalidElementsStillProduceCommands() throws {
         let dom = try DOM.SVG.parse(data: Data("""
         <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10">
           <path fill="red"/>
@@ -54,8 +55,10 @@ final class LayerTreeInvalidElementTests: XCTestCase {
             if case let .setFill(color: color) = command { return color }
             return nil
         }
-        XCTAssertEqual(fills, [
+        // the path without d and the rect without width are dropped; x="" falls back to 0
+        #expect(fills == [
             .rgba(r: 1, g: 0, b: 0, a: 1, space: .srgb),
+            .rgba(r: 0, g: 1, b: 0, a: 1, space: .srgb),
             .rgba(r: 0, g: 0, b: 1, a: 1, space: .srgb)
         ])
     }
