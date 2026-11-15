@@ -49,7 +49,8 @@ struct CGFilterLayerCacheTests {
 
         let drawn = try Self.render { $0.draw(other, in: nil, baseCTM: nil, filterCache: cache) }
         #expect(cache.hitCount == 0)
-        #expect(drawn == (try Self.render { $0.draw(other, in: nil) }))
+        let expected = try Self.render { $0.draw(other, in: nil) }
+        #expect(drawn == expected)
     }
 
     @Test
@@ -74,7 +75,8 @@ struct CGFilterLayerCacheTests {
         }
         #expect(cache.hitCount == 0)
         #expect(cache.count == 3)
-        #expect(resized == (try Self.render { $0.draw(svg, in: CGRect(x: 0, y: 0, width: 60, height: 45)) }))
+        let expected = try Self.render { $0.draw(svg, in: CGRect(x: 0, y: 0, width: 60, height: 45)) }
+        #expect(resized == expected)
     }
 
     @Test
