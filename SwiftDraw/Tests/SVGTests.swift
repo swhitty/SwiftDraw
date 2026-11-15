@@ -29,6 +29,7 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
+import Foundation
 import SwiftDrawDOM
 @testable import SwiftDraw
 import Testing
@@ -290,8 +291,12 @@ struct SVGHostileTests {
 
     private static let head = "<svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\""
 
-    private func load(_ xml: String) -> SVG? {
-        SVG(data: Data(xml.utf8))
+    /// The steps of `SVG(data:)` (parse, layer tree, commands) without CoreGraphics, so these run on every platform.
+    private func load(_ xml: String) -> [RendererCommand<LayerTreeProvider.Types>]? {
+        guard let svg = try? DOM.SVG.parse(data: Data(xml.utf8)) else { return nil }
+        let layer = LayerTree.Builder(svg: svg).makeLayer()
+        let generator = LayerTree.CommandGenerator(provider: LayerTreeProvider(), size: .zero, options: .default)
+        return generator.renderCommands(for: layer, colorConverter: .default)
     }
 
     @Test
@@ -362,6 +367,41 @@ struct SVGHostileTests {
     @Test
     func markerCycleDoesNotRecurse() {
         #expect(load("\(Self.head) width=\"9\" height=\"9\"><marker id=\"m\"><path d=\"M0 0L1 1\" marker-end=\"url(#m)\"/></marker><path d=\"M0 0L5 5\" marker-end=\"url(#m)\"/></svg>") != nil)
+    }
+
+    /// Level n is a group that uses level n - 1 `fanOut` times: `fanOut ^ depth` rects from a tiny file.
+    private func fanOut(depth: Int, fanOut: Int) -> String {
+        var defs = #"<rect id="l0" width="1" height="1"/>"#
+        for level in 1...depth {
+            let uses = String(repeating: ##"<use href="#l\##(level - 1)"/>"##, count: fanOut)
+            defs += #"<g id="l\#(level)">\#(uses)</g>"#
+        }
+        return "\(Self.head) width=\"9\" height=\"9\"><defs>\(defs)</defs><use href=\"#l\(depth)\"/></svg>"
+    }
+
+    private func fillCount(_ commands: [RendererCommand<LayerTreeProvider.Types>]) -> Int {
+        commands.filter { if case .fill = $0 { return true } else { return false } }.count
+    }
+
+    @Test
+    func useFanOutIsBounded() throws {
+        // 4^9 = 262,144 rects without a budget
+        let svg = try #require(load(fanOut(depth: 9, fanOut: 4)))
+        #expect(fillCount(svg) <= LayerTree.Builder.maxReferences)
+    }
+
+    @Test
+    func largeUseFanOutStillLoads() {
+        // 4^14 = 268 million rects without a budget
+        #expect(load(fanOut(depth: 14, fanOut: 4)) != nil)
+    }
+
+    @Test
+    func deepUseChainIsCapped() throws {
+        let shallow = try #require(load(fanOut(depth: 10, fanOut: 1)))
+        #expect(fillCount(shallow) == 1)
+        let deep = try #require(load(fanOut(depth: 30, fanOut: 1)))
+        #expect(fillCount(deep) == 0)
     }
 
     @Test
