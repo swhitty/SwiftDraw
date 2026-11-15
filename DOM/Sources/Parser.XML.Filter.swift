@@ -61,7 +61,13 @@ extension XMLParser {
         node.primitiveUnits = try? nodeAtt.parseRaw("primitiveUnits")
 
         var previousResult: String?
-        for n in e.children {
+        var primitives = e.children[...]
+        if hasNoOpSourcePrelude(primitives) {
+            // the chain continues from the source graphic, under the blend's result name
+            previousResult = primitives[primitives.startIndex + 1].attributes["result"]
+            primitives = primitives.dropFirst(2)
+        }
+        for n in primitives {
             if var effect = try parseEffect(n) {
                 // only a linear chain is supported: each primitive must consume the previous result
                 if let input = n.attributes["in"] {
@@ -77,6 +83,28 @@ extension XMLParser {
         }
 
         return node
+    }
+
+    /// Figma and Sketch start a layer blur with a transparent `feFlood` and the source graphic blended over
+    /// it in `normal` mode. The source over transparency is the source, so the pair is a no-op and the
+    /// chain is just the primitives after it. Only that exact pair matches: an opaque flood, another blend
+    /// mode or input, or a blend subregion (which clips) is left as it is.
+    func hasNoOpSourcePrelude(_ primitives: ArraySlice<XML.Element>) -> Bool {
+        guard primitives.count >= 2 else { return false }
+        let flood = primitives[primitives.startIndex]
+        let blend = primitives[primitives.startIndex + 1]
+        guard flood.name == "feFlood", blend.name == "feBlend",
+              let floodResult = flood.attributes["result"],
+              let floodAtt = try? parseAttributes(flood),
+              let opacity = try? floodAtt.parsePercentage("flood-opacity") as DOM.Float?,
+              opacity == 0,
+              blend.attributes["in"] == "SourceGraphic",
+              blend.attributes["in2"] == floodResult,
+              (blend.attributes["mode"] ?? "normal") == "normal",
+              ["x", "y", "width", "height"].allSatisfy({ blend.attributes[$0] == nil }) else {
+            return false
+        }
+        return true
     }
 
     func parseEffect(_ e: XML.Element) throws -> DOM.Filter.Effect? {

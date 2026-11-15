@@ -153,3 +153,61 @@ private extension XML.Element {
         return XML.Element(name: name, attributes: attributes)
     }
 }
+
+/// Figma's layer blur: a transparent flood with the source blended over it in normal mode is a no-op.
+struct ParserXMLFilterNoOpPreludeTests {
+
+    private func effects(flood: [String: String], blend: [String: String], blur: Bool = true) throws -> [DOM.Filter.Effect] {
+        let filter = XML.Element(name: "filter", attributes: ["id": "f"])
+        filter.children = [.makeElement("feFlood", flood), .makeElement("feBlend", blend)]
+        if blur {
+            filter.children.append(.makeElement("feGaussianBlur", ["stdDeviation": "0.75"]))
+        }
+        return try XMLParser().parseFilter(filter).effects
+    }
+
+    private static let flood = ["flood-opacity": "0", "result": "BackgroundImageFix"]
+    private static let blend = ["mode": "normal", "in": "SourceGraphic", "in2": "BackgroundImageFix", "result": "shape"]
+
+    @Test
+    func figmaLayerBlurIsAPlainBlur() throws {
+        #expect(try effects(flood: Self.flood, blend: Self.blend) == [.gaussianBlur(stdDeviation: 0.75)])
+    }
+
+    @Test
+    func blendModeDefaultsToNormal() throws {
+        var blend = Self.blend
+        blend["mode"] = nil
+        #expect(try effects(flood: Self.flood, blend: blend) == [.gaussianBlur(stdDeviation: 0.75)])
+    }
+
+    @Test
+    func preludeAloneLeavesNoEffects() throws {
+        #expect(try effects(flood: Self.flood, blend: Self.blend, blur: false).isEmpty)
+    }
+
+    @Test
+    func blurMayNameTheBlendResult() throws {
+        let filter = XML.Element(name: "filter", attributes: ["id": "f"])
+        filter.children = [
+            .makeElement("feFlood", Self.flood),
+            .makeElement("feBlend", Self.blend),
+            .makeElement("feGaussianBlur", ["in": "shape", "stdDeviation": "2"])
+        ]
+        #expect(try XMLParser().parseFilter(filter).effects == [.gaussianBlur(stdDeviation: 2)])
+    }
+
+    // anything but the exact no-op pair stays unsupported
+    @Test(arguments: [
+        ("opaque flood", ["flood-opacity": "0.5", "result": "BackgroundImageFix"], blend),
+        ("flood without opacity", ["result": "BackgroundImageFix"], blend),
+        ("multiply blend", flood, ["mode": "multiply", "in": "SourceGraphic", "in2": "BackgroundImageFix"]),
+        ("other input", flood, ["mode": "normal", "in": "SourceAlpha", "in2": "BackgroundImageFix"]),
+        ("in2 not the flood", flood, ["mode": "normal", "in": "SourceGraphic", "in2": "Other"]),
+        ("blend subregion", flood, ["mode": "normal", "in": "SourceGraphic", "in2": "BackgroundImageFix", "width": "5"])
+    ])
+    func otherFloodOrBlendStaysUnsupported(name: String, flood: [String: String], blend: [String: String]) throws {
+        let effects = try effects(flood: flood, blend: blend)
+        #expect(effects.contains(.unsupported(name: "feFlood")) || effects.contains(.unsupported(name: "feBlend")))
+    }
+}
