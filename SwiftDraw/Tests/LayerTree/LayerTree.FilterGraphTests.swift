@@ -31,15 +31,17 @@
 
 @testable import SwiftDrawDOM
 @testable import SwiftDraw
-import XCTest
+import Foundation
+import Testing
 
 // SD12: filter primitive trees resolved into LayerTree.FilterLayer
-final class LayerTreeFilterGraphTests: XCTestCase {
+struct LayerTreeFilterGraphTests {
 
     typealias Primitive = LayerTree.FilterLayer.Primitive
 
     // Inkscape 1.x Filters ▸ Shadows and Glows ▸ Drop Shadow
-    func testInkscapeDropShadow() throws {
+    @Test
+    func inkscapeDropShadow() throws {
         let filter = try makeFilterLayer(#"""
         <svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">
             <filter style="color-interpolation-filters:sRGB" id="filter1" x="-0.1" y="-0.1" width="1.2" height="1.2">
@@ -54,11 +56,11 @@ final class LayerTreeFilterGraphTests: XCTestCase {
         """#)
 
         let region = filter.region
-        XCTAssertEqual(region.x, 0, accuracy: 0.001)
-        XCTAssertEqual(region.y, 5, accuracy: 0.001)
-        XCTAssertEqual(region.width, 120, accuracy: 0.001)
-        XCTAssertEqual(region.height, 60, accuracy: 0.001)
-        XCTAssertEqual(filter.primitives, [
+        #expect(abs(region.x - 0) <= 0.001)
+        #expect(abs(region.y - 5) <= 0.001)
+        #expect(abs(region.width - 120) <= 0.001)
+        #expect(abs(region.height - 60) <= 0.001)
+        #expect(filter.primitives == [
             Primitive(effect: .flood(.rgba(r: 0, g: 0, b: 0, a: 0.498039, space: .srgb)),
                       inputs: [], subregion: region, colorInterpolation: .sRGB),
             Primitive(effect: .composite(.in), inputs: [.primitive(0), .sourceGraphic],
@@ -70,11 +72,12 @@ final class LayerTreeFilterGraphTests: XCTestCase {
             Primitive(effect: .composite(.over), inputs: [.sourceGraphic, .primitive(3)],
                       subregion: region, colorInterpolation: .sRGB)
         ])
-        XCTAssertFalse(filter.isBlurChain)
+        #expect(!filter.isBlurChain)
     }
 
     // Illustrator's AI_Shadow: no color-interpolation-filters, so linearRGB
-    func testIllustratorShadow() throws {
+    @Test
+    func illustratorShadow() throws {
         let filter = try makeFilterLayer(#"""
         <svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">
             <filter id="AI_Shadow_1" filterUnits="objectBoundingBox">
@@ -89,17 +92,18 @@ final class LayerTreeFilterGraphTests: XCTestCase {
         </svg>
         """#)
 
-        XCTAssertEqual(filter.effects, [
+        #expect(filter.effects == [
             .gaussianBlur(stdDeviation: 2, stdDeviationY: 2),
             .offset(dx: 4, dy: 4),
             .merge
         ])
-        XCTAssertEqual(filter.primitives.map(\.inputs), [[.sourceAlpha], [.primitive(0)], [.primitive(1), .sourceGraphic]])
-        XCTAssertEqual(Set(filter.primitives.map(\.colorInterpolation)), [.linearRGB])
+        #expect(filter.primitives.map(\.inputs) == [[.sourceAlpha], [.primitive(0)], [.primitive(1), .sourceGraphic]])
+        #expect(Set(filter.primitives.map(\.colorInterpolation)) == [.linearRGB])
     }
 
     // Figma's drop shadow: a transparent BackgroundImageFix flood, a hard alpha from SourceAlpha, implicit inputs
-    func testFigmaDropShadow() throws {
+    @Test
+    func figmaDropShadow() throws {
         let filter = try makeFilterLayer(#"""
         <svg width="108" height="108" xmlns="http://www.w3.org/2000/svg">
             <filter id="filter0_d" x="0" y="0" width="108" height="108" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
@@ -116,8 +120,8 @@ final class LayerTreeFilterGraphTests: XCTestCase {
         </svg>
         """#)
 
-        XCTAssertEqual(filter.region, LayerTree.Rect(x: 0, y: 0, width: 108, height: 108))
-        XCTAssertEqual(filter.effects, [
+        #expect(filter.region == LayerTree.Rect(x: 0, y: 0, width: 108, height: 108))
+        #expect(filter.effects == [
             .flood(.rgba(r: 0, g: 0, b: 0, a: 0, space: .srgb)),
             .colorMatrix([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 127, 0]),
             .offset(dx: 0, dy: 4),
@@ -127,7 +131,7 @@ final class LayerTreeFilterGraphTests: XCTestCase {
             .blend(.normal),
             .blend(.normal)
         ])
-        XCTAssertEqual(filter.primitives.map(\.inputs), [
+        #expect(filter.primitives.map(\.inputs) == [
             [],
             [.sourceAlpha],
             [.primitive(1)],
@@ -140,7 +144,8 @@ final class LayerTreeFilterGraphTests: XCTestCase {
     }
 
     // Filter Effects 1 §9.2: missing, forward and unknown references take the previous result
-    func testInputReferences() {
+    @Test
+    func inputReferences() {
         func primitive(_ inputs: [DOM.Filter.Input?], result: String? = nil) -> DOM.Filter.Primitive {
             DOM.Filter.Primitive(effect: .merge, inputs: inputs, result: result)
         }
@@ -152,7 +157,7 @@ final class LayerTreeFilterGraphTests: XCTestCase {
             primitive([.sourceGraphic, .sourceAlpha, .result("later"), nil])
         ])
 
-        XCTAssertEqual(inputs, [
+        #expect(inputs == [
             [.sourceGraphic],
             [.primitive(0)],
             // the closest preceding "a"
@@ -163,7 +168,8 @@ final class LayerTreeFilterGraphTests: XCTestCase {
     }
 
     // Filter Effects 1 §9.3: only the tree rooted at the last primitive is evaluated
-    func testOnlyThePrimaryTreeIsKept() throws {
+    @Test
+    func onlyThePrimaryTreeIsKept() throws {
         let filter = try makeFilterLayer(#"""
         <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
             <filter id="f">
@@ -177,15 +183,16 @@ final class LayerTreeFilterGraphTests: XCTestCase {
         </svg>
         """#)
 
-        XCTAssertEqual(filter.effects, [
+        #expect(filter.effects == [
             .flood(.rgba(r: 0, g: Float(128) / 255, b: 0, a: 1, space: .srgb)),
             .composite(.in)
         ])
-        XCTAssertEqual(filter.primitives.map(\.inputs), [[], [.sourceAlpha, .primitive(0)]])
+        #expect(filter.primitives.map(\.inputs) == [[], [.sourceAlpha, .primitive(0)]])
     }
 
     // an unsupported primitive outside the primary tree is never drawn, so the filter still applies
-    func testUnsupportedPrimitiveOutsidePrimaryTree() throws {
+    @Test
+    func unsupportedPrimitiveOutsidePrimaryTree() throws {
         let commands = try makeCommands(#"""
         <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
             <filter id="f">
@@ -196,11 +203,12 @@ final class LayerTreeFilterGraphTests: XCTestCase {
         </svg>
         """#, options: .hideUnsupportedFilters)
 
-        XCTAssertEqual(commands.filterLayers.first?.effects, [.offset(dx: 2, dy: 0)])
-        XCTAssertEqual(commands.names, ["pushFilterLayer", "setFillColor", "fillPath", "popFilterLayer"])
+        #expect(commands.filterLayers.first?.effects == [.offset(dx: 2, dy: 0)])
+        #expect(commands.names == ["pushFilterLayer", "setFillColor", "fillPath", "popFilterLayer"])
     }
 
-    func testUnsupportedPrimitiveInPrimaryTreeDrawsUnfiltered() throws {
+    @Test
+    func unsupportedPrimitiveInPrimaryTreeDrawsUnfiltered() throws {
         let commands = try makeCommands(#"""
         <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
             <filter id="f">
@@ -211,12 +219,13 @@ final class LayerTreeFilterGraphTests: XCTestCase {
         </svg>
         """#)
 
-        XCTAssertEqual(commands.names, ["setFillColor", "fillPath"])
+        #expect(commands.names == ["setFillColor", "fillPath"])
     }
 
     // Filter Effects 1 §9.4: x, y, width, height in user units, the rest from the default subregion,
     // all within the filter region
-    func testSubregionInUserSpace() throws {
+    @Test
+    func subregionInUserSpace() throws {
         let filter = try makeFilterLayer(#"""
         <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
             <filter id="f" filterUnits="userSpaceOnUse" x="0" y="0" width="100" height="100">
@@ -228,7 +237,7 @@ final class LayerTreeFilterGraphTests: XCTestCase {
         </svg>
         """#)
 
-        XCTAssertEqual(filter.primitives.map(\.subregion), [
+        #expect(filter.primitives.map(\.subregion) == [
             LayerTree.Rect(x: 10, y: 0, width: 30, height: 100),
             // 50% of the viewport height, clipped to the filter region
             LayerTree.Rect(x: 80, y: 0, width: 20, height: 30),
@@ -236,7 +245,8 @@ final class LayerTreeFilterGraphTests: XCTestCase {
         ])
     }
 
-    func testSubregionInBoundingBoxUnits() throws {
+    @Test
+    func subregionInBoundingBoxUnits() throws {
         let filter = try makeFilterLayer(#"""
         <svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">
             <filter id="f" primitiveUnits="objectBoundingBox">
@@ -248,12 +258,13 @@ final class LayerTreeFilterGraphTests: XCTestCase {
         """#)
 
         let flood = LayerTree.Rect(x: 50, y: 110, width: 100, height: 20)
-        XCTAssertEqual(filter.primitives.map(\.subregion), [flood, flood])
-        XCTAssertEqual(filter.primitives[1].effect, .offset(dx: 20, dy: 20))
+        #expect(filter.primitives.map(\.subregion) == [flood, flood])
+        #expect(filter.primitives[1].effect == .offset(dx: 20, dy: 20))
     }
 
     // the default subregion of a primitive reading only results is the union of theirs
-    func testSubregionDefaultsToUnionOfInputs() throws {
+    @Test
+    func subregionDefaultsToUnionOfInputs() throws {
         let filter = try makeFilterLayer(#"""
         <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
             <filter id="f" filterUnits="userSpaceOnUse" x="0" y="0" width="100" height="100">
@@ -266,7 +277,7 @@ final class LayerTreeFilterGraphTests: XCTestCase {
         </svg>
         """#)
 
-        XCTAssertEqual(filter.primitives.map(\.subregion), [
+        #expect(filter.primitives.map(\.subregion) == [
             LayerTree.Rect(x: 10, y: 10, width: 10, height: 10),
             LayerTree.Rect(x: 50, y: 60, width: 10, height: 10),
             LayerTree.Rect(x: 10, y: 10, width: 50, height: 60),
@@ -276,7 +287,8 @@ final class LayerTreeFilterGraphTests: XCTestCase {
     }
 
     // zero or negative sizes, or no overlap with the filter region, disable the primitive
-    func testEmptySubregionDisablesPrimitive() throws {
+    @Test
+    func emptySubregionDisablesPrimitive() throws {
         let filter = try makeFilterLayer(#"""
         <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
             <filter id="f" filterUnits="userSpaceOnUse" x="0" y="0" width="100" height="100">
@@ -289,10 +301,11 @@ final class LayerTreeFilterGraphTests: XCTestCase {
         </svg>
         """#)
 
-        XCTAssertEqual(filter.primitives.map(\.subregion), [.zero, .zero, .zero, .zero])
+        #expect(filter.primitives.map(\.subregion) == [.zero, .zero, .zero, .zero])
     }
 
-    func testFloodColorAndOpacity() throws {
+    @Test
+    func floodColorAndOpacity() throws {
         let filter = try makeFilterLayer(#"""
         <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
             <filter id="f"><feFlood flood-color="rgba(255, 0, 0, 0.5)" flood-opacity="0.5" /></filter>
@@ -300,27 +313,28 @@ final class LayerTreeFilterGraphTests: XCTestCase {
         </svg>
         """#)
 
-        XCTAssertEqual(filter.effects, [.flood(.rgba(r: 1, g: 0, b: 0, a: 0.25, space: .srgb))])
+        #expect(filter.effects == [.flood(.rgba(r: 1, g: 0, b: 0, a: 0.25, space: .srgb))])
     }
 
-    func testColorMatrixTypesResolveToMatrices() {
+    @Test
+    func colorMatrixTypesResolveToMatrices() {
         let identity = DOM.Filter.ColorMatrix.identity
-        XCTAssertEqual(DOM.Filter.ColorMatrix.saturate(1).values, identity)
-        XCTAssertEqual(DOM.Filter.ColorMatrix.matrix([1, 2]).values, identity)
+        #expect(DOM.Filter.ColorMatrix.saturate(1).values == identity)
+        #expect(DOM.Filter.ColorMatrix.matrix([1, 2]).values == identity)
         for (value, expected) in zip(DOM.Filter.ColorMatrix.hueRotate(0).values, identity) {
-            XCTAssertEqual(value, expected, accuracy: 0.0001)
+            #expect(abs(value - expected) <= 0.0001)
         }
         for (value, expected) in zip(DOM.Filter.ColorMatrix.hueRotate(360).values, identity) {
-            XCTAssertEqual(value, expected, accuracy: 0.0001)
+            #expect(abs(value - expected) <= 0.0001)
         }
         // saturate(0) is a grey: each row is the luminance
-        XCTAssertEqual(Array(DOM.Filter.ColorMatrix.saturate(0).values[0..<3]), [0.2126, 0.7152, 0.0722])
-        XCTAssertEqual(Array(DOM.Filter.ColorMatrix.saturate(0).values[5..<8]), [0.2126, 0.7152, 0.0722])
-        XCTAssertEqual(DOM.Filter.ColorMatrix.luminanceToAlpha.values,
-                       [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.2126, 0.7152, 0.0722, 0, 0])
+        #expect(Array(DOM.Filter.ColorMatrix.saturate(0).values[0..<3]) == [0.2126, 0.7152, 0.0722])
+        #expect(Array(DOM.Filter.ColorMatrix.saturate(0).values[5..<8]) == [0.2126, 0.7152, 0.0722])
+        #expect(DOM.Filter.ColorMatrix.luminanceToAlpha.values == [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.2126, 0.7152, 0.0722, 0, 0])
     }
 
-    func testFloodGoesThroughColorConverter() throws {
+    @Test
+    func floodGoesThroughColorConverter() throws {
         let svg = try DOM.SVG.parse(xml: #"""
         <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
             <filter id="f"><feFlood flood-color="white" /></filter>
@@ -328,20 +342,22 @@ final class LayerTreeFilterGraphTests: XCTestCase {
         </svg>
         """#)
         let layer = LayerTree.Builder(svg: svg).makeLayer()
-        let filtered = try XCTUnwrap(layer.allLayers.first { !$0.filters.isEmpty })
+        let filtered = try #require(layer.allLayers.first { !$0.filters.isEmpty })
         let generator = LayerTree.CommandGenerator(provider: LayerTreeProvider(), size: .init(100, 100), options: .default)
-        let filter = try XCTUnwrap(generator.makeFilterLayer(for: filtered, colorConverter: .luminance))
+        let filter = try #require(generator.makeFilterLayer(for: filtered, colorConverter: .luminance))
 
         // white has a luminance of 1 (#162: the luminance is the grey, the alpha is kept)
-        guard case .flood(.gray(white: let white, a: let alpha)) = try XCTUnwrap(filter.effects.first) else {
-            return XCTFail("expected a luminance flood")
+        guard case .flood(.gray(white: let white, a: let alpha)) = try #require(filter.effects.first) else {
+            Issue.record("expected a luminance flood")
+            return
         }
-        XCTAssertEqual(white, 1, accuracy: 0.0001)
-        XCTAssertEqual(alpha, 1, accuracy: 0.0001)
+        #expect(abs(white - 1) <= 0.0001)
+        #expect(abs(alpha - 1) <= 0.0001)
     }
 
     // SD2's blur chains keep their in-place path; anything else is a primitive tree
-    func testBlurChain() throws {
+    @Test
+    func blurChain() throws {
         let chain = try makeFilterLayer(#"""
         <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
             <filter id="f">
@@ -364,59 +380,62 @@ final class LayerTreeFilterGraphTests: XCTestCase {
         </svg>
         """#)
 
-        XCTAssertTrue(chain.isBlurChain)
-        XCTAssertFalse(alpha.isBlurChain)
-        XCTAssertFalse(subregion.isBlurChain)
+        #expect(chain.isBlurChain)
+        #expect(!alpha.isBlurChain)
+        #expect(!subregion.isBlurChain)
     }
 
-    func testPrimaryTreeIsCapped() throws {
+    @Test
+    func primaryTreeIsCapped() throws {
         func chain(_ count: Int) -> String {
             let offsets = String(repeating: #"<feOffset dx="1" />"#, count: count)
             return #"<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><filter id="f">"#
                 + offsets + #"</filter><rect width="10" height="10" filter="url(#f)" /></svg>"#
         }
         let max = LayerTree.FilterLayer.maxPrimitives
-        XCTAssertEqual(try makeCommands(chain(max)).filterLayers.first?.primitives.count, max)
+        #expect(try makeCommands(chain(max)).filterLayers.first?.primitives.count == max)
         // over the cap: drawn unfiltered, like an unsupported primitive
-        XCTAssertTrue(try makeCommands(chain(max + 1)).filterLayers.isEmpty)
+        #expect(try makeCommands(chain(max + 1)).filterLayers.isEmpty)
     }
 
-    func testPeakBitmapCount() {
+    @Test
+    func peakBitmapCount() {
         let region = LayerTree.Rect(x: 0, y: 0, width: 10, height: 10)
         func primitive(_ inputs: [LayerTree.FilterLayer.Input]) -> Primitive {
             Primitive(effect: .merge, inputs: inputs, subregion: region, colorInterpolation: .sRGB)
         }
         // source and one result at a time
-        XCTAssertEqual(LayerTree.FilterLayer(region: region, effects: [.offset(dx: 1, dy: 1), .offset(dx: 1, dy: 1)]).peakBitmapCount, 3)
+        #expect(LayerTree.FilterLayer(region: region, effects: [.offset(dx: 1, dy: 1), .offset(dx: 1, dy: 1)]).peakBitmapCount == 3)
         // two results kept for the merge, SourceAlpha alive until its last reader
         let tree = LayerTree.FilterLayer(region: region, primitives: [
             primitive([.sourceAlpha]),
             primitive([.sourceAlpha]),
             primitive([.primitive(0), .primitive(1), .transparent])
         ])
-        XCTAssertEqual(tree.peakBitmapCount, 5)
+        #expect(tree.peakBitmapCount == 5)
     }
 
     // every filter of the samples resolves: none is drawn unfiltered or hidden as unsupported
-    func testSamplesResolveEveryFilter() throws {
-        let samples = URL(fileURLWithPath: #filePath)
-            .deletingLastPathComponent()
-            .deletingLastPathComponent()
-            .deletingLastPathComponent()
-            .deletingLastPathComponent()
-            .appendingPathComponent("Samples.bundle")
-        // read from the source tree, which a device or emulator run does not have
-        try XCTSkipUnless(FileManager.default.fileExists(atPath: samples.path), "Samples.bundle not reachable")
-        for (name, count) in [("filter-drop-shadow", 3), ("filter-primitives", 8)] {
-            let xml = try String(contentsOf: samples.appendingPathComponent("\(name).svg"), encoding: .utf8)
-            let filters = try makeCommands(xml, options: .hideUnsupportedFilters).filterLayers
-            XCTAssertEqual(filters.count, count, name)
-            XCTAssertFalse(filters.contains { $0.region.width <= 0 || $0.region.height <= 0 }, name)
-        }
+    // read from the source tree, which a device or emulator run does not have
+    @Test(.enabled(if: FileManager.default.fileExists(atPath: samples.path), "Samples.bundle not reachable"),
+          arguments: [("filter-drop-shadow", 3), ("filter-primitives", 8)])
+    func samplesResolveEveryFilter(name: String, count: Int) throws {
+        let xml = try String(contentsOf: Self.samples.appendingPathComponent("\(name).svg"), encoding: .utf8)
+        let filters = try makeCommands(xml, options: .hideUnsupportedFilters).filterLayers
+        #expect(filters.count == count)
+        #expect(!filters.contains { $0.region.width <= 0 || $0.region.height <= 0 })
     }
 
+    static let samples = URL(fileURLWithPath: #filePath)
+        .deletingLastPathComponent()
+        .deletingLastPathComponent()
+        .deletingLastPathComponent()
+        .deletingLastPathComponent()
+        .appendingPathComponent("Samples.bundle")
+
     // the merge's region-wide result keeps the whole region in the command stream
-    func testFilterLayerCommandsForGraph() throws {
+    @Test
+    func filterLayerCommandsForGraph() throws {
         let commands = try makeCommands(#"""
         <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
             <filter id="f">
@@ -427,7 +446,7 @@ final class LayerTreeFilterGraphTests: XCTestCase {
         </svg>
         """#)
 
-        XCTAssertEqual(commands.names, [
+        #expect(commands.names == [
             "pushState", "setAlpha", "pushTransparencyLayer",
             "pushFilterLayer", "setFillColor", "fillPath", "popFilterLayer",
             "popTransparencyLayer", "popState"
@@ -449,7 +468,7 @@ private extension LayerTreeFilterGraphTests {
 
     // the first filter layer in the command stream
     func makeFilterLayer(_ xml: String) throws -> LayerTree.FilterLayer {
-        try XCTUnwrap(makeCommands(xml).filterLayers.first)
+        try #require(makeCommands(xml).filterLayers.first)
     }
 }
 
