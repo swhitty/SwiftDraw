@@ -25,12 +25,12 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-import SwiftDrawDOM
-import XCTest
-@testable import SwiftDraw
 import Foundation
+import SwiftDrawDOM
+@testable import SwiftDraw
+import Testing
 
-final class LayerTreeTolerantParsingTests: XCTestCase {
+struct LayerTreeTolerantParsingTests {
 
     private func fillColors(_ svg: String) throws -> [LayerTree.Color] {
         let dom = try DOM.SVG.parse(data: Data(svg.utf8))
@@ -49,7 +49,8 @@ final class LayerTreeTolerantParsingTests: XCTestCase {
         }
     }
 
-    func testHSLAAndHexAlphaReachCommandStream() throws {
+    @Test
+    func hslaAndHexAlphaReachCommandStream() throws {
         let colors = try fillColors("""
         <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10">
           <rect width="5" height="5" fill="hsla(0, 100%, 50%, 0.25)"/>
@@ -57,8 +58,8 @@ final class LayerTreeTolerantParsingTests: XCTestCase {
         </svg>
         """)
         let a = alphas(colors)
-        XCTAssertEqual(a.count, 2)
-        XCTAssertEqual(a[0], 0.25, accuracy: 0.001)
-        XCTAssertEqual(a[1], 128.0 / 255, accuracy: 0.001)
+        try #require(a.count == 2)
+        #expect(abs(a[0] - 0.25) < 0.001)
+        #expect(abs(a[1] - 128.0 / 255) < 0.001)
     }
 }
