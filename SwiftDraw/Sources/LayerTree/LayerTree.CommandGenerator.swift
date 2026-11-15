@@ -498,15 +498,20 @@ extension LayerTree {
         }
 
 
-        // The mask contents are drawn with normal compositing in greyscale (colours converted to their luminance),
-        // so overlapping, translucent and opacity-grouped mask contents combine as they would in colour.
+        // The mask contents are drawn with normal compositing in greyscale (colours converted to their luminance,
+        // or to white for `mask-type: alpha`), so overlapping, translucent and opacity-grouped mask contents
+        // combine as they would in colour.
         // The renderer turns the result into a clip; the masked contents are drawn into a transparency layer
         // within it, so they are masked as a group.
         func renderCommands(forMask layer: Layer?) -> [RendererCommand<P.Types>] {
             guard let layer = layer else { return [] }
             //commands.append(contentsOf: renderCommands(forClip: layer.clip))
+            let converter: any ColorConverter = switch layer.maskType {
+            case .luminance: .luminance
+            case .alpha: .alpha
+            }
             let drawMask = layer.contents.flatMap{
-                renderCommands(for: $0, colorConverter: .luminance)
+                renderCommands(for: $0, colorConverter: converter)
             }
             return [.clipToMask(drawMask)]
         }

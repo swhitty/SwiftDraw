@@ -331,6 +331,7 @@ extension XMLParser {
         el.clipPath = lenient { try att.parseUrlSelector("clip-path") }
         el.clipRule = lenient { try att.parseRaw("clip-rule") }
         el.mask = lenient { try att.parseUrlSelector("mask") }
+        el.maskType = lenient { try att.parseRaw("mask-type") }
         el.filter = lenient { try att.parseUrlSelector("filter") }
 
         return el
