@@ -261,6 +261,6 @@ extension Dictionary: AttributeParser where Key == String, Value == String {
         guard let value = self[key] else {
             throw XMLParser.Error.missingAttribute(name: key)
         }
-        return try exp(value)
+        return try exp(XMLParser.Attributes.removingImportant(from: value))
     }
 }

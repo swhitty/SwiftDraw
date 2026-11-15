@@ -42,12 +42,9 @@ struct StyleTests {
         #expect(try XMLParser().parseStyleAttributes("selector: hi ") == ["selector": "hi"])
         #expect(try XMLParser().parseStyleAttributes(" trans-form : rotate(4)") == ["trans-form": "rotate(4)"])
 
-        #expect(throws: (any Error).self) {
-            try XMLParser().parseStyleAttributes("selector")
-        }
-        #expect(throws: (any Error).self) {
-            try XMLParser().parseStyleAttributes(": hmm")
-        }
+        // malformed declarations are skipped, not fatal
+        #expect(try XMLParser().parseStyleAttributes("selector") == [:])
+        #expect(try XMLParser().parseStyleAttributes(": hmm") == [:])
     }
 
     @Test
