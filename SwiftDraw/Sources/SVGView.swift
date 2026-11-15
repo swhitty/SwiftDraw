@@ -156,12 +156,15 @@ public extension GraphicsContext {
     }
 
     func draw(_ svg: SVG, in rect: CGRect, capInsets: EdgeInsets, byTiling: Bool = false)  {
+        // a Canvas context is not a bitmap: its CTM need not carry the display scale tiles are rasterized at
+        let scale = environment.displayScale
         withCGContext {
             $0.draw(
                 svg,
                 in: rect,
                 capInsets: (capInsets.top, capInsets.leading, capInsets.bottom, capInsets.trailing),
-                byTiling: byTiling
+                byTiling: byTiling,
+                tileScale: scale
             )
         }
     }

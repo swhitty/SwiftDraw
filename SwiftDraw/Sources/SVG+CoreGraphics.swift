@@ -64,25 +64,7 @@ extension CGContext {
 public extension CGContext {
 
     func draw(_ svg: SVG, in rect: CGRect, byTiling: Bool) {
-        guard byTiling else {
-            draw(svg, in: rect)
-            return
-        }
-
-        let cols = Int(ceil(rect.size.width / svg.size.width))
-        let rows = Int(ceil(rect.size.height / svg.size.height))
-
-        for r in 0..<rows {
-            for c in 0..<cols {
-                let tile = CGRect(
-                    x: rect.minX + CGFloat(c) * svg.size.width,
-                    y: rect.minY + CGFloat(r) * svg.size.height,
-                    width: svg.size.width,
-                    height: svg.size.height
-                )
-                draw(svg, in: tile)
-            }
-        }
+        draw(svg, in: rect, byTiling: byTiling, tileScale: nil)
     }
 
     func draw(
@@ -91,55 +73,155 @@ public extension CGContext {
         capInsets: (top: CGFloat, left: CGFloat, bottom: CGFloat, right: CGFloat),
         byTiling: Bool
     ) {
+        draw(svg, in: rect, capInsets: capInsets, byTiling: byTiling, tileScale: nil)
+    }
+}
+
+extension CGContext {
+
+    /// `tileScale` is the device pixels per point to rasterize a tile at; nil reads it from the CTM.
+    func draw(_ svg: SVG, in rect: CGRect, byTiling: Bool, tileScale: CGFloat?) {
+        guard byTiling else {
+            draw(svg, in: rect)
+            return
+        }
+        let size = svg.size
+        guard size.width > 0, size.height > 0 else { return }
+
+        // whole tiles from rect's origin, the last row and column may overhang rect
+        let grid = CGRect(
+            origin: rect.origin,
+            size: CGSize(
+                width: ceil(rect.width / size.width) * size.width,
+                height: ceil(rect.height / size.height) * size.height
+            )
+        )
+        saveGState()
+        clip(to: grid)
+        drawTiles(svg, from: CGRect(origin: .zero, size: size), in: grid, tileScale: tileScale)
+        restoreGState()
+    }
+
+    func draw(
+        _ svg: SVG,
+        in rect: CGRect,
+        capInsets: (top: CGFloat, left: CGFloat, bottom: CGFloat, right: CGFloat),
+        byTiling: Bool,
+        tileScale: CGFloat?
+    ) {
         guard capInsets != (0, 0, 0, 0) else {
-            draw(svg, in: rect, byTiling: byTiling)
+            draw(svg, in: rect, byTiling: byTiling, tileScale: tileScale)
             return
         }
 
         let source = Slice9(source: CGRect(origin: .zero, size: svg.size), capInsets: capInsets)
         let dest = Slice9(source: rect, capInsets: capInsets)
 
-        draw(svg, from: source.topLeft, in: dest.topLeft, byTiling: false)
-        draw(svg, from: source.topMid, in: dest.topMid, byTiling: byTiling)
-        draw(svg, from: source.topRight, in: dest.topRight, byTiling: false)
-        draw(svg, from: source.midLeft, in: dest.midLeft, byTiling: byTiling)
-        draw(svg, from: source.center, in: dest.center, byTiling: byTiling)
-        draw(svg, from: source.midRight, in: dest.midRight, byTiling: byTiling)
-        draw(svg, from: source.bottomLeft, in: dest.bottomLeft, byTiling: false)
-        draw(svg, from: source.bottomMid, in: dest.bottomMid, byTiling: byTiling)
-        draw(svg, from: source.bottomRight, in: dest.bottomRight, byTiling: false)
+        draw(svg, from: source.topLeft, in: dest.topLeft, byTiling: false, tileScale: tileScale)
+        draw(svg, from: source.topMid, in: dest.topMid, byTiling: byTiling, tileScale: tileScale)
+        draw(svg, from: source.topRight, in: dest.topRight, byTiling: false, tileScale: tileScale)
+        draw(svg, from: source.midLeft, in: dest.midLeft, byTiling: byTiling, tileScale: tileScale)
+        draw(svg, from: source.center, in: dest.center, byTiling: byTiling, tileScale: tileScale)
+        draw(svg, from: source.midRight, in: dest.midRight, byTiling: byTiling, tileScale: tileScale)
+        draw(svg, from: source.bottomLeft, in: dest.bottomLeft, byTiling: false, tileScale: tileScale)
+        draw(svg, from: source.bottomMid, in: dest.bottomMid, byTiling: byTiling, tileScale: tileScale)
+        draw(svg, from: source.bottomRight, in: dest.bottomRight, byTiling: false, tileScale: tileScale)
     }
 
-    private func draw(_ svg: SVG, from source: CGRect, in rect: CGRect, byTiling: Bool = false) {
+    private func draw(_ svg: SVG, from source: CGRect, in rect: CGRect, byTiling: Bool, tileScale: CGFloat?) {
         saveGState()
         clip(to: [rect])
-
         if byTiling {
-            let cols = Int(ceil(rect.width / source.width))
-            let rows = Int(ceil(rect.height / source.height))
-            for r in 0..<rows {
-                for c in 0..<cols {
-                    let tile = CGRect(
-                        x: rect.minX + source.width * CGFloat(c),
-                        y: rect.minY + source.height * CGFloat(r),
-                        width: source.width,
-                        height: source.height
-                    )
-                    draw(svg, from: source, in: tile)
-                }
-            }
+            drawTiles(svg, from: source, in: rect, tileScale: tileScale)
         } else {
-            // stretch
-            translateBy(x: rect.origin.x, y: rect.origin.y)
-            scaleBy(
-                x: rect.width / source.width,
-                y: rect.height / source.height
-            )
-            translateBy(x: -source.minX, y: -source.minY)
-            CGRenderer(context: self).perform(svg.commands)
+            drawStretched(svg, from: source, in: rect)
         }
-
         restoreGState()
+    }
+
+    // draws source of svg at its own size, repeated from rect's origin across the clip.
+    // Rendering the SVG (filters included) once per tile can take seconds for a small SVG tiled across
+    // a window, so a single tile is rasterized at device scale and CoreGraphics repeats the image.
+    // PDF keeps vector tiles; any tile count of 1 or less renders directly.
+    private func drawTiles(_ svg: SVG, from source: CGRect, in rect: CGRect, tileScale: CGFloat?) {
+        guard source.width > 0, source.height > 0 else { return }
+        let visible = rect.intersection(boundingBoxOfClipPath)
+        guard !visible.isNull, !visible.isEmpty else { return }
+        let tiles = Self.tiles(of: source.size, in: rect, visible: visible)
+
+        if tiles.count > 1, !isPDFContext,
+           let image = makeTileImage(svg, from: source, scale: tileScale ?? deviceScale) {
+            draw(image, in: CGRect(origin: rect.origin, size: source.size), byTiling: true)
+            return
+        }
+        for tile in tiles {
+            saveGState()
+            clip(to: tile)
+            drawStretched(svg, from: source, in: tile)
+            restoreGState()
+        }
+    }
+
+    private func drawStretched(_ svg: SVG, from source: CGRect, in rect: CGRect) {
+        translateBy(x: rect.origin.x, y: rect.origin.y)
+        scaleBy(
+            x: rect.width / source.width,
+            y: rect.height / source.height
+        )
+        translateBy(x: -source.minX, y: -source.minY)
+        CGRenderer(context: self).perform(svg.commands)
+    }
+
+    // source of svg rasterized at scale pixels per point. Drawn with draw(_:in:) the image lands
+    // exactly where the vector drawing would, whichever way the context is flipped.
+    func makeTileImage(_ svg: SVG, from source: CGRect, scale: CGFloat) -> CGImage? {
+        let width = Int(ceil(source.width * scale))
+        let height = Int(ceil(source.height * scale))
+        guard width > 0, height > 0, width * height <= Self.maxTilePixels,
+              let bitmap = CGContext.makeFilterLayer(width: width, height: height,
+                                                     colorSpace: isBitmapContext ? colorSpace : nil) else {
+            return nil
+        }
+        bitmap.scaleBy(x: CGFloat(width) / source.width, y: CGFloat(height) / source.height)
+        bitmap.translateBy(x: -source.minX, y: -source.minY)
+        CGRenderer(context: bitmap).perform(svg.commands)
+        return bitmap.makeImage()
+    }
+
+    static let maxTilePixels = 4096 * 4096
+
+    // device pixels per point along the larger axis, at least 1
+    var deviceScale: CGFloat {
+        let t = userSpaceToDeviceSpaceTransform
+        return max(1, hypot(t.a, t.b), hypot(t.c, t.d))
+    }
+
+    var isPDFContext: Bool {
+        (CFCopyDescription(self) as String).contains("(kCGContextTypePDF)")
+    }
+
+    // tiles of size laid out from rect's origin, limited to those intersecting visible
+    static func tiles(of size: CGSize, in rect: CGRect, visible: CGRect) -> [CGRect] {
+        let cols = Int(ceil(rect.width / size.width))
+        let rows = Int(ceil(rect.height / size.height))
+        let c0 = max(0, Int(floor((visible.minX - rect.minX) / size.width)))
+        let c1 = min(cols, Int(ceil((visible.maxX - rect.minX) / size.width)))
+        let r0 = max(0, Int(floor((visible.minY - rect.minY) / size.height)))
+        let r1 = min(rows, Int(ceil((visible.maxY - rect.minY) / size.height)))
+        guard c0 < c1, r0 < r1 else { return [] }
+        var tiles = [CGRect]()
+        tiles.reserveCapacity((c1 - c0) * (r1 - r0))
+        for r in r0..<r1 {
+            for c in c0..<c1 {
+                tiles.append(CGRect(
+                    x: rect.minX + CGFloat(c) * size.width,
+                    y: rect.minY + CGFloat(r) * size.height,
+                    width: size.width,
+                    height: size.height
+                ))
+            }
+        }
+        return tiles
     }
 }
 
