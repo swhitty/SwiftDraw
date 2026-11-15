@@ -418,7 +418,10 @@ struct LayerTreeFilterGraphTests {
     // every filter of the samples resolves: none is drawn unfiltered or hidden as unsupported
     // read from the source tree, which a device or emulator run does not have
     @Test(.enabled(if: FileManager.default.fileExists(atPath: samples.path), "Samples.bundle not reachable"),
-          arguments: [("filter-drop-shadow", 3), ("filter-primitives", 8)])
+          arguments: [("filter-drop-shadow", 3), ("filter-primitives", 8),
+                       ("filter-feDropShadow", 2), ("filter-feDropShadow-color", 2),
+                       ("filter-feDropShadow-stddeviation", 2), ("filter-feDropShadow-bbox", 2),
+                       ("filter-feDropShadow-chain", 2)])
     func samplesResolveEveryFilter(name: String, count: Int) throws {
         let xml = try String(contentsOf: Self.samples.appendingPathComponent("\(name).svg"), encoding: .utf8)
         let filters = try makeCommands(xml, options: .hideUnsupportedFilters).filterLayers

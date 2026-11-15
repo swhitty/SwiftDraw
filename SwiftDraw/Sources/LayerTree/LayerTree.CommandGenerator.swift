@@ -711,24 +711,36 @@ extension LayerTree.CommandGenerator {
         var positions = [Int: Int]()
         var primitives = [LayerTree.FilterLayer.Primitive]()
         let tree = LayerTree.FilterLayer.primaryTree(of: inputs)
-        guard tree.count <= LayerTree.FilterLayer.maxPrimitives else { return nil }
+        guard LayerTree.FilterLayer.primitiveCount(of: tree.map { layer.filters[$0] }) <= LayerTree.FilterLayer.maxPrimitives else {
+            return nil
+        }
         for index in tree {
             let primitive = layer.filters[index]
-            guard let effect = makeFilterEffect(primitive.effect, scale: units.size, colorConverter: colorConverter) else {
-                return nil
-            }
             let sources = inputs[index].map { input -> LayerTree.FilterLayer.Input in
                 guard case .primitive(let source) = input else { return input }
                 return positions[source].map { .primitive($0) } ?? .transparent
             }
             let subregion = makeSubregion(for: primitive, inputs: sources, resolved: primitives,
                                           region: filterRegion, units: units)
+            let colorInterpolation: LayerTree.FilterLayer.ColorInterpolation = primitive.colorInterpolation == .linearRGB ? .linearRGB : .sRGB
+            if case .dropShadow(let shadow) = primitive.effect {
+                primitives.append(contentsOf: makeDropShadow(shadow, input: sources.first ?? .sourceGraphic,
+                                                             first: primitives.count,
+                                                             subregion: subregion, region: filterRegion,
+                                                             scale: units.size, colorInterpolation: colorInterpolation,
+                                                             colorConverter: colorConverter))
+                positions[index] = primitives.count - 1
+                continue
+            }
+            guard let effect = makeFilterEffect(primitive.effect, scale: units.size, colorConverter: colorConverter) else {
+                return nil
+            }
             positions[index] = primitives.count
             primitives.append(LayerTree.FilterLayer.Primitive(
                 effect: effect,
                 inputs: sources,
                 subregion: subregion,
-                colorInterpolation: primitive.colorInterpolation == .linearRGB ? .linearRGB : .sRGB
+                colorInterpolation: colorInterpolation
             ))
         }
 
@@ -777,6 +789,37 @@ extension LayerTree.CommandGenerator {
         return LayerTree.Rect(x: minX, y: minY, width: maxX - minX, height: maxY - minY)
     }
 
+    // Filter Effects 1 §9.12: feDropShadow is the blur of the input's alpha, offset, flooded with the
+    // shadow colour, under the input. The colour comes from the flood `in` the offset blur, so the blur
+    // can read the input itself: only its alpha reaches the result. The steps between are unclipped
+    // (the filter region), the shadow's own subregion clips the merged result.
+    func makeDropShadow(_ shadow: DOM.Filter.DropShadow,
+                        input: LayerTree.FilterLayer.Input,
+                        first: Int,
+                        subregion: LayerTree.Rect,
+                        region: LayerTree.Rect,
+                        scale: LayerTree.Size,
+                        colorInterpolation: LayerTree.FilterLayer.ColorInterpolation,
+                        colorConverter: any ColorConverter) -> [LayerTree.FilterLayer.Primitive] {
+        func make(_ filter: LayerTree.Filter) -> LayerTree.FilterLayer.Effect {
+            // only feDropShadow's own values reach here, all of them supported
+            makeFilterEffect(filter, scale: scale, colorConverter: colorConverter)!
+        }
+        func primitive(_ effect: LayerTree.FilterLayer.Effect,
+                       _ inputs: [LayerTree.FilterLayer.Input],
+                       _ subregion: LayerTree.Rect) -> LayerTree.FilterLayer.Primitive {
+            LayerTree.FilterLayer.Primitive(effect: effect, inputs: inputs, subregion: subregion,
+                                            colorInterpolation: colorInterpolation)
+        }
+        return [
+            primitive(make(.gaussianBlur(stdDeviation: shadow.stdDeviation, stdDeviationY: shadow.stdDeviationY)), [input], region),
+            primitive(make(.offset(dx: shadow.dx, dy: shadow.dy)), [.primitive(first)], region),
+            primitive(make(.flood(color: shadow.color, opacity: shadow.opacity)), [], region),
+            primitive(.composite(.in), [.primitive(first + 2), .primitive(first + 1)], region),
+            primitive(.merge, [.primitive(first + 3), input], subregion)
+        ]
+    }
+
     // The effect in user units; nil when unsupported.
     func makeFilterEffect(_ effect: LayerTree.Filter,
                           scale: LayerTree.Size,
@@ -809,6 +852,9 @@ extension LayerTree.CommandGenerator {
             return .blend(mode)
         case .colorMatrix(let matrix):
             return .colorMatrix(matrix.values)
+        case .dropShadow:
+            // resolved into its primitives by makeDropShadow
+            return nil
         }
     }
 
@@ -1052,6 +1098,8 @@ private extension LayerTree.Filter {
             return "<feBlend>"
         case .colorMatrix:
             return "<feColorMatrix>"
+        case .dropShadow:
+            return "<feDropShadow>"
         }
     }
 }

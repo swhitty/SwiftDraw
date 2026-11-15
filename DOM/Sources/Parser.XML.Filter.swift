@@ -145,11 +145,15 @@ extension XMLParser {
                 .map { Self.parseFilterInput($0.attributes["in"]) }
         case .composite, .blend:
             primitive.inputs = [Self.parseFilterInput(e.attributes["in"]), Self.parseFilterInput(e.attributes["in2"])]
+        case .flood(.currentColor, let opacity):
+            primitive.effect = .flood(color: resolveCurrentColor(att, context: context), opacity: opacity)
         case .flood:
-            // flood-color="currentColor" takes the `color` of the primitive, else of the <filter>
-            if case .flood(.currentColor, let opacity) = effect {
-                let color = (try? att.parseColor("color")) ?? context.color ?? .keyword(.black)
-                primitive.effect = .flood(color: color == .currentColor ? .keyword(.black) : color, opacity: opacity)
+            break
+        case .dropShadow(var shadow):
+            primitive.inputs = [Self.parseFilterInput(e.attributes["in"])]
+            if shadow.color == .currentColor {
+                shadow.color = resolveCurrentColor(att, context: context)
+                primitive.effect = .dropShadow(shadow)
             }
         default:
             primitive.inputs = [Self.parseFilterInput(e.attributes["in"])]
@@ -176,6 +180,18 @@ extension XMLParser {
         return primitive
     }
 
+    // flood-color="currentColor" takes the `color` of the primitive, else of the <filter>
+    func resolveCurrentColor(_ att: any AttributeParser, context: PrimitiveContext) -> DOM.Color {
+        let color = (try? att.parseColor("color")) ?? context.color ?? .keyword(.black)
+        return color == .currentColor ? .keyword(.black) : color
+    }
+
+    // flood-color is a <color>: anything else, `none` included, keeps the initial black
+    func parseFloodColor(_ att: any AttributeParser) -> DOM.Color {
+        let color = (try? att.parseColor("flood-color")) ?? .keyword(.black)
+        return color == .none ? .keyword(.black) : color
+    }
+
     func parseEffect(_ e: XML.Element) throws -> DOM.Filter.Effect? {
         switch e.name {
         case "feGaussianBlur":
@@ -191,12 +207,21 @@ extension XMLParser {
                            dy: parseFiniteFloat(att, "dy") ?? 0)
         case "feFlood":
             let att: any AttributeParser = try parseAttributes(e)
-            // flood-color is a <color>: anything else, `none` included, keeps the initial black
-            var color = (try? att.parseColor("flood-color")) ?? .keyword(.black)
-            if color == .none {
-                color = .keyword(.black)
+            return .flood(color: parseFloodColor(att), opacity: parseClampedFraction(att, "flood-opacity") ?? 1)
+        case "feDropShadow":
+            let att: any AttributeParser = try parseAttributes(e)
+            // Filter Effects 1 §9.12: dx, dy and stdDeviation default to 2; an unreadable value takes the default
+            let values: [DOM.Float]? = (try? att.parseFloats("stdDeviation")).flatMap { values in
+                values.isEmpty || values.count > 2 || !values.allSatisfy(\.isFinite) ? nil : values
             }
-            return .flood(color: color, opacity: parseClampedFraction(att, "flood-opacity") ?? 1)
+            return .dropShadow(DOM.Filter.DropShadow(
+                dx: parseFiniteFloat(att, "dx") ?? 2,
+                dy: parseFiniteFloat(att, "dy") ?? 2,
+                stdDeviation: values?[0] ?? 2,
+                stdDeviationY: values.flatMap { $0.count > 1 ? $0[1] : nil },
+                color: parseFloodColor(att),
+                opacity: parseClampedFraction(att, "flood-opacity") ?? 1
+            ))
         case "feComposite":
             let att: any AttributeParser = try parseAttributes(e)
             return .composite(parseCompositeOperator(att))

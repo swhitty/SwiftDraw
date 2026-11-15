@@ -77,6 +77,10 @@ package extension DOM {
 
             // Filter Effects 1 §9.6 feColorMatrix
             case colorMatrix(ColorMatrix)
+
+            // Filter Effects 1 §9.12 feDropShadow, in primitiveUnits: stdDeviationY is nil when stdDeviation
+            // has a single value; currentColor is resolved while parsing
+            case dropShadow(DropShadow)
         }
 
         // A filter primitive with its wiring (Filter Effects 1 §9.2 in / in2 / result) and subregion (§9.4)
@@ -148,6 +152,30 @@ package extension DOM {
             case saturation
             case color
             case luminosity
+        }
+
+        package struct DropShadow: Hashable {
+            package var dx: DOM.Float
+            package var dy: DOM.Float
+            package var stdDeviation: DOM.Float
+            package var stdDeviationY: DOM.Float?
+            package var color: DOM.Color
+            package var opacity: DOM.Float
+
+            // the initial values: a black shadow 2 units right and down, blurred by 2
+            package init(dx: DOM.Float = 2,
+                         dy: DOM.Float = 2,
+                         stdDeviation: DOM.Float = 2,
+                         stdDeviationY: DOM.Float? = nil,
+                         color: DOM.Color = .keyword(.black),
+                         opacity: DOM.Float = 1) {
+                self.dx = dx
+                self.dy = dy
+                self.stdDeviation = stdDeviation
+                self.stdDeviationY = stdDeviationY
+                self.color = color
+                self.opacity = opacity
+            }
         }
 
         package enum ColorMatrix: Hashable {

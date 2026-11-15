@@ -1,0 +1,11 @@
+<svg width="240" height="100" viewBox="0 0 240 100" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- dx, dy and stdDeviation are fractions of the bounding box -->
+    <filter id="bbox" primitiveUnits="objectBoundingBox" x="-20%" y="-20%" width="150%" height="150%">
+      <feDropShadow dx="0.1" dy="0.15" stdDeviation="0.04 0.06" flood-color="#6d597a" />
+    </filter>
+  </defs>
+  <rect width="240" height="100" fill="#f4f1ea" />
+  <rect x="20" y="25" width="60" height="40" fill="#e56b6f" filter="url(#bbox)" />
+  <ellipse cx="170" cy="45" rx="45" ry="25" fill="#b56576" filter="url(#bbox)" />
+</svg>

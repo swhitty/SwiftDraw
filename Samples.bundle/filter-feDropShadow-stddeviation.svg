@@ -1,0 +1,14 @@
+<svg width="240" height="100" viewBox="0 0 240 100" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- two values: x then y -->
+    <filter id="wide" x="-40%" y="-30%" width="180%" height="160%">
+      <feDropShadow dx="0" dy="6" stdDeviation="8 1" flood-color="#1d3557" />
+    </filter>
+    <filter id="tall" x="-30%" y="-40%" width="160%" height="180%">
+      <feDropShadow dx="6" dy="0" stdDeviation="0 6" flood-color="#1d3557" />
+    </filter>
+  </defs>
+  <rect width="240" height="100" fill="#f4f1ea" />
+  <rect x="25" y="25" width="70" height="40" fill="#f4a261" filter="url(#wide)" />
+  <rect x="150" y="20" width="50" height="60" fill="#2a9d8f" filter="url(#tall)" />
+</svg>
