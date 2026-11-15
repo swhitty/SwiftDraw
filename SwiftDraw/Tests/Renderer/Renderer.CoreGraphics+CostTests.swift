@@ -95,7 +95,8 @@ struct RendererCoreGraphicsCostTests {
     @Test
     func shapesEstimatedCost() throws {
         let image = try #require(SVG(named: "shapes.svg", in: .test))
-        #expect(image.commands.estimatedCost == 19220)
+        // includes a translate and scale into the bounding box for each of the two objectBoundingBox gradients
+        #expect(image.commands.estimatedCost == 19252)
     }
 }
 

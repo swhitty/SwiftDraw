@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="320" viewBox="0 0 320 320">
+  <defs>
+    <radialGradient id="radial">
+      <stop offset="0" stop-color="gold" />
+      <stop offset="0.5" stop-color="crimson" />
+      <stop offset="1" stop-color="navy" />
+    </radialGradient>
+    <radialGradient id="corner" cx="0" cy="1" r="1" fr="0.25">
+      <stop offset="0" stop-color="seagreen" />
+      <stop offset="1" stop-color="white" />
+    </radialGradient>
+    <radialGradient id="rotated" href="#radial" gradientTransform="rotate(30 0.5 0.5) scale(0.5 1)" />
+    <linearGradient id="diagonal" x2="1" y2="1">
+      <stop offset="0" stop-color="navy" />
+      <stop offset="0.5" stop-color="white" />
+      <stop offset="1" stop-color="crimson" />
+    </linearGradient>
+    <linearGradient id="skewed" href="#diagonal" x2="1" y2="0" gradientTransform="rotate(45)" />
+  </defs>
+  <!-- objectBoundingBox gradients are stretched with a wide or tall bounding box -->
+  <rect x="10" y="10" width="140" height="60" fill="url(#radial)" />
+  <rect x="170" y="10" width="60" height="140" fill="url(#radial)" stroke="black" />
+  <rect x="10" y="90" width="140" height="60" fill="url(#corner)" />
+  <ellipse cx="275" cy="80" rx="35" ry="70" fill="url(#rotated)" />
+  <rect x="10" y="170" width="300" height="60" fill="url(#diagonal)" />
+  <rect x="10" y="250" width="300" height="60" fill="url(#skewed)" />
+</svg>
