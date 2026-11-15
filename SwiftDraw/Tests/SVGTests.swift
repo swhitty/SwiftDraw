@@ -29,6 +29,7 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
+import Foundation
 import SwiftDrawDOM
 @testable import SwiftDraw
 import Testing
@@ -290,8 +291,12 @@ struct SVGHostileTests {
 
     private static let head = "<svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\""
 
-    private func load(_ xml: String) -> SVG? {
-        SVG(data: Data(xml.utf8))
+    /// The steps of `SVG(data:)` (parse, layer tree, commands) without CoreGraphics, so these run on every platform.
+    private func load(_ xml: String) -> [RendererCommand<LayerTreeProvider.Types>]? {
+        guard let svg = try? DOM.SVG.parse(data: Data(xml.utf8)) else { return nil }
+        let layer = LayerTree.Builder(svg: svg).makeLayer()
+        let generator = LayerTree.CommandGenerator(provider: LayerTreeProvider(), size: .zero, options: .default)
+        return generator.renderCommands(for: layer, colorConverter: .default)
     }
 
     @Test
@@ -374,8 +379,8 @@ struct SVGHostileTests {
         return "\(Self.head) width=\"9\" height=\"9\"><defs>\(defs)</defs><use href=\"#l\(depth)\"/></svg>"
     }
 
-    private func fillCount(_ svg: SVG) -> Int {
-        svg.commands.filter { if case .fill = $0 { return true } else { return false } }.count
+    private func fillCount(_ commands: [RendererCommand<LayerTreeProvider.Types>]) -> Int {
+        commands.filter { if case .fill = $0 { return true } else { return false } }.count
     }
 
     @Test
