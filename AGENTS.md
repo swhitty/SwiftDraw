@@ -9,7 +9,6 @@ Guidance for coding agents working in this repository.
 - `CommandLine/` — the `swiftdrawcli` executable (SVG → PNG/PDF/JPEG/Swift/SF Symbol).
 - `Samples.bundle/` — sample SVGs covering supported features; used for rendering comparisons.
 - `Tools/swiftdraw-diff/` — dev-only package that compares SwiftDraw's rendering with WebKit (see below). Not part of the main package.
-- `Tools/webkit-render/` — dev-only package that renders SVGs to PNGs with WebKit, the reference renderer (see Renderers). Doesn't depend on SwiftDraw.
 
 ## Build and test
 
@@ -71,22 +70,6 @@ The first run builds SwiftDraw at the base revision (about a minute); later runs
 - To see what changed, view only the PNGs for the files the summary lists, in `Tools/swiftdraw-diff/.build/compare/report/`: `base/<name>.png`, `head/<name>.png` and the original `svg/<name>.svg`.
 - Read `compare.json` only if you need numbers the summary doesn't show.
 - Don't pass `--html` and don't read `index.html`: it embeds every image (tens of MB) and is meant for people.
-
-### Renderers
-
-`swiftdraw-diff` compares PNGs from standalone renderers, each taking an SVG and a size in points and writing an opaque sRGB PNG of `round(W×scale) × round(H×scale)` pixels:
-
-- `swiftdrawcli`, built at the commit being compared.
-- `Tools/webkit-render`, the WebKit (Safari) reference. It draws the SVG as an `<img>` onto a white canvas, retrying draws that come out blank, with font smoothing off unless `--font-smoothing`. Batch mode (`--jobs jobs.json --out <dir>`) keeps one web view for all files and writes `<dir>/manifest.json`; `--version` prints the WebKit version. It needs a logged-in GUI session.
-- `resvg`.
-
-```bash
-swift build -c release -q --package-path Tools/webkit-render
-```
-
-```bash
-Tools/webkit-render/.build/release/webkit-render in.svg out.png --size 64x64 --scale 2
-```
 
 ### Reviewing a pull request
 
