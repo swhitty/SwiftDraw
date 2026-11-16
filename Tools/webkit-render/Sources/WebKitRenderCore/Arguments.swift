@@ -1,4 +1,4 @@
-import Foundation
+public import Foundation
 
 /// Parsed command line.
 ///

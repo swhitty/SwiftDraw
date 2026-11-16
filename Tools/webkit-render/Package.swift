@@ -18,14 +18,39 @@ let package = Package(
         .executable(name: "webkit-render", targets: ["webkit-render"])
     ],
     targets: [
-        .target(name: "WebKitRenderCore"),
+        .target(name: "WebKitRenderCore", swiftSettings: .upcomingFeatures),
         .executableTarget(
             name: "webkit-render",
-            dependencies: ["WebKitRenderCore"]
+            dependencies: ["WebKitRenderCore"],
+            swiftSettings: .upcomingFeatures
         ),
         .testTarget(
             name: "WebKitRenderCoreTests",
-            dependencies: ["WebKitRenderCore"]
+            dependencies: ["WebKitRenderCore"],
+            swiftSettings: .upcomingFeatures
         )
     ]
 )
+
+extension Array where Element == SwiftSetting {
+    static var upcomingFeatures: [SwiftSetting] {
+        [
+            // Actor isolation
+            .defaultIsolation(nil),
+
+            // Concurrency
+            .enableUpcomingFeature("NonisolatedNonsendingByDefault"),
+            .enableUpcomingFeature("InferIsolatedConformances"),
+
+            // Language
+            .enableUpcomingFeature("ExistentialAny"),
+            .enableUpcomingFeature("ImmutableWeakCaptures"),
+
+            // Module boundaries
+            .enableUpcomingFeature("MemberImportVisibility"),
+            .enableUpcomingFeature("InternalImportsByDefault"),
+
+            .swiftLanguageMode(.v6)
+        ]
+    }
+}

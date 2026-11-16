@@ -1,4 +1,4 @@
-import Foundation
+public import Foundation
 
 /// One entry of `jobs.json`: render `svg` at `width`×`height` points to `<out>/<name>.png`.
 /// Without a size the SVG is laid out at its natural size (see `Size.layout(natural:max:)`).

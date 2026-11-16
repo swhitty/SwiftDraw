@@ -23,7 +23,7 @@ final class WebKitRenderer: NSObject, WKNavigationDelegate {
 
     private let webView: WKWebView
     private let window: NSWindow
-    private var navigation: CheckedContinuation<Void, Error>?
+    private var navigation: CheckedContinuation<Void, any Error>?
     private var isLoaded = false
 
     /// Per-image limit, enforced inside the page.
@@ -86,7 +86,7 @@ final class WebKitRenderer: NSObject, WKNavigationDelegate {
         }
     }
 
-    private static func message(for error: Error) -> String {
+    private static func message(for error: any Error) -> String {
         let info = (error as NSError).userInfo
         if let message = info["WKJavaScriptExceptionMessage"] as? String {
             return message.replacingOccurrences(of: "Error: ", with: "")
@@ -95,13 +95,13 @@ final class WebKitRenderer: NSObject, WKNavigationDelegate {
     }
 
     private func load() async throws {
-        try await withCheckedThrowingContinuation { (c: CheckedContinuation<Void, Error>) in
+        try await withCheckedThrowingContinuation { (c: CheckedContinuation<Void, any Error>) in
             navigation = c
             webView.loadHTMLString(Self.page, baseURL: nil)
         }
     }
 
-    private func finishNavigation(_ error: Error?) {
+    private func finishNavigation(_ error: any Error?) {
         if let error { navigation?.resume(throwing: error) } else { navigation?.resume() }
         navigation = nil
     }
@@ -110,11 +110,11 @@ final class WebKitRenderer: NSObject, WKNavigationDelegate {
         MainActor.assumeIsolated { finishNavigation(nil) }
     }
 
-    nonisolated func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
+    nonisolated func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: any Error) {
         MainActor.assumeIsolated { finishNavigation(Failure(description: "page load failed: \(error.localizedDescription)")) }
     }
 
-    nonisolated func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
+    nonisolated func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: any Error) {
         MainActor.assumeIsolated { finishNavigation(Failure(description: "page load failed: \(error.localizedDescription)")) }
     }
 
