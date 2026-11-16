@@ -97,7 +97,7 @@ extension LayerTree {
         enum Input: Hashable {
             case sourceGraphic
             case sourceAlpha
-            // BackgroundImage, BackgroundAlpha, FillPaint and StrokePaint
+            // transparent black: a primitive outside the primary tree
             case transparent
             // the result of an earlier primitive
             case primitive(Int)
@@ -138,8 +138,9 @@ extension LayerTree.FilterLayer {
 
     // Filter Effects 1 §9.2: a missing `in`, a forward reference and a reference to a result that does not
     // exist all take the previous result, or SourceGraphic for the first primitive. A repeated `result`
-    // name refers to the closest preceding primitive. The background and paint inputs are not available
-    // and are transparent black (SVG 1.1 §15.6 without enable-background: new).
+    // name refers to the closest preceding primitive. BackgroundImage and BackgroundAlpha (SVG 1.1 §15.7.2,
+    // dropped by Filter Effects 1) and FillPaint and StrokePaint (removed from Filter Effects 1) are
+    // SourceGraphic, as in resvg and WebKit.
     static func makeInputs(for primitives: [LayerTree.FilterPrimitive]) -> [[Input]] {
         var named = [String: Int]()
         var inputs = [[Input]]()
@@ -147,12 +148,10 @@ extension LayerTree.FilterLayer {
             let previous: Input = index == 0 ? .sourceGraphic : .primitive(index - 1)
             inputs.append(primitive.inputs.map { input in
                 switch input {
-                case .sourceGraphic:
+                case .sourceGraphic, .backgroundImage, .backgroundAlpha, .fillPaint, .strokePaint:
                     return .sourceGraphic
                 case .sourceAlpha:
                     return .sourceAlpha
-                case .backgroundImage, .backgroundAlpha, .fillPaint, .strokePaint:
-                    return .transparent
                 case .result(let name):
                     return named[name].map { .primitive($0) } ?? previous
                 case nil:

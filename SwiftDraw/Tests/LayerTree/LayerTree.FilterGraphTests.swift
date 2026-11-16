@@ -162,7 +162,8 @@ struct LayerTreeFilterGraphTests {
             [.primitive(0)],
             // the closest preceding "a"
             [.primitive(1), .primitive(1)],
-            [.transparent, .transparent, .transparent, .transparent],
+            // the deprecated inputs, as in resvg and WebKit
+            [.sourceGraphic, .sourceGraphic, .sourceGraphic, .sourceGraphic],
             [.sourceGraphic, .sourceAlpha, .primitive(2), .primitive(3)]
         ])
     }

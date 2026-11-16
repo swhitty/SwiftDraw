@@ -69,20 +69,35 @@ extension XMLParser {
         node.height = try? nodeAtt.parseCoordinateOrPercentage("height")
         node.filterUnits = try? nodeAtt.parseRaw("filterUnits")
         node.primitiveUnits = try? nodeAtt.parseRaw("primitiveUnits")
+        node.href = try? nodeAtt.parseHref()
 
         let context = PrimitiveContext(
             primitiveUnits: node.primitiveUnits ?? .userSpaceOnUse,
             colorInterpolation: parseColorInterpolation(e) ?? colorInterpolation,
-            color: try? nodeAtt.parseColor("color")
+            color: try? nodeAtt.parseColor("color"),
+            floodColor: parseFloodColor(nodeAtt),
+            floodOpacity: parseClampedFraction(nodeAtt, "flood-opacity") ?? 1
         )
-        var primitives = e.children[...]
+        node.primitives = try parsePrimitives(e.children[...], context: context, skippingPrelude: true)
+        if node.primitives.isEmpty {
+            // a lone prelude is still a filter: keep it so the element is drawn, not hidden as by an empty filter
+            node.primitives = try parsePrimitives(e.children[...], context: context, skippingPrelude: false)
+        }
+        return node
+    }
+
+    func parsePrimitives(_ children: ArraySlice<XML.Element>,
+                         context: PrimitiveContext,
+                         skippingPrelude: Bool) throws -> [DOM.Filter.Primitive] {
+        var children = children
         // the source graphic stands in for the blend's result until a later primitive reuses its name
         var sourceAlias: String?
-        if hasNoOpSourcePrelude(primitives) {
-            sourceAlias = primitives[primitives.startIndex + 1].attributes["result"]?.trimmingCharacters(in: .whitespaces)
-            primitives = primitives.dropFirst(2)
+        if skippingPrelude && hasNoOpSourcePrelude(children) {
+            sourceAlias = children[children.startIndex + 1].attributes["result"]?.trimmingCharacters(in: .whitespaces)
+            children = children.dropFirst(2)
         }
-        for n in primitives {
+        var primitives = [DOM.Filter.Primitive]()
+        for n in children {
             if var primitive = try parsePrimitive(n, context: context) {
                 if let alias = sourceAlias {
                     primitive.inputs = primitive.inputs.map { $0 == .result(alias) ? .sourceGraphic : $0 }
@@ -90,11 +105,10 @@ extension XMLParser {
                         sourceAlias = nil
                     }
                 }
-                node.primitives.append(primitive)
+                primitives.append(primitive)
             }
         }
-
-        return node
+        return primitives
     }
 
     /// Figma and Sketch start a layer blur with a transparent `feFlood` and the source graphic blended over
@@ -131,14 +145,17 @@ extension XMLParser {
         var colorInterpolation: DOM.Filter.ColorInterpolation
         // the <filter>'s `color`, for flood-color="currentColor"
         var color: DOM.Color?
+        // the <filter>'s flood-color and flood-opacity, for `inherit`
+        var floodColor: DOM.Color = .keyword(.black)
+        var floodOpacity: DOM.Float = 1
     }
 
     func parsePrimitive(_ e: XML.Element, context: PrimitiveContext) throws -> DOM.Filter.Primitive? {
         guard let effect = try parseEffect(e) else { return nil }
         let att: any AttributeParser = try parseAttributes(e)
 
-        var primitive = DOM.Filter.Primitive(effect: effect)
-        switch effect {
+        var primitive = DOM.Filter.Primitive(effect: inheritingFlood(effect, att, context: context))
+        switch primitive.effect {
         case .merge:
             primitive.inputs = e.children
                 .filter { $0.name == "feMergeNode" }
@@ -180,6 +197,25 @@ extension XMLParser {
         return primitive
     }
 
+    // flood-color and flood-opacity are not inherited, but an explicit `inherit` takes the <filter>'s
+    func inheritingFlood(_ effect: DOM.Filter.Effect, _ att: any AttributeParser, context: PrimitiveContext) -> DOM.Filter.Effect {
+        func isInherit(_ key: String) -> Bool {
+            (try? att.parseString(key))?.trimmingCharacters(in: .whitespaces) == "inherit"
+        }
+        switch effect {
+        case .flood(var color, var opacity):
+            if isInherit("flood-color") { color = context.floodColor }
+            if isInherit("flood-opacity") { opacity = context.floodOpacity }
+            return .flood(color: color, opacity: opacity)
+        case .dropShadow(var shadow):
+            if isInherit("flood-color") { shadow.color = context.floodColor }
+            if isInherit("flood-opacity") { shadow.opacity = context.floodOpacity }
+            return .dropShadow(shadow)
+        default:
+            return effect
+        }
+    }
+
     // flood-color="currentColor" takes the `color` of the primitive, else of the <filter>
     func resolveCurrentColor(_ att: any AttributeParser, context: PrimitiveContext) -> DOM.Color {
         let color = (try? att.parseColor("color")) ?? context.color ?? .keyword(.black)
@@ -196,8 +232,12 @@ extension XMLParser {
         switch e.name {
         case "feGaussianBlur":
             let att: any AttributeParser = try parseAttributes(e)
-            // SVG 1.1 §15.17: one or two numbers; missing, invalid or negative values disable the blur
-            let values: [DOM.Float] = (try? att.parseFloats("stdDeviation")) ?? []
+            // SVG 1.1 §15.17: one or two numbers; missing, invalid or negative values disable the blur,
+            // and so do more than two (as resvg and WebKit)
+            var values: [DOM.Float] = (try? att.parseFloats("stdDeviation")) ?? []
+            if values.count > 2 {
+                values = []
+            }
             let x = values.first ?? 0
             let y = values.count > 1 ? values[1] : nil
             return .gaussianBlur(stdDeviation: x, stdDeviationY: y)
@@ -285,7 +325,7 @@ extension XMLParser {
     }
 
     // Filter Effects 1 §9.6: missing values take the type's default; a wrong number of values is a pass through.
-    // An unknown type is a pass through too, as in Chrome.
+    // An unknown type is the initial `matrix`, so its values still apply, as in resvg and WebKit.
     func parseColorMatrix(_ att: any AttributeParser) -> DOM.Filter.ColorMatrix {
         let identity: [DOM.Float] = [1, 0, 0, 0, 0,
                                      0, 1, 0, 0, 0,
@@ -296,9 +336,6 @@ extension XMLParser {
             values.allSatisfy(\.isFinite) ? values : []
         }
         switch type {
-        case "matrix":
-            guard let values else { return .matrix(identity) }
-            return .matrix(values.count == 20 ? values : identity)
         case "saturate":
             guard let values else { return .saturate(1) }
             return values.count == 1 ? .saturate(values[0]) : .saturate(1)
@@ -308,7 +345,9 @@ extension XMLParser {
         case "luminanceToAlpha":
             return .luminanceToAlpha
         default:
-            return .matrix(identity)
+            // `matrix`, or an unknown type
+            guard let values else { return .matrix(identity) }
+            return .matrix(values.count == 20 ? values : identity)
         }
     }
 

@@ -48,6 +48,9 @@ package extension DOM {
         package var filterUnits: Units?
         package var primitiveUnits: Units?
 
+        // SVG 1.1 §15.5: unset attributes, and the primitives when there are none, come from the referenced filter
+        package var href: DOM.URL?
+
         package init(id: String) {
             self.id = id
             self.primitives = []

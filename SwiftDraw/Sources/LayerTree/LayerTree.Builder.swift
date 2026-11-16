@@ -278,7 +278,10 @@ extension LayerTree {
             }
             l.opacity = state.opacity
             if let filter = makeFilter(for: element) {
-                l.filters = filter.primitives
+                // Filter Effects 1 §5.1: a filter without primitives paints transparent black, hiding the element
+                l.filters = filter.primitives.isEmpty
+                    ? [DOM.Filter.Primitive(effect: .flood(color: .keyword(.black), opacity: 0))]
+                    : filter.primitives
                 l.filterRegion = makeFilterRegion(for: filter)
             }
             return l
@@ -375,8 +378,38 @@ extension LayerTree {
         // `filter` is not inherited: it applies once, to the element that references it
         func makeFilter(for element: DOM.GraphicsElement) -> DOM.Filter? {
             let attributes = DOM.presentationAttributes(for: element, styles: svg.styles)
-            guard let filterId = attributes.filter?.fragmentID else { return nil }
-            return svg.defs.filters.first(where: { $0.id == filterId })
+            guard let filterId = attributes.filter?.fragmentID,
+                  let filter = svg.defs.filters.first(where: { $0.id == filterId }) else { return nil }
+            return resolvingHref(filter)
+        }
+
+        // SVG 1.1 §15.5 (dropped by Filter Effects 1, followed by resvg): attributes the filter leaves unset,
+        // and its primitives when it has none, come from the filter its href references, and so on along the chain
+        func resolvingHref(_ filter: DOM.Filter) -> DOM.Filter {
+            guard filter.href != nil else { return filter }
+            let resolved = DOM.Filter(id: filter.id)
+            resolved.primitives = filter.primitives
+            resolved.x = filter.x
+            resolved.y = filter.y
+            resolved.width = filter.width
+            resolved.height = filter.height
+            resolved.filterUnits = filter.filterUnits
+            resolved.primitiveUnits = filter.primitiveUnits
+
+            var visited: Set<String> = [filter.id]
+            var href = filter.href
+            while let id = href?.fragmentID, visited.insert(id).inserted,
+                  let referenced = svg.defs.filters.first(where: { $0.id == id }) {
+                if resolved.primitives.isEmpty { resolved.primitives = referenced.primitives }
+                resolved.x = resolved.x ?? referenced.x
+                resolved.y = resolved.y ?? referenced.y
+                resolved.width = resolved.width ?? referenced.width
+                resolved.height = resolved.height ?? referenced.height
+                resolved.filterUnits = resolved.filterUnits ?? referenced.filterUnits
+                resolved.primitiveUnits = resolved.primitiveUnits ?? referenced.primitiveUnits
+                href = referenced.href
+            }
+            return resolved
         }
 
         func makeFilterRegion(for filter: DOM.Filter) -> FilterRegion {

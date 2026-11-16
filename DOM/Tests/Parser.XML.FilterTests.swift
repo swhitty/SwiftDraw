@@ -416,9 +416,13 @@ struct ParserXMLFilterNoOpPreludeTests {
         #expect(try effects(flood: Self.flood, blend: blend) == [.gaussianBlur(stdDeviation: 0.75)])
     }
 
+    // dropping it would leave no primitives, which hides the element: the pair is kept to draw the source
     @Test
-    func preludeAloneLeavesNoEffects() throws {
-        #expect(try effects(flood: Self.flood, blend: Self.blend, blur: false).isEmpty)
+    func preludeAloneIsKept() throws {
+        #expect(try effects(flood: Self.flood, blend: Self.blend, blur: false) == [
+            .flood(color: .keyword(.black), opacity: 0),
+            .blend(.normal)
+        ])
     }
 
     @Test
