@@ -176,14 +176,10 @@ private extension RendererSFSymbolInsetsTests {
         )
         let output = try renderer.render(default: DOM.SVG.parse(data: Data(source.utf8)), ultralight: nil, black: nil)
         let regular = try SFSymbolTemplate.parse(output).regular
-        let bounds = regular.contents.paths
-            .compactMap { path -> LayerTree.Rect? in
-                guard case let .path(p) = LayerTree.Builder.makeShape(from: path) else { return nil }
-                return p.bounds
-            }
-        let content = try #require(bounds.first)
-        return Symbol(
-            content: bounds.dropFirst().reduce(content) { $0.combined(with: $1) },
+        #expect(regular.contents.paths.count == 1)
+        let path = try #require(regular.contents.paths.first)
+        return try Symbol(
+            content: LayerTree.Builder.createPath(from: path).bounds,
             margins: Margins(left: regular.bounds.minX, right: regular.bounds.maxX)
         )
     }
@@ -196,16 +192,5 @@ private extension LayerTree.Rect {
         abs(minY - other.minY) < tolerance &&
         abs(width - other.width) < tolerance &&
         abs(height - other.height) < tolerance
-    }
-
-    func combined(with other: LayerTree.Rect) -> LayerTree.Rect {
-        let minX = Swift.min(minX, other.minX)
-        let minY = Swift.min(minY, other.minY)
-        return LayerTree.Rect(
-            x: minX,
-            y: minY,
-            width: Swift.max(maxX, other.maxX) - minX,
-            height: Swift.max(maxY, other.maxY) - minY
-        )
     }
 }
