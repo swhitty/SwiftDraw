@@ -846,7 +846,8 @@ struct FilterLayerGeometry {
                         height: CGFloat(filter.region.height))
         let toDevice = parent.userSpaceToDeviceSpaceTransform
         self.toDevice = toDevice
-        isBlurChain = filter.isBlurChain
+        // a blur that is not along the device axes (rotation or skew) is sheared by the primitive tree
+        isBlurChain = filter.isBlurChain && !filter.effects.contains { $0.isSheared(toDevice) }
         deviations = isBlurChain ? filter.effects.compactMap { $0.deviceStdDeviation(toDevice) } : []
         self.isVector = isVector
         oversample = isVector ? 2 : 1
@@ -945,8 +946,17 @@ struct CGFilterLayer {
 
 private extension LayerTree.FilterLayer.Effect {
 
+    // a blur that is not along the device axes
+    func isSheared(_ toDevice: CGAffineTransform) -> Bool {
+        guard case let .gaussianBlur(stdDeviation: x, stdDeviationY: y) = self else { return false }
+        let matrix = LayerTree.Transform.Matrix(a: Float(toDevice.a), b: Float(toDevice.b),
+                                                c: Float(toDevice.c), d: Float(toDevice.d),
+                                                tx: 0, ty: 0)
+        return matrix.blurShear(x, y) != nil
+    }
+
     // stdDeviation converted to device pixels along the device axes; nil when it does not blur.
-    // Exact for scale and 90° rotations, an approximation under skew or other rotations.
+    // The extent of the blur along each axis: a sheared blur is not separable along them.
     func deviceStdDeviation(_ toDevice: CGAffineTransform) -> CGSize? {
         guard case let .gaussianBlur(stdDeviation: x, stdDeviationY: y) = self else { return nil }
         let sx = CGFloat(x)
@@ -1011,10 +1021,19 @@ extension CGContext {
     }
 
     static func applyGaussianBlur(_ deviation: CGSize, data: UnsafeMutableRawPointer, width: Int, height: Int, bytesPerRow: Int) {
-        // a box wider than the image only spreads it further towards transparent: clamp per axis
-        let sizesX = Self.boxSizes(for: deviation.width, limit: width | 1)
-        let sizesY = Self.boxSizes(for: deviation.height, limit: height | 1)
-        guard sizesX.contains(where: { $0 > 1 }) || sizesY.contains(where: { $0 > 1 }) else { return }
+        // Each pass treats pixels outside the bitmap as transparent. A box of 2n-1 then covers a whole row
+        // (or column) of n from every pixel, so a wider box only divides that sum by more: clamp per axis
+        // and scale the result by what the clamp left out, exactly as the wider box would.
+        guard width > 0, height > 0 else { return }
+        let requestedX = Self.boxSizes(for: deviation.width)
+        let requestedY = Self.boxSizes(for: deviation.height)
+        let sizesX = requestedX.map { Swift.min($0, 2 * width - 1) }
+        let sizesY = requestedY.map { Swift.min($0, 2 * height - 1) }
+        guard requestedX.contains(where: { $0 > 1 }) || requestedY.contains(where: { $0 > 1 }) else { return }
+        var scale: Double = 1
+        for (size, requested) in zip(sizesX + sizesY, requestedX + requestedY) where size < requested {
+            scale *= Double(size) / Double(requested)
+        }
 
         let byteCount = bytesPerRow * height
         guard let temp = calloc(byteCount, 1) else { return }
@@ -1032,6 +1051,15 @@ extension CGContext {
         }
         // after three passes the result is in the temporary buffer
         memcpy(data, src.data, byteCount)
+        if scale < 1 {
+            let bytes = data.assumingMemoryBound(to: UInt8.self)
+            for row in 0..<height {
+                let start = row * bytesPerRow
+                for i in start..<(start + width * 4) {
+                    bytes[i] = UInt8((Double(bytes[i]) * scale).rounded())
+                }
+            }
+        }
     }
 
     // SD12: evaluates the primitive tree on the offscreen's pixels, SourceGraphic being what was drawn,
@@ -1097,11 +1125,10 @@ extension CGContext {
         boxSizes(for: deviation.width * scale) != [1, 1, 1] || boxSizes(for: deviation.height * scale) != [1, 1, 1]
     }
 
-    // limit is odd: the largest box size worth applying
-    static func boxSizes(for deviation: CGFloat, limit: Int = .max) -> [Int] {
+    static func boxSizes(for deviation: CGFloat) -> [Int] {
         guard deviation.isFinite, deviation > 0 else { return [1, 1, 1] }
         let factor: CGFloat = 3 * (2 * CGFloat.pi).squareRoot() / 4
-        let value = Swift.min(deviation * factor + 0.5, CGFloat(Swift.min(limit, 1 << 24)))
+        let value = Swift.min(deviation * factor + 0.5, CGFloat(1 << 24))
         let d = Int(value.rounded(.down))
         guard d > 1 else { return [1, 1, 1] }
         return d % 2 == 1 ? [d, d, d] : [d + 1, d - 1, d + 1]

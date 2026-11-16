@@ -110,10 +110,28 @@ struct CGRendererFilterTests {
         #expect(CGContext.boxSizes(for: 5) == [9, 9, 9])
         #expect(CGContext.boxSizes(for: .infinity) == [1, 1, 1])
         #expect(CGContext.boxSizes(for: .nan) == [1, 1, 1])
-        #expect(CGContext.boxSizes(for: 1e300, limit: 201) == [201, 201, 201])
-        #expect(CGContext.boxSizes(for: 1e6, limit: 1024 | 1) == [1025, 1025, 1025])
+        #expect(CGContext.boxSizes(for: 1e300) == [(1 << 24) + 1, (1 << 24) - 1, (1 << 24) + 1])
         #expect(!(CGContext.isVisibleBlur(CGSize(width: 0.3, height: 0.3), scale: 1)))
         #expect(CGContext.isVisibleBlur(CGSize(width: 0, height: 2), scale: 1))
+    }
+
+    // filters/filter/on-a-thin-rect: a box wider than the bitmap divides by its full size, as each pass
+    // treats pixels outside the bitmap as transparent
+    @Test
+    func blurWiderThanBitmapKeepsItsFalloff() {
+        // one pixel blurred by stdDeviation 2: boxes 5, 3 and 5, each clamped to 1
+        var pixel: [UInt8] = [255, 255, 255, 255]
+        pixel.withUnsafeMutableBytes {
+            CGContext.applyGaussianBlur(CGSize(width: 2, height: 0), data: $0.baseAddress!, width: 1, height: 1, bytesPerRow: 4)
+        }
+        #expect(pixel == [3, 3, 3, 3])
+
+        // three pixels: the clamped boxes (5, 3, 5) match the boxes asked for
+        var row: [UInt8] = [0, 0, 0, 0, 255, 255, 255, 255, 0, 0, 0, 0]
+        row.withUnsafeMutableBytes {
+            CGContext.applyGaussianBlur(CGSize(width: 2, height: 0), data: $0.baseAddress!, width: 3, height: 1, bytesPerRow: 12)
+        }
+        #expect(row[7] > 3)
     }
 
     // the clip-path applies to the blurred result: a hard edge at the clip, the blur kept inside it

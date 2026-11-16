@@ -118,8 +118,7 @@ extension LayerTree.FilterLayer {
                 switch primitive.effect {
                 case let .gaussianBlur(stdDeviation: x, stdDeviationY: y):
                     result = input(0)
-                    let deviation = environment.transform.deviation(x, y)
-                    environment.blur(&result, deviation.x, deviation.y)
+                    environment.gaussianBlur(&result, stdDeviation: x, stdDeviationY: y)
                 case let .offset(dx: dx, dy: dy):
                     let vector = environment.transform.vector(dx, dy)
                     result = FilterBitmap.offset(input(0), dx: vector.x, dy: vector.y)
@@ -194,13 +193,60 @@ extension LayerTree.FilterLayer {
     }
 }
 
-private extension LayerTree.Transform.Matrix {
+extension LayerTree.FilterLayer.Environment {
 
-    // stdDeviation along the pixel axes; exact for scale and 90° rotations, an approximation otherwise
+    // Filter Effects 1 §9.14: a blur by stdDeviation along the user space axes, in pixels. Its covariance in
+    // pixel space is M·diag(x², y²)·Mᵀ. When that is diagonal (scale, 90° rotations or an isotropic blur under
+    // rotation) the blur is along the pixel axes. Otherwise it is split into a blur along one pixel axis and
+    // one along a sheared direction, which is the same covariance (resvg and WebKit blur in user space).
+    func gaussianBlur(_ bitmap: inout FilterBitmap, stdDeviation x: Float, stdDeviationY y: Float) {
+        guard let shear = transform.blurShear(x, y) else {
+            let deviation = transform.deviation(x, y)
+            blur(&bitmap, deviation.x, deviation.y)
+            return
+        }
+        if shear.isTransposed {
+            bitmap = bitmap.transposed()
+        }
+        let width = bitmap.width
+        blur(&bitmap, shear.across, 0)
+        bitmap = bitmap.shearingRows(by: shear.slope)
+        blur(&bitmap, 0, shear.along)
+        bitmap = bitmap.unshearingRows(by: shear.slope, width: width)
+        if shear.isTransposed {
+            bitmap = bitmap.transposed()
+        }
+    }
+}
+
+extension LayerTree.Transform.Matrix {
+
+    // stdDeviation along the pixel axes: the square roots of the diagonal of the pixel space covariance
     func deviation(_ x: Float, _ y: Float) -> (x: Float, y: Float) {
         let dx = (a * x).hypot(c * y)
         let dy = (b * x).hypot(d * y)
         return (dx.isFinite ? dx : 0, dy.isFinite ? dy : 0)
+    }
+
+    // A blur that is not along the pixel axes, as covariance Σ = [[p, q], [q, r]] = α·eₓeₓᵀ + β·v·vᵀ with
+    // v = (slope, 1): a blur of √α across (along x) then of √β along v. The axis with the larger variance
+    // takes the shear so |slope| ≤ 1; when that is x the bitmap is transposed first. nil when Σ is diagonal.
+    func blurShear(_ x: Float, _ y: Float) -> (across: Float, along: Float, slope: Float, isTransposed: Bool)? {
+        let vx = x * x
+        let vy = y * y
+        var p = a * a * vx + c * c * vy
+        var r = b * b * vx + d * d * vy
+        let q = a * b * vx + c * d * vy
+        guard p.isFinite, r.isFinite, q.isFinite, p > 0, r > 0,
+              // within a thousandth of the deviations the blur is along the axes
+              q * q > 1e-6 * p * r else { return nil }
+        let isTransposed = p > r
+        if isTransposed {
+            swap(&p, &r)
+        }
+        let slope = q / r
+        let across = max(0, p - q * slope).squareRoot()
+        return (across, r.squareRoot(), slope, isTransposed)
     }
 
     func vector(_ x: Float, _ y: Float) -> (x: Float, y: Float) {
@@ -222,6 +268,77 @@ private extension LayerTree.Transform.Matrix {
 private extension Float {
     func hypot(_ other: Float) -> Float {
         (self * self + other * other).squareRoot()
+    }
+}
+
+// MARK: - Shearing
+
+extension FilterBitmap {
+
+    // rows and columns swapped
+    func transposed() -> FilterBitmap {
+        var result = FilterBitmap(width: height, height: width)
+        pixels.withUnsafeBytes { src in
+            result.pixels.withUnsafeMutableBytes { dst in
+                for y in 0..<height {
+                    for x in 0..<width {
+                        let s = (y * width + x) * 4
+                        let d = (x * height + y) * 4
+                        dst[d] = src[s]; dst[d + 1] = src[s + 1]; dst[d + 2] = src[s + 2]; dst[d + 3] = src[s + 3]
+                    }
+                }
+            }
+        }
+        return result
+    }
+
+    // How far rows are shifted right so that the line x = x₀ + slope·y becomes a column: never negative
+    static func shearOrigin(slope: Float, height: Int) -> Float {
+        max(0, slope * Float(max(height - 1, 0)))
+    }
+
+    // Each row shifted so that a line of the slope (x = x₀ + slope·y) becomes vertical, widened to keep it all
+    func shearingRows(by slope: Float) -> FilterBitmap {
+        let origin = Self.shearOrigin(slope: slope, height: height)
+        let extra = Int((abs(slope) * Float(max(height - 1, 0))).rounded(.up)) + 1
+        return shiftingRows(width: width + extra) { y in origin - slope * Float(y) }
+    }
+
+    // The inverse of shearingRows, back to the original width
+    func unshearingRows(by slope: Float, width: Int) -> FilterBitmap {
+        let origin = Self.shearOrigin(slope: slope, height: height)
+        return shiftingRows(width: width) { y in slope * Float(y) - origin }
+    }
+
+    // Each row y moved right by shift(y) pixels into a bitmap of the width, interpolated linearly
+    func shiftingRows(width newWidth: Int, by shift: (Int) -> Float) -> FilterBitmap {
+        var result = FilterBitmap(width: newWidth, height: height)
+        let width = self.width
+        pixels.withUnsafeBytes { src in
+            result.pixels.withUnsafeMutableBytes { dst in
+                for y in 0..<height {
+                    let offset = shift(y)
+                    let whole = Int(offset.rounded(.down))
+                    // 8-bit fixed point weight of the source pixel before
+                    let w = Int(((offset - Float(whole)) * 256).rounded())
+                    let row = y * width * 4
+                    let out = y * newWidth * 4
+                    for x in 0..<newWidth {
+                        // destination x reads the source at x - offset: between sx - 1 (weight w) and sx
+                        let sx = x - whole
+                        let hasCurrent = sx >= 0 && sx < width
+                        let hasPrevious = sx - 1 >= 0 && sx - 1 < width
+                        guard hasCurrent || hasPrevious else { continue }
+                        for channel in 0..<4 {
+                            let current = hasCurrent ? Int(src[row + sx * 4 + channel]) : 0
+                            let previous = hasPrevious ? Int(src[row + (sx - 1) * 4 + channel]) : 0
+                            dst[out + x * 4 + channel] = UInt8((current * (256 - w) + previous * w + 128) >> 8)
+                        }
+                    }
+                }
+            }
+        }
+        return result
     }
 }
 
