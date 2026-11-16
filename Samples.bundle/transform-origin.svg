@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="160" viewBox="0 0 240 160">
+  <title>transform-origin on shapes, groups, clip paths, gradients and patterns</title>
+  <style>
+    .css { transform-origin: 140px 40px; }
+  </style>
+  <defs>
+    <clipPath id="clip" transform="rotate(45)" transform-origin="200 40">
+      <rect x="180" y="20" width="40" height="40" />
+    </clipPath>
+    <radialGradient id="gradient" gradientTransform="scale(2)" transform-origin="0.5 0.5">
+      <stop offset="0" stop-color="black" />
+      <stop offset="0.375" stop-color="seagreen" />
+    </radialGradient>
+    <pattern id="pattern" patternUnits="userSpaceOnUse" width="40" height="40"
+             patternTransform="rotate(45)" transform-origin="200 120">
+      <rect width="20" height="40" fill="steelblue" />
+    </pattern>
+  </defs>
+
+  <!-- a keyword and a percentage of the viewport: rotated around its top left corner -->
+  <rect x="20" y="20" width="40" height="40" fill="tomato" transform="rotate(30)" transform-origin="left 0%" />
+  <rect x="20" y="20" width="40" height="40" fill="none" stroke="black" stroke-dasharray="2" />
+
+  <!-- a group, around a length set by a stylesheet -->
+  <g class="css" transform="scale(0.5)">
+    <rect x="100" y="0" width="80" height="80" fill="gold" />
+  </g>
+  <rect x="100" y="0" width="80" height="80" fill="none" stroke="black" stroke-dasharray="2" />
+
+  <!-- a clip path transform -->
+  <rect x="160" y="0" width="80" height="80" fill="orchid" clip-path="url(#clip)" />
+
+  <!-- style="" and two keywords in either order -->
+  <rect x="20" y="100" width="40" height="40" fill="slateblue" style="transform-origin: top center" transform="rotate(20)" />
+
+  <!-- gradientTransform around the middle of the bounding box -->
+  <rect x="100" y="90" width="60" height="60" fill="url(#gradient)" />
+
+  <!-- patternTransform -->
+  <rect x="180" y="100" width="40" height="40" fill="url(#pattern)" stroke="black" />
+</svg>

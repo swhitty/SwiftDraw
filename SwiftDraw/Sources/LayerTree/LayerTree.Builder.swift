@@ -94,7 +94,14 @@ extension LayerTree {
                 return Layer()
             }
             let l = makeLayer(from: svg, inheriting: previousState)
-            l.transform = Builder.makeTransform(
+            // SVG 2: the root's own `transform` applies outside the viewBox mapping, in the viewport,
+            // where its transform-origin percentages resolve. The outermost <svg> has a CSS box, so its
+            // transform-origin defaults to `50% 50%` rather than `0 0` (as in resvg and browsers).
+            let attributes = DOM.presentationAttributes(for: svg, styles: self.svg.styles)
+            let rootTransform = Builder.createTransforms(from: attributes.transform ?? [],
+                                                         origin: attributes.transformOrigin ?? .init(x: .fraction(0.5), y: .fraction(0.5)),
+                                                         viewport: LayerTree.Size(LayerTree.Float(svg.width), LayerTree.Float(svg.height)))
+            l.transform = rootTransform + Builder.makeTransform(
                 x: svg.x,
                 y: svg.y,
                 viewBox: svg.viewBox,
@@ -269,7 +276,7 @@ extension LayerTree {
             let attributes = DOM.presentationAttributes(for: element, styles: svg.styles)
             let l = Layer()
             l.class = element.class
-            l.transform = Builder.createTransforms(from: attributes.transform ?? [])
+            l.transform = createTransforms(from: attributes)
             l.mask = createMaskLayer(for: element, attributes: attributes)
             // clip-rule comes from the <clipPath> contents and objectBoundingBox units are resolved
             // here, so every clip reaches the renderers in user space (SVG 1.1 §14.3.5)
@@ -768,7 +775,11 @@ extension LayerTree.Builder {
             pattern.viewBox = LayerTree.Rect(x: viewBox.x, y: viewBox.y, width: viewBox.width, height: viewBox.height)
         }
         pattern.preserveAspectRatio = inherited(\.preserveAspectRatio) ?? .default
-        pattern.transform = Self.createTransforms(from: inherited(\.patternTransform) ?? []).toMatrix()
+        // transform-origin belongs to the pattern whose patternTransform applies
+        let transformSource = chain.first { $0.patternTransform != nil }
+        pattern.transform = Self.createTransforms(from: transformSource?.patternTransform ?? [],
+                                                  origin: transformSource?.transformOrigin,
+                                                  viewport: viewport).toMatrix()
         let children = chain.first(where: { !$0.childElements.isEmpty })?.childElements ?? []
         // A pattern inside itself is empty
         building(element.id, cycle: ()) {
@@ -814,7 +825,7 @@ extension LayerTree.Builder {
         )
 
         gradient.units = units
-        gradient.transform = Self.createTransforms(from: chain.lazy.map(\.transform).first { !$0.isEmpty } ?? [])
+        gradient.transform = makeGradientTransform(for: chain, viewport: geometry.viewport)
         gradient.spread = Self.createSpread(from: chain.lazy.compactMap(\.spreadMethod).first)
         return gradient
     }
@@ -843,8 +854,14 @@ extension LayerTree.Builder {
             endRadius: geometry.length("r", \.r) ?? geometry.diagonal(0.5)
         )
         gradient.units = units
-        gradient.transform = Self.createTransforms(from: chain.lazy.map(\.transform).first { !$0.isEmpty } ?? [])
+        gradient.transform = makeGradientTransform(for: chain, viewport: geometry.viewport)
         return gradient
+    }
+
+    /// The gradientTransform of a chain, from the first gradient that has one, around that gradient's `transform-origin`.
+    func makeGradientTransform(for chain: [GradientElement], viewport: LayerTree.Size) -> [LayerTree.Transform] {
+        let source = chain.first { !$0.transform.isEmpty }
+        return Self.createTransforms(from: source?.transform ?? [], origin: source?.transformOrigin, viewport: viewport)
     }
 
     /// The viewport that percentages resolve against in user space: the one a paint server was
@@ -934,6 +951,13 @@ extension LayerTree.Builder {
             switch self {
             case let .linear(element): return element.gradientTransform
             case let .radial(element): return element.gradientTransform
+            }
+        }
+
+        var transformOrigin: DOM.TransformOrigin? {
+            switch self {
+            case let .linear(element): return element.transformOrigin
+            case let .radial(element): return element.transformOrigin
             }
         }
 
@@ -1175,6 +1199,27 @@ extension LayerTree.Builder {
 
     static func createTransforms(from transforms: [DOM.Transform]) -> [LayerTree.Transform] {
         return transforms.flatMap{ createTransform(for: $0) }
+    }
+
+    /// A transform applied around its `transform-origin`: `translate(o) · transform · translate(-o)`
+    /// (CSS Transforms 1 §6). Percentages and keywords resolve against `viewport`: SVG elements
+    /// default to `transform-box: view-box`, as in resvg.
+    static func createTransforms(from transforms: [DOM.Transform],
+                                 origin: DOM.TransformOrigin?,
+                                 viewport: LayerTree.Size) -> [LayerTree.Transform] {
+        let transform = createTransforms(from: transforms)
+        guard !transform.isEmpty, let origin else { return transform }
+        let x = origin.x.resolved(against: viewport.width)
+        let y = origin.y.resolved(against: viewport.height)
+        guard x.isFinite, y.isFinite, x != 0 || y != 0 else { return transform }
+        return [.translate(tx: x, ty: y)] + transform + [.translate(tx: -x, ty: -y)]
+    }
+
+    /// The `transform` of an element's cascade around its `transform-origin`, with percentages of the root viewport.
+    func createTransforms(from attributes: DOM.PresentationAttributes) -> [LayerTree.Transform] {
+        Self.createTransforms(from: attributes.transform ?? [],
+                              origin: attributes.transformOrigin,
+                              viewport: userSpaceViewport(nil))
     }
 }
 
