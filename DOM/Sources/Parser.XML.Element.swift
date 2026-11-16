@@ -280,7 +280,7 @@ extension XMLParser {
         guard let styleText = e.attributes["style"] else {
             return (DOM.PresentationAttributes(), DOM.PresentationAttributes())
         }
-        let declarations = Self.parseCSSDeclarations(styleText)
+        let declarations = Self.parseCSSDeclarations(Self.removeCSSComments(from: styleText))
         let important = declarations.filter(\.important)
         // most style attributes have no !important: skip a second parse of an empty partition
         guard !important.isEmpty else {
@@ -337,6 +337,7 @@ extension XMLParser {
     func parseStyleAttributes(_ data: String) throws -> [String: String] {
         var style = [String: String]()
 
+        let data = Self.removeCSSComments(from: data)
         for declaration in data.split(separator: ";", omittingEmptySubsequences: true) {
             guard let colon = declaration.firstIndex(of: ":") else { continue }
             let key = declaration[declaration.startIndex..<colon].trimmingCharacters(in: .whitespacesAndNewlines)

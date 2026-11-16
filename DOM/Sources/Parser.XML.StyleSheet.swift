@@ -330,6 +330,7 @@ extension XMLParser {
 
     static func removeCSSComments(from text: String) -> String {
         // non-greedy, across lines; an unterminated comment runs to the end of the sheet
+        guard text.contains("/*") else { return text }
         let regex = try! NSRegularExpression(pattern: "/\\*[\\s\\S]*?(?:\\*/|$)", options: [])
         let range = NSMakeRange(0, (text as NSString).length)
         return regex.stringByReplacingMatches(in: text, options: [], range: range, withTemplate: "")

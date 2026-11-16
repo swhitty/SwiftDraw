@@ -1,0 +1,25 @@
+<svg width="240" height="160" viewBox="0 0 240 160" xmlns="http://www.w3.org/2000/svg">
+  <!-- url() may hold a quoted string and whitespace; style="" may hold comments -->
+  <defs>
+    <linearGradient id="lg1">
+      <stop offset="0" stop-color="white"/>
+      <stop offset="1" stop-color="green"/>
+    </linearGradient>
+    <clipPath id="clip">
+      <circle cx="40" cy="120" r="30"/>
+    </clipPath>
+    <mask id="mask">
+      <rect x="130" y="90" width="40" height="60" fill="white"/>
+    </mask>
+    <marker id="dot" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="5" markerHeight="5">
+      <circle cx="5" cy="5" r="5" fill="green"/>
+    </marker>
+  </defs>
+  <rect x="10" y="10" width="60" height="60" fill="url('#lg1')"/>
+  <rect x="90" y="10" width="60" height="60" fill='url("#lg1")'/>
+  <rect x="170" y="10" width="60" height="60" style="/*a*/fill:url( '#lg1' ) red/*b*/"/>
+  <rect x="10" y="90" width="60" height="60" fill="green" clip-path="url( &quot;#clip&quot; )"/>
+  <path d="M 90 100 L 110 140" stroke="green" stroke-width="4" style="marker-start: url('#dot'); /* marker-end: none; */ marker-end: url(&quot;#dot&quot;)"/>
+  <rect x="120" y="90" width="60" height="60" fill="green" mask="url( '#mask' )"/>
+  <rect x="190" y="90" width="40" height="60" style="fill:red;/* fill:green; */ fill: /* ; */ green"/>
+</svg>

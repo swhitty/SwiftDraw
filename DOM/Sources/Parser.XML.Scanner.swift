@@ -212,7 +212,8 @@ package extension XMLParser {
             let arg = try scanString(upTo: ")")
             _ = try scanString(")")
             currentIndex = scanner.currentIndex
-            return arg.unquoted
+            // CSS allows whitespace and a single- or double-quoted string inside the parentheses
+            return arg.trimmingCharacters(in: .whitespacesAndNewlines).unquoted
         }
 
         package mutating func scanURLFunction(_ name: String) throws -> DOM.URL {
