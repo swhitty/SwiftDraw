@@ -146,6 +146,7 @@ public extension SVG {
 
 extension SVG {
 
+    // An sRGB bitmap: its context draws in sRGB and PNG/JPEG data is tagged sRGB.
     func makeBitmap(width: Int, height: Int, isOpaque: Bool) -> NSBitmapImageRep? {
         guard width > 0 && height > 0 else { return nil }
         return NSBitmapImageRep(
@@ -156,10 +157,10 @@ extension SVG {
             samplesPerPixel: isOpaque ? 3 : 4,
             hasAlpha: !isOpaque,
             isPlanar: false,
-            colorSpaceName: NSColorSpaceName.deviceRGB,
+            colorSpaceName: NSColorSpaceName.calibratedRGB,
             bytesPerRow: 0,
             bitsPerPixel: 32
-        )
+        )?.retagging(with: .sRGB)
     }
 }
 #endif

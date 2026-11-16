@@ -86,10 +86,10 @@ struct CGTextProvider: RendererTypeProvider {
     let d3 = CoordinateFormatter.Precision.capped(max: 3)
     switch color {
     case .none:
-      return "CGColor(colorSpace: CGColorSpaceCreateDeviceRGB(), components: [0, 0, 0, 0])!"
+      return "CGColor(colorSpace: CGColorSpace(name: CGColorSpace.sRGB)!, components: [0, 0, 0, 0])!"
     case let .rgba(r, g, b, a, .srgb):
       let comps = formatter.format(r, g, b, a, precision: d3)
-      return "CGColor(colorSpace: CGColorSpaceCreateDeviceRGB(), components: [\(comps)])!"
+      return "CGColor(colorSpace: CGColorSpace(name: CGColorSpace.sRGB)!, components: [\(comps)])!"
     case let .rgba(r, g, b, a, .p3):
       let comps = formatter.format(r, g, b, a, precision: d3)
       return "CGColor(colorSpace: CGColorSpaceCreateDisplayP3(), components: [\(comps)])!"
@@ -275,7 +275,7 @@ public final class CGTextRenderer: Renderer {
     init?(for color: String) {
       if color.contains("CGColorSpaceCreateExtendedGray()") {
         self = .gray
-      } else if color.contains("CGColorSpaceCreateDeviceRGB()")  {
+      } else if color.contains("CGColorSpace(name: CGColorSpace.sRGB)!")  {
         self = .rgb
       } else if color.contains("CGColorSpaceCreateDisplayP3()")  {
         self = .p3
@@ -300,7 +300,7 @@ public final class CGTextRenderer: Renderer {
         lines.append("let gray = CGColorSpace(name: CGColorSpace.extendedGray)!")
         colorSpaces.insert(.gray)
       case .rgb:
-        lines.append("let rgb = CGColorSpaceCreateDeviceRGB()")
+        lines.append("let rgb = CGColorSpace(name: CGColorSpace.sRGB)!")
         colorSpaces.insert(.rgb)
       case .p3:
         lines.append("let p3 = CGColorSpace(name: CGColorSpace.displayP3)!")
@@ -315,7 +315,7 @@ public final class CGTextRenderer: Renderer {
     case .gray:
       return color.replacingOccurrences(of: "CGColorSpaceCreateExtendedGray()", with: "gray")
     case .rgb:
-      return color.replacingOccurrences(of: "CGColorSpaceCreateDeviceRGB()", with: "rgb")
+      return color.replacingOccurrences(of: "CGColorSpace(name: CGColorSpace.sRGB)!", with: "rgb")
     case .p3:
       return color.replacingOccurrences(of: "CGColorSpaceCreateDisplayP3()", with: "p3")
     }
@@ -337,10 +337,10 @@ public final class CGTextRenderer: Renderer {
     let d3 = CoordinateFormatter.Precision.capped(max: 3)
     switch color {
     case .none:
-      return createOrGetColor("CGColor(colorSpace: CGColorSpaceCreateDeviceRGB(), components: [0, 0, 0, 0])!")
+      return createOrGetColor("CGColor(colorSpace: CGColorSpace(name: CGColorSpace.sRGB)!, components: [0, 0, 0, 0])!")
     case let .rgba(r, g, b, a, .srgb):
       let comps = formatter.format(r, g, b, a, precision: d3)
-      return createOrGetColor("CGColor(colorSpace: CGColorSpaceCreateDeviceRGB(), components: [\(comps)])!")
+      return createOrGetColor("CGColor(colorSpace: CGColorSpace(name: CGColorSpace.sRGB)!, components: [\(comps)])!")
     case let .rgba(r, g, b, a, .p3):
       let comps = formatter.format(r, g, b, a, precision: d3)
       return createOrGetColor("CGColor(colorSpace: CGColorSpaceCreateDisplayP3(), components: [\(comps)])!")

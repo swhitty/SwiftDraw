@@ -118,12 +118,12 @@ struct CGProvider: RendererTypeProvider {
         }
     }
 
-    private func createColorSpace(for colorSpace: LayerTree.ColorSpace) -> CGColorSpace {
+    func createColorSpace(for colorSpace: LayerTree.ColorSpace) -> CGColorSpace {
         switch colorSpace {
         case .srgb:
-            return CGColorSpaceCreateDeviceRGB()
+            return CGColorSpace.sRGBSpace
         case .p3:
-            return CGColorSpace(name: CGColorSpace.displayP3)!
+            return CGColorSpace.displayP3Space
         }
     }
 
@@ -137,12 +137,12 @@ struct CGProvider: RendererTypeProvider {
     }
 
     private func createSRGB(r: CGFloat, g: CGFloat, b: CGFloat, a: CGFloat) -> CGColor {
-        return CGColor(colorSpace: CGColorSpaceCreateDeviceRGB(),
+        return CGColor(colorSpace: CGColorSpace.sRGBSpace,
                        components: [r, g, b, a])!
     }
 
     private func createP3(r: CGFloat, g: CGFloat, b: CGFloat, a: CGFloat) -> CGColor {
-        return CGColor(colorSpace: CGColorSpace(name: CGColorSpace.displayP3)!,
+        return CGColor(colorSpace: CGColorSpace.displayP3Space,
                        components: [r, g, b, a])!
     }
 
@@ -996,7 +996,7 @@ extension CGContext {
     }
 
     static func makeFilterLayer(width: Int, height: Int, colorSpace: CGColorSpace?) -> CGContext? {
-        let sRGB = CGColorSpace(name: CGColorSpace.sRGB)!
+        let sRGB = CGColorSpace.sRGBSpace
         let space = colorSpace.flatMap { $0.model == .rgb ? $0 : nil } ?? sRGB
         let info = CGImageAlphaInfo.premultipliedLast.rawValue
         return CGContext(data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: 0, space: space, bitmapInfo: info) ??

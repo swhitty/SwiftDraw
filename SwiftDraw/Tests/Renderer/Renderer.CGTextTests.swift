@@ -52,7 +52,7 @@ final class RendererCGTextTests: XCTestCase {
 
               private static func drawImage(in ctx: CGContext, scale: CGSize) {
                 ctx.scaleBy(x: scale.width, y: scale.height)
-                let rgb = CGColorSpaceCreateDeviceRGB()
+                let rgb = CGColorSpace(name: CGColorSpace.sRGB)!
                 let color1 = CGColor(colorSpace: rgb, components: [0, 0, 0, 1])!
                 ctx.setFillColor(color1)
                 let path = CGMutablePath()
@@ -137,7 +137,7 @@ final class RendererCGTextTests: XCTestCase {
                   let scale = CGSize(width: size.width / 100.0, height: size.height / 100.0)                                  
                   context.withCGContext { ctx in
                     ctx.scaleBy(x: scale.width, y: scale.height)
-                    let rgb = CGColorSpaceCreateDeviceRGB()
+                    let rgb = CGColorSpace(name: CGColorSpace.sRGB)!
                     let color1 = CGColor(colorSpace: rgb, components: [0, 0, 0, 1])!
                     ctx.setFillColor(color1)
                     let path = CGMutablePath()
@@ -218,7 +218,7 @@ final class RendererCGTextTests: XCTestCase {
                 ctx.addPath(path)
                 ctx.clip()
                 ctx.setAlpha(1)
-                let rgb = CGColorSpaceCreateDeviceRGB()
+                let rgb = CGColorSpace(name: CGColorSpace.sRGB)!
                 let color1 = CGColor(colorSpace: rgb, components: [0.635, 0.902, 0.18, 1])!
                 let color2 = CGColor(colorSpace: rgb, components: [0.035, 0.655, 0.427, 1])!
                 let color3 = CGColor(colorSpace: rgb, components: [0.004, 0.482, 0.306, 1])!

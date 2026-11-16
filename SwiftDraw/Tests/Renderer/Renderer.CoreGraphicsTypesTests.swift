@@ -67,12 +67,12 @@ final class RendererCoreGraphicsTypesTests: XCTestCase {
   func testColor() {
     let c = CGProvider().createColor(from: .srgb(r: 0.1, g: 0.2, b: 0.3, a: 0.4))
     //CGFloat(Float(xx)) accounts for floating point margin of error
-    let reference = CGColor(colorSpace: CGColorSpaceCreateDeviceRGB(), components: [CGFloat(Float(0.1)), CGFloat(Float(0.2)), CGFloat(Float(0.3)), CGFloat(Float(0.4))])!
+    let reference = CGColor(colorSpace: CGColorSpace(name: CGColorSpace.sRGB)!, components: [CGFloat(Float(0.1)), CGFloat(Float(0.2)), CGFloat(Float(0.3)), CGFloat(Float(0.4))])!
     XCTAssertEqual(c.components!, reference.components!)
     
     let clear = CGProvider().createColor(from: .none)
     //CGFloat(Float(xx)) accounts for floating point margin of error
-    let clearReference = CGColor(colorSpace: CGColorSpaceCreateDeviceRGB(), components: [0, 0, 0, 0])!
+    let clearReference = CGColor(colorSpace: CGColorSpace(name: CGColorSpace.sRGB)!, components: [0, 0, 0, 0])!
     XCTAssertEqual(clear.components!, clearReference.components!)
   }
   
