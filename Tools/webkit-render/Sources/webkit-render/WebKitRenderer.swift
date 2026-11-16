@@ -1,5 +1,6 @@
 import AppKit
 import WebKit
+import WebKitRenderCore
 
 /// Renders SVGs to PNGs in one hidden WKWebView.
 ///
@@ -44,29 +45,45 @@ final class WebKitRenderer: NSObject, WKNavigationDelegate {
         return bundle.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "unknown"
     }
 
+    /// The SVG's natural size in points (`naturalWidth`/`naturalHeight` of an `<img>`).
+    func measure(svg: Data) async throws -> WebKitRenderCore.Size {
+        let result = try await call("return await measureSVG(src, timeout);", ["src": Self.dataURI(svg)])
+        guard let object = result as? [String: Any],
+              let w = (object["w"] as? NSNumber)?.doubleValue,
+              let h = (object["h"] as? NSNumber)?.doubleValue else {
+            throw Failure(description: "page returned no size")
+        }
+        guard w > 0, h > 0 else { throw Failure(description: "WebKit reports no natural size (\(w)×\(h))") }
+        return WebKitRenderCore.Size(width: w, height: h)
+    }
+
     func render(svg: Data, width: Int, height: Int) async throws -> Output {
-        if !isLoaded {
-            try await load()
-            isLoaded = true
-        }
-        let src = "data:image/svg+xml;base64," + svg.base64EncodedString()
-        let result: Any?
-        do {
-            result = try await webView.callAsyncJavaScript(
-                "return await renderSVG(src, w, h, timeout);",
-                arguments: ["src": src, "w": width, "h": height, "timeout": Int(timeout * 1000)],
-                in: nil,
-                contentWorld: .page
-            )
-        } catch {
-            throw Failure(description: Self.message(for: error))
-        }
+        let result = try await call("return await renderSVG(src, w, h, timeout);",
+                                    ["src": Self.dataURI(svg), "w": width, "h": height])
         guard let object = result as? [String: Any],
               let base64 = object["png"] as? String,
               let png = Data(base64Encoded: base64) else {
             throw Failure(description: "page returned no PNG")
         }
         return Output(png: png, redrawn: (object["redrawn"] as? Int) ?? 0)
+    }
+
+    private static func dataURI(_ svg: Data) -> String {
+        "data:image/svg+xml;base64," + svg.base64EncodedString()
+    }
+
+    private func call(_ body: String, _ arguments: [String: Any]) async throws -> Any? {
+        if !isLoaded {
+            try await load()
+            isLoaded = true
+        }
+        var arguments = arguments
+        arguments["timeout"] = Int(timeout * 1000)
+        do {
+            return try await webView.callAsyncJavaScript(body, arguments: arguments, in: nil, contentWorld: .page)
+        } catch {
+            throw Failure(description: Self.message(for: error))
+        }
     }
 
     private static func message(for error: Error) -> String {
@@ -168,14 +185,27 @@ final class WebKitRenderer: NSObject, WKNavigationDelegate {
       return url.slice(url.indexOf(',') + 1);
     }
 
+    function withTimeout(work, timeout) {
+      const limit = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error(`timed out after ${timeout} ms`)), timeout));
+      return Promise.race([work, limit]);
+    }
+
+    // The <img>'s natural size. For an SVG without an absolute width and height this is the
+    // HTML default object size (300×150, fitted to the viewBox's aspect ratio), as a browser
+    // shows it. naturalWidth/naturalHeight are whole numbers (width="10.5" reports 10); measuring
+    // the laid-out image instead keeps fractions but depends on the container for viewBox-only SVGs.
+    async function measureSVG(src, timeout) {
+      const img = await withTimeout(loadImage(src), timeout);
+      return { w: img.naturalWidth, h: img.naturalHeight };
+    }
+
     async function renderSVG(src, w, h, timeout) {
       const work = (async () => {
         const { canvas, redrawn } = await drawChecked(src, w, h);
         return { png: await exportPNG(canvas), redrawn };
       })();
-      const limit = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error(`timed out after ${timeout} ms`)), timeout));
-      return Promise.race([work, limit]);
+      return withTimeout(work, timeout);
     }
     </script>
     </body></html>

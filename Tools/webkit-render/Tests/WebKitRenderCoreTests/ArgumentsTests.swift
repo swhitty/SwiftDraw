@@ -36,7 +36,7 @@ struct ArgumentsTests {
     }
 
     @Test(arguments: [
-        ["in.svg", "out.png"],                                  // no --size
+        ["in.svg", "out.png", "--max", "0"],
         ["in.svg", "--size", "10x10"],                          // no output
         ["a.svg", "b.svg", "c.png", "--size", "10x10"],         // too many paths
         ["in.svg", "out.png", "--size"],                        // missing value
@@ -52,6 +52,25 @@ struct ArgumentsTests {
     ])
     func rejects(_ args: [String]) {
         #expect(throws: Arguments.Error.self) { try Arguments.parse(args) }
+    }
+
+    @Test
+    func naturalSizeAndMax() throws {
+        let args = try Arguments.parse(["in.svg", "out.png", "--max", "256"])
+        #expect(args.mode == .single(input: URL(fileURLWithPath: "in.svg"), output: URL(fileURLWithPath: "out.png"), size: nil))
+        #expect(args.maxDimension == 256)
+        #expect(try Arguments.parse(["--jobs", "j.json", "--out", "d"]).maxDimension == 1024)
+    }
+
+    @Test(arguments: [
+        (Size(width: 64, height: 48), 1024.0 as Double, Size(width: 64, height: 48)),
+        (Size(width: 10.5, height: 20.4), 1024.0, Size(width: 11, height: 20)),       // whole points
+        (Size(width: 2048, height: 1024), 1024.0, Size(width: 1024, height: 512)),     // clamped
+        (Size(width: 3000, height: 1), 1024.0, Size(width: 1024, height: 1)),          // at least 1
+        (Size(width: 0.2, height: 0.2), 1024.0, Size(width: 1, height: 1)),
+    ])
+    func layoutSize(_ natural: Size, _ max: Double, _ expected: Size) {
+        #expect(Size.layout(natural: natural, max: max) == expected)
     }
 
     @Test(arguments: [
