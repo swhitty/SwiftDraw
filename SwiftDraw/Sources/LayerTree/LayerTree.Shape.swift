@@ -52,6 +52,20 @@ extension LayerTree {
 
 extension LayerTree.Shape {
 
+    /// The bounding box of the geometry, without stroke; nil for an empty path.
+    var bounds: LayerTree.Rect? {
+        switch self {
+        case .path(let p):
+            return p.bounds
+        case .rect(within: let rect, _),
+             .ellipse(within: let rect):
+            return rect
+        case .polygon(between: let points),
+             .line(between: let points):
+            return .makeBounds(between: points)
+        }
+    }
+
     var path: LayerTree.Path {
         switch self {
         case let .line(between: points):
@@ -136,5 +150,23 @@ private extension LayerTree.Path {
             ry: radii.height,
             rotation: 0
         ))
+    }
+}
+
+extension LayerTree.Rect {
+
+    static func makeBounds(between points: [LayerTree.Point]) -> Self? {
+        var min = LayerTree.Point.maximum
+        var max = LayerTree.Point.minimum
+        for point in points {
+            min = min.minimum(combining: point)
+            max = max.maximum(combining: point)
+        }
+        return LayerTree.Rect(
+            x: min.x,
+            y: min.y,
+            width: max.x - min.x,
+            height: max.y - min.y
+        )
     }
 }

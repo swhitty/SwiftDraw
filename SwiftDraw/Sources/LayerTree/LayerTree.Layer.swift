@@ -123,13 +123,16 @@ extension LayerTree {
         var miterLimit: Float
         var dashArray: [Float] = []
         var dashOffset: Float = 0
+        /// stroke-opacity for paint servers; a colour carries it in its alpha.
+        var opacity: Float = 1.0
 
         enum Stroke: Hashable {
             case color(Color)
+            case pattern(Pattern)
             case linearGradient(LinearGradient)
             case radialGradient(RadialGradient)
 
-            static let none = Stroke.color(.none)
+            static var none: Stroke { .color(.none) }
         }
     }
 

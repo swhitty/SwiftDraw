@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240" viewBox="0 0 240 240">
+    <!-- fill-opacity and stroke-opacity on gradient and pattern paint, pattern strokes,
+         and objectBoundingBox paint servers falling back on lines with no height or width -->
+    <linearGradient id="lg">
+        <stop offset="0" stop-color="#fc0" />
+        <stop offset="1" stop-color="#06c" />
+    </linearGradient>
+    <radialGradient id="rg">
+        <stop offset="0" stop-color="#fc0" />
+        <stop offset="1" stop-color="#c03" />
+    </radialGradient>
+    <pattern id="checks" patternUnits="userSpaceOnUse" width="12" height="12">
+        <rect width="6" height="6" fill="#06c" />
+        <rect x="6" y="6" width="6" height="6" fill="#c03" />
+    </pattern>
+    <pattern id="bbox" width="0.25" height="0.25">
+        <rect width="10" height="10" fill="#090" />
+    </pattern>
+
+    <!-- checkerboard behind, so opacity shows -->
+    <rect width="240" height="240" fill="#eee" />
+    <path d="M0 60h240M0 120h240M0 180h240M60 0v240M120 0v240M180 0v240" stroke="#999" stroke-width="2" />
+
+    <!-- stroke-opacity on paint servers; fill-opacity must not leak into the stroke -->
+    <rect x="15" y="15" width="40" height="40" fill="#888" fill-opacity="0.2" stroke="url(#lg)" stroke-opacity="0.5" stroke-width="12" />
+    <rect x="95" y="15" width="40" height="40" fill="#888" fill-opacity="0.2" stroke="url(#rg)" stroke-opacity="0.5" stroke-width="12" />
+    <rect x="175" y="15" width="40" height="40" fill="#888" fill-opacity="0.2" stroke="url(#checks)" stroke-opacity="0.5" stroke-width="12" />
+
+    <!-- fill-opacity on paint servers -->
+    <circle cx="35" cy="110" r="28" fill="url(#lg)" fill-opacity="0.5" />
+    <circle cx="115" cy="110" r="28" fill="url(#rg)" fill-opacity="0.5" />
+    <circle cx="195" cy="110" r="28" fill="url(#checks)" fill-opacity="0.5" />
+
+    <!-- pattern strokes: userSpaceOnUse, and objectBoundingBox against the geometry, not the stroke -->
+    <circle cx="35" cy="195" r="24" fill="none" stroke="url(#checks)" stroke-width="10" />
+    <rect x="95" y="175" width="40" height="40" fill="none" stroke="url(#bbox)" stroke-width="8" stroke-dasharray="14 6" />
+
+    <!-- objectBoundingBox servers on horizontal and vertical lines use the fallback colour -->
+    <line x1="165" y1="170" x2="165" y2="225" stroke="url(#lg) #090" stroke-width="6" />
+    <line x1="180" y1="170" x2="180" y2="225" stroke="url(#rg) #090" stroke-width="6" />
+    <line x1="195" y1="170" x2="195" y2="225" stroke="url(#bbox) #090" stroke-width="6" />
+    <line x1="160" y1="232" x2="230" y2="232" stroke="url(#lg) #090" stroke-width="6" />
+</svg>
