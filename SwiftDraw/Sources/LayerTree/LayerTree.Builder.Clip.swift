@@ -285,10 +285,10 @@ extension LayerTree.Builder {
             let referencedBounds = makeBounds(for: referenced, depth: depth + 1, visited: &visited)
             guard case .known(let bounds) = referencedBounds else { return referencedBounds }
             if let symbol = referenced as? DOM.Symbol {
-                let viewport = makeSymbolViewport(for: use)
+                let viewport = makeSymbolViewport(for: use, symbol: symbol)
                 guard viewport.width > 0, viewport.height > 0 else { return .empty }
                 // the bounding box is the geometry, not clipped by the viewport (as for a nested <svg>)
-                let transform = Self.makeSymbolTransform(symbol, x: use.x, y: use.y,
+                let transform = Self.makeSymbolTransform(symbol, x: viewport.x, y: viewport.y,
                                                          width: viewport.width, height: viewport.height).toMatrix()
                 return Bounds(bounds.applying(transform))
             }

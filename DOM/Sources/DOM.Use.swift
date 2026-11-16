@@ -33,9 +33,12 @@ package extension DOM {
     final class Use: GraphicsElement {
         package var x: Coordinate?
         package var y: Coordinate?
-        // the viewport of a referenced <symbol>; a missing width or height is 100% (SVG 2 §5.6)
+        // the viewport of a referenced <symbol> (SVG 2 §5.6); nil when not set on the <use>,
+        // then the symbol's own width or height applies, or else 100% of `viewport`
         package var width: Coordinate?
         package var height: Coordinate?
+        // the viewport that contains the <use>, which a missing width or height fills
+        package var viewport: XMLParser.Viewport?
 
         //references element ids within defs
         package var href: URL

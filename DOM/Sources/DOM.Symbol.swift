@@ -41,6 +41,12 @@ package extension DOM {
         package var refX: Coordinate?
         package var refY: Coordinate?
         package var overflow: Overflow?
+        // SVG 2 §5.6: the viewport position (added to the x, y of the <use>) and size, used when
+        // the <use> sets no width or height; percentages resolve when parsed
+        package var x: Coordinate?
+        package var y: Coordinate?
+        package var width: Coordinate?
+        package var height: Coordinate?
 
         package var childElements = [GraphicsElement]()
 
