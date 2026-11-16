@@ -108,14 +108,10 @@ extension XMLParser {
   /// An unreadable fallback is dropped rather than failing the paint.
   private func parseURLPaint(data: String) throws -> DOM.Fill? {
     var scanner = XMLParser.Scanner(text: data)
-    guard (try? scanner.scanString("url(")) == true else {
+    guard data.trimmingCharacters(in: .whitespaces).lowercased().hasPrefix("url(") else {
       return nil
     }
-    let urlText = try scanner.scanString(upTo: ")")
-    _ = try? scanner.scanString(")")
-    guard let url = URL(string: urlText.trimmingCharacters(in: .whitespaces)) else {
-      throw XMLParser.Error.invalid
-    }
+    let url = try scanner.scanURLFunction("url")
     if scanner.isEOF {
       return .url(url)
     }
