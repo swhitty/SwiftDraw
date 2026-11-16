@@ -145,7 +145,35 @@ extension LayerTree.Builder {
         point.x += offset.width
         point.y += offset.height
 
+#if canImport(CoreText)
+        // text painted with a paint server or a stroke is drawn as its glyph outlines, through the
+        // shape pipeline, so it gets gradients, patterns, strokes and the text's bounding box for free
+        if needsOutlines(for: state),
+           let outlines = CGProvider().createPath(from: text.value, at: point, with: att) {
+            var state = state
+            // glyph outlines are designed for nonzero; fill-rule does not apply to text in browsers
+            state.fillRule = .nonzero
+            return makeShapeContents(from: .path(outlines.makePath()), with: state)
+        }
+#endif
         return .text(text.value, point, att)
+    }
+
+    /// Whether text with `state` paints more than a solid fill: a paint server fill, or any stroke.
+    func needsOutlines(for state: State) -> Bool {
+        if case .url = resolveFallback(state.fill) {
+            return true
+        }
+        guard state.strokeWidth > 0 else { return false }
+        switch resolveFallback(state.stroke) {
+        case .url:
+            return true
+        case .color(let color):
+            return LayerTree.Color.create(from: color, current: state.color)
+                .withAlpha(state.strokeOpacity).maybeNone() != .none
+        case .urlWithFallback:
+            return false
+        }
     }
 
     static func makeImageContents(from image: DOM.Image) throws -> LayerTree.Layer.Contents {
