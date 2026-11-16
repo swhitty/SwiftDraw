@@ -1,0 +1,22 @@
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <!-- userSpaceOnUse: missing coordinates and percentages resolve against the 200x200 viewport -->
+  <defs>
+    <linearGradient id="lin-default" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#1e88e5"/><stop offset="1" stop-color="#fdd835"/>
+    </linearGradient>
+    <linearGradient id="lin-percent" gradientUnits="userSpaceOnUse" x1="50%" y1="0%" x2="100%" y2="50%">
+      <stop offset="0" stop-color="#43a047"/><stop offset="1" stop-color="#e53935"/>
+    </linearGradient>
+    <radialGradient id="rad-default" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#fdd835"/><stop offset="1" stop-color="#8e24aa"/>
+    </radialGradient>
+    <radialGradient id="rad-base" cx="75%" cy="75%" r="20%" fx="65%" fy="65%">
+      <stop offset="0" stop-color="white"/><stop offset="1" stop-color="#00897b"/>
+    </radialGradient>
+    <radialGradient id="rad-href" xlink:href="#rad-base" gradientUnits="userSpaceOnUse"/>
+  </defs>
+  <rect x="0" y="0" width="95" height="95" fill="url(#lin-default)"/>
+  <rect x="105" y="0" width="95" height="95" fill="url(#lin-percent)"/>
+  <rect x="0" y="105" width="95" height="95" fill="url(#rad-default)"/>
+  <rect x="105" y="105" width="95" height="95" fill="url(#rad-href)"/>
+</svg>

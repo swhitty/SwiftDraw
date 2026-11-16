@@ -686,9 +686,9 @@ extension LayerTree.Builder {
         let units: LayerTree.PatternUnits = inherited(\.patternUnits) == .userSpaceOnUse ? .userSpaceOnUse : .objectBoundingBox
 
         // Percentages are fractions of the bounding box under objectBoundingBox, and of the
-        // viewport (in user units) under userSpaceOnUse.
-        let viewport = svg.viewBox.map { LayerTree.Size($0.width, $0.height) }
-            ?? LayerTree.Size(LayerTree.Float(svg.width), LayerTree.Float(svg.height))
+        // viewport (in user units) under userSpaceOnUse: as in WebKit, the viewport the
+        // referenced pattern is defined in, also for values it inherits.
+        let viewport = userSpaceViewport(element.viewport)
         func geometry(_ key: String, _ value: (DOM.Pattern) -> DOM.Coordinate?, viewport length: LayerTree.Float) -> LayerTree.Float {
             guard let source = chain.first(where: { value($0) != nil }),
                   let coordinate = value(source) else { return 0 }
@@ -740,14 +740,20 @@ extension LayerTree.Builder {
             return nil
         }
 
-        let linear = chain.compactMap(\.linear)
+        let units = Self.createUnits(from: chain.lazy.compactMap(\.units).first)
+        // as in WebKit, percentages resolve in the viewport the referenced gradient is defined in,
+        // also for values it inherits
+        let geometry = GradientGeometry(chain: chain.compactMap(\.linear), percentageAttributes: \.percentageAttributes,
+                                        units: units, viewport: userSpaceViewport(element.viewport))
+
+        // SVG 1.1 §13.2.2: x1, y1, y2 default to 0% and x2 to 100%
         var gradient = LayerTree.LinearGradient(
             gradient: .init(stops: stops),
-            start: Point(linear.lazy.compactMap(\.x1).first ?? 0, linear.lazy.compactMap(\.y1).first ?? 0),
-            end: Point(linear.lazy.compactMap(\.x2).first ?? 1, linear.lazy.compactMap(\.y2).first ?? 0)
+            start: Point(geometry.x("x1", \.x1) ?? geometry.width(0), geometry.y("y1", \.y1) ?? geometry.height(0)),
+            end: Point(geometry.x("x2", \.x2) ?? geometry.width(1), geometry.y("y2", \.y2) ?? geometry.height(0))
         )
 
-        gradient.units = Self.createUnits(from: chain.lazy.compactMap(\.units).first)
+        gradient.units = units
         gradient.transform = Self.createTransforms(from: chain.lazy.map(\.transform).first { !$0.isEmpty } ?? [])
         gradient.spread = Self.createSpread(from: chain.lazy.compactMap(\.spreadMethod).first)
         return gradient
@@ -760,19 +766,73 @@ extension LayerTree.Builder {
             return nil
         }
 
-        let radial = chain.compactMap(\.radial)
-        let cx = radial.lazy.compactMap(\.cx).first ?? 0.5
-        let cy = radial.lazy.compactMap(\.cy).first ?? 0.5
+        let units = Self.createUnits(from: chain.lazy.compactMap(\.units).first)
+        // as in WebKit, percentages resolve in the viewport the referenced gradient is defined in,
+        // also for values it inherits
+        let geometry = GradientGeometry(chain: chain.compactMap(\.radial), percentageAttributes: \.percentageAttributes,
+                                        units: units, viewport: userSpaceViewport(element.viewport))
+
+        // SVG 1.1 §13.2.3: cx, cy, r default to 50%; fx, fy to cx, cy; fr (SVG 2) to 0%
+        let cx = geometry.x("cx", \.cx) ?? geometry.width(0.5)
+        let cy = geometry.y("cy", \.cy) ?? geometry.height(0.5)
         var gradient = LayerTree.RadialGradient(
             gradient: .init(stops: stops),
-            center: LayerTree.Point(radial.lazy.compactMap(\.fx).first ?? cx, radial.lazy.compactMap(\.fy).first ?? cy),
-            radius: LayerTree.Float(radial.lazy.compactMap(\.fr).first ?? 0),
+            center: LayerTree.Point(geometry.x("fx", \.fx) ?? cx, geometry.y("fy", \.fy) ?? cy),
+            radius: geometry.length("fr", \.fr) ?? geometry.diagonal(0),
             endCenter: LayerTree.Point(cx, cy),
-            endRadius: LayerTree.Float(radial.lazy.compactMap(\.r).first ?? 0.5)
+            endRadius: geometry.length("r", \.r) ?? geometry.diagonal(0.5)
         )
-        gradient.units = Self.createUnits(from: chain.lazy.compactMap(\.units).first)
+        gradient.units = units
         gradient.transform = Self.createTransforms(from: chain.lazy.map(\.transform).first { !$0.isEmpty } ?? [])
         return gradient
+    }
+
+    /// The viewport that percentages resolve against in user space: the one a paint server was
+    /// defined in, or the root's when that is unknown.
+    func userSpaceViewport(_ viewport: SwiftDrawDOM.XMLParser.Viewport?) -> LayerTree.Size {
+        if let viewport {
+            return LayerTree.Size(LayerTree.Float(viewport.width), LayerTree.Float(viewport.height))
+        }
+        return svg.viewBox.map { LayerTree.Size($0.width, $0.height) }
+            ?? LayerTree.Size(LayerTree.Float(svg.width), LayerTree.Float(svg.height))
+    }
+
+    /// Resolves gradient geometry inherited along an href chain. Under objectBoundingBox the
+    /// stored values (percentages as fractions) are used as is; under userSpaceOnUse a
+    /// percentage, or a default written as one, is a fraction of the viewport: its width for x,
+    /// height for y and normalised diagonal for other lengths (SVG 1.1 §7.10).
+    struct GradientGeometry<Element> {
+        var chain: [Element]
+        var percentageAttributes: (Element) -> Set<String>
+        var units: LayerTree.Gradient.Units
+        var viewport: LayerTree.Size
+
+        func x(_ key: String, _ value: (Element) -> DOM.Coordinate?) -> LayerTree.Float? {
+            resolve(key, value, against: viewport.width)
+        }
+
+        func y(_ key: String, _ value: (Element) -> DOM.Coordinate?) -> LayerTree.Float? {
+            resolve(key, value, against: viewport.height)
+        }
+
+        func length(_ key: String, _ value: (Element) -> DOM.Coordinate?) -> LayerTree.Float? {
+            resolve(key, value, against: viewport.normalizedDiagonal)
+        }
+
+        func width(_ fraction: LayerTree.Float) -> LayerTree.Float { scale(fraction, by: viewport.width) }
+        func height(_ fraction: LayerTree.Float) -> LayerTree.Float { scale(fraction, by: viewport.height) }
+        func diagonal(_ fraction: LayerTree.Float) -> LayerTree.Float { scale(fraction, by: viewport.normalizedDiagonal) }
+
+        private func scale(_ fraction: LayerTree.Float, by length: LayerTree.Float) -> LayerTree.Float {
+            units == .userSpaceOnUse ? fraction * length : fraction
+        }
+
+        private func resolve(_ key: String, _ value: (Element) -> DOM.Coordinate?, against length: LayerTree.Float) -> LayerTree.Float? {
+            guard let source = chain.first(where: { value($0) != nil }),
+                  let coordinate = value(source) else { return nil }
+            let isPercentage = percentageAttributes(source).contains(key)
+            return isPercentage ? scale(LayerTree.Float(coordinate), by: length) : LayerTree.Float(coordinate)
+        }
     }
 
     enum GradientElement {
@@ -1073,5 +1133,12 @@ private extension DOM.SVG {
 
     func fontFaces(for family: String) -> [DOM.FontFace] {
         styles.flatMap { $0.fonts.filter { $0.family == family } }
+    }
+}
+
+private extension LayerTree.Size {
+    /// √(w² + h²) / √2, the reference for lengths that are neither horizontal nor vertical (SVG 1.1 §7.10).
+    var normalizedDiagonal: LayerTree.Float {
+        ((width * width + height * height) / 2).squareRoot()
     }
 }

@@ -47,6 +47,14 @@ package extension DOM {
         //references another LinearGradient element id within defs
         package var href: URL?
 
+        /// Names of the geometry attributes written as percentages; their value is stored as a
+        /// fraction and resolved against the viewport under userSpaceOnUse.
+        package var percentageAttributes: Set<String> = []
+
+        /// The viewport of the `<svg>` this element is defined in, that percentages resolve
+        /// against under userSpaceOnUse; nil when parsed outside an `<svg>`.
+        package var viewport: XMLParser.Viewport?
+
         package init(id: String) {
             self.id = id
             self.stops = []
