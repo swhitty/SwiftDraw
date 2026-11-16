@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="260" viewBox="0 0 320 260" font-family="Helvetica" font-size="150%">
+  <!-- font-size relative to the parent's computed size: em, %, ex, keywords, larger/smaller; and em lengths on other attributes -->
+  <!-- root: 150% of the initial 16px = 24px, so 10em = 240 -->
+  <rect x="10" y="4" width="10em" height="4" fill="#9cf"/>
+  <g font-size="12">
+    <g font-size="3em"><text x="10" y="48">3em 36</text></g>
+    <text x="180" y="48" font-size="250%">% 30</text>
+    <g font-size="2em"><g font-size="3ex"><text x="10" y="86">3ex 36</text></g></g>
+    <g font-size="20">
+      <text x="180" y="86" font-size="larger">larger</text>
+      <g font-size="smaller"><text x="180" y="110" font-size="1.2em">smaller+1.2em</text></g>
+    </g>
+    <text x="10" y="132" font-size="xx-large">xx-large</text>
+    <text x="180" y="132" font-size="small">small</text>
+    <text x="180" y="150" font-size="x-small">x-small</text>
+    <text x="10" y="150" font-size="0">zero</text>
+    <text x="10" y="150" font-size="-10">negative: inherits 12</text>
+    <!-- em lengths: 12px parent, rects resize with their own font-size -->
+    <rect x="10" y="164" width="10em" height="1em" fill="#36c"/>
+    <rect x="10" y="184" font-size="200%" width="10em" height="1em" fill="#c63"/>
+    <rect x="10" y="216" font-size="larger" width="10em" height="1em" fill="#393"/>
+    <rect x="10" y="236" font-size="medium" width="10em" height="1em" fill="#939"/>
+  </g>
+</svg>

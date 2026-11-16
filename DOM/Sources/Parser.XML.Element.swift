@@ -91,7 +91,8 @@ extension XMLParser {
         let style = parseStyleDeclarations(e)
         let matched = styleContext.matcher?.match(e)
         // `em` and `ex` lengths of this element (and font-size inherited by its children)
-        lengthContext.fontSize = fontSize(attributes: attributes, style: style, matched: matched) ?? lengthContext.fontSize
+        lengthContext.fontSize = fontSize(attributes: attributes, style: style, matched: matched,
+                                          inheriting: lengthContext.fontSize)
 
         switch e.name {
         case "g": ge = try parseGroup(e)
@@ -404,9 +405,8 @@ extension XMLParser {
         el.fillRule = lenient { try att.parseRaw("fill-rule") }
 
         el.fontFamily = lenient { try att.parseFontFamily("font-family") }
-        // absolute units (`12pt`) in px; `em` and `%` keep their raw number as before
-        // absolute units (`12pt`) in px; `em` and `%` keep their raw number as before
-        el.fontSize = lenient { try att.parseCoordinate("font-size") }
+        // kept unresolved: `em`, `%`, keywords and `larger` are relative to the parent's font-size
+        el.fontSize = lenient { try att.parseString("font-size") as String? }.flatMap(DOM.FontSize.init)
         el.fontWeight = lenient { try att.parseString("font-weight") as String? }.flatMap(DOM.FontWeight.init)
         el.fontStyle = lenient { try att.parseString("font-style") as String? }.flatMap(DOM.FontStyle.init)
         el.textAnchor = lenient { try att.parseRaw("text-anchor") }

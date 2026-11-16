@@ -71,17 +71,20 @@ package extension XMLParser {
         }
     }
 
-    /// The font-size `em` and `ex` of an element resolve against, in the order LayerTree applies them
-    /// (`DOM.presentationAttributes(for:styles:)`): presentation attribute < matched stylesheet rules
-    /// < style="" < `!important` rules < `!important` style="". nil when none sets it.
+    /// The computed font-size `em` and `ex` of an element resolve against: its specified font-size,
+    /// in the order LayerTree applies them (`DOM.presentationAttributes(for:styles:)`): presentation
+    /// attribute < matched stylesheet rules < style="" < `!important` rules < `!important` style="",
+    /// resolved against the parent's computed font-size. The parent's when none sets it.
     func fontSize(attributes: DOM.PresentationAttributes,
                   style: (normal: DOM.PresentationAttributes, important: DOM.PresentationAttributes),
-                  matched: DOM.StyleSheet.Matched?) -> DOM.Float? {
-        style.important.fontSize
+                  matched: DOM.StyleSheet.Matched?,
+                  inheriting parent: DOM.Float) -> DOM.Float {
+        let specified = style.important.fontSize
             ?? matched?.importantAttributes.fontSize
             ?? style.normal.fontSize
             ?? matched?.attributes.fontSize
             ?? attributes.fontSize
+        return specified?.resolved(inheriting: parent) ?? parent
     }
 
     func parseLength(_ att: any AttributeParser, _ key: String, _ direction: LengthDirection) throws -> DOM.Coordinate {

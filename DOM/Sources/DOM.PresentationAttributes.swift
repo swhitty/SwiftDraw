@@ -56,7 +56,7 @@ package extension DOM {
         package var fillRule: DOM.FillRule?
 
         package var fontFamily: [DOM.FontFamily]?
-        package var fontSize: Float?
+        package var fontSize: FontSize?
         package var fontWeight: FontWeight?
         package var fontStyle: FontStyle?
         package var textAnchor: TextAnchor?

@@ -146,7 +146,7 @@ extension XML.Formatter {
             attributes["fill-rule"] = graphic.fillRule?.rawValue
 
             attributes["font-family"] = encodeFontFamily(graphic.fontFamily)
-            attributes["font-size"] = formatter.format(graphic.fontSize)
+            attributes["font-size"] = graphic.fontSize.map(encodeFontSize)
             attributes["font-weight"] = graphic.fontWeight.map(encodeFontWeight)
             attributes["font-style"] = graphic.fontStyle.map(encodeFontStyle)
             attributes["text-anchor"] = graphic.textAnchor?.rawValue
@@ -297,6 +297,17 @@ extension XML.Formatter {
                 return encodeURL(url)
             case .urlWithFallback(let url, let color):
                 return "\(encodeURL(url)) \(encodeColor(from: color))"
+            }
+        }
+
+        func encodeFontSize(_ size: DOM.FontSize) -> String {
+            switch size {
+            case .length(let value): return formatter.format(value)
+            case .relative(let factor): return formatter.format(factor * 100) + "%"
+            case .ex(let factor): return formatter.format(factor) + "ex"
+            case .keyword(let keyword): return keyword.rawValue
+            case .larger: return "larger"
+            case .smaller: return "smaller"
             }
         }
 
