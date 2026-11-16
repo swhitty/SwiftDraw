@@ -109,10 +109,46 @@ struct ParserSymbolTests {
         #expect(uses.count == 3)
         #expect(uses[0].width == 24)
         #expect(uses[0].height == 25)
-        // missing or invalid: 100% of the viewport (here the viewBox)
-        #expect(uses[1].width == 200)
-        #expect(uses[1].height == 50)
-        #expect(uses[2].width == 200)
+        // missing or invalid: left to the symbol, then 100% of the enclosing viewport (here the viewBox)
+        #expect(uses[1].width == nil)
+        #expect(uses[1].height == nil)
+        #expect(uses[2].width == nil)
+        #expect(uses.allSatisfy { $0.viewport == XMLParser.Viewport(width: 200, height: 50) })
+    }
+
+    @Test
+    func symbolPositionAndSize() throws {
+        let svg = try DOM.SVG.parse(xml: """
+        <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 200 50">
+          <symbol id="icon" x="10" y="20%" width="50%" height="bad"><rect width="10" height="10"/></symbol>
+        </svg>
+        """)
+        let symbol = try #require(svg.firstGraphicsElement(with: "icon") as? DOM.Symbol)
+        #expect(symbol.x == 10)
+        #expect(symbol.y == 10)
+        #expect(symbol.width == 100)
+        #expect(symbol.height == nil)
+    }
+
+    @Test(arguments: [
+        // the viewBox is the viewport of the contents
+        (##"<symbol id="s" viewBox="0 0 10 20" width="40"><rect id="r" width="50%" height="50%"/></symbol><use href="#s" width="80" height="60"/>"##, 5.0, 10.0),
+        // the size every <use> gives it
+        (##"<symbol id="s"><rect id="r" width="50%" height="50%"/></symbol><use href="#s" width="80" height="60"/>"##, 40, 30),
+        // the <use>'s side, then the symbol's
+        (##"<symbol id="s" width="40" height="20"><rect id="r" width="50%" height="50%"/></symbol><use href="#s" width="80"/>"##, 40, 10),
+        // uses that disagree: the symbol's size, else the enclosing viewport
+        (##"<symbol id="s" width="40"><rect id="r" width="50%" height="50%"/></symbol><use href="#s" width="80"/><use href="#s" width="60"/>"##, 20, 50),
+        // a percentage on the <use> is not known for the symbol
+        (##"<symbol id="s"><rect id="r" width="50%" height="50%"/></symbol><use href="#s" width="50%" height="10"/>"##, 100, 50),
+    ])
+    func symbolContentsResolvePercentagesAgainstItsViewport(_ markup: String, width: Double, height: Double) throws {
+        let svg = try DOM.SVG.parse(xml: """
+        <svg xmlns="http://www.w3.org/2000/svg" width="200" height="100">\(markup)</svg>
+        """)
+        let rect = try #require(svg.firstGraphicsElement(with: "r") as? DOM.Rect)
+        #expect(rect.width == DOM.Coordinate(width))
+        #expect(rect.height == DOM.Coordinate(height))
     }
 
     @Test

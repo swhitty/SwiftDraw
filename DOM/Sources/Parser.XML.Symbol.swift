@@ -47,6 +47,57 @@ extension XMLParser {
         symbol.overflow = (try? att.parseString("overflow")).flatMap {
             DOM.Symbol.Overflow(rawValue: $0.trimmingCharacters(in: .whitespaces))
         }
+        // SVG 2 §5.6: percentages resolve against the enclosing viewport
+        symbol.x = parseDefaultedLength(att, "x", .horizontal)
+        symbol.y = parseDefaultedLength(att, "y", .vertical)
+        symbol.width = parseDefaultedLength(att, "width", .horizontal)
+        symbol.height = parseDefaultedLength(att, "height", .vertical)
+
+        // The contents resolve percentages against the symbol's viewport: its viewBox, or else the size
+        // the <use> gives it. Lengths are resolved once, so that is the size every <use> of it agrees on.
+        let id = e.attributes["id"]
+        let enclosing = lengthContext.viewports.last
+        let viewport = symbol.viewBox.map { Viewport(width: $0.width, height: $0.height) }
+            ?? id.flatMap { lengthContext.symbolViewports[$0] }.map {
+                Viewport(width: $0.width ?? symbol.width ?? enclosing?.width ?? 0,
+                         height: $0.height ?? symbol.height ?? enclosing?.height ?? 0)
+            }
+            ?? Viewport(width: symbol.width ?? enclosing?.width ?? 0,
+                        height: symbol.height ?? enclosing?.height ?? 0)
+        lengthContext.viewports.append(viewport)
+        defer { lengthContext.viewports.removeLast() }
+        symbol.childElements = try parseGraphicsElements(e.children)
         return symbol
+    }
+
+    /// The width and height every `<use>` referencing a symbol gives it, by the symbol's id.
+    /// Only `<use>` elements with absolute lengths are known while parsing; a symbol whose uses
+    /// disagree, or set a percentage, is left out. nil sides are left for the symbol to size.
+    func makeSymbolUseSizes(within root: XML.Element) -> [String: (width: DOM.Coordinate?, height: DOM.Coordinate?)] {
+        var sizes = [String: (width: DOM.Coordinate?, height: DOM.Coordinate?)]()
+        var ambiguous = Set<String>()
+        var stack = [root]
+        while let e = stack.popLast() {
+            stack.append(contentsOf: e.children)
+            guard e.name == "use",
+                  let href = e.attributes["href"] ?? e.attributes["xlink:href"],
+                  href.hasPrefix("#") else { continue }
+            let id = String(href.dropFirst())
+            func absolute(_ key: String, _ direction: LengthDirection) -> DOM.Coordinate?? {
+                guard let raw = e.attributes[key] else { return .some(nil) }
+                guard !raw.contains("%"), let value = try? resolveLength(raw, direction) else { return nil }
+                return .some(value)
+            }
+            guard let width = absolute("width", .horizontal),
+                  let height = absolute("height", .vertical) else {
+                ambiguous.insert(id)
+                continue
+            }
+            if let existing = sizes[id], existing != (width, height) {
+                ambiguous.insert(id)
+            }
+            sizes[id] = (width, height)
+        }
+        return sizes.filter { !ambiguous.contains($0.key) }
     }
 }

@@ -161,8 +161,9 @@ extension XMLParser {
                 result.append(ge)
             }
 
-            // a nested <svg> has already parsed its own children (with its own defs and styles)
-            if let container = ge as? any ContainerElement, !(ge is DOM.SVG) {
+            // a nested <svg> has already parsed its own children (with its own defs and styles),
+            // and a <symbol> in its own viewport
+            if let container = ge as? any ContainerElement, !(ge is DOM.SVG), !(ge is DOM.Symbol) {
                 let fontSize = lengthContext.fontSize
                 stack.append(contentsOf: element.children.reversed().map { ($0, container, fontSize) })
             }

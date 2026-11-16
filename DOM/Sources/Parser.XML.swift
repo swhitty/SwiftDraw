@@ -59,6 +59,8 @@ package struct XMLParser {
         var fontSize: DOM.Float = LengthContext.initialFontSize
         // `medium` in Chrome and Safari
         static let initialFontSize: DOM.Float = 16
+        // the size the <use> elements of the document give each <symbol>, by id
+        var symbolViewports = [String: (width: DOM.Coordinate?, height: DOM.Coordinate?)]()
     }
 
     // stylesheet matcher for the document being parsed (set while parsing the root <svg>)
