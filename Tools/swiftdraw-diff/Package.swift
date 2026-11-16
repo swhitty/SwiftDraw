@@ -1,39 +1,71 @@
 // swift-tools-version:6.2
 
-// Private, macOS-only dev tool: renders SVGs with SwiftDraw and writes an
-// "eyeball" page comparing them with the browser's own live rendering.
+// Private, macOS-only dev tool: scores SwiftDraw's rendering against WebKit and, optionally, resvg.
+// It runs three SVG → PNG renderers and diffs their PNGs:
 //
-//   cd Tools/swiftdraw-diff
-//   swift run -c release swiftdraw-diff ../../Samples.bundle --out .build/report
-//   open .build/report/index.html
+//   swiftdrawcli   built from this repo at each SwiftDraw revision (cached by commit)
+//   webkit-render  Tools/webkit-render, built on first use; also decides each SVG's size
+//   resvg          optional (--resvg), found on PATH (brew install resvg)
 //
-// index.html is self-contained (assets embedded as data: URIs), so it opens
-// from file:// in Safari or Chrome and the in-page pixel diff needs no server.
-// --hide-below <percent> sets the default diff threshold for hiding rows (default 1).
+// Score SwiftDraw's working copy:
+//
+//   swift build -c release --package-path Tools/swiftdraw-diff
+//   Tools/swiftdraw-diff/.build/release/swiftdraw-diff Samples.bundle [--resvg]
 //
 // Regression check before merging (base defaults to main, head to the working copy):
 //
-//   swift run -c release swiftdraw-diff compare --base main ../../Samples.bundle
+//   Tools/swiftdraw-diff/.build/release/swiftdraw-diff compare --base main Samples.bundle [--resvg]
 //
-// Builds SwiftDraw at --base in a reusable git worktree (.build/compare/base-src),
-// renders both, scores each against WebKit and prints regressed / improved /
-// changed files. Exits 1 if any file got further from WebKit by more than
-// --tolerance percentage points (default 0.5). --head <ref> compares two commits.
-// --webkit additionally snapshots each SVG with an offscreen WKWebView (experimental).
+// See AGENTS.md, "Checking rendering changes". Needs a logged-in GUI session (WebKit).
 
 import PackageDescription
 
 let package = Package(
     name: "swiftdraw-diff",
-    platforms: [.macOS(.v13)],
+    platforms: [.macOS(.v26)],
+    products: [
+        .executable(name: "swiftdraw-diff", targets: ["swiftdraw-diff"])
+    ],
     dependencies: [
-        .package(name: "SwiftDraw", path: "../..")
+        .package(url: "https://github.com/swiftlang/swift-subprocess.git", .upToNextMinor(from: "1.0.2"))
     ],
     targets: [
+        .target(name: "SwiftDrawDiffCore", swiftSettings: .upcomingFeatures),
         .executableTarget(
             name: "swiftdraw-diff",
-            dependencies: [.product(name: "SwiftDraw", package: "SwiftDraw")]
+            dependencies: [
+                "SwiftDrawDiffCore",
+                .product(name: "Subprocess", package: "swift-subprocess")
+            ],
+            swiftSettings: .upcomingFeatures
+        ),
+        .testTarget(
+            name: "SwiftDrawDiffCoreTests",
+            dependencies: ["SwiftDrawDiffCore"],
+            swiftSettings: .upcomingFeatures
         )
-    ],
-    swiftLanguageModes: [.v5]
+    ]
 )
+
+extension Array where Element == SwiftSetting {
+    static var upcomingFeatures: [SwiftSetting] {
+        [
+            // Actor isolation
+            .defaultIsolation(nil),
+
+            // Concurrency
+            .enableUpcomingFeature("NonisolatedNonsendingByDefault"),
+            .enableUpcomingFeature("InferIsolatedConformances"),
+
+            // Language
+            .enableUpcomingFeature("ExistentialAny"),
+            .enableUpcomingFeature("ImmutableWeakCaptures"),
+
+            // Module boundaries
+            .enableUpcomingFeature("MemberImportVisibility"),
+            .enableUpcomingFeature("InternalImportsByDefault"),
+
+            .swiftLanguageMode(.v6)
+        ]
+    }
+}
