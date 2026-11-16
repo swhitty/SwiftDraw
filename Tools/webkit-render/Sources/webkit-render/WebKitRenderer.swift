@@ -191,13 +191,21 @@ final class WebKitRenderer: NSObject, WKNavigationDelegate {
       return Promise.race([work, limit]);
     }
 
-    // The <img>'s natural size. For an SVG without an absolute width and height this is the
-    // HTML default object size (300×150, fitted to the viewBox's aspect ratio), as a browser
-    // shows it. naturalWidth/naturalHeight are whole numbers (width="10.5" reports 10); measuring
-    // the laid-out image instead keeps fractions but depends on the container for viewBox-only SVGs.
+    // The <img>'s natural size, as a browser lays it out without width or height attributes. For an
+    // SVG without an absolute width and height this is the HTML default object size (300×150,
+    // fitted to the viewBox's aspect ratio). naturalWidth/naturalHeight are whole numbers (300×90.87
+    // reports 300×90), so the image is laid out in a box naturalWidth wide and measured: that keeps
+    // fractions, and an SVG without an intrinsic width fills the box rather than the window.
     async function measureSVG(src, timeout) {
       const img = await withTimeout(loadImage(src), timeout);
-      return { w: img.naturalWidth, h: img.naturalHeight };
+      const box = document.createElement('div');
+      box.style.cssText = `position:absolute; left:0; top:0; width:${img.naturalWidth}px`;
+      img.style.display = 'block';
+      box.appendChild(img);
+      document.body.appendChild(box);
+      const r = img.getBoundingClientRect();
+      box.remove();
+      return { w: r.width, h: r.height };
     }
 
     async function renderSVG(src, w, h, timeout) {
