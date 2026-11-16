@@ -1045,7 +1045,12 @@ extension LayerTree.Builder {
         state.opacity = attributes.opacity ?? 1.0
         state.display = attributes.display ?? existing.display
         state.visibility = attributes.visibility ?? existing.visibility
-        state.color = attributes.color ?? existing.color
+        // CSS Color 4: `color: currentColor` is the inherited `color`
+        if let color = attributes.color, color != .currentColor {
+            state.color = color
+        } else {
+            state.color = existing.color
+        }
 
         state.stroke = attributes.stroke ?? existing.stroke
         state.strokeWidth = attributes.strokeWidth ?? existing.strokeWidth

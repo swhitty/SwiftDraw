@@ -62,13 +62,65 @@ extension XMLParser {
     // e.g. Illustrator's <stop class="st0"/> with .st0 { stop-color: … }; nil without a stylesheet
     func cascadedStop(_ e: XML.Element) -> (color: DOM.Color?, opacity: DOM.Float?)? {
         guard let matched = styleContext.matcher?.match(e) else { return nil }
-        let style = parseStyleDeclarations(e)
-        let attributes = ((try? parsePresentationAttributes(e.attributes)) ?? DOM.PresentationAttributes())
-            .applyingAttributes(matched.attributes)
-            .applyingAttributes(style.normal)
-            .applyingAttributes(matched.importantAttributes)
-            .applyingAttributes(style.important)
+        let attributes = cascadedAttributes(e, matched: matched)
         return (attributes.stopColor, attributes.stopOpacity)
+    }
+
+    // presentation attributes through the cascade: attribute < rules < style="" < !important
+    func cascadedAttributes(_ e: XML.Element, matched: DOM.StyleSheet.Matched? = nil) -> DOM.PresentationAttributes {
+        let matched = matched ?? styleContext.matcher?.match(e)
+        let style = parseStyleDeclarations(e)
+        var attributes = (try? parsePresentationAttributes(e.attributes)) ?? DOM.PresentationAttributes()
+        if let matched {
+            attributes = attributes.applyingAttributes(matched.attributes)
+        }
+        attributes = attributes.applyingAttributes(style.normal)
+        if let matched {
+            attributes = attributes.applyingAttributes(matched.importantAttributes)
+        }
+        return attributes.applyingAttributes(style.important)
+    }
+
+    /// SVG 1.1 §13.2.4 / CSS Color 4: `stop-color="inherit"` takes the gradient's `stop-color`, and
+    /// `currentColor` the `color` in effect on the <stop>, inherited from the gradient and its
+    /// ancestors in the document (not from the element being painted).
+    func resolveStopColor(_ stop: XML.Element,
+                          _ att: any AttributeParser,
+                          cascaded: DOM.Color?,
+                          gradient: XML.Element,
+                          ancestors: [XML.Element]) -> DOM.Color {
+        var color: DOM.Color? = try? att.parseFill("stop-color").getColor()
+        if color == nil, Self.isInherit(att, "stop-color") {
+            color = specifiedStopColor(gradient)
+        }
+        color = cascaded ?? color
+        guard let color else { return .keyword(.black) }
+        guard color == .currentColor else { return color }
+        return currentColor(of: ancestors + [gradient, stop])
+    }
+
+    // the gradient's own stop-color; stop-color is not inherited, so this is the initial black when unset
+    private func specifiedStopColor(_ gradient: XML.Element) -> DOM.Color? {
+        let att = try? parseAttributes(gradient)
+        let color = try? att?.parseFill("stop-color").getColor()
+        return cascadedStop(gradient)?.color ?? color
+    }
+
+    /// The `color` in effect on the last element of `chain`, a path from the document root;
+    /// `currentColor` (or an unreadable value) inherits, and the initial value is black.
+    func currentColor(of chain: [XML.Element]) -> DOM.Color {
+        var color = DOM.Color.keyword(.black)
+        for e in chain {
+            if let c = cascadedAttributes(e).color, c != .currentColor {
+                color = c
+            }
+        }
+        return color
+    }
+
+    static func isInherit(_ att: any AttributeParser, _ key: String) -> Bool {
+        guard let raw: String = try? att.parseString(key) else { return false }
+        return raw.trimmingCharacters(in: .whitespaces).lowercased() == "inherit"
     }
 
     // CSS Syntax Level 3 error recovery: a malformed rule or declaration is dropped on its own,
