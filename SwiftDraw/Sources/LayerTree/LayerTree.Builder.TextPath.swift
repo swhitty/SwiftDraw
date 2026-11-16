@@ -51,9 +51,9 @@ extension LayerTree.Builder {
               let shape = Self.makeShape(from: element) else { return nil }
 
         let path = shape.path
-        let transform = DOM.presentationAttributes(for: element, styles: svg.styles).transform ?? []
+        let transform = createTransforms(from: DOM.presentationAttributes(for: element, styles: svg.styles))
         guard !transform.isEmpty else { return path }
-        return path.applying(matrix: Self.createTransforms(from: transform).toMatrix())
+        return path.applying(matrix: transform.toMatrix())
     }
 
     /// The distance along the path the text starts at, before `text-anchor` shifts it

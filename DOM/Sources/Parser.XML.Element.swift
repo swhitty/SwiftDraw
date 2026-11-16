@@ -415,6 +415,8 @@ extension XMLParser {
             // `none` is the identity, and still overrides a lower rule
             el.transform = Self.isNone(val) ? [] : try? parseTransform(val)
         }
+        // not inherited: it only applies to the element's own transform
+        el.transformOrigin = lenient { try att.parseString("transform-origin") as String? }.flatMap(parseTransformOrigin)
 
         el.clipPath = urlOrNone(att, "clip-path")
         el.clipRule = lenient { try att.parseRaw("clip-rule") }

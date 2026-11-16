@@ -50,6 +50,8 @@ package extension DOM {
         package var viewBox: DOM.SVG.ViewBox?
         package var preserveAspectRatio: DOM.PreserveAspectRatio?
         package var patternTransform: [Transform]?
+        /// `transform-origin` of the paint server transform (SVG 2), not inherited through href
+        package var transformOrigin: TransformOrigin?
         /// Names of the x / y / width / height attributes written as percentages; their value
         /// is stored as a fraction and resolved against the viewport under userSpaceOnUse.
         package var percentageAttributes: Set<String> = []

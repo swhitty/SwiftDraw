@@ -42,6 +42,8 @@ package extension DOM {
         package var stops: [Stop]
         package var gradientUnits: Units?
         package var gradientTransform: [Transform]
+        /// `transform-origin` of the paint server transform (SVG 2), not inherited through href
+        package var transformOrigin: TransformOrigin?
         package var spreadMethod: SpreadMethod?
 
         //references another LinearGradient element id within defs

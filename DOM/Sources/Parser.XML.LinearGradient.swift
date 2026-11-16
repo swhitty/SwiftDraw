@@ -80,6 +80,7 @@ extension XMLParser {
         if let val = try? nodeAtt.parseString("gradientTransform") {
           if let t = try? parseTransform(val) { node.gradientTransform = t }
         }
+        node.transformOrigin = (try? nodeAtt.parseString("transform-origin")).flatMap(parseTransformOrigin)
         node.spreadMethod = try? nodeAtt.parseRaw("spreadMethod")
 
         return node
