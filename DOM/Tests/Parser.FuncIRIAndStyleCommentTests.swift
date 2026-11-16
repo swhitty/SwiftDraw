@@ -45,7 +45,7 @@ struct ParserFuncIRIAndStyleCommentTests {
         #expect(att.stroke == .url(url))
         #expect(att.clipPath == url)
         #expect(att.mask == url)
-        #expect(att.filter == url)
+        #expect(att.filter == [.url(url)])
         #expect(att.markerStart == url)
         #expect(att.markerMid == url)
         #expect(att.markerEnd == url)

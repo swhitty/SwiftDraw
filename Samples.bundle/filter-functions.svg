@@ -1,0 +1,35 @@
+<svg width="320" height="200" viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Filter Effects 1 §12: CSS filter functions in the filter property, alone and in lists with url() -->
+  <defs>
+    <linearGradient id="g">
+      <stop offset="0" stop-color="tomato" />
+      <stop offset="0.5" stop-color="gold" />
+      <stop offset="1" stop-color="royalblue" />
+    </linearGradient>
+    <filter id="offset" x="-0.2" y="-0.2" width="1.4" height="1.4">
+      <feOffset dx="4" dy="4" />
+    </filter>
+    <style>
+      .css { filter: sepia(80%) hue-rotate(0.5turn); }
+    </style>
+  </defs>
+
+  <rect x="10" y="10" width="50" height="50" fill="url(#g)" filter="blur(3)" />
+  <rect x="70" y="10" width="50" height="50" fill="url(#g)" filter="grayscale()" />
+  <rect x="130" y="10" width="50" height="50" fill="url(#g)" filter="sepia(100%)" />
+  <rect x="190" y="10" width="50" height="50" fill="url(#g)" filter="saturate(3)" />
+  <rect x="250" y="10" width="50" height="50" fill="url(#g)" filter="hue-rotate(90deg)" />
+
+  <rect x="10" y="75" width="50" height="50" fill="url(#g)" filter="invert(0.8)" />
+  <rect x="70" y="75" width="50" height="50" fill="url(#g)" filter="opacity(40%)" />
+  <rect x="130" y="75" width="50" height="50" fill="url(#g)" filter="brightness(1.5)" />
+  <rect x="190" y="75" width="50" height="50" fill="url(#g)" filter="contrast(40%)" />
+  <rect x="250" y="75" width="50" height="50" fill="url(#g)" class="css" />
+
+  <circle cx="35" cy="165" r="22" fill="seagreen" color="purple" filter="drop-shadow(4 5 3)" />
+  <circle cx="95" cy="165" r="22" fill="seagreen" font-size="10" filter="drop-shadow(rgba(0, 0, 255, 0.6) -0.4em 0.5em 0.2em)" />
+  <rect x="133" y="143" width="44" height="44" fill="url(#g)" filter="url(#offset) grayscale() blur(1.5)" />
+  <rect x="193" y="143" width="44" height="44" fill="url(#g)" filter="url(#missing) invert()" />
+  <!-- invalid: the whole list is ignored -->
+  <rect x="253" y="143" width="44" height="44" fill="url(#g)" filter="grayscale() hue-rotate(45)" />
+</svg>

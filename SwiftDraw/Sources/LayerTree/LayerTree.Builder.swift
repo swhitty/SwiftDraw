@@ -224,14 +224,20 @@ extension LayerTree {
                     }
                     continue
                 }
-                let layer = makeBaseLayer(from: currentElement, with: newState)
+                // a `filter` whose url() references are all missing removes the element (as resvg)
+                guard let (layer, contentLayer) = makeBaseLayer(from: currentElement, with: newState) else {
+                    if parentLayer == nil {
+                        resultLayer = Layer()
+                    }
+                    continue
+                }
 
                 if let contents = makeContents(from: currentElement, with: newState) {
-                    layer.appendContents(contents)
+                    contentLayer.appendContents(contents)
                 } else if let container = currentElement as? any ContainerElement {
                     // Push children in reverse so they are processed in the original order
                     for child in container.childElements.reversed() {
-                        stack.append((child, newState, layer))
+                        stack.append((child, newState, contentLayer))
                     }
                 }
 
@@ -264,9 +270,13 @@ extension LayerTree {
             return resultLayer!
         }
 
-        func makeBaseLayer(from element: DOM.GraphicsElement, with state: State) -> Layer {
+        /// The layer of an element and the layer its contents go into: the same layer, unless the `filter`
+        /// list has more than one entry. Each entry is then a layer of its own, the first innermost, so they
+        /// apply in order, each with its own filter region. nil when the element is not rendered.
+        func makeBaseLayer(from element: DOM.GraphicsElement, with state: State) -> (layer: Layer, contents: Layer)? {
             // transform and mask may come from CSS as well as attributes
             let attributes = DOM.presentationAttributes(for: element, styles: svg.styles)
+            guard let filters = makeFilters(for: attributes, with: state) else { return nil }
             let l = Layer()
             l.class = element.class
             l.transform = Builder.createTransforms(from: attributes.transform ?? [])
@@ -277,14 +287,19 @@ extension LayerTree {
                 apply(clip, to: l)
             }
             l.opacity = state.opacity
-            if let filter = makeFilter(for: element) {
-                // Filter Effects 1 §5.1: a filter without primitives paints transparent black, hiding the element
-                l.filters = filter.primitives.isEmpty
-                    ? [DOM.Filter.Primitive(effect: .flood(color: .keyword(.black), opacity: 0))]
-                    : filter.primitives
-                l.filterRegion = makeFilterRegion(for: filter)
+            var contents = l
+            if let last = filters.last {
+                l.filters = last.primitives
+                l.filterRegion = last.region
+                for filter in filters.dropLast().reversed() {
+                    let inner = Layer()
+                    inner.filters = filter.primitives
+                    inner.filterRegion = filter.region
+                    contents.appendContents(.layer(inner))
+                    contents = inner
+                }
             }
-            return l
+            return (l, contents)
         }
 
         func makeContents(from element: DOM.GraphicsElement, with state: State) -> Layer.Contents? {
@@ -375,12 +390,36 @@ extension LayerTree {
             }
         }
 
-        // `filter` is not inherited: it applies once, to the element that references it
-        func makeFilter(for element: DOM.GraphicsElement) -> DOM.Filter? {
-            let attributes = DOM.presentationAttributes(for: element, styles: svg.styles)
-            guard let filterId = attributes.filter?.fragmentID,
-                  let filter = svg.defs.filters.first(where: { $0.id == filterId }) else { return nil }
-            return resolvingHref(filter)
+        // `filter` is not inherited: it applies once, to the element that references it.
+        // Each url() and filter function in the list is one filter, applied in order. A url() to a missing
+        // <filter> is skipped; when every entry is such a url() the element is not rendered (nil), as resvg.
+        func makeFilters(for attributes: DOM.PresentationAttributes,
+                         with state: State) -> [(primitives: [FilterPrimitive], region: FilterRegion)]? {
+            guard let values = attributes.filter else { return [] }
+            var filters = [(primitives: [FilterPrimitive], region: FilterRegion)]()
+            var hasMissingURL = false
+            for value in values {
+                switch value {
+                case .url(let url):
+                    if let filterId = url.fragmentID,
+                       let filter = svg.defs.filters.first(where: { $0.id == filterId }) {
+                        let filter = resolvingHref(filter)
+                        // Filter Effects 1 §5.1: a filter without primitives paints transparent black, hiding the element
+                        let primitives = filter.primitives.isEmpty
+                            ? [DOM.Filter.Primitive(effect: .flood(color: .keyword(.black), opacity: 0))]
+                            : filter.primitives
+                        filters.append((primitives, makeFilterRegion(for: filter)))
+                    } else {
+                        hasMissingURL = true
+                    }
+                case .function(let function):
+                    filters.append(Self.makeFilter(for: function, with: state))
+                }
+            }
+            if filters.isEmpty && hasMissingURL {
+                return nil
+            }
+            return filters
         }
 
         // SVG 1.1 §15.5 (dropped by Filter Effects 1, followed by resvg): attributes the filter leaves unset,
