@@ -56,9 +56,7 @@ package struct XMLParser {
         // the nearest viewport (in user units) is last; empty outside an <svg>
         var viewports = [Viewport]()
         // the computed font-size of the element being parsed, for `em` and `ex`
-        var fontSize: DOM.Float = LengthContext.initialFontSize
-        // `medium` in Chrome and Safari
-        static let initialFontSize: DOM.Float = 16
+        var fontSize: DOM.Float = DOM.FontSize.initial
     }
 
     // stylesheet matcher for the document being parsed (set while parsing the root <svg>)

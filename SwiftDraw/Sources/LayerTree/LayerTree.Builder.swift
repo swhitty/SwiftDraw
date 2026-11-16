@@ -299,6 +299,8 @@ extension LayerTree {
                 if let textPath = text.textPath {
                     return makeTextPathContents(from: textPath, with: state)
                 }
+                // a font-size of 0 draws nothing (CoreText would fall back to its default size)
+                guard state.fontSize > 0 else { return nil }
                 return makeTextContents(from: text, with: state)
             } else if let image = element as? DOM.Image {
                 return isVisible ? try? Builder.makeImageContents(from: image) : nil
@@ -1061,7 +1063,7 @@ extension LayerTree.Builder {
             textBaseline = .auto
 
             fontFamily = [.keyword(.serif)]
-            fontSize = 12.0
+            fontSize = DOM.FontSize.initial
             fontWeight = 400
             fontStyle = .normal
         }
@@ -1098,7 +1100,8 @@ extension LayerTree.Builder {
         state.fillRule = attributes.fillRule ?? existing.fillRule
 
         state.fontFamily = attributes.fontFamily ?? existing.fontFamily
-        state.fontSize = attributes.fontSize ?? existing.fontSize
+        // `em`, `%`, keywords, `larger` and `smaller` resolve against the parent (CSS Fonts 4 §2.5)
+        state.fontSize = attributes.fontSize?.resolved(inheriting: existing.fontSize) ?? existing.fontSize
         state.fontWeight = attributes.fontWeight?.resolved(inheriting: existing.fontWeight) ?? existing.fontWeight
         state.fontStyle = attributes.fontStyle ?? existing.fontStyle
         state.textAnchor = attributes.textAnchor ?? existing.textAnchor

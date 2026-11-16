@@ -109,7 +109,8 @@ extension LayerTree.Builder {
             for textRun in textRuns {
                 switch textRun {
                 case .text(let string):
-                    guard !string.isEmpty else { continue }
+                    // a font-size of 0 draws nothing (CoreText would fall back to its default size)
+                    guard !string.isEmpty, state.fontSize > 0 else { continue }
                     let attributes = makeTextAttributes(with: state)
                     let font = CGProvider.createFont(for: attributes)
                     let glyphs = string.toGlyphs(font: font.font,

@@ -170,8 +170,8 @@ package extension XMLParser {
     func rootFontSize(_ e: XML.Element) -> DOM.Float {
         fontSize(attributes: (try? parsePresentationAttributes(e)) ?? DOM.PresentationAttributes(),
                  style: parseStyleDeclarations(e),
-                 matched: styleContext.matcher?.match(e))
-            ?? LengthContext.initialFontSize
+                 matched: styleContext.matcher?.match(e),
+                 inheriting: DOM.FontSize.initial)
     }
 
     private func finite(_ value: DOM.Coordinate) -> DOM.Coordinate? {
