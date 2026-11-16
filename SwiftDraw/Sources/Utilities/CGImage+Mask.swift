@@ -34,7 +34,16 @@ import CoreGraphics
 import Foundation
 
 func CGColorSpaceCreateExtendedGray() -> CGColorSpace {
-  return CGColorSpace(name: CGColorSpace.extendedGray)!
+  return CGColorSpace.extendedGraySpace
+}
+
+extension CGColorSpace {
+  // SVG and CSS colours are sRGB; color(display-p3 …) stays Display P3. DeviceRGB is never used,
+  // so the destination context alone decides the output space.
+  static let sRGBSpace = CGColorSpace(name: CGColorSpace.sRGB)!
+  static let displayP3Space = CGColorSpace(name: CGColorSpace.displayP3)!
+  // Extended gray uses the sRGB transfer function, so its greys match sRGB greys pixel for pixel.
+  static let extendedGraySpace = CGColorSpace(name: CGColorSpace.extendedGray)!
 }
 
 extension CGImage {

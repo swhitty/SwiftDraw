@@ -86,11 +86,26 @@ public extension SVG {
         
         return UIGraphicsGetImageFromCurrentImageContext() ?? UIImage()
     }
+
+    // UIGraphicsBeginImageContext always draws into an 8-bit sRGB bitmap.
+    private func exportImage(scale: CGFloat) -> UIImage {
+        rasterize(scale: scale)
+    }
 #else
+    // PNG and JPEG data are always sRGB, whatever the screen supports.
+    private func exportImage(scale: CGFloat) -> UIImage {
+        rasterize(scale: scale, range: .standard)
+    }
+
     func rasterize(scale: CGFloat = 0) -> UIImage {
+        rasterize(scale: scale, range: .automatic)
+    }
+
+    // .standard draws into an sRGB bitmap; .automatic lets the device pick (extended sRGB on wide-colour screens).
+    private func rasterize(scale: CGFloat, range: UIGraphicsImageRendererFormat.Range) -> UIImage {
         let (bounds, pixelsWide, pixelsHigh) = SVG.makeBounds(size: size, scale: 1)
         let f = UIGraphicsImageRendererFormat.preferred()
-        f.preferredRange = .automatic
+        f.preferredRange = range
         f.scale = scale <= 0 ? SVG.defaultScale : scale
         f.opaque = false
         let r = UIGraphicsImageRenderer(size: CGSize(width: pixelsWide, height: pixelsHigh), format: f)
@@ -105,7 +120,7 @@ public extension SVG {
     }
 
     func pngData(scale: CGFloat = 0) throws -> Data {
-        let image = rasterize(scale: scale)
+        let image = exportImage(scale: scale)
         guard let data = image.pngData() else {
             throw Error("Failed to create png data")
         }
@@ -113,7 +128,7 @@ public extension SVG {
     }
 
     func jpegData(scale: CGFloat = 0, compressionQuality quality: CGFloat = 1) throws -> Data {
-        let image = rasterize(scale: scale)
+        let image = exportImage(scale: scale)
         guard let data = image.jpegData(compressionQuality: quality) else {
             throw Error("Failed to create jpeg data")
         }
