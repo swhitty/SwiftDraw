@@ -1,4 +1,4 @@
-import Foundation
+public import Foundation
 
 /// The SVG that WebKit renders as the reference.
 ///

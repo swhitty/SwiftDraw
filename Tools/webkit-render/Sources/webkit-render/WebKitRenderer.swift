@@ -1,5 +1,6 @@
 import AppKit
 import WebKit
+import WebKitRenderCore
 
 /// Renders SVGs to PNGs in one hidden WKWebView.
 ///
@@ -22,7 +23,7 @@ final class WebKitRenderer: NSObject, WKNavigationDelegate {
 
     private let webView: WKWebView
     private let window: NSWindow
-    private var navigation: CheckedContinuation<Void, Error>?
+    private var navigation: CheckedContinuation<Void, any Error>?
     private var isLoaded = false
 
     /// Per-image limit, enforced inside the page.
@@ -44,23 +45,21 @@ final class WebKitRenderer: NSObject, WKNavigationDelegate {
         return bundle.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "unknown"
     }
 
+    /// The SVG's natural size in points (`naturalWidth`/`naturalHeight` of an `<img>`).
+    func measure(svg: Data) async throws -> WebKitRenderCore.Size {
+        let result = try await call("return await measureSVG(src, timeout);", ["src": Self.dataURI(svg)])
+        guard let object = result as? [String: Any],
+              let w = (object["w"] as? NSNumber)?.doubleValue,
+              let h = (object["h"] as? NSNumber)?.doubleValue else {
+            throw Failure(description: "page returned no size")
+        }
+        guard w > 0, h > 0 else { throw Failure(description: "WebKit reports no natural size (\(w)×\(h))") }
+        return WebKitRenderCore.Size(width: w, height: h)
+    }
+
     func render(svg: Data, width: Int, height: Int) async throws -> Output {
-        if !isLoaded {
-            try await load()
-            isLoaded = true
-        }
-        let src = "data:image/svg+xml;base64," + svg.base64EncodedString()
-        let result: Any?
-        do {
-            result = try await webView.callAsyncJavaScript(
-                "return await renderSVG(src, w, h, timeout);",
-                arguments: ["src": src, "w": width, "h": height, "timeout": Int(timeout * 1000)],
-                in: nil,
-                contentWorld: .page
-            )
-        } catch {
-            throw Failure(description: Self.message(for: error))
-        }
+        let result = try await call("return await renderSVG(src, w, h, timeout);",
+                                    ["src": Self.dataURI(svg), "w": width, "h": height])
         guard let object = result as? [String: Any],
               let base64 = object["png"] as? String,
               let png = Data(base64Encoded: base64) else {
@@ -69,7 +68,25 @@ final class WebKitRenderer: NSObject, WKNavigationDelegate {
         return Output(png: png, redrawn: (object["redrawn"] as? Int) ?? 0)
     }
 
-    private static func message(for error: Error) -> String {
+    private static func dataURI(_ svg: Data) -> String {
+        "data:image/svg+xml;base64," + svg.base64EncodedString()
+    }
+
+    private func call(_ body: String, _ arguments: [String: Any]) async throws -> Any? {
+        if !isLoaded {
+            try await load()
+            isLoaded = true
+        }
+        var arguments = arguments
+        arguments["timeout"] = Int(timeout * 1000)
+        do {
+            return try await webView.callAsyncJavaScript(body, arguments: arguments, in: nil, contentWorld: .page)
+        } catch {
+            throw Failure(description: Self.message(for: error))
+        }
+    }
+
+    private static func message(for error: any Error) -> String {
         let info = (error as NSError).userInfo
         if let message = info["WKJavaScriptExceptionMessage"] as? String {
             return message.replacingOccurrences(of: "Error: ", with: "")
@@ -78,13 +95,13 @@ final class WebKitRenderer: NSObject, WKNavigationDelegate {
     }
 
     private func load() async throws {
-        try await withCheckedThrowingContinuation { (c: CheckedContinuation<Void, Error>) in
+        try await withCheckedThrowingContinuation { (c: CheckedContinuation<Void, any Error>) in
             navigation = c
             webView.loadHTMLString(Self.page, baseURL: nil)
         }
     }
 
-    private func finishNavigation(_ error: Error?) {
+    private func finishNavigation(_ error: any Error?) {
         if let error { navigation?.resume(throwing: error) } else { navigation?.resume() }
         navigation = nil
     }
@@ -93,11 +110,11 @@ final class WebKitRenderer: NSObject, WKNavigationDelegate {
         MainActor.assumeIsolated { finishNavigation(nil) }
     }
 
-    nonisolated func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
+    nonisolated func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: any Error) {
         MainActor.assumeIsolated { finishNavigation(Failure(description: "page load failed: \(error.localizedDescription)")) }
     }
 
-    nonisolated func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
+    nonisolated func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: any Error) {
         MainActor.assumeIsolated { finishNavigation(Failure(description: "page load failed: \(error.localizedDescription)")) }
     }
 
@@ -168,14 +185,35 @@ final class WebKitRenderer: NSObject, WKNavigationDelegate {
       return url.slice(url.indexOf(',') + 1);
     }
 
+    function withTimeout(work, timeout) {
+      const limit = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error(`timed out after ${timeout} ms`)), timeout));
+      return Promise.race([work, limit]);
+    }
+
+    // The <img>'s natural size, as a browser lays it out without width or height attributes. For an
+    // SVG without an absolute width and height this is the HTML default object size (300×150,
+    // fitted to the viewBox's aspect ratio). naturalWidth/naturalHeight are whole numbers (300×90.87
+    // reports 300×90), so the image is laid out in a box naturalWidth wide and measured: that keeps
+    // fractions, and an SVG without an intrinsic width fills the box rather than the window.
+    async function measureSVG(src, timeout) {
+      const img = await withTimeout(loadImage(src), timeout);
+      const box = document.createElement('div');
+      box.style.cssText = `position:absolute; left:0; top:0; width:${img.naturalWidth}px`;
+      img.style.display = 'block';
+      box.appendChild(img);
+      document.body.appendChild(box);
+      const r = img.getBoundingClientRect();
+      box.remove();
+      return { w: r.width, h: r.height };
+    }
+
     async function renderSVG(src, w, h, timeout) {
       const work = (async () => {
         const { canvas, redrawn } = await drawChecked(src, w, h);
         return { png: await exportPNG(canvas), redrawn };
       })();
-      const limit = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error(`timed out after ${timeout} ms`)), timeout));
-      return Promise.race([work, limit]);
+      return withTimeout(work, timeout);
     }
     </script>
     </body></html>

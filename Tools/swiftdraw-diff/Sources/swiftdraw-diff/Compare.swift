@@ -1,294 +1,187 @@
-import AppKit
 import Foundation
+import SwiftDrawDiffCore
 
-/// `swiftdraw-diff compare --base <ref>`
+/// `swiftdraw-diff compare --base <ref> [--head <ref>]`
 ///
-/// 1. Checks out <ref> into a reusable git worktree and builds this tool against
-///    that SwiftDraw, then runs its `render` subcommand → base PNGs.
-/// 2. Renders the working copy (uncommitted changes included) in-process → head PNGs.
-/// 3. Writes a self-contained compare page and scores both against WebKit in a
-///    hidden WKWebView, using the same JS diff as the eyeball report.
-/// 4. Prints regressions / improvements / changes, writes compare.json and
-///    returns exit code 1 if anything regressed beyond the tolerance.
-@MainActor
+/// 1. Builds swiftdrawcli at --base and at --head (default: the working copy), cached by commit.
+/// 2. Renders every file with WebKit (which decides its size), SwiftDraw head and base, and resvg.
+/// 3. Scores base and head against each reference and diffs base against head.
+/// 4. Prints regressed / mixed / improved / changed files, writes compare.json and returns 1 if
+///    anything regressed beyond the tolerance.
 struct Comparer {
-    var options: Options
-
-    struct Entry: Codable {
-        var name: String
-        var category: String
-        /// Difference from WebKit, in percent (0...100). nil when that side failed.
-        var base: Double?
-        var head: Double?
-        var delta: Double?
-        /// Pixels that differ between base and head (exact, unblurred).
-        var pixelsChanged: Int?
-        var baseStatus: String
-        var headStatus: String
-        /// Images that first drew blank in the scoring page and were redrawn, e.g. "head png: 1 retry".
-        var redrawn: [String]?
-    }
-
-    struct Output: Codable {
-        var base: String
-        var head: String
-        var engine: String
-        var os: String
-        var tolerance: Double
-        var generated: Date
-        var results: [Entry]
-    }
+    var session: Session
+    var options: Options { session.options }
 
     func run() async throws -> Int32 {
-        let fm = FileManager.default
-        let repo = try git(["rev-parse", "--show-toplevel"], in: URL(fileURLWithPath: fm.currentDirectoryPath))
-        let repoURL = URL(fileURLWithPath: repo)
-        let toolDir = repoURL.appendingPathComponent("Tools/swiftdraw-diff")
-        guard fm.fileExists(atPath: toolDir.appendingPathComponent("Package.swift").path) else {
-            throw Failure("expected the tool at \(toolDir.path)")
-        }
-        let work = toolDir.appendingPathComponent(".build/compare")
-        let out = options.outIsDefault ? work.appendingPathComponent("report") : options.out
-        try? fm.removeItem(at: out)
-        try fm.createDirectory(at: out, withIntermediateDirectories: true)
+        let dirs = OutputDirs(root: options.out ?? session.repo.work.appendingPathComponent("compare/report"), headName: "head")
+        try dirs.create(base: true, resvg: session.resvg != nil)
+        let files = try Pipeline.inputs(options, copyTo: dirs.svg)
 
-        let files = options.svgFiles.map { $0.standardizedFileURL }
-        guard !files.isEmpty else { throw Failure("no SVG files found") }
-
-        // Revisions
-        let label = { (ref: String, sha: String) in sha.hasPrefix(ref) ? String(sha.prefix(7)) : "\(ref) (\(sha.prefix(7)))" }
-        let baseSHA = try git(["rev-parse", "--verify", "\(options.base)^{commit}"], in: repoURL)
-        let baseLabel = label(options.base, baseSHA)
-        let headLabel: String
-        let headSHA: String
-        var dirty = false
-        if let head = options.head {
-            headSHA = try git(["rev-parse", "--verify", "\(head)^{commit}"], in: repoURL)
-            headLabel = label(head, headSHA)
+        let baseRevision = try await session.revision(options.base)
+        let headRevision = try await session.revision(options.head)
+        let base: SwiftDrawRenderer
+        if case .binary = baseRevision {
+            // --swiftdraw-path replaces head only
+            let sha = try await git(["rev-parse", "--verify", "\(options.base)^{commit}"], in: session.repo.root)
+            base = try await SwiftDrawRenderer.prepare(.commit(ref: options.base, sha: sha), slot: "base", repo: session.repo, cache: session.cache, scale: options.scale)
         } else {
-            headSHA = try git(["rev-parse", "HEAD"], in: repoURL)
-            dirty = !(try git(["status", "--porcelain", "--", "SwiftDraw", "DOM"], in: repoURL)).isEmpty
-            headLabel = "working copy (\(headSHA.prefix(7))\(dirty ? " + uncommitted changes" : ""))"
+            base = try await SwiftDrawRenderer.prepare(baseRevision, slot: "base", repo: session.repo, cache: session.cache, scale: options.scale)
         }
-        print("Comparing SwiftDraw: \(baseLabel) → \(headLabel)")
-        if baseSHA == headSHA && !dirty {
-            print("note: base and head are the same commit with no SwiftDraw changes; expect no differences")
-        }
-
-        let sources = toolDir.appendingPathComponent("Sources")
-        let baseDir = out.appendingPathComponent("base")
-        let baseManifest = try renderRevision(sha: baseSHA, slot: "base", repo: repoURL, work: work, sources: sources, files: files, to: baseDir)
-
-        let headDir = out.appendingPathComponent("head")
-        let headManifest: [RenderedFile]
-        if options.head != nil {
-            headManifest = try renderRevision(sha: headSHA, slot: "head", repo: repoURL, work: work, sources: sources, files: files, to: headDir)
-        } else {
-            step("Rendering working copy")
-            headManifest = try renderAll(files, scale: options.scale, maxDimension: options.maxDimension, to: headDir)
+        let head = try await SwiftDrawRenderer.prepare(headRevision, slot: "head", repo: session.repo, cache: session.cache, scale: options.scale)
+        print("Comparing SwiftDraw: \(base.label) → \(head.label)")
+        if case let .commit(_, baseSHA) = baseRevision, case let .commit(_, headSHA) = headRevision, baseSHA == headSHA {
+            print("note: base and head are the same commit; expect no differences")
         }
 
-        let svgDir = out.appendingPathComponent("svg")
-        try fm.createDirectory(at: svgDir, withIntermediateDirectories: true)
-        for url in files {
-            guard let data = try? Data(contentsOf: url) else { continue }
-            try? ReferenceSVG.prepare(data, fontSmoothing: options.fontSmoothing)
-                .write(to: svgDir.appendingPathComponent(url.lastPathComponent))
+        let rendered = try await Pipeline.render(files, options: options, cache: session.cache, dirs: dirs,
+                                                 webkit: session.webkit, head: head, base: base, resvg: session.resvg)
+        let progress = Progress("Scoring", total: rendered.count)
+        let entries = await concurrentMap(rendered) { r -> CompareReport.Entry in
+            defer { progress.tick() }
+            return entry(r, dirs: dirs)
         }
 
-        // The page is also the scoring engine; without --html it's temporary.
-        let page = out.appendingPathComponent(options.html ? "index.html" : ".scoring.html")
-        try writeComparePage(base: baseManifest, head: headManifest, baseLabel: baseLabel, headLabel: headLabel, dir: out, to: page)
-
-        let result = try await Scorer.evaluate(
-            page: page,
-            rowsExpression: "ROWS.map(r => ({ name: r.name, category: r.category, base: r.baseScore, head: r.headScore, pixelsChanged: r.changed, baseStatus: r.baseStatus, headStatus: r.headStatus, redrawn: r.redrawn ?? null }))",
-            progress: progressPrinter("Scoring against WebKit")
+        let report = CompareReport(
+            base: base.label, head: head.label, engine: session.engine, resvg: session.resvg?.label, os: session.os,
+            scale: options.scale, tolerance: options.tolerance, match: options.match, fontSmoothing: options.fontSmoothing,
+            generated: Date(), results: entries
         )
-        let entries = result.rows.map { row -> Entry in
-            let base = (row["base"] as? Double).map { $0 * 100 }
-            let head = (row["head"] as? Double).map { $0 * 100 }
-            return Entry(
-                name: row["name"] as? String ?? "?",
-                category: row["category"] as? String ?? "error",
-                base: base,
-                head: head,
-                delta: base.flatMap { b in head.map { $0 - b } },
-                pixelsChanged: row["pixelsChanged"] as? Int,
-                baseStatus: row["baseStatus"] as? String ?? "",
-                headStatus: row["headStatus"] as? String ?? "",
-                redrawn: row["redrawn"] as? [String]
-            )
-        }
-
-        let output = Output(base: baseLabel, head: headLabel, engine: result.engine, os: result.os,
-                            tolerance: options.tolerance, generated: Date(), results: entries)
-        let encoder = JSONEncoder()
-        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-        encoder.dateEncodingStrategy = .iso8601
-        try encoder.encode(output).write(to: out.appendingPathComponent("compare.json"))
-
-        printSummary(output)
+        let json = dirs.root.appendingPathComponent("compare.json")
+        try JSONEncoder.report.encode(report).write(to: json)
+        printSummary(report)
         if options.html {
-            print("\nReport: \(page.standardizedFileURL.path)")
-        } else {
-            try? FileManager.default.removeItem(at: page)
+            let page = dirs.root.appendingPathComponent("index.html")
+            try HTMLReport.write(compare: report, dirs: dirs, to: page)
+            print("\nReport: \(page.path)")
         }
-        print("\nJSON:   \(out.appendingPathComponent("compare.json").standardizedFileURL.path)")
-        return entries.contains { $0.category == "regressed" } ? 1 : 0
+        print("\nJSON:   \(json.path)")
+        return entries.contains { $0.category == .regressed } ? 1 : 0
+    }
+
+    func entry(_ r: RenderedFile, dirs: OutputDirs) -> CompareReport.Entry {
+        let name = r.file.name
+        var errors: [String: String] = [:]
+        func note(_ key: String, _ result: RenderResult?) { if let e = result?.error { errors[key] = e } }
+        note("head", r.head)
+        note("base", r.base)
+        note("webkit", r.webkitResult)
+        note("resvg", r.resvg)
+
+        let baseRendered = r.base?.rendered == true, headRendered = r.head.rendered
+        var e = CompareReport.Entry(
+            name: name, category: .error,
+            baseStatus: baseRendered ? "rendered" : "failed", headStatus: headRendered ? "rendered" : "failed",
+            size: r.size, redrawn: r.webkit?.redrawn
+        )
+        guard let px = Pipeline.pixels(r, scale: options.scale) else {
+            e.category = CompareCategory.of(baseRendered: baseRendered, headRendered: headRendered,
+                                            deltas: [], pixelsChanged: 0, tolerance: options.tolerance)
+            e.errors = errors.isEmpty ? nil : errors
+            return e
+        }
+        func load(_ key: String, _ dir: URL, _ result: RenderResult?, fit: Bool = false) -> Bitmap? {
+            guard result?.rendered == true else { return nil }
+            switch Pipeline.load(dirs.png(dir, name), size: px, fit: fit) {
+            case let .success(b): return b
+            case let .failure(err): errors[key] = err.description; return nil
+            }
+        }
+        let baseImage = load("base", dirs.base, r.base)
+        let headImage = load("head", dirs.head, r.head)
+        let webkit = load("webkit", dirs.webkit, r.webkitResult)
+        let resvg = load("resvg", dirs.resvg, r.resvg, fit: session.resvg?.isPNG == false)
+        let blur = Diff.blur(scale: options.scale)
+        func pct(_ a: Bitmap?, _ b: Bitmap?) -> Diff? {
+            guard let a, let b else { return nil }
+            return Diff.compare(a, b, blur: blur)
+        }
+
+        let headWebKit = pct(webkit, headImage), headResvg = pct(resvg, headImage)
+        e.base = pct(webkit, baseImage).map { $0.score * 100 }
+        e.head = headWebKit.map { $0.score * 100 }
+        e.baseResvg = pct(resvg, baseImage).map { $0.score * 100 }
+        e.headResvg = headResvg.map { $0.score * 100 }
+        e.webkitResvg = pct(webkit, resvg).map { $0.score * 100 }
+        e.delta = e.base.flatMap { b in e.head.map { $0 - b } }
+        e.deltaResvg = e.baseResvg.flatMap { b in e.headResvg.map { $0 - b } }
+        let match = options.match
+        func verdict(_ w: Double?, _ s: Double?) -> Verdict? {
+            guard let w, let s, let wr = e.webkitResvg else { return nil }
+            return Verdict(webkit: w / 100, resvg: s / 100, webkitResvg: wr / 100, match: match / 100)
+        }
+        e.baseVerdict = verdict(e.base, e.baseResvg)
+        e.headVerdict = verdict(e.head, e.headResvg)
+
+        var change: Diff?
+        if let baseImage, let headImage {
+            // Exact comparison: no blur, tiny threshold, so any real change shows.
+            change = Diff.compare(baseImage, headImage, blur: 0, threshold: 2)
+            e.pixelsChanged = change?.differing
+        }
+        e.category = CompareCategory.of(
+            baseRendered: baseImage != nil, headRendered: headImage != nil,
+            deltas: [e.delta, e.deltaResvg].compactMap { $0 }, pixelsChanged: e.pixelsChanged ?? 0, tolerance: options.tolerance
+        )
+        if e.category != .unchanged {
+            try? headWebKit?.image.writePNG(to: dirs.diff.appendingPathComponent("\(name).webkit.png"))
+            try? headResvg?.image.writePNG(to: dirs.diff.appendingPathComponent("\(name).resvg.png"))
+            try? change?.image.writePNG(to: dirs.diff.appendingPathComponent("\(name).change.png"))
+        }
+        e.errors = errors.isEmpty ? nil : errors
+        return e
     }
 
     // MARK: - Summary
 
-    func printSummary(_ output: Output) {
-        print("\nReference: \(output.engine) · \(output.os) · font smoothing \(options.fontSmoothing ? "on" : "off") · tolerance \(fmt(output.tolerance)) pts\n")
-        let width = max(10, output.results.map(\.name.count).max() ?? 10)
+    func printSummary(_ report: CompareReport) {
+        let refs = [report.engine, report.resvg].compactMap { $0 }.joined(separator: " and ")
+        print("\nReferences: \(refs) · \(report.os) · font smoothing \(report.fontSmoothing ? "on" : "off") · tolerance \(String(format: "%g", report.tolerance)) pts\n")
+        let width = max(10, report.results.map(\.name.count).max() ?? 10)
+        let hasResvg = report.resvg != nil
 
-        func line(_ e: Entry) -> String {
-            let name = e.name.padding(toLength: width, withPad: " ", startingAt: 0)
-            let base = e.base.map { String(format: "%11.2f%%", $0) } ?? label(e.baseStatus).leftPadded(12)
-            let head = e.head.map { String(format: "%6.2f%%", $0) } ?? label(e.headStatus)
-            let delta = e.delta.map { String(format: "%+7.2f", $0) } ?? ""
-            let px = (e.pixelsChanged ?? 0) > 0 ? "   \(e.pixelsChanged!) px changed" : ""
-            return "  \(name)  \(base) → \(head)  \(delta)\(px)"
+        func side(_ base: Double?, _ head: Double?, _ delta: Double?, baseStatus: String, headStatus: String) -> String {
+            let b = base.map { String(format: "%6.2f%%", $0) } ?? (baseStatus == "failed" ? "failed" : "–").leftPadded(7)
+            let h = head.map { String(format: "%6.2f%%", $0) } ?? (headStatus == "failed" ? "failed" : "–").leftPadded(7)
+            let d = delta.map { String(format: "%+7.2f", $0) } ?? "       "
+            return "\(b) → \(h) \(d)"
+        }
+        func line(_ e: CompareReport.Entry) -> String {
+            var s = "  \(e.name.padded(width))  WebKit " + side(e.base, e.head, e.delta, baseStatus: e.baseStatus, headStatus: e.headStatus)
+            if hasResvg {
+                s += "   resvg " + side(e.baseResvg, e.headResvg, e.deltaResvg, baseStatus: e.baseStatus, headStatus: e.headStatus)
+                if let b = e.baseVerdict, let h = e.headVerdict, b != h { s += "   \(b.label) → \(h.label)" }
+            }
+            if let px = e.pixelsChanged, px > 0 { s += "   \(px) px changed" }
+            if e.category == .error || e.category == .regressed, let errors = e.errors {
+                s += "   (" + errors.sorted { $0.key < $1.key }.map { "\($0.key): \($0.value)" }.joined(separator: "; ") + ")"
+            }
+            return s
         }
 
-        let groups: [(String, String, String)] = [
-            ("regressed", "Regressed", "further from WebKit"),
-            ("improved", "Improved", "closer to WebKit"),
-            ("changed", "Changed", "pixels differ, score within tolerance"),
-            ("error", "Errors", "could not compare"),
+        let groups: [(CompareCategory, String, String)] = [
+            (.regressed, "Regressed", "further from a reference, not closer to the other"),
+            (.mixed, "Mixed", "closer to one reference, further from the other; not a failure, check by eye"),
+            (.improved, "Improved", "closer to a reference"),
+            (.changed, "Changed", "pixels differ, scores within tolerance"),
+            (.error, "Errors", "no reference rendered"),
         ]
-        for (key, title, detail) in groups {
-            let items = output.results.filter { $0.category == key }
-                .sorted { abs($0.delta ?? 100) > abs($1.delta ?? 100) }
+        func magnitude(_ e: CompareReport.Entry) -> Double { max(abs(e.delta ?? 100), abs(e.deltaResvg ?? 0)) }
+        for (category, title, detail) in groups {
+            let items = report.results.filter { $0.category == category }.sorted { magnitude($0) > magnitude($1) }
             guard !items.isEmpty else { continue }
             print("\(title) (\(items.count)) — \(detail)")
             items.forEach { print(line($0)) }
             print("")
         }
-        printRedrawn(output.results.compactMap { e in e.redrawn.map { (e.name, $0) } })
-        if output.results.contains(where: { $0.redrawn != nil }) { print("") }
-        let unchanged = output.results.filter { $0.category == "unchanged" }.count
-        let regressed = output.results.filter { $0.category == "regressed" }.count
-        print("Unchanged: \(unchanged) of \(output.results.count)")
+        let redrawn = report.results.filter { $0.redrawn != nil }
+        if !redrawn.isEmpty {
+            print("Redrawn (\(redrawn.count)) — WebKit's first draw was blank, scored from a later one")
+            for e in redrawn { print("  \(e.name): \(e.redrawn!) \(e.redrawn == 1 ? "retry" : "retries")") }
+            print("")
+        }
+        let unchanged = report.results.filter { $0.category == .unchanged }.count
+        let regressed = report.results.filter { $0.category == .regressed }.count
+        print("Unchanged: \(unchanged) of \(report.results.count)")
         print(regressed == 0 ? "Result: no regressions" : "Result: \(regressed) regression\(regressed == 1 ? "" : "s")")
-    }
-
-    private func fmt(_ v: Double) -> String { String(format: "%g", v) }
-
-    private func label(_ status: String) -> String {
-        switch status {
-        case "swiftdraw-nil": return "parse failed"
-        case "missing": return "missing"
-        default: return status
-        }
-    }
-
-    // MARK: - Base build
-
-    /// Builds this tool against SwiftDraw at `sha` (in a reusable worktree named
-    /// after `slot`) and runs its `render` subcommand into `dir`.
-    func renderRevision(sha: String, slot: String, repo: URL, work: URL, sources: URL, files: [URL], to dir: URL) throws -> [RenderedFile] {
-        let worktree = work.appendingPathComponent("\(slot)-src")
-        try prepareWorktree(worktree, sha: sha, repo: repo)
-        let tool = work.appendingPathComponent("\(slot)-tool")
-        try prepareBaseTool(tool, swiftDraw: worktree, sources: sources)
-        step("Building SwiftDraw @ \(sha.prefix(7))")
-        try shell(["swift", "build", "-c", "release", "--package-path", tool.path], in: tool, label: "\(slot) build")
-        step("Rendering \(slot)")
-        try shell([tool.appendingPathComponent(".build/release/swiftdraw-diff").path, "render"]
-                  + files.map(\.path)
-                  + ["--out", dir.path, "--scale", "\(options.scale)", "--max", "\(options.maxDimension)"],
-                  in: work, label: "\(slot) render")
-        return try JSONDecoder().decode([RenderedFile].self, from: Data(contentsOf: dir.appendingPathComponent("manifest.json")))
-    }
-
-    /// Reuses one worktree across runs so the base build stays incremental.
-    func prepareWorktree(_ dir: URL, sha: String, repo: URL) throws {
-        let fm = FileManager.default
-        if fm.fileExists(atPath: dir.appendingPathComponent(".git").path) {
-            _ = try git(["checkout", "--quiet", "--detach", "--force", sha], in: dir)
-        } else {
-            _ = try? git(["worktree", "prune"], in: repo)
-            try fm.createDirectory(at: dir.deletingLastPathComponent(), withIntermediateDirectories: true)
-            _ = try git(["worktree", "add", "--quiet", "--detach", "--force", dir.path, sha], in: repo)
-        }
-    }
-
-    /// A copy of this tool's package whose SwiftDraw dependency points at the worktree.
-    func prepareBaseTool(_ dir: URL, swiftDraw: URL, sources: URL) throws {
-        let fm = FileManager.default
-        try fm.createDirectory(at: dir, withIntermediateDirectories: true)
-        let manifest = """
-        // swift-tools-version:6.2
-        // Generated by swiftdraw-diff compare: this tool built against SwiftDraw at the base revision.
-        import PackageDescription
-
-        let package = Package(
-            name: "swiftdraw-diff",
-            platforms: [.macOS(.v13)],
-            dependencies: [.package(name: "SwiftDraw", path: "\(swiftDraw.path)")],
-            targets: [
-                .executableTarget(
-                    name: "swiftdraw-diff",
-                    dependencies: [.product(name: "SwiftDraw", package: "SwiftDraw")]
-                )
-            ],
-            swiftLanguageModes: [.v5]
-        )
-
-        """
-        let manifestURL = dir.appendingPathComponent("Package.swift")
-        if (try? String(contentsOf: manifestURL, encoding: .utf8)) != manifest {
-            try manifest.write(to: manifestURL, atomically: true, encoding: .utf8)
-        }
-        // Copy (not symlink) the sources so SwiftPM sees changes normally.
-        let dest = dir.appendingPathComponent("Sources")
-        try? fm.removeItem(at: dest)
-        try fm.copyItem(at: sources, to: dest)
-    }
-
-    // MARK: - Processes
-
-    struct Failure: Error, CustomStringConvertible {
-        var description: String
-        init(_ description: String) { self.description = description }
-    }
-
-    func step(_ text: String) {
-        FileHandle.standardError.write(Data("→ \(text)…\n".utf8))
-    }
-
-    @discardableResult
-    func git(_ args: [String], in dir: URL) throws -> String {
-        try shell(["git"] + args, in: dir, label: "git \(args.first ?? "")")
-    }
-
-    /// Runs a command, returning trimmed stdout. On failure prints its output and throws.
-    @discardableResult
-    func shell(_ args: [String], in dir: URL, label: String) throws -> String {
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
-        process.arguments = args
-        process.currentDirectoryURL = dir
-        let pipe = Pipe()
-        process.standardOutput = pipe
-        process.standardError = pipe
-        try process.run()
-        let data = pipe.fileHandleForReading.readDataToEndOfFile()
-        process.waitUntilExit()
-        let output = String(decoding: data, as: UTF8.self)
-        guard process.terminationStatus == 0 else {
-            FileHandle.standardError.write(Data(output.utf8))
-            throw Failure("\(label) failed (exit \(process.terminationStatus))")
-        }
-        return output.trimmingCharacters(in: .whitespacesAndNewlines)
-    }
-}
-
-private extension String {
-    func leftPadded(_ width: Int) -> String {
-        count >= width ? self : String(repeating: " ", count: width - count) + self
     }
 }

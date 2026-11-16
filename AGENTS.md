@@ -8,7 +8,8 @@ Guidance for coding agents working in this repository.
 - `SwiftDraw/` — the library: DOM → `LayerTree` → renderers (`Renderer/`: CoreGraphics, Swift code generation, SF Symbols), plus SwiftUI/UIKit/AppKit API. Tests in `SwiftDraw/Tests`.
 - `CommandLine/` — the `swiftdrawcli` executable (SVG → PNG/PDF/JPEG/Swift/SF Symbol).
 - `Samples.bundle/` — sample SVGs covering supported features; used for rendering comparisons.
-- `Tools/swiftdraw-diff/` — dev-only package that compares SwiftDraw's rendering with WebKit (see below). Not part of the main package.
+- `Tools/swiftdraw-diff/` — dev-only package that compares SwiftDraw's rendering with WebKit and resvg (see below). Not part of the main package.
+- `Tools/webkit-render/` — dev-only SVG → PNG renderer using WebKit, run by `swiftdraw-diff`.
 
 ## Build and test
 
@@ -41,7 +42,9 @@ Write all new tests with Swift Testing (`import Testing`, `@Test`, `#expect`, `#
 
 ## Checking rendering changes
 
-Unit tests don't catch most visual regressions. For any change under `SwiftDraw/Sources` or `DOM/Sources` that can affect rendered output, run `swiftdraw-diff`, which renders `Samples.bundle` with SwiftDraw at `main` and with your working copy, scores both against WebKit (Safari's engine) and reports what changed. It needs macOS with a logged-in GUI session.
+Unit tests don't catch most visual regressions. For any change under `SwiftDraw/Sources` or `DOM/Sources` that can affect rendered output, run `swiftdraw-diff`. It renders `Samples.bundle` with SwiftDraw at `main` and with your working copy, scores both against WebKit (Safari's engine) and, with `--resvg`, against [resvg](https://github.com/linebender/resvg), and reports what changed. It needs macOS 26 with a logged-in GUI session (for WebKit).
+
+Neither reference is the truth. WebKit renders SVG as an `<img>`, which lacks some SVG 2 and CSS features (CSS filter functions, markers on all shapes, context paint, `mix-blend-mode`) and offsets middle- and end-anchored text. resvg supports more of SVG but has gaps of its own (for example `color(display-p3 …)`). A second reference shows where WebKit falls short, so pass `--resvg` when resvg is installed (`brew install resvg`).
 
 From the repo root:
 
@@ -50,25 +53,40 @@ swift build -c release -q --package-path Tools/swiftdraw-diff
 ```
 
 ```bash
-Tools/swiftdraw-diff/.build/release/swiftdraw-diff compare --base main Samples.bundle
+Tools/swiftdraw-diff/.build/release/swiftdraw-diff compare --base main --resvg Samples.bundle
 ```
 
-The first run builds SwiftDraw at the base revision (about a minute); later runs reuse it.
+swiftdraw-diff runs three renderers and diffs their PNGs:
+
+- `webkit-render` (`Tools/webkit-render`, built on first use) renders each SVG and decides its size: the browser's natural size, clamped to `--max` and rounded to whole points. Every renderer draws at that size.
+- `swiftdrawcli`, built from this repo for each revision. The working copy is rebuilt on every run, so uncommitted changes are always included; a commit's build is cached by SHA in `~/Library/Caches/swiftdraw-diff`, so the first compare against a new base takes about a minute and later ones reuse it.
+- `resvg` from `PATH`, with SwiftDraw's fallback fonts (Times, Helvetica, Courier) so text is comparable.
+
+`--swiftdraw-path`, `--webkit-render-path` and `--resvg-path` use a given binary instead. WebKit, resvg and committed SwiftDraw renders are cached too; pass `--no-cache` to render everything.
+
+To score one revision without comparing, drop `compare`: `swiftdraw-diff Samples.bundle --resvg` scores the working copy, `--head 0.30.0` a tag or branch.
 
 ### Reading the result
 
-- Exit code `1` means at least one file **regressed**: further from WebKit by more than `--tolerance` percentage points (default 0.5), or it stopped parsing. Exit `0` means no regressions.
-- The summary lists only **Regressed**, **Improved** and **Changed** files (Changed = pixels differ but the score stayed within tolerance), each as `base% → head%` and the change. Unchanged files are only counted.
+- Exit code `1` means at least one file **regressed**: it moved further from a reference by more than `--tolerance` percentage points (default 0.5) without moving closer to the other, or it stopped rendering. Exit `0` means no regressions; `2` means the tool failed.
+- The summary lists **Regressed**, **Mixed**, **Improved** and **Changed** files. Each shows `base% → head%` and the change against WebKit and, with `--resvg`, against resvg. Unchanged files are only counted.
+- **Mixed** means closer to one reference and further from the other, such as fixing something WebKit gets wrong. It does not fail the run; check those files by eye.
+- With `--resvg`, each file also gets a verdict, shown as `base → head` when it changes. Two images count as the same below `--match` percent (default 1).
+  - **pass**: SwiftDraw matches both references.
+  - **pass, WebKit differs**: SwiftDraw matches resvg, and WebKit is the odd one out.
+  - **pass, resvg differs**: SwiftDraw matches WebKit, and resvg is the odd one out. Often a feature that WebKit's `<img>` path and SwiftDraw both lack.
+  - **SwiftDraw bug**: the references agree, and SwiftDraw matches neither.
+  - **unclear**: all three differ.
 - Judge by the change between base and head, not the absolute score. Many samples are already imperfect (e.g. `display`, `use`, `mask-composite`); a file staying at a high score is not a regression.
-- Text is compared with WebKit's font smoothing off (`-webkit-font-smoothing: antialiased`), because SwiftDraw fills glyph outlines and macOS smoothing makes WebKit's glyphs heavier. Pass `--font-smoothing` to compare against WebKit's default, as browsers show it. Text samples still keep a few percent from glyph positioning; judge them by eye at `--scale 4`.
-- A **Redrawn** list means an image first drew blank in the scoring page (a WebKit timing glitch under load) and was scored from a later draw. That's informational. An image that stays blank after the retries is scored as blank, so a real blank render still shows up as a regression.
+- Text is compared with WebKit's font smoothing off (`-webkit-font-smoothing: antialiased`), because SwiftDraw fills glyph outlines and macOS smoothing makes WebKit's glyphs heavier. Pass `--font-smoothing` to compare against WebKit's default, as browsers show it. Text samples still keep a few percent from glyph positioning; judge them by eye at `--scale 3`.
+- A **Redrawn** list means WebKit first drew an image blank (a timing glitch under load) and it was scored from a later draw. That's informational. An image that stays blank after the retries is scored as blank, so a real blank render still shows up as a regression.
 - Ignore `Warning: <…> is not supported` lines; they come from SwiftDraw's logging.
 
 ### Keeping it cheap
 
 - Read the terminal summary first; it is usually enough.
-- To see what changed, view only the PNGs for the files the summary lists, in `Tools/swiftdraw-diff/.build/compare/report/`: `base/<name>.png`, `head/<name>.png` and the original `svg/<name>.svg`.
-- Read `compare.json` only if you need numbers the summary doesn't show.
+- To see what changed, view only the PNGs for the files the summary lists, in `Tools/swiftdraw-diff/.build/compare/report/`. The renders are `base/<name>.png`, `head/<name>.png`, `webkit/<name>.png` and `resvg/<name>.png`, and the original is `svg/<name>.svg`. Diffs are in `diff/`: `<name>.change.png` shows base → head, and `<name>.webkit.png` and `<name>.resvg.png` show head against each reference.
+- Read `compare.json` (or `scores.json` without `compare`) only if you need numbers the summary doesn't show.
 - Don't pass `--html` and don't read `index.html`: it embeds every image (tens of MB) and is meant for people.
 
 ### Reviewing a pull request
@@ -80,7 +98,7 @@ git fetch origin main pull/123/head:pr/123
 ```
 
 ```bash
-Tools/swiftdraw-diff/.build/release/swiftdraw-diff compare --base "$(git merge-base origin/main pr/123)" --head pr/123 Samples.bundle
+Tools/swiftdraw-diff/.build/release/swiftdraw-diff compare --base "$(git merge-base origin/main pr/123)" --head pr/123 --resvg Samples.bundle
 ```
 
 If the PR adds samples, run it again on the PR's copy at `Tools/swiftdraw-diff/.build/compare/head-src/Samples.bundle`.

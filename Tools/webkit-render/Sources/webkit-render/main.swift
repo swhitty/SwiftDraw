@@ -33,6 +33,14 @@ guard CGSessionCopyCurrentDictionary() != nil else {
     fail("no GUI login session; WebKit needs the user logged in at the Mac (ssh works once they are)")
 }
 
+/// The requested size, or the SVG's natural size clamped to --max and rounded to whole points.
+@MainActor
+func layoutSize(_ requested: Size?, svg: Data, renderer: WebKitRenderer) async throws -> (layout: Size, natural: Size?) {
+    if let requested { return (requested, nil) }
+    let natural = try await renderer.measure(svg: svg)
+    return (Size.layout(natural: natural, max: arguments.maxDimension), natural)
+}
+
 @MainActor
 func run() async throws -> Int32 {
     let renderer = WebKitRenderer()
@@ -40,8 +48,9 @@ func run() async throws -> Int32 {
     case let .single(input, output, size):
         let data: Data
         do { data = try Data(contentsOf: input) } catch { fail("cannot read \(input.path): \(error.localizedDescription)") }
-        let (w, h) = size.pixels(scale: arguments.scale)
         let svg = ReferenceSVG.prepare(data, fontSmoothing: arguments.fontSmoothing)
+        let layout = try await layoutSize(size, svg: svg, renderer: renderer).layout
+        let (w, h) = layout.pixels(scale: arguments.scale)
         let result = try await renderer.render(svg: svg, width: w, height: h)
         try result.png.write(to: output)
         return 0
@@ -55,19 +64,25 @@ func run() async throws -> Int32 {
         var manifest: [ManifestEntry] = []
         for (index, job) in jobs.enumerated() {
             if isTTY { FileHandle.standardError.write(Data("\rWebKit… \(index + 1)/\(jobs.count)\u{1B}[K".utf8)) }
-            let (w, h) = job.size.pixels(scale: arguments.scale)
             let png = out.appendingPathComponent("\(job.name).png")
             try? FileManager.default.removeItem(at: png) // never leave a stale image for a failed job
+            var layout = job.size, natural: Size?
             do {
                 let data = try Data(contentsOf: job.svgURL(relativeTo: jobsURL))
                 let svg = ReferenceSVG.prepare(data, fontSmoothing: arguments.fontSmoothing)
+                let sized = try await layoutSize(job.size, svg: svg, renderer: renderer)
+                layout = sized.layout
+                natural = sized.natural
+                let (w, h) = sized.layout.pixels(scale: arguments.scale)
                 let result = try await renderer.render(svg: svg, width: w, height: h)
                 try result.png.write(to: png)
                 manifest.append(ManifestEntry(name: job.name, status: .rendered,
                                               redrawn: result.redrawn > 0 ? result.redrawn : nil,
-                                              width: w, height: h))
+                                              width: w, height: h, layout: sized.layout, natural: sized.natural))
             } catch {
-                manifest.append(ManifestEntry(name: job.name, status: .failed, error: "\(error)", width: w, height: h))
+                let (w, h) = layout?.pixels(scale: arguments.scale) ?? (0, 0)
+                manifest.append(ManifestEntry(name: job.name, status: .failed, error: "\(error)", width: w, height: h,
+                                              layout: layout, natural: natural))
             }
         }
         if isTTY { FileHandle.standardError.write(Data("\r\u{1B}[K".utf8)) }
