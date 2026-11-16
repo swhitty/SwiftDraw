@@ -62,7 +62,7 @@ struct DOMFontSizeTests {
         (.keyword(.medium), 16),
         (.keyword(.xxLarge), 32),
         (.larger, 24),
-        (.smaller, 50 / 3),
+        (.smaller, Float(50) / 3),
     ])
     func resolvesAgainstTheParent(_ size: DOM.FontSize, _ expected: Float) {
         #expect(abs(size.resolved(inheriting: 20) - expected) < 0.0001)
