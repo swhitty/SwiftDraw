@@ -252,17 +252,19 @@ By default, SwiftDraw automatically sizes and aligns the content to the template
 
 ```bash
 $ swiftdraw simple.svg --format sfsymbol --insets auto
-Alignment: --insets 30,30,30,30
+Alignment: --insets 0,-22.8571,0,-22.8571
 ```
 
 Insets can be provided in the form `--insets top,left,bottom,right` specifying a `Double` or `auto` for each edge:
 
 ```bash
 $ swiftdraw simple.svg --format sfsymbol --insets 40,auto,40,auto
-Alignment: --insets 40,30,40,30
+Alignment: --insets 40,-11.4286,40,-11.4286
 ```
 
-Variants can also be aligned using `--ultralightInsets` and `--blackInsets`.
+Insets are measured inwards from each edge of the SVG, in its own units, and mark out the rectangle that is aligned to the template. Its top and bottom are placed on the cap height and baseline, which sets the scale, and its left and right become the margins. Positive top and bottom insets let content extend above the cap height and below the baseline; negative left and right insets add space beside the symbol.
+
+Variants can also be aligned using `--ultralight-insets` and `--black-insets`.
 
 #### Auto-generated weight variants
 

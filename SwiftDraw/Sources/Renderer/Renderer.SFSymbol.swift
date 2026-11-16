@@ -116,24 +116,24 @@ public struct SFSymbolRenderer {
 
         template.svg.styles = image.styles.map(makeSymbolStyleSheet)
 
-        let boundsRegular = try makeBounds(svg: image, auto: Self.makeAutoBounds(for: pathsRegular, isLegacy: isLegacyInsets), for: .regular)
+        let boundsRegular = try makeBounds(svg: image, paths: pathsRegular, destination: template.regular.bounds, for: .regular)
         template.regular.appendPaths(pathsRegular, from: boundsRegular, isLegacy: isLegacyInsets)
 
         if let ultralight = ultralight,
            let paths = Self.getPaths(for: ultralight) {
-            let bounds = try makeBounds(svg: ultralight, isRegularSVG: false, auto: Self.makeAutoBounds(for: paths, isLegacy: isLegacyInsets), for: .ultralight)
+            let bounds = try makeBounds(svg: ultralight, paths: paths, destination: template.ultralight.bounds, for: .ultralight)
             template.ultralight.appendPaths(paths, from: bounds, isLegacy: isLegacyInsets)
         } else {
-            let bounds = try makeBounds(svg: image, auto: Self.makeAutoBounds(for: pathsRegular, isLegacy: isLegacyInsets), for: .ultralight)
+            let bounds = try makeBounds(svg: image, paths: pathsRegular, destination: template.ultralight.bounds, for: .ultralight)
             template.ultralight.appendPaths(pathsRegular, from: bounds, isLegacy: isLegacyInsets)
         }
 
         if let black = black,
            let paths = Self.getPaths(for: black) {
-            let bounds = try makeBounds(svg: black, isRegularSVG: false, auto: Self.makeAutoBounds(for: paths, isLegacy: isLegacyInsets), for: .black)
+            let bounds = try makeBounds(svg: black, paths: paths, destination: template.black.bounds, for: .black)
             template.black.appendPaths(paths, from: bounds, isLegacy: isLegacyInsets)
         } else {
-            let bounds = try makeBounds(svg: image, auto: Self.makeAutoBounds(for: pathsRegular, isLegacy: isLegacyInsets), for: .black)
+            let bounds = try makeBounds(svg: image, paths: pathsRegular, destination: template.black.bounds, for: .black)
             template.black.appendPaths(pathsRegular, from: bounds, isLegacy: isLegacyInsets)
         }
 
@@ -190,7 +190,47 @@ extension SFSymbolRenderer {
         }
     }
 
-    func makeBounds(svg: DOM.SVG, isRegularSVG: Bool = true, auto: LayerTree.Rect, for variant: Variant) throws -> LayerTree.Rect {
+    /// Space left between the content and each margin by auto alignment, in template units.
+    static let autoMarginPadding: LayerTree.Float = 10
+
+    /// The rect of the source SVG that is aligned to the template: its top and bottom map to the cap height
+    /// and baseline, its left and right to the margins. Insets are measured from the edges of the SVG in its
+    /// own units; any edge left as `auto` is derived from the content.
+    func makeBounds(svg: DOM.SVG, paths: [SymbolPath], destination: LayerTree.Rect, for variant: Variant) throws -> LayerTree.Rect {
+        let content = Self.makeAutoBounds(for: paths)
+        guard !isLegacyInsets else {
+            return try makeLegacyBounds(svg: svg, auto: content, for: variant)
+        }
+
+        let insets = getInsets(for: variant)
+        let width = LayerTree.Float(svg.width)
+        let height = LayerTree.Float(svg.height)
+
+        // auto sizes the content to fit within the default margins and between the baseline and cap height
+        let autoScale = Self.makeFiniteScale(min(destination.width / content.width, destination.height / content.height))
+        let autoHeight = destination.height / autoScale
+        let top = insets.top.map { LayerTree.Float($0) } ?? (content.midY - autoHeight / 2)
+        let bottom = insets.bottom.map { LayerTree.Float($0) } ?? (height - content.midY - autoHeight / 2)
+        let boundsHeight = height - top - bottom
+        guard boundsHeight > 0 else {
+            throw Error("Invalid insets")
+        }
+
+        // the padding is in template units, so it is converted at the scale the content is drawn
+        let padding = Self.autoMarginPadding * boundsHeight / destination.height
+        let left = insets.left.map { LayerTree.Float($0) } ?? (content.minX - padding)
+        let right = insets.right.map { LayerTree.Float($0) } ?? (width - content.maxX - padding)
+        let boundsWidth = width - left - right
+        guard boundsWidth > 0 else {
+            throw Error("Invalid insets")
+        }
+
+        Self.printInsets(top: Double(top), left: Double(left), bottom: Double(bottom), right: Double(right), variant: variant)
+        return LayerTree.Rect(x: left, y: top, width: boundsWidth, height: boundsHeight)
+    }
+
+    /// Alignment from SwiftDraw 0.22 and earlier, with the `--legacy` option.
+    func makeLegacyBounds(svg: DOM.SVG, auto: LayerTree.Rect, for variant: Variant) throws -> LayerTree.Rect {
         let insets = getInsets(for: variant)
         let width = LayerTree.Float(svg.width)
         let height = LayerTree.Float(svg.height)
@@ -213,6 +253,10 @@ extension SFSymbolRenderer {
             throw Error("Invalid insets")
         }
         return bounds
+    }
+
+    static func makeFiniteScale(_ scale: LayerTree.Float) -> LayerTree.Float {
+        scale.isFinite && scale > 0 ? scale : 1
     }
 
     static func getPaths(for svg: DOM.SVG) -> [SymbolPath]? {
@@ -340,18 +384,13 @@ extension SFSymbolRenderer {
 #endif
     }
 
-    static func makeAutoBounds(for paths: [SymbolPath], isLegacy: Bool = false) -> LayerTree.Rect {
+    static func makeAutoBounds(for paths: [SymbolPath]) -> LayerTree.Rect {
         var min = LayerTree.Point.maximum
         var max = LayerTree.Point.minimum
         for p in paths {
             let bounds = p.path.bounds
             min = min.minimum(combining: .init(bounds.minX, bounds.minY))
             max = max.maximum(combining: .init(bounds.maxX, bounds.maxY))
-        }
-
-        if !isLegacy {
-            min.x -= 10
-            max.x += 10
         }
 
         return LayerTree.Rect(
@@ -375,6 +414,20 @@ extension SFSymbolRenderer {
             .scale(sx: scale, sy: scale)
             .toMatrix()
             .concatenated(t.toMatrix())
+    }
+
+    /// Scales `source` so its height matches `destination` and centres it within `destination`.
+    static func makeAlignment(from source: LayerTree.Rect,
+                              to destination: LayerTree.Rect) -> LayerTree.Transform.Matrix {
+        let scale = makeFiniteScale(destination.height / source.height)
+        return LayerTree.Transform
+            .scale(sx: scale, sy: scale)
+            .toMatrix()
+            .concatenated(
+                LayerTree.Transform
+                    .translate(tx: destination.midX - source.midX * scale, ty: destination.midY - source.midY * scale)
+                    .toMatrix()
+            )
     }
 
     static func convertPaths(_ paths: [LayerTree.Path],
@@ -843,7 +896,9 @@ private extension ContainerElement {
 private extension SFSymbolTemplate.Variant {
 
     mutating func appendPaths(_ paths: [SFSymbolRenderer.SymbolPath], from source: LayerTree.Rect, isLegacy: Bool = false) {
-        let matrix = SFSymbolRenderer.makeTransformation(from: source, to: bounds)
+        let matrix = isLegacy
+            ? SFSymbolRenderer.makeTransformation(from: source, to: bounds)
+            : SFSymbolRenderer.makeAlignment(from: source, to: bounds)
         contents.paths = paths
             .map {
                 let transformed = $0.path.applying(matrix: matrix)

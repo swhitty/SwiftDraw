@@ -80,7 +80,7 @@ extension CommandLine {
         case superRetina
     }
 
-    public struct Insets: Equatable {
+    public struct Insets: Equatable, Sendable {
         public var top: Double?
         public var left: Double?
         public var bottom: Double?
