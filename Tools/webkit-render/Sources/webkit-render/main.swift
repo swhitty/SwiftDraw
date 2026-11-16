@@ -27,10 +27,10 @@ case .single, .batch:
     break
 }
 
-// WebKit needs the window server: without a logged-in GUI session (e.g. over ssh before anyone
-// has logged in at the console) WKWebView hangs or crashes instead of failing.
+// WebKit needs the window server, so the user must be logged in at the Mac. ssh works while they
+// are; with nobody logged in (login window, after logging out) fail clearly rather than hang.
 guard CGSessionCopyCurrentDictionary() != nil else {
-    fail("no GUI login session; WebKit needs a logged-in macOS desktop session (run from Terminal on a logged-in Mac, not a bare ssh session)")
+    fail("no GUI login session; WebKit needs the user logged in at the Mac (ssh works once they are)")
 }
 
 @MainActor
