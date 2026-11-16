@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 10 10">
+  <!-- A nested <svg> with fractional width/height scales its viewBox by 5.8/100,
+       so the circle fills the blue square (issue #134). -->
+  <rect width="10" height="10" fill="#eeeeee"/>
+  <rect x="2.1" y="2.1" width="5.8" height="5.8" fill="none" stroke="#0000ff" stroke-width="0.1"/>
+  <svg x="2.1" y="2.1" width="5.8" height="5.8" viewBox="0 0 100 100">
+    <circle cx="50" cy="50" r="48" fill="#ff6347"/>
+  </svg>
+</svg>
