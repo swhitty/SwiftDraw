@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="320" height="240" viewBox="0 0 320 240">
+  <!-- stop-color="currentColor" takes the color in effect on the stop, inherited from the
+       gradient and its ancestors in the document, not from the element being painted -->
+  <linearGradient id="onGradient" color="green">
+    <stop offset="0" stop-color="gold" />
+    <stop offset="1" stop-color="currentColor" />
+  </linearGradient>
+
+  <g color="royalblue">
+    <defs>
+      <radialGradient id="onAncestor">
+        <stop offset="0" stop-color="white" />
+        <stop offset="1" stop-color="currentColor" />
+      </radialGradient>
+    </defs>
+  </g>
+
+  <linearGradient id="onStop" color="red">
+    <stop offset="0" stop-color="gold" />
+    <stop offset="1" stop-color="currentColor" style="color: purple" />
+  </linearGradient>
+
+  <!-- stop-color="inherit" takes the gradient's stop-color -->
+  <linearGradient id="inherit" stop-color="teal" x2="0" y2="1">
+    <stop offset="0" stop-color="gold" />
+    <stop offset="1" stop-color="inherit" />
+  </linearGradient>
+
+  <!-- stops reached through href keep the color of their own gradient -->
+  <linearGradient id="viaHref" xlink:href="#onGradient" color="red" x2="0" y2="1" />
+
+  <rect x="10" y="10" width="140" height="100" fill="url(#onGradient)" color="red" />
+  <rect x="170" y="10" width="140" height="100" fill="url(#onAncestor)" />
+  <rect x="10" y="130" width="90" height="100" fill="url(#onStop)" />
+  <rect x="115" y="130" width="90" height="100" fill="url(#inherit)" />
+  <rect x="220" y="130" width="90" height="100" fill="url(#viaHref)" />
+
+  <!-- color="currentColor" is the inherited color -->
+  <g color="crimson">
+    <circle cx="160" cy="120" r="12" fill="currentColor" color="currentColor" stroke="white" stroke-width="2" />
+  </g>
+</svg>

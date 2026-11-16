@@ -31,24 +31,26 @@
 
 extension XMLParser {
 
-    func parseRadialGradients(_ e: XML.Element) throws -> [DOM.RadialGradient] {
+    /// `ancestors` are the elements above `e`, for the `color` a stop's `currentColor` inherits.
+    func parseRadialGradients(_ e: XML.Element, ancestors: [XML.Element] = []) throws -> [DOM.RadialGradient] {
         var gradients = [DOM.RadialGradient]()
+        let ancestors = ancestors + [e]
 
         for n in e.children {
             if n.name == "radialGradient" {
-                try appendSkippingInvalid(&gradients, n, parseRadialGradient)
+                try appendSkippingInvalid(&gradients, n) { try parseRadialGradient($0, ancestors: ancestors) }
             } else if n.name == "svg" {
                 let pushed = pushViewport(of: n)
                 defer { if pushed { popViewport() } }
-                gradients.append(contentsOf: try parseRadialGradients(n))
+                gradients.append(contentsOf: try parseRadialGradients(n, ancestors: ancestors))
             } else {
-                gradients.append(contentsOf: try parseRadialGradients(n))
+                gradients.append(contentsOf: try parseRadialGradients(n, ancestors: ancestors))
             }
         }
         return gradients
     }
 
-    func parseRadialGradient(_ e: XML.Element) throws -> DOM.RadialGradient {
+    func parseRadialGradient(_ e: XML.Element, ancestors: [XML.Element] = []) throws -> DOM.RadialGradient {
         guard e.name == "radialGradient" else {
             throw Error.invalid
         }
@@ -66,10 +68,9 @@ extension XMLParser {
         for n in e.children where n.name == "stop" {
             let att: any AttributeParser = try parseAttributes(n)
             var stop = try parseRadialGradientStop(att)
-            if let cascaded = cascadedStop(n) {
-                stop.color = cascaded.color ?? stop.color
-                stop.opacity = cascaded.opacity ?? stop.opacity
-            }
+            let cascaded = cascadedStop(n)
+            stop.color = resolveStopColor(n, att, cascaded: cascaded?.color, gradient: e, ancestors: ancestors)
+            stop.opacity = cascaded?.opacity ?? stop.opacity
             node.stops.append(stop)
         }
 
