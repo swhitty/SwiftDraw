@@ -1,0 +1,23 @@
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <!-- userSpaceOnUse percentages resolve in the viewport of the <svg> the referenced paint server is defined in -->
+  <svg width="50%" height="50%" viewBox="0 0 40 40">
+    <defs>
+      <linearGradient id="nested-lin" gradientUnits="userSpaceOnUse" x2="100%">
+        <stop offset="0" stop-color="#1e88e5"/><stop offset="1" stop-color="#fdd835"/>
+      </linearGradient>
+      <radialGradient id="nested-rad" gradientUnits="userSpaceOnUse">
+        <stop offset="0" stop-color="#fdd835"/><stop offset="1" stop-color="#8e24aa"/>
+      </radialGradient>
+      <pattern id="nested-pat" patternUnits="userSpaceOnUse" width="25%" height="25%">
+        <circle cx="5" cy="5" r="4" fill="#00897b"/>
+      </pattern>
+    </defs>
+  </svg>
+  <defs>
+    <linearGradient id="root-lin" xlink:href="#nested-lin"/>
+  </defs>
+  <rect x="0" y="0" width="95" height="95" fill="url(#nested-lin)"/>
+  <rect x="105" y="0" width="95" height="95" fill="url(#root-lin)"/>
+  <rect x="0" y="105" width="95" height="95" fill="url(#nested-rad)"/>
+  <rect x="105" y="105" width="95" height="95" fill="url(#nested-pat)"/>
+</svg>

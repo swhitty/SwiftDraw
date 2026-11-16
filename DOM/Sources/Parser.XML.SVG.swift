@@ -58,8 +58,7 @@ package extension XMLParser {
         if let parent = lengthContext.viewports.last {
             // SVG 1.1 §7.9: a nested <svg> resolves its percentages against the enclosing viewport,
             // and a missing (or invalid) width or height is 100%
-            let width = widthRaw.flatMap { try? resolveLength($0, .horizontal) }.flatMap(finite) ?? parent.width
-            let height = heightRaw.flatMap { try? resolveLength($0, .vertical) }.flatMap(finite) ?? parent.height
+            let (width, height) = nestedSize(widthRaw: widthRaw, heightRaw: heightRaw, parent: parent)
             svg = DOM.SVG(width: width, height: height)
             svg.x = parseDefaultedLength(att, "x", .horizontal)
             svg.y = parseDefaultedLength(att, "y", .vertical)
@@ -101,12 +100,7 @@ package extension XMLParser {
             svg.y = try att.parseCoordinate("y")
         }
 
-        // the viewport that percentages of the contents resolve against, in their user units
-        if let viewBox, viewBox.width > 0, viewBox.height > 0 {
-            lengthContext.viewports.append(Viewport(width: viewBox.width, height: viewBox.height))
-        } else {
-            lengthContext.viewports.append(Viewport(width: svg.width, height: svg.height))
-        }
+        lengthContext.viewports.append(Self.contentViewport(viewBox: viewBox, width: svg.width, height: svg.height))
         defer { lengthContext.viewports.removeLast() }
 
         svg.childElements = try parseGraphicsElements(e.children)
@@ -182,6 +176,43 @@ package extension XMLParser {
 
     private func finite(_ value: DOM.Coordinate) -> DOM.Coordinate? {
         value.isFinite ? value : nil
+    }
+
+    /// The size of a nested `<svg>` (SVG 1.1 §7.9): percentages resolve against the enclosing
+    /// viewport, and a missing (or invalid) width or height is 100%.
+    private func nestedSize(widthRaw: String?, heightRaw: String?, parent: Viewport) -> (DOM.Coordinate, DOM.Coordinate) {
+        let width = widthRaw.flatMap { try? resolveLength($0, .horizontal) }.flatMap(finite) ?? parent.width
+        let height = heightRaw.flatMap { try? resolveLength($0, .vertical) }.flatMap(finite) ?? parent.height
+        return (width, height)
+    }
+
+    /// The viewport that percentages of an `<svg>`'s contents resolve against, in their user units.
+    static func contentViewport(viewBox: DOM.SVG.ViewBox?, width: DOM.Coordinate, height: DOM.Coordinate) -> Viewport {
+        if let viewBox, viewBox.width > 0, viewBox.height > 0 {
+            return Viewport(width: viewBox.width, height: viewBox.height)
+        }
+        return Viewport(width: width, height: height)
+    }
+
+    /// Pushes the viewport `e` establishes when it is a nested `<svg>`, so that definitions
+    /// collected from inside it (`parseSVGDefs` walks the whole document) see the viewport they
+    /// are defined in. Returns whether one was pushed; the caller pops it. Not a closure-taking
+    /// wrapper: the defs walks recurse once per nesting level and must keep their frames small.
+    func pushViewport(of e: XML.Element) -> Bool {
+        guard e.name == "svg", let parent = lengthContext.viewports.last,
+              let att = try? parseAttributes(e) else {
+            return false
+        }
+        let (width, height) = nestedSize(widthRaw: try? att.parseString("width"),
+                                         heightRaw: try? att.parseString("height"),
+                                         parent: parent)
+        let viewBox = (try? att.parseString("viewBox")).flatMap { try? parseViewBox($0) }
+        lengthContext.viewports.append(Self.contentViewport(viewBox: viewBox, width: width, height: height))
+        return true
+    }
+
+    func popViewport() {
+        lengthContext.viewports.removeLast()
     }
 
     func makeUnresolvedReason(attribute: String, raw: String?, hasViewBox: Bool) -> String {
@@ -321,6 +352,10 @@ package extension XMLParser {
                 // a pattern without an id can never be referenced; skip it rather than fail
                 guard n.attributes["id"] != nil else { continue }
                 try appendSkippingInvalid(&patterns, n, parsePattern)
+            } else if n.name == "svg" {
+                let pushed = pushViewport(of: n)
+                defer { if pushed { popViewport() } }
+                patterns.append(contentsOf: try parsePatterns(n))
             } else {
                 patterns.append(contentsOf: try parsePatterns(n))
             }
@@ -333,6 +368,7 @@ package extension XMLParser {
 
         let att = try parseAttributes(e)
         var pattern = try parsePattern(att)
+        pattern.viewport = lengthContext.viewports.last
         pattern.childElements = try parseGraphicsElements(e.children)
         return pattern
     }

@@ -129,6 +129,89 @@ struct LayerTreeGradientUserSpaceTests {
         #expect(gradient.endRadius == 0.5 * Self.diagonal)
     }
 
+    // A nested <svg> sets the viewport for the paint servers defined in it, as in WebKit:
+    // the referenced element's viewport applies, also to values it inherits through href.
+
+    @Test(arguments: [
+        (#"width="100" height="50""#, LayerTree.Point(100, 50)),
+        (#"width="25%" height="50%""#, LayerTree.Point(75, 50)),
+        (#"width="100" height="50" viewBox="0 0 40 20""#, LayerTree.Point(40, 20)),
+    ])
+    func linearDefinedInNestedSVGUsesItsViewport(nested: String, end: LayerTree.Point) throws {
+        let gradient = try makeLinear(body: #"""
+        <svg \#(nested)><defs>
+            <linearGradient id="g" gradientUnits="userSpaceOnUse" x2="100%" y2="100%">\#(Self.stops)</linearGradient>
+        </defs></svg>
+        """#)
+        #expect(gradient.start == LayerTree.Point(0, 0))
+        #expect(gradient.end == end)
+    }
+
+    @Test
+    func radialDefaultsInNestedSVGUseItsViewport() throws {
+        let gradient = try makeRadial(body: #"""
+        <svg width="100" height="100" viewBox="0 0 40 20"><defs>
+            <radialGradient id="g" gradientUnits="userSpaceOnUse">\#(Self.stops)</radialGradient>
+        </defs></svg>
+        """#)
+        #expect(gradient.endCenter == LayerTree.Point(20, 10))
+        #expect(gradient.endRadius == 0.5 * LayerTree.Float(1000).squareRoot())
+    }
+
+    @Test
+    func percentageInheritedFromNestedSVGUsesReferencedViewport() throws {
+        let gradient = try makeLinear(body: #"""
+        <svg width="100" height="100"><defs>
+            <linearGradient id="a" gradientUnits="userSpaceOnUse" x2="50%">\#(Self.stops)</linearGradient>
+        </defs></svg>
+        <defs><linearGradient id="g" href="#a"/></defs>
+        """#)
+        #expect(gradient.end == LayerTree.Point(150, 0))
+    }
+
+    @Test
+    func nestedGradientInheritingFromRootUsesItsOwnViewport() throws {
+        let gradient = try makeLinear(body: #"""
+        <defs><linearGradient id="a" gradientUnits="userSpaceOnUse" x1="10%">\#(Self.stops)</linearGradient></defs>
+        <svg width="100" height="100"><defs><linearGradient id="g" href="#a"/></defs></svg>
+        """#)
+        #expect(gradient.start == LayerTree.Point(10, 0))
+        #expect(gradient.end == LayerTree.Point(100, 0))
+    }
+
+    @Test
+    func patternDefinedInNestedSVGUsesItsViewport() throws {
+        let svg = try DOM.SVG.parse(xml: #"""
+        <svg width="300" height="100" xmlns="http://www.w3.org/2000/svg">
+            <svg width="100" height="50"><defs>
+                <pattern id="a" patternUnits="userSpaceOnUse" width="20%" height="20%"><rect width="5" height="5"/></pattern>
+            </defs></svg>
+            <defs><pattern id="g" href="#a" x="10%"/></defs>
+        </svg>
+        """#)
+        let builder = LayerTree.Builder(svg: svg)
+        let nested = try #require(svg.defs.patterns.first { $0.id == "a" })
+        let root = try #require(svg.defs.patterns.first { $0.id == "g" })
+        #expect(builder.makePattern(for: nested).frame == LayerTree.Rect(x: 0, y: 0, width: 20, height: 10))
+        #expect(builder.makePattern(for: root).frame == LayerTree.Rect(x: 30, y: 0, width: 60, height: 20))
+    }
+
+    func makeLinear(body: String) throws -> LayerTree.LinearGradient {
+        let svg = try DOM.SVG.parse(xml: #"""
+        <svg width="300" height="100" xmlns="http://www.w3.org/2000/svg">\#(body)</svg>
+        """#)
+        let element = try #require(svg.defs.linearGradients.first { $0.id == "g" })
+        return try #require(LayerTree.Builder(svg: svg).makeGradient(for: element))
+    }
+
+    func makeRadial(body: String) throws -> LayerTree.RadialGradient {
+        let svg = try DOM.SVG.parse(xml: #"""
+        <svg width="300" height="100" xmlns="http://www.w3.org/2000/svg">\#(body)</svg>
+        """#)
+        let element = try #require(svg.defs.radialGradients.first { $0.id == "g" })
+        return try #require(LayerTree.Builder(svg: svg).makeGradient(for: element))
+    }
+
     func makeBuilder(_ defs: String, root: String) throws -> (LayerTree.Builder, DOM.SVG) {
         let svg = try DOM.SVG.parse(xml: #"""
         <svg \#(root) xmlns="http://www.w3.org/2000/svg">

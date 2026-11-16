@@ -55,6 +55,10 @@ package extension DOM {
         /// fraction and resolved against the viewport under userSpaceOnUse.
         package var percentageAttributes: Set<String> = []
 
+        /// The viewport of the `<svg>` this element is defined in, that percentages resolve
+        /// against under userSpaceOnUse; nil when parsed outside an `<svg>`.
+        package var viewport: XMLParser.Viewport?
+
         package init(id: String) {
             self.id = id
             self.stops = []

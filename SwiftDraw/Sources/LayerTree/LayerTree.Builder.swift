@@ -686,8 +686,9 @@ extension LayerTree.Builder {
         let units: LayerTree.PatternUnits = inherited(\.patternUnits) == .userSpaceOnUse ? .userSpaceOnUse : .objectBoundingBox
 
         // Percentages are fractions of the bounding box under objectBoundingBox, and of the
-        // viewport (in user units) under userSpaceOnUse.
-        let viewport = userSpaceViewport
+        // viewport (in user units) under userSpaceOnUse: as in WebKit, the viewport the
+        // referenced pattern is defined in, also for values it inherits.
+        let viewport = userSpaceViewport(element.viewport)
         func geometry(_ key: String, _ value: (DOM.Pattern) -> DOM.Coordinate?, viewport length: LayerTree.Float) -> LayerTree.Float {
             guard let source = chain.first(where: { value($0) != nil }),
                   let coordinate = value(source) else { return 0 }
@@ -740,8 +741,10 @@ extension LayerTree.Builder {
         }
 
         let units = Self.createUnits(from: chain.lazy.compactMap(\.units).first)
+        // as in WebKit, percentages resolve in the viewport the referenced gradient is defined in,
+        // also for values it inherits
         let geometry = GradientGeometry(chain: chain.compactMap(\.linear), percentageAttributes: \.percentageAttributes,
-                                        units: units, viewport: userSpaceViewport)
+                                        units: units, viewport: userSpaceViewport(element.viewport))
 
         // SVG 1.1 §13.2.2: x1, y1, y2 default to 0% and x2 to 100%
         var gradient = LayerTree.LinearGradient(
@@ -764,8 +767,10 @@ extension LayerTree.Builder {
         }
 
         let units = Self.createUnits(from: chain.lazy.compactMap(\.units).first)
+        // as in WebKit, percentages resolve in the viewport the referenced gradient is defined in,
+        // also for values it inherits
         let geometry = GradientGeometry(chain: chain.compactMap(\.radial), percentageAttributes: \.percentageAttributes,
-                                        units: units, viewport: userSpaceViewport)
+                                        units: units, viewport: userSpaceViewport(element.viewport))
 
         // SVG 1.1 §13.2.3: cx, cy, r default to 50%; fx, fy to cx, cy; fr (SVG 2) to 0%
         let cx = geometry.x("cx", \.cx) ?? geometry.width(0.5)
@@ -782,9 +787,13 @@ extension LayerTree.Builder {
         return gradient
     }
 
-    /// The viewport that percentages resolve against in user space.
-    var userSpaceViewport: LayerTree.Size {
-        svg.viewBox.map { LayerTree.Size($0.width, $0.height) }
+    /// The viewport that percentages resolve against in user space: the one a paint server was
+    /// defined in, or the root's when that is unknown.
+    func userSpaceViewport(_ viewport: SwiftDrawDOM.XMLParser.Viewport?) -> LayerTree.Size {
+        if let viewport {
+            return LayerTree.Size(LayerTree.Float(viewport.width), LayerTree.Float(viewport.height))
+        }
+        return svg.viewBox.map { LayerTree.Size($0.width, $0.height) }
             ?? LayerTree.Size(LayerTree.Float(svg.width), LayerTree.Float(svg.height))
     }
 
@@ -807,16 +816,12 @@ extension LayerTree.Builder {
         }
 
         func length(_ key: String, _ value: (Element) -> DOM.Coordinate?) -> LayerTree.Float? {
-            resolve(key, value, against: diagonalLength)
+            resolve(key, value, against: viewport.normalizedDiagonal)
         }
 
         func width(_ fraction: LayerTree.Float) -> LayerTree.Float { scale(fraction, by: viewport.width) }
         func height(_ fraction: LayerTree.Float) -> LayerTree.Float { scale(fraction, by: viewport.height) }
-        func diagonal(_ fraction: LayerTree.Float) -> LayerTree.Float { scale(fraction, by: diagonalLength) }
-
-        private var diagonalLength: LayerTree.Float {
-            (viewport.width * viewport.width + viewport.height * viewport.height).squareRoot() / LayerTree.Float(2).squareRoot()
-        }
+        func diagonal(_ fraction: LayerTree.Float) -> LayerTree.Float { scale(fraction, by: viewport.normalizedDiagonal) }
 
         private func scale(_ fraction: LayerTree.Float, by length: LayerTree.Float) -> LayerTree.Float {
             units == .userSpaceOnUse ? fraction * length : fraction
@@ -1128,5 +1133,12 @@ private extension DOM.SVG {
 
     func fontFaces(for family: String) -> [DOM.FontFace] {
         styles.flatMap { $0.fonts.filter { $0.family == family } }
+    }
+}
+
+private extension LayerTree.Size {
+    /// √(w² + h²) / √2, the reference for lengths that are neither horizontal nor vertical (SVG 1.1 §7.10).
+    var normalizedDiagonal: LayerTree.Float {
+        ((width * width + height * height) / 2).squareRoot()
     }
 }

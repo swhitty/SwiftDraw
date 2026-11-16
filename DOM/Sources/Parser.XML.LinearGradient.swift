@@ -37,6 +37,10 @@ extension XMLParser {
         for n in e.children {
             if n.name == "linearGradient" {
                 try appendSkippingInvalid(&gradients, n, parseLinearGradient)
+            } else if n.name == "svg" {
+                let pushed = pushViewport(of: n)
+                defer { if pushed { popViewport() } }
+                gradients.append(contentsOf: try parseLinearGradients(n))
             } else {
                 gradients.append(contentsOf: try parseLinearGradients(n))
             }
@@ -70,6 +74,7 @@ extension XMLParser {
         // an unreadable value is dropped like the other attributes, the gradient is kept (SVG 1.1 §13.2.2)
         node.gradientUnits = (try? nodeAtt.parseRaw("gradientUnits")) ?? nil
         node.href  = try? nodeAtt.parseHref()
+        node.viewport = lengthContext.viewports.last
 
         if let val = try? nodeAtt.parseString("gradientTransform") {
           if let t = try? parseTransform(val) { node.gradientTransform = t }
