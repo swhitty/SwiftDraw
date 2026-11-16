@@ -86,7 +86,7 @@ struct ParserGraphicAttributeTests {
         #expect(parsed.transform == [.scale(sx: 15, sy: 15)])
         #expect(parsed.clipPath?.fragmentID == "circlePath")
         #expect(parsed.mask?.fragmentID == "fancyMask")
-        #expect(parsed.filter?.fragmentID == "blur")
+        #expect(parsed.filter?.first?.url?.fragmentID == "blur")
     }
 
     @Test
