@@ -1,6 +1,8 @@
 import Foundation
 
-/// The SVG that WebKit renders as the reference.
+/// The SVG that WebKit renders as the reference. A copy of `Tools/webkit-render`'s ReferenceSVG, kept
+/// until swiftdraw-diff runs webkit-render instead of scoring in its own page.
+///
 ///
 /// WebKit draws text through macOS font smoothing, which makes glyphs heavier than their outlines.
 /// SwiftDraw fills the glyph outlines, so by default the reference turns smoothing off
