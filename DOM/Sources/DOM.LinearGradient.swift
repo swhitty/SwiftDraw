@@ -47,6 +47,10 @@ package extension DOM {
         //references another LinearGradient element id within defs
         package var href: URL?
 
+        /// Names of the geometry attributes written as percentages; their value is stored as a
+        /// fraction and resolved against the viewport under userSpaceOnUse.
+        package var percentageAttributes: Set<String> = []
+
         package init(id: String) {
             self.id = id
             self.stops = []

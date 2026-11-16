@@ -55,6 +55,7 @@ extension XMLParser {
         node.y1 = try nodeAtt.parseCoordinateOrPercentage("y1")
         node.x2 = try nodeAtt.parseCoordinateOrPercentage("x2")
         node.y2 = try nodeAtt.parseCoordinateOrPercentage("y2")
+        node.percentageAttributes = percentageAttributes(nodeAtt, ["x1", "y1", "x2", "y2"])
 
         for n in e.children where n.name == "stop" {
             let att: any AttributeParser = try parseAttributes(n)
@@ -87,6 +88,14 @@ extension XMLParser {
 }
 
 extension XMLParser {
+
+    /// The keys whose value is written as a percentage.
+    func percentageAttributes(_ att: any AttributeParser, _ keys: [String]) -> Set<String> {
+        Set(keys.filter { key in
+            guard let raw: String = try? att.parseString(key) else { return false }
+            return raw.trimmingCharacters(in: .whitespaces).hasSuffix("%")
+        })
+    }
 
     /// A number or percentage clamped to 0...1 (SVG 1.1 §13.2.4 stop offset and stop-opacity);
     /// nil when missing or unreadable, so the caller uses the initial value.

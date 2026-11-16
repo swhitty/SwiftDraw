@@ -109,8 +109,9 @@ final class LayerTreeBuilderGradientTests: XCTestCase {
 
         let gradient = try XCTUnwrap(builder.makeGradient(for: svg.defs.radialGradients[0]))
         XCTAssertEqual(gradient.units, .userSpaceOnUse)
-        XCTAssertEqual(gradient.endCenter, LayerTree.Point(0.5, 0.5))
-        XCTAssertEqual(gradient.endRadius, 0.5)
+        // the defaults (50%) of the 10x10 viewport, not the linear gradient's x1
+        XCTAssertEqual(gradient.endCenter, LayerTree.Point(5, 5))
+        XCTAssertEqual(gradient.endRadius, 5)
     }
 
     func testGradient_FollowsReferenceChain() throws {

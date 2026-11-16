@@ -57,6 +57,7 @@ extension XMLParser {
         node.fr = try? nodeAtt.parseCoordinateOrPercentage("fr")
         node.fx = try? nodeAtt.parseCoordinateOrPercentage("fx")
         node.fy = try? nodeAtt.parseCoordinateOrPercentage("fy")
+        node.percentageAttributes = percentageAttributes(nodeAtt, ["r", "cx", "cy", "fr", "fx", "fy"])
 
         for n in e.children where n.name == "stop" {
             let att: any AttributeParser = try parseAttributes(n)
