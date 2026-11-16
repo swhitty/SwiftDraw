@@ -395,26 +395,32 @@ extension LayerTree {
 
 extension LayerTree.Builder {
 
-    func makeStrokeAttributes(with state: State) -> LayerTree.StrokeAttributes {
+    /// `bounds` is the bounding box of the geometry being stroked; when it has no width or height a
+    /// paint server with objectBoundingBox units gives way to its fallback colour (SVG 2 §8.10).
+    func makeStrokeAttributes(with state: State, bounds: LayerTree.Rect? = nil) -> LayerTree.StrokeAttributes {
         let stroke: LayerTree.StrokeAttributes.Stroke
 
         if state.strokeWidth > 0.0 {
-            switch resolveFallback(state.stroke) {
+            switch resolveFallback(state.stroke, bounds: bounds) {
             case .color(let c):
                 let color = LayerTree.Color
                     .create(from: c, current: state.color)
                     .withAlpha(state.strokeOpacity).maybeNone()
                 stroke = .color(color)
-            case .url(let gradientId):
-                switch makeGradientPaint(for: gradientId) {
-                case .linear(let gradient):
-                    stroke = .linearGradient(gradient)
-                case .radial(let gradient):
-                    stroke = .radialGradient(gradient)
-                case .color(let color):
-                    stroke = .color(color.withAlpha(state.strokeOpacity).maybeNone())
-                case nil:
-                    stroke = .color(.none)
+            case .url(let paintId):
+                if let element = svg.defs.patterns.first(where: { $0.id == paintId.fragmentID }) {
+                    stroke = .pattern(makePattern(for: element))
+                } else {
+                    switch makeGradientPaint(for: paintId) {
+                    case .linear(let gradient):
+                        stroke = .linearGradient(gradient)
+                    case .radial(let gradient):
+                        stroke = .radialGradient(gradient)
+                    case .color(let color):
+                        stroke = .color(color.withAlpha(state.strokeOpacity).maybeNone())
+                    case nil:
+                        stroke = .color(.none)
+                    }
                 }
             case .urlWithFallback:
                 stroke = .color(.none) // resolved to .url or .color above
@@ -429,7 +435,8 @@ extension LayerTree.Builder {
                                           join: state.strokeLineJoin,
                                           miterLimit: state.strokeLineMiterLimit,
                                           dashArray: makeDashArray(with: state),
-                                          dashOffset: makeDashOffset(with: state))
+                                          dashOffset: makeDashOffset(with: state),
+                                          opacity: state.strokeOpacity)
     }
 
     /// Length of the viewport diagonal / sqrt(2), the reference for percentages (SVG 1.1 §7.10).
@@ -471,18 +478,38 @@ extension LayerTree.Builder {
     }
 
     /// SVG 1.1 §11.2: a paint server that resolves wins; otherwise the fallback colour (`none` paints nothing).
-    func resolveFallback(_ paint: DOM.Fill) -> DOM.Fill {
+    /// A paint server with objectBoundingBox units does not resolve on a `bounds` with no width or
+    /// height, such as a horizontal or vertical line (SVG 2 §8.10).
+    func resolveFallback(_ paint: DOM.Fill, bounds: LayerTree.Rect? = nil) -> DOM.Fill {
         guard case .urlWithFallback(let url, let color) = paint else { return paint }
-        let resolves = url.fragmentID.map { id in
-            svg.defs.patterns.contains(where: { $0.id == id }) ||
-                makeGradientPaint(for: url) != nil
-        } ?? false
-        return resolves ? .url(url) : .color(color)
+        guard let id = url.fragmentID else { return .color(color) }
+        let units: LayerTree.Gradient.Units
+        if let element = svg.defs.patterns.first(where: { $0.id == id }) {
+            let patternUnits = makePatternChain(for: element).lazy.compactMap(\.patternUnits).first
+            units = patternUnits == .userSpaceOnUse ? .userSpaceOnUse : .objectBoundingBox
+        } else if let element = makeGradientElement(for: id), makeGradientPaint(for: url) != nil {
+            units = Self.createUnits(from: makeGradientChain(from: element).lazy.compactMap(\.units).first)
+        } else {
+            return .color(color)
+        }
+        if units == .objectBoundingBox, let bounds, !(bounds.width > 0 && bounds.height > 0) {
+            return .color(color)
+        }
+        return .url(url)
     }
 
-    func makeFillAttributes(with state: State) -> LayerTree.FillAttributes {
+    func makeGradientElement(for id: String) -> GradientElement? {
+        if let element = svg.defs.linearGradients.first(where: { $0.id == id }) {
+            return .linear(element)
+        } else if let element = svg.defs.radialGradients.first(where: { $0.id == id }) {
+            return .radial(element)
+        }
+        return nil
+    }
+
+    func makeFillAttributes(with state: State, bounds: LayerTree.Rect? = nil) -> LayerTree.FillAttributes {
         var state = state
-        state.fill = resolveFallback(state.fill)
+        state.fill = resolveFallback(state.fill, bounds: bounds)
         let fill = LayerTree.Color
             .create(from: state.fill.makeColor(), current: state.color)
             .withAlpha(state.fillOpacity).maybeNone()

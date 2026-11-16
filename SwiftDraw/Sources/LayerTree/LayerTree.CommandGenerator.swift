@@ -228,23 +228,12 @@ extension LayerTree {
                     commands.append(.fill(path, rule: rule))
                 }
             case .pattern(let fillPattern):
-                if let (resolvedPattern, contentTransform) = Self.resolvePattern(fillPattern, in: provider.getBounds(from: shape)) {
-                    var patternCommands = [RendererCommand<P.Types>]()
-                    if contentTransform != .identity {
-                        patternCommands.append(.pushState)
-                        patternCommands.append(.concatenate(transform: provider.createTransform(from: contentTransform)))
-                    }
-                    for contents in resolvedPattern.contents {
-                        patternCommands.append(contentsOf: renderCommands(for: contents, colorConverter: colorConverter))
-                    }
-                    if contentTransform != .identity {
-                        patternCommands.append(.popState)
-                    }
-
-                    let pattern = provider.createPattern(from: resolvedPattern, contents: patternCommands)
+                if let pattern = makePattern(fillPattern, in: provider.getBounds(from: shape), colorConverter: colorConverter) {
                     let rule = provider.createFillRule(from: fill.rule)
-                    commands.append(.setFillPattern(pattern))
-                    commands.append(.fill(path, rule: rule))
+                    commands.append(contentsOf: renderCommands(withOpacity: fill.opacity, [
+                        .setFillPattern(pattern),
+                        .fill(path, rule: rule)
+                    ]))
                 }
             case .linearGradient(let gradient):
                 if canRenderGradient(gradient.gradient) {
@@ -317,7 +306,7 @@ extension LayerTree {
                     commands.append(contentsOf: renderCommands(forLinear: gradient,
                                                                in: pathBounds,
                                                                covering: pathBounds.outset(by: stroke.coverage),
-                                                               opacity: fill.opacity,
+                                                               opacity: stroke.opacity,
                                                                colorConverter: colorConverter))
                     commands.append(contentsOf: renderCommands(forDashResetOf: stroke))
                     commands.append(.popState)
@@ -339,8 +328,33 @@ extension LayerTree {
 
                     commands.append(contentsOf: renderCommands(forRadial: gradient,
                                                                in: pathBounds,
-                                                               opacity: fill.opacity,
+                                                               opacity: stroke.opacity,
                                                                colorConverter: colorConverter))
+                    commands.append(contentsOf: renderCommands(forDashResetOf: stroke))
+                    commands.append(.popState)
+                }
+            case .pattern(let strokePattern):
+                // objectBoundingBox resolves against the geometry, not the stroke (SVG 1.1 §13.3)
+                if stroke.width > 0, let pathBounds = shape.bounds,
+                   let pattern = makePattern(strokePattern, in: pathBounds, colorConverter: colorConverter) {
+                    let width = provider.createFloat(from: stroke.width)
+                    let cap = provider.createLineCap(from: stroke.cap)
+                    let join = provider.createLineJoin(from: stroke.join)
+                    let limit = provider.createFloat(from: stroke.miterLimit)
+                    let area = provider.createPath(from: .rect(within: pathBounds.outset(by: stroke.coverage), radii: .zero))
+
+                    commands.append(.pushState)
+                    commands.append(.setLineCap(cap))
+                    commands.append(.setLineJoin(join))
+                    commands.append(.setLine(width: width))
+                    commands.append(.setLineMiter(limit: limit))
+                    commands.append(contentsOf: renderCommands(forDash: stroke))
+                    commands.append(.clipStrokeOutline(path))
+                    if stroke.opacity < 1 {
+                        commands.append(.setAlpha(provider.createFloat(from: stroke.opacity)))
+                    }
+                    commands.append(.setFillPattern(pattern))
+                    commands.append(.fill(area, rule: provider.createFillRule(from: .nonzero)))
                     commands.append(contentsOf: renderCommands(forDashResetOf: stroke))
                     commands.append(.popState)
                 }
@@ -349,6 +363,31 @@ extension LayerTree {
             }
 
             return commands
+        }
+
+        /// The pattern resolved against `bounds`, with its contents rendered; nil when it disables rendering.
+        func makePattern(_ pattern: LayerTree.Pattern, in bounds: @autoclosure () -> LayerTree.Rect, colorConverter: any ColorConverter) -> P.Types.Pattern? {
+            guard let (resolvedPattern, contentTransform) = Self.resolvePattern(pattern, in: bounds()) else {
+                return nil
+            }
+            var patternCommands = [RendererCommand<P.Types>]()
+            if contentTransform != .identity {
+                patternCommands.append(.pushState)
+                patternCommands.append(.concatenate(transform: provider.createTransform(from: contentTransform)))
+            }
+            for contents in resolvedPattern.contents {
+                patternCommands.append(contentsOf: renderCommands(for: contents, colorConverter: colorConverter))
+            }
+            if contentTransform != .identity {
+                patternCommands.append(.popState)
+            }
+            return provider.createPattern(from: resolvedPattern, contents: patternCommands)
+        }
+
+        /// Wraps `commands` in a state with the given alpha, when it is less than 1.
+        func renderCommands(withOpacity opacity: LayerTree.Float, _ commands: [RendererCommand<P.Types>]) -> [RendererCommand<P.Types>] {
+            guard opacity < 1 else { return commands }
+            return [.pushState, .setAlpha(provider.createFloat(from: opacity))] + commands + [.popState]
         }
 
         func renderCommands(forDash stroke: StrokeAttributes) -> [RendererCommand<P.Types>] {
@@ -1063,22 +1102,6 @@ private extension LayerTree.Gradient {
     }
 }
 
-private extension LayerTree.Shape {
-
-    var bounds: LayerTree.Rect? {
-        switch self {
-        case .path(let p):
-            return p.bounds
-        case .rect(within: let rect, _),
-             .ellipse(within: let rect):
-            return rect
-        case .polygon(between: let points),
-             .line(between: let points):
-            return .makeBounds(between: points)
-        }
-    }
-}
-
 private extension LayerTree.Filter {
     var name: String {
         switch self {
@@ -1119,21 +1142,6 @@ private extension LayerTree.Rect {
          LayerTree.Point(maxX, minY),
          LayerTree.Point(maxX, maxY),
          LayerTree.Point(minX, maxY)]
-    }
-
-    static func makeBounds(between points: [LayerTree.Point]) -> Self? {
-        var min = LayerTree.Point.maximum
-        var max = LayerTree.Point.minimum
-        for point in points {
-            min = min.minimum(combining: point)
-            max = max.maximum(combining: point)
-        }
-        return LayerTree.Rect(
-            x: min.x,
-            y: min.y,
-            width: max.x - min.x,
-            height: max.y - min.y
-        )
     }
 }
 
