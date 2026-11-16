@@ -67,6 +67,7 @@ extension XMLParser {
     if let val = try? att.parseString("patternTransform") {
       pattern.patternTransform = try? parseTransform(val)
     }
+    pattern.transformOrigin = (try? att.parseString("transform-origin")).flatMap(parseTransformOrigin)
 
     return pattern
   }

@@ -57,6 +57,8 @@ package struct XMLParser {
         var viewports = [Viewport]()
         // the computed font-size of the element being parsed, for `em` and `ex`
         var fontSize: DOM.Float = DOM.FontSize.initial
+        // the size the <use> elements of the document give each <symbol>, by id
+        var symbolViewports = [String: (width: DOM.Coordinate?, height: DOM.Coordinate?)]()
     }
 
     // stylesheet matcher for the document being parsed (set while parsing the root <svg>)

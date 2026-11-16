@@ -45,9 +45,11 @@ extension XMLParser {
     let use = DOM.Use(href: href)
     use.x = parseDefaultedLength(att, "x", .horizontal)
     use.y = parseDefaultedLength(att, "y", .vertical)
-    // only a referenced <symbol> uses these: missing (or invalid) is 100% of the enclosing viewport
-    use.width = parseDefaultedLength(att, "width", .horizontal) ?? lengthContext.viewports.last?.width
-    use.height = parseDefaultedLength(att, "height", .vertical) ?? lengthContext.viewports.last?.height
+    // only a referenced <symbol> uses these: missing (or invalid) falls back to the symbol's
+    // own size, and then to 100% of the enclosing viewport
+    use.width = parseDefaultedLength(att, "width", .horizontal)
+    use.height = parseDefaultedLength(att, "height", .vertical)
+    use.viewport = lengthContext.viewports.last
     
     return use
   }

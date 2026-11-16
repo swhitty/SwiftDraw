@@ -49,9 +49,13 @@ package extension XMLParser {
             // selectors are matched against the whole document tree before its elements are parsed
             styleContext.matcher = DOM.StyleSheet.Matcher(sheets: styles, root: e)
             lengthContext.fontSize = rootFontSize(e)
+            lengthContext.symbolViewports = makeSymbolUseSizes(within: e)
         }
         defer {
-            if isRoot { styleContext.matcher = nil }
+            if isRoot {
+                styleContext.matcher = nil
+                lengthContext.symbolViewports = [:]
+            }
         }
 
         let svg: DOM.SVG

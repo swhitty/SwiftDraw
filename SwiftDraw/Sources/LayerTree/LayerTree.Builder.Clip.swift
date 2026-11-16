@@ -82,10 +82,10 @@ extension LayerTree.Builder {
 
         // the <clipPath>'s own cascade: attributes < CSS rules < style=""
         let own = DOM.presentationAttributes(for: clip, styles: svg.styles)
-        let transform = own.transform ?? []
         // the bounding box mapping comes first, then the <clipPath>'s transform in user units
-        // (as Blink, Gecko and resvg do: clipTransform × translate(bbox) × scale(bbox))
-        let space = units.concatenated(Self.createTransforms(from: transform).toMatrix())
+        // (as Blink, Gecko and resvg do: clipTransform × translate(bbox) × scale(bbox)),
+        // so its transform-origin is in user units too
+        let space = units.concatenated(createTransforms(from: own).toMatrix())
         let rule = own.clipRule ?? .nonzero
         // `visibility` is inherited: a hidden <clipPath> hides its children unless they say `visible`
         let visibility = own.visibility ?? .visible
@@ -130,7 +130,7 @@ extension LayerTree.Builder {
         let visibility = attributes.visibility ?? inherited
         // SVG 1.1 §14.3.5: children with `display="none"` or hidden `visibility` do not contribute to the clip
         guard attributes.display != DOM.DisplayMode.none, visibility == .visible else { return [] }
-        let transform = Self.createTransforms(from: attributes.transform ?? []).toMatrix()
+        let transform = createTransforms(from: attributes).toMatrix()
         let rule = attributes.clipRule ?? rule
 
         if let use = element as? DOM.Use {
@@ -286,14 +286,14 @@ extension LayerTree.Builder {
             let referencedBounds = makeBounds(for: referenced, depth: depth + 1, visited: &visited)
             guard case .known(let bounds) = referencedBounds else { return referencedBounds }
             if let symbol = referenced as? DOM.Symbol {
-                let viewport = makeSymbolViewport(for: use)
+                let viewport = makeSymbolViewport(for: use, symbol: symbol)
                 guard viewport.width > 0, viewport.height > 0 else { return .empty }
                 // the bounding box is the geometry, not clipped by the viewport (as for a nested <svg>)
-                let transform = Self.makeSymbolTransform(symbol, x: use.x, y: use.y,
+                let transform = Self.makeSymbolTransform(symbol, x: viewport.x, y: viewport.y,
                                                          width: viewport.width, height: viewport.height).toMatrix()
                 return Bounds(bounds.applying(transform))
             }
-            let transform = Self.createTransforms(from: DOM.presentationAttributes(for: referenced, styles: svg.styles).transform ?? []).toMatrix()
+            let transform = createTransforms(from: DOM.presentationAttributes(for: referenced, styles: svg.styles)).toMatrix()
                 .concatenated(LayerTree.Transform.translate(tx: use.x ?? 0, ty: use.y ?? 0).toMatrix())
             return Bounds(bounds.applying(transform))
         } else if let container = element as? any ContainerElement {
@@ -312,7 +312,7 @@ extension LayerTree.Builder {
                         transform = Self.makeTransform(x: svg.x, y: svg.y, viewBox: svg.viewBox,
                                                        width: svg.width, height: svg.height).toMatrix()
                     } else {
-                        transform = Self.createTransforms(from: childAttributes.transform ?? []).toMatrix()
+                        transform = createTransforms(from: childAttributes).toMatrix()
                     }
                     guard case .known(let childBounds) = Bounds(bounds.applying(transform)) else { continue }
                     let union = result.map { $0.union(childBounds) } ?? childBounds

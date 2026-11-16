@@ -211,4 +211,103 @@ struct LayerTreeSymbolTests {
         let group = try #require(svg.firstGraphicsElement(with: "g"))
         #expect(builder.makeBoundingBox(for: group) == LayerTree.Rect(x: 0, y: 0, width: 1, height: 1))
     }
+
+    @Test(arguments: [
+        // the <use>'s size wins over the symbol's
+        (##"<symbol id="s" viewBox="0 0 10 10" width="20" height="20"><rect width="10" height="10"/></symbol><use href="#s" width="40" height="40"/>"##, 4.0),
+        // then the symbol's
+        (##"<symbol id="s" viewBox="0 0 10 10" width="20" height="20"><rect width="10" height="10"/></symbol><use href="#s"/>"##, 2),
+        // then 100% of the viewport
+        (##"<symbol id="s" viewBox="0 0 10 10"><rect width="10" height="10"/></symbol><use href="#s"/>"##, 10),
+        // each side on its own
+        (##"<symbol id="s" viewBox="0 0 10 10" width="20" height="80"><rect width="10" height="10"/></symbol><use href="#s" height="40"/>"##, 2)
+    ])
+    func sizePrecedence(body: String, scale: Double) throws {
+        let layer = try symbolLayer(body)
+        let s = LayerTree.Float(scale)
+        #expect(layer.transform.contains(.scale(sx: s, sy: s)))
+    }
+
+    @Test
+    func symbolXAndYAddToUse() throws {
+        let layer = try symbolLayer("""
+        <symbol id="s" x="10" y="20" width="30" height="40"><rect width="60" height="60"/></symbol>
+        <use href="#s" x="5" y="6"/>
+        """)
+        #expect(layer.transform == [.translate(tx: 15, ty: 26)])
+        #expect(clipRect(layer) == LayerTree.Rect(x: 0, y: 0, width: 30, height: 40))
+    }
+
+    @Test
+    func symbolSizeFitsViewBox() throws {
+        let layer = try symbolLayer("""
+        <symbol id="s" viewBox="0 0 10 20" width="40" height="40" preserveAspectRatio="xMaxYMid meet"><rect width="10" height="20"/></symbol>
+        <use href="#s"/>
+        """)
+        // scale 2, pushed to the right of the 40 wide viewport
+        #expect(layer.transform == [.translate(tx: 20, ty: 0), .scale(sx: 2, sy: 2)])
+        #expect(clipRect(layer) == LayerTree.Rect(x: -10, y: 0, width: 20, height: 20))
+    }
+
+    @Test
+    func percentagesResolveAgainstTheViewportOfTheUse() throws {
+        let layer = try symbolLayer("""
+        <symbol id="s" viewBox="0 0 10 10" x="10%" width="50%" height="50%"><rect width="10" height="10"/></symbol>
+        <use href="#s" y="20%"/>
+        """)
+        #expect(layer.transform == [.translate(tx: 10, ty: 20), .scale(sx: 5, sy: 5)])
+    }
+
+    @Test
+    func percentageSizeOnUse() throws {
+        let svg = try DOM.SVG.parse(xml: """
+        <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 200 200">
+          <symbol id="s" viewBox="0 0 10 10"><rect width="10" height="10"/></symbol>
+          <svg width="100" height="50"><use href="#s" width="50%" height="50%"/></svg>
+        </svg>
+        """)
+        let nested = try #require(svg.childElements.compactMap { $0 as? DOM.SVG }.first)
+        let use = try #require(nested.childElements.first as? DOM.Use)
+        guard case .layer(let layer) = try LayerTree.Builder(svg: svg).makeUseLayerContents(from: use, with: .init()) else {
+            Issue.record("expected a layer")
+            return
+        }
+        // 50% of the nested viewport (100 × 50): 50 × 25, meet scales by 2.5
+        #expect(layer.transform == [.translate(tx: 12.5, ty: 0), .scale(sx: 2.5, sy: 2.5)])
+    }
+
+    @Test(arguments: [
+        (#"overflow="hidden""#, true),
+        (#"overflow="scroll""#, true),
+        ("", true),
+        (#"overflow="visible""#, false),
+        (#"overflow="auto""#, false)
+    ])
+    func symbolSizeClipsToViewport(overflow: String, clips: Bool) throws {
+        let layer = try symbolLayer("""
+        <symbol id="s" width="20" height="30" \(overflow)><rect width="60" height="60"/></symbol>
+        <use href="#s"/>
+        """)
+        #expect(clipRect(layer) == (clips ? LayerTree.Rect(x: 0, y: 0, width: 20, height: 30) : nil))
+    }
+
+    @Test
+    func symbolTransformIsIgnored() throws {
+        let layer = try symbolLayer("""
+        <symbol id="s" transform="skewX(30)"><rect width="10" height="10"/></symbol>
+        <use href="#s" x="5"/>
+        """)
+        #expect(layer.transform == [.translate(tx: 5, ty: 0)])
+        #expect(layer.contents.count == 1)
+    }
+
+    @Test
+    func symbolContentsResolvePercentagesAgainstUseSize() throws {
+        let svg = try parse("""
+        <symbol id="s"><rect width="100%" height="100%"/></symbol>
+        <use href="#s" width="30" height="20"/>
+        """)
+        let (shape, _) = try #require(shapes(in: LayerTree.Builder(svg: svg).makeLayer()).first)
+        #expect(shape == .rect(within: LayerTree.Rect(x: 0, y: 0, width: 30, height: 20), radii: .zero))
+    }
 }

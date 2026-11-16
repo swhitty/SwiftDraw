@@ -162,8 +162,9 @@ extension XMLParser {
                 result.append(ge)
             }
 
-            // a nested <svg> has already parsed its own children (with its own defs and styles)
-            if let container = ge as? any ContainerElement, !(ge is DOM.SVG) {
+            // a nested <svg> has already parsed its own children (with its own defs and styles),
+            // and a <symbol> in its own viewport
+            if let container = ge as? any ContainerElement, !(ge is DOM.SVG), !(ge is DOM.Symbol) {
                 let fontSize = lengthContext.fontSize
                 stack.append(contentsOf: element.children.reversed().map { ($0, container, fontSize) })
             }
@@ -415,12 +416,16 @@ extension XMLParser {
             // `none` is the identity, and still overrides a lower rule
             el.transform = Self.isNone(val) ? [] : try? parseTransform(val)
         }
+        // not inherited: it only applies to the element's own transform
+        el.transformOrigin = lenient { try att.parseString("transform-origin") as String? }.flatMap(parseTransformOrigin)
 
         el.clipPath = urlOrNone(att, "clip-path")
         el.clipRule = lenient { try att.parseRaw("clip-rule") }
         el.mask = urlOrNone(att, "mask")
         el.maskType = lenient { try att.parseRaw("mask-type") }
-        el.filter = urlOrNone(att, "filter")
+        el.filter = lenient { try att.parseString("filter") as String? }.flatMap {
+            try? Self.parseFilterValue(XMLParser.Attributes.removingImportant(from: $0))
+        }
         el.overflow = lenient { try att.parseRaw("overflow") }
 
         el.markerStart = urlOrNone(att, "marker-start")

@@ -63,11 +63,13 @@ package extension DOM {
         package var dominantBaseline: TextBaseline?
 
         package var transform: [DOM.Transform]?
+        package var transformOrigin: DOM.TransformOrigin?
         package var clipPath: DOM.URL?
         package var clipRule: DOM.FillRule?
         package var mask: DOM.URL?
         package var maskType: DOM.MaskType?
-        package var filter: DOM.URL?
+        // url() references and filter functions in order; empty for `none`
+        package var filter: [DOM.FilterValue]?
         package var overflow: DOM.Overflow?
 
         package var markerStart: DOM.URL?
@@ -197,6 +199,7 @@ extension DOM.PresentationAttributes {
         merged.dominantBaseline = att.dominantBaseline ?? dominantBaseline
 
         merged.transform = att.transform ?? transform
+        merged.transformOrigin = att.transformOrigin ?? transformOrigin
         merged.clipPath = att.clipPath ?? clipPath
         merged.clipRule = att.clipRule ?? clipRule
         merged.mask = att.mask ?? mask

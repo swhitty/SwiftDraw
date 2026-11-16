@@ -369,7 +369,7 @@ struct ParserXMLStyleSheetCascadeTests {
         let att = try cascaded("r", style: style, body: #"<rect id="r" width="1" height="1"/>"#)
         #expect(att.clipPath == DOM.noneURL)
         #expect(att.mask == DOM.noneURL)
-        #expect(att.filter == DOM.noneURL)
+        #expect(att.filter == [])
         #expect(att.transform == [])
     }
 
