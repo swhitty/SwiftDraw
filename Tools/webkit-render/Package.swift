@@ -13,7 +13,7 @@ import PackageDescription
 
 let package = Package(
     name: "webkit-render",
-    platforms: [.macOS(.v13)],
+    platforms: [.macOS(.v26)],
     products: [
         .executable(name: "webkit-render", targets: ["webkit-render"])
     ],
