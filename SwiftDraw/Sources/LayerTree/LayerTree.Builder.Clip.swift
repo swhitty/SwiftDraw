@@ -165,7 +165,11 @@ extension LayerTree.Builder {
             l.appendContents(makeShapeContents(from: shape, with: state))
             applyMemberClip(of: member, to: l)
         } else if let text = member.element as? DOM.Text {
-            let state = createState(for: text, inheriting: State())
+            var state = createState(for: text, inheriting: State())
+            // a clip is the fill geometry only, so the text stays text rather than painted outlines
+            state.fill = .color(.keyword(.white))
+            state.fillOpacity = 1
+            state.stroke = .color(.none)
             if let textPath = text.textPath {
                 if let contents = makeTextPathContents(from: textPath, with: state, isClip: true) {
                     l.appendContents(contents)

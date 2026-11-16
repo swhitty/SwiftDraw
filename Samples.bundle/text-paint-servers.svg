@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240" viewBox="0 0 240 240" font-family="Times" font-size="30" font-weight="bold">
+    <!-- text filled with gradients and patterns, stroked text (with opacity, dashes and paint servers),
+         and the fallback colour of a paint server that does not exist -->
+    <linearGradient id="lg">
+        <stop offset="0" stop-color="#fc0" />
+        <stop offset="1" stop-color="#06c" />
+    </linearGradient>
+    <radialGradient id="rg">
+        <stop offset="0" stop-color="#fc0" />
+        <stop offset="1" stop-color="#c03" />
+    </radialGradient>
+    <pattern id="checks" patternUnits="userSpaceOnUse" width="6" height="6">
+        <rect width="3" height="3" fill="#06c" />
+        <rect x="3" y="3" width="3" height="3" fill="#c03" />
+    </pattern>
+
+    <rect width="240" height="240" fill="#eee" />
+    <path d="M0 120h240M120 0v240" stroke="#999" stroke-width="2" />
+
+    <!-- paint server fills -->
+    <text x="10" y="40" fill="url(#lg)">Linear</text>
+    <text x="230" y="40" text-anchor="end" fill="url(#rg)" fill-opacity="0.6">Radial</text>
+    <text x="10" y="90" fill="url(#checks)" stroke="#333" stroke-width="0.75">Pattern</text>
+    <text x="230" y="90" text-anchor="end" fill="url(#missing) #090">Fallback</text>
+
+    <!-- stroked text -->
+    <text x="10" y="150" fill="none" stroke="#06c" stroke-width="2" stroke-opacity="0.5">Stroke</text>
+    <text x="230" y="150" text-anchor="end" fill="#fc0" stroke="#c03" stroke-width="1.5" stroke-dasharray="3 2">Dash</text>
+    <text x="10" y="210" fill="none" stroke="url(#lg)" stroke-width="3" stroke-linejoin="round">Grad</text>
+    <text x="230" y="210" text-anchor="end" fill="#fff" stroke="url(#checks)" stroke-width="3">Pat</text>
+</svg>
