@@ -134,6 +134,7 @@ extension XML.Formatter {
             attributes["fill-opacity"] = formatter.format(graphic.fillOpacity)
             attributes["fill"] = graphic.fill.map(encodeFill)
             attributes["fill-rule"] = graphic.fillRule?.rawValue
+            attributes["paint-order"] = graphic.paintOrder?.value
 
             attributes["font-family"] = encodeFontFamily(graphic.fontFamily)
             attributes["font-size"] = graphic.fontSize.map(encodeFontSize)

@@ -288,7 +288,7 @@ extension SFSymbolRenderer {
 
         let symbolClass = isSFSymbolLayer ? layer.class : nil
 
-        for c in layer.contents {
+        for c in makeUnorderedContents(of: layer) {
             switch c {
             case let .shape(shape, stroke, fill):
 
@@ -322,6 +322,37 @@ extension SFSymbolRenderer {
         }
 
         return paths
+    }
+
+    /// A symbol is one silhouette whatever the `paint-order`. A shape painted in another order is a
+    /// group of its fill-only and stroke-only halves and its markers: the halves are put back together
+    /// and the group is laid out as in the default order, so it gives the same paths.
+    static func makeUnorderedContents(of layer: LayerTree.Layer) -> [LayerTree.Layer.Contents] {
+        layer.contents.flatMap { contents -> [LayerTree.Layer.Contents] in
+            guard case let .layer(group) = contents, group.isPaintOrdered else { return [contents] }
+            var merged: (shape: LayerTree.Shape, stroke: LayerTree.StrokeAttributes, fill: LayerTree.FillAttributes)?
+            for case let .shape(shape, stroke, fill) in group.contents {
+                if var m = merged {
+                    if stroke.color != .color(.none) { m.stroke = stroke }
+                    if fill.fill != .color(.none) { m.fill = fill }
+                    merged = m
+                } else {
+                    merged = (shape, stroke, fill)
+                }
+            }
+            var result = [LayerTree.Layer.Contents]()
+            if let merged {
+                result.append(.shape(merged.shape, merged.stroke, merged.fill))
+            }
+            let markers = group.contents.filter {
+                if case .shape = $0 { return false } else { return true }
+            }
+            guard !markers.isEmpty else { return result }
+            // in the default order a shape with markers is a layer of the shape then its markers
+            let l = LayerTree.Layer()
+            l.contents = result + markers
+            return [.layer(l)]
+        }
     }
 
     static func applyClip(to paths: [SymbolPath],

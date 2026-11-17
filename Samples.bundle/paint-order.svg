@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="160" viewBox="0 0 240 160">
+  <defs>
+    <marker id="dot" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="16" markerHeight="16" markerUnits="userSpaceOnUse">
+      <circle cx="5" cy="5" r="5" fill="steelblue"/>
+    </marker>
+  </defs>
+  <style>.css { paint-order: markers stroke }</style>
+  <g stroke="gold" stroke-width="12" fill="crimson" marker-start="url(#dot)" marker-mid="url(#dot)" marker-end="url(#dot)">
+    <!-- normal: fill, stroke, markers -->
+    <path d="M 20 20 H 60 V 60 H 20 Z"/>
+    <!-- stroke: stroke, fill, markers -->
+    <path d="M 100 20 H 140 V 60 H 100 Z" paint-order="stroke"/>
+    <!-- markers: markers, fill, stroke -->
+    <path d="M 180 20 H 220 V 60 H 180 Z" paint-order="markers"/>
+    <!-- markers stroke (from CSS): markers, stroke, fill -->
+    <path d="M 20 100 H 60 V 140 H 20 Z" class="css"/>
+    <!-- stroke markers: stroke, markers, fill -->
+    <path d="M 100 100 H 140 V 140 H 100 Z" paint-order="stroke markers"/>
+    <!-- fill markers stroke, inherited from the group, drawn as a group at half opacity -->
+    <g paint-order="fill markers stroke">
+      <path d="M 180 100 H 220 V 140 H 180 Z" opacity="0.5"/>
+    </g>
+  </g>
+</svg>

@@ -108,6 +108,54 @@ extension DOM {
         case auto
     }
 
+    /// SVG 2 §13.6 `paint-order`: the order the fill, stroke and markers of a shape are painted in.
+    /// Always holds all three; keywords left out of the value follow in the default order.
+    package struct PaintOrder: Hashable, Sendable {
+        package enum Layer: String, CaseIterable, Sendable {
+            case fill
+            case stroke
+            case markers
+        }
+
+        package var layers: [Layer]
+
+        package static let normal = PaintOrder(layers: Layer.allCases)
+
+        package init(layers: [Layer]) {
+            self.layers = layers
+        }
+
+        /// `normal`, or one to three distinct keywords; nil for anything else (a duplicate, an
+        /// unknown keyword or an empty value), so the declaration is dropped.
+        package init?(_ text: String) {
+            let tokens = text
+                .split(whereSeparator: { $0 == " " || $0 == "\t" || $0 == "\n" || $0 == "\r" })
+                .map { $0.lowercased() }
+            if tokens == ["normal"] {
+                self = .normal
+                return
+            }
+            var layers = [Layer]()
+            for token in tokens {
+                guard let layer = Layer(rawValue: token), !layers.contains(layer) else { return nil }
+                layers.append(layer)
+            }
+            guard !layers.isEmpty else { return nil }
+            self.layers = layers + Layer.allCases.filter { !layers.contains($0) }
+        }
+
+        /// The shortest value that serialises this order.
+        package var value: String {
+            guard self != .normal else { return "normal" }
+            // trailing keywords that are in their default order anyway are left out
+            for count in 1..<layers.count {
+                let value = layers.prefix(count).map(\.rawValue).joined(separator: " ")
+                if PaintOrder(value) == self { return value }
+            }
+            return layers.map(\.rawValue).joined(separator: " ")
+        }
+    }
+
     // CSS Masking §7.2: whether a mask uses the luminance or the alpha of its contents
     package enum MaskType: String {
         case luminance

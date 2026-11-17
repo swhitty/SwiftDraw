@@ -465,6 +465,10 @@ extension XMLParser {
         el.markerStart = urlOrNone(att, "marker-start")
         el.markerMid = urlOrNone(att, "marker-mid")
         el.markerEnd = urlOrNone(att, "marker-end")
+        // SVG 2 §13.6: an invalid value is dropped, so the inherited order applies
+        el.paintOrder = lenient { try att.parseString("paint-order") as String? }.flatMap {
+            DOM.PaintOrder(XMLParser.Attributes.removingImportant(from: $0))
+        }
 
         el.stopColor = lenient { try att.parseFill("stop-color").getColor() }
         el.stopOpacity = opacity(att, "stop-opacity")

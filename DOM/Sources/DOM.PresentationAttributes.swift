@@ -75,6 +75,7 @@ package extension DOM {
         package var markerStart: DOM.URL?
         package var markerMid: DOM.URL?
         package var markerEnd: DOM.URL?
+        package var paintOrder: DOM.PaintOrder?
 
         package var stopColor: DOM.Color?
         package var stopOpacity: DOM.Float?
@@ -210,6 +211,7 @@ extension DOM.PresentationAttributes {
         merged.markerStart = att.markerStart ?? markerStart
         merged.markerMid = att.markerMid ?? markerMid
         merged.markerEnd = att.markerEnd ?? markerEnd
+        merged.paintOrder = att.paintOrder ?? paintOrder
 
         merged.stopColor = att.stopColor ?? stopColor
         merged.stopOpacity = att.stopOpacity ?? stopOpacity
