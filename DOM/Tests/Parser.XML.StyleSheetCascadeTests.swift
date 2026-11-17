@@ -407,18 +407,17 @@ struct ParserXMLStyleSheetCascadeTests {
         #expect(try #require(svg.defs.radialGradients.first).stops[0].color == .hex(0, 255, 0))
     }
 
-    @Test
+    // the quadratic matcher took far longer than a minute on a debug build
+    @Test(.timeLimit(.minutes(1)))
     func manyRulesOnALargeDocumentStayFast() throws {
         let rules = (0..<300).map { ".c\($0) { fill: #\(String(format: "%06x", $0)) }" }.joined(separator: "\n")
         let elements = (0..<5000).map { #"<rect class="x c\#($0 % 300)" width="1" height="1"/>"# }.joined()
         let siblings = "g > rect ~ rect + rect { stroke: red } svg rect:last-child { stroke-width: 2 }"
-        let start = Date()
         let svg = try DOM.SVG.parse(xml: """
         <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10">
         <style>\(rules) \(siblings)</style><g>\(elements)</g>
         </svg>
         """)
-        let elapsed = Date().timeIntervalSince(start)
         let group = try #require(svg.childElements.first as? DOM.Group)
         #expect(group.childElements.count == 5000)
         let last = DOM.presentationAttributes(for: group.childElements[4999], styles: svg.styles)
@@ -426,9 +425,6 @@ struct ParserXMLStyleSheetCascadeTests {
         #expect(last.stroke == .color(.keyword(.red)))
         #expect(last.strokeWidth == 2)
         #expect(DOM.presentationAttributes(for: group.childElements[0], styles: svg.styles).stroke == nil)
-        // generous bound for debug builds on CI, where Windows takes up to ~21s; the quadratic
-        // matcher took far longer
-        #expect(elapsed < 60)
     }
 
     // MARK: - Third review
