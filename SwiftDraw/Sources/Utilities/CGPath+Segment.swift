@@ -130,11 +130,16 @@ private extension LayerTree.Point {
 
 extension String {
 
-    func toLine(font: CTFont, kerning: Bool = true) -> CTLine {
+    /// - Parameter ligatures: false keeps only the ligatures the script requires (CSS: letter-spacing
+    ///   turns optional ligatures off)
+    func toLine(font: CTFont, kerning: Bool = true, ligatures: Bool = true) -> CTLine {
         var attributes: [CFString: Any] = [kCTFontAttributeName: font]
         if !kerning {
             // a kern of zero turns the font's own kerning off
             attributes[kCTKernAttributeName] = 0
+        }
+        if !ligatures {
+            attributes[kCTLigatureAttributeName] = 0
         }
         let attString = CFAttributedStringCreate(nil, self as CFString, attributes as CFDictionary)!
         return CTLineCreateWithAttributedString(attString)
@@ -230,7 +235,7 @@ extension String {
     }
 
     // Use the font CoreText resolved for this run, else fall back to the requested font.
-    private func resolveRunFont(attributes: NSDictionary, fallback: CTFont) -> CTFont {
+    func resolveRunFont(attributes: NSDictionary, fallback: CTFont) -> CTFont {
         guard let value = attributes[kCTFontAttributeName] else {
             return fallback
         }

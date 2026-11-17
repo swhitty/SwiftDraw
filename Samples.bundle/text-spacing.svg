@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="200" viewBox="0 0 240 200" font-family="Helvetica" font-size="22">
+  <!-- letter-spacing and word-spacing: lengths, em and negative values, inherited by tspans -->
+  <path d="M120 0 V200" stroke="silver"/>
+  <text x="10" y="30" letter-spacing="6">Spaced</text>
+  <text x="10" y="60" letter-spacing="-1.5" fill="teal">Tight text</text>
+  <text x="10" y="90" word-spacing="0.8em">one two three</text>
+  <text x="10" y="120" letter-spacing="2">In<tspan fill="crimson" letter-spacing="8">her</tspan>ited</text>
+  <!-- the spacing after the last character is not anchored -->
+  <text x="120" y="155" text-anchor="middle" letter-spacing="10" fill="purple">Mid</text>
+  <!-- spacing between glyphs placed one by one keeps the paint of the whole text -->
+  <linearGradient id="g"><stop offset="0" stop-color="#fc0"/><stop offset="1" stop-color="#06c"/></linearGradient>
+  <text x="10" y="190" font-size="30" font-weight="bold" letter-spacing="4" fill="url(#g)" stroke="#333" stroke-width="0.5">Gradient</text>
+</svg>

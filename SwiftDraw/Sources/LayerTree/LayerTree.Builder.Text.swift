@@ -45,9 +45,29 @@ extension LayerTree.Builder {
         var state: State
         /// The start of the run on the baseline, before `text-anchor` and the baseline shift
         var origin: LayerTree.Point
+        /// from the origin to the end of its last character, without the spacing after it
         var advance: LayerTree.Float = 0
+        /// the leftmost start and rightmost end of its characters' cells on the line: with `dx` within
+        /// the run, a character can start before the run's origin
+        var extent: ClosedRange<LayerTree.Float>?
         /// `rotate` of a single character in degrees, about its origin
         var rotate: LayerTree.Float = 0
+        /// Its glyphs, each placed on the line (before `text-anchor` and the baseline shift), when its
+        /// characters are not laid out as the font would on its own: spacing or `dx` / `dy` within
+        /// it, or a rotated character. nil draws `string` as text.
+        var glyphs: [PlacedGlyph]?
+
+        var horizontalExtent: ClosedRange<LayerTree.Float> {
+            if let extent { return extent }
+            let end = origin.x + advance
+            return min(origin.x, end)...max(origin.x, end)
+        }
+    }
+
+    struct PlacedGlyph: Equatable {
+        var fontName: String
+        var glyph: UInt16
+        var position: LayerTree.Point
     }
 
     /// SVG 2 §11.5.3 text chunk: runs drawn one after the other from an absolute position.
@@ -67,9 +87,9 @@ extension LayerTree.Builder {
             var minX = LayerTree.Float.infinity
             var maxX = -LayerTree.Float.infinity
             for run in runs {
-                let edges = [run.origin.x, run.origin.x + run.advance]
-                minX = min(minX, edges.min()!)
-                maxX = max(maxX, edges.max()!)
+                let extent = run.horizontalExtent
+                minX = min(minX, extent.lowerBound)
+                maxX = max(maxX, extent.upperBound)
             }
             switch anchor {
             case .start: return x - minX
@@ -163,61 +183,64 @@ extension LayerTree.Builder {
     }
 
     /// The characters of `text` laid out on one line, split into text chunks. Each character starts
-    /// where the previous one's advance ends, moved by its `dx` and `dy`; an absolute `x` or `y`
-    /// starts a new chunk there. Characters of one text node that are not positioned or rotated on
-    /// their own are drawn together as a run, so their kerning and ligatures are kept.
+    /// where the previous one's advance (and `letter-spacing` / `word-spacing`) ends, moved by its `dx`
+    /// and `dy`; an absolute `x` or `y` starts a new chunk there.
+    ///
+    /// Characters are shaped together while they share a font, across text nodes and `dx` / `dy`,
+    /// so kerning applies between them; each chunk is shaped on its own. A text node's characters
+    /// that flow as the font lays them out are kept together as one run of text. Those with spacing
+    /// or `dx` / `dy` between them, or rotated, are placed glyph by glyph from the shaping.
     func makeTextChunks(for text: DOM.Text, with state: State) -> [TextChunk] {
+        // a font-size of 0 draws nothing (CoreText would fall back to its default size)
+        let characters = makeTextCharacters(for: text, with: state).filter { $0.state.fontSize > 0 }
+        let shaped = makeShapedCharacters(for: characters)
+
         var chunks = [TextChunk]()
         var current = TextChunk()
         var pen = LayerTree.Point.zero
 
-        // consecutive runs in the same font are measured together, as browsers and resvg shape them,
-        // so kerning applies across a change of colour: each run ends where the joined text would.
-        // A `dx` or `dy` moves the pen without breaking the shaping; a new chunk is shaped on its own.
-        var shaped: (font: LayerTree.TextAttributes, text: String, advance: LayerTree.Float)?
-        var pending: (string: String, state: State, run: Int, rotate: LayerTree.Float)?
-
-        func place(_ string: String, state: State, rotate: LayerTree.Float) {
-            var font = makeTextAttributes(with: state)
-            font.color = .none
-            font.anchor = .start
-            font.baseline = .auto
-            let advance = Self.makeAdvance(for: string, with: font)
-            var origin = pen
-            if let previous = shaped, previous.font == font {
-                let text = previous.text + string
-                let total = Self.makeAdvance(for: text, with: font)
-                pen.x += total - previous.advance
-                origin.x = pen.x - advance
-                shaped = (font, text, total)
-            } else {
-                pen.x += advance
-                shaped = (font, string, advance)
-            }
-            // the run's advance as placed: from its origin to where the shaped text ends
-            current.runs.append(TextRunPlacement(string: string, state: state, origin: origin,
-                                                 advance: pen.x - origin.x, rotate: rotate))
+        struct Segment {
+            var string: String
+            var state: State
+            var run: Int
+            var rotate: LayerTree.Float
+            var origin: LayerTree.Point
+            var glyphs = [PlacedGlyph]()
+            /// laid out as the font would on its own: drawn as text
+            var isNatural = true
+            /// where its last character ends, before the spacing after it
+            var end: LayerTree.Float
+            /// the spacing after its last character
+            var spacing: LayerTree.Float = 0
+            /// the leftmost start and rightmost end of its characters
+            var extent: ClosedRange<LayerTree.Float>
         }
+        var segment: Segment?
 
         func flush() {
-            guard let run = pending else { return }
-            place(run.string, state: run.state, rotate: run.rotate)
-            pending = nil
+            guard let s = segment else { return }
+            current.runs.append(TextRunPlacement(string: s.string, state: s.state, origin: s.origin,
+                                                 advance: s.end - s.origin.x, extent: s.extent,
+                                                 rotate: s.rotate, glyphs: s.isNatural ? nil : s.glyphs))
+            segment = nil
         }
 
-        for character in makeTextCharacters(for: text, with: state) {
-            // a font-size of 0 draws nothing (CoreText would fall back to its default size)
-            guard character.state.fontSize > 0 else { continue }
-            let isAbsolute = character.x != nil || character.y != nil
-            let isAdjusted = isAbsolute || character.dx != 0 || character.dy != 0 || character.rotate != 0
+        // CSS Text 3 §8.2: no letter-spacing within cursive scripts, whose letters join. Spaces and
+        // punctuation beside a cursive letter belong to its run, so they take none either.
+        let isCursive = characters.indices.map { index -> Bool in
+            let character = characters[index].character
+            if Self.isCursive(character) { return true }
+            guard !character.isLetter && !character.isNumber else { return false }
+            let previous = index > 0 && Self.isCursive(characters[index - 1].character)
+            let next = index + 1 < characters.count && Self.isCursive(characters[index + 1].character)
+            return previous || next
+        }
 
-            if let run = pending, run.run == character.run, run.rotate == 0, !isAdjusted {
-                pending?.string.append(character.character)
-                continue
-            }
-            flush()
+        for (index, (character, shape)) in zip(characters, shaped).enumerated() {
+            let isAbsolute = character.x != nil || character.y != nil
+            let isMoved = character.dx != 0 || character.dy != 0
             if isAbsolute {
-                shaped = nil
+                flush()
                 if !current.runs.isEmpty {
                     chunks.append(current)
                     current = TextChunk()
@@ -226,13 +249,78 @@ extension LayerTree.Builder {
             }
             pen.x += character.dx
             pen.y += character.dy
-            pending = (String(character.character), character.state, character.run, character.rotate)
+
+            if var s = segment, s.run == character.run, s.rotate == 0, character.rotate == 0, !isAbsolute {
+                // spacing or a move between two characters: they are no longer where the font puts them
+                if s.spacing != 0 || isMoved { s.isNatural = false }
+                segment = s
+            } else {
+                flush()
+                segment = Segment(string: "", state: character.state, run: character.run,
+                                  rotate: character.rotate, origin: pen,
+                                  isNatural: character.rotate == 0, end: pen.x, extent: pen.x...pen.x)
+            }
+
+            segment?.string.append(character.character)
+            segment?.glyphs.append(contentsOf: shape.glyphs.map {
+                PlacedGlyph(fontName: $0.fontName, glyph: $0.glyph,
+                            position: LayerTree.Point(pen.x + $0.offset.x, pen.y + $0.offset.y))
+            })
+            let cell = min(pen.x, pen.x + shape.advance)...max(pen.x, pen.x + shape.advance)
+            pen.x += shape.advance
+            segment?.end = pen.x
+            if let extent = segment?.extent {
+                segment?.extent = min(extent.lowerBound, cell.lowerBound)...max(extent.upperBound, cell.upperBound)
+            }
+
+            // CSS Text 3 §8: spacing after each typographic character
+            var spacing = isCursive[index] ? 0 : character.state.letterSpacing
+            if Self.isWordSeparator(character.character) {
+                spacing += character.state.wordSpacing
+            }
+            pen.x += spacing
+            segment?.spacing = spacing
         }
         flush()
         if !current.runs.isEmpty {
             chunks.append(current)
         }
         return chunks
+    }
+
+    /// The glyphs of each character, shaped together while consecutive characters share a font
+    /// (across text nodes, with their kerning), each text chunk on its own.
+    func makeShapedCharacters(for characters: [TextCharacter]) -> [ShapedCharacter] {
+        var result = [ShapedCharacter]()
+        var group = [TextCharacter]()
+        var groupFont: (LayerTree.TextAttributes, Bool)?
+
+        func shape() {
+            guard let (font, ligatures) = groupFont else { return }
+            let characters = group.map(\.character)
+            let runs = Self.makeShapedText(String(characters), with: font, ligatures: ligatures)
+            result.append(contentsOf: Self.makeShapedCharacters(runs, for: characters))
+            group = []
+        }
+
+        for character in characters {
+            var font = makeTextAttributes(with: character.state)
+            font.color = .none
+            font.anchor = .start
+            font.baseline = .auto
+            // CSS Text 3 §8.2: letter-spacing turns optional ligatures off
+            let key = (font, character.state.letterSpacing == 0)
+            let isAbsolute = character.x != nil || character.y != nil
+            if let current = groupFont, current.0 == key.0, current.1 == key.1, !isAbsolute {
+                group.append(character)
+            } else {
+                shape()
+                groupFont = key
+                group = [character]
+            }
+        }
+        shape()
+        return result
     }
 
     /// Every run of the text, each drawn with its own state. A single run is returned as is, several
@@ -263,8 +351,12 @@ extension LayerTree.Builder {
                     state.stroke = .color(.none)
                 }
                 let point = LayerTree.Point(run.origin.x + shift, run.origin.y)
-                if let runContents = makeTextRunContents(run.string, at: point, with: state, rotate: run.rotate,
-                                                         for: text, bounds: textBounds) {
+                let glyphs = run.glyphs?.map {
+                    PlacedGlyph(fontName: $0.fontName, glyph: $0.glyph,
+                                position: LayerTree.Point($0.position.x + shift, $0.position.y))
+                }
+                if let runContents = makeTextRunContents(run.string, glyphs: glyphs, at: point, with: state,
+                                                         rotate: run.rotate, for: text, bounds: textBounds) {
                     contents.append(runContents)
                 }
             }
@@ -309,8 +401,9 @@ extension LayerTree.Builder {
                 let descent = LayerTree.Float(CTFontGetDescent(font))
                 let origin = LayerTree.Point(run.origin.x + shift, run.origin.y)
                 let baseline = origin.y + makeBaselineOffset(with: attributes)
-                var cell = LayerTree.Rect(x: origin.x, y: baseline - ascent,
-                                          width: run.advance, height: ascent + descent)
+                let extent = run.horizontalExtent
+                var cell = LayerTree.Rect(x: extent.lowerBound + shift, y: baseline - ascent,
+                                          width: extent.upperBound - extent.lowerBound, height: ascent + descent)
                 if run.rotate != 0 {
                     cell = cell.applying(makeRotation(run.rotate, about: LayerTree.Point(origin.x, baseline)).toMatrix())
                 }
@@ -326,21 +419,26 @@ extension LayerTree.Builder {
     /// One run of characters starting at `point` on the line, shifted to the baseline of its state.
     /// Its fill and stroke follow `paint-order`; `bounds` is the text's box for objectBoundingBox paint.
     /// - Parameter rotate: `rotate` of a single glyph, clockwise in degrees about its origin
-    func makeTextRunContents(_ string: String, at point: LayerTree.Point, with state: State,
+    /// - Parameter glyphs: the run's glyphs placed one by one, on the line before the baseline shift;
+    ///   nil draws `string` as text from `point`
+    func makeTextRunContents(_ string: String, glyphs: [PlacedGlyph]? = nil,
+                             at point: LayerTree.Point, with state: State,
                              rotate: LayerTree.Float = 0,
                              for text: DOM.Text? = nil,
                              bounds: () -> LayerTree.Rect? = { nil }) -> LayerTree.Layer.Contents? {
         // state already holds the cascaded font-family, font-size, font-weight, font-style and text-anchor
         let att = makeTextAttributes(with: state)
+        let baseline = Self.makeBaselineOffset(with: att)
         var point = point
-        point.y += Self.makeBaselineOffset(with: att)
+        point.y += baseline
         let rotation = rotate == 0 ? [] : Self.makeRotation(rotate, about: point)
+        let glyphRuns = glyphs.map { Self.makeGlyphRuns($0, attributes: att, baseline: baseline) }
 
 #if canImport(CoreText)
         // text painted with a paint server or a stroke is drawn as its glyph outlines, through the
         // shape pipeline, so it gets gradients, patterns, strokes and the text's bounding box for free
         if needsOutlines(for: state),
-           let outlines = CGProvider().createPath(from: string, at: point, with: att) {
+           let outlines = glyphRuns.map(Self.makeGlyphOutlines) ?? CGProvider().createPath(from: string, at: point, with: att) {
             var state = state
             // glyph outlines are designed for nonzero; fill-rule does not apply to text in browsers
             state.fillRule = .nonzero
@@ -356,12 +454,54 @@ extension LayerTree.Builder {
             return makePaintedContents(contents, for: text, with: state)
         }
 #endif
-        guard !rotation.isEmpty else { return .text(string, point, att) }
+        let contents: LayerTree.Layer.Contents
+        if let glyphRuns {
+            guard !glyphRuns.isEmpty else { return nil }
+            if glyphRuns.count == 1 {
+                contents = .glyphs(glyphRuns[0])
+            } else {
+                let layer = LayerTree.Layer()
+                glyphRuns.forEach { layer.appendContents(.glyphs($0)) }
+                contents = .layer(layer)
+            }
+        } else {
+            contents = .text(string, point, att)
+        }
+        guard !rotation.isEmpty else { return contents }
         let layer = LayerTree.Layer()
         layer.transform = rotation
-        layer.appendContents(.text(string, point, att))
+        layer.appendContents(contents)
         return .layer(layer)
     }
+
+    /// Placed glyphs in runs of one face, shifted to the baseline
+    static func makeGlyphRuns(_ glyphs: [PlacedGlyph], attributes: LayerTree.TextAttributes,
+                              baseline: LayerTree.Float) -> [LayerTree.GlyphRun] {
+        var runs = [LayerTree.GlyphRun]()
+        for glyph in glyphs {
+            let position = LayerTree.Point(glyph.position.x, glyph.position.y + baseline)
+            if let last = runs.last, last.fontName == glyph.fontName {
+                runs[runs.count - 1].glyphs.append(glyph.glyph)
+                runs[runs.count - 1].positions.append(position)
+            } else {
+                runs.append(LayerTree.GlyphRun(attributes: attributes, fontName: glyph.fontName,
+                                               glyphs: [glyph.glyph], positions: [position]))
+            }
+        }
+        return runs
+    }
+
+#if canImport(CoreText)
+    static func makeGlyphOutlines(_ runs: [LayerTree.GlyphRun]) -> CGPath? {
+        let path = CGMutablePath()
+        for run in runs {
+            if let outline = CGProvider.createGlyphPath(from: run) {
+                path.addPath(outline)
+            }
+        }
+        return path
+    }
+#endif
 
     static func makeXOffset(width: Double, anchor: DOM.TextAnchor) -> LayerTree.Float {
         switch anchor {

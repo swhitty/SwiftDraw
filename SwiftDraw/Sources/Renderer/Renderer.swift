@@ -61,6 +61,7 @@ protocol RendererTypeProvider {
     func createPath(from shape: LayerTree.Shape) -> Types.Path
     func createPath(from subPaths: [Types.Path]) -> Types.Path
     func createPath(from text: String, at origin: LayerTree.Point, with attributes: LayerTree.TextAttributes) -> Types.Path?
+    func createPath(from glyphs: LayerTree.GlyphRun) -> Types.Path?
     func createPattern(from pattern: LayerTree.Pattern, contents: [RendererCommand<Types>]) -> Types.Pattern
     func createFillRule(from rule: LayerTree.FillRule) -> Types.FillRule
     func createLineCap(from cap: LayerTree.LineCap) -> Types.LineCap

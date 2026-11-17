@@ -306,6 +306,10 @@ extension SFSymbolRenderer {
                 if let path = makePath(for: text, at: point, with: attributes) {
                     paths.append(SymbolPath(class: symbolClass, path: path.applying(matrix: ctm)))
                 }
+            case .glyphs(let run):
+                if let path = makePath(for: run) {
+                    paths.append(SymbolPath(class: symbolClass, path: path.applying(matrix: ctm)))
+                }
             case .layer(let l):
                 paths.append(contentsOf: getSymbolPaths(for: l, ctm: ctm))
             default:
@@ -409,6 +413,15 @@ extension SFSymbolRenderer {
 #if canImport(CoreGraphics)
         let cgPath = CGProvider().createPath(from: text, at: point, with: attributes)
         return cgPath?.makePath()
+#else
+        LogSink.warning("expanding text outlines requires macOS.")
+        return nil
+#endif
+    }
+
+    static func makePath(for run: LayerTree.GlyphRun) -> LayerTree.Path? {
+#if canImport(CoreText)
+        CGProvider.createGlyphPath(from: run)?.makePath()
 #else
         LogSink.warning("expanding text outlines requires macOS.")
         return nil

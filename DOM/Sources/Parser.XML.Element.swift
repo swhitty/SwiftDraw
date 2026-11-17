@@ -281,6 +281,13 @@ extension XMLParser {
         return lengths
     }
 
+    /// `letter-spacing` and `word-spacing`: `normal` (0) or a length; `em` and `%` are of the font-size
+    static func parseSpacing(_ text: String) -> DOM.DashLength? {
+        let text = XMLParser.Attributes.removingImportant(from: text).trimmingCharacters(in: .whitespacesAndNewlines)
+        guard text.lowercased() != "normal" else { return .absolute(0) }
+        return parseDashLength(text)
+    }
+
     static func parseDashLength(_ text: String) -> DOM.DashLength? {
         let text = text.trimmingCharacters(in: .whitespacesAndNewlines)
         if text.hasSuffix("%") {
@@ -450,6 +457,16 @@ extension XMLParser {
         el.fontStyle = lenient { try att.parseString("font-style") as String? }.flatMap(DOM.FontStyle.init)
         el.textAnchor = lenient { try att.parseRaw("text-anchor") }
         el.dominantBaseline = lenient { try att.parseRaw("dominant-baseline") }
+        // a percentage is of the viewport width, as for other horizontal lengths (as resvg; CSS Text 4
+        // makes it a percentage of the font-size)
+        let viewportWidth = lengthContext.viewports.last?.width
+        func spacing(_ key: String) -> DOM.DashLength? {
+            guard let length = lenient({ try att.parseString(key) as String? }).flatMap(Self.parseSpacing) else { return nil }
+            guard case .percentage(let percent) = length else { return length }
+            return viewportWidth.map { .absolute(percent / 100 * $0) }
+        }
+        el.letterSpacing = spacing("letter-spacing")
+        el.wordSpacing = spacing("word-spacing")
 
         if let val = try? att.parseString("transform") {
             // `none` is the identity, and still overrides a lower rule

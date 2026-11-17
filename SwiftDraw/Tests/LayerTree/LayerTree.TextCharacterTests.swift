@@ -136,16 +136,49 @@ struct LayerTreeTextCharacterTests {
         #expect(drawn.map(\.point) == [LayerTree.Point(10, 20), LayerTree.Point(50, 20), LayerTree.Point(90, 20)])
     }
 
+    /// The placements of the text's chunks, shifted by their anchoring
+    private func placements(_ text: String) throws -> [LayerTree.Builder.TextRunPlacement] {
+        let svg = try parse(text)
+        let element = try #require(svg.childElements.first as? DOM.Text)
+        let builder = LayerTree.Builder(svg: svg)
+        let state = builder.createState(for: element, inheriting: builder.createState(for: svg, inheriting: .init()))
+        return builder.makeTextChunks(for: element, with: state).flatMap { chunk in
+            chunk.runs.map { run in
+                var run = run
+                run.origin.x += chunk.shift
+                run.extent = run.horizontalExtent.lowerBound + chunk.shift...run.horizontalExtent.upperBound + chunk.shift
+                run.glyphs = run.glyphs?.map {
+                    LayerTree.Builder.PlacedGlyph(fontName: $0.fontName, glyph: $0.glyph,
+                                                  position: LayerTree.Point($0.position.x + chunk.shift, $0.position.y))
+                }
+                return run
+            }
+        }
+    }
+
+    private func advance(_ string: String, _ placement: LayerTree.Builder.TextRunPlacement) -> LayerTree.Float {
+        let builder = LayerTree.Builder(svg: DOM.SVG(width: 1, height: 1))
+        return LayerTree.Builder.makeAdvance(for: string, with: builder.makeTextAttributes(with: placement.state))
+    }
+
     @Test
-    func relativeValuesMoveEachCharacter() throws {
-        let drawn = try runs(#"<text x="10" y="20" dx="1 2" dy="3 4">ABC</text>"#)
-        #expect(drawn.map(\.string) == ["A", "BC"])
-        try #require(drawn.count == 2)
-        #expect(drawn[0].point == LayerTree.Point(11, 23))
-        // B and C stay shaped with A: they end where "ABC" would, 2 further on
-        let x = 13 + advance("ABC", drawn[1]) - advance("BC", drawn[1])
-        #expect(abs(drawn[1].point.x - x) < 0.001)
-        #expect(drawn[1].point.y == 27)
+    func relativeValuesWithinARunPlaceItsGlyphs() throws {
+        let placed = try placements(#"<text x="10" y="20" dx="1 2" dy="3 4">ABC</text>"#)
+        // one run, no longer laid out as the font would: placed glyph by glyph
+        #expect(placed.map(\.string) == ["ABC"])
+        let run = try #require(placed.first)
+        #expect(run.origin == LayerTree.Point(11, 23))
+#if canImport(CoreText)
+        let glyphs = try #require(run.glyphs)
+        try #require(glyphs.count == 3)
+        #expect(glyphs[0].position == LayerTree.Point(11, 23))
+        // B moves 2 further on and 4 down; C flows on from it, kerned as in "ABC"
+        #expect(abs(glyphs[1].position.x - (13 + advance("AB", run) - advance("B", run))) < 0.01)
+        #expect(glyphs[1].position.y == 27)
+        #expect(glyphs[2].position.y == 27)
+#else
+        #expect(run.glyphs != nil)
+#endif
     }
 
     @Test
@@ -169,23 +202,46 @@ struct LayerTreeTextCharacterTests {
     @Test
     func aChunkIsAnchoredOnItsLeftmostEdge() throws {
         // dx moves B well before A: with start anchoring, B's start is the chunk's start
-        let drawn = try runs(#"<text x="100" y="20" dx="0 -60">AB</text>"#)
-        try #require(drawn.count == 2)
-        #expect(abs(drawn[1].point.x - 100) < 0.001)
-        #expect(drawn[0].point.x > drawn[1].point.x)
+        let placed = try placements(#"<text x="100" y="20" dx="0 -60">AB</text>"#)
+        let run = try #require(placed.first)
+        #expect(placed.count == 1)
+        #expect(abs(run.horizontalExtent.lowerBound - 100) < 0.001)
+#if canImport(CoreText)
+        let glyphs = try #require(run.glyphs)
+        try #require(glyphs.count == 2)
+        #expect(abs(glyphs[1].position.x - 100) < 0.001)
+        #expect(glyphs[0].position.x > glyphs[1].position.x)
+#endif
     }
 
     @Test
-    func rotateTurnsEachGlyphAboutItsOrigin() throws {
-        let drawn = try runs(#"<text x="10" y="20" rotate="0 90">AB</text>"#)
-        #expect(drawn.map(\.string) == ["A", "B"])
-        try #require(drawn.count == 2)
-        #expect(drawn[0].transform.isEmpty)
-        let p = drawn[1].point
-        #expect(drawn[1].transform == [.translate(tx: p.x, ty: p.y),
-                                       .rotate(radians: .pi / 2),
-                                       .translate(tx: -p.x, ty: -p.y)])
+    func rotatedCharactersArePlacedOnTheirOwn() throws {
+        let placed = try placements(#"<text x="10" y="20" rotate="0 90">AB</text>"#)
+        #expect(placed.map(\.string) == ["A", "B"])
+        #expect(placed.map(\.rotate) == [0, 90])
+        // the unrotated character is drawn as text, the rotated one by its glyph
+        #expect(placed.first?.glyphs == nil)
+        #expect(placed.last?.glyphs != nil)
     }
+
+#if canImport(CoreText)
+    @Test
+    func rotateTurnsEachGlyphAboutItsOrigin() throws {
+        let layer = LayerTree.Builder(svg: try parse(#"<text x="10" y="20" rotate="0 90">AB</text>"#)).makeLayer()
+        func rotated(_ layer: LayerTree.Layer) -> [(LayerTree.Layer, LayerTree.GlyphRun)] {
+            layer.contents.flatMap { contents -> [(LayerTree.Layer, LayerTree.GlyphRun)] in
+                guard case .layer(let child) = contents else { return [] }
+                if case .glyphs(let run)? = child.contents.first, !child.transform.isEmpty { return [(child, run)] }
+                return rotated(child)
+            }
+        }
+        let (glyphLayer, run) = try #require(rotated(layer).first)
+        let p = try #require(run.positions.first)
+        #expect(glyphLayer.transform == [.translate(tx: p.x, ty: p.y),
+                                         .rotate(radians: .pi / 2),
+                                         .translate(tx: -p.x, ty: -p.y)])
+    }
+#endif
 
     @Test(arguments: [
         #"<text x="10" y="20">Text</text>"#,
