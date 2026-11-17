@@ -74,35 +74,23 @@ extension LayerTree.Builder {
                 0, 0, 0, 1, 0
             ]))
         case .invert(let amount):
-            // feComponentTransfer table [amount, 1 - amount] on each colour channel
             let a = min(amount, 1)
-            effect = .colorMatrix(.matrix(linear(slope: 1 - 2 * a, intercept: a)))
+            effect = .componentTransfer(colors(.table([a, 1 - a])))
         case .opacity(let amount):
-            // feComponentTransfer table [0, amount] on alpha
-            effect = .colorMatrix(.matrix([
-                1, 0, 0, 0, 0,
-                0, 1, 0, 0, 0,
-                0, 0, 1, 0, 0,
-                0, 0, 0, min(amount, 1), 0
-            ]))
+            effect = .componentTransfer(DOM.Filter.ComponentTransfer(a: .table([0, min(amount, 1)])))
         case .brightness(let amount):
-            // feComponentTransfer linear, slope amount
-            effect = .colorMatrix(.matrix(linear(slope: amount, intercept: 0)))
+            effect = .componentTransfer(colors(.linear(slope: amount, intercept: 0)))
         case .contrast(let amount):
-            // feComponentTransfer linear, slope amount, intercept -0.5 × amount + 0.5
-            effect = .colorMatrix(.matrix(linear(slope: amount, intercept: 0.5 - 0.5 * amount)))
+            effect = .componentTransfer(colors(.linear(slope: amount, intercept: 0.5 - 0.5 * amount)))
         }
 
         let primitive = LayerTree.FilterPrimitive(effect: effect, inputs: [nil], colorInterpolation: .sRGB)
         return ([primitive], region)
     }
 
-    /// the same linear function on red, green and blue; alpha unchanged
-    private static func linear(slope: DOM.Float, intercept: DOM.Float) -> [DOM.Float] {
-        [slope, 0, 0, 0, intercept,
-         0, slope, 0, 0, intercept,
-         0, 0, slope, 0, intercept,
-         0, 0, 0, 1, 0]
+    /// the same function on red, green and blue; alpha unchanged
+    private static func colors(_ function: DOM.Filter.TransferFunction) -> DOM.Filter.ComponentTransfer {
+        DOM.Filter.ComponentTransfer(r: function, g: function, b: function)
     }
 }
 

@@ -214,7 +214,7 @@ struct LayerTreeFilterGraphTests {
         <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
             <filter id="f">
                 <feOffset dx="2" result="o" />
-                <feMorphology in="o" radius="2" />
+                <feConvolveMatrix in="o" kernelMatrix="1 0 0 0 1 0 0 0 1" />
             </filter>
             <rect x="10" y="10" width="50" height="50" filter="url(#f)" />
         </svg>

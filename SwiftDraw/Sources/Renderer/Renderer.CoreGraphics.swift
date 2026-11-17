@@ -988,7 +988,13 @@ private extension LayerTree.FilterLayer {
                 let vector = CGSize(width: CGFloat(dx), height: CGFloat(dy)).applying(toDevice)
                 width += abs(vector.width)
                 height += abs(vector.height)
-            case .flood, .composite, .merge, .blend, .colorMatrix:
+            case let .morphology(_, radiusX: rx, radiusY: ry):
+                // erode and dilate both read pixels up to the radius away
+                let x = CGSize(width: CGFloat(rx), height: 0).applying(toDevice)
+                let y = CGSize(width: 0, height: CGFloat(ry)).applying(toDevice)
+                width += abs(x.width) + abs(y.width)
+                height += abs(x.height) + abs(y.height)
+            case .flood, .composite, .merge, .blend, .colorMatrix, .componentTransfer:
                 break
             }
         }

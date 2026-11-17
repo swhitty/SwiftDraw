@@ -84,6 +84,12 @@ package extension DOM {
             // Filter Effects 1 §9.12 feDropShadow, in primitiveUnits: stdDeviationY is nil when stdDeviation
             // has a single value; currentColor is resolved while parsing
             case dropShadow(DropShadow)
+
+            // Filter Effects 1 §9.7 feComponentTransfer: one function per channel, from the feFuncX children
+            case componentTransfer(ComponentTransfer)
+
+            // Filter Effects 1 §9.17 feMorphology, in primitiveUnits: radiusY is nil when radius has a single value
+            case morphology(MorphologyOperator, radius: DOM.Float, radiusY: DOM.Float? = nil)
         }
 
         // A filter primitive with its wiring (Filter Effects 1 §9.2 in / in2 / result) and subregion (§9.4)
@@ -179,6 +185,40 @@ package extension DOM {
                 self.color = color
                 self.opacity = opacity
             }
+        }
+
+        // Filter Effects 1 §9.7: the functions applied to red, green, blue and alpha
+        package struct ComponentTransfer: Hashable {
+            package var r: TransferFunction
+            package var g: TransferFunction
+            package var b: TransferFunction
+            package var a: TransferFunction
+
+            package init(r: TransferFunction = .identity,
+                         g: TransferFunction = .identity,
+                         b: TransferFunction = .identity,
+                         a: TransferFunction = .identity) {
+                self.r = r
+                self.g = g
+                self.b = b
+                self.a = a
+            }
+        }
+
+        // Filter Effects 1 §9.7 transfer function types, on non-premultiplied values 0...1
+        package enum TransferFunction: Hashable {
+            case identity
+            // interpolated between evenly spaced values; empty is the identity
+            case table([DOM.Float])
+            // a step function of evenly spaced values; empty is the identity
+            case discrete([DOM.Float])
+            case linear(slope: DOM.Float, intercept: DOM.Float)
+            case gamma(amplitude: DOM.Float, exponent: DOM.Float, offset: DOM.Float)
+        }
+
+        package enum MorphologyOperator: String, Hashable {
+            case erode
+            case dilate
         }
 
         package enum ColorMatrix: Hashable {

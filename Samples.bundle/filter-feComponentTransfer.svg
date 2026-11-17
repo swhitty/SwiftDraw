@@ -1,0 +1,61 @@
+<svg width="300" height="200" viewBox="0 0 300 200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="spectrum" x1="0" x2="1">
+      <stop offset="0" stop-color="#ff006e" />
+      <stop offset="0.5" stop-color="#8338ec" />
+      <stop offset="1" stop-color="#3a86ff" />
+    </linearGradient>
+    <linearGradient id="fade" x1="0" x2="1">
+      <stop offset="0" stop-color="#2a9d8f" stop-opacity="0" />
+      <stop offset="1" stop-color="#2a9d8f" />
+    </linearGradient>
+    <!-- Filter Effects 1 §9.7: interpolated table, in linearRGB -->
+    <filter id="table">
+      <feComponentTransfer>
+        <feFuncR type="table" tableValues="0 1 0" />
+        <feFuncB type="table" tableValues="1 0" />
+      </feComponentTransfer>
+    </filter>
+    <!-- a step per value, posterizing the gradient -->
+    <filter id="discrete" color-interpolation-filters="sRGB">
+      <feComponentTransfer>
+        <feFuncR type="discrete" tableValues="0 0.33 0.66 1" />
+        <feFuncG type="discrete" tableValues="0 0.33 0.66 1" />
+        <feFuncB type="discrete" tableValues="0 0.33 0.66 1" />
+      </feComponentTransfer>
+    </filter>
+    <filter id="linear">
+      <feComponentTransfer>
+        <feFuncR type="linear" slope="0.5" intercept="0.25" />
+        <feFuncG type="linear" slope="2" intercept="-0.2" />
+      </feComponentTransfer>
+    </filter>
+    <filter id="gamma" color-interpolation-filters="sRGB">
+      <feComponentTransfer>
+        <feFuncR type="gamma" amplitude="1" exponent="4" offset="0" />
+        <feFuncG type="gamma" amplitude="2" exponent="0.5" offset="-0.2" />
+        <feFuncB type="gamma" amplitude="1" exponent="1" offset="0.3" />
+      </feComponentTransfer>
+    </filter>
+    <!-- alpha: transparent areas become opaque, opaque ones fade -->
+    <filter id="alpha" x="0" y="0" width="1" height="1">
+      <feComponentTransfer>
+        <feFuncA type="table" tableValues="1 0.2 1" />
+      </feComponentTransfer>
+    </filter>
+    <!-- the last feFuncG wins; an unknown type is the identity -->
+    <filter id="repeated" color-interpolation-filters="sRGB">
+      <feComponentTransfer>
+        <feFuncG type="linear" slope="0" intercept="1" />
+        <feFuncG type="table" tableValues="1 0" />
+        <feFuncB type="unknown" tableValues="0 0" />
+      </feComponentTransfer>
+    </filter>
+  </defs>
+  <rect x="10" y="10" width="85" height="80" fill="url(#spectrum)" filter="url(#table)" />
+  <rect x="107" y="10" width="85" height="80" fill="url(#spectrum)" filter="url(#discrete)" />
+  <rect x="205" y="10" width="85" height="80" fill="url(#spectrum)" filter="url(#linear)" />
+  <rect x="10" y="110" width="85" height="80" fill="url(#spectrum)" filter="url(#gamma)" />
+  <rect x="107" y="110" width="85" height="80" fill="url(#fade)" filter="url(#alpha)" />
+  <rect x="205" y="110" width="85" height="80" fill="url(#spectrum)" filter="url(#repeated)" />
+</svg>

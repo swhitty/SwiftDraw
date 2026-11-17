@@ -71,30 +71,7 @@ struct LayerTreeFilterFunctionTests {
                      0.349, 0.686, 0.168, 0, 0,
                      0.272, 0.534, 0.131, 0, 0,
                      0, 0, 0, 1, 0]),
-        ("sepia(0)", DOM.Filter.ColorMatrix.identity),
-        ("invert()", [-1, 0, 0, 0, 1,
-                      0, -1, 0, 0, 1,
-                      0, 0, -1, 0, 1,
-                      0, 0, 0, 1, 0]),
-        ("invert(25%)", [0.5, 0, 0, 0, 0.25,
-                         0, 0.5, 0, 0, 0.25,
-                         0, 0, 0.5, 0, 0.25,
-                         0, 0, 0, 1, 0]),
-        ("opacity(0.5)", [1, 0, 0, 0, 0,
-                          0, 1, 0, 0, 0,
-                          0, 0, 1, 0, 0,
-                          0, 0, 0, 0.5, 0]),
-        ("opacity(2)", DOM.Filter.ColorMatrix.identity),
-        ("brightness(2)", [2, 0, 0, 0, 0,
-                           0, 2, 0, 0, 0,
-                           0, 0, 2, 0, 0,
-                           0, 0, 0, 1, 0]),
-        ("contrast(2)", [2, 0, 0, 0, -0.5,
-                         0, 2, 0, 0, -0.5,
-                         0, 0, 2, 0, -0.5,
-                         0, 0, 0, 1, 0]),
-        ("brightness()", DOM.Filter.ColorMatrix.identity),
-        ("contrast()", DOM.Filter.ColorMatrix.identity)
+        ("sepia(0)", DOM.Filter.ColorMatrix.identity)
     ] as [(String, [Float])])
     func colorMatrix(function: String, matrix: [Float]) throws {
         let filter = try #require(makeFilterLayers(rect: function).first)
@@ -111,6 +88,32 @@ struct LayerTreeFilterFunctionTests {
         for (value, expected) in zip(values, matrix) {
             #expect(abs(value - expected) < 0.0001)
         }
+    }
+
+    // Filter Effects 1 §12.2: the functions defined by feComponentTransfer
+    @Test(arguments: [
+        ("invert()", colors(.table([1, 0]))),
+        ("invert(25%)", colors(.table([0.25, 0.75]))),
+        // amounts over 1 are clamped
+        ("invert(2)", colors(.table([1, 0]))),
+        ("opacity(0.5)", DOM.Filter.ComponentTransfer(a: .table([0, 0.5]))),
+        ("opacity(2)", DOM.Filter.ComponentTransfer(a: .table([0, 1]))),
+        ("brightness(2)", colors(.linear(slope: 2, intercept: 0))),
+        ("brightness()", colors(.linear(slope: 1, intercept: 0))),
+        ("contrast(2)", colors(.linear(slope: 2, intercept: -0.5))),
+        ("contrast()", colors(.linear(slope: 1, intercept: 0)))
+    ] as [(String, DOM.Filter.ComponentTransfer)])
+    func componentTransfer(function: String, transfer: DOM.Filter.ComponentTransfer) throws {
+        let filter = try #require(makeFilterLayers(rect: function).first)
+        #expect(filter.region.isClose(to: Self.region))
+        #expect(filter.primitives == [
+            Primitive(effect: .componentTransfer(transfer), inputs: [.sourceGraphic],
+                      subregion: filter.region, colorInterpolation: .sRGB)
+        ])
+    }
+
+    static func colors(_ function: DOM.Filter.TransferFunction) -> DOM.Filter.ComponentTransfer {
+        DOM.Filter.ComponentTransfer(r: function, g: function, b: function)
     }
 
     @Test(arguments: [
@@ -171,10 +174,7 @@ struct LayerTreeFilterFunctionTests {
     func missingURLInListIsSkipped() throws {
         let commands = try makeCommands(rect: "url(#missing) opacity(0.5)")
         #expect(commands.filterLayers.map { $0.effects.first } == [
-            .colorMatrix([1, 0, 0, 0, 0,
-                           0, 1, 0, 0, 0,
-                           0, 0, 1, 0, 0,
-                           0, 0, 0, 0.5, 0])
+            .componentTransfer(DOM.Filter.ComponentTransfer(a: .table([0, 0.5])))
         ])
         #expect(commands.fills == 1)
     }
