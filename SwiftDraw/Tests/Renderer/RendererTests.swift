@@ -29,13 +29,14 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-import XCTest
+import Foundation
+import Testing
 @testable import SwiftDraw
 import SwiftDrawDOM
 
-final class RendererTests: XCTestCase {
+struct RendererTests {
 
-    func testPerformCommands() {
+    @Test func performCommandsCallsRenderer() {
         let renderer = MockRenderer()
         renderer.perform([
             .pushState,
@@ -65,9 +66,8 @@ final class RendererTests: XCTestCase {
             .drawRadialGradient(.mock, startCenter: .zero, startRadius: 0, endCenter: .zero, endRadius: 0),
         ])
 
-        XCTAssertEqual(
-            renderer.operations,
-            [
+        #expect(
+            renderer.operations == [
                 "pushState",
                 "popState",
                 "pushTransparencyLayer",

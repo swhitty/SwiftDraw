@@ -34,21 +34,21 @@
 #if canImport(AppKit) && !targetEnvironment(macCatalyst)
 import AppKit
 import CoreGraphics
-import XCTest
+import Testing
 
-final class CGRendererTests: XCTestCase {
+struct CGRendererTests {
 
-    func testDrawsRect() {
+    @Test func drawsRect() {
         let renderer = ImageRenderer(pixelsWide: 2, pixelsHigh: 2)
 
         renderer.renderer.setFill(color: .red)
         renderer.renderer.fill(path: CGPath.rect(), rule: .evenOdd)
 
-        XCTAssertEqual(renderer.getColor(x: 0, y: 0), .red)
-        XCTAssertEqual(renderer.getColor(x: 1, y: 1), .red)
+        #expect(renderer.getColor(x: 0, y: 0) == .red)
+        #expect(renderer.getColor(x: 1, y: 1) == .red)
     }
 
-    func testLineDashLeavesGaps() {
+    @Test func lineDashLeavesGaps() {
         let renderer = ImageRenderer(pixelsWide: 20, pixelsHigh: 4)
         let path = CGMutablePath()
         path.move(to: CGPoint(x: 0, y: 2))
@@ -59,19 +59,19 @@ final class CGRendererTests: XCTestCase {
         renderer.renderer.setLineDash(phase: 0, lengths: [5, 5])
         renderer.renderer.stroke(path: path)
 
-        XCTAssertEqual(renderer.getColor(x: 2, y: 2), .red)
-        XCTAssertNotEqual(renderer.getColor(x: 7, y: 2), .red)
-        XCTAssertEqual(renderer.getColor(x: 12, y: 2), .red)
+        #expect(renderer.getColor(x: 2, y: 2) == .red)
+        #expect(renderer.getColor(x: 7, y: 2) != .red)
+        #expect(renderer.getColor(x: 12, y: 2) == .red)
     }
 
-    func testAlphaClips() {
+    @Test func alphaClips() {
         let renderer = ImageRenderer(pixelsWide: 2, pixelsHigh: 2)
 
         renderer.renderer.setFill(color: .red)
         renderer.renderer.fill(path: CGPath.rect(), rule: .evenOdd)
 
-        XCTAssertEqual(renderer.getColor(x: 0, y: 0), .red)
-        XCTAssertEqual(renderer.getColor(x: 1, y: 1), .red)
+        #expect(renderer.getColor(x: 0, y: 0) == .red)
+        #expect(renderer.getColor(x: 1, y: 1) == .red)
     }
 }
 

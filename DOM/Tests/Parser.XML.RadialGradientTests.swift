@@ -34,7 +34,6 @@ import Foundation
 import Testing
 @testable import SwiftDrawDOM
 
-@Suite("Parser XML Radial Gradient Tests")
 struct ParserXMLRadialGradientTests {
 
     @Test

@@ -29,57 +29,54 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-import XCTest
+import Testing
 @testable import SwiftDraw
 
-final class CommandLineArgumentsTests: XCTestCase {
+struct CommandLineArgumentsTests {
 
-    func testParseModifiers() throws {
-        var modifiers = try CommandLine.parseModifiers(from: [
-            "--format", "some", "--output", "more", "--scale", "magnify", "--size", "huge",
-        ])
-        XCTAssertEqual(modifiers, [.format: "some", .output: "more", .scale: "magnify", .size: "huge"])
-
-        modifiers = try CommandLine.parseModifiers(from: [
-            "--ultralightInsets", "a", "--blackInsets", "b", "--hideUnsupportedFilters", "--legacy",
-        ])
-        XCTAssertEqual(
-            modifiers,
-            [.ultralightInsets: "a", .blackInsets: "b", .hideUnsupportedFilters: nil, .legacy: nil]
-        )
-
-        modifiers = try CommandLine.parseModifiers(from: [
-            "--ultralight-insets", "a", "--black-insets", "b", "--hide-unsupported-filters", "--legacy",
-        ])
-        XCTAssertEqual(
-            modifiers,
-            [.ultralightInsets: "a", .blackInsets: "b", .hideUnsupportedFilters: nil, .legacy: nil]
-        )
-
-        modifiers = try CommandLine.parseModifiers(from: ["--format", "png", "--quiet"])
-        XCTAssertEqual(modifiers, [.format: "png", .quiet: nil])
+    @Test(
+        arguments: [
+            (
+                ["--format", "some", "--output", "more", "--scale", "magnify", "--size", "huge"],
+                [.format: "some", .output: "more", .scale: "magnify", .size: "huge"]
+            ),
+            (
+                ["--ultralightInsets", "a", "--blackInsets", "b", "--hideUnsupportedFilters", "--legacy"],
+                [.ultralightInsets: "a", .blackInsets: "b", .hideUnsupportedFilters: nil, .legacy: nil]
+            ),
+            (
+                ["--ultralight-insets", "a", "--black-insets", "b", "--hide-unsupported-filters", "--legacy"],
+                [.ultralightInsets: "a", .blackInsets: "b", .hideUnsupportedFilters: nil, .legacy: nil]
+            ),
+            (
+                ["--format", "png", "--quiet"],
+                [.format: "png", .quiet: nil]
+            ),
+        ] as [([String], [CommandLine.Modifier: String?])]
+    )
+    func parsesModifiers(args: [String], expected: [CommandLine.Modifier: String?]) throws {
+        #expect(try CommandLine.parseModifiers(from: args) == expected)
     }
 
-    func testParseModifiersThrowsForOddPairs() {
-        XCTAssertThrowsError(try CommandLine.parseModifiers(from: ["--format"]))
-        XCTAssertThrowsError(try CommandLine.parseModifiers(from: ["--format", "png", "--output"]))
+    @Test(
+        arguments: [
+            // odd pairs
+            ["--format"],
+            ["--format", "png", "--output"],
+            // duplicate modifiers
+            ["--format", "png", "--format", "jpg"],
+            ["--format", "png", "--output", "more", "--output", "evenmore"],
+            // unknown modifiers
+            ["--unknown", "png"],
+            ["--format", "png", "--unknown", "more"],
+            // missing prefix
+            ["format", "png"],
+            ["--format", "png", "output", "more"],
+        ]
+    )
+    func invalidModifiersThrow(args: [String]) {
+        #expect(throws: CommandLine.Error.invalid) {
+            try CommandLine.parseModifiers(from: args)
+        }
     }
-
-    func testParseModifiersThrowsForDuplicateModifiers() {
-        XCTAssertThrowsError(try CommandLine.parseModifiers(from: ["--format", "png", "--format", "jpg"]))
-        XCTAssertThrowsError(
-            try CommandLine.parseModifiers(from: ["--format", "png", "--output", "more", "--output", "evenmore"])
-        )
-    }
-
-    func testParseModifiersThrowsForUnknownModifiers() {
-        XCTAssertThrowsError(try CommandLine.parseModifiers(from: ["--unknown", "png"]))
-        XCTAssertThrowsError(try CommandLine.parseModifiers(from: ["--format", "png", "--unknown", "more"]))
-    }
-
-    func testParseModifiersThrowsForMissingPrefix() {
-        XCTAssertThrowsError(try CommandLine.parseModifiers(from: ["format", "png"]))
-        XCTAssertThrowsError(try CommandLine.parseModifiers(from: ["--format", "png", "output", "more"]))
-    }
-
 }

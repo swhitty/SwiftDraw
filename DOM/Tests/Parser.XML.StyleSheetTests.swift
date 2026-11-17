@@ -32,7 +32,6 @@
 import Testing
 @testable import SwiftDrawDOM
 
-@Suite("Parser XML StyleSheet Tests")
 struct ParserXMLStyleSheetTests {
 
     @Test

@@ -29,37 +29,41 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-import XCTest
+import Foundation
 @testable import SwiftDraw
 import SwiftDrawDOM
+import Testing
 
-final class LayerTreeLayerTests: XCTestCase {
+struct LayerTreeLayerTests {
 
     private typealias Layer = LayerTree.Layer
     private typealias Contents = LayerTree.Layer.Contents
     private typealias TextAttributes = LayerTree.TextAttributes
     private typealias Point = LayerTree.Point
 
-    func testLayersWithSimpleContentsAreAppendedWithoutLayer() {
+    @Test
+    func layersWithSimpleContentsAreAppendedWithoutLayer() {
         let parent = LayerTree.Layer()
         let simple = LayerTree.Layer()
         simple.appendContents(.mockImage)
 
         parent.appendContents(.layer(simple))
-        XCTAssertEqual(parent.contents, [.mockImage])
+        #expect(parent.contents == [.mockImage])
     }
 
-    func testLayersWithComplexContentsAreAppendedWithoutLayer() {
+    @Test
+    func layersWithComplexContentsAreAppendedAsLayer() {
         let parent = LayerTree.Layer()
         let complex = LayerTree.Layer()
         complex.appendContents(.mockImage)
         complex.opacity = 0.5
 
         parent.appendContents(.layer(complex))
-        XCTAssertEqual(parent.contents, [.layer(complex)])
+        #expect(parent.contents == [.layer(complex)])
     }
 
-    func testContentsTextEquality() {
+    @Test
+    func contentsTextEquality() {
         let c1 = Contents.text("Charlie", .zero, .normal)
         let c2 = Contents.text("Ida", .zero, .normal)
         let c3 = Contents.text("Charlie", Point(10, 20), .normal)
@@ -68,24 +72,24 @@ final class LayerTreeLayerTests: XCTestCase {
         att.color = .srgb(r: 1.0, g: 0, b: 0, a: 1.0)
         let c4 = Contents.text("Charlie", .zero, att)
 
-        XCTAssertEqual(c1, c1)
-        XCTAssertEqual(c1, .text("Charlie", .zero, .normal))
+        #expect(c1 == c1)
+        #expect(c1 == .text("Charlie", .zero, .normal))
 
-        XCTAssertEqual(c2, c2)
-        XCTAssertEqual(c2, .text("Ida", .zero, .normal))
+        #expect(c2 == c2)
+        #expect(c2 == .text("Ida", .zero, .normal))
 
-        XCTAssertEqual(c3, c3)
-        XCTAssertEqual(c3, .text("Charlie", Point(10, 20), .normal))
+        #expect(c3 == c3)
+        #expect(c3 == .text("Charlie", Point(10, 20), .normal))
 
-        XCTAssertEqual(c4, c4)
-        XCTAssertEqual(c4, .text("Charlie", .zero, att))
+        #expect(c4 == c4)
+        #expect(c4 == .text("Charlie", .zero, att))
 
-        XCTAssertNotEqual(c1, c2)
-        XCTAssertNotEqual(c1, c3)
-        XCTAssertNotEqual(c1, c4)
-        XCTAssertNotEqual(c2, c3)
-        XCTAssertNotEqual(c2, c4)
-        XCTAssertNotEqual(c3, c4)
+        #expect(c1 != c2)
+        #expect(c1 != c3)
+        #expect(c1 != c4)
+        #expect(c2 != c3)
+        #expect(c2 != c4)
+        #expect(c3 != c4)
     }
 }
 

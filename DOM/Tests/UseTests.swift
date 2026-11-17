@@ -32,7 +32,6 @@
 import Testing
 @testable import SwiftDrawDOM
 
-@Suite("Use Tests")
 struct UseTests {
 
     @Test

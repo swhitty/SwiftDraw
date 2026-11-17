@@ -29,13 +29,15 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
+import Foundation
 import SwiftDrawDOM
+import Testing
 @testable import SwiftDraw
-import XCTest
 
-final class XMLFormatterTests: XCTestCase {
+struct XMLFormatterTests {
 
-    func testAA() {
+    @Test
+    func encodesElementWithEscapedAttributes() {
         let formatter = XML.Formatter(spaces: 2)
 
         let element = XML.Element(
@@ -45,26 +47,23 @@ final class XMLFormatterTests: XCTestCase {
 
         element.children.append(.init(name: "circle"))
 
-        XCTAssertEqual(
-            formatter.encodeElement(element),
-            """
+        let expected = """
             <draw color="Red&amp;Back" zlevel="2">
               <circle />
             </draw>
             """
-        )
+        #expect(formatter.encodeElement(element) == expected)
     }
 
-    func testBB() throws {
+    @Test
+    func encodesGradientDocument() throws {
         let url = try Bundle.test.url(forResource: "gradient-gratification.svg")
         let svg = try DOM.SVG.parse(fileURL: url)
 
         let element = try XML.Formatter.SVG().makeElement(from: svg)
         let formatter = XML.Formatter(spaces: 2)
 
-        XCTAssertEqual(
-            formatter.encodeRootElement(element),
-            """
+        let expected = """
             <?xml version="1.0" encoding="UTF-8"?>
             <svg height="352" width="480" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
               <defs>
@@ -78,33 +77,33 @@ final class XMLFormatterTests: XCTestCase {
               <use fill="url(#violet)" mask="url(#fade)" xlink:href="#frame" />
             </svg>
             """
-        )
+        #expect(formatter.encodeRootElement(element) == expected)
     }
 
-    func testFractionalRootSizeRoundTrips() throws {
+    @Test
+    func fractionalRootSizeRoundTrips() throws {
         let svg = DOM.SVG(width: 5.8, height: 80.5)
         svg.viewBox = .init(x: 0, y: 0, width: 10, height: 10)
 
         let element = try XML.Formatter.SVG().makeElement(from: svg)
-        XCTAssertEqual(element.attributes["width"], "5.8")
-        XCTAssertEqual(element.attributes["height"], "80.5")
+        #expect(element.attributes["width"] == "5.8")
+        #expect(element.attributes["height"] == "80.5")
 
         let data = XML.Formatter(spaces: 2).encodeRootElement(element)
         let parsed = try DOM.SVG.parse(data: Data(data.utf8))
-        XCTAssertEqual(parsed.width, 5.8)
-        XCTAssertEqual(parsed.height, 80.5)
+        #expect(parsed.width == 5.8)
+        #expect(parsed.height == 80.5)
     }
 
-    func testSymbol() throws {
+    @Test
+    func encodesSymbolDocument() throws {
         let url = try Bundle.test.url(forResource: "symbol-test.svg")
         let svg = try DOM.SVG.parse(fileURL: url)
 
         let element = try XML.Formatter.SVG().makeElement(from: svg)
         let formatter = XML.Formatter(spaces: 2)
 
-        XCTAssertEqual(
-            formatter.encodeRootElement(element),
-            """
+        let expected = """
             <?xml version="1.0" encoding="UTF-8"?>
             <svg viewBox="0,0,550,550" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
               <defs>
@@ -133,7 +132,7 @@ final class XMLFormatterTests: XCTestCase {
               </g>
             </svg>
             """
-        )
+        #expect(formatter.encodeRootElement(element) == expected)
     }
 }
 

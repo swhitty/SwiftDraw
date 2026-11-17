@@ -27,122 +27,126 @@
 //
 
 import SwiftDrawDOM
-import XCTest
+import Testing
 @testable import SwiftDraw
 
-final class LayerTreePathTests: XCTestCase {
+struct LayerTreePathTests {
 
     typealias Float = LayerTree.Float
     typealias Point = LayerTree.Point
     typealias Path = LayerTree.Path
     typealias Segment = LayerTree.Path.Segment
 
-    let twoThirds = Float(2.0 / 3.0)
-
-    func testLocation() {
+    @Test
+    func location() {
         let path = Path()
-        XCTAssertNil(path.location)
+        #expect(path.location == nil)
 
         path.segments.append(move(10, 10))
-        XCTAssertEqual(path.location, Point(10, 10))
+        #expect(path.location == Point(10, 10))
 
         path.segments.append(line(20, 20))
-        XCTAssertEqual(path.location, Point(20, 20))
+        #expect(path.location == Point(20, 20))
 
         path.segments.append(move(110, 90))
-        XCTAssertEqual(path.location, Point(110, 90))
+        #expect(path.location == Point(110, 90))
 
         path.segments.append(line(200, 200))
-        XCTAssertEqual(path.location, Point(200, 200))
+        #expect(path.location == Point(200, 200))
 
         path.segments.append(.cubic(to: Point(300, 300), control1: Point(200, 200), control2: Point(250, 250)))
-        XCTAssertEqual(path.location, Point(300, 300))
+        #expect(path.location == Point(300, 300))
 
         path.segments.append(.close)
-        XCTAssertEqual(path.location, Point(110, 90))
+        #expect(path.location == Point(110, 90))
     }
 
-    func testMove() {
+    @Test
+    func createsMove() {
         var m = LayerTree.Builder.createMove(from: .move(x: 10, y: 10, space: .absolute), last: .zero)
-        XCTAssertEqual(m, move(10, 10))
+        #expect(m == move(10, 10))
 
         m = LayerTree.Builder.createMove(
             from: .move(x: 10, y: 10, space: .absolute),
             last: Point(100, 100)
         )
-        XCTAssertEqual(m, move(10, 10))
+        #expect(m == move(10, 10))
 
         m = LayerTree.Builder.createMove(
             from: .move(x: 10, y: -10, space: .relative),
             last: Point(100, 100)
         )
-        XCTAssertEqual(m, move(110, 90))
+        #expect(m == move(110, 90))
     }
 
-    func testLine() {
+    @Test
+    func createsLine() {
         var l = LayerTree.Builder.createLine(from: .line(x: 10, y: 10, space: .absolute), last: .zero)
-        XCTAssertEqual(l, line(10, 10))
+        #expect(l == line(10, 10))
 
         l = LayerTree.Builder.createLine(
             from: .line(x: 10, y: 10, space: .absolute),
             last: Point(100, 100)
         )
-        XCTAssertEqual(l, line(10, 10))
+        #expect(l == line(10, 10))
 
         l = LayerTree.Builder.createLine(
             from: .line(x: 10, y: -10, space: .relative),
             last: Point(100, 100)
         )
-        XCTAssertEqual(l, line(110, 90))
+        #expect(l == line(110, 90))
     }
 
-    func testHorizontal() {
+    @Test
+    func createsHorizontalLine() {
         var l = LayerTree.Builder.createHorizontal(from: .horizontal(x: 10, space: .absolute), last: .zero)
-        XCTAssertEqual(l, line(10, 0))
+        #expect(l == line(10, 0))
 
         l = LayerTree.Builder.createHorizontal(
             from: .horizontal(x: 10, space: .absolute),
             last: Point(100, 100)
         )
-        XCTAssertEqual(l, line(10, 100))
+        #expect(l == line(10, 100))
 
         l = LayerTree.Builder.createHorizontal(
             from: .horizontal(x: 10, space: .relative),
             last: Point(100, 100)
         )
-        XCTAssertEqual(l, line(110, 100))
+        #expect(l == line(110, 100))
 
         l = LayerTree.Builder.createHorizontal(
             from: .horizontal(x: -10, space: .relative),
             last: Point(100, 100)
         )
-        XCTAssertEqual(l, line(90, 100))
+        #expect(l == line(90, 100))
     }
 
-    func testVertical() {
+    @Test
+    func createsVerticalLine() {
         var l = LayerTree.Builder.createVertical(from: .vertical(y: 10, space: .absolute), last: .zero)
-        XCTAssertEqual(l, line(0, 10))
+        #expect(l == line(0, 10))
 
         l = LayerTree.Builder.createVertical(
             from: .vertical(y: 10, space: .absolute),
             last: Point(100, 100)
         )
-        XCTAssertEqual(l, line(100, 10))
+        #expect(l == line(100, 10))
 
         l = LayerTree.Builder.createVertical(
             from: .vertical(y: 10, space: .relative),
             last: Point(100, 100)
         )
-        XCTAssertEqual(l, line(100, 110))
+        #expect(l == line(100, 110))
 
         l = LayerTree.Builder.createVertical(
             from: .vertical(y: -10, space: .relative),
             last: Point(100, 100)
         )
-        XCTAssertEqual(l, line(100, 90))
+        #expect(l == line(100, 90))
     }
 
-    func testCubic() {
+    @Test
+    func createsCubic() {
         var curve: DOM.Path.Segment
         curve = .cubic(
             x1: 0,
@@ -154,7 +158,7 @@ final class LayerTreePathTests: XCTestCase {
             space: .absolute
         )
         var c = LayerTree.Builder.createCubic(from: curve, last: .zero)
-        XCTAssertEqual(c, cubic(40, 50, 0, 10, 20, 30))
+        #expect(c == cubic(40, 50, 0, 10, 20, 30))
 
         curve = .cubic(
             x1: 100,
@@ -166,32 +170,35 @@ final class LayerTreePathTests: XCTestCase {
             space: .relative
         )
         c = LayerTree.Builder.createCubic(from: curve, last: Point(100, 100))
-        XCTAssertEqual(c, cubic(210, 90, 200, 100, 90, 110))
+        #expect(c == cubic(210, 90, 200, 100, 90, 110))
     }
 
-    func testCubicSmoothAbsolute() {
+    @Test
+    func createsAbsoluteSmoothCubic() {
         var curve: DOM.Path.Segment
         curve = .cubicSmooth(x2: 80, y2: 40, x: 100, y: 50, space: .absolute)
         var c = LayerTree.Builder.createCubicSmooth(from: curve, last: .zero, previous: Point.zero)
-        XCTAssertEqual(c, cubic(100, 50, 0, 0, 80, 40))
+        #expect(c == cubic(100, 50, 0, 0, 80, 40))
 
         curve = .cubicSmooth(x2: 180, y2: 60, x: 200, y: 50, space: .absolute)
         c = LayerTree.Builder.createCubicSmooth(from: curve, last: Point(100, 50), previous: Point(80, 40))
-        XCTAssertEqual(c, cubic(200, 50, 120, 60, 180, 60))
+        #expect(c == cubic(200, 50, 120, 60, 180, 60))
     }
 
-    func testCubicSmoothRelative() {
+    @Test
+    func createsRelativeSmoothCubic() {
         var curve: DOM.Path.Segment
         curve = .cubicSmooth(x2: 80, y2: -10, x: 100, y: 0, space: .relative)
         var c = LayerTree.Builder.createCubicSmooth(from: curve, last: Point(0, 50), previous: Point(0, 50))
-        XCTAssertEqual(c, cubic(100, 50, 0, 50, 80, 40))
+        #expect(c == cubic(100, 50, 0, 50, 80, 40))
 
         curve = .cubicSmooth(x2: 80, y2: 10, x: 100, y: 0, space: .relative)
         c = LayerTree.Builder.createCubicSmooth(from: curve, last: Point(100, 50), previous: Point(80, 40))
-        XCTAssertEqual(c, cubic(200, 50, 120, 60, 180, 60))
+        #expect(c == cubic(200, 50, 120, 60, 180, 60))
     }
 
-    func testQuadraticBalanced() {
+    @Test
+    func createsBalancedQuadratic() {
         //balanced quad with control point centered on the curve
         var quad: DOM.Path.Segment
         quad = .quadratic(
@@ -203,7 +210,7 @@ final class LayerTreePathTests: XCTestCase {
         )
         var c = LayerTree.Builder.createQuadratic(from: quad, last: Point(0, 50))
 
-        XCTAssertEqual(c, cubic(300, 50, 100, 16.6666641, 200, 16.6666641))
+        #expect(c == cubic(300, 50, 100, 16.6666641, 200, 16.6666641))
 
         quad = .quadratic(
             x1: 150,
@@ -213,10 +220,11 @@ final class LayerTreePathTests: XCTestCase {
             space: .relative
         )
         c = LayerTree.Builder.createQuadratic(from: quad, last: Point(0, 50))
-        XCTAssertEqual(c, cubic(300, 50, 100, 16.6666641, 200, 16.6666641))
+        #expect(c == cubic(300, 50, 100, 16.6666641, 200, 16.6666641))
     }
 
-    func testQuadraticUnbalanced() {
+    @Test
+    func createsUnbalancedQuadratic() {
         //quad with control point to the left
         var quad: DOM.Path.Segment
         quad = .quadratic(
@@ -228,7 +236,7 @@ final class LayerTreePathTests: XCTestCase {
         )
         var c = LayerTree.Builder.createQuadratic(from: quad, last: Point(0, 50))
 
-        XCTAssertEqual(c, cubic(300, 50, 66.66667, 16.666664, 166.66666, 16.666664))
+        #expect(c == cubic(300, 50, 66.66667, 16.666664, 166.66666, 16.666664))
 
         //quad with control point to the right
         quad = .quadratic(
@@ -239,45 +247,50 @@ final class LayerTreePathTests: XCTestCase {
             space: .absolute
         )
         c = LayerTree.Builder.createQuadratic(from: quad, last: Point(0, 50))
-        XCTAssertEqual(c, cubic(300, 50, 133.33334, 16.666664, 233.33333, 16.666664))
+        #expect(c == cubic(300, 50, 133.33334, 16.666664, 233.33333, 16.666664))
     }
 
-    func testQuadraticSmoothAbsolute() {
+    @Test
+    func createsAbsoluteSmoothQuadratic() {
         var quad: DOM.Path.Segment
         quad = .quadraticSmooth(x: 100, y: 50, space: .absolute)
 
         let c = LayerTree.Builder.createQuadraticSmooth(from: quad, last: Point(0, 50), previous: Point(-50, 0))
         // the reflected quadratic control point (50, 100) converted to cubic control points
-        XCTAssertEqual(c, cubic(100, 50, 33.333336, 83.333336, 66.666664, 83.333336))
+        #expect(c == cubic(100, 50, 33.333336, 83.333336, 66.666664, 83.333336))
     }
 
-    func testClose() {
-        XCTAssertEqual(LayerTree.Builder.createClose(from: .close), Segment.close)
+    @Test
+    func createsClose() {
+        #expect(LayerTree.Builder.createClose(from: .close) == Segment.close)
     }
 
-    func testDOMQuadraticSmooth() {
+    @Test
+    func makesSegmentFromDOMSmoothQuadratic() {
         let domSegment = DOM.Path.Segment.quadraticSmooth(x: 10.0, y: 10.0, space: .relative)
         let segment = LayerTree.Builder.makeSegment(from: domSegment, last: .init(10, 10), previous: nil)
 
-        XCTAssertEqual(
-            segment,
-            .cubic(to: .init(20.0, 20.0), control1: .init(10, 10), control2: .init(13.333333, 13.333333))
+        #expect(
+            segment == .cubic(to: .init(20.0, 20.0), control1: .init(10, 10), control2: .init(13.333333, 13.333333))
         )
     }
 
-    func testDOMCubicSmooth() {
+    @Test
+    func makesSegmentFromDOMSmoothCubic() {
         let domSegment = DOM.Path.Segment.cubicSmooth(x2: 10, y2: 10, x: 10, y: 10, space: .relative)
         let segment = LayerTree.Builder.makeSegment(from: domSegment, last: .init(10, 10), previous: nil)
 
-        XCTAssertEqual(segment, .cubic(to: .init(20.0, 20.0), control1: .init(10, 10), control2: .init(20.0, 20.0)))
+        #expect(segment == .cubic(to: .init(20.0, 20.0), control1: .init(10, 10), control2: .init(20.0, 20.0)))
     }
 
-    func testDirectionInverts() {
-        XCTAssertEqual(!LayerTree.Path.Direction.anticlockwise, .clockwise)
-        XCTAssertEqual(!LayerTree.Path.Direction.clockwise, .anticlockwise)
+    @Test
+    func directionInverts() {
+        #expect(!LayerTree.Path.Direction.anticlockwise == .clockwise)
+        #expect(!LayerTree.Path.Direction.clockwise == .anticlockwise)
     }
 
-    func testClockwiseDirection() {
+    @Test
+    func clockwiseDirection() {
         let segments: [LayerTree.Path.Segment] = [
             .move(to: Point(10, 10)),
             .line(to: Point(15, 15)),
@@ -286,10 +299,11 @@ final class LayerTreePathTests: XCTestCase {
             .close,
         ]
 
-        XCTAssertEqual(segments.direction, .clockwise)
+        #expect(segments.direction == .clockwise)
     }
 
-    func testAnticlockwiseDirection() {
+    @Test
+    func anticlockwiseDirection() {
         let segments: [LayerTree.Path.Segment] = [
             .move(to: Point(10, 10)),
             .line(to: Point(5, 10)),
@@ -298,17 +312,17 @@ final class LayerTreePathTests: XCTestCase {
             .close,
         ]
 
-        XCTAssertEqual(segments.direction, .anticlockwise)
+        #expect(segments.direction == .anticlockwise)
     }
 
     // helpers to create Segments without labels
     // splatting of tuple is no longer supported
     private func move(_ x: Float, _ y: Float) -> Path.Segment {
-        return .move(to: Point(x, y))
+        .move(to: Point(x, y))
     }
 
     private func line(_ x: Float, _ y: Float) -> Path.Segment {
-        return .line(to: Point(x, y))
+        .line(to: Point(x, y))
     }
 
     private func cubic(
@@ -319,7 +333,6 @@ final class LayerTreePathTests: XCTestCase {
         _ x2: Float,
         _ y2: Float
     ) -> Path.Segment {
-        return .cubic(to: Point(x, y), control1: Point(x1, y1), control2: Point(x2, y2))
+        .cubic(to: Point(x, y), control1: Point(x1, y1), control2: Point(x2, y2))
     }
-
 }

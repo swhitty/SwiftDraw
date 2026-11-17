@@ -29,122 +29,107 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
+import Foundation
 import SwiftDrawDOM
-import XCTest
+import Testing
 @testable import SwiftDraw
 
-final class RendererSFSymbolStrokeScaleTests: XCTestCase {
+struct RendererSFSymbolStrokeScaleTests {
 
     // MARK: - StrokeWidthScale parser
 
-    func testParsesDecimal() throws {
-        let scale = try XCTUnwrap(SFSymbolRenderer.StrokeWidthScale(rawValue: "0.5"))
-        XCTAssertEqual(scale.multiplier, 0.5)
+    @Test(
+        arguments: [
+            ("0.5", 0.5),
+            ("2", 2.0),
+            ("50%", 0.5),
+            ("200%", 2.0),
+            ("  75%  ", 0.75),
+        ] as [(String, Double)]
+    )
+    func parsesMultiplier(rawValue: String, multiplier: Double) throws {
+        let scale = try #require(SFSymbolRenderer.StrokeWidthScale(rawValue: rawValue))
+        #expect(scale.multiplier == multiplier)
     }
 
-    func testParsesInteger() throws {
-        let scale = try XCTUnwrap(SFSymbolRenderer.StrokeWidthScale(rawValue: "2"))
-        XCTAssertEqual(scale.multiplier, 2.0)
-    }
-
-    func testParsesPercent() throws {
-        let scale = try XCTUnwrap(SFSymbolRenderer.StrokeWidthScale(rawValue: "50%"))
-        XCTAssertEqual(scale.multiplier, 0.5)
-    }
-
-    func testParsesPercentAboveOneHundred() throws {
-        let scale = try XCTUnwrap(SFSymbolRenderer.StrokeWidthScale(rawValue: "200%"))
-        XCTAssertEqual(scale.multiplier, 2.0)
-    }
-
-    func testParsesWithSurroundingWhitespace() throws {
-        let scale = try XCTUnwrap(SFSymbolRenderer.StrokeWidthScale(rawValue: "  75%  "))
-        XCTAssertEqual(scale.multiplier, 0.75)
-    }
-
-    func testRejectsZero() {
-        XCTAssertNil(SFSymbolRenderer.StrokeWidthScale(rawValue: "0"))
-        XCTAssertNil(SFSymbolRenderer.StrokeWidthScale(rawValue: "0%"))
-    }
-
-    func testRejectsNegative() {
-        XCTAssertNil(SFSymbolRenderer.StrokeWidthScale(rawValue: "-1"))
-        XCTAssertNil(SFSymbolRenderer.StrokeWidthScale(rawValue: "-50%"))
-    }
-
-    func testRejectsEmpty() {
-        XCTAssertNil(SFSymbolRenderer.StrokeWidthScale(rawValue: ""))
-        XCTAssertNil(SFSymbolRenderer.StrokeWidthScale(rawValue: "   "))
-    }
-
-    func testRejectsMalformed() {
-        XCTAssertNil(SFSymbolRenderer.StrokeWidthScale(rawValue: "abc"))
-        XCTAssertNil(SFSymbolRenderer.StrokeWidthScale(rawValue: "1.5x"))
-        XCTAssertNil(SFSymbolRenderer.StrokeWidthScale(rawValue: "%50"))
+    @Test(
+        arguments: [
+            // zero
+            "0", "0%",
+            // negative
+            "-1", "-50%",
+            // empty
+            "", "   ",
+            // malformed
+            "abc", "1.5x", "%50",
+        ]
+    )
+    func rejectsInvalidValue(rawValue: String) {
+        #expect(SFSymbolRenderer.StrokeWidthScale(rawValue: rawValue) == nil)
     }
 
     // MARK: - Walker on element attributes
 
-    func testScalesElementStrokeWidthAttribute() throws {
+    @Test func scalesElementStrokeWidthAttribute() throws {
         let url = try Bundle.test.url(forResource: "stroke-attribute.svg")
         let svg = try DOM.SVG.parse(fileURL: url)
         let count = StrokeWidthScaler.scale(svg, by: .init(multiplier: 0.5))
 
-        XCTAssertEqual(count, 1)
-        let line = try XCTUnwrap(svg.childElements.first as? DOM.Line)
-        XCTAssertEqual(line.attributes.strokeWidth, 2)
+        #expect(count == 1)
+        let line = try #require(svg.childElements.first as? DOM.Line)
+        #expect(line.attributes.strokeWidth == 2)
     }
 
     // MARK: - Walker on inline style
 
-    func testScalesInlineStyleStrokeWidth() throws {
+    @Test func scalesInlineStyleStrokeWidth() throws {
         let url = try Bundle.test.url(forResource: "stroke-inline-style.svg")
         let svg = try DOM.SVG.parse(fileURL: url)
         let count = StrokeWidthScaler.scale(svg, by: .init(multiplier: 2.0))
 
-        XCTAssertEqual(count, 1)
-        let line = try XCTUnwrap(svg.childElements.first as? DOM.Line)
-        XCTAssertEqual(line.style.strokeWidth, 12)
+        #expect(count == 1)
+        let line = try #require(svg.childElements.first as? DOM.Line)
+        #expect(line.style.strokeWidth == 12)
     }
 
     // MARK: - Walker on stylesheet
 
-    func testScalesStylesheetStrokeWidth() throws {
+    @Test func scalesStylesheetStrokeWidth() throws {
         let url = try Bundle.test.url(forResource: "stroke-stylesheet.svg")
         let svg = try DOM.SVG.parse(fileURL: url)
         let count = StrokeWidthScaler.scale(svg, by: .init(multiplier: 0.25))
 
-        XCTAssertEqual(count, 1)
-        let sheet = try XCTUnwrap(svg.styles.first)
-        let attrs = try XCTUnwrap(sheet.attributes[.class("bar")])
-        XCTAssertEqual(attrs.strokeWidth, 2)
+        #expect(count == 1)
+        let sheet = try #require(svg.styles.first)
+        let attrs = try #require(sheet.attributes[.class("bar")])
+        #expect(attrs.strokeWidth == 2)
     }
 
     // MARK: - Walker across all sources
 
-    func testScalesAcrossAllSources() throws {
+    @Test func scalesAcrossAllSources() throws {
         let url = try Bundle.test.url(forResource: "stroke-mixed.svg")
         let svg = try DOM.SVG.parse(fileURL: url)
         let count = StrokeWidthScaler.scale(svg, by: .init(multiplier: 2.0))
 
         // 4 stroke-width values: group attribute (3 -> 6),
         // line attribute (4 -> 8), inline style (5 -> 10), stylesheet (2 -> 4)
-        XCTAssertEqual(count, 4)
+        #expect(count == 4)
     }
 
     // MARK: - Walker reports zero when nothing to scale
 
-    func testReportsZeroWhenNoStrokes() throws {
+    @Test func reportsZeroWhenNoStrokes() throws {
         let url = try Bundle.test.url(forResource: "stroke-none.svg")
         let svg = try DOM.SVG.parse(fileURL: url)
         let count = StrokeWidthScaler.scale(svg, by: .init(multiplier: 0.5))
 
-        XCTAssertEqual(count, 0)
+        #expect(count == 0)
     }
 
     // MARK: - Walker recurses through groups
 
-    func testScalesNestedGroups() throws {
+    @Test func scalesNestedGroups() throws {
         let svg = try DOM.SVG.parse(
             xml: #"""
                 <?xml version="1.0" encoding="UTF-8"?>
@@ -159,12 +144,12 @@ final class RendererSFSymbolStrokeScaleTests: XCTestCase {
         )
 
         let count = StrokeWidthScaler.scale(svg, by: .init(multiplier: 0.5))
-        XCTAssertEqual(count, 3)
+        #expect(count == 3)
     }
 
     // MARK: - Walker visits clipPath defs
 
-    func testScalesInsideClipPath() throws {
+    @Test func scalesInsideClipPath() throws {
         let svg = try DOM.SVG.parse(
             xml: #"""
                 <?xml version="1.0" encoding="UTF-8"?>
@@ -180,12 +165,12 @@ final class RendererSFSymbolStrokeScaleTests: XCTestCase {
         )
 
         let count = StrokeWidthScaler.scale(svg, by: .init(multiplier: 0.5))
-        XCTAssertEqual(count, 2)
+        #expect(count == 2)
     }
 
     // MARK: - Integration through SFSymbolRenderer
 
-    func testRendersUltralightVariantFromScale() throws {
+    @Test func rendersVariantsFromStrokeScale() throws {
         let url = try Bundle.test.url(forResource: "chart.svg")
         let renderer = SFSymbolRenderer.makeStrokeScaling(
             ultralight: .init(multiplier: 0.5),
@@ -195,12 +180,12 @@ final class RendererSFSymbolStrokeScaleTests: XCTestCase {
             try renderer.render(regular: url, ultralight: nil, black: nil)
         )
 
-        XCTAssertFalse(template.ultralight.contents.paths.isEmpty)
-        XCTAssertFalse(template.regular.contents.paths.isEmpty)
-        XCTAssertFalse(template.black.contents.paths.isEmpty)
+        #expect(!template.ultralight.contents.paths.isEmpty)
+        #expect(!template.regular.contents.paths.isEmpty)
+        #expect(!template.black.contents.paths.isEmpty)
     }
 
-    func testStrokeScaledVariantsDifferFromRegular() throws {
+    @Test func strokeScaledVariantsDifferFromRegular() throws {
         // Heavier strokes expand outlines into wider paths, so the ultralight
         // and black variants should not be byte-identical to regular
         let url = try Bundle.test.url(forResource: "chart.svg")
@@ -216,14 +201,14 @@ final class RendererSFSymbolStrokeScaleTests: XCTestCase {
         let regularPaths = template.regular.contents.paths
         let blackPaths = template.black.contents.paths
 
-        XCTAssertEqual(ultralightPaths.count, regularPaths.count)
-        XCTAssertEqual(blackPaths.count, regularPaths.count)
+        #expect(ultralightPaths.count == regularPaths.count)
+        #expect(blackPaths.count == regularPaths.count)
 
         let ultralightSegments = ultralightPaths.flatMap(\.segments)
         let regularSegments = regularPaths.flatMap(\.segments)
         let blackSegments = blackPaths.flatMap(\.segments)
-        XCTAssertNotEqual(ultralightSegments, regularSegments)
-        XCTAssertNotEqual(blackSegments, regularSegments)
+        #expect(ultralightSegments != regularSegments)
+        #expect(blackSegments != regularSegments)
     }
 }
 

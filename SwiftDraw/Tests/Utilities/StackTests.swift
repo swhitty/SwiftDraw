@@ -29,96 +29,104 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-import XCTest
+import Testing
 @testable import SwiftDraw
 
-final class StackTests: XCTestCase {
+struct StackTests {
 
-    func testInit() {
+    @Test
+    func initStartsWithRootOnly() {
         let stack = Stack<Int>(root: 10)
 
-        XCTAssertEqual(stack.root, 10)
-        XCTAssertEqual(stack.top, 10)
-        XCTAssertTrue(stack.storage.isEmpty)
+        #expect(stack.root == 10)
+        #expect(stack.top == 10)
+        #expect(stack.storage.isEmpty)
     }
 
-    func testPush() {
+    @Test
+    func pushChangesTop() {
         var stack = Stack<Int>(root: 10)
 
-        XCTAssertTrue(stack.storage.isEmpty)
+        #expect(stack.storage.isEmpty)
 
         stack.push(20)
-        XCTAssertEqual(stack.top, 20)
-        XCTAssertFalse(stack.storage.isEmpty)
+        #expect(stack.top == 20)
+        #expect(!stack.storage.isEmpty)
 
         stack.push(30)
-        XCTAssertEqual(stack.top, 30)
+        #expect(stack.top == 30)
         stack.push(40)
-        XCTAssertEqual(stack.top, 40)
+        #expect(stack.top == 40)
         stack.push(50)
-        XCTAssertEqual(stack.top, 50)
-        XCTAssertEqual(stack.storage, [20, 30, 40, 50])
+        #expect(stack.top == 50)
+        #expect(stack.storage == [20, 30, 40, 50])
     }
 
-    func testPop() {
+    @Test
+    func popStopsAtRoot() {
         var stack = Stack<Int>(root: 10)
+        var popped: Bool
 
-        //cannot pop off root
-        XCTAssertFalse(stack.pop())
+        // cannot pop off root
+        popped = stack.pop()
+        #expect(!popped)
 
         stack.push(20)
         stack.push(30)
         stack.push(40)
         stack.push(50)
-        XCTAssertEqual(stack.top, 50)
-        XCTAssertTrue(stack.pop())
-        XCTAssertEqual(stack.top, 40)
-        XCTAssertTrue(stack.pop())
-        XCTAssertEqual(stack.top, 30)
-        XCTAssertTrue(stack.pop())
-        XCTAssertEqual(stack.top, 20)
-        XCTAssertTrue(stack.pop())
-        XCTAssertEqual(stack.top, 10)
+        #expect(stack.top == 50)
+        popped = stack.pop()
+        #expect(popped)
+        #expect(stack.top == 40)
+        popped = stack.pop()
+        #expect(popped)
+        #expect(stack.top == 30)
+        popped = stack.pop()
+        #expect(popped)
+        #expect(stack.top == 20)
+        popped = stack.pop()
+        #expect(popped)
+        #expect(stack.top == 10)
 
-        //cannot pop off root
-        XCTAssertFalse(stack.pop())
+        // cannot pop off root
+        popped = stack.pop()
+        #expect(!popped)
     }
 
-    func testMutation() {
-
+    @Test
+    func settingTopMutatesTopmostElement() {
         var stack = Stack<Int>(root: 10)
 
-        XCTAssertEqual(stack.top, 10)
+        #expect(stack.top == 10)
         stack.top = 50
-        XCTAssertEqual(stack.top, 50)
-        XCTAssertEqual(stack.root, 50)
-        XCTAssertTrue(stack.storage.isEmpty)
+        #expect(stack.top == 50)
+        #expect(stack.root == 50)
+        #expect(stack.storage.isEmpty)
 
         stack.push(100)
         stack.top = 200
 
-        XCTAssertEqual(stack.top, 200)
-        XCTAssertEqual(stack.root, 50)
-        XCTAssertEqual(stack.storage, [200])
+        #expect(stack.top == 200)
+        #expect(stack.root == 50)
+        #expect(stack.storage == [200])
 
         stack.push(500)
         stack.top = 600
-        XCTAssertEqual(stack.top, 600)
-        XCTAssertEqual(stack.root, 50)
-        XCTAssertEqual(stack.storage, [200, 600])
+        #expect(stack.top == 600)
+        #expect(stack.root == 50)
+        #expect(stack.storage == [200, 600])
 
         stack.pop()
         stack.top = 33
-        XCTAssertEqual(stack.top, 33)
-        XCTAssertEqual(stack.root, 50)
-        XCTAssertEqual(stack.storage, [33])
+        #expect(stack.top == 33)
+        #expect(stack.root == 50)
+        #expect(stack.storage == [33])
 
         stack.pop()
         stack.top = 1
-        XCTAssertEqual(stack.top, 1)
-        XCTAssertEqual(stack.root, 1)
-        XCTAssertTrue(stack.storage.isEmpty)
-
+        #expect(stack.top == 1)
+        #expect(stack.root == 1)
+        #expect(stack.storage.isEmpty)
     }
-
 }

@@ -30,14 +30,15 @@
 //
 
 @testable import SwiftDraw
-import XCTest
+import Testing
 
-final class LayerTreePathSubpathTests: XCTestCase {
+struct LayerTreePathSubpathTests {
 
     typealias Point = LayerTree.Point
     typealias Rect = LayerTree.Rect
 
-    func testIgnoresRedundantMoves() {
+    @Test
+    func ignoresRedundantMoves() {
         let path = LayerTree.Path([
             .move(to: Point(-50, -50)),
             .move(to: Point(100, 100)),
@@ -47,14 +48,9 @@ final class LayerTreePathSubpathTests: XCTestCase {
             .line(to: Point(0, 200)),
         ])
 
-        XCTAssertEqual(
-            path.subpaths.count,
-            1
-        )
-
-        XCTAssertEqual(
-            path.subpaths[0].segments,
-            [
+        #expect(path.subpaths.count == 1)
+        #expect(
+            path.subpaths[0].segments == [
                 .move(to: Point(100, 100)),
                 .line(to: Point(200, 200)),
                 .move(to: Point(0, 0)),
@@ -63,7 +59,8 @@ final class LayerTreePathSubpathTests: XCTestCase {
         )
     }
 
-    func testClosedPathsStartNewSubpath() {
+    @Test
+    func closedPathsStartNewSubpath() {
         let path = LayerTree.Path([
             .move(to: Point(100, 100)),
             .line(to: Point(200, 200)),
@@ -75,18 +72,11 @@ final class LayerTreePathSubpathTests: XCTestCase {
             .move(to: Point(500, 500)),
         ])
 
-        XCTAssertEqual(
-            path.subpaths.count,
-            2
-        )
+        #expect(path.subpaths.count == 2)
 
-        XCTAssertEqual(
-            path.subpaths[0].segments.direction,
-            .anticlockwise
-        )
-        XCTAssertEqual(
-            path.subpaths[0].segments,
-            [
+        #expect(path.subpaths[0].segments.direction == .anticlockwise)
+        #expect(
+            path.subpaths[0].segments == [
                 .move(to: Point(100, 100)),
                 .line(to: Point(200, 200)),
                 .line(to: Point(200, 100)),
@@ -94,13 +84,9 @@ final class LayerTreePathSubpathTests: XCTestCase {
             ]
         )
 
-        XCTAssertEqual(
-            path.subpaths[1].segments.direction,
-            .clockwise
-        )
-        XCTAssertEqual(
-            path.subpaths[1].segments,
-            [
+        #expect(path.subpaths[1].segments.direction == .clockwise)
+        #expect(
+            path.subpaths[1].segments == [
                 .move(to: Point(100, 100)),
                 .line(to: Point(0, 200)),
                 .line(to: Point(0, 100)),

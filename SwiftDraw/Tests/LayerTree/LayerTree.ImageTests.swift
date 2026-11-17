@@ -26,39 +26,42 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-import XCTest
+import Foundation
 @testable import SwiftDraw
+import Testing
 
-final class LayerTreeImageTests: XCTestCase {
+struct LayerTreeImageTests {
 
     let someData = Data(base64Encoded: "8badf00d")!
     let moreData = Data(base64Encoded: "f00d")!
 
-    func testInit() {
+    @Test
+    func initFromMimeType() {
         let i1 = LayerTree.Image(mimeType: "image/png", data: someData)
         let i2 = LayerTree.Image(mimeType: "image/jpg", data: moreData)
         let i3 = LayerTree.Image(mimeType: "image/jpeg", data: someData)
 
-        XCTAssertEqual(i1, .png(data: someData))
-        XCTAssertEqual(i2, .jpeg(data: moreData))
-        XCTAssertEqual(i3, .jpeg(data: someData))
+        #expect(i1 == .png(data: someData))
+        #expect(i2 == .jpeg(data: moreData))
+        #expect(i3 == .jpeg(data: someData))
 
-        XCTAssertNil(LayerTree.Image(mimeType: "image/jpg", data: Data()))
-        XCTAssertNil(LayerTree.Image(mimeType: "image", data: someData))
+        #expect(LayerTree.Image(mimeType: "image/jpg", data: Data()) == nil)
+        #expect(LayerTree.Image(mimeType: "image", data: someData) == nil)
     }
 
-    func testImageEquality() {
+    @Test
+    func imageEquality() {
         let i1 = LayerTree.Image(mimeType: "image/jpeg", data: someData)
         let i2 = LayerTree.Image(mimeType: "image/jpg", data: someData)
         let i3 = LayerTree.Image(mimeType: "image/png", data: someData)
 
-        XCTAssertEqual(i1, .jpeg(data: someData))
-        XCTAssertEqual(i1, i1)
-        XCTAssertEqual(i1, i2)
+        #expect(i1 == .jpeg(data: someData))
+        #expect(i1 == i1)
+        #expect(i1 == i2)
 
-        XCTAssertEqual(i3, .png(data: someData))
-        XCTAssertEqual(i3, i3)
+        #expect(i3 == .png(data: someData))
+        #expect(i3 == i3)
 
-        XCTAssertNotEqual(i1, i3)
+        #expect(i1 != i3)
     }
 }

@@ -29,35 +29,49 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
+import Foundation
 import SwiftDrawDOM
-import XCTest
+import Testing
 @testable import SwiftDraw
 
-final class URLTests: XCTestCase {
+struct URLTests {
 
-    func testDecodedData() {
+    @Test
+    func decodedData() {
         let url = URL(maybeData: "data:image/png;base64,f00d")
-        XCTAssertEqual(url?.decodedData?.mimeType, "image/png")
-        XCTAssertEqual(url?.decodedData?.data.base64EncodedString(), "f00d")
-
-        XCTAssertNil(URL(maybeData: "data:;base64,f00d")?.decodedData)
-        XCTAssertNil(URL(maybeData: "data:image/png;bas,f00d")?.decodedData)
-        XCTAssertNil(URL(maybeData: "data:image/png;base64")?.decodedData)
-        XCTAssertNil(URL(maybeData: "data:image/png;base64,")?.decodedData)
+        #expect(url?.decodedData?.mimeType == "image/png")
+        #expect(url?.decodedData?.data.base64EncodedString() == "f00d")
     }
 
-    func testDataURL() {
-        XCTAssertTrue(URL(maybeData: "data:image/png;base64,f00d")!.isDataURL)
-        XCTAssertTrue(URL(maybeData: "data:f00d")!.isDataURL)
-        XCTAssertFalse(URL(maybeData: "#identifier")!.isDataURL)
-        XCTAssertFalse(URL(maybeData: "data")!.isDataURL)
-        XCTAssertFalse(URL(maybeData: "www.google.com")!.isDataURL)
+    @Test(
+        arguments: [
+            "data:;base64,f00d",
+            "data:image/png;bas,f00d",
+            "data:image/png;base64",
+            "data:image/png;base64,",
+        ]
+    )
+    func malformedDataURLHasNoDecodedData(string: String) {
+        #expect(URL(maybeData: string)?.decodedData == nil)
     }
 
-    func testDecodedDataLineBreak() {
+    @Test(
+        arguments: [
+            ("data:image/png;base64,f00d", true),
+            ("data:f00d", true),
+            ("#identifier", false),
+            ("data", false),
+            ("www.google.com", false),
+        ] as [(String, Bool)]
+    )
+    func isDataURL(string: String, expected: Bool) throws {
+        #expect(try #require(URL(maybeData: string)).isDataURL == expected)
+    }
+
+    @Test
+    func decodedDataIgnoresLineBreaks() {
         let url = URL(maybeData: "data:image/png;base64,8badf00d\n\t 8badf00d")
-        XCTAssertEqual(url?.decodedData?.mimeType, "image/png")
-        XCTAssertEqual(url?.decodedData?.data.base64EncodedString(), "8badf00d8badf00d")
+        #expect(url?.decodedData?.mimeType == "image/png")
+        #expect(url?.decodedData?.data.base64EncodedString() == "8badf00d8badf00d")
     }
-
 }

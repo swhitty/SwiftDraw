@@ -27,15 +27,14 @@
 //
 
 @testable import SwiftDraw
-import XCTest
+import Foundation
+import Testing
 
-final class RendererCGTextTests: XCTestCase {
+struct RendererCGTextTests {
 
-    func testLinesCode() throws {
+    @Test func linesCode() throws {
         let code = try CGTextRenderer.render(svgNamed: "lines.svg")
-        XCTAssertEqual(
-            code,
-            """
+        let expected = """
             import CoreGraphics
             import UIKit
 
@@ -80,10 +79,10 @@ final class RendererCGTextTests: XCTestCase {
               }
             }
             """
-        )
+        #expect(code == expected)
     }
 
-    func testPatternCode() throws {
+    @Test func derivedPatternCode() throws {
         let svg = #"""
             <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="64" height="64">
                 <defs>
@@ -96,19 +95,17 @@ final class RendererCGTextTests: XCTestCase {
             </svg>
             """#
         let code = try CGTextRenderer.render(data: Data(svg.utf8), options: .default, api: .uiKit, precision: 2)
-        XCTAssertTrue(code.contains("bounds: CGRect(x: 2, y: 3, width: 8, height: 8)"))
-        XCTAssertTrue(
+        #expect(code.contains("bounds: CGRect(x: 2, y: 3, width: 8, height: 8)"))
+        #expect(
             code.contains(
                 "matrix: CGAffineTransform(a: 1.0, b: 0.0, c: 0.0, d: 1.0, tx: 10.0, ty: 0.0).concatenating(ctx.ctm.concatenating(baseCTM.inverted()))"
             )
         )
     }
 
-    func testSwiftUICode() throws {
+    @Test func swiftUICode() throws {
         let code = try CGTextRenderer.render(svgNamed: "lines.svg", api: .swiftUI)
-        XCTAssertEqual(
-            code,
-            """
+        let expected = """
             import SwiftUI
 
             struct ImageView: View {
@@ -171,14 +168,12 @@ final class RendererCGTextTests: XCTestCase {
               }
             }
             """
-        )
+        #expect(code == expected)
     }
 
-    func testGradientAppleCode() throws {
+    @Test func gradientAppleCode() throws {
         let code = try CGTextRenderer.render(svgNamed: "gradient-apple.svg")
-        XCTAssertEqual(
-            code,
-            """
+        let expected = """
             import CoreGraphics
             import UIKit
 
@@ -563,40 +558,41 @@ final class RendererCGTextTests: XCTestCase {
               }
             }
             """
-        )
+        #expect(code == expected)
     }
 }
 
 extension RendererCGTextTests {
 
-    func testDashedStrokeIsResetAfterStroke() throws {
+    @Test func dashedStrokeIsResetAfterStroke() throws {
         let svg =
             #"<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><path d="M0 0 L100 100" stroke="black" stroke-dasharray="4 2" stroke-dashoffset="1"/></svg>"#
         let code = try CGTextRenderer.render(data: Data(svg.utf8), options: .default, api: .uiKit, precision: 2)
         let lines = code.split(separator: "\n").map { $0.trimmingCharacters(in: .whitespaces) }
-        let dash = try XCTUnwrap(lines.firstIndex(of: "ctx.setLineDash(phase: 1, lengths: [4, 2])"))
-        let stroke = try XCTUnwrap(lines.lastIndex(of: "ctx.strokePath()"))
-        XCTAssertGreaterThan(stroke, dash)
+        let dash = try #require(lines.firstIndex(of: "ctx.setLineDash(phase: 1, lengths: [4, 2])"))
+        let stroke = try #require(lines.lastIndex(of: "ctx.strokePath()"))
+        #expect(stroke > dash)
         // the lone push/pop pair is stripped by the optimizer, so the dash must be reset explicitly
-        XCTAssertEqual(lines[stroke + 1], "ctx.setLineDash(phase: 0, lengths: [])")
+        #expect(lines[stroke + 1] == "ctx.setLineDash(phase: 0, lengths: [])")
     }
 
-    func testDashedGradientStrokesAreReset() throws {
-        // A stroke-only shape is the lone push/pop pair the optimizer strips, so each gradient stroke
-        // branch must reset the dash itself or it leaks into the caller's context.
-        for gradient in [
+    // A stroke-only shape is the lone push/pop pair the optimizer strips, so each gradient stroke
+    // branch must reset the dash itself or it leaks into the caller's context.
+    @Test(
+        arguments: [
             #"<linearGradient id="g"><stop offset="0" stop-color="red"/><stop offset="1" stop-color="blue"/></linearGradient>"#,
             #"<radialGradient id="g"><stop offset="0" stop-color="red"/><stop offset="1" stop-color="blue"/></radialGradient>"#,
-        ] {
-            let svg =
-                #"<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><defs>"# + gradient
-                + #"</defs><path d="M0 0 L100 100" fill="none" stroke="url(#g)" stroke-width="4" stroke-dasharray="4 2"/></svg>"#
-            let code = try CGTextRenderer.render(data: Data(svg.utf8), options: .default, api: .uiKit, precision: 2)
-            let lines = code.split(separator: "\n").map { $0.trimmingCharacters(in: .whitespaces) }
-            let dash = try XCTUnwrap(lines.firstIndex(of: "ctx.setLineDash(phase: 0, lengths: [4, 2])"), gradient)
-            let reset = try XCTUnwrap(lines.lastIndex(of: "ctx.setLineDash(phase: 0, lengths: [])"), gradient)
-            XCTAssertGreaterThan(reset, dash, gradient)
-        }
+        ]
+    )
+    func dashedGradientStrokesAreReset(gradient: String) throws {
+        let svg =
+            #"<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><defs>"# + gradient
+            + #"</defs><path d="M0 0 L100 100" fill="none" stroke="url(#g)" stroke-width="4" stroke-dasharray="4 2"/></svg>"#
+        let code = try CGTextRenderer.render(data: Data(svg.utf8), options: .default, api: .uiKit, precision: 2)
+        let lines = code.split(separator: "\n").map { $0.trimmingCharacters(in: .whitespaces) }
+        let dash = try #require(lines.firstIndex(of: "ctx.setLineDash(phase: 0, lengths: [4, 2])"))
+        let reset = try #require(lines.lastIndex(of: "ctx.setLineDash(phase: 0, lengths: [])"))
+        #expect(reset > dash)
     }
 }
 

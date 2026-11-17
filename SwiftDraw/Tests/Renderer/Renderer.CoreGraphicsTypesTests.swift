@@ -26,100 +26,97 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-import XCTest
+import Testing
 #if canImport(CoreGraphics)
 import CoreGraphics
 @testable import SwiftDraw
 import SwiftDrawDOM
 
-final class RendererCoreGraphicsTypesTests: XCTestCase {
+struct RendererCoreGraphicsTypesTests {
 
     typealias Float = LayerTree.Float
     typealias Point = LayerTree.Point
     typealias Rect = LayerTree.Rect
     typealias Size = LayerTree.Size
 
-    func testFloat() {
-        XCTAssertEqual(CGProvider().createFloat(from: Float(10)), 10.0)
-        XCTAssertEqual(CGProvider().createFloat(from: Float(200.5)), 200.5)
+    @Test func float() {
+        #expect(CGProvider().createFloat(from: Float(10)) == 10.0)
+        #expect(CGProvider().createFloat(from: Float(200.5)) == 200.5)
     }
 
-    func testPoint() {
-        XCTAssertEqual(CGProvider().createPoint(from: LayerTree.Point(10, 20)), CGPoint(x: 10, y: 20))
-        XCTAssertEqual(CGProvider().createPoint(from: LayerTree.Point(200.5, 300.5)), CGPoint(x: 200.5, y: 300.5))
+    @Test func point() {
+        #expect(CGProvider().createPoint(from: LayerTree.Point(10, 20)) == CGPoint(x: 10, y: 20))
+        #expect(CGProvider().createPoint(from: LayerTree.Point(200.5, 300.5)) == CGPoint(x: 200.5, y: 300.5))
     }
 
-    func testSize() {
-        XCTAssertEqual(CGProvider().createSize(from: LayerTree.Size(10, 20)), CGSize(width: 10, height: 20))
-        XCTAssertEqual(CGProvider().createSize(from: LayerTree.Size(200.5, 300.5)), CGSize(width: 200.5, height: 300.5))
+    @Test func size() {
+        #expect(CGProvider().createSize(from: LayerTree.Size(10, 20)) == CGSize(width: 10, height: 20))
+        #expect(CGProvider().createSize(from: LayerTree.Size(200.5, 300.5)) == CGSize(width: 200.5, height: 300.5))
     }
 
-    func testRect() {
+    @Test func rect() {
         let r1 = LayerTree.Rect(x: 10, y: 20, width: 30, height: 40)
-        XCTAssertEqual(
-            CGProvider().createRect(from: r1),
-            CGRect(x: 10, y: 20, width: 30, height: 40)
-        )
+        #expect(CGProvider().createRect(from: r1) == CGRect(x: 10, y: 20, width: 30, height: 40))
 
         let r2 = LayerTree.Rect(x: 200.5, y: 300.5, width: 400.5, height: 500.5)
-        XCTAssertEqual(
-            CGProvider().createRect(from: r2),
-            CGRect(x: 200.5, y: 300.5, width: 400.5, height: 500.5)
-        )
+        #expect(CGProvider().createRect(from: r2) == CGRect(x: 200.5, y: 300.5, width: 400.5, height: 500.5))
     }
 
-    func testColor() {
+    @Test func color() throws {
+        let sRGB = try #require(CGColorSpace(name: CGColorSpace.sRGB))
         let c = CGProvider().createColor(from: .srgb(r: 0.1, g: 0.2, b: 0.3, a: 0.4))
         //CGFloat(Float(xx)) accounts for floating point margin of error
-        let reference = CGColor(
-            colorSpace: CGColorSpace(name: CGColorSpace.sRGB)!,
-            components: [CGFloat(Float(0.1)), CGFloat(Float(0.2)), CGFloat(Float(0.3)), CGFloat(Float(0.4))]
-        )!
-        XCTAssertEqual(c.components!, reference.components!)
+        let reference = try #require(
+            CGColor(
+                colorSpace: sRGB,
+                components: [CGFloat(Float(0.1)), CGFloat(Float(0.2)), CGFloat(Float(0.3)), CGFloat(Float(0.4))]
+            )
+        )
+        let components = try #require(c.components)
+        #expect(components == reference.components)
 
         let clear = CGProvider().createColor(from: .none)
-        //CGFloat(Float(xx)) accounts for floating point margin of error
-        let clearReference = CGColor(colorSpace: CGColorSpace(name: CGColorSpace.sRGB)!, components: [0, 0, 0, 0])!
-        XCTAssertEqual(clear.components!, clearReference.components!)
+        let clearReference = try #require(CGColor(colorSpace: sRGB, components: [0, 0, 0, 0]))
+        let clearComponents = try #require(clear.components)
+        #expect(clearComponents == clearReference.components)
     }
 
-    func testTransform() {
+    @Test func transform() {
         let m = LayerTree.Transform.Matrix(a: 10, b: 20, c: 30, d: 40, tx: 50, ty: 60)
         let expected = CGAffineTransform(a: 10, b: 20, c: 30, d: 40, tx: 50, ty: 60)
-        XCTAssertEqual(CGProvider().createTransform(from: m), expected)
+        #expect(CGProvider().createTransform(from: m) == expected)
     }
 
-    func testBlendMode() {
-        XCTAssertEqual(CGProvider().createBlendMode(from: .normal), .normal)
-        XCTAssertEqual(CGProvider().createBlendMode(from: .copy), .copy)
-        XCTAssertEqual(CGProvider().createBlendMode(from: .sourceIn), .sourceIn)
+    @Test func blendMode() {
+        #expect(CGProvider().createBlendMode(from: .normal) == .normal)
+        #expect(CGProvider().createBlendMode(from: .copy) == .copy)
+        #expect(CGProvider().createBlendMode(from: .sourceIn) == .sourceIn)
     }
 
-    func testFillRule() {
-        XCTAssertEqual(CGProvider().createFillRule(from: .nonzero), .winding)
-        XCTAssertEqual(CGProvider().createFillRule(from: .evenodd), .evenOdd)
+    @Test func fillRule() {
+        #expect(CGProvider().createFillRule(from: .nonzero) == .winding)
+        #expect(CGProvider().createFillRule(from: .evenodd) == .evenOdd)
     }
 
-    func testLineCap() {
-        XCTAssertEqual(CGProvider().createLineCap(from: .butt), .butt)
-        XCTAssertEqual(CGProvider().createLineCap(from: .round), .round)
-        XCTAssertEqual(CGProvider().createLineCap(from: .square), .square)
+    @Test func lineCap() {
+        #expect(CGProvider().createLineCap(from: .butt) == .butt)
+        #expect(CGProvider().createLineCap(from: .round) == .round)
+        #expect(CGProvider().createLineCap(from: .square) == .square)
     }
 
-    func testLineJoin() {
-        XCTAssertEqual(CGProvider().createLineJoin(from: .miter), .miter)
-        XCTAssertEqual(CGProvider().createLineJoin(from: .round), .round)
-        XCTAssertEqual(CGProvider().createLineJoin(from: .bevel), .bevel)
+    @Test func lineJoin() {
+        #expect(CGProvider().createLineJoin(from: .miter) == .miter)
+        #expect(CGProvider().createLineJoin(from: .round) == .round)
+        #expect(CGProvider().createLineJoin(from: .bevel) == .bevel)
     }
 
-    func testShapeLine() {
+    @Test func shapeLine() {
         let path = CGProvider().createPath(from: .line(between: [.zero, Point(10, 20), Point(30, 40)]))
         let segments: [CGPath.Segment] = [.move(CGPoint(0, 0)), .line(CGPoint(10, 20)), .line(CGPoint(30, 40))]
-        XCTAssertEqual(path.segments(), segments)
+        #expect(path.segments() == segments)
     }
 
-    @MainActor
-    func testShapeRect() {
+    @Test func shapeRect() {
         let path = CGProvider().createPath(
             from: .rect(
                 within: Rect(x: 10, y: 20, width: 30, height: 40),
@@ -134,16 +131,16 @@ final class RendererCoreGraphicsTypesTests: XCTestCase {
             transform: nil
         )
 
-        XCTAssertEqual(path, expected)
+        #expect(path == expected)
     }
 
-    func testShapeEllipse() {
+    @Test func shapeEllipse() {
         let path = CGProvider().createPath(from: .ellipse(within: Rect(x: 10, y: 20, width: 30, height: 40)))
         let expected = CGPath(ellipseIn: CGRect(x: 10, y: 20, width: 30, height: 40), transform: nil)
-        XCTAssertEqual(path, expected)
+        #expect(path == expected)
     }
 
-    func testShapePolygon() {
+    @Test func shapePolygon() {
         let path = CGProvider().createPath(
             from: .polygon(between: [
                 .zero,
@@ -159,10 +156,10 @@ final class RendererCoreGraphicsTypesTests: XCTestCase {
         expected.addLine(to: CGPoint(x: 20, y: 0))
         expected.closeSubpath()
 
-        XCTAssertEqual(path.segments(), expected.segments())
+        #expect(path.segments() == expected.segments())
     }
 
-    func testShapePath() {
+    @Test func shapePath() {
         let model = LayerTree.Path()
         model.segments.append(.move(to: Point(0, 0)))
         model.segments.append(.line(to: Point(100, 100)))
@@ -176,14 +173,14 @@ final class RendererCoreGraphicsTypesTests: XCTestCase {
         expected.closeSubpath()
 
         let path = CGProvider().createPath(from: .path(model))
-        XCTAssertEqual(path, expected)
+        #expect(path == expected)
     }
 
-    func testTextPath() {
-        XCTAssertNotNil(CGProvider().createPath(from: "Hi", at: .zero, with: .normal))
+    @Test func textPath() {
+        #expect(CGProvider().createPath(from: "Hi", at: .zero, with: .normal) != nil)
     }
 
-    func testSubpath() {
+    @Test func subpath() {
         let p1 = CGMutablePath()
         p1.move(to: CGPoint(x: 0, y: 0))
         p1.addLine(to: CGPoint(x: 100, y: 100))
@@ -195,9 +192,8 @@ final class RendererCoreGraphicsTypesTests: XCTestCase {
         p2.closeSubpath()
 
         let segments = CGProvider().createPath(from: [p1, p2]).segments()
-        XCTAssertEqual(
-            segments,
-            [
+        #expect(
+            segments == [
                 .move(CGPoint(x: 0, y: 0)),
                 .line(CGPoint(x: 100, y: 100)),
                 .close,

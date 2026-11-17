@@ -30,11 +30,10 @@
 //
 
 import SwiftDrawDOM
-import XCTest
-
 @testable import SwiftDraw
+import Testing
 
-final class LayerTreeColorTests: XCTestCase {
+struct LayerTreeColorTests {
 
     typealias Color = LayerTree.Color
 
@@ -42,63 +41,68 @@ final class LayerTreeColorTests: XCTestCase {
     let someColor = Color.srgb(r: 0.1, g: 0.2, b: 0.3, a: 0.4)
     let anotherColor = Color.srgb(r: 0.4, g: 0.3, b: 0.2, a: 0.1)
 
-    func testStaticColors() {
-        XCTAssertEqual(Color.black, .srgb(r: 0, g: 0, b: 0, a: 1.0))
-        XCTAssertEqual(Color.white, .srgb(r: 1, g: 1, b: 1, a: 1.0))
+    @Test
+    func blackAndWhiteAreOpaqueSRGB() {
+        #expect(Color.black == .srgb(r: 0, g: 0, b: 0, a: 1.0))
+        #expect(Color.white == .srgb(r: 1, g: 1, b: 1, a: 1.0))
     }
 
-    func testWithAlpha() {
+    @Test
+    func withAlpha() {
         //test alpha can be easily adjusted on rgba values
         //apha 0.0 == .none
 
         //.none color cannot change alpha
-        XCTAssertEqual(noColor.withAlpha(1.0).maybeNone(), .none)
-        XCTAssertEqual(noColor.withAlpha(0.5).maybeNone(), .none)
-        XCTAssertEqual(noColor.withAlpha(0.3).maybeNone(), .none)
-        XCTAssertEqual(noColor.withAlpha(0.0).maybeNone(), .none)
+        #expect(noColor.withAlpha(1.0).maybeNone() == .none)
+        #expect(noColor.withAlpha(0.5).maybeNone() == .none)
+        #expect(noColor.withAlpha(0.3).maybeNone() == .none)
+        #expect(noColor.withAlpha(0.0).maybeNone() == .none)
 
-        XCTAssertEqual(someColor.withAlpha(1.0).maybeNone(), .srgb(r: 0.1, g: 0.2, b: 0.3, a: 0.4 * 1))
-        XCTAssertEqual(someColor.withAlpha(0.5).maybeNone(), .srgb(r: 0.1, g: 0.2, b: 0.3, a: 0.4 * 0.5))
-        XCTAssertEqual(someColor.withAlpha(0.3).maybeNone(), .srgb(r: 0.1, g: 0.2, b: 0.3, a: 0.4 * 0.3))
-        XCTAssertEqual(someColor.withAlpha(0.0).maybeNone(), .none)
+        #expect(someColor.withAlpha(1.0).maybeNone() == .srgb(r: 0.1, g: 0.2, b: 0.3, a: 0.4 * 1))
+        #expect(someColor.withAlpha(0.5).maybeNone() == .srgb(r: 0.1, g: 0.2, b: 0.3, a: 0.4 * 0.5))
+        #expect(someColor.withAlpha(0.3).maybeNone() == .srgb(r: 0.1, g: 0.2, b: 0.3, a: 0.4 * 0.3))
+        #expect(someColor.withAlpha(0.0).maybeNone() == .none)
 
-        XCTAssertEqual(anotherColor.withAlpha(1.0).maybeNone(), .srgb(r: 0.4, g: 0.3, b: 0.2, a: 0.1 * 1))
-        XCTAssertEqual(anotherColor.withAlpha(0.5).maybeNone(), .srgb(r: 0.4, g: 0.3, b: 0.2, a: 0.1 * 0.5))
-        XCTAssertEqual(anotherColor.withAlpha(0.3).maybeNone(), .srgb(r: 0.4, g: 0.3, b: 0.2, a: 0.1 * 0.3))
-        XCTAssertEqual(anotherColor.withAlpha(0.0).maybeNone(), .none)
+        #expect(anotherColor.withAlpha(1.0).maybeNone() == .srgb(r: 0.4, g: 0.3, b: 0.2, a: 0.1 * 1))
+        #expect(anotherColor.withAlpha(0.5).maybeNone() == .srgb(r: 0.4, g: 0.3, b: 0.2, a: 0.1 * 0.5))
+        #expect(anotherColor.withAlpha(0.3).maybeNone() == .srgb(r: 0.4, g: 0.3, b: 0.2, a: 0.1 * 0.3))
+        #expect(anotherColor.withAlpha(0.0).maybeNone() == .none)
     }
 
-    func testMultiplyingAlpha() {
+    @Test
+    func multiplyingAlpha() {
         //test alpha can be easily multiplied on rgba values
         //apha 0.0 == .none
 
-        XCTAssertEqual(noColor.withMultiplyingAlpha(1.0), .none)
-        XCTAssertEqual(noColor.withMultiplyingAlpha(0.5), .none)
-        XCTAssertEqual(noColor.withMultiplyingAlpha(0.3), .none)
-        XCTAssertEqual(noColor.withMultiplyingAlpha(0.0), .none)
+        #expect(noColor.withMultiplyingAlpha(1.0) == .none)
+        #expect(noColor.withMultiplyingAlpha(0.5) == .none)
+        #expect(noColor.withMultiplyingAlpha(0.3) == .none)
+        #expect(noColor.withMultiplyingAlpha(0.0) == .none)
 
-        XCTAssertEqual(someColor.withMultiplyingAlpha(1.0), .srgb(r: 0.1, g: 0.2, b: 0.3, a: 0.4))
-        XCTAssertEqual(someColor.withMultiplyingAlpha(0.5), .srgb(r: 0.1, g: 0.2, b: 0.3, a: 0.2))
-        XCTAssertEqual(someColor.withMultiplyingAlpha(0.0).maybeNone(), .none)
+        #expect(someColor.withMultiplyingAlpha(1.0) == .srgb(r: 0.1, g: 0.2, b: 0.3, a: 0.4))
+        #expect(someColor.withMultiplyingAlpha(0.5) == .srgb(r: 0.1, g: 0.2, b: 0.3, a: 0.2))
+        #expect(someColor.withMultiplyingAlpha(0.0).maybeNone() == .none)
 
-        XCTAssertEqual(anotherColor.withMultiplyingAlpha(1.0), .srgb(r: 0.4, g: 0.3, b: 0.2, a: 0.1))
-        XCTAssertEqual(anotherColor.withMultiplyingAlpha(0.5), .srgb(r: 0.4, g: 0.3, b: 0.2, a: 0.05))
-        XCTAssertEqual(anotherColor.withMultiplyingAlpha(0.0).maybeNone(), .none)
+        #expect(anotherColor.withMultiplyingAlpha(1.0) == .srgb(r: 0.4, g: 0.3, b: 0.2, a: 0.1))
+        #expect(anotherColor.withMultiplyingAlpha(0.5) == .srgb(r: 0.4, g: 0.3, b: 0.2, a: 0.05))
+        #expect(anotherColor.withMultiplyingAlpha(0.0).maybeNone() == .none)
     }
 
-    func testRGBi() {
+    @Test
+    func rgbIntegerComponents() {
         //a color can be created from (UInt8, UInt8, UInt8)
 
-        XCTAssertEqual(Color(UInt8(102), UInt8(102), UInt8(102)), .srgb(r: 0.4, g: 0.4, b: 0.4, a: 1.0))
-        XCTAssertEqual(Color(UInt8(102), UInt8(0), UInt8(102)), .srgb(r: 0.4, g: 0.0, b: 0.4, a: 1.0))
-        XCTAssertEqual(Color(UInt8(102), UInt8(102), UInt8(0)), .srgb(r: 0.4, g: 0.4, b: 0.0, a: 1.0))
+        #expect(Color(UInt8(102), UInt8(102), UInt8(102)) == .srgb(r: 0.4, g: 0.4, b: 0.4, a: 1.0))
+        #expect(Color(UInt8(102), UInt8(0), UInt8(102)) == .srgb(r: 0.4, g: 0.0, b: 0.4, a: 1.0))
+        #expect(Color(UInt8(102), UInt8(102), UInt8(0)) == .srgb(r: 0.4, g: 0.4, b: 0.0, a: 1.0))
 
-        XCTAssertEqual(Color(UInt8(204), UInt8(204), UInt8(204)), .srgb(r: 0.8, g: 0.8, b: 0.8, a: 1.0))
-        XCTAssertEqual(Color(UInt8(204), UInt8(0), UInt8(204)), .srgb(r: 0.8, g: 0.0, b: 0.8, a: 1.0))
-        XCTAssertEqual(Color(UInt8(204), UInt8(204), UInt8(0)), .srgb(r: 0.8, g: 0.8, b: 0.0, a: 1.0))
+        #expect(Color(UInt8(204), UInt8(204), UInt8(204)) == .srgb(r: 0.8, g: 0.8, b: 0.8, a: 1.0))
+        #expect(Color(UInt8(204), UInt8(0), UInt8(204)) == .srgb(r: 0.8, g: 0.0, b: 0.8, a: 1.0))
+        #expect(Color(UInt8(204), UInt8(204), UInt8(0)) == .srgb(r: 0.8, g: 0.8, b: 0.0, a: 1.0))
     }
 
-    func testFromDOM() {
+    @Test
+    func initFromDOMColor() {
         // DOM.Color converts correctly
 
         let none = DOM.Color.none
@@ -108,24 +112,25 @@ final class LayerTreeColorTests: XCTestCase {
         let green = DOM.Color.rgbi(0, 255, 0, 1.0)
         let blue = DOM.Color.rgbi(0, 0, 255, 1.0)
 
-        XCTAssertEqual(Color(none), .none)
-        XCTAssertEqual(Color(black), .srgb(r: 0.0, g: 0.0, b: 0.0, a: 1.0))
-        XCTAssertEqual(Color(white), .srgb(r: 1.0, g: 1.0, b: 1.0, a: 1.0))
-        XCTAssertEqual(Color(red), .srgb(r: 1.0, g: 0.0, b: 0.0, a: 1.0))
-        XCTAssertEqual(Color(green), .srgb(r: 0.0, g: 1.0, b: 0.0, a: 1.0))
-        XCTAssertEqual(Color(blue), .srgb(r: 0.0, g: 0.0, b: 1.0, a: 1.0))
+        #expect(Color(none) == .none)
+        #expect(Color(black) == .srgb(r: 0.0, g: 0.0, b: 0.0, a: 1.0))
+        #expect(Color(white) == .srgb(r: 1.0, g: 1.0, b: 1.0, a: 1.0))
+        #expect(Color(red) == .srgb(r: 1.0, g: 0.0, b: 0.0, a: 1.0))
+        #expect(Color(green) == .srgb(r: 0.0, g: 1.0, b: 0.0, a: 1.0))
+        #expect(Color(blue) == .srgb(r: 0.0, g: 0.0, b: 1.0, a: 1.0))
     }
 
-    func testCurrentColor() {
+    @Test
+    func currentColorResolvesToCurrent() {
         // DOM.Color converts correctly
 
         let none = DOM.Color.none
         let black = DOM.Color.keyword(.black)
         let white = DOM.Color.keyword(.white)
 
-        XCTAssertEqual(Color.create(from: .currentColor, current: none), .none)
-        XCTAssertEqual(Color.create(from: .currentColor, current: black), Color(black))
-        XCTAssertEqual(Color.create(from: .currentColor, current: white), Color(white))
+        #expect(Color.create(from: .currentColor, current: none) == .none)
+        #expect(Color.create(from: .currentColor, current: black) == Color(black))
+        #expect(Color.create(from: .currentColor, current: white) == Color(white))
     }
 }
 

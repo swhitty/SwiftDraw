@@ -33,7 +33,6 @@ public import Foundation
 import Testing
 @testable import SwiftDrawDOM
 
-@Suite("Scanner Tests")
 struct ScannerTests {
 
     @Test

@@ -33,7 +33,6 @@ import Foundation
 import Testing
 @testable import SwiftDrawDOM
 
-@Suite("SAX Parser Tests")
 struct SAXParserTests {
 
     @Test

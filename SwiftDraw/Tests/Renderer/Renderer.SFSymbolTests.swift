@@ -29,34 +29,29 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
+import Foundation
 import SwiftDrawDOM
-import XCTest
+import Testing
 @testable import SwiftDraw
 
-final class RendererSFSymbolTests: XCTestCase {
+struct RendererSFSymbolTests {
 
-    func testTemplateLoads() {
-        XCTAssertNoThrow(try SFSymbolTemplate.make())
+    @Test func templateLoads() throws {
+        _ = try SFSymbolTemplate.make()
     }
 
-    func testFillSymbol() throws {
+    @Test func fillSymbolHasPathsInEveryWeight() throws {
         let url = try Bundle.test.url(forResource: "chart.svg")
         let template = try SFSymbolTemplate.parse(
             SFSymbolRenderer.render(fileURL: url)
         )
 
-        XCTAssertFalse(
-            template.ultralight.contents.paths.isEmpty
-        )
-        XCTAssertFalse(
-            template.regular.contents.paths.isEmpty
-        )
-        XCTAssertFalse(
-            template.black.contents.paths.isEmpty
-        )
+        #expect(!template.ultralight.contents.paths.isEmpty)
+        #expect(!template.regular.contents.paths.isEmpty)
+        #expect(!template.black.contents.paths.isEmpty)
     }
 
-    func testWidthGreaterThanHeightSymbol() throws {
+    @Test func widthGreaterThanHeightScalesByWidth() throws {
         // This svg has a width of 24, but a height of 4. When scaling in SFSymbolRenderer makeTransformation
         // the height was being used to create scale causing the width to be 440 instead of 108.
         let url = try Bundle.test.url(forResource: "dash.svg")
@@ -64,16 +59,12 @@ final class RendererSFSymbolTests: XCTestCase {
             SFSymbolRenderer.render(fileURL: url)
         )
 
-        XCTAssertTrue(
-            template.regular.bounds.size.width == 108.0
-        )
-        XCTAssertTrue(
-            template.regular.bounds.size.height == 70.0
-        )
+        #expect(template.regular.bounds.size.width == 108.0)
+        #expect(template.regular.bounds.size.height == 70.0)
 
     }
 
-    func testTransparentLayers_Are_Removed() throws {
+    @Test func transparentLayersAreRemoved() throws {
         let source = try DOM.SVG.parse(
             #"""
             <?xml version="1.0" encoding="UTF-8"?>
@@ -89,21 +80,12 @@ final class RendererSFSymbolTests: XCTestCase {
             SFSymbolRenderer.render(svg: source)
         )
 
-        XCTAssertEqual(
-            template.ultralight.contents.paths.count,
-            1
-        )
-        XCTAssertEqual(
-            template.regular.contents.paths.count,
-            1
-        )
-        XCTAssertEqual(
-            template.black.contents.paths.count,
-            1
-        )
+        #expect(template.ultralight.contents.paths.count == 1)
+        #expect(template.regular.contents.paths.count == 1)
+        #expect(template.black.contents.paths.count == 1)
     }
 
-    func testTransparentSFSymboleLayers_AreNot_Removed() throws {
+    @Test func transparentSFSymbolLayersAreNotRemoved() throws {
         let source = try DOM.SVG.parse(
             #"""
             <?xml version="1.0" encoding="UTF-8"?>
@@ -119,39 +101,24 @@ final class RendererSFSymbolTests: XCTestCase {
             SFSymbolRenderer.render(svg: source)
         )
 
-        XCTAssertEqual(
-            template.ultralight.contents.paths.count,
-            3
-        )
-        XCTAssertEqual(
-            template.regular.contents.paths.count,
-            3
-        )
-        XCTAssertEqual(
-            template.black.contents.paths.count,
-            3
-        )
+        #expect(template.ultralight.contents.paths.count == 3)
+        #expect(template.regular.contents.paths.count == 3)
+        #expect(template.black.contents.paths.count == 3)
     }
 
     #if canImport(CoreGraphics)
-    func testStrokeSymbol() throws {
+    @Test func strokeSymbolHasPathsInEveryWeight() throws {
         let url = try Bundle.test.url(forResource: "key.svg")
         let template = try SFSymbolTemplate.parse(
             SFSymbolRenderer.render(fileURL: url)
         )
 
-        XCTAssertFalse(
-            template.ultralight.contents.paths.isEmpty
-        )
-        XCTAssertFalse(
-            template.regular.contents.paths.isEmpty
-        )
-        XCTAssertFalse(
-            template.black.contents.paths.isEmpty
-        )
+        #expect(!template.ultralight.contents.paths.isEmpty)
+        #expect(!template.regular.contents.paths.isEmpty)
+        #expect(!template.black.contents.paths.isEmpty)
     }
 
-    func testStrokeText() throws {
+    @Test func strokeAndTextAreConvertedToPaths() throws {
         let source = try DOM.SVG.parse(
             #"""
             <?xml version="1.0" encoding="UTF-8"?>
@@ -166,24 +133,15 @@ final class RendererSFSymbolTests: XCTestCase {
             SFSymbolRenderer.render(svg: source)
         )
 
-        XCTAssertEqual(
-            template.ultralight.contents.paths.count,
-            2
-        )
-        XCTAssertEqual(
-            template.regular.contents.paths.count,
-            2
-        )
-        XCTAssertEqual(
-            template.black.contents.paths.count,
-            2
-        )
+        #expect(template.ultralight.contents.paths.count == 2)
+        #expect(template.regular.contents.paths.count == 2)
+        #expect(template.black.contents.paths.count == 2)
     }
     #endif
 
     // MARK: - Segment Normalization Tests
 
-    func testNormalizeSegments_PromotesLineToCubic() {
+    @Test func normalizeSegmentsPromotesLineToCubic() {
         // When one variant has a cubic and another has a line at the same position,
         // the line should be promoted to a degenerate cubic
         var a: [DOM.Path.Segment] = [
@@ -205,14 +163,14 @@ final class RendererSFSymbolTests: XCTestCase {
         SFSymbolTemplate.normalizeSegments(&a, &b, &c)
 
         // b and c should now have cubics instead of lines
-        XCTAssertTrue(b[1].isCubic)
-        XCTAssertTrue(c[1].isCubic)
+        #expect(b[1].isCubic)
+        #expect(c[1].isCubic)
         // All should have same count
-        XCTAssertEqual(a.count, b.count)
-        XCTAssertEqual(b.count, c.count)
+        #expect(a.count == b.count)
+        #expect(b.count == c.count)
     }
 
-    func testNormalizeSegments_InsertsDegenerate() {
+    @Test func normalizeSegmentsInsertsDegenerateCubic() {
         // When one variant has an extra segment, a degenerate cubic should be
         // inserted in the other variants to align them
         var a: [DOM.Path.Segment] = [
@@ -238,16 +196,16 @@ final class RendererSFSymbolTests: XCTestCase {
         SFSymbolTemplate.normalizeSegments(&a, &b, &c)
 
         // All should now have the same number of segments
-        XCTAssertEqual(a.count, b.count, "Segment counts should match after normalization")
-        XCTAssertEqual(b.count, c.count, "Segment counts should match after normalization")
+        #expect(a.count == b.count, "Segment counts should match after normalization")
+        #expect(b.count == c.count, "Segment counts should match after normalization")
         // All should have same command types at each position
         for i in 0..<a.count {
-            XCTAssertEqual(a[i].commandType, b[i].commandType, "Command types should match at index \(i)")
-            XCTAssertEqual(b[i].commandType, c[i].commandType, "Command types should match at index \(i)")
+            #expect(a[i].commandType == b[i].commandType, "Command types should match at index \(i)")
+            #expect(b[i].commandType == c[i].commandType, "Command types should match at index \(i)")
         }
     }
 
-    func testNormalizeSegments_AlreadyMatching() {
+    @Test func normalizeSegmentsLeavesMatchingVariantsUnchanged() {
         // When all three variants already match, no changes should be made
         var a: [DOM.Path.Segment] = [
             .move(x: 0, y: 0, space: .absolute),
@@ -259,49 +217,48 @@ final class RendererSFSymbolTests: XCTestCase {
 
         SFSymbolTemplate.normalizeSegments(&a, &b, &c)
 
-        XCTAssertEqual(a.count, 3)
-        XCTAssertEqual(b.count, 3)
-        XCTAssertEqual(c.count, 3)
+        #expect(a.count == 3)
+        #expect(b.count == 3)
+        #expect(c.count == 3)
     }
 
-    func testCommandType() {
-        XCTAssertEqual(DOM.Path.Segment.move(x: 0, y: 0, space: .absolute).commandType, .move)
-        XCTAssertEqual(DOM.Path.Segment.line(x: 0, y: 0, space: .absolute).commandType, .line)
-        XCTAssertEqual(
-            DOM.Path.Segment.cubic(x1: 0, y1: 0, x2: 0, y2: 0, x: 0, y: 0, space: .absolute).commandType,
-            .cubic
+    @Test func commandType() {
+        #expect(DOM.Path.Segment.move(x: 0, y: 0, space: .absolute).commandType == .move)
+        #expect(DOM.Path.Segment.line(x: 0, y: 0, space: .absolute).commandType == .line)
+        #expect(
+            DOM.Path.Segment.cubic(x1: 0, y1: 0, x2: 0, y2: 0, x: 0, y: 0, space: .absolute).commandType == .cubic
         )
-        XCTAssertEqual(DOM.Path.Segment.close.commandType, .close)
-        XCTAssertEqual(DOM.Path.Segment.horizontal(x: 0, space: .absolute).commandType, .line)
-        XCTAssertEqual(DOM.Path.Segment.vertical(y: 0, space: .absolute).commandType, .line)
+        #expect(DOM.Path.Segment.close.commandType == .close)
+        #expect(DOM.Path.Segment.horizontal(x: 0, space: .absolute).commandType == .line)
+        #expect(DOM.Path.Segment.vertical(y: 0, space: .absolute).commandType == .line)
     }
 
-    func testPromoteToCubic() {
+    @Test func promoteLineToCubic() {
         let line = DOM.Path.Segment.line(x: 10, y: 20, space: .absolute)
         let promoted = line.promoteToCubic(from: (x: 0, y: 0))
 
         if case .cubic(let x1, let y1, let x2, let y2, let x, let y, _) = promoted {
-            XCTAssertEqual(x1, 0)  // control1 at start
-            XCTAssertEqual(y1, 0)
-            XCTAssertEqual(x2, 10)  // control2 at end
-            XCTAssertEqual(y2, 20)
-            XCTAssertEqual(x, 10)  // endpoint
-            XCTAssertEqual(y, 20)
+            #expect(x1 == 0)  // control1 at start
+            #expect(y1 == 0)
+            #expect(x2 == 10)  // control2 at end
+            #expect(y2 == 20)
+            #expect(x == 10)  // endpoint
+            #expect(y == 20)
         } else {
-            XCTFail("Expected cubic segment")
+            Issue.record("Expected cubic segment")
         }
     }
 
     // MARK: - Variant Validation Tests
 
-    func testValidateVariants_MatchingStructure() throws {
+    @Test func validateVariantsAcceptsMatchingStructure() throws {
         var template = try SFSymbolTemplate.make()
         template.setVariantSegments(ultralight: [.squareSegments], regular: [.squareSegments], black: [.squareSegments])
 
-        XCTAssertNoThrow(try template.validateVariants())
+        try template.validateVariants()
     }
 
-    func testValidateVariants_ThrowsForPathCountMismatch() throws {
+    @Test func validateVariantsThrowsForPathCountMismatch() throws {
         var template = try SFSymbolTemplate.make()
         template.setVariantSegments(
             ultralight: [.squareSegments, .squareSegments],
@@ -309,15 +266,17 @@ final class RendererSFSymbolTests: XCTestCase {
             black: [.squareSegments]
         )
 
-        XCTAssertThrowsError(try template.validateVariants()) {
-            XCTAssertTrue(
-                $0.localizedDescription.contains("path count is 2/2/1"),
-                "Expected the path counts in the message, got: \($0.localizedDescription)"
-            )
+        let error = #expect(throws: (any Error).self) {
+            try template.validateVariants()
         }
+        let message = error?.localizedDescription ?? ""
+        #expect(
+            message.contains("path count is 2/2/1"),
+            "Expected the path counts in the message, got: \(message)"
+        )
     }
 
-    func testValidateVariants_ThrowsForSegmentCountMismatch() throws {
+    @Test func validateVariantsThrowsForSegmentCountMismatch() throws {
         var template = try SFSymbolTemplate.make()
         template.setVariantSegments(
             ultralight: [.squareSegments],
@@ -325,15 +284,17 @@ final class RendererSFSymbolTests: XCTestCase {
             black: [.triangleSegments]
         )
 
-        XCTAssertThrowsError(try template.validateVariants()) {
-            XCTAssertTrue(
-                $0.localizedDescription.contains("path 0 has 4/4/3 segments"),
-                "Expected the segment counts in the message, got: \($0.localizedDescription)"
-            )
+        let error = #expect(throws: (any Error).self) {
+            try template.validateVariants()
         }
+        let message = error?.localizedDescription ?? ""
+        #expect(
+            message.contains("path 0 has 4/4/3 segments"),
+            "Expected the segment counts in the message, got: \(message)"
+        )
     }
 
-    func testValidateVariants_ThrowsForSegmentTypeMismatch() throws {
+    @Test func validateVariantsThrowsForSegmentTypeMismatch() throws {
         var template = try SFSymbolTemplate.make()
         template.setVariantSegments(
             ultralight: [.squareSegments],
@@ -341,15 +302,17 @@ final class RendererSFSymbolTests: XCTestCase {
             black: [.curvedSquareSegments]
         )
 
-        XCTAssertThrowsError(try template.validateVariants()) {
-            XCTAssertTrue(
-                $0.localizedDescription.contains("path 0 has mismatched segment types"),
-                "Expected a segment type mismatch, got: \($0.localizedDescription)"
-            )
+        let error = #expect(throws: (any Error).self) {
+            try template.validateVariants()
         }
+        let message = error?.localizedDescription ?? ""
+        #expect(
+            message.contains("path 0 has mismatched segment types"),
+            "Expected a segment type mismatch, got: \(message)"
+        )
     }
 
-    func testRender_ThrowsForNonInterpolatableVariants() throws {
+    @Test func renderThrowsForNonInterpolatableVariants() throws {
         // The regular variant draws its outline with a cubic where black uses a line;
         // normalization cannot align them, so rendering must fail instead of emitting
         // a symbol that crashes CoreUI at draw time.
@@ -369,12 +332,14 @@ final class RendererSFSymbolTests: XCTestCase {
             isLegacyInsets: false
         )
 
-        XCTAssertThrowsError(try renderer.render(default: regular, ultralight: nil, black: black)) {
-            XCTAssertTrue(
-                $0.localizedDescription.contains("not interpolatable"),
-                "Expected an interpolation error, got: \($0.localizedDescription)"
-            )
+        let error = #expect(throws: (any Error).self) {
+            try renderer.render(default: regular, ultralight: nil, black: black)
         }
+        let message = error?.localizedDescription ?? ""
+        #expect(
+            message.contains("not interpolatable"),
+            "Expected an interpolation error, got: \(message)"
+        )
     }
 }
 

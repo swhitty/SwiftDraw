@@ -29,35 +29,32 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-import XCTest
+import Testing
 @testable import SwiftDraw
 
-final class SVGRendererTests: XCTestCase {
+struct SVGRendererTests {
 
-    func testPathExpands_WithTranslate() throws {
-        let path = try SVGRenderer.makeExpanded(
-            path: "M0,50 L 50,50 C 100,0 150,0 200,50",
-            transform: "translate(10, 10)",
+    @Test(
+        arguments: [
+            (
+                "M0,50 L 50,50 C 100,0 150,0 200,50",
+                "translate(10, 10)",
+                "M10,60 L60,60 C110,10 160,10 210,60"
+            ),
+            (
+                "M100,0 L 300,0 L 300,100 L 100,100 Z",
+                "rotate(90 100 0)",
+                "M100,0 L100,200 L0,200 L0,0 Z"
+            ),
+        ] as [(String, String, String)]
+    )
+    func pathExpandsWithTransform(path: String, transform: String, expected: String) throws {
+        let expanded = try SVGRenderer.makeExpanded(
+            path: path,
+            transform: transform,
             precision: 0
         )
 
-        XCTAssertEqual(
-            path,
-            "M10,60 L60,60 C110,10 160,10 210,60"
-        )
+        #expect(expanded == expected)
     }
-
-    func testPathExpands_WithRotate() throws {
-        let path = try SVGRenderer.makeExpanded(
-            path: "M100,0 L 300,0 L 300,100 L 100,100 Z",
-            transform: "rotate(90 100 0)",
-            precision: 0
-        )
-
-        XCTAssertEqual(
-            path,
-            "M100,0 L100,200 L0,200 L0,0 Z"
-        )
-    }
-
 }

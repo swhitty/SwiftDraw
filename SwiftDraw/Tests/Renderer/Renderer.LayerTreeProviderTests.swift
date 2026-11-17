@@ -26,11 +26,12 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-import XCTest
+import Foundation
+import Testing
 @testable import SwiftDraw
 import SwiftDrawDOM
 
-final class RendererLayerTreeProviderTests: XCTestCase {
+struct RendererLayerTreeProviderTests {
 
     private typealias Point = LayerTree.Point
     private typealias Rect = LayerTree.Rect
@@ -38,38 +39,38 @@ final class RendererLayerTreeProviderTests: XCTestCase {
     private typealias Transform = LayerTree.Transform
     private typealias Matrix = LayerTree.Transform.Matrix
 
-    func testFloat() {
+    @Test func float() {
         let float = LayerTreeProvider().createFloat(from: 10)
-        XCTAssertEqual(float, 10)
+        #expect(float == 10)
     }
 
-    func testPoint() {
+    @Test func point() {
         let point = LayerTreeProvider().createPoint(from: Point(10, 20))
-        XCTAssertEqual(point, Point(10, 20))
+        #expect(point == Point(10, 20))
     }
 
-    func testSize() {
+    @Test func size() {
         let size = LayerTreeProvider().createSize(from: Size(10, 20))
-        XCTAssertEqual(size, Size(10, 20))
+        #expect(size == Size(10, 20))
     }
 
-    func testRect() {
+    @Test func rect() {
         let rect = Rect(x: 0, y: 10, width: 20, height: 30)
         let converted = LayerTreeProvider().createRect(from: rect)
-        XCTAssertEqual(converted, rect)
+        #expect(converted == rect)
     }
 
-    func testShape() {
+    @Test func shape() {
         let shape = LayerTree.Shape.rect(
             within: Rect(x: 0, y: 10, width: 20, height: 30),
             radii: .zero
         )
 
         let converted = LayerTreeProvider().createPath(from: shape)
-        XCTAssertEqual(converted, [shape])
+        #expect(converted == [shape])
     }
 
-    func testSubPaths() {
+    @Test func subPaths() {
         let rect = LayerTree.Shape.rect(
             within: Rect(x: 0, y: 10, width: 20, height: 30),
             radii: .zero
@@ -79,47 +80,47 @@ final class RendererLayerTreeProviderTests: XCTestCase {
         let p1 = LayerTreeProvider().createPath(from: rect)
         let p2 = LayerTreeProvider().createPath(from: line)
         let converted = LayerTreeProvider().createPath(from: [p1, p2])
-        XCTAssertEqual(converted, [rect, line])
+        #expect(converted == [rect, line])
     }
 
-    func testTextPathIsUnsupported() {
-        XCTAssertNil(LayerTreeProvider().createPath(from: "", at: .zero, with: .normal))
+    @Test func textPathIsUnsupported() {
+        #expect(LayerTreeProvider().createPath(from: "", at: .zero, with: .normal) == nil)
     }
 
-    func testColor() {
+    @Test func color() {
         let color = LayerTreeProvider().createColor(from: .black)
-        XCTAssertEqual(color, .black)
+        #expect(color == .black)
     }
 
-    func testBlendMode() {
+    @Test func blendMode() {
         let blend = LayerTreeProvider().createBlendMode(from: .sourceIn)
-        XCTAssertEqual(blend, .sourceIn)
+        #expect(blend == .sourceIn)
     }
 
-    func testTransform() {
+    @Test func transform() {
         let matrix = Transform.identity.toMatrix()
-        let transfrom = LayerTreeProvider().createTransform(from: matrix)
-        XCTAssertEqual(transfrom, .identity)
+        let transform = LayerTreeProvider().createTransform(from: matrix)
+        #expect(transform == .identity)
     }
 
-    func testFillRule() {
+    @Test func fillRule() {
         let fill = LayerTreeProvider().createFillRule(from: .nonzero)
-        XCTAssertEqual(fill, .nonzero)
+        #expect(fill == .nonzero)
     }
 
-    func testLineCap() {
+    @Test func lineCap() {
         let cap = LayerTreeProvider().createLineCap(from: .butt)
-        XCTAssertEqual(cap, .butt)
+        #expect(cap == .butt)
     }
 
-    func testLineJoin() {
+    @Test func lineJoin() {
         let join = LayerTreeProvider().createLineJoin(from: .bevel)
-        XCTAssertEqual(join, .bevel)
+        #expect(join == .bevel)
     }
 
-    func testImage() {
+    @Test func image() {
         let image = LayerTreeProvider().createImage(from: .mock)
-        XCTAssertEqual(image, .mock)
+        #expect(image == .mock)
     }
 }
 

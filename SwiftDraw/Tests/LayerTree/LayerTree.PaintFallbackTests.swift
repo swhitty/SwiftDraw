@@ -31,62 +31,65 @@
 
 @testable import SwiftDraw
 @testable import SwiftDrawDOM
-import XCTest
+import Testing
 
 /// Pattern fills reset the optimizer's tracked fill, and `fill="url(#id) fallback"` (SVG 1.1 §11.2).
-final class LayerTreePaintFallbackTests: XCTestCase {
+struct LayerTreePaintFallbackTests {
 
-    func testOptimizerKeepsSetFillAfterPattern() {
+    @Test
+    func optimizerKeepsSetFillAfterPattern() {
         let commands: [RendererCommand<LayerTreeTypes>] = [
             .setFill(color: .black),
             .setFillPattern(LayerTree.Pattern(frame: .init(x: 0, y: 0, width: 2, height: 2))),
             .setFill(color: .black),
         ]
         let optimized = LayerTree.CommandOptimizer<LayerTreeTypes>().optimizeCommands(commands)
-        XCTAssertEqual(optimized.names, ["setFillColor", "setFillPattern", "setFillColor"])
+        #expect(optimized.names == ["setFillColor", "setFillPattern", "setFillColor"])
     }
 
-    func testOptimizerStillDropsRepeatedFill() {
+    @Test
+    func optimizerStillDropsRepeatedFill() {
         let commands: [RendererCommand<LayerTreeTypes>] = [
             .setFill(color: .black),
             .setFill(color: .black),
         ]
         let optimized = LayerTree.CommandOptimizer<LayerTreeTypes>().optimizeCommands(commands)
-        XCTAssertEqual(optimized.names, ["setFillColor"])
+        #expect(optimized.names == ["setFillColor"])
     }
 
-    func testPatternThenSameColourEndToEnd() throws {
+    @Test
+    func patternThenSameColourEndToEnd() throws {
         let commands = try makeCommands(fill: "#000000", then: "url(#pat)", defs: pattern)
-        XCTAssertEqual(commands.names.filter { $0 == "setFillColor" }.count, 2)
-        XCTAssertEqual(commands.names.filter { $0 == "setFillPattern" }.count, 1)
+        #expect(commands.names.filter { $0 == "setFillColor" }.count == 2)
+        #expect(commands.names.filter { $0 == "setFillPattern" }.count == 1)
     }
 
-    func testResolvingServerWinsOverFallback() throws {
+    @Test
+    func resolvingServerWinsOverFallback() throws {
         let commands = try makeCommands(fill: "url(#g) #ff0000", defs: gradient)
-        XCTAssertTrue(commands.names.contains("drawLinearGradient"))
+        #expect(commands.names.contains("drawLinearGradient"))
     }
 
-    func testMissingServerUsesFallbackColour() throws {
+    @Test
+    func missingServerUsesFallbackColour() throws {
         let commands = try makeCommands(fill: "url(#missing) #ff0000")
-        XCTAssertEqual(commands.fillColors, [.init(255, 0, 0)])
+        #expect(commands.fillColors == [.init(255, 0, 0)])
     }
 
-    func testMissingServerWithNoneFallbackPaintsNothing() throws {
-        let commands = try makeCommands(fill: "url(#missing) none")
-        XCTAssertFalse(commands.names.contains("fill"))
+    @Test(arguments: ["url(#missing) none", "url(#missing)"])
+    func missingServerWithoutPaintableFallbackPaintsNothing(_ fill: String) throws {
+        let commands = try makeCommands(fill: fill)
+        #expect(!commands.names.contains("fill"))
     }
 
-    func testMissingServerWithoutFallbackPaintsNothing() throws {
-        let commands = try makeCommands(fill: "url(#missing)")
-        XCTAssertFalse(commands.names.contains("fill"))
-    }
-
-    func testFallbackInStyleAttribute() throws {
+    @Test
+    func fallbackInStyleAttribute() throws {
         let commands = try makeCommands(fill: nil, style: "fill:url(#missing) #ff0000")
-        XCTAssertEqual(commands.fillColors, [.init(255, 0, 0)])
+        #expect(commands.fillColors == [.init(255, 0, 0)])
     }
 
-    func testStrokeFallback() throws {
+    @Test
+    func strokeFallback() throws {
         let svg = try DOM.SVG.parse(
             xml: #"""
                 <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10">
@@ -96,7 +99,7 @@ final class LayerTreePaintFallbackTests: XCTestCase {
         )
         let commands = LayerTree.CommandGenerator(provider: LayerTreeProvider(), size: .init(10, 10), options: .default)
             .renderCommands(for: LayerTree.Builder(svg: svg).makeLayer(), colorConverter: .default)
-        XCTAssertTrue(
+        #expect(
             commands.contains {
                 if case .setStroke(let c) = $0 { return c == .init(0, 255, 0) }; return false
             }
@@ -104,10 +107,11 @@ final class LayerTreePaintFallbackTests: XCTestCase {
     }
 
     // WebKit and resvg drop the whole declaration (resvg suite: valid-FuncIRI-with-a-fallback-ICC-color)
-    func testUnreadableFallbackMakesThePaintInvalid() throws {
+    @Test
+    func unreadableFallbackMakesThePaintInvalid() throws {
         let commands = try makeCommands(fill: "url(#g) garbage", defs: gradient)
-        XCTAssertFalse(commands.names.contains("drawLinearGradient"))
-        XCTAssertEqual(commands.fillColors, [.init(0, 0, 0)])
+        #expect(!commands.names.contains("drawLinearGradient"))
+        #expect(commands.fillColors == [.init(0, 0, 0)])
     }
 
     var pattern: String {

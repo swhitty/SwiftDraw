@@ -39,7 +39,6 @@ private typealias Coordinate = DOM.Coordinate
 private typealias Segment = DOM.Path.Segment
 private typealias CoordinateSpace = DOM.Path.Segment.CoordinateSpace
 
-@Suite("Parser XML Path Tests")
 struct ParserXMLPathTests {
 
     @Test

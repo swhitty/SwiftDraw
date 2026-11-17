@@ -29,38 +29,50 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
+import Foundation
 import SwiftDrawDOM
-import XCTest
 @testable import SwiftDraw
+import Testing
 
-final class LayerTreeBuilderLayerTests: XCTestCase {
+struct LayerTreeBuilderLayerTests {
 
-    func testMakeTextContentsFromDOM() {
+    @Test
+    func makeTextContentsFromDOM() {
         let text = DOM.Text(value: "Hello")
         let builder = LayerTree.Builder(svg: DOM.SVG(width: 10, height: 10))
         let contents = builder.makeTextContents(from: text, with: .init())
 
-        guard case .text(let t, _, _)? = contents else { XCTFail(); return }
-        XCTAssertEqual(t, "Hello")
+        guard case .text(let t, _, _)? = contents else {
+            Issue.record("expected text contents")
+            return
+        }
+        #expect(t == "Hello")
     }
 
-    func testMakeImageContentsFromDOM() throws {
+    @Test
+    func makeImageContentsFromDOM() throws {
         let image = DOM.Image(href: URL(maybeData: "data:image/png;base64,f00d")!)
 
         let contents = try LayerTree.Builder.makeImageContents(from: image)
-        XCTAssertEqual(contents, .image(.png(data: Data(base64Encoded: "f00d")!)))
+        #expect(contents == .image(.png(data: Data(base64Encoded: "f00d")!)))
 
         let invalid = DOM.Image(href: URL(string: "aa")!)
-        XCTAssertThrowsError(try LayerTree.Builder.makeImageContents(from: invalid))
+        #expect(throws: (any Error).self) {
+            try LayerTree.Builder.makeImageContents(from: invalid)
+        }
     }
 
-    func testMakeUseContentsThrows() {
+    @Test
+    func makeUseContentsThrowsForMissingReference() {
         let builder = LayerTree.Builder(svg: DOM.SVG(width: 10, height: 10))
         let use = DOM.Use(href: URL(string: "#circle")!)
-        XCTAssertThrowsError(try builder.makeUseLayerContents(from: use, with: .init()))
+        #expect(throws: (any Error).self) {
+            try builder.makeUseLayerContents(from: use, with: .init())
+        }
     }
 
-    func testMakeUseContentsFromDOM() throws {
+    @Test
+    func makeUseContentsFromDOM() throws {
         let circle = DOM.Circle(cx: 5, cy: 5, r: 5)
         let svg = DOM.SVG(width: 10, height: 10)
         svg.defs.elements["circle"] = circle
@@ -68,22 +80,31 @@ final class LayerTreeBuilderLayerTests: XCTestCase {
 
         let use = DOM.Use(href: URL(string: "#circle")!)
         var contents = try builder.makeUseLayerContents(from: use, with: .init())
-        guard case .layer(let l) = contents else { XCTFail(); return }
-        XCTAssertEqual(l.contents.count, 1)
-        XCTAssertEqual(l.transform, [])
+        guard case .layer(let l) = contents else {
+            Issue.record("expected layer contents")
+            return
+        }
+        #expect(l.contents.count == 1)
+        #expect(l.transform == [])
 
         use.x = 10
         contents = try builder.makeUseLayerContents(from: use, with: .init())
-        guard case .layer(let l1) = contents else { XCTFail(); return }
-        XCTAssertEqual(l1.contents.count, 1)
-        XCTAssertEqual(l1.transform, [.translate(tx: 10, ty: 0)])
+        guard case .layer(let l1) = contents else {
+            Issue.record("expected layer contents")
+            return
+        }
+        #expect(l1.contents.count == 1)
+        #expect(l1.transform == [.translate(tx: 10, ty: 0)])
 
         use.x = nil
         use.y = 20
         contents = try builder.makeUseLayerContents(from: use, with: .init())
-        guard case .layer(let l2) = contents else { XCTFail(); return }
-        XCTAssertEqual(l2.contents.count, 1)
-        XCTAssertEqual(l2.transform, [.translate(tx: 0, ty: 20)])
+        guard case .layer(let l2) = contents else {
+            Issue.record("expected layer contents")
+            return
+        }
+        #expect(l2.contents.count == 1)
+        #expect(l2.transform == [.translate(tx: 0, ty: 20)])
     }
 }
 

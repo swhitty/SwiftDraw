@@ -29,24 +29,26 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-import XCTest
 @testable import SwiftDraw
+import Testing
 
-final class LayerTreeBuilderPathArcTests: XCTestCase {
+struct LayerTreeBuilderPathArcTests {
 
-    func testClamped() {
-        XCTAssertEqual(5.clamped(to: 0...10), 5)
-        XCTAssertEqual((10.1).clamped(to: 0...10), 10)
-        XCTAssertEqual((-1).clamped(to: 0...10), 0)
-        XCTAssertEqual(Double.infinity.clamped(to: 0...10), 10)
-        XCTAssertEqual((-Double.infinity).clamped(to: 0...10), 0)
-        XCTAssertEqual(Double.nan.clamped(to: 0...10), 0)
-        XCTAssertEqual((-Double.nan).clamped(to: 0...10), 0)
+    @Test
+    func clampedLimitsValueToRange() {
+        #expect(5.clamped(to: 0...10) == 5)
+        #expect((10.1).clamped(to: 0...10) == 10)
+        #expect((-1).clamped(to: 0...10) == 0)
+        #expect(Double.infinity.clamped(to: 0...10) == 10)
+        #expect((-Double.infinity).clamped(to: 0...10) == 0)
+        #expect(Double.nan.clamped(to: 0...10) == 0)
+        #expect((-Double.nan).clamped(to: 0...10) == 0)
     }
 
-    func testVectorAngle() {
-        XCTAssertEqual(vectorAngle(ux: 1, uy: 1, vx: 1, vy: 1), 0)
-        XCTAssertEqual(vectorAngle(ux: 1, uy: 1, vx: -1, vy: 1), 1.5707964, accuracy: 0.001)
-        XCTAssertEqual(vectorAngle(ux: 1, uy: 1, vx: .nan, vy: 1), 3.1415925, accuracy: 0.001)
+    @Test
+    func vectorAngleBetweenVectors() {
+        #expect(vectorAngle(ux: 1, uy: 1, vx: 1, vy: 1) == 0)
+        #expect(vectorAngle(ux: 1, uy: 1, vx: -1, vy: 1).isApproximately(1.5707964, tolerance: 0.001))
+        #expect(vectorAngle(ux: 1, uy: 1, vx: .nan, vy: 1).isApproximately(3.1415925, tolerance: 0.001))
     }
 }

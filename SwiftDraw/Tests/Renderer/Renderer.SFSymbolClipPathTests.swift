@@ -29,19 +29,20 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
+import Foundation
 import SwiftDrawDOM
-import XCTest
+import Testing
 @testable import SwiftDraw
 
 #if canImport(CoreGraphics)
-final class RendererSFSymbolClipPathTests: XCTestCase {
+struct RendererSFSymbolClipPathTests {
 
     // MARK: - Issue #37 reproduction
 
     /// The exact SVG from the GitHub issue used as the reproducer for the missing clip-path
     /// support warning. Pre-fix this rendered nothing and emitted "clip-path unsupported".
     /// Post-fix it must produce the baked intersection (the clipping circle).
-    func testIssue37_minimalRectClippedByCircle_producesIntersectedPath() throws {
+    @Test func issue37RectClippedByCircleProducesIntersectedPath() throws {
         let svg = try DOM.SVG.parse(
             #"""
             <svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
@@ -57,171 +58,86 @@ final class RendererSFSymbolClipPathTests: XCTestCase {
 
         let template = try SFSymbolTemplate.parse(SFSymbolRenderer.render(svg: svg))
 
-        XCTAssertFalse(template.regular.contents.paths.isEmpty)
-        XCTAssertFalse(template.ultralight.contents.paths.isEmpty)
-        XCTAssertFalse(template.black.contents.paths.isEmpty)
+        #expect(!template.regular.contents.paths.isEmpty)
+        #expect(!template.ultralight.contents.paths.isEmpty)
+        #expect(!template.black.contents.paths.isEmpty)
     }
 
     // MARK: - Clip shape coverage (asserted on raw symbol paths in user space)
 
-    func testClipRect_intersectionIsClippingRect() throws {
-        let paths = try makeSymbolPaths(forResource: "clip-rect.svg")
-        XCTAssertEqual(paths.count, 1)
-        // 100x100 rect ∩ rect(20,20,60,60) = rect(20,20,60,60)
-        assertBounds(
-            paths[0].path.bounds,
-            equals: .init(x: 20, y: 20, width: 60, height: 60)
-        )
+    @Test(
+        arguments: [
+            // 100x100 rect ∩ rect(20,20,60,60) = rect(20,20,60,60)
+            ("clip-rect.svg", .init(x: 20, y: 20, width: 60, height: 60), 0.01),
+            // 100x100 rect ∩ circle(50,50,r=30) = circle(50,50,r=30) → bounds(20,20,60,60)
+            ("clip-circle.svg", .init(x: 20, y: 20, width: 60, height: 60), 0.5),
+            // 100x100 rect ∩ ellipse(cx=50,cy=50,rx=40,ry=20) = ellipse → bounds(10,30,80,40)
+            ("clip-ellipse.svg", .init(x: 10, y: 30, width: 80, height: 40), 0.5),
+            // Triangle(50,10)-(90,90)-(10,90) → bounds(10,10,80,80)
+            ("clip-polygon.svg", .init(x: 10, y: 10, width: 80, height: 80), 0.5),
+            ("clip-path-element.svg", .init(x: 20, y: 20, width: 60, height: 60), 0.5),
+            // Two overlapping circles centered at (35,50) and (65,50) with r=20, unioned.
+            // Union extents: x ∈ [15,85], y ∈ [30,70]
+            ("clip-multi-shape.svg", .init(x: 15, y: 30, width: 70, height: 40), 0.5),
+            // Outer 80x80 with inner 40x40 hole using evenodd → bounds remain 10,10,80,80
+            ("clip-rule-evenodd.svg", .init(x: 10, y: 10, width: 80, height: 80), 0.5),
+            // rect(20,20,60,60) clipped by bbox-relative rect (0.25,0.25,0.5,0.5)
+            // → user-space rect (35,35,30,30)
+            ("clip-units-bbox.svg", .init(x: 35, y: 35, width: 30, height: 30), 0.5),
+            // Clip fully contains the shape, so it keeps its original bounds
+            ("clip-contains.svg", .init(x: 20, y: 20, width: 60, height: 60), 0.5),
+            // Clip child rect(0,0,40,40) with transform translate(30,30) → effective (30,30,40,40)
+            ("clip-transform-child.svg", .init(x: 30, y: 30, width: 40, height: 40), 0.5),
+            // 100x100 rect drawn with translate(50,50), clipped by circle(0,0,r=30) in local space.
+            // Post-transform clip is a circle at (50,50) with r=30 → bounds (20,20,60,60)
+            ("clip-transformed-element.svg", .init(x: 20, y: 20, width: 60, height: 60), 0.5),
+        ] as [(String, LayerTree.Rect, LayerTree.Float)]
+    )
+    func clipIntersectionBounds(resource: String, expected: LayerTree.Rect, tolerance: LayerTree.Float) throws {
+        let paths = try makeSymbolPaths(forResource: resource)
+        try #require(paths.count == 1)
+        expectBounds(paths[0].path.bounds, equal: expected, tolerance: tolerance)
     }
 
-    func testClipCircle_intersectionIsClippingCircle() throws {
-        let paths = try makeSymbolPaths(forResource: "clip-circle.svg")
-        XCTAssertEqual(paths.count, 1)
-        // 100x100 rect ∩ circle(50,50,r=30) = circle(50,50,r=30) → bounds(20,20,60,60)
-        assertBounds(
-            paths[0].path.bounds,
-            equals: .init(x: 20, y: 20, width: 60, height: 60),
-            accuracy: 0.5
-        )
-    }
-
-    func testClipEllipse_intersectionIsClippingEllipse() throws {
-        let paths = try makeSymbolPaths(forResource: "clip-ellipse.svg")
-        XCTAssertEqual(paths.count, 1)
-        // 100x100 rect ∩ ellipse(cx=50,cy=50,rx=40,ry=20) = ellipse → bounds(10,30,80,40)
-        assertBounds(
-            paths[0].path.bounds,
-            equals: .init(x: 10, y: 30, width: 80, height: 40),
-            accuracy: 0.5
-        )
-    }
-
-    func testClipPolygon_intersectionMatchesPolygon() throws {
-        let paths = try makeSymbolPaths(forResource: "clip-polygon.svg")
-        XCTAssertEqual(paths.count, 1)
-        // Triangle(50,10)-(90,90)-(10,90) → bounds(10,10,80,80)
-        assertBounds(
-            paths[0].path.bounds,
-            equals: .init(x: 10, y: 10, width: 80, height: 80),
-            accuracy: 0.5
-        )
-    }
-
-    func testClipPathElement_intersectionMatchesPath() throws {
-        let paths = try makeSymbolPaths(forResource: "clip-path-element.svg")
-        XCTAssertEqual(paths.count, 1)
-        assertBounds(
-            paths[0].path.bounds,
-            equals: .init(x: 20, y: 20, width: 60, height: 60),
-            accuracy: 0.5
-        )
-    }
-
-    func testClipMultiShape_unionsAllChildren() throws {
-        let paths = try makeSymbolPaths(forResource: "clip-multi-shape.svg")
-        XCTAssertEqual(paths.count, 1)
-        // Two overlapping circles centered at (35,50) and (65,50) with r=20.
-        // Union extents: x ∈ [15,85], y ∈ [30,70]
-        assertBounds(
-            paths[0].path.bounds,
-            equals: .init(x: 15, y: 30, width: 70, height: 40),
-            accuracy: 0.5
-        )
-    }
-
-    func testClipOnGroup_appliesToAllChildren() throws {
+    @Test func clipOnGroupAppliesToAllChildren() throws {
         let paths = try makeSymbolPaths(forResource: "clip-group.svg")
         // Two rects in a clipped group; each gets independently intersected with the rect clip.
         // Each result fits inside (20,20,60,60).
-        XCTAssertGreaterThan(paths.count, 0)
+        #expect(paths.count > 0)
         for sp in paths {
             let b = sp.path.bounds
-            XCTAssertGreaterThanOrEqual(b.minX, 19.5)
-            XCTAssertLessThanOrEqual(b.maxX, 80.5)
-            XCTAssertGreaterThanOrEqual(b.minY, 19.5)
-            XCTAssertLessThanOrEqual(b.maxY, 80.5)
+            #expect(b.minX >= 19.5)
+            #expect(b.maxX <= 80.5)
+            #expect(b.minY >= 19.5)
+            #expect(b.maxY <= 80.5)
         }
     }
 
-    func testClipRuleEvenOdd_producesAnnulusBounds() throws {
-        let paths = try makeSymbolPaths(forResource: "clip-rule-evenodd.svg")
-        // Outer 80x80 with inner 40x40 hole using evenodd → bounds remain 10,10,80,80
-        XCTAssertEqual(paths.count, 1)
-        assertBounds(
-            paths[0].path.bounds,
-            equals: .init(x: 10, y: 10, width: 80, height: 80),
-            accuracy: 0.5
-        )
-    }
-
-    func testClipUnitsObjectBoundingBox_appliesShapeRelativeCoords() throws {
-        let paths = try makeSymbolPaths(forResource: "clip-units-bbox.svg")
-        XCTAssertEqual(paths.count, 1)
-        // rect(20,20,60,60) clipped by bbox-relative rect (0.25,0.25,0.5,0.5)
-        // → user-space rect (35,35,30,30)
-        assertBounds(
-            paths[0].path.bounds,
-            equals: .init(x: 35, y: 35, width: 30, height: 30),
-            accuracy: 0.5
-        )
-    }
-
-    func testClipFullyContainsShape_keepsOriginalBounds() throws {
-        let paths = try makeSymbolPaths(forResource: "clip-contains.svg")
-        XCTAssertEqual(paths.count, 1)
-        assertBounds(
-            paths[0].path.bounds,
-            equals: .init(x: 20, y: 20, width: 60, height: 60),
-            accuracy: 0.5
-        )
-    }
-
-    func testClipFullyOutsideShape_dropsPath() throws {
+    @Test func clipFullyOutsideShapeDropsPath() throws {
         let paths = try makeSymbolPaths(forResource: "clip-outside.svg")
-        XCTAssertEqual(paths.count, 0)
-    }
-
-    func testClipChildTransform_isApplied() throws {
-        let paths = try makeSymbolPaths(forResource: "clip-transform-child.svg")
-        XCTAssertEqual(paths.count, 1)
-        // Clip child rect(0,0,40,40) with transform translate(30,30) → effective (30,30,40,40)
-        assertBounds(
-            paths[0].path.bounds,
-            equals: .init(x: 30, y: 30, width: 40, height: 40),
-            accuracy: 0.5
-        )
-    }
-
-    func testClipPropagatesThroughElementTransform() throws {
-        let paths = try makeSymbolPaths(forResource: "clip-transformed-element.svg")
-        XCTAssertEqual(paths.count, 1)
-        // 100x100 rect drawn with translate(50,50), clipped by circle(0,0,r=30) in local space.
-        // Post-transform clip is a circle at (50,50) with r=30 → bounds (20,20,60,60)
-        assertBounds(
-            paths[0].path.bounds,
-            equals: .init(x: 20, y: 20, width: 60, height: 60),
-            accuracy: 0.5
-        )
+        #expect(paths.isEmpty)
     }
 
     // MARK: - Full pipeline smoke (renders to SF Symbol template)
 
-    func testFullPipeline_clipCircle_emitsThreeWeightVariants() throws {
+    @Test func fullPipelineClipCircleEmitsThreeWeightVariants() throws {
         let url = try Bundle.test.url(forResource: "clip-circle.svg")
         let template = try SFSymbolTemplate.parse(SFSymbolRenderer.render(fileURL: url))
-        XCTAssertEqual(template.regular.contents.paths.count, 1)
-        XCTAssertEqual(template.ultralight.contents.paths.count, 1)
-        XCTAssertEqual(template.black.contents.paths.count, 1)
+        #expect(template.regular.contents.paths.count == 1)
+        #expect(template.ultralight.contents.paths.count == 1)
+        #expect(template.black.contents.paths.count == 1)
     }
 
-    func testFullPipeline_clipFullyOutside_throwsNoValidContent() throws {
+    @Test func fullPipelineClipFullyOutsideThrowsNoValidContent() throws {
         let url = try Bundle.test.url(forResource: "clip-outside.svg")
-        XCTAssertThrowsError(try SFSymbolRenderer.render(fileURL: url))
+        #expect(throws: (any Error).self) {
+            try SFSymbolRenderer.render(fileURL: url)
+        }
     }
 
     // MARK: - Layer-level coverage
 
-    func testBuilder_setsClipUnits_userSpaceOnUseByDefault() throws {
+    @Test func builderSetsClipUnitsUserSpaceOnUseByDefault() throws {
         let svg = try DOM.SVG.parse(
             #"""
             <svg width="10" height="10" xmlns="http://www.w3.org/2000/svg">
@@ -233,9 +149,8 @@ final class RendererSFSymbolClipPathTests: XCTestCase {
             """#
         )
         let layer = LayerTree.Builder(svg: svg).makeLayer()
-        let clipped = firstClippedLayer(in: layer)
-        XCTAssertNotNil(clipped)
-        XCTAssertEqual(clipped?.clipUnits, .userSpaceOnUse)
+        let clipped = try #require(firstClippedLayer(in: layer))
+        #expect(clipped.clipUnits == .userSpaceOnUse)
     }
 
     // MARK: - Helpers
@@ -246,17 +161,32 @@ final class RendererSFSymbolClipPathTests: XCTestCase {
         return SFSymbolRenderer.getPaths(for: svg) ?? []
     }
 
-    private func assertBounds(
+    private func expectBounds(
         _ actual: LayerTree.Rect,
-        equals expected: LayerTree.Rect,
-        accuracy: LayerTree.Float = 0.01,
-        file: StaticString = #filePath,
-        line: UInt = #line
+        equal expected: LayerTree.Rect,
+        tolerance: LayerTree.Float,
+        sourceLocation: SourceLocation = #_sourceLocation
     ) {
-        XCTAssertEqual(actual.minX, expected.minX, accuracy: accuracy, "minX", file: file, line: line)
-        XCTAssertEqual(actual.minY, expected.minY, accuracy: accuracy, "minY", file: file, line: line)
-        XCTAssertEqual(actual.width, expected.width, accuracy: accuracy, "width", file: file, line: line)
-        XCTAssertEqual(actual.height, expected.height, accuracy: accuracy, "height", file: file, line: line)
+        #expect(
+            actual.minX.isApproximately(expected.minX, tolerance: tolerance),
+            "minX",
+            sourceLocation: sourceLocation
+        )
+        #expect(
+            actual.minY.isApproximately(expected.minY, tolerance: tolerance),
+            "minY",
+            sourceLocation: sourceLocation
+        )
+        #expect(
+            actual.width.isApproximately(expected.width, tolerance: tolerance),
+            "width",
+            sourceLocation: sourceLocation
+        )
+        #expect(
+            actual.height.isApproximately(expected.height, tolerance: tolerance),
+            "height",
+            sourceLocation: sourceLocation
+        )
     }
 
     private func firstClippedLayer(in layer: LayerTree.Layer) -> LayerTree.Layer? {
