@@ -44,7 +44,7 @@ package extension DOM {
         package var color: DOM.Color?
 
         package var stroke: DOM.Fill?
-        package var strokeWidth: DOM.Float?
+        package var strokeWidth: DOM.DashLength?
         package var strokeOpacity: DOM.Float?
         package var strokeLineCap: DOM.LineCap?
         package var strokeLineJoin: DOM.LineJoin?

@@ -122,24 +122,14 @@ extension XML.Formatter {
             attributes["display"] = graphic.display?.rawValue
             attributes["visibility"] = graphic.visibility?.rawValue
             attributes["stroke"] = graphic.stroke.map(encodeFill)
-            attributes["stroke-width"] = formatter.format(graphic.strokeWidth)
+            attributes["stroke-width"] = graphic.strokeWidth.map(encodeLength)
             attributes["stroke-opacity"] = formatter.format(graphic.strokeOpacity)
             attributes["stroke-linecap"] = graphic.strokeLineCap?.rawValue
             attributes["stroke-linejoin"] = graphic.strokeLineJoin?.rawValue
             attributes["stroke-dasharray"] = graphic.strokeDashArray.map { lengths in
-                lengths.isEmpty ? "none" : lengths.map { length -> String in
-                    switch length {
-                    case .absolute(let v): return formatter.format(v)
-                    case .percentage(let v): return formatter.format(v) + "%"
-                    }
-                }.joined(separator: " ")
+                lengths.isEmpty ? "none" : lengths.map(encodeLength).joined(separator: " ")
             }
-            attributes["stroke-dashoffset"] = graphic.strokeDashOffset.map { length -> String in
-                switch length {
-                case .absolute(let v): return formatter.format(v)
-                case .percentage(let v): return formatter.format(v) + "%"
-                }
-            }
+            attributes["stroke-dashoffset"] = graphic.strokeDashOffset.map(encodeLength)
 
             attributes["fill-opacity"] = formatter.format(graphic.fillOpacity)
             attributes["fill"] = graphic.fill.map(encodeFill)
@@ -287,6 +277,14 @@ extension XML.Formatter {
             )
             element.attributes["d"] = encodeSegments(path.segments)
             return element
+        }
+
+        func encodeLength(_ length: DOM.DashLength) -> String {
+            switch length {
+            case .absolute(let v): return formatter.format(v)
+            case .percentage(let v): return formatter.format(v) + "%"
+            case .em(let v): return formatter.format(v) + "em"
+            }
         }
 
         func encodeFill(from fill: DOM.Fill) -> String {

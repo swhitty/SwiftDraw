@@ -43,14 +43,17 @@ package extension DOM {
 }
 
 extension DOM {
-    /// A `stroke-dasharray` / `stroke-dashoffset` length; a percentage is relative to the viewport diagonal.
+    /// A `stroke-width`, `stroke-dasharray` or `stroke-dashoffset` length; a percentage is relative
+    /// to the viewport diagonal and `em` to the element's font-size, both resolved in LayerTree.
     package enum DashLength: Equatable {
         case absolute(Float)
         case percentage(Float)
+        /// A multiple of the font-size; `ex` is stored as half an `em` (CSS 2.1 §4.3.2)
+        case em(Float)
 
         var isNegative: Bool {
             switch self {
-            case .absolute(let v), .percentage(let v): return v < 0
+            case .absolute(let v), .percentage(let v), .em(let v): return v < 0
             }
         }
     }
@@ -261,5 +264,15 @@ package extension Double {
         case .em, .ex:
             return self
         }
+    }
+}
+
+extension DOM.DashLength: ExpressibleByFloatLiteral, ExpressibleByIntegerLiteral {
+    package init(floatLiteral value: Float) {
+        self = .absolute(value)
+    }
+
+    package init(integerLiteral value: Int) {
+        self = .absolute(Float(value))
     }
 }

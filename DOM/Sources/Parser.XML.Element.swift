@@ -268,8 +268,15 @@ extension XMLParser {
             return .percentage(value)
         }
         var scanner = XMLParser.Scanner(text: text)
-        guard let value = try? scanner.scanCoordinate(), value.isFinite, scanner.isEOF else { return nil }
-        return .absolute(value)
+        guard let number = try? scanner.scanDouble(), number.isFinite else { return nil }
+        let length: DOM.DashLength
+        switch scanner.scanUnit() {
+        case .em: length = .em(Float(number))
+        case .ex: length = .em(Float(number / 2))
+        case let unit?: length = .absolute(Float(number.apply(unit: unit)))
+        case nil: length = .absolute(Float(number))
+        }
+        return scanner.isEOF ? length : nil
     }
 
     func parsePresentationAttributes(_ e: XML.Element) throws -> DOM.PresentationAttributes {
@@ -355,12 +362,21 @@ extension XMLParser {
         (try? parse()) ?? nil
     }
 
-    // opacity outside 0...1 is clamped; a non-numeric value is dropped
+    // opacity outside 0...1 is clamped; an invalid value (`0.1mm`, `x`) is dropped
     private func opacity(_ att: any AttributeParser, _ key: String) -> DOM.Float? {
-        if let value = lenient({ try att.parsePercentage(key) as DOM.Float? }) {
-            return value
+        lenient { try att.parseString(key) as String? }.flatMap(Self.parseOpacity)
+    }
+
+    /// `<number> | <percentage>` clamped to 0...1 (CSS Color 4 §11.1); nil when invalid.
+    static func parseOpacity(_ text: String) -> DOM.Float? {
+        let text = XMLParser.Attributes.removingImportant(from: text)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        let isPercentage = text.hasSuffix("%")
+        guard let number = Double(isPercentage ? String(text.dropLast()) : text), number.isFinite else {
+            return nil
         }
-        return lenient { try att.parseFloat(key) as DOM.Float? }.map { min(max($0, 0), 1) }
+        let value = isPercentage ? number / 100 : number
+        return DOM.Float(min(max(value, 0), 1))
     }
 
     static func isNone(_ value: String) -> Bool {
@@ -386,8 +402,11 @@ extension XMLParser {
         el.color = lenient { try att.parseColor("color") }
 
         el.stroke = lenient { try att.parseFill("stroke") }
-        // a negative stroke-width is an error: drop it (SVG 1.1 §11.4); absolute units in px
-        el.strokeWidth = lenient { try att.parseCoordinate("stroke-width") }.flatMap { $0 < 0 ? nil : $0 }
+        // a negative stroke-width is an error: drop it (SVG 1.1 §11.4); absolute units in px,
+        // `em` and `%` are kept for LayerTree to resolve
+        el.strokeWidth = lenient { try att.parseString("stroke-width") as String? }
+            .flatMap(Self.parseDashLength)
+            .flatMap { $0.isNegative ? nil : $0 }
         el.strokeOpacity = opacity(att, "stroke-opacity")
         el.strokeLineCap = lenient { try att.parseRaw("stroke-linecap") }
         el.strokeLineJoin = lenient { try att.parseRaw("stroke-linejoin") }

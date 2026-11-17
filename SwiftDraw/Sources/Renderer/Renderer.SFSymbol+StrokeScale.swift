@@ -146,8 +146,15 @@ enum StrokeWidthScaler {
         }
     }
 
-    private static func multiply(_ value: DOM.Float, by scale: SFSymbolRenderer.StrokeWidthScale) -> DOM.Float {
-        DOM.Float(Double(value) * scale.multiplier)
+    private static func multiply(_ value: DOM.DashLength, by scale: SFSymbolRenderer.StrokeWidthScale) -> DOM.DashLength {
+        func multiply(_ value: DOM.Float) -> DOM.Float {
+            DOM.Float(Double(value) * scale.multiplier)
+        }
+        switch value {
+        case .absolute(let v): return .absolute(multiply(v))
+        case .percentage(let v): return .percentage(multiply(v))
+        case .em(let v): return .em(multiply(v))
+        }
     }
 }
 

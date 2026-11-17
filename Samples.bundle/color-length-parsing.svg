@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <!-- rgb() with fractional channels, clamped percentages and mixed (invalid → black) components -->
+  <rect x="10" y="10" width="40" height="40" fill="rgb(0.8, 127.5, 14.2)"/>
+  <rect x="55" y="10" width="40" height="40" fill="rgb(-10%, 50%, 120%)"/>
+  <rect x="100" y="10" width="40" height="40" fill="rgba(0, 50%, 0, 0.5)"/>
+  <rect x="145" y="10" width="40" height="40" fill="rgba(0, 128, 255, 0.5)"/>
+
+  <!-- an unreadable paint fallback makes the whole value invalid (black) -->
+  <linearGradient id="lg">
+    <stop offset="0" stop-color="white"/>
+    <stop offset="1" stop-color="red"/>
+  </linearGradient>
+  <rect x="10" y="55" width="40" height="40" fill="url(#lg) green icc-color(acmecmyk, 0.11, 0.48, 0.83, 0.00)"/>
+
+  <!-- an invalid opacity is ignored -->
+  <rect x="55" y="55" width="40" height="40" fill="red"/>
+  <rect x="55" y="55" width="40" height="40" fill="green" opacity="0.1mm"/>
+
+  <!-- stroke-width as a percentage of the viewport diagonal (10% = 20) -->
+  <rect x="115" y="65" width="60" height="20" fill="none" stroke="steelblue" stroke-width="5%"/>
+
+  <!-- em lengths resolve against the element's font-size -->
+  <g font-size="10" fill="none" stroke="green">
+    <circle cx="50" cy="150" r="35" stroke-width="1em" stroke-dasharray="2em 1em"/>
+    <circle cx="140" cy="150" r="35" font-size="5" stroke-width="2em" stroke-dasharray="2 4" stroke-dashoffset="1.5em"/>
+  </g>
+</svg>

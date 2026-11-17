@@ -98,9 +98,11 @@ final class LayerTreePaintFallbackTests: XCTestCase {
         XCTAssertTrue(commands.contains { if case .setStroke(let c) = $0 { return c == .init(0, 255, 0) }; return false })
     }
 
-    func testUnreadableFallbackIsDroppedNotTheServer() throws {
+    // WebKit and resvg drop the whole declaration (resvg suite: valid-FuncIRI-with-a-fallback-ICC-color)
+    func testUnreadableFallbackMakesThePaintInvalid() throws {
         let commands = try makeCommands(fill: "url(#g) garbage", defs: gradient)
-        XCTAssertTrue(commands.names.contains("drawLinearGradient"))
+        XCTAssertFalse(commands.names.contains("drawLinearGradient"))
+        XCTAssertEqual(commands.fillColors, [.init(0, 0, 0)])
     }
 
     var pattern: String {

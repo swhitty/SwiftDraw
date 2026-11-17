@@ -227,6 +227,7 @@ extension LayerTree.Builder {
                 switch length {
                 case .absolute(let value): return value
                 case .percentage(let value): return value / 100
+                case .em(let value): return value * DOM.FontSize.initial
                 }
             }
             return LayerTree.Rect(x: bounds.x + fraction(x) * bounds.width,
@@ -240,6 +241,7 @@ extension LayerTree.Builder {
                 switch length {
                 case .absolute(let value): return value
                 case .percentage(let value): return value / 100 * reference
+                case .em(let value): return value * DOM.FontSize.initial
                 }
             }
             return LayerTree.Rect(x: length(x, viewport.width),

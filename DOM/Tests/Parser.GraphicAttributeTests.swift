@@ -134,3 +134,31 @@ struct ParserGraphicAttributeTests {
         }
     }
 }
+
+/// `opacity` is `<number> | <percentage>`; anything else is invalid and the initial value applies
+/// (resvg suite: opacity/invalid-value-2).
+struct ParserOpacityTests {
+
+    private func opacity(_ value: String) throws -> DOM.Float? {
+        let svg = try DOM.SVG.parse(xml: #"<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"><rect width="1" height="1" opacity="\#(value)"/></svg>"#)
+        return try #require(svg.childElements.first).attributes.opacity
+    }
+
+    @Test(arguments: [
+        ("0.5", DOM.Float(0.5)),
+        ("50%", 0.5),
+        (" 0.25 ", 0.25),
+        ("2", 1),
+        ("-1", 0),
+        ("150%", 1),
+        ("1e-1", 0.1)
+    ])
+    func validOpacity(_ value: String, _ expected: DOM.Float) throws {
+        #expect(try opacity(value) == expected)
+    }
+
+    @Test(arguments: ["0.1mm", "0.5px", "abc", "50 %", "0.5 0.5", ""])
+    func invalidOpacityIsDropped(_ value: String) throws {
+        #expect(try opacity(value) == nil)
+    }
+}
