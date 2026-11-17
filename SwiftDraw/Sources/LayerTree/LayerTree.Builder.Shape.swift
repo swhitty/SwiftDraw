@@ -40,11 +40,15 @@ extension LayerTree.Builder {
             let to = Point(line.x2, line.y2)
             return .line(between: [from, to])
         } else if let circle = element as? DOM.Circle {
+            // SVG 2 §10.3–10.5: a zero (or negative) size disables rendering
+            guard circle.r > 0 else { return nil }
             return .ellipse(within: makeRect(from: circle))
         } else if let ellipse = element as? DOM.Ellipse {
+            guard ellipse.rx > 0, ellipse.ry > 0 else { return nil }
             return .ellipse(within: makeRect(from: ellipse))
         } else if let rect = element as? DOM.Rect {
-            let radii = makeRadii(rx: rect.rx, ry: rect.ry)
+            guard rect.width > 0, rect.height > 0 else { return nil }
+            let radii = makeRadii(rx: rect.rx, ry: rect.ry, width: rect.width, height: rect.height)
             return .rect(within: makeRect(from: rect), radii: radii)
         } else if let polyline = element as? DOM.Polyline {
             return .line(between: polyline.points.map{ Point($0.x, $0.y) })
@@ -83,7 +87,12 @@ extension LayerTree.Builder {
                               height: circle.r * 2)
     }
 
-    static func makeRadii(rx: DOM.Float?, ry: DOM.Float?) -> LayerTree.Size {
-        LayerTree.Size(rx ?? ry ?? 0, ry ?? rx ?? 0)
+    /// SVG 2 §10.2: an auto (or negative) `rx` uses `ry` and vice versa,
+    /// and each is clamped to half the width or height.
+    static func makeRadii(rx: DOM.Float?, ry: DOM.Float?, width: DOM.Float, height: DOM.Float) -> LayerTree.Size {
+        let rx = rx.flatMap { $0 >= 0 ? $0 : nil }
+        let ry = ry.flatMap { $0 >= 0 ? $0 : nil }
+        return LayerTree.Size(min(rx ?? ry ?? 0, width / 2),
+                              min(ry ?? rx ?? 0, height / 2))
     }
 }

@@ -98,14 +98,6 @@ extension LayerTree.Path {
         return finder.makeEndpoints(for: segments)
     }
 
-    var lastControl: LayerTree.Point? {
-        guard let lastSegment = segments.last else { return nil }
-        switch lastSegment {
-        case .cubic(_, _, let p): return p
-        default: return nil
-        }
-    }
-
     var location: LayerTree.Point? {
         guard let location = segments.last?.location else {
             return segments.last(where:\.isMove)?.location

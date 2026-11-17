@@ -47,30 +47,44 @@ extension XMLParser {
                  y2: parseDefaultedLength(att, "y2", .vertical) ?? 0)
     }
 
+    /// A non-negative length; a negative value is an error (SVG 2 §10.2, §10.3, §10.4).
+    func parseNonNegativeLength(_ att: any AttributeParser, _ key: String, _ direction: LengthDirection) throws -> DOM.Coordinate {
+        let length: DOM.Coordinate = try parseLength(att, key, direction)
+        guard length >= 0 else { throw XMLParser.Error.invalid }
+        return length
+    }
+
+    /// An `rx`/`ry` that may be `auto` (SVG 2 §10.3, §10.4): missing, invalid or negative values are `nil`.
+    func parseAutoRadius(_ att: any AttributeParser, _ key: String, _ direction: LengthDirection) -> DOM.Coordinate? {
+        guard let radius = parseDefaultedLength(att, key, direction), radius >= 0 else { return nil }
+        return radius
+    }
+
     func parseCircle(_ att: any AttributeParser) throws -> DOM.Circle {
-        let r: DOM.Coordinate = try parseLength(att, "r", .other)
+        let r = try parseNonNegativeLength(att, "r", .other)
         return DOM.Circle(cx: parseDefaultedLength(att, "cx", .horizontal),
                           cy: parseDefaultedLength(att, "cy", .vertical),
                           r: r)
     }
 
     func parseEllipse(_ att: any AttributeParser) throws -> DOM.Ellipse {
-        let rx: DOM.Coordinate = try parseLength(att, "rx", .horizontal)
-        let ry: DOM.Coordinate = try parseLength(att, "ry", .vertical)
+        // SVG 2: an auto rx uses ry and vice versa; both auto is 0, which disables rendering
+        let rx = parseAutoRadius(att, "rx", .horizontal)
+        let ry = parseAutoRadius(att, "ry", .vertical)
         return DOM.Ellipse(cx: parseDefaultedLength(att, "cx", .horizontal),
                            cy: parseDefaultedLength(att, "cy", .vertical),
-                           rx: rx, ry: ry)
+                           rx: rx ?? ry ?? 0, ry: ry ?? rx ?? 0)
     }
 
     func parseRect(_ att: any AttributeParser) throws -> DOM.Rect {
-        let width: DOM.Coordinate = try parseLength(att, "width", .horizontal)
-        let height: DOM.Coordinate = try parseLength(att, "height", .vertical)
+        let width = try parseNonNegativeLength(att, "width", .horizontal)
+        let height = try parseNonNegativeLength(att, "height", .vertical)
         let rect = DOM.Rect(width: width, height: height)
 
         rect.x = parseDefaultedLength(att, "x", .horizontal)
         rect.y = parseDefaultedLength(att, "y", .vertical)
-        rect.rx = parseDefaultedLength(att, "rx", .horizontal)
-        rect.ry = parseDefaultedLength(att, "ry", .vertical)
+        rect.rx = parseAutoRadius(att, "rx", .horizontal)
+        rect.ry = parseAutoRadius(att, "ry", .vertical)
 
         return rect
     }

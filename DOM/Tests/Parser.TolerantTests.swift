@@ -313,6 +313,7 @@ struct TolerantGeometryTests {
         #expect(throws: (any Error).self) { try parser.parseRect(["width": "abc", "height": "5"]) }
         #expect(throws: (any Error).self) { try parser.parseRect(["height": "5"]) }
         #expect(throws: (any Error).self) { try parser.parseCircle(["r": "abc"]) }
-        #expect(throws: (any Error).self) { try parser.parseEllipse(["rx": "5"]) }
+        #expect(throws: (any Error).self) { try parser.parseCircle(["r": "-1"]) }
+        #expect(throws: (any Error).self) { try parser.parseRect(["width": "-1", "height": "5"]) }
     }
 }

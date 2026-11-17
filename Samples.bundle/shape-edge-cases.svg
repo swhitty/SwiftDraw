@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
+  <!-- Invalid sizes render nothing: no red should be visible -->
+  <circle cx="30" cy="30" r="-20" fill="red"/>
+  <ellipse cx="80" cy="30" rx="-20" ry="-15" fill="red"/>
+  <ellipse cx="130" cy="30" fill="red"/>
+  <rect x="160" y="10" width="-30" height="40" fill="red"/>
+  <rect x="160" y="10" width="30" height="-40" fill="red"/>
+
+  <!-- SVG 2 auto radii: a missing or negative rx uses ry, and vice versa -->
+  <ellipse cx="30" cy="85" ry="20" fill="green"/>
+  <ellipse cx="80" cy="85" rx="20" fill="green"/>
+  <ellipse cx="130" cy="85" rx="-5" ry="20" fill="green"/>
+  <rect x="160" y="65" width="35" height="40" rx="-10" ry="10" fill="green"/>
+
+  <!-- rx and ry are clamped to half the width and height -->
+  <rect x="10" y="120" width="80" height="30" rx="100" fill="green"/>
+  <rect x="110" y="120" width="80" height="30" rx="100" ry="5" fill="green"/>
+
+  <!-- An odd final coordinate is ignored -->
+  <polygon points="10 160 60 195 10 195 300" fill="green"/>
+  <polyline points="80 160 130 195 80 195 300" fill="none" stroke="green" stroke-width="3"/>
+</svg>

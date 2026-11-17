@@ -196,7 +196,8 @@ final class LayerTreePathTests: XCTestCase {
         quad = .quadraticSmooth(x: 100, y: 50, space: .absolute)
 
         let c = LayerTree.Builder.createQuadraticSmooth(from: quad, last: Point(0, 50), previous: Point(-50, 0))
-        XCTAssertEqual(c, cubic(100, 50, 50, 100, 50+50*twoThirds, 100))
+        // the reflected quadratic control point (50, 100) converted to cubic control points
+        XCTAssertEqual(c, cubic(100, 50, 33.333336, 83.333336, 66.666664, 83.333336))
     }
 
     func testClose() {
@@ -208,7 +209,7 @@ final class LayerTreePathTests: XCTestCase {
         let segment = LayerTree.Builder.makeSegment(from: domSegment, last: .init(10, 10), previous: nil)
 
 
-        XCTAssertEqual(segment, .cubic(to: .init(20.0, 20.0), control1: .init(10, 10), control2: .init(13.333334, 13.333334)))
+        XCTAssertEqual(segment, .cubic(to: .init(20.0, 20.0), control1: .init(10, 10), control2: .init(13.333333, 13.333333)))
     }
 
     func testDOMCubicSmooth() {
