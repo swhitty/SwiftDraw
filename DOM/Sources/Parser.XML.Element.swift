@@ -120,6 +120,7 @@ extension XMLParser {
         let elementAtt = try parseElementAttributes(att)
         ge.id = elementAtt.id
         ge.class = elementAtt.class
+        parseConditionalAttributes(att, into: ge)
 
         ge.attributes = attributes
         ge.style = style.normal
@@ -436,6 +437,13 @@ extension XMLParser {
         el.stopOpacity = opacity(att, "stop-opacity")
 
         return el
+    }
+
+    /// SVG 2 §5.8: `systemLanguage` and `requiredExtensions` are kept as written and evaluated when
+    /// rendering. `requiredFeatures` was removed in SVG 2 and browsers treat it as true, so it is ignored.
+    func parseConditionalAttributes(_ att: any AttributeParser, into element: DOM.GraphicsElement) {
+        element.systemLanguage = try? att.parseString("systemLanguage")
+        element.requiredExtensions = try? att.parseString("requiredExtensions")
     }
 
     func parseElementAttributes(_ att: any AttributeParser) throws -> any ElementAttributes {

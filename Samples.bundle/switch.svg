@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="160" viewBox="0 0 240 160">
+  <title>switch, systemLanguage and requiredExtensions (assumes an English-speaking reader)</title>
+
+  <!-- an unsupported extension is skipped: the second child is drawn -->
+  <switch>
+    <rect x="10" y="10" width="60" height="60" fill="crimson" requiredExtensions="http://example.org/bogus" />
+    <rect x="10" y="10" width="60" height="60" fill="seagreen" />
+    <rect x="10" y="10" width="60" height="60" fill="crimson" />
+  </switch>
+
+  <!-- another language is skipped; a region other than the reader's still matches -->
+  <switch>
+    <circle cx="120" cy="40" r="30" fill="crimson" systemLanguage="ru-RU" />
+    <circle cx="120" cy="40" r="30" fill="seagreen" systemLanguage="is, en-GB" />
+    <circle cx="120" cy="40" r="30" fill="crimson" />
+  </switch>
+
+  <!-- the switch's own transform and fill apply to the chosen child -->
+  <switch fill="steelblue" transform="translate(200 40) rotate(45)">
+    <rect x="-20" y="-20" width="40" height="40" fill="crimson" systemLanguage="fr" />
+    <rect x="-20" y="-20" width="40" height="40" />
+  </switch>
+
+  <!-- outside a switch, an element whose conditions fail is not drawn -->
+  <rect x="10" y="90" width="100" height="60" fill="seagreen" />
+  <rect x="10" y="90" width="100" height="60" fill="crimson" systemLanguage="ru" />
+  <g requiredExtensions="http://example.org/bogus">
+    <rect x="130" y="90" width="100" height="60" fill="crimson" />
+  </g>
+  <rect x="130" y="90" width="100" height="60" fill="steelblue" systemLanguage="en" />
+</svg>

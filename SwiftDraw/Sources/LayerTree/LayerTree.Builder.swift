@@ -39,6 +39,8 @@ extension LayerTree {
     struct Builder {
 
         let svg: DOM.SVG
+        /// The user's preferred languages for `systemLanguage` (BCP 47 tags, most preferred first).
+        let languages: [String]
 
         // The use, mask and pattern elements being built. Reaching one again is a cycle.
         private final class Active {
@@ -58,8 +60,20 @@ extension LayerTree {
         /// such as each level using the previous one several times, grows exponentially.
         static let maxReferences = 20_000
 
-        init(svg: DOM.SVG) {
+        init(svg: DOM.SVG, languages: [String] = Builder.preferredLanguages) {
             self.svg = svg
+            self.languages = languages
+        }
+
+        /// The system's preferred languages on Apple platforms; `en` elsewhere, where the locale
+        /// environment rarely reflects a reader's preference.
+        static var preferredLanguages: [String] {
+            #if canImport(Darwin)
+            let languages = Locale.preferredLanguages
+            return languages.isEmpty ? ["en"] : languages
+            #else
+            return ["en"]
+            #endif
         }
 
         /// Builds a referenced use, mask or pattern, or returns `cycle` when the reference is
@@ -224,8 +238,10 @@ extension LayerTree {
                 }
                 let newState = createState(for: currentElement, inheriting: currentState)
                 // SVG 1.1 §11.6.2: `display="none"` removes the element and its whole subtree from rendering,
-                // before any transform, clip, mask, filter or opacity is built for it
-                if newState.display == .none || Self.isHiddenLeaf(currentElement, newState) {
+                // before any transform, clip, mask, filter or opacity is built for it;
+                // SVG 2 §5.8: so does a conditional processing attribute that evaluates to false
+                if newState.display == .none || Self.isHiddenLeaf(currentElement, newState)
+                    || !currentElement.passesConditions(languages: languages) {
                     if parentLayer == nil {
                         resultLayer = Layer()
                     }
@@ -328,9 +344,12 @@ extension LayerTree {
                 return isVisible ? try? Builder.makeImageContents(from: image) : nil
             } else if let use = element as? DOM.Use {
                 return try? makeUseLayerContents(from: use, with: state)
-            } else if let sw = element as? DOM.Switch,
-                      let e = sw.childElements.first {
-                //TODO: select first element that creates non empty Layer
+            } else if let sw = element as? DOM.Switch {
+                // SVG 2 §5.8.2: only the first direct child whose conditions evaluate to true is rendered,
+                // even if it then draws nothing (such as `display="none"`)
+                guard let e = sw.childElements.first(where: { $0.passesConditions(languages: languages) }) else {
+                    return .layer(Layer())
+                }
                 return .layer(makeLayer(from: e, inheriting: state))
             }
 
