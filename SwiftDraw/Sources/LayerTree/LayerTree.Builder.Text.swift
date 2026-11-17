@@ -68,6 +68,8 @@ extension LayerTree.Builder {
         var fontName: String
         var glyph: UInt16
         var position: LayerTree.Point
+        /// `lengthAdjust="spacingAndGlyphs"`: the glyph is stretched horizontally about its origin
+        var scaleX: LayerTree.Float = 1
     }
 
     /// SVG 2 §11.5.3 text chunk: runs drawn one after the other from an absolute position.
@@ -119,6 +121,23 @@ extension LayerTree.Builder {
     /// list take no value, except for `rotate`, whose last value repeats. A `<tspan>` with
     /// `display="none"` has no addressable characters.
     func makeTextCharacters(for text: DOM.Text, with state: State) -> [TextCharacter] {
+        collectTextCharacters(for: text, with: state).characters
+    }
+
+    /// The `textLength` of `<text>` or a `<tspan>`: the advance its characters are fitted to
+    struct TextLength: Equatable {
+        /// its characters, as indices of `makeTextCharacters`
+        var range: Range<Int>
+        var length: LayerTree.Float
+        var adjust: DOM.LengthAdjust
+    }
+
+    /// Every `textLength` of the text, innermost first (SVG 2 §11.5.2 "Resolve text length")
+    func makeTextLengths(for text: DOM.Text, with state: State) -> [TextLength] {
+        collectTextCharacters(for: text, with: state).lengths
+    }
+
+    private func collectTextCharacters(for text: DOM.Text, with state: State) -> (characters: [TextCharacter], lengths: [TextLength]) {
         struct Lists {
             var range: Range<Int>
             var x: [DOM.Coordinate]
@@ -127,6 +146,8 @@ extension LayerTree.Builder {
             var dy: [DOM.Coordinate]
             var rotate: [DOM.Float]
         }
+        // when an element's characters are complete: descendants first
+        var lengths = [TextLength]()
         var characters = [TextCharacter]()
         // in document order, so an ancestor's lists are applied before its descendants'
         var lists = [Lists]()
@@ -149,6 +170,10 @@ extension LayerTree.Builder {
                                        dx: span.dxList, dy: span.dyList, rotate: span.rotateList))
                     collect(span.runs, state: spanState)
                     lists[index].range = start..<characters.count
+                    if let length = span.textLength {
+                        lengths.append(TextLength(range: start..<characters.count, length: LayerTree.Float(length),
+                                                  adjust: span.lengthAdjust ?? .spacing))
+                    }
                 }
             }
         }
@@ -157,6 +182,10 @@ extension LayerTree.Builder {
                            dx: text.dxList, dy: text.dyList, rotate: text.rotateList))
         collect(text.runs, state: state)
         lists[0].range = 0..<characters.count
+        if let length = text.textLength {
+            lengths.append(TextLength(range: 0..<characters.count, length: LayerTree.Float(length),
+                                      adjust: text.lengthAdjust ?? .spacing))
+        }
 
         for list in lists {
             func apply(_ values: [DOM.Coordinate], _ keyPath: WritableKeyPath<TextCharacter, LayerTree.Float?>) {
@@ -179,7 +208,7 @@ extension LayerTree.Builder {
                 }
             }
         }
-        return characters
+        return (characters, lengths)
     }
 
     /// The characters of `text` laid out on one line, split into text chunks. Each character starts
@@ -191,9 +220,15 @@ extension LayerTree.Builder {
     /// that flow as the font lays them out are kept together as one run of text. Those with spacing
     /// or `dx` / `dy` between them, or rotated, are placed glyph by glyph from the shaping.
     func makeTextChunks(for text: DOM.Text, with state: State) -> [TextChunk] {
-        // a font-size of 0 draws nothing (CoreText would fall back to its default size)
-        let characters = makeTextCharacters(for: text, with: state).filter { $0.state.fontSize > 0 }
-        let shaped = makeShapedCharacters(for: characters)
+        let (characters, lengths) = collectTextCharacters(for: text, with: state)
+        // a font-size of 0 draws nothing (CoreText would fall back to its default size): such
+        // characters keep their index, for the lists and text lengths, but are not laid out
+        let isDrawn = characters.map { $0.state.fontSize > 0 }
+        var shaped = Array(repeating: ShapedCharacter(advance: 0, glyphs: []), count: characters.count)
+        let drawnIndices = characters.indices.filter { isDrawn[$0] }
+        for (index, shape) in zip(drawnIndices, makeShapedCharacters(for: drawnIndices.map { characters[$0] })) {
+            shaped[index] = shape
+        }
 
         var chunks = [TextChunk]()
         var current = TextChunk()
@@ -204,6 +239,8 @@ extension LayerTree.Builder {
             var state: State
             var run: Int
             var rotate: LayerTree.Float
+            /// `lengthAdjust="spacingAndGlyphs"`: the horizontal scale of its glyphs
+            var scale: LayerTree.Float
             var origin: LayerTree.Point
             var glyphs = [PlacedGlyph]()
             /// laid out as the font would on its own: drawn as text
@@ -235,8 +272,24 @@ extension LayerTree.Builder {
             let next = index + 1 < characters.count && Self.isCursive(characters[index + 1].character)
             return previous || next
         }
+        // CSS Text 3 §8: the spacing after each typographic character
+        var spacings = characters.indices.map { index -> LayerTree.Float in
+            let character = characters[index]
+            var spacing = isCursive[index] ? 0 : character.state.letterSpacing
+            if Self.isWordSeparator(character.character) {
+                spacing += character.state.wordSpacing
+            }
+            return spacing
+        }
+        let advances = shaped.map(\.advance)
+        let fitted = Self.makeFittedSpacing(lengths, characters: characters, isDrawn: isDrawn,
+                                            advances: advances, spacings: spacings)
+        spacings = fitted.spacings
+        let scales = fitted.scales
 
         for (index, (character, shape)) in zip(characters, shaped).enumerated() {
+            guard isDrawn[index] else { continue }
+            let scale = scales[index]
             let isAbsolute = character.x != nil || character.y != nil
             let isMoved = character.dx != 0 || character.dy != 0
             if isAbsolute {
@@ -250,34 +303,33 @@ extension LayerTree.Builder {
             pen.x += character.dx
             pen.y += character.dy
 
-            if var s = segment, s.run == character.run, s.rotate == 0, character.rotate == 0, !isAbsolute {
+            if var s = segment, s.run == character.run, s.rotate == 0, character.rotate == 0,
+               s.scale == scale, !isAbsolute {
                 // spacing or a move between two characters: they are no longer where the font puts them
                 if s.spacing != 0 || isMoved { s.isNatural = false }
                 segment = s
             } else {
                 flush()
                 segment = Segment(string: "", state: character.state, run: character.run,
-                                  rotate: character.rotate, origin: pen,
-                                  isNatural: character.rotate == 0, end: pen.x, extent: pen.x...pen.x)
+                                  rotate: character.rotate, scale: scale, origin: pen,
+                                  isNatural: character.rotate == 0 && scale == 1, end: pen.x, extent: pen.x...pen.x)
             }
 
             segment?.string.append(character.character)
             segment?.glyphs.append(contentsOf: shape.glyphs.map {
                 PlacedGlyph(fontName: $0.fontName, glyph: $0.glyph,
-                            position: LayerTree.Point(pen.x + $0.offset.x, pen.y + $0.offset.y))
+                            position: LayerTree.Point(pen.x + $0.offset.x * scale, pen.y + $0.offset.y),
+                            scaleX: scale)
             })
-            let cell = min(pen.x, pen.x + shape.advance)...max(pen.x, pen.x + shape.advance)
-            pen.x += shape.advance
+            let advance = shape.advance * scale
+            let cell = min(pen.x, pen.x + advance)...max(pen.x, pen.x + advance)
+            pen.x += advance
             segment?.end = pen.x
             if let extent = segment?.extent {
                 segment?.extent = min(extent.lowerBound, cell.lowerBound)...max(extent.upperBound, cell.upperBound)
             }
 
-            // CSS Text 3 §8: spacing after each typographic character
-            var spacing = isCursive[index] ? 0 : character.state.letterSpacing
-            if Self.isWordSeparator(character.character) {
-                spacing += character.state.wordSpacing
-            }
+            let spacing = spacings[index]
             pen.x += spacing
             segment?.spacing = spacing
         }
@@ -286,6 +338,54 @@ extension LayerTree.Builder {
             chunks.append(current)
         }
         return chunks
+    }
+
+    /// SVG 2 §11.5.2 "Resolve text length": fits the characters of each element with a `textLength`,
+    /// innermost first, by changing the spacing after each of its characters (`spacing`), or by
+    /// scaling their advances, the spacing between them and their glyphs (`spacingAndGlyphs`). The
+    /// characters after the element move with it. An element whose characters a descendant already
+    /// fitted, or that starts a new text chunk within itself, keeps its natural length.
+    static func makeFittedSpacing(_ lengths: [TextLength], characters: [TextCharacter], isDrawn: [Bool],
+                                  advances: [LayerTree.Float], spacings: [LayerTree.Float])
+    -> (spacings: [LayerTree.Float], scales: [LayerTree.Float]) {
+        var spacings = spacings
+        var scales = Array(repeating: LayerTree.Float(1), count: characters.count)
+        var isFitted = Array(repeating: false, count: characters.count)
+
+        for length in lengths {
+            let range = length.range.clamped(to: characters.indices)
+            guard !range.contains(where: { isFitted[$0] }),
+                  !range.dropFirst().contains(where: { characters[$0].x != nil || characters[$0].y != nil }) else { continue }
+            let members = range.filter { isDrawn[$0] }
+            guard !members.isEmpty else { continue }
+            // the space between consecutive characters: the spacing after one and the dx of the next
+            let gaps = zip(members, members.dropFirst()).map { spacings[$0] + characters[$1].dx }
+            let natural = members.reduce(0) { $0 + advances[$1] * scales[$1] } + gaps.reduce(0, +)
+
+            switch length.adjust {
+            case .spacing:
+                guard members.count > 1 else { continue }
+                let delta = (length.length - natural) / LayerTree.Float(members.count - 1)
+                // the gap follows the last character too, moving the text after the element on
+                // (as resvg; within the element only the gaps between its characters count)
+                for member in members {
+                    spacings[member] += delta
+                }
+            case .spacingAndGlyphs:
+                guard natural > 0 else { continue }
+                let scale = length.length / natural
+                for member in members {
+                    scales[member] *= scale
+                }
+                for (member, gap) in zip(members, gaps) {
+                    spacings[member] += gap * (scale - 1)
+                }
+            }
+            for index in range {
+                isFitted[index] = true
+            }
+        }
+        return (spacings, scales)
     }
 
     /// The glyphs of each character, shaped together while consecutive characters share a font
@@ -353,7 +453,7 @@ extension LayerTree.Builder {
                 let point = LayerTree.Point(run.origin.x + shift, run.origin.y)
                 let glyphs = run.glyphs?.map {
                     PlacedGlyph(fontName: $0.fontName, glyph: $0.glyph,
-                                position: LayerTree.Point($0.position.x + shift, $0.position.y))
+                                position: LayerTree.Point($0.position.x + shift, $0.position.y), scaleX: $0.scaleX)
                 }
                 if let runContents = makeTextRunContents(run.string, glyphs: glyphs, at: point, with: state,
                                                          rotate: run.rotate, for: text, bounds: textBounds) {
@@ -480,12 +580,12 @@ extension LayerTree.Builder {
         var runs = [LayerTree.GlyphRun]()
         for glyph in glyphs {
             let position = LayerTree.Point(glyph.position.x, glyph.position.y + baseline)
-            if let last = runs.last, last.fontName == glyph.fontName {
+            if let last = runs.last, last.fontName == glyph.fontName, last.scaleX == glyph.scaleX {
                 runs[runs.count - 1].glyphs.append(glyph.glyph)
                 runs[runs.count - 1].positions.append(position)
             } else {
                 runs.append(LayerTree.GlyphRun(attributes: attributes, fontName: glyph.fontName,
-                                               glyphs: [glyph.glyph], positions: [position]))
+                                               glyphs: [glyph.glyph], positions: [position], scaleX: glyph.scaleX))
             }
         }
         return runs

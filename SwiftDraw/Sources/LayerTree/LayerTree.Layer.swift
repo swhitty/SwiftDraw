@@ -207,6 +207,8 @@ extension LayerTree {
         var glyphs: [UInt16]
         /// the origin of each glyph on the baseline, in user space
         var positions: [Point]
+        /// `lengthAdjust="spacingAndGlyphs"`: each glyph is stretched horizontally about its origin
+        var scaleX: Float = 1
     }
 
     struct TextAttributes: Hashable {
