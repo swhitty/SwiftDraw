@@ -67,7 +67,9 @@ import Synchronization
 
 ### Writing tests
 
-Write all new tests with Swift Testing (`import Testing`, `@Test`, `#expect`, `#require`), including tests brought in from other branches or pull requests. Follow the existing suites: a `struct`, `@Test` functions named for the behaviour without a `test` prefix, and `@Test(arguments:)` instead of looping over inputs. Some older suites still use XCTest; when adding to one, a new Swift Testing suite is preferred over more XCTest cases.
+All tests use Swift Testing (`import Testing`, `@Test`, `#expect`, `#require`); there is no XCTest, so convert tests brought in from other branches or pull requests. Each suite is an implicit one: a plain `struct` (a `class` only when a test needs `deinit`) holding `@Test` functions named for the behaviour without a `test` prefix, with no free-standing `@Test` functions. Use `@Suite` only to set a trait such as `.serialized` or `.timeLimit`, never just for a display name. Use `@Test(arguments:)` instead of looping over inputs or writing near-duplicate tests. Compare floating-point values with `#expect(a.isApproximately(b, tolerance: 0.001))` (`SwiftDraw/Tests/Utilities/FloatingPoint+Approximately.swift`).
+
+Swift Testing runs tests in parallel. Give each test its own state (caches, temporary file names, renderers) rather than sharing globals, or mark the suite `@Suite(.serialized)` when it must touch global state such as the log sink. Tests that draw with AppKit or UIKit (`NSImage`, `UIImage`, views) need `@MainActor`.
 
 ## Checking rendering changes
 

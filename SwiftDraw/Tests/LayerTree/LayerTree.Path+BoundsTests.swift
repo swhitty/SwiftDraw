@@ -30,26 +30,25 @@
 //
 
 @testable import SwiftDraw
-import XCTest
+import Testing
 
-final class LayerTreePathBoundsTests: XCTestCase {
+struct LayerTreePathBoundsTests {
 
     typealias Point = LayerTree.Point
     typealias Rect = LayerTree.Rect
 
-    func testBounds() {
+    @Test
+    func bounds() {
         let path = LayerTree.Path([
             .move(to: Point(-50, -50)),
             .line(to: Point(50, 50)),
         ])
 
-        XCTAssertEqual(
-            path.bounds,
-            Rect(x: -50, y: -50, width: 100, height: 100)
-        )
+        #expect(path.bounds == Rect(x: -50, y: -50, width: 100, height: 100))
     }
 
-    func testBoundsWithLines() {
+    @Test
+    func boundsWithLines() {
         var finder = LayerTree.Path.BoundsFinder()
 
         finder.updateBounds(for: [
@@ -58,18 +57,12 @@ final class LayerTreePathBoundsTests: XCTestCase {
             .line(to: Point(80, 102)),
         ])
 
-        XCTAssertEqual(
-            finder.min,
-            Point(10, 10)
-        )
-
-        XCTAssertEqual(
-            finder.max,
-            Point(100, 102)
-        )
+        #expect(finder.min == Point(10, 10))
+        #expect(finder.max == Point(100, 102))
     }
 
-    func testBoundsWithCubic() {
+    @Test
+    func boundsWithCubic() {
         var finder = LayerTree.Path.BoundsFinder()
 
         finder.updateBounds(for: [
@@ -78,18 +71,12 @@ final class LayerTreePathBoundsTests: XCTestCase {
             .cubic(to: Point(75, 50), control1: Point(120, 100), control2: Point(120, 50)),
         ])
 
-        XCTAssertEqual(
-            finder.min,
-            Point(10, 10)
-        )
-
-        XCTAssertEqual(
-            finder.max,
-            Point(112.8, 100)
-        )
+        #expect(finder.min == Point(10, 10))
+        #expect(finder.max == Point(112.8, 100))
     }
 
-    func testBoundsWithClose() {
+    @Test
+    func boundsWithClose() {
         var finder = LayerTree.Path.BoundsFinder()
 
         finder.updateBounds(for: [
@@ -101,18 +88,12 @@ final class LayerTreePathBoundsTests: XCTestCase {
             .line(to: Point(75, 0)),
         ])
 
-        XCTAssertEqual(
-            finder.min,
-            Point(50, 0)
-        )
-
-        XCTAssertEqual(
-            finder.max,
-            Point(100, 100)
-        )
+        #expect(finder.min == Point(50, 0))
+        #expect(finder.max == Point(100, 100))
     }
 
-    func testEndpoints() {
+    @Test
+    func endpointsIgnoreRedundantMoves() {
         let path = LayerTree.Path([
             .move(to: Point(-50, -50)),
             .move(to: Point(0, 0)),
@@ -121,13 +102,7 @@ final class LayerTreePathBoundsTests: XCTestCase {
             .line(to: Point(200, 15)),
         ])
 
-        XCTAssertEqual(
-            path.endpoints.start,
-            Point(50, 10)
-        )
-        XCTAssertEqual(
-            path.endpoints.end,
-            Point(200, 15)
-        )
+        #expect(path.endpoints.start == Point(50, 10))
+        #expect(path.endpoints.end == Point(200, 15))
     }
 }

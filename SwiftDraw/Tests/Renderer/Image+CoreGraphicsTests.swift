@@ -30,86 +30,36 @@
 //
 
 #if canImport(CoreGraphics)
-import XCTest
+import Testing
 @testable import SwiftDraw
 import CoreGraphics
 
-final class ImageCoreGraphicsTests: XCTestCase {
+struct ImageCoreGraphicsTests {
 
-    func testPixelWide() {
-        XCTAssertEqual(
-            SVG.makeBounds(
-                size: CGSize(width: 100, height: 50),
-                scale: 1
-            ).pixelsWide,
-            100
-        )
-        XCTAssertEqual(
-            SVG.makeBounds(
-                size: CGSize(width: 100.5, height: 50),
-                scale: 1
-            ).pixelsWide,
-            101
-        )
-        XCTAssertEqual(
-            SVG.makeBounds(
-                size: CGSize(width: 100, height: 50),
-                scale: 2
-            ).pixelsWide,
-            200
-        )
-        XCTAssertEqual(
-            SVG.makeBounds(
-                size: CGSize(width: 300, height: 200),
-                scale: 1
-            ).pixelsWide,
-            300
-        )
-        XCTAssertEqual(
-            SVG.makeBounds(
-                size: CGSize(width: 300, height: 200),
-                scale: 2
-            ).pixelsWide,
-            600
-        )
+    @Test(
+        arguments: [
+            (CGSize(width: 100, height: 50), 1, 100),
+            (CGSize(width: 100.5, height: 50), 1, 101),
+            (CGSize(width: 100, height: 50), 2, 200),
+            (CGSize(width: 300, height: 200), 1, 300),
+            (CGSize(width: 300, height: 200), 2, 600),
+        ] as [(CGSize, CGFloat, Int)]
+    )
+    func pixelsWide(size: CGSize, scale: CGFloat, expected: Int) {
+        #expect(SVG.makeBounds(size: size, scale: scale).pixelsWide == expected)
     }
 
-    func testPixelHigh() {
-        XCTAssertEqual(
-            SVG.makeBounds(
-                size: CGSize(width: 100, height: 50),
-                scale: 1
-            ).pixelsHigh,
-            50
-        )
-        XCTAssertEqual(
-            SVG.makeBounds(
-                size: CGSize(width: 100, height: 50.5),
-                scale: 1
-            ).pixelsHigh,
-            51
-        )
-        XCTAssertEqual(
-            SVG.makeBounds(
-                size: CGSize(width: 100, height: 50),
-                scale: 2
-            ).pixelsHigh,
-            100
-        )
-        XCTAssertEqual(
-            SVG.makeBounds(
-                size: CGSize(width: 300, height: 200),
-                scale: 1
-            ).pixelsHigh,
-            200
-        )
-        XCTAssertEqual(
-            SVG.makeBounds(
-                size: CGSize(width: 300, height: 200),
-                scale: 2
-            ).pixelsHigh,
-            400
-        )
+    @Test(
+        arguments: [
+            (CGSize(width: 100, height: 50), 1, 50),
+            (CGSize(width: 100, height: 50.5), 1, 51),
+            (CGSize(width: 100, height: 50), 2, 100),
+            (CGSize(width: 300, height: 200), 1, 200),
+            (CGSize(width: 300, height: 200), 2, 400),
+        ] as [(CGSize, CGFloat, Int)]
+    )
+    func pixelsHigh(size: CGSize, scale: CGFloat, expected: Int) {
+        #expect(SVG.makeBounds(size: size, scale: scale).pixelsHigh == expected)
     }
 }
 

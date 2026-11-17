@@ -29,14 +29,16 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-import XCTest
-@testable import SwiftDraw
 #if canImport(CoreGraphics)
 import CoreGraphics
+import CoreText
+import Testing
+@testable import SwiftDraw
 
-final class CGPathSegmentTests: XCTestCase {
+struct CGPathSegmentTests {
 
-    func testSegments() {
+    @Test
+    func segmentsAreReadFromPath() {
         let path = CGMutablePath()
         path.move(to: CGPoint(x: 0, y: 0))
         path.addLine(to: CGPoint(x: 0, y: 100))
@@ -51,9 +53,8 @@ final class CGPathSegmentTests: XCTestCase {
         )
         path.closeSubpath()
 
-        XCTAssertEqual(
-            path.segments(),
-            [
+        #expect(
+            path.segments() == [
                 .move(CGPoint(x: 0, y: 0)),
                 .line(CGPoint(x: 0, y: 100)),
                 .quad(CGPoint(x: 50, y: 50), CGPoint(x: 100, y: 100)),
@@ -63,17 +64,24 @@ final class CGPathSegmentTests: XCTestCase {
         )
     }
 
-    func testString() {
+    @Test
+    func glyphPathSegments() throws {
         let font = CTFontCreateWithName("Helvetica" as CFString, 10.0, nil)
-        let path = "_".toPath(font: font)!
+        let path = try #require("_".toPath(font: font))
 
         let segments = path.segments()
-        XCTAssertEqual(segments.count, 5)
-        guard case .move(_) = segments[0] else { XCTFail("expected move"); return }
-        guard case .line(_) = segments[1] else { XCTFail("expected line"); return }
-        guard case .line(_) = segments[2] else { XCTFail("expected line"); return }
-        guard case .line(_) = segments[3] else { XCTFail("expected line"); return }
-        XCTAssertEqual(segments[4], .close)
+        try #require(segments.count == 5)
+        guard case .move = segments[0] else {
+            Issue.record("expected move")
+            return
+        }
+        for segment in segments[1...3] {
+            guard case .line = segment else {
+                Issue.record("expected line")
+                return
+            }
+        }
+        #expect(segments[4] == .close)
     }
 }
 

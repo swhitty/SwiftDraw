@@ -30,20 +30,22 @@
 //
 
 import SwiftDrawDOM
-import XCTest
 @testable import SwiftDraw
+import Testing
 
-final class LayerTreeBuilderShapeTests: XCTestCase {
+struct LayerTreeBuilderShapeTests {
 
-    func testDOMRectMakesRectWithDefaultOrigin() {
+    @Test
+    func domRectMakesRectWithDefaultOrigin() {
         let dom = DOM.Rect(width: 10, height: 20)
         let rect = LayerTree.Builder.makeRect(from: dom)
-        XCTAssertEqual(rect, LayerTree.Rect(x: 0, y: 0, width: 10, height: 20))
+        #expect(rect == LayerTree.Rect(x: 0, y: 0, width: 10, height: 20))
     }
 
-    func testDOMRectMakesRect() {
+    @Test
+    func domRectMakesRect() {
         let dom = DOM.Rect(x: 10, y: 20, width: 30, height: 40)
         let rect = LayerTree.Builder.makeRect(from: dom)
-        XCTAssertEqual(rect, LayerTree.Rect(x: 10, y: 20, width: 30, height: 40))
+        #expect(rect == LayerTree.Rect(x: 10, y: 20, width: 30, height: 40))
     }
 }

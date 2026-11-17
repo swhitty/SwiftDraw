@@ -29,29 +29,32 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
+import Foundation
 @testable import SwiftDrawDOM
-import XCTest
 @testable import SwiftDraw
+import Testing
 
-final class LayerTreeBuilderTests: XCTestCase {
+struct LayerTreeBuilderTests {
 
     typealias Shape = LayerTree.Shape
     typealias Contents = LayerTree.Layer.Contents
 
-    func testMakeViewBoxTransform() {
+    @Test
+    func makeViewBoxTransform() {
         var transform = LayerTree.Builder.makeTransform(viewBox: nil, width: 100, height: 200)
-        XCTAssertEqual(transform, [])
+        #expect(transform == [])
 
         let viewbox = DOM.SVG.ViewBox(x: 0, y: 0, width: 200, height: 200)
         transform = LayerTree.Builder.makeTransform(viewBox: viewbox, width: 100, height: 100)
-        XCTAssertEqual(transform, [.scale(sx: 0.5, sy: 0.5)])
+        #expect(transform == [.scale(sx: 0.5, sy: 0.5)])
 
         let viewbox1 = DOM.SVG.ViewBox(x: 10, y: -10, width: 100, height: 100)
         transform = LayerTree.Builder.makeTransform(viewBox: viewbox1, width: 100, height: 100)
-        XCTAssertEqual(transform, [.translate(tx: -10, ty: 10)])
+        #expect(transform == [.translate(tx: -10, ty: 10)])
     }
 
-    func testDOMMaskMakesLayer() {
+    @Test
+    func domMaskMakesLayer() {
         let circle = DOM.Circle(cx: 5, cy: 5, r: 5)
         let line = DOM.Line(x1: 0, y1: 0, x2: 10, y2: 0)
         let mask = DOM.Mask(id: "mask1", childElements: [circle, line])
@@ -66,11 +69,12 @@ final class LayerTreeBuilderTests: XCTestCase {
         element.attributes.mask = URL(string: "#mask1")
 
         let layer = builder.createMaskLayer(for: element)
-        XCTAssertEqual(layer?.contents.count, 2)
-        XCTAssertEqual(layer?.contents[0].shape?.fill.fill, .color(.white))
+        #expect(layer?.contents.count == 2)
+        #expect(layer?.contents[0].shape?.fill.fill == .color(.white))
     }
 
-    func testDOMClipMakesShape() {
+    @Test
+    func domClipMakesShape() {
         let circle = DOM.Circle(cx: 5, cy: 5, r: 5)
         let svg = DOM.SVG(width: 10, height: 10)
         svg.defs.clipPaths.append(DOM.ClipPath(id: "clip1", childElements: [circle]))
@@ -84,20 +88,23 @@ final class LayerTreeBuilderTests: XCTestCase {
         var element = DOM.GraphicsElement()
         element.attributes.clipPath = URL(string: "#clip1")
 
-        XCTAssertEqual(
-            builder.createClipShapes(for: element),
-            [.ellipse(within: LayerTree.Rect(x: 0, y: 0, width: 10, height: 10))]
+        #expect(
+            builder.createClipShapes(for: element) == [
+                .ellipse(within: LayerTree.Rect(x: 0, y: 0, width: 10, height: 10))
+            ]
         )
 
         element = DOM.GraphicsElement()
         element.class = "a"
-        XCTAssertEqual(
-            builder.createClipShapes(for: element),
-            [.ellipse(within: LayerTree.Rect(x: 0, y: 0, width: 10, height: 10))]
+        #expect(
+            builder.createClipShapes(for: element) == [
+                .ellipse(within: LayerTree.Rect(x: 0, y: 0, width: 10, height: 10))
+            ]
         )
     }
 
-    func testDOMGroupMakesChildContents() {
+    @Test
+    func domGroupMakesChildContents() {
         let builder = LayerTree.Builder(svg: DOM.SVG(width: 10, height: 10))
 
         let group = DOM.Group()
@@ -107,10 +114,11 @@ final class LayerTreeBuilderTests: XCTestCase {
         ]
 
         let layer = builder.makeLayer(from: group, inheriting: .init())
-        XCTAssertEqual(layer.contents.count, 2)
+        #expect(layer.contents.count == 2)
     }
 
-    func testDOMPatternMakesPattern() {
+    @Test
+    func domPatternMakesPattern() {
         let builder = LayerTree.Builder(svg: DOM.SVG(width: 10, height: 10))
 
         var element = DOM.Pattern(id: "hi", width: 5, height: 5)
@@ -121,10 +129,11 @@ final class LayerTreeBuilderTests: XCTestCase {
         let ellipse = Shape.ellipse(within: LayerTree.Rect(x: 5, y: 5, width: 10, height: 10))
         let expected = LayerTree.Layer()
         expected.contents = [Contents.shape(ellipse, .default, .default)]
-        XCTAssertEqual(pattern.contents, [.layer(expected)])
+        #expect(pattern.contents == [.layer(expected)])
     }
 
-    func testDOMPatternObjectBoundingBox() {
+    @Test
+    func domPatternObjectBoundingBox() {
         let builder = LayerTree.Builder(svg: DOM.SVG(width: 100, height: 100))
 
         var element = DOM.Pattern(id: "p1", width: 1, height: 1)
@@ -132,35 +141,38 @@ final class LayerTreeBuilderTests: XCTestCase {
         element.childElements = [DOM.Circle(cx: 0, cy: 0, r: 5)]
 
         let pattern = builder.makePattern(for: element)
-        XCTAssertEqual(pattern.contentUnits, LayerTree.PatternUnits.objectBoundingBox)
-        XCTAssertEqual(pattern.frame, LayerTree.Rect(x: 0, y: 0, width: 1, height: 1))
+        #expect(pattern.contentUnits == LayerTree.PatternUnits.objectBoundingBox)
+        #expect(pattern.frame == LayerTree.Rect(x: 0, y: 0, width: 1, height: 1))
     }
 
-    func testDOMPatternUserSpaceOnUse() {
+    @Test
+    func domPatternUserSpaceOnUse() {
         let builder = LayerTree.Builder(svg: DOM.SVG(width: 100, height: 100))
 
         var element = DOM.Pattern(id: "p2", width: 20, height: 20)
         element.childElements = [DOM.Circle(cx: 10, cy: 10, r: 5)]
 
         let pattern = builder.makePattern(for: element)
-        XCTAssertEqual(pattern.contentUnits, LayerTree.PatternUnits.userSpaceOnUse)
+        #expect(pattern.contentUnits == LayerTree.PatternUnits.userSpaceOnUse)
     }
 
-    func testDOMPatternDefaultsToObjectBoundingBoxUnits() {
+    @Test
+    func domPatternDefaultsToObjectBoundingBoxUnits() {
         let builder = LayerTree.Builder(svg: DOM.SVG(width: 100, height: 100))
 
         var element = DOM.Pattern(id: "p", width: 0.5, height: 0.25)
         element.x = 0.1
 
         let pattern = builder.makePattern(for: element)
-        XCTAssertEqual(pattern.units, .objectBoundingBox)
-        XCTAssertEqual(pattern.contentUnits, .userSpaceOnUse)
-        XCTAssertEqual(pattern.frame, LayerTree.Rect(x: 0.1, y: 0, width: 0.5, height: 0.25))
-        XCTAssertEqual(pattern.transform, .identity)
-        XCTAssertNil(pattern.viewBox)
+        #expect(pattern.units == .objectBoundingBox)
+        #expect(pattern.contentUnits == .userSpaceOnUse)
+        #expect(pattern.frame == LayerTree.Rect(x: 0.1, y: 0, width: 0.5, height: 0.25))
+        #expect(pattern.transform == .identity)
+        #expect(pattern.viewBox == nil)
     }
 
-    func testDOMPatternPercentagesResolveAgainstViewportInUserSpace() {
+    @Test
+    func domPatternPercentagesResolveAgainstViewportInUserSpace() {
         let svg = DOM.SVG(width: 200, height: 100)
         svg.viewBox = .init(x: 0, y: 0, width: 400, height: 50)
 
@@ -172,17 +184,19 @@ final class LayerTreeBuilderTests: XCTestCase {
 
         let pattern = LayerTree.Builder(svg: svg).makePattern(for: element)
         // x 10% and width 50% of the viewBox width 400, height 100% of 50; y is a plain number
-        XCTAssertEqual(pattern.frame, LayerTree.Rect(x: 40, y: 4, width: 200, height: 50))
+        #expect(pattern.frame == LayerTree.Rect(x: 40, y: 4, width: 200, height: 50))
     }
 
-    func testDOMPatternPercentagesStayFractionsInObjectBoundingBox() {
+    @Test
+    func domPatternPercentagesStayFractionsInObjectBoundingBox() {
         var element = DOM.Pattern(id: "p", width: 0.5, height: 1)
         element.percentageAttributes = ["width", "height"]
         let pattern = LayerTree.Builder(svg: DOM.SVG(width: 200, height: 100)).makePattern(for: element)
-        XCTAssertEqual(pattern.frame, LayerTree.Rect(x: 0, y: 0, width: 0.5, height: 1))
+        #expect(pattern.frame == LayerTree.Rect(x: 0, y: 0, width: 0.5, height: 1))
     }
 
-    func testDOMPatternInheritedPercentageKeepsItsUnit() {
+    @Test
+    func domPatternInheritedPercentageKeepsItsUnit() {
         var base = DOM.Pattern(id: "base", width: 0.25, height: 8)
         base.percentageAttributes = ["width"]
         var derived = DOM.Pattern(id: "derived")
@@ -192,16 +206,18 @@ final class LayerTreeBuilderTests: XCTestCase {
         let svg = DOM.SVG(width: 100, height: 100)
         svg.defs.patterns = [base, derived]
         let pattern = LayerTree.Builder(svg: svg).makePattern(for: derived)
-        XCTAssertEqual(pattern.frame.size, LayerTree.Size(25, 8))
+        #expect(pattern.frame.size == LayerTree.Size(25, 8))
     }
 
-    func testDOMPatternMissingSizeIsEmpty() {
+    @Test
+    func domPatternMissingSizeIsEmpty() {
         let builder = LayerTree.Builder(svg: DOM.SVG(width: 100, height: 100))
         let pattern = builder.makePattern(for: DOM.Pattern(id: "p"))
-        XCTAssertEqual(pattern.frame, .zero)
+        #expect(pattern.frame == .zero)
     }
 
-    func testDOMPatternViewBoxAndTransform() {
+    @Test
+    func domPatternViewBoxAndTransform() {
         let builder = LayerTree.Builder(svg: DOM.SVG(width: 100, height: 100))
 
         var element = DOM.Pattern(id: "p", width: 10, height: 10)
@@ -209,11 +225,12 @@ final class LayerTreeBuilderTests: XCTestCase {
         element.patternTransform = [.translate(tx: 5, ty: 0), .scale(sx: 2, sy: 2)]
 
         let pattern = builder.makePattern(for: element)
-        XCTAssertEqual(pattern.viewBox, LayerTree.Rect(x: 0, y: 0, width: 20, height: 20))
-        XCTAssertEqual(pattern.transform, .init(a: 2, b: 0, c: 0, d: 2, tx: 5, ty: 0))
+        #expect(pattern.viewBox == LayerTree.Rect(x: 0, y: 0, width: 20, height: 20))
+        #expect(pattern.transform == .init(a: 2, b: 0, c: 0, d: 2, tx: 5, ty: 0))
     }
 
-    func testDOMPatternInheritsAttributesAndContentThroughHref() {
+    @Test
+    func domPatternInheritsAttributesAndContentThroughHref() {
         // Inkscape: <pattern id="p" xlink:href="#base" patternTransform="…"/>
         var base = DOM.Pattern(id: "base", width: 8, height: 4)
         base.patternUnits = .userSpaceOnUse
@@ -234,14 +251,15 @@ final class LayerTreeBuilderTests: XCTestCase {
         let builder = LayerTree.Builder(svg: svg)
 
         let pattern = builder.makePattern(for: derived)
-        XCTAssertEqual(pattern.units, .userSpaceOnUse)
-        XCTAssertEqual(pattern.frame, LayerTree.Rect(x: 1, y: 2, width: 8, height: 4))
-        XCTAssertEqual(pattern.transform, .init(a: 1, b: 0, c: 0, d: 1, tx: 10, ty: 20))
-        XCTAssertEqual(pattern.contents, builder.makePattern(for: base).contents)
-        XCTAssertEqual(pattern.contents.count, 1)
+        #expect(pattern.units == .userSpaceOnUse)
+        #expect(pattern.frame == LayerTree.Rect(x: 1, y: 2, width: 8, height: 4))
+        #expect(pattern.transform == .init(a: 1, b: 0, c: 0, d: 1, tx: 10, ty: 20))
+        #expect(pattern.contents == builder.makePattern(for: base).contents)
+        #expect(pattern.contents.count == 1)
     }
 
-    func testDOMPatternOwnChildrenOverrideHref() {
+    @Test
+    func domPatternOwnChildrenOverrideHref() {
         var base = DOM.Pattern(id: "base", width: 8, height: 8)
         base.childElements = [DOM.Circle(cx: 2, cy: 2, r: 1), DOM.Circle(cx: 4, cy: 4, r: 1)]
 
@@ -253,11 +271,12 @@ final class LayerTreeBuilderTests: XCTestCase {
         svg.defs.patterns = [base, derived]
 
         let pattern = LayerTree.Builder(svg: svg).makePattern(for: derived)
-        XCTAssertEqual(pattern.contents.count, 1)
-        XCTAssertEqual(pattern.frame.size, LayerTree.Size(8, 8))
+        #expect(pattern.contents.count == 1)
+        #expect(pattern.frame.size == LayerTree.Size(8, 8))
     }
 
-    func testDOMPatternHrefCycleTerminates() {
+    @Test
+    func domPatternHrefCycleTerminates() {
         var a = DOM.Pattern(id: "a")
         a.href = URL(string: "#b")
         var b = DOM.Pattern(id: "b", width: 5, height: 5)
@@ -269,20 +288,22 @@ final class LayerTreeBuilderTests: XCTestCase {
         svg.defs.patterns = [a, b, selfRef]
         let builder = LayerTree.Builder(svg: svg)
 
-        XCTAssertEqual(builder.makePatternChain(for: a).map(\.id), ["a", "b"])
-        XCTAssertEqual(builder.makePattern(for: a).frame.size, LayerTree.Size(5, 5))
-        XCTAssertEqual(builder.makePatternChain(for: selfRef).map(\.id), ["self"])
+        #expect(builder.makePatternChain(for: a).map(\.id) == ["a", "b"])
+        #expect(builder.makePattern(for: a).frame.size == LayerTree.Size(5, 5))
+        #expect(builder.makePatternChain(for: selfRef).map(\.id) == ["self"])
     }
 
-    func testDOMPatternHrefToMissingPattern() {
+    @Test
+    func domPatternHrefToMissingPattern() {
         var element = DOM.Pattern(id: "p", width: 2, height: 2)
         element.href = URL(string: "#missing")
         let builder = LayerTree.Builder(svg: DOM.SVG(width: 100, height: 100))
-        XCTAssertEqual(builder.makePatternChain(for: element).map(\.id), ["p"])
-        XCTAssertEqual(builder.makePattern(for: element).frame.size, LayerTree.Size(2, 2))
+        #expect(builder.makePatternChain(for: element).map(\.id) == ["p"])
+        #expect(builder.makePattern(for: element).frame.size == LayerTree.Size(2, 2))
     }
 
-    func testStrokeAttributes() {
+    @Test
+    func strokeAttributesFromState() {
         var state = LayerTree.Builder.State()
         state.stroke = .color(.rgbf(1.0, 0.0, 0.0, 1.0))
         state.strokeOpacity = 0.5
@@ -292,23 +313,24 @@ final class LayerTreeBuilderTests: XCTestCase {
         state.strokeLineMiterLimit = 10.0
 
         let att = LayerTree.Builder.makeStrokeAttributes(with: state)
-        XCTAssertEqual(att.color, .color(.srgb(r: 1.0, g: 0, b: 0, a: 0.5)))
-        XCTAssertEqual(att.width, 5.0)
-        XCTAssertEqual(att.cap, .square)
-        XCTAssertEqual(att.join, .round)
-        XCTAssertEqual(att.miterLimit, 10.0)
+        #expect(att.color == .color(.srgb(r: 1.0, g: 0, b: 0, a: 0.5)))
+        #expect(att.width == 5.0)
+        #expect(att.cap == .square)
+        #expect(att.join == .round)
+        #expect(att.miterLimit == 10.0)
 
         state.strokeWidth = 0
         let att2 = LayerTree.Builder.makeStrokeAttributes(with: state)
-        XCTAssertEqual(att2.color, .none)
+        #expect(att2.color == .none)
     }
 
-    func testDeepNestedSVGBuildLayers() async {
+    @Test
+    func deepNestedSVGBuildLayers() async {
         let circle = DOM.Circle(cx: 50, cy: 50, r: 10)
         let svg = DOM.SVG(width: 50, height: 50)
         svg.childElements.append(DOM.Group.make(child: circle, nestedLevels: 500))
 
-        let _ = LayerTree.Builder(svg: svg).makeLayer()
+        _ = LayerTree.Builder(svg: svg).makeLayer()
     }
 }
 

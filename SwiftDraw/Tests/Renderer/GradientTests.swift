@@ -29,13 +29,13 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-import XCTest
+import Testing
 @testable import SwiftDrawDOM
 @testable import SwiftDraw
 
-final class GradientTests: XCTestCase {
+struct GradientTests {
 
-    func testLinerGradient() {
+    @Test func linearGradientParsesStops() {
         let node = XML.Element(name: "linearGradient", attributes: ["id": "blue"])
 
         node.children.append(XML.Element(name: "stop", attributes: ["offset": "0%", "stop-color": "black"]))
@@ -50,36 +50,36 @@ final class GradientTests: XCTestCase {
         expected.stops.append(DOM.LinearGradient.Stop(offset: 1, color: .keyword(.red)))
 
         let parsed = try? DOMXMLParser().parseLinearGradient(node)
-        XCTAssertEqual(expected, parsed)
-        XCTAssertEqual(expected.stops.count, parsed?.stops.count)
+        #expect(expected == parsed)
+        #expect(expected.stops.count == parsed?.stops.count)
     }
 
-    func testLinerGradientStop() {
+    @Test func linearGradientStopParsesOffsetColorAndOpacity() {
 
         var node = ["offset": "25.5%", "stop-color": "black"]
 
         var parsed = try? DOMXMLParser().parseLinearGradientStop(node)
-        XCTAssertEqual(parsed?.offset, 0.255)
-        XCTAssertEqual(parsed?.color, .keyword(.black))
-        XCTAssertEqual(parsed?.opacity, 1.0)
+        #expect(parsed?.offset == 0.255)
+        #expect(parsed?.color == .keyword(.black))
+        #expect(parsed?.opacity == 1.0)
 
         node["stop-opacity"] = "99%"
         parsed = try? DOMXMLParser().parseLinearGradientStop(node)
-        XCTAssertEqual(parsed?.opacity, 0.99)
+        #expect(parsed?.opacity == 0.99)
     }
 
-    func testGradientUnits() throws {
+    @Test func gradientUnits() throws {
         let node = XML.Element(name: "linearGradient", attributes: ["id": "abc"])
 
         var gradient = try DOMXMLParser().parseLinearGradient(node)
-        XCTAssertNil(gradient.gradientUnits)
+        #expect(gradient.gradientUnits == nil)
 
         node.attributes["gradientUnits"] = "userSpaceOnUse"
         gradient = try DOMXMLParser().parseLinearGradient(node)
-        XCTAssertEqual(gradient.gradientUnits, .userSpaceOnUse)
+        #expect(gradient.gradientUnits == .userSpaceOnUse)
 
         node.attributes["gradientUnits"] = "objectBoundingBox"
         gradient = try DOMXMLParser().parseLinearGradient(node)
-        XCTAssertEqual(gradient.gradientUnits, .objectBoundingBox)
+        #expect(gradient.gradientUnits == .objectBoundingBox)
     }
 }

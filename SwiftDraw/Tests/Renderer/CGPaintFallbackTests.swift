@@ -33,13 +33,14 @@
 
 #if canImport(AppKit) && !targetEnvironment(macCatalyst)
 import AppKit
-import XCTest
+import Testing
 
 /// Pixel checks for the pattern-fill state leak and the paint fallback (SVG 1.1 §11.2) through CoreGraphics.
-final class CGPaintFallbackTests: XCTestCase {
+@MainActor
+struct CGPaintFallbackTests {
 
     // a solid colour A, a pattern, then colour A again: the last shape must be solid A, not the pattern
-    func testSolidColourAfterPatternIsNotPatterned() throws {
+    @Test func solidColourAfterPatternIsNotPatterned() throws {
         let pixels = try render(
             defs:
                 #"<pattern id="p" width="4" height="4" patternUnits="userSpaceOnUse"><rect width="4" height="4" fill="blue" /></pattern>"#,
@@ -49,28 +50,28 @@ final class CGPaintFallbackTests: XCTestCase {
                     <rect x="12" width="4" height="16" fill="red" />
                 """#
         )
-        XCTAssertEqual(pixels(2), .red)
-        XCTAssertEqual(pixels(10), .blue)
-        XCTAssertEqual(pixels(14), .red)
+        #expect(pixels(2) == .red)
+        #expect(pixels(10) == .blue)
+        #expect(pixels(14) == .red)
     }
 
-    func testMissingServerPaintsFallbackColour() throws {
+    @Test func missingServerPaintsFallbackColour() throws {
         let pixels = try render(defs: "", body: #"<rect width="16" height="16" fill="url(#missing) #ff0000" />"#)
-        XCTAssertEqual(pixels(8), .red)
+        #expect(pixels(8) == .red)
     }
 
-    func testResolvingServerWinsOverFallback() throws {
+    @Test func resolvingServerWinsOverFallback() throws {
         let pixels = try render(
             defs:
                 #"<linearGradient id="g"><stop offset="0" stop-color="blue" /><stop offset="1" stop-color="blue" /></linearGradient>"#,
             body: #"<rect width="16" height="16" fill="url(#g) #ff0000" />"#
         )
-        XCTAssertEqual(pixels(8), .blue)
+        #expect(pixels(8) == .blue)
     }
 
-    func testNoneFallbackPaintsNothing() throws {
+    @Test func noneFallbackPaintsNothing() throws {
         let pixels = try render(defs: "", body: #"<rect width="16" height="16" fill="url(#missing) none" />"#)
-        XCTAssertEqual(pixels(8), .white)
+        #expect(pixels(8) == .white)
     }
 }
 
@@ -87,7 +88,7 @@ private extension CGPaintFallbackTests {
                 \(body)
             </svg>
             """
-        let svg = try XCTUnwrap(SVG(xml: xml))
+        let svg = try #require(SVG(xml: xml))
         let image = svg.rasterize(with: CGSize(width: 16, height: 16), scale: 1)
         let canvas = NSBitmapImageRep(pixelsWide: 16, pixelsHigh: 16)
         canvas.lockFocus()

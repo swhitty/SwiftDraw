@@ -27,10 +27,10 @@
 //
 
 import SwiftDrawDOM
-import XCTest
+import Testing
 @testable import SwiftDraw
 
-final class LayerTreeShapeTests: XCTestCase {
+struct LayerTreeShapeTests {
 
     typealias Point = LayerTree.Point
     typealias Rect = LayerTree.Rect
@@ -38,204 +38,203 @@ final class LayerTreeShapeTests: XCTestCase {
     typealias Path = LayerTree.Path
     typealias Shape = LayerTree.Shape
 
-    func testShapeEquality() {
+    @Test
+    func shapeEquality() {
         let s1 = Shape.line(between: [.zero, Point(100, 200)])
         let s2 = Shape.rect(within: .zero, radii: Size(10, 20))
         let s3 = Shape.ellipse(within: .zero)
         let s4 = Shape.polygon(between: [.zero, Point(10, 20)])
         let s5 = Shape.path(Path())
 
-        XCTAssertEqual(s1, s1)
-        XCTAssertEqual(s1, .line(between: [.zero, Point(100, 200)]))
-        XCTAssertNotEqual(s1, .line(between: []))
-        XCTAssertNotEqual(s1.hashValue, Shape.line(between: []).hashValue)
+        #expect(s1 == s1)
+        #expect(s1 == .line(between: [.zero, Point(100, 200)]))
+        #expect(s1 != .line(between: []))
+        #expect(s1.hashValue != Shape.line(between: []).hashValue)
 
-        XCTAssertEqual(s2, s2)
-        XCTAssertEqual(s2, .rect(within: .zero, radii: Size(10, 20)))
-        XCTAssertNotEqual(s2, .rect(within: .zero, radii: .zero))
-        XCTAssertNotEqual(s2.hashValue, Shape.rect(within: .zero, radii: .zero).hashValue)
+        #expect(s2 == s2)
+        #expect(s2 == .rect(within: .zero, radii: Size(10, 20)))
+        #expect(s2 != .rect(within: .zero, radii: .zero))
+        #expect(s2.hashValue != Shape.rect(within: .zero, radii: .zero).hashValue)
 
-        XCTAssertEqual(s3, s3)
-        XCTAssertEqual(s3, .ellipse(within: .zero))
-        XCTAssertNotEqual(s3, .ellipse(within: Rect(x: 0, y: 0, width: 10, height: 20)))
-        XCTAssertNotEqual(s3.hashValue, Shape.ellipse(within: Rect(x: 0, y: 0, width: 10, height: 20)).hashValue)
+        #expect(s3 == s3)
+        #expect(s3 == .ellipse(within: .zero))
+        #expect(s3 != .ellipse(within: Rect(x: 0, y: 0, width: 10, height: 20)))
+        #expect(s3.hashValue != Shape.ellipse(within: Rect(x: 0, y: 0, width: 10, height: 20)).hashValue)
 
-        XCTAssertEqual(s4, s4)
-        XCTAssertEqual(s4, .polygon(between: [.zero, Point(10, 20)]))
-        XCTAssertNotEqual(s4, .polygon(between: []))
-        XCTAssertNotEqual(s4.hashValue, Shape.polygon(between: []).hashValue)
+        #expect(s4 == s4)
+        #expect(s4 == .polygon(between: [.zero, Point(10, 20)]))
+        #expect(s4 != .polygon(between: []))
+        #expect(s4.hashValue != Shape.polygon(between: []).hashValue)
 
-        XCTAssertEqual(s5, s5)
-        XCTAssertEqual(s5, .path(Path()))
-        XCTAssertNotEqual(s5.hashValue, Shape.path(Path([.close])).hashValue)
+        #expect(s5 == s5)
+        #expect(s5 == .path(Path()))
+        #expect(s5.hashValue != Shape.path(Path([.close])).hashValue)
 
-        XCTAssertNotEqual(s1, s2)
-        XCTAssertNotEqual(s1, s3)
-        XCTAssertNotEqual(s1, s4)
-        XCTAssertNotEqual(s1, s5)
+        #expect(s1 != s2)
+        #expect(s1 != s3)
+        #expect(s1 != s4)
+        #expect(s1 != s5)
 
-        XCTAssertNotEqual(s2, s3)
-        XCTAssertNotEqual(s2, s4)
-        XCTAssertNotEqual(s2, s5)
+        #expect(s2 != s3)
+        #expect(s2 != s4)
+        #expect(s2 != s5)
 
-        XCTAssertNotEqual(s3, s4)
-        XCTAssertNotEqual(s3, s5)
+        #expect(s3 != s4)
+        #expect(s3 != s5)
 
-        XCTAssertNotEqual(s4, s5)
+        #expect(s4 != s5)
     }
 
-    func testLineBuilder() {
+    @Test
+    func buildsLine() {
         let line = DOM.Line(x1: 10, y1: 20, x2: 30, y2: 40)
         let shape = LayerTree.Builder.makeShape(from: line)
 
-        XCTAssertEqual(shape, .line(between: [Point(10, 20), Point(30, 40)]))
+        #expect(shape == .line(between: [Point(10, 20), Point(30, 40)]))
     }
 
-    func testCircleBuilder() {
+    @Test
+    func buildsCircle() {
         let cicle = DOM.Circle(cx: 50, cy: 50, r: 25)
         let shape = LayerTree.Builder.makeShape(from: cicle)
 
-        XCTAssertEqual(shape, .ellipse(within: Rect(x: 25, y: 25, width: 50, height: 50)))
+        #expect(shape == .ellipse(within: Rect(x: 25, y: 25, width: 50, height: 50)))
     }
 
-    func testEllipseBuilder() {
+    @Test
+    func buildsEllipse() {
         let ellipse = DOM.Ellipse(cx: 50, cy: 75, rx: 25, ry: 50)
         let shape = LayerTree.Builder.makeShape(from: ellipse)
 
-        XCTAssertEqual(shape, .ellipse(within: Rect(x: 25, y: 25, width: 50, height: 100)))
+        #expect(shape == .ellipse(within: Rect(x: 25, y: 25, width: 50, height: 100)))
     }
 
-    func testRectBuilder() {
+    @Test
+    func buildsRect() {
         let rect = DOM.Rect(x: 10, y: 20, width: 30, height: 40)
         let shape = LayerTree.Builder.makeShape(from: rect)
-        XCTAssertEqual(
-            shape,
-            .rect(
-                within: Rect(x: 10, y: 20, width: 30, height: 40),
-                radii: .zero
-            )
+        #expect(
+            shape
+                == .rect(
+                    within: Rect(x: 10, y: 20, width: 30, height: 40),
+                    radii: .zero
+                )
         )
 
         //add corner radii
         rect.rx = 2
         rect.ry = 4
         let another = LayerTree.Builder.makeShape(from: rect)
-        XCTAssertEqual(
-            another,
-            .rect(
-                within: Rect(x: 10, y: 20, width: 30, height: 40),
-                radii: Size(2, 4)
-            )
+        #expect(
+            another
+                == .rect(
+                    within: Rect(x: 10, y: 20, width: 30, height: 40),
+                    radii: Size(2, 4)
+                )
         )
     }
 
-    func testPolylineBuilder() {
+    @Test
+    func buildsPolyline() {
         let line = DOM.Polyline(10, 20, 30, 40, 50, 60)
         let shape = LayerTree.Builder.makeShape(from: line)
 
-        XCTAssertEqual(shape, .line(between: [Point(10, 20), Point(30, 40), Point(50, 60)]))
+        #expect(shape == .line(between: [Point(10, 20), Point(30, 40), Point(50, 60)]))
     }
 
-    func testPolygonBuilder() {
+    @Test
+    func buildsPolygon() {
         let poly = DOM.Polygon(10, 20, 30, 40, 50, 60)
         let shape = LayerTree.Builder.makeShape(from: poly)
 
-        XCTAssertEqual(shape, .polygon(between: [Point(10, 20), Point(30, 40), Point(50, 60)]))
+        #expect(shape == .polygon(between: [Point(10, 20), Point(30, 40), Point(50, 60)]))
     }
 
-    func testPathBuilder() {
+    @Test
+    func buildsPath() {
         let domPath = DOM.Path(x: 10, y: 20)
         domPath.segments.append(.line(x: 30, y: 40, space: .absolute))
         let shape = LayerTree.Builder.makeShape(from: domPath)
 
         let path = Path()
         path.segments = [.move(to: Point(10, 20)), .line(to: Point(30, 40))]
-        XCTAssertEqual(shape, .path(path))
+        #expect(shape == .path(path))
     }
 
-    func testLine_CreatesPath() {
+    @Test
+    func lineCreatesPath() {
         let shape = LayerTree.Shape.line(between: [
             Point(100, 100),
             Point(200, 100),
             Point(300, 300),
         ])
 
-        XCTAssertEqual(
-            shape.path,
-            LayerTree.Path([
-                .move(to: Point(100, 100)),
-                .line(to: Point(200, 100)),
-                .line(to: Point(300, 300)),
-            ])
+        #expect(
+            shape.path
+                == LayerTree.Path([
+                    .move(to: Point(100, 100)),
+                    .line(to: Point(200, 100)),
+                    .line(to: Point(300, 300)),
+                ])
         )
 
-        XCTAssertEqual(
-            LayerTree.Shape.line(between: []).path,
-            LayerTree.Path()
-        )
+        #expect(LayerTree.Shape.line(between: []).path == LayerTree.Path())
     }
 
-    func testPolygon_CreatesPath() {
+    @Test
+    func polygonCreatesPath() {
         let shape = LayerTree.Shape.polygon(between: [
             Point(100, 100),
             Point(200, 100),
             Point(300, 300),
         ])
 
-        XCTAssertEqual(
-            shape.path,
-            LayerTree.Path([
-                .move(to: Point(100, 100)),
-                .line(to: Point(200, 100)),
-                .line(to: Point(300, 300)),
-                .close,
-            ])
+        #expect(
+            shape.path
+                == LayerTree.Path([
+                    .move(to: Point(100, 100)),
+                    .line(to: Point(200, 100)),
+                    .line(to: Point(300, 300)),
+                    .close,
+                ])
         )
 
-        XCTAssertEqual(
-            LayerTree.Shape.polygon(between: []).path,
-            LayerTree.Path()
-        )
+        #expect(LayerTree.Shape.polygon(between: []).path == LayerTree.Path())
     }
 
-    func testRect_CreatesPath() {
+    @Test
+    func rectCreatesPath() {
         let shape = LayerTree.Shape.rect(
             within: .init(x: 100, y: 100, width: 100, height: 100),
             radii: .zero
         )
 
-        XCTAssertEqual(
-            shape.path.segments.count,
-            5
-        )
+        #expect(shape.path.segments.count == 5)
     }
 
     #if canImport(Darwin)
-    func testEllipse_CreatesPath() {
+    @Test
+    func ellipseCreatesPath() {
         let shape = LayerTree.Shape.ellipse(
             within: .init(x: 100, y: 100, width: 100, height: 100)
         )
 
-        XCTAssertEqual(
-            shape.path.segments.count,
-            6
-        )
+        #expect(shape.path.segments.count == 6)
     }
     #endif
 
-    func testRectWithRadii_CreatesPath() {
+    @Test
+    func rectWithRadiiCreatesPath() {
         let shape = LayerTree.Shape.rect(
             within: .init(x: 100, y: 100, width: 100, height: 100),
             radii: .init(10, 10)
         )
 
-        XCTAssertEqual(
-            shape.path.segments.count,
-            14
-        )
+        #expect(shape.path.segments.count == 14)
     }
 
-    func testPath_CreatesPath() {
+    @Test
+    func pathCreatesPath() {
         let shape = LayerTree.Shape.path(
             .init([
                 .move(to: .zero),
@@ -244,13 +243,13 @@ final class LayerTreeShapeTests: XCTestCase {
             ])
         )
 
-        XCTAssertEqual(
-            shape.path,
-            LayerTree.Path([
-                .move(to: .zero),
-                .line(to: Point(10, 10)),
-                .close,
-            ])
+        #expect(
+            shape.path
+                == LayerTree.Path([
+                    .move(to: .zero),
+                    .line(to: Point(10, 10)),
+                    .close,
+                ])
         )
     }
 }

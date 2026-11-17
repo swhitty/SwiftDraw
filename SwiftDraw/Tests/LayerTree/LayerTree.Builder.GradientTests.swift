@@ -30,12 +30,13 @@
 //
 
 @testable import SwiftDrawDOM
-import XCTest
 @testable import SwiftDraw
+import Testing
 
-final class LayerTreeBuilderGradientTests: XCTestCase {
+struct LayerTreeBuilderGradientTests {
 
-    func testRadialGradient_InheritsStops_FromLinearGradient() throws {
+    @Test
+    func radialGradientInheritsStopsFromLinearGradient() throws {
         let svg = try DOM.SVG.parse(
             xml: #"""
                 <svg width="10" height="10" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
@@ -48,13 +49,14 @@ final class LayerTreeBuilderGradientTests: XCTestCase {
         )
         let builder = LayerTree.Builder(svg: svg)
 
-        let gradient = try XCTUnwrap(builder.makeGradient(for: svg.defs.radialGradients[0]))
-        XCTAssertEqual(gradient.gradient.stops, builder.makeGradientStops(for: svg.defs.linearGradients[0]))
-        XCTAssertEqual(gradient.endCenter, LayerTree.Point(5, 5))
-        XCTAssertEqual(gradient.endRadius, 5)
+        let gradient = try #require(builder.makeGradient(for: svg.defs.radialGradients[0]))
+        #expect(gradient.gradient.stops == builder.makeGradientStops(for: svg.defs.linearGradients[0]))
+        #expect(gradient.endCenter == LayerTree.Point(5, 5))
+        #expect(gradient.endRadius == 5)
     }
 
-    func testLinearGradient_InheritsUnitsGeometryAndTransform() throws {
+    @Test
+    func linearGradientInheritsUnitsGeometryAndTransform() throws {
         let svg = try DOM.SVG.parse(
             xml: #"""
                 <svg width="10" height="10" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
@@ -69,14 +71,15 @@ final class LayerTreeBuilderGradientTests: XCTestCase {
         )
         let builder = LayerTree.Builder(svg: svg)
 
-        let gradient = try XCTUnwrap(builder.makeGradient(for: svg.defs.linearGradients[1]))
-        XCTAssertEqual(gradient.units, .userSpaceOnUse)
-        XCTAssertEqual(gradient.start, LayerTree.Point(1, 2))
-        XCTAssertEqual(gradient.end, LayerTree.Point(3, 4))
-        XCTAssertEqual(gradient.transform, [.translate(tx: 5, ty: 6)])
+        let gradient = try #require(builder.makeGradient(for: svg.defs.linearGradients[1]))
+        #expect(gradient.units == .userSpaceOnUse)
+        #expect(gradient.start == LayerTree.Point(1, 2))
+        #expect(gradient.end == LayerTree.Point(3, 4))
+        #expect(gradient.transform == [.translate(tx: 5, ty: 6)])
     }
 
-    func testGradient_OwnAttributes_OverrideReferenced() throws {
+    @Test
+    func ownAttributesOverrideReferencedGradient() throws {
         let svg = try DOM.SVG.parse(
             xml: #"""
                 <svg width="10" height="10" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
@@ -93,13 +96,14 @@ final class LayerTreeBuilderGradientTests: XCTestCase {
         )
         let builder = LayerTree.Builder(svg: svg)
 
-        let gradient = try XCTUnwrap(builder.makeGradient(for: svg.defs.linearGradients[1]))
-        XCTAssertEqual(gradient.units, .objectBoundingBox)
-        XCTAssertEqual(gradient.start.x, 0.5)
-        XCTAssertEqual(gradient.gradient.stops, builder.makeGradientStops(for: svg.defs.linearGradients[1]))
+        let gradient = try #require(builder.makeGradient(for: svg.defs.linearGradients[1]))
+        #expect(gradient.units == .objectBoundingBox)
+        #expect(gradient.start.x == 0.5)
+        #expect(gradient.gradient.stops == builder.makeGradientStops(for: svg.defs.linearGradients[1]))
     }
 
-    func testRadialGradient_DoesNotInheritGeometry_FromLinearGradient() throws {
+    @Test
+    func radialGradientDoesNotInheritGeometryFromLinearGradient() throws {
         let svg = try DOM.SVG.parse(
             xml: #"""
                 <svg width="10" height="10" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
@@ -114,14 +118,15 @@ final class LayerTreeBuilderGradientTests: XCTestCase {
         )
         let builder = LayerTree.Builder(svg: svg)
 
-        let gradient = try XCTUnwrap(builder.makeGradient(for: svg.defs.radialGradients[0]))
-        XCTAssertEqual(gradient.units, .userSpaceOnUse)
+        let gradient = try #require(builder.makeGradient(for: svg.defs.radialGradients[0]))
+        #expect(gradient.units == .userSpaceOnUse)
         // the defaults (50%) of the 10x10 viewport, not the linear gradient's x1
-        XCTAssertEqual(gradient.endCenter, LayerTree.Point(5, 5))
-        XCTAssertEqual(gradient.endRadius, 5)
+        #expect(gradient.endCenter == LayerTree.Point(5, 5))
+        #expect(gradient.endRadius == 5)
     }
 
-    func testGradient_FollowsReferenceChain() throws {
+    @Test
+    func gradientFollowsReferenceChain() throws {
         let svg = try DOM.SVG.parse(
             xml: #"""
                 <svg width="10" height="10" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
@@ -135,12 +140,13 @@ final class LayerTreeBuilderGradientTests: XCTestCase {
         )
         let builder = LayerTree.Builder(svg: svg)
 
-        let gradient = try XCTUnwrap(builder.makeGradient(for: svg.defs.radialGradients[0]))
-        XCTAssertEqual(gradient.gradient.stops, builder.makeGradientStops(for: svg.defs.linearGradients[0]))
-        XCTAssertEqual(gradient.units, .userSpaceOnUse)
+        let gradient = try #require(builder.makeGradient(for: svg.defs.radialGradients[0]))
+        #expect(gradient.gradient.stops == builder.makeGradientStops(for: svg.defs.linearGradients[0]))
+        #expect(gradient.units == .userSpaceOnUse)
     }
 
-    func testGradient_ReferenceCycle_ReturnsNil() throws {
+    @Test
+    func gradientReferenceCycleReturnsNil() throws {
         let svg = try DOM.SVG.parse(
             xml: #"""
                 <svg width="10" height="10" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
@@ -153,7 +159,7 @@ final class LayerTreeBuilderGradientTests: XCTestCase {
         )
         let builder = LayerTree.Builder(svg: svg)
 
-        XCTAssertNil(builder.makeGradient(for: svg.defs.linearGradients[0]))
-        XCTAssertNil(builder.makeGradient(for: svg.defs.radialGradients[0]))
+        #expect(builder.makeGradient(for: svg.defs.linearGradients[0]) == nil)
+        #expect(builder.makeGradient(for: svg.defs.radialGradients[0]) == nil)
     }
 }

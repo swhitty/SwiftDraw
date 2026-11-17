@@ -29,52 +29,24 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-import XCTest
+import Testing
 @testable import SwiftDraw
 
-final class PairedSequenceTests: XCTestCase {
+struct PairedSequenceTests {
 
-    func testSequences() {
-        XCTAssertEqual(
-            ["a", "b", "c", "d"].paired(with: .nextSkippingLast).map { "\($0)\($1)" },
-            ["ab", "bc", "cd"]
-        )
-
-        XCTAssertEqual(
-            ["a", "b", "c", "d"].paired(with: .nextWrappingToFirst).map { "\($0)\($1)" },
-            ["ab", "bc", "cd", "da"]
-        )
-
-        XCTAssertEqual(
-            ["a", "b"].paired(with: .nextSkippingLast).map { "\($0)\($1)" },
-            ["ab"]
-        )
-
-        XCTAssertEqual(
-            ["a", "b"].paired(with: .nextWrappingToFirst).map { "\($0)\($1)" },
-            ["ab", "ba"]
-        )
-    }
-
-    func testEmptySequences() {
-        XCTAssertEqual(
-            ["a"].paired(with: .nextSkippingLast).map { "\($0)\($1)" },
-            []
-        )
-
-        XCTAssertEqual(
-            ["a"].paired(with: .nextWrappingToFirst).map { "\($0)\($1)" },
-            []
-        )
-
-        XCTAssertEqual(
-            [].paired(with: .nextSkippingLast).map { "\($0)\($1)" },
-            []
-        )
-
-        XCTAssertEqual(
-            [].paired(with: .nextWrappingToFirst).map { "\($0)\($1)" },
-            []
-        )
+    @Test(
+        arguments: [
+            (["a", "b", "c", "d"], .nextSkippingLast, ["ab", "bc", "cd"]),
+            (["a", "b", "c", "d"], .nextWrappingToFirst, ["ab", "bc", "cd", "da"]),
+            (["a", "b"], .nextSkippingLast, ["ab"]),
+            (["a", "b"], .nextWrappingToFirst, ["ab", "ba"]),
+            (["a"], .nextSkippingLast, []),
+            (["a"], .nextWrappingToFirst, []),
+            ([], .nextSkippingLast, []),
+            ([], .nextWrappingToFirst, []),
+        ] as [([String], PairedSequence<[String]>.Options, [String])]
+    )
+    func pairsElements(elements: [String], options: PairedSequence<[String]>.Options, expected: [String]) {
+        #expect(elements.paired(with: options).map { "\($0)\($1)" } == expected)
     }
 }
