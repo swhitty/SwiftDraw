@@ -60,7 +60,8 @@ extension XMLParser {
         node.r = try? nodeAtt.parseCoordinateOrPercentage("r")
         node.cx = try? nodeAtt.parseCoordinateOrPercentage("cx")
         node.cy = try? nodeAtt.parseCoordinateOrPercentage("cy")
-        node.fr = try? nodeAtt.parseCoordinateOrPercentage("fr")
+        // a negative fr is an error (SVG 2 §14.3.4): as in WebKit and resvg, the initial 0% is used
+        node.fr = (try? nodeAtt.parseCoordinateOrPercentage("fr")).flatMap { $0 < 0 ? nil : $0 }
         node.fx = try? nodeAtt.parseCoordinateOrPercentage("fx")
         node.fy = try? nodeAtt.parseCoordinateOrPercentage("fy")
         node.percentageAttributes = percentageAttributes(nodeAtt, ["r", "cx", "cy", "fr", "fx", "fy"])
@@ -79,9 +80,13 @@ extension XMLParser {
         node.href  = try? nodeAtt.parseHref()
         node.viewport = lengthContext.viewports.last
 
-        if let val = try? nodeAtt.parseString("gradientTransform") {
-          if let t = try? parseTransform(val) { node.gradientTransform = t }
+        // an empty value is the identity and overrides an inherited transform; an invalid one is dropped
+        if let val = try? nodeAtt.parseString("gradientTransform"),
+           let t = try? parseTransform(val) {
+            node.gradientTransform = t
+            node.hasGradientTransform = true
         }
+        node.colorInterpolation = inheritedColorInterpolation(ancestors + [e])
         node.transformOrigin = (try? nodeAtt.parseString("transform-origin")).flatMap(parseTransformOrigin)
         node.spreadMethod = try? nodeAtt.parseRaw("spreadMethod")
 

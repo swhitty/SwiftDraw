@@ -231,11 +231,7 @@ package extension DOM {
         }
 
         // Filter Effects 1 §10 color-interpolation-filters
-        package enum ColorInterpolation: String, Hashable {
-            case auto
-            case sRGB
-            case linearRGB
-        }
+        package typealias ColorInterpolation = DOM.ColorInterpolation
 
         package enum Units: String {
             case userSpaceOnUse

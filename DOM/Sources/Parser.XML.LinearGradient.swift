@@ -77,9 +77,13 @@ extension XMLParser {
         node.href  = try? nodeAtt.parseHref()
         node.viewport = lengthContext.viewports.last
 
-        if let val = try? nodeAtt.parseString("gradientTransform") {
-          if let t = try? parseTransform(val) { node.gradientTransform = t }
+        // an empty value is the identity and overrides an inherited transform; an invalid one is dropped
+        if let val = try? nodeAtt.parseString("gradientTransform"),
+           let t = try? parseTransform(val) {
+            node.gradientTransform = t
+            node.hasGradientTransform = true
         }
+        node.colorInterpolation = inheritedColorInterpolation(ancestors + [e])
         node.transformOrigin = (try? nodeAtt.parseString("transform-origin")).flatMap(parseTransformOrigin)
         node.spreadMethod = try? nodeAtt.parseRaw("spreadMethod")
 
@@ -102,6 +106,13 @@ extension XMLParser {
             guard let raw: String = try? att.parseString(key) else { return false }
             return raw.trimmingCharacters(in: .whitespaces).hasSuffix("%")
         })
+    }
+
+    /// The `color-interpolation` in effect on the last element of `chain`, a path from the document root,
+    /// through the cascade; `auto` is sRGB.
+    func inheritedColorInterpolation(_ chain: [XML.Element]) -> DOM.ColorInterpolation? {
+        let value = chain.lazy.reversed().compactMap { self.cascadedAttributes($0).colorInterpolation }.first
+        return value == .auto ? .sRGB : value
     }
 
     /// A number or percentage clamped to 0...1 (SVG 1.1 §13.2.4 stop offset and stop-opacity);

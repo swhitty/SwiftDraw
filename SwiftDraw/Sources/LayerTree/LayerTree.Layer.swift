@@ -52,6 +52,8 @@ extension LayerTree {
 
         enum MaskType: Hashable {
             case luminance
+            /// luminance of the contents' colours in linear light (`color-interpolation: linearRGB`)
+            case linearLuminance
             case alpha
         }
 

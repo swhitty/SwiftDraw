@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="250" viewBox="0 0 240 250">
+    <!-- color-interpolation="linearRGB" mixes the stops in linear light; sRGB below each for comparison -->
+    <linearGradient id="srgb">
+        <stop offset="0" stop-color="red"/>
+        <stop offset="0.5" stop-color="lime"/>
+        <stop offset="1" stop-color="blue"/>
+    </linearGradient>
+    <linearGradient id="linear" color-interpolation="linearRGB">
+        <stop offset="0" stop-color="red"/>
+        <stop offset="0.5" stop-color="lime"/>
+        <stop offset="1" stop-color="blue"/>
+    </linearGradient>
+    <g color-interpolation="linearRGB">
+        <linearGradient id="opacity">
+            <stop offset="0" stop-color="blue"/>
+            <stop offset="1" stop-color="yellow" stop-opacity="0"/>
+        </linearGradient>
+        <radialGradient id="radial">
+            <stop offset="0" stop-color="white"/>
+            <stop offset="1" stop-color="black"/>
+        </radialGradient>
+    </g>
+    <linearGradient id="fade">
+        <stop offset="0" stop-color="white" stop-opacity="0"/>
+        <stop offset="1" stop-color="black"/>
+    </linearGradient>
+    <!-- on a mask it takes the luminance in linear light -->
+    <mask id="mask" color-interpolation="linearRGB">
+        <rect x="10" y="200" width="220" height="40" fill="url(#fade)"/>
+    </mask>
+    <rect x="10" y="10" width="220" height="30" fill="url(#linear)"/>
+    <rect x="10" y="40" width="220" height="30" fill="url(#srgb)"/>
+    <rect x="10" y="80" width="220" height="40" fill="url(#opacity)"/>
+    <rect x="10" y="130" width="60" height="60" fill="url(#radial)"/>
+    <rect x="0" y="195" width="240" height="50" fill="green" mask="url(#mask)"/>
+</svg>

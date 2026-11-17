@@ -40,8 +40,17 @@ extension LayerTree {
             return .srgb
         }
 
-        init(stops: [Stop]) {
+        /// SVG 1.1 §12.7.1 color-interpolation: the space the colours between stops are interpolated in
+        var interpolation: Interpolation = .sRGB
+
+        init(stops: [Stop], interpolation: Interpolation = .sRGB) {
             self.stops = stops
+            self.interpolation = interpolation
+        }
+
+        enum Interpolation: Hashable {
+            case sRGB
+            case linearRGB
         }
 
         struct Stop: Hashable {

@@ -107,7 +107,8 @@ struct LayerTreeGradientSpreadTests {
         let stops = [-0.5, .nan, 0.8, 0.3, 4].map {
             LayerTree.Gradient.Stop(offset: $0, color: .none, opacity: 1)
         }
-        #expect(LayerTree.Builder.makeMonotonic(stops).map(\.offset) == [0, 0, 0.8, 0.8, 1])
+        // a second stop at 0 is moved just after it, so the first colour pads before the gradient
+        #expect(LayerTree.Builder.makeMonotonic(stops).map(\.offset) == [0, 1e-5, 0.8, 0.8, 1])
     }
 
     // MARK: - spreadMethod parsing

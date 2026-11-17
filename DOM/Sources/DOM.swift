@@ -156,6 +156,14 @@ extension DOM {
         }
     }
 
+    // SVG 1.1 §12.7.1 color-interpolation (and Filter Effects 1 §10 color-interpolation-filters):
+    // the space gradients interpolate and masks compute luminance in; `auto` is sRGB
+    package enum ColorInterpolation: String, Hashable {
+        case auto
+        case sRGB
+        case linearRGB
+    }
+
     // CSS Masking §7.2: whether a mask uses the luminance or the alpha of its contents
     package enum MaskType: String {
         case luminance

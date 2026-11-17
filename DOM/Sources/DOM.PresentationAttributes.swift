@@ -68,6 +68,8 @@ package extension DOM {
         package var clipRule: DOM.FillRule?
         package var mask: DOM.URL?
         package var maskType: DOM.MaskType?
+        /// inherited: gradients and masks use the value in effect on the `<linearGradient>`, `<radialGradient>` or `<mask>`
+        package var colorInterpolation: DOM.ColorInterpolation?
         // url() references and filter functions in order; empty for `none`
         package var filter: [DOM.FilterValue]?
         package var overflow: DOM.Overflow?
@@ -205,6 +207,7 @@ extension DOM.PresentationAttributes {
         merged.clipRule = att.clipRule ?? clipRule
         merged.mask = att.mask ?? mask
         merged.maskType = att.maskType ?? maskType
+        merged.colorInterpolation = att.colorInterpolation ?? colorInterpolation
         merged.filter = att.filter ?? filter
         merged.overflow = att.overflow ?? overflow
 

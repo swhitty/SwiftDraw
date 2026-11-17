@@ -462,6 +462,7 @@ extension XMLParser {
         el.clipRule = lenient { try att.parseRaw("clip-rule") }
         el.mask = urlOrNone(att, "mask")
         el.maskType = lenient { try att.parseRaw("mask-type") }
+        el.colorInterpolation = lenient { try att.parseRaw("color-interpolation") }
         el.filter = lenient { try att.parseString("filter") as String? }.flatMap {
             try? Self.parseFilterValue(XMLParser.Attributes.removingImportant(from: $0))
         }

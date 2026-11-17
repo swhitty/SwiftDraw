@@ -386,6 +386,8 @@ extension LayerTree {
                 let l = Layer()
                 if DOM.presentationAttributes(for: mask, styles: svg.styles).maskType == .alpha {
                     l.maskType = .alpha
+                } else if makeColorInterpolation(for: mask) == .linearRGB {
+                    l.maskType = .linearLuminance
                 }
 
                 let content = Layer()
@@ -898,6 +900,7 @@ extension LayerTree.Builder {
 
         gradient.units = units
         gradient.transform = makeGradientTransform(for: chain, viewport: geometry.viewport)
+        gradient.gradient.interpolation = Self.createInterpolation(from: element.colorInterpolation)
         gradient.spread = Self.createSpread(from: chain.lazy.compactMap(\.spreadMethod).first)
         return gradient
     }
@@ -927,12 +930,13 @@ extension LayerTree.Builder {
         )
         gradient.units = units
         gradient.transform = makeGradientTransform(for: chain, viewport: geometry.viewport)
+        gradient.gradient.interpolation = Self.createInterpolation(from: element.colorInterpolation)
         return gradient
     }
 
     /// The gradientTransform of a chain, from the first gradient that has one, around that gradient's `transform-origin`.
     func makeGradientTransform(for chain: [GradientElement], viewport: LayerTree.Size) -> [LayerTree.Transform] {
-        let source = chain.first { !$0.transform.isEmpty }
+        let source = chain.first { $0.hasTransform || !$0.transform.isEmpty }
         return Self.createTransforms(from: source?.transform ?? [], origin: source?.transformOrigin, viewport: viewport)
     }
 
@@ -1026,6 +1030,13 @@ extension LayerTree.Builder {
             }
         }
 
+        var hasTransform: Bool {
+            switch self {
+            case let .linear(element): return element.hasGradientTransform
+            case let .radial(element): return element.hasGradientTransform
+            }
+        }
+
         var transformOrigin: DOM.TransformOrigin? {
             switch self {
             case let .linear(element): return element.transformOrigin
@@ -1076,14 +1087,46 @@ extension LayerTree.Builder {
 
     /// SVG 1.1 §13.2.4: offsets are clamped to 0...1, and an offset less than any before it
     /// takes the largest offset before it.
+    /// Where three or more stops share an offset only the first and last can be seen: the colour
+    /// changes from one to the other there, so the ones between are dropped. A pair at 0 keeps the
+    /// first colour for the padding before the gradient, as WebKit and resvg do, so the second is
+    /// moved just after 0 (CoreGraphics pads with the last stop at 0).
     static func makeMonotonic(_ stops: [LayerTree.Gradient.Stop]) -> [LayerTree.Gradient.Stop] {
         var previous: LayerTree.Float = 0
-        return stops.map {
+        let clamped = stops.map {
             var stop = $0
             stop.offset = max(previous, min(1, stop.offset.isFinite ? stop.offset : 0))
             previous = stop.offset
             return stop
         }
+
+        var result = [LayerTree.Gradient.Stop]()
+        for (index, stop) in clamped.enumerated() {
+            let isBetween = index > 0 && index < clamped.count - 1 &&
+                clamped[index - 1].offset == stop.offset && clamped[index + 1].offset == stop.offset
+            if !isBetween {
+                result.append(stop)
+            }
+        }
+        if result.count > 1, result[0].offset == 0, result[1].offset == 0 {
+            let next = result.count > 2 ? result[2].offset : 1
+            result[1].offset = min(minimumStopOffset, next)
+        }
+        return result
+    }
+
+    /// The offset a second stop at 0 is moved to: small enough not to be seen.
+    static var minimumStopOffset: LayerTree.Float { 1e-5 }
+
+    /// The `color-interpolation` in effect on a `<mask>`: its own, or inherited from its ancestors.
+    func makeColorInterpolation(for mask: DOM.Mask) -> DOM.ColorInterpolation? {
+        (mask.ancestors + [mask]).lazy.reversed()
+            .compactMap { DOM.presentationAttributes(for: $0, styles: self.svg.styles).colorInterpolation }
+            .first
+    }
+
+    static func createInterpolation(from interpolation: DOM.ColorInterpolation?) -> LayerTree.Gradient.Interpolation {
+        interpolation == .linearRGB ? .linearRGB : .sRGB
     }
 
     func makeGradientStops(for element: DOM.LinearGradient) -> [LayerTree.Gradient.Stop] {
