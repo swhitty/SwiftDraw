@@ -61,6 +61,9 @@ package extension DOM {
         package var fontStyle: FontStyle?
         package var textAnchor: TextAnchor?
         package var dominantBaseline: TextBaseline?
+        /// CSS `letter-spacing` and `word-spacing`; `normal` is a length of 0
+        package var letterSpacing: DashLength?
+        package var wordSpacing: DashLength?
 
         package var transform: [DOM.Transform]?
         package var transformOrigin: DOM.TransformOrigin?
@@ -200,6 +203,8 @@ extension DOM.PresentationAttributes {
         merged.fontStyle = att.fontStyle ?? fontStyle
         merged.textAnchor = att.textAnchor ?? textAnchor
         merged.dominantBaseline = att.dominantBaseline ?? dominantBaseline
+        merged.letterSpacing = att.letterSpacing ?? letterSpacing
+        merged.wordSpacing = att.wordSpacing ?? wordSpacing
 
         merged.transform = att.transform ?? transform
         merged.transformOrigin = att.transformOrigin ?? transformOrigin

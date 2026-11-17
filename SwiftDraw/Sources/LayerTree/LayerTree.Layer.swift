@@ -64,6 +64,8 @@ extension LayerTree {
             case shape(Shape, StrokeAttributes, FillAttributes)
             case image(Image)
             case text(String, Point, TextAttributes)
+            /// glyphs placed one by one, where the text is not laid out as its font would on its own
+            case glyphs(GlyphRun)
             case layer(Layer)
         }
 
@@ -193,6 +195,20 @@ extension LayerTree {
         }
     }
 
+    /// Glyphs of one face, each at its own origin: text the builder laid out character by character
+    /// (spacing, per-character positions) from the font's shaping, so its kerning and contextual forms
+    /// are kept. Renderers draw a run as one path of its glyph outlines.
+    struct GlyphRun: Hashable {
+        /// the fill colour and the requested font, size, weight and slant
+        var attributes: TextAttributes
+        /// PostScript name of the face the glyph ids are in: one of the requested fonts, or one the
+        /// shaper fell back to for characters they lack
+        var fontName: String
+        var glyphs: [UInt16]
+        /// the origin of each glyph on the baseline, in user space
+        var positions: [Point]
+    }
+
     struct TextAttributes: Hashable {
         var color: Color
         var font: [Font]
@@ -257,6 +273,8 @@ extension LayerTree.Layer.Contents: CustomDebugStringConvertible {
             return "shape-\(s.debugDescription)"
         case .text:
             return "text"
+        case .glyphs:
+            return "glyphs"
         }
     }
 }

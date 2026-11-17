@@ -207,7 +207,7 @@ struct LayerTreeVisibilityTests {
             func count(_ layer: LayerTree.Layer) -> (text: Int, image: Int) {
                 layer.contents.reduce(into: (0, 0)) { total, content in
                     switch content {
-                    case .text: total.text += 1
+                    case .text, .glyphs: total.text += 1
                     case .image: total.image += 1
                     case .layer(let child):
                         let c = count(child)

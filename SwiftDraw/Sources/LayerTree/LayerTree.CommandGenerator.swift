@@ -213,6 +213,8 @@ extension LayerTree {
                 return .simple(renderCommands(for: image))
             case .text(let text, let point, let att):
                 return .simple(renderCommands(for: text, at: point, attributes: att, colorConverter: colorConverter))
+            case .glyphs(let run):
+                return .simple(renderCommands(for: run, colorConverter: colorConverter))
             case .layer(let layer):
                 return .layer(layer)
             }
@@ -494,6 +496,13 @@ extension LayerTree {
 
             return [.setFill(color: color),
                     .fill(path, rule: rule)]
+        }
+
+        func renderCommands(for run: GlyphRun, colorConverter: any ColorConverter = .default) -> [RendererCommand<P.Types>] {
+            guard let path = provider.createPath(from: run) else { return [] }
+            let color = provider.createColor(from: colorConverter.createColor(from: run.attributes.color))
+            return [.setFill(color: color),
+                    .fill(path, rule: provider.createFillRule(from: .nonzero))]
         }
 
         func renderCommands(forOpacity opacity: Float) -> [RendererCommand<P.Types>] {
@@ -1050,7 +1059,7 @@ extension LayerTree.CommandGenerator {
                 if let width = image.width, let height = image.height {
                     points.append(contentsOf: LayerTree.Rect(x: image.origin.x, y: image.origin.y, width: width, height: height).corners)
                 }
-            case .text:
+            case .text, .glyphs:
                 break
             case .layer(let child):
                 if let rect = makeBounds(for: child) {

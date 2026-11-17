@@ -225,6 +225,32 @@ struct CGProvider: RendererTypeProvider {
         return cgPath
     }
 
+    func createPath(from run: LayerTree.GlyphRun) -> Types.Path? {
+        Self.createGlyphPath(from: run)
+    }
+
+    /// The outlines of a run of glyphs at their positions, with the bold and oblique its face needs synthesized
+    static func createGlyphPath(from run: LayerTree.GlyphRun) -> CGPath? {
+        let font = createFont(for: run.attributes)
+        let face = font.face(named: run.fontName)
+        let synthesis = font.synthesis(for: face)
+        let boldOffset = synthesis.contains(.bold) ? String.syntheticBoldOffset(for: face) : 0
+        var skew = synthesis.contains(.oblique) ? String.syntheticObliqueTransform : .identity
+        // glyph space is y up: flip it about the baseline
+        let flip = CGAffineTransform(a: 1, b: 0, c: 0, d: -1, tx: 0, ty: 0)
+        let path = CGMutablePath()
+        for (glyph, position) in zip(run.glyphs, run.positions) {
+            guard let outline = CTFontCreatePathForGlyph(face, CGGlyph(glyph), &skew) else { continue }
+            let origin = CGAffineTransform(translationX: CGFloat(position.x), y: CGFloat(position.y))
+            path.addPath(outline, transform: flip.concatenating(origin))
+            if boldOffset > 0 {
+                // a second copy, offset; filled nonzero, the two copies merge
+                path.addPath(outline, transform: flip.concatenating(origin.translatedBy(x: boldOffset, y: 0)))
+            }
+        }
+        return path
+    }
+
     func createPath(from text: String, at origin: LayerTree.Point, with attributes: LayerTree.TextAttributes) -> Types.Path? {
         let font = CGProvider.createFont(for: attributes)
         guard let path = text.toPath(font: font.font, synthesis: font.synthesis(for:)) else { return nil }
@@ -266,6 +292,18 @@ struct CGProvider: RendererTypeProvider {
         var faces: [(postScriptName: String, synthesis: LayerTree.FontSynthesis)]
         var weight: Int
         var isItalic: Bool
+        /// The faces in cascade order
+        var faceFonts: [CTFont] = []
+
+        /// The face a run of shaped glyphs is in, by PostScript name: one of the faces, else an
+        /// installed font CoreText fell back to
+        func face(named name: String) -> CTFont {
+            if CTFontCopyPostScriptName(font) as String == name { return font }
+            if let face = faceFonts.first(where: { CTFontCopyPostScriptName($0) as String == name }) {
+                return face
+            }
+            return CTFontCreateWithName(name as CFString, CTFontGetSize(font), nil)
+        }
 
         /// The synthesis for a run's font: that of its face, or for a font CoreText substituted for
         /// missing glyphs (a system font), whatever its own weight and slant lack
@@ -406,7 +444,8 @@ struct CGProvider: RendererTypeProvider {
             font: font,
             faces: faces.map { (CTFontCopyPostScriptName($0.0) as String, $0.1) },
             weight: weight,
-            isItalic: isItalic
+            isItalic: isItalic,
+            faceFonts: faces.map(\.0)
         )
     }
 

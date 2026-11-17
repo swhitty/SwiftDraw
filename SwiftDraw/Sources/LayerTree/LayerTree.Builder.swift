@@ -1174,6 +1174,9 @@ extension LayerTree.Builder {
         var fontStyle: DOM.FontStyle
         var textAnchor: DOM.TextAnchor
         var textBaseline: DOM.TextBaseline
+        /// CSS `letter-spacing` and `word-spacing`, computed: inherited as absolute lengths
+        var letterSpacing: DOM.Float
+        var wordSpacing: DOM.Float
 
         var markerStart: DOM.URL?
         var markerMid: DOM.URL?
@@ -1200,6 +1203,8 @@ extension LayerTree.Builder {
             fillOpacity = 1.0
             fillRule = .nonzero
             textAnchor = .start
+            letterSpacing = 0
+            wordSpacing = 0
             textBaseline = .auto
 
             fontFamily = [.keyword(.serif)]
@@ -1264,6 +1269,16 @@ extension LayerTree.Builder {
         state.fontStyle = attributes.fontStyle ?? existing.fontStyle
         state.textAnchor = attributes.textAnchor ?? existing.textAnchor
         state.textBaseline = attributes.dominantBaseline ?? existing.textBaseline
+        // `em` is of the element's computed font-size; the parser resolves percentages of the viewport
+        func spacing(_ length: DOM.DashLength) -> DOM.Float {
+            switch length {
+            case .absolute(let value): return value
+            case .em(let value): return value * state.fontSize
+            case .percentage(let value): return value / 100 * state.fontSize
+            }
+        }
+        state.letterSpacing = attributes.letterSpacing.map(spacing) ?? existing.letterSpacing
+        state.wordSpacing = attributes.wordSpacing.map(spacing) ?? existing.wordSpacing
 
         state.markerStart = attributes.markerStart ?? existing.markerStart
         state.markerMid = attributes.markerMid ?? existing.markerMid

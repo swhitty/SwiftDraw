@@ -243,7 +243,7 @@ extension LayerTree.Layer {
     var containsText: Bool {
         contents.contains {
             switch $0 {
-            case .text:
+            case .text, .glyphs:
                 return true
             case .layer(let layer):
                 return layer.containsText
