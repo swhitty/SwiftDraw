@@ -83,7 +83,7 @@ struct CGTransformingPattern: Hashable {
 }
 
 struct CGProvider: RendererTypeProvider {
-  
+
     typealias Types = CGTypes
 
     func createFloat(from float: LayerTree.Float) -> CGFloat {
@@ -756,13 +756,13 @@ struct CGRenderer: Renderer {
     }
 
     func draw(image: CGImage, in rect: CGRect) {
-      pushState()
-      translate(tx: rect.minX, ty: rect.maxY)
-      scale(sx: 1, sy: -1)
-      pushState()
-      ctx.draw(image, in: CGRect(origin: .zero, size: rect.size))
-      popState()
-      popState()
+        pushState()
+        translate(tx: rect.minX, ty: rect.maxY)
+        scale(sx: 1, sy: -1)
+        pushState()
+        ctx.draw(image, in: CGRect(origin: .zero, size: rect.size))
+        popState()
+        popState()
     }
 
     func draw(linear gradient: CGGradient, from start: CGPoint, to end: CGPoint) {

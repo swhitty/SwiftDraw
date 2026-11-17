@@ -30,37 +30,37 @@
 //
 
 struct Stack<Element> {
-  private(set) var root: Element
-  private(set) var storage: [Element]
-  
-  init(root: Element) {
-    self.root = root
-    storage = [Element]()
-  }
+    private(set) var root: Element
+    private(set) var storage: [Element]
 
-  var top: Element {
-    get {
-      guard let last = storage.last else { return root }
-      return last
+    init(root: Element) {
+        self.root = root
+        storage = [Element]()
     }
-    set {
-      guard storage.isEmpty else {
+
+    var top: Element {
+        get {
+            guard let last = storage.last else { return root }
+            return last
+        }
+        set {
+            guard storage.isEmpty else {
+                storage.removeLast()
+                storage.append(newValue)
+                return
+            }
+            root = newValue
+        }
+    }
+
+    mutating func push(_ element: Element) {
+        storage.append(element)
+    }
+
+    @discardableResult
+    mutating func pop() -> Bool {
+        guard !storage.isEmpty else { return false }
         storage.removeLast()
-        storage.append(newValue)
-        return
-      }
-      root = newValue
+        return true
     }
-  }
-
-  mutating func push(_ element: Element) {
-    storage.append(element)
-  }
-
-  @discardableResult
-  mutating func pop() -> Bool {
-    guard !storage.isEmpty else { return false }
-    storage.removeLast()
-    return true
-  }
 }

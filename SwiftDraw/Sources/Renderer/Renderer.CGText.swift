@@ -32,788 +32,788 @@ import SwiftDrawDOM
 import Foundation
 
 struct CGTextTypes: RendererTypes {
-  typealias Float = LayerTree.Float
-  typealias Point = String
-  typealias Size = String
-  typealias Rect = String
-  typealias Color = String
-  typealias Gradient = LayerTree.Gradient
-  typealias Mask = [AnyHashable]
-  typealias Path = [LayerTree.Shape]
-  typealias Pattern = String
-  typealias Transform = String
-  typealias BlendMode = String
-  typealias FillRule = String
-  typealias LineCap = String
-  typealias LineJoin = String
-  typealias Image = LayerTree.Image
+    typealias Float = LayerTree.Float
+    typealias Point = String
+    typealias Size = String
+    typealias Rect = String
+    typealias Color = String
+    typealias Gradient = LayerTree.Gradient
+    typealias Mask = [AnyHashable]
+    typealias Path = [LayerTree.Shape]
+    typealias Pattern = String
+    typealias Transform = String
+    typealias BlendMode = String
+    typealias FillRule = String
+    typealias LineCap = String
+    typealias LineJoin = String
+    typealias Image = LayerTree.Image
 }
 
 struct CGTextProvider: RendererTypeProvider {
-  typealias Types = CGTextTypes
-  
-  let formatter: CoordinateFormatter
+    typealias Types = CGTextTypes
 
-  init(formatter: CoordinateFormatter) {
-    self.formatter = formatter
-  }
+    let formatter: CoordinateFormatter
 
-  func createFloat(from float: LayerTree.Float) -> LayerTree.Float {
-    return float
-  }
-
-  func createPoint(from point: LayerTree.Point) -> String {
-    let x = formatter.format(point.x)
-    let y = formatter.format(point.y)
-    return "CGPoint(x: \(x), y: \(y))"
-  }
-  
-  func createSize(from size: LayerTree.Size) -> String {
-    let width = formatter.format(size.width)
-    let height = formatter.format(size.height)
-    return "CGSize(width: \(width), height: \(height))"
-  }
-  
-  func createRect(from rect: LayerTree.Rect) -> String {
-    let x = formatter.format(rect.x)
-    let y = formatter.format(rect.y)
-    let width = formatter.format(rect.width)
-    let height = formatter.format(rect.height)
-    return "CGRect(x: \(x), y: \(y), width: \(width), height: \(height))"
-  }
-
-  func createColor(from color: LayerTree.Color) -> String {
-    let d3 = CoordinateFormatter.Precision.capped(max: 3)
-    switch color {
-    case .none:
-      return "CGColor(colorSpace: CGColorSpace(name: CGColorSpace.sRGB)!, components: [0, 0, 0, 0])!"
-    case let .rgba(r, g, b, a, .srgb):
-      let comps = formatter.format(r, g, b, a, precision: d3)
-      return "CGColor(colorSpace: CGColorSpace(name: CGColorSpace.sRGB)!, components: [\(comps)])!"
-    case let .rgba(r, g, b, a, .p3):
-      let comps = formatter.format(r, g, b, a, precision: d3)
-      return "CGColor(colorSpace: CGColorSpaceCreateDisplayP3(), components: [\(comps)])!"
-    case .gray(white: let w, a: let a):
-      let comps = formatter.format(w, a, precision: d3)
-      return "CGColor(colorSpace: CGColorSpaceCreateExtendedGray(), components: [\(comps)])!"
-    }
-  }
-
-  func createGradient(from gradient: LayerTree.Gradient) -> LayerTree.Gradient {
-    return gradient
-  }
-  
-  func createBlendMode(from mode: LayerTree.BlendMode) -> String {
-    switch mode {
-    case .normal:
-      return ".normal"
-    case .copy:
-      return ".copy"
-    case .sourceIn:
-      return ".sourceIn"
-    case .destinationIn:
-      return ".destinationIn"
-    }
-  }
-
-  func createTransform(from transform: LayerTree.Transform.Matrix) -> String {
-    """
-    let transform1 = CGAffineTransform(
-      a: \(createFloat(from: transform.a)),
-      b: \(createFloat(from: transform.b)),
-      c: \(createFloat(from: transform.c)),
-      d: \(createFloat(from: transform.d)),
-      tx: \(createFloat(from: transform.tx)),
-      ty: \(createFloat(from: transform.ty))
-    )
-    """
-  }
-
-  func createPattern(from pattern: LayerTree.Pattern, contents: [RendererCommand<Types>]) -> String {
-    let optimizer = LayerTree.CommandOptimizer<CGTextTypes>(options: [.skipRedundantState, .skipInitialSaveState])
-    let contents = optimizer.optimizeCommands(contents)
-
-    let formatter = CoordinateFormatter(delimeter: .commaSpace,
-                                        precision: .capped(max: 3))
-
-    let renderer = CGTextRenderer(api: .appKit,
-                                  name: "pattern",
-                                  size: pattern.frame.size,
-                                  commandSize: pattern.frame.size,
-                                  formatter: formatter)
-    renderer.perform(contents)
-    let lines = renderer.lines
-      .map { "  \($0)" }
-      .joined(separator: "\n")
-
-    var matrix = "ctx.ctm.concatenating(baseCTM.inverted())"
-    if pattern.transform != .identity {
-      let t = pattern.transform
-      let patternTransform = "CGAffineTransform(a: \(createFloat(from: t.a)), b: \(createFloat(from: t.b)), c: \(createFloat(from: t.c)), d: \(createFloat(from: t.d)), tx: \(createFloat(from: t.tx)), ty: \(createFloat(from: t.ty)))"
-      matrix = "\(patternTransform).concatenating(\(matrix))"
+    init(formatter: CoordinateFormatter) {
+        self.formatter = formatter
     }
 
-    return """
-    let patternDraw1: CGPatternDrawPatternCallback = { _, ctx in
-    \(lines)
+    func createFloat(from float: LayerTree.Float) -> LayerTree.Float {
+        return float
     }
-    var patternCallback1 = CGPatternCallbacks(version: 0, drawPattern: patternDraw1, releaseInfo: nil)
-    let pattern1 = CGPattern(
-      info: nil,
-      bounds: \(createRect(from: pattern.frame)),
-      matrix: \(matrix),
-      xStep: \(formatter.format(pattern.frame.width)),
-      yStep: \(formatter.format(pattern.frame.height)),
-      tiling: .constantSpacing,
-      isColored: true,
-      callbacks: &patternCallback1
-    )!
-    """
-  }
 
-  func createPath(from shape: LayerTree.Shape) -> [LayerTree.Shape] {
-    [shape]
-  }
+    func createPoint(from point: LayerTree.Point) -> String {
+        let x = formatter.format(point.x)
+        let y = formatter.format(point.y)
+        return "CGPoint(x: \(x), y: \(y))"
+    }
 
-  func createPath(from subPaths: [[LayerTree.Shape]]) -> [LayerTree.Shape] {
-    return subPaths.flatMap { $0 }
-  }
-  
-  /// The outlines of the glyphs: generated code never names glyph ids, which belong to one font file
-  func createPath(from glyphs: LayerTree.GlyphRun) -> [LayerTree.Shape]? {
+    func createSize(from size: LayerTree.Size) -> String {
+        let width = formatter.format(size.width)
+        let height = formatter.format(size.height)
+        return "CGSize(width: \(width), height: \(height))"
+    }
+
+    func createRect(from rect: LayerTree.Rect) -> String {
+        let x = formatter.format(rect.x)
+        let y = formatter.format(rect.y)
+        let width = formatter.format(rect.width)
+        let height = formatter.format(rect.height)
+        return "CGRect(x: \(x), y: \(y), width: \(width), height: \(height))"
+    }
+
+    func createColor(from color: LayerTree.Color) -> String {
+        let d3 = CoordinateFormatter.Precision.capped(max: 3)
+        switch color {
+        case .none:
+            return "CGColor(colorSpace: CGColorSpace(name: CGColorSpace.sRGB)!, components: [0, 0, 0, 0])!"
+        case let .rgba(r, g, b, a, .srgb):
+            let comps = formatter.format(r, g, b, a, precision: d3)
+            return "CGColor(colorSpace: CGColorSpace(name: CGColorSpace.sRGB)!, components: [\(comps)])!"
+        case let .rgba(r, g, b, a, .p3):
+            let comps = formatter.format(r, g, b, a, precision: d3)
+            return "CGColor(colorSpace: CGColorSpaceCreateDisplayP3(), components: [\(comps)])!"
+        case .gray(white: let w, a: let a):
+            let comps = formatter.format(w, a, precision: d3)
+            return "CGColor(colorSpace: CGColorSpaceCreateExtendedGray(), components: [\(comps)])!"
+        }
+    }
+
+    func createGradient(from gradient: LayerTree.Gradient) -> LayerTree.Gradient {
+        return gradient
+    }
+
+    func createBlendMode(from mode: LayerTree.BlendMode) -> String {
+        switch mode {
+        case .normal:
+            return ".normal"
+        case .copy:
+            return ".copy"
+        case .sourceIn:
+            return ".sourceIn"
+        case .destinationIn:
+            return ".destinationIn"
+        }
+    }
+
+    func createTransform(from transform: LayerTree.Transform.Matrix) -> String {
+        """
+        let transform1 = CGAffineTransform(
+          a: \(createFloat(from: transform.a)),
+          b: \(createFloat(from: transform.b)),
+          c: \(createFloat(from: transform.c)),
+          d: \(createFloat(from: transform.d)),
+          tx: \(createFloat(from: transform.tx)),
+          ty: \(createFloat(from: transform.ty))
+        )
+        """
+    }
+
+    func createPattern(from pattern: LayerTree.Pattern, contents: [RendererCommand<Types>]) -> String {
+        let optimizer = LayerTree.CommandOptimizer<CGTextTypes>(options: [.skipRedundantState, .skipInitialSaveState])
+        let contents = optimizer.optimizeCommands(contents)
+
+        let formatter = CoordinateFormatter(delimeter: .commaSpace,
+                                            precision: .capped(max: 3))
+
+        let renderer = CGTextRenderer(api: .appKit,
+                                      name: "pattern",
+                                      size: pattern.frame.size,
+                                      commandSize: pattern.frame.size,
+                                      formatter: formatter)
+        renderer.perform(contents)
+        let lines = renderer.lines
+            .map { "  \($0)" }
+            .joined(separator: "\n")
+
+        var matrix = "ctx.ctm.concatenating(baseCTM.inverted())"
+        if pattern.transform != .identity {
+            let t = pattern.transform
+            let patternTransform = "CGAffineTransform(a: \(createFloat(from: t.a)), b: \(createFloat(from: t.b)), c: \(createFloat(from: t.c)), d: \(createFloat(from: t.d)), tx: \(createFloat(from: t.tx)), ty: \(createFloat(from: t.ty)))"
+            matrix = "\(patternTransform).concatenating(\(matrix))"
+        }
+
+        return """
+        let patternDraw1: CGPatternDrawPatternCallback = { _, ctx in
+        \(lines)
+        }
+        var patternCallback1 = CGPatternCallbacks(version: 0, drawPattern: patternDraw1, releaseInfo: nil)
+        let pattern1 = CGPattern(
+          info: nil,
+          bounds: \(createRect(from: pattern.frame)),
+          matrix: \(matrix),
+          xStep: \(formatter.format(pattern.frame.width)),
+          yStep: \(formatter.format(pattern.frame.height)),
+          tiling: .constantSpacing,
+          isColored: true,
+          callbacks: &patternCallback1
+        )!
+        """
+    }
+
+    func createPath(from shape: LayerTree.Shape) -> [LayerTree.Shape] {
+        [shape]
+    }
+
+    func createPath(from subPaths: [[LayerTree.Shape]]) -> [LayerTree.Shape] {
+        return subPaths.flatMap { $0 }
+    }
+
+    /// The outlines of the glyphs: generated code never names glyph ids, which belong to one font file
+    func createPath(from glyphs: LayerTree.GlyphRun) -> [LayerTree.Shape]? {
 #if canImport(CoreText)
     guard let path = CGProvider.createGlyphPath(from: glyphs) else { return nil }
     return [.path(path.makePath())]
 #else
     return nil
 #endif
-  }
-
-  func createPath(from text: String, at origin: LayerTree.Point, with attributes: LayerTree.TextAttributes) -> [LayerTree.Shape]? {
-    nil
-  }
-  
-  func createFillRule(from rule: LayerTree.FillRule) -> String {
-    switch rule {
-    case .nonzero:
-      return ".winding"
-    case .evenodd:
-      return ".evenOdd"
     }
-  }
 
-  func createLineCap(from cap: LayerTree.LineCap) -> String {
-    switch cap {
-    case .butt:
-      return ".butt"
-    case .round:
-      return ".round"
-    case .square:
-      return ".square"
+    func createPath(from text: String, at origin: LayerTree.Point, with attributes: LayerTree.TextAttributes) -> [LayerTree.Shape]? {
+        nil
     }
-  }
 
-  func createLineJoin(from join: LayerTree.LineJoin) -> String {
-    switch join {
-    case .bevel:
-      return ".bevel"
-    case .round:
-      return ".round"
-    case .miter:
-      return ".miter"
+    func createFillRule(from rule: LayerTree.FillRule) -> String {
+        switch rule {
+        case .nonzero:
+            return ".winding"
+        case .evenodd:
+            return ".evenOdd"
+        }
     }
-  }
-  
-  func createImage(from image: LayerTree.Image) -> LayerTree.Image? {
-    return image
-  }
 
-  func createSize(from image: LayerTree.Image) -> LayerTree.Size {
-    LayerTree.Size(image.width ?? 0, image.height ?? 0)
-  }
+    func createLineCap(from cap: LayerTree.LineCap) -> String {
+        switch cap {
+        case .butt:
+            return ".butt"
+        case .round:
+            return ".round"
+        case .square:
+            return ".square"
+        }
+    }
 
-  func getBounds(from shape: LayerTree.Shape) -> LayerTree.Rect {
+    func createLineJoin(from join: LayerTree.LineJoin) -> String {
+        switch join {
+        case .bevel:
+            return ".bevel"
+        case .round:
+            return ".round"
+        case .miter:
+            return ".miter"
+        }
+    }
+
+    func createImage(from image: LayerTree.Image) -> LayerTree.Image? {
+        return image
+    }
+
+    func createSize(from image: LayerTree.Image) -> LayerTree.Size {
+        LayerTree.Size(image.width ?? 0, image.height ?? 0)
+    }
+
+    func getBounds(from shape: LayerTree.Shape) -> LayerTree.Rect {
 #if canImport(CoreGraphics)
     return CGProvider().getBounds(from: shape)
 #else
     return shape.path.bounds
 #endif
-  }
+    }
 }
 
 public final class CGTextRenderer: Renderer {
-  typealias Types = CGTextTypes
+    typealias Types = CGTextTypes
 
-  private let api: API
-  private let name: String
-  private let size: LayerTree.Size
-  private let commandSize: LayerTree.Size
-  let formatter: CoordinateFormatter
+    private let api: API
+    private let name: String
+    private let size: LayerTree.Size
+    private let commandSize: LayerTree.Size
+    let formatter: CoordinateFormatter
 
-  public enum API {
-    case uiKit
-    case appKit
-    case swiftUI
-  }
-
-  init(api: API,
-       name: String,
-       size: LayerTree.Size,
-       commandSize: LayerTree.Size,
-       formatter: CoordinateFormatter) {
-    self.api = api
-    self.name = name
-    self.size = size
-    self.commandSize = commandSize
-    self.formatter = formatter
-  }
-
-  private(set) var lines = [String]()
-  private var colorSpaces: Set<ColorSpace> = []
-  private var colors: [String: String] = [:]
-  private var paths: [String: String] = [:]
-  private var transforms: [String: String] = [:]
-  private var gradients: [LayerTree.Gradient: String] = [:]
-  private var patterns: [String: String] = [:]
-  private var maskCount = 0
-
-  enum ColorSpace: String, Hashable {
-    case rgb
-    case p3
-    case gray
-
-    init?(for color: String) {
-      if color.contains("CGColorSpaceCreateExtendedGray()") {
-        self = .gray
-      } else if color.contains("CGColorSpace(name: CGColorSpace.sRGB)!")  {
-        self = .rgb
-      } else if color.contains("CGColorSpaceCreateDisplayP3()")  {
-        self = .p3
-      } else {
-        return nil
-      }
-    }
-  }
-
-  func createOrGetColorSpace(for color: String) -> ColorSpace {
-    guard let space = ColorSpace(for: color) else {
-      fatalError("not a support color")
-    }
-    createColorSpace(space)
-    return space
-  }
-
-  func createColorSpace(_ space: ColorSpace) {
-    if !colorSpaces.contains(space) {
-      switch space {
-      case .gray:
-        lines.append("let gray = CGColorSpace(name: CGColorSpace.extendedGray)!")
-        colorSpaces.insert(.gray)
-      case .rgb:
-        lines.append("let rgb = CGColorSpace(name: CGColorSpace.sRGB)!")
-        colorSpaces.insert(.rgb)
-      case .p3:
-        lines.append("let p3 = CGColorSpace(name: CGColorSpace.displayP3)!")
-        colorSpaces.insert(.p3)
-      }
-    }
-  }
-
-  func updateColor(_ color: String) -> String {
-    let space = createOrGetColorSpace(for: color)
-    switch  space {
-    case .gray:
-      return color.replacingOccurrences(of: "CGColorSpaceCreateExtendedGray()", with: "gray")
-    case .rgb:
-      return color.replacingOccurrences(of: "CGColorSpace(name: CGColorSpace.sRGB)!", with: "rgb")
-    case .p3:
-      return color.replacingOccurrences(of: "CGColorSpaceCreateDisplayP3()", with: "p3")
-    }
-  }
-
-  func createOrGetColor(_ color: String) -> String {
-    let color = updateColor(color)
-    if let identifier = colors[color] {
-      return identifier
+    public enum API {
+        case uiKit
+        case appKit
+        case swiftUI
     }
 
-    let identifier = "color\(colors.count + 1)"
-    colors[color] = identifier
-    lines.append("let \(identifier) = \(color)")
-    return identifier
-  }
-
-  func createOrGetColor(_ color: LayerTree.Color) -> String {
-    let d3 = CoordinateFormatter.Precision.capped(max: 3)
-    switch color {
-    case .none:
-      return createOrGetColor("CGColor(colorSpace: CGColorSpace(name: CGColorSpace.sRGB)!, components: [0, 0, 0, 0])!")
-    case let .rgba(r, g, b, a, .srgb):
-      let comps = formatter.format(r, g, b, a, precision: d3)
-      return createOrGetColor("CGColor(colorSpace: CGColorSpace(name: CGColorSpace.sRGB)!, components: [\(comps)])!")
-    case let .rgba(r, g, b, a, .p3):
-      let comps = formatter.format(r, g, b, a, precision: d3)
-      return createOrGetColor("CGColor(colorSpace: CGColorSpaceCreateDisplayP3(), components: [\(comps)])!")
-    case .gray(white: let w, a: let a):
-      let comps = formatter.format(w, a, precision: d3)
-      return createOrGetColor("CGColor(colorSpace: CGColorSpaceCreateExtendedGray(), components: [\(comps)])!")
-    }
-  }
-  
-  func createOrGetPath(_ path: String) -> String {
-    if let identifier = paths[path] {
-      return identifier
+    init(api: API,
+         name: String,
+         size: LayerTree.Size,
+         commandSize: LayerTree.Size,
+         formatter: CoordinateFormatter) {
+        self.api = api
+        self.name = name
+        self.size = size
+        self.commandSize = commandSize
+        self.formatter = formatter
     }
 
-    let idx = paths.count
-    let identifier = "path".makeIdentifier(idx)
-    paths[path] = identifier
-    let newPath = path
-      .replacingOccurrences(of: "path1", with: identifier)
-      .split(separator: "\n")
-      .map(String.init)
-    lines.append(contentsOf: newPath)
-    return identifier
-  }
-  
-  func createOrGetTransform(_ transform: String) -> String {
-    if let identifier = transforms[transform] {
-      return identifier
+    private(set) var lines = [String]()
+    private var colorSpaces: Set<ColorSpace> = []
+    private var colors: [String: String] = [:]
+    private var paths: [String: String] = [:]
+    private var transforms: [String: String] = [:]
+    private var gradients: [LayerTree.Gradient: String] = [:]
+    private var patterns: [String: String] = [:]
+    private var maskCount = 0
+
+    enum ColorSpace: String, Hashable {
+        case rgb
+        case p3
+        case gray
+
+        init?(for color: String) {
+            if color.contains("CGColorSpaceCreateExtendedGray()") {
+                self = .gray
+            } else if color.contains("CGColorSpace(name: CGColorSpace.sRGB)!")  {
+                self = .rgb
+            } else if color.contains("CGColorSpaceCreateDisplayP3()")  {
+                self = .p3
+            } else {
+                return nil
+            }
+        }
     }
 
-    let idx = transforms.count
-    let identifier = "transform".makeIdentifier(idx)
-    transforms[transform] = identifier
-    let newTransform = transform
-      .replacingOccurrences(of: "transform1", with: identifier)
-      .split(separator: "\n")
-      .map(String.init)
-    lines.append(contentsOf: newTransform)
-    return identifier
-  }
-
-  func createOrGetColorSpace(for colorSpace: LayerTree.ColorSpace) -> ColorSpace {
-    switch colorSpace {
-    case .srgb:
-      createColorSpace(.rgb)
-      return .rgb
-    case .p3:
-      createColorSpace(.p3)
-      return .p3
-    }
-  }
-
-  func createOrGetGradient(_ gradient: LayerTree.Gradient) -> String {
-    if let identifier = gradients[gradient] {
-      return identifier
+    func createOrGetColorSpace(for color: String) -> ColorSpace {
+        guard let space = ColorSpace(for: color) else {
+            fatalError("not a support color")
+        }
+        createColorSpace(space)
+        return space
     }
 
-    let idx = gradients.count
-    let identifier = "gradient".makeIdentifier(idx)
-    gradients[gradient] = identifier
-
-    let colorTxt = gradient.stops
-      .map { createOrGetColor($0.color) }
-      .joined(separator: ", ")
-
-    let pointsTxt = gradient.stops
-      .map { String($0.offset) }
-      .joined(separator: ", ")
-
-    let space = createOrGetColorSpace(for: gradient.colorSpace)
-    let locationsIdentifier = "locations".makeIdentifier(idx)
-    let code = """
-    var \(locationsIdentifier): [CGFloat] = [\(pointsTxt)]
-    let \(identifier) = CGGradient(
-      colorsSpace: \(space.rawValue),
-      colors: [\(colorTxt)] as CFArray,
-      locations: &\(locationsIdentifier)
-    )!
-    """.split(separator: "\n").map(String.init)
-    lines.append(contentsOf: code)
-    return identifier
-  }
-
-  func createOrGetPattern(_ pattern: String) -> String {
-    if let identifier = patterns[pattern] {
-      return identifier
+    func createColorSpace(_ space: ColorSpace) {
+        if !colorSpaces.contains(space) {
+            switch space {
+            case .gray:
+                lines.append("let gray = CGColorSpace(name: CGColorSpace.extendedGray)!")
+                colorSpaces.insert(.gray)
+            case .rgb:
+                lines.append("let rgb = CGColorSpace(name: CGColorSpace.sRGB)!")
+                colorSpaces.insert(.rgb)
+            case .p3:
+                lines.append("let p3 = CGColorSpace(name: CGColorSpace.displayP3)!")
+                colorSpaces.insert(.p3)
+            }
+        }
     }
 
-    let idx = patterns.count
-
-    let identifier = "pattern".makeIdentifier(idx)
-    let draw = "patternDraw".makeIdentifier(idx)
-    let callback = "patternCallback".makeIdentifier(idx)
-    patterns[pattern] = identifier
-    let newPattern = pattern
-      .replacingOccurrences(of: "pattern1", with: identifier)
-      .replacingOccurrences(of: "patternDraw1", with: draw)
-      .replacingOccurrences(of: "patternCallback1", with: callback)
-      .split(separator: "\n")
-      .map(String.init)
-    lines.append(contentsOf: newPattern)
-
-    return identifier
-  }
-
-  func pushState() {
-    lines.append("ctx.saveGState()")
-  }
-
-  func popState() {
-    lines.append("ctx.restoreGState()")
-  }
-  
-  func pushTransparencyLayer() {
-    lines.append("ctx.beginTransparencyLayer(auxiliaryInfo: nil)")
-  }
-  
-  func popTransparencyLayer() {
-    lines.append("ctx.endTransparencyLayer()")
-  }
-  
-  func concatenate(transform: String) {
-    let identifier = createOrGetTransform(transform)
-    lines.append("ctx.concatenate(\(identifier))")
-  }
-
-  func translate(tx: LayerTree.Float, ty: LayerTree.Float) {
-    lines.append("ctx.translateBy(x: \(formatter.format(tx)), y: \(formatter.format(ty)))")
-  }
-
-  func rotate(angle: LayerTree.Float) {
-    lines.append("ctx.rotate(by: \(formatter.format(angle)))")
-  }
-  
-  func scale(sx: LayerTree.Float, sy: LayerTree.Float) {
-    lines.append("ctx.scaleBy(x: \(formatter.format(sx)), y: \(formatter.format(sy)))")
-  }
-  
-  func setFill(color: String) {
-    let identifier = createOrGetColor(color)
-    lines.append("ctx.setFillColor(\(identifier))")
-  }
-  
-  func setFill(pattern: String) {
-    let identifier = createOrGetPattern(pattern)
-    let alpha = identifier.replacingOccurrences(of: "pattern", with: "patternAlpha")
-    lines.append("ctx.setFillColorSpace(CGColorSpace(patternBaseSpace: nil)!)")
-    lines.append("var \(alpha) : CGFloat = 1.0")
-    lines.append("ctx.setFillPattern(\(identifier), colorComponents: &\(alpha))")
-  }
-
-  func setStroke(color: String) {
-    let identifier = createOrGetColor(color)
-    lines.append("ctx.setStrokeColor(\(identifier))")
-  }
-  
-  func setLine(width: LayerTree.Float) {
-    lines.append("ctx.setLineWidth(\(formatter.format(width)))")
-  }
-  
-  func setLine(cap: String) {
-    lines.append("ctx.setLineCap(\(cap))")
-  }
-  
-  func setLine(join: String) {
-    lines.append("ctx.setLineJoin(\(join))")
-  }
-  
-  func setLine(miterLimit: LayerTree.Float) {
-    lines.append("ctx.setMiterLimit(\(formatter.format(miterLimit)))")
-  }
-
-  func setLineDash(phase: LayerTree.Float, lengths: [LayerTree.Float]) {
-    let values = lengths.map { formatter.format($0) }.joined(separator: ", ")
-    lines.append("ctx.setLineDash(phase: \(formatter.format(phase)), lengths: [\(values)])")
-  }
-
-  func setClip(path: [LayerTree.Shape], rule: String) {
-    let identifier = createOrGetPath(path)
-    lines.append("ctx.addPath(\(identifier))")
-    if rule == ".winding" {
-      lines.append("ctx.clip()")
-    } else {
-      lines.append("ctx.clip(using: \(rule))")
+    func updateColor(_ color: String) -> String {
+        let space = createOrGetColorSpace(for: color)
+        switch  space {
+        case .gray:
+            return color.replacingOccurrences(of: "CGColorSpaceCreateExtendedGray()", with: "gray")
+        case .rgb:
+            return color.replacingOccurrences(of: "CGColorSpace(name: CGColorSpace.sRGB)!", with: "rgb")
+        case .p3:
+            return color.replacingOccurrences(of: "CGColorSpaceCreateDisplayP3()", with: "p3")
+        }
     }
-  }
 
-  // The generated code draws the mask contents into a greyscale bitmap and clips to it, as CGRenderer does.
-  // The contents are generated in a nested scope where `ctx` is the bitmap; identifiers declared there
-  // are out of scope afterwards, so the caches are restored when it ends.
-  func clip(toMask contents: [RendererCommand<CGTextTypes>]) {
-    maskCount += 1
-    let device = "maskDevice".makeIdentifier(maskCount)
-    let rect = "maskRect".makeIdentifier(maskCount)
-    let context = "maskContext".makeIdentifier(maskCount)
-    let code = """
-    let \(device) = ctx.userSpaceToDeviceSpaceTransform
-    let \(rect) = ctx.boundingBoxOfClipPath.applying(\(device)).integral
-    let \(context) = CGContext(
-      data: nil,
-      width: max(1, Int(\(rect).width)),
-      height: max(1, Int(\(rect).height)),
-      bitsPerComponent: 8,
-      bytesPerRow: 0,
-      space: CGColorSpaceCreateDeviceGray(),
-      bitmapInfo: CGImageAlphaInfo.none.rawValue
-    )!
-    \(context).fill(CGRect(x: 0, y: 0, width: \(context).width, height: \(context).height))
-    \(context).translateBy(x: -\(rect).minX, y: -\(rect).minY)
-    \(context).concatenate(\(device))
-    """.split(separator: "\n").map(String.init)
-    lines.append(contentsOf: code)
+    func createOrGetColor(_ color: String) -> String {
+        let color = updateColor(color)
+        if let identifier = colors[color] {
+            return identifier
+        }
 
-    let outer = (lines, colorSpaces, colors, paths, transforms, gradients, patterns)
-    lines = []
-    perform(contents)
-    var inner = ["let ctx = \(context)"]
-    if patterns.count > outer.6.count {
-      // CGPattern matrices are relative to the bitmap's default space
-      inner.append("let baseCTM = CGAffineTransform.identity")
+        let identifier = "color\(colors.count + 1)"
+        colors[color] = identifier
+        lines.append("let \(identifier) = \(color)")
+        return identifier
     }
-    inner.append(contentsOf: lines)
-    (lines, colorSpaces, colors, paths, transforms, gradients, patterns) = outer
 
-    lines.append("do {")
-    lines.append(contentsOf: inner.map { "  \($0)" })
-    lines.append("}")
-    lines.append("ctx.concatenate(\(device).inverted())")
-    lines.append("ctx.clip(to: \(rect), mask: \(context).makeImage()!)")
-    lines.append("ctx.concatenate(\(device))")
-  }
-
-  func setClip(mask: [AnyHashable], frame: String) {
-    lines.append("ctx.clip(to: \(frame), mask: \(mask))")
-  }
-  
-  func setAlpha(_ alpha: LayerTree.Float) {
-    lines.append("ctx.setAlpha(\(formatter.format(alpha)))")
-  }
-  
-  func setBlend(mode: String) {
-    lines.append("ctx.setBlendMode(\(mode))")
-  }
-
-  func stroke(path: [LayerTree.Shape]) {
-    if let frame = getSimpleRect(from: path) {
-      lines.append("ctx.stroke(\(frame))")
-    } else if let frame = getSimpleEllipse(from: path) {
-      lines.append("ctx.strokeEllipse(in: \(frame))")
-    } else {
-      let identifier = createOrGetPath(path)
-      lines.append("ctx.addPath(\(identifier))")
-      lines.append("ctx.strokePath()")
+    func createOrGetColor(_ color: LayerTree.Color) -> String {
+        let d3 = CoordinateFormatter.Precision.capped(max: 3)
+        switch color {
+        case .none:
+            return createOrGetColor("CGColor(colorSpace: CGColorSpace(name: CGColorSpace.sRGB)!, components: [0, 0, 0, 0])!")
+        case let .rgba(r, g, b, a, .srgb):
+            let comps = formatter.format(r, g, b, a, precision: d3)
+            return createOrGetColor("CGColor(colorSpace: CGColorSpace(name: CGColorSpace.sRGB)!, components: [\(comps)])!")
+        case let .rgba(r, g, b, a, .p3):
+            let comps = formatter.format(r, g, b, a, precision: d3)
+            return createOrGetColor("CGColor(colorSpace: CGColorSpaceCreateDisplayP3(), components: [\(comps)])!")
+        case .gray(white: let w, a: let a):
+            let comps = formatter.format(w, a, precision: d3)
+            return createOrGetColor("CGColor(colorSpace: CGColorSpaceCreateExtendedGray(), components: [\(comps)])!")
+        }
     }
-  }
 
-  func clipStrokeOutline(path: [LayerTree.Shape]) {
-      let identifier = createOrGetPath(path)
-      lines.append("ctx.addPath(\(identifier))")
-      lines.append("ctx.replacePathWithStrokedPath()")
-      lines.append("ctx.clip()")
-  }
+    func createOrGetPath(_ path: String) -> String {
+        if let identifier = paths[path] {
+            return identifier
+        }
 
-  func fill(path: [LayerTree.Shape], rule: String) {
-    if let frame = getSimpleRect(from: path) {
-      lines.append("ctx.fill(\(frame))")
-    } else if let frame = getSimpleEllipse(from: path) {
-      lines.append("ctx.fillEllipse(in: \(frame))")
-    } else {
-      let identifier = createOrGetPath(path)
-      lines.append("ctx.addPath(\(identifier))")
-      if rule == ".winding" {
-        lines.append("ctx.fillPath()")
-      } else {
-        lines.append("ctx.fillPath(using: \(rule))")
-      }
+        let idx = paths.count
+        let identifier = "path".makeIdentifier(idx)
+        paths[path] = identifier
+        let newPath = path
+            .replacingOccurrences(of: "path1", with: identifier)
+            .split(separator: "\n")
+            .map(String.init)
+        lines.append(contentsOf: newPath)
+        return identifier
     }
-  }
-  
-  func draw(image: LayerTree.Image, in rect: String) {
-    // the generated code embeds no bitmaps: it cannot draw, nor letterbox (the bitmap size is unknown here)
-    lines.append("// warning: image dropped, <image> is not supported in generated code")
-  }
 
-  func draw(linear gradient: LayerTree.Gradient, from start: String, to end: String) {
-    let identifier = createOrGetGradient(gradient)
-    lines.append("""
-    ctx.drawLinearGradient(\(identifier),
-                           start: \(start),
-                           end: \(end),
-                           options: [.drawsAfterEndLocation, .drawsBeforeStartLocation])
-    """)
-  }
+    func createOrGetTransform(_ transform: String) -> String {
+        if let identifier = transforms[transform] {
+            return identifier
+        }
 
-  func draw(radial gradient: LayerTree.Gradient, startCenter: String, startRadius: LayerTree.Float, endCenter: String, endRadius: LayerTree.Float) {
-    let identifier = createOrGetGradient(gradient)
-    lines.append("""
-    ctx.drawRadialGradient(\(identifier),
-                           startCenter: \(startCenter),
-                           startRadius: \(formatter.format(startRadius)),
-                           endCenter: \(endCenter),
-                           endRadius: \(formatter.format(endRadius)),
-                           options: [.drawsAfterEndLocation, .drawsBeforeStartLocation])
-    """)
-  }
+        let idx = transforms.count
+        let identifier = "transform".makeIdentifier(idx)
+        transforms[transform] = identifier
+        let newTransform = transform
+            .replacingOccurrences(of: "transform1", with: identifier)
+            .split(separator: "\n")
+            .map(String.init)
+        lines.append(contentsOf: newTransform)
+        return identifier
+    }
 
-  // Filters are not generated: the contents are drawn unfiltered, in their own graphics state.
-  func pushFilterLayer(_ filter: LayerTree.FilterLayer) {
-    lines.append("// warning: filter dropped (\(filter.effects.count) effect(s)), contents drawn unfiltered")
-    lines.append("ctx.saveGState()")
-  }
+    func createOrGetColorSpace(for colorSpace: LayerTree.ColorSpace) -> ColorSpace {
+        switch colorSpace {
+        case .srgb:
+            createColorSpace(.rgb)
+            return .rgb
+        case .p3:
+            createColorSpace(.p3)
+            return .p3
+        }
+    }
 
-  func setFilterImage(primitive: Int, contents: [RendererCommand<CGTextTypes>]) { }
+    func createOrGetGradient(_ gradient: LayerTree.Gradient) -> String {
+        if let identifier = gradients[gradient] {
+            return identifier
+        }
 
-  func popFilterLayer() {
-    lines.append("ctx.restoreGState()")
-  }
+        let idx = gradients.count
+        let identifier = "gradient".makeIdentifier(idx)
+        gradients[gradient] = identifier
 
-  func makeSwiftUI() -> String {
-    """
-    import SwiftUI
+        let colorTxt = gradient.stops
+            .map { createOrGetColor($0.color) }
+            .joined(separator: ", ")
 
-    struct \(name)View: View {
+        let pointsTxt = gradient.stops
+            .map { String($0.offset) }
+            .joined(separator: ", ")
 
-      var body: some View {
-        if isResizable {
-          canvas
-            .frame(idealWidth: \(commandSize.width), idealHeight: \(commandSize.width))
+        let space = createOrGetColorSpace(for: gradient.colorSpace)
+        let locationsIdentifier = "locations".makeIdentifier(idx)
+        let code = """
+        var \(locationsIdentifier): [CGFloat] = [\(pointsTxt)]
+        let \(identifier) = CGGradient(
+          colorsSpace: \(space.rawValue),
+          colors: [\(colorTxt)] as CFArray,
+          locations: &\(locationsIdentifier)
+        )!
+        """.split(separator: "\n").map(String.init)
+        lines.append(contentsOf: code)
+        return identifier
+    }
+
+    func createOrGetPattern(_ pattern: String) -> String {
+        if let identifier = patterns[pattern] {
+            return identifier
+        }
+
+        let idx = patterns.count
+
+        let identifier = "pattern".makeIdentifier(idx)
+        let draw = "patternDraw".makeIdentifier(idx)
+        let callback = "patternCallback".makeIdentifier(idx)
+        patterns[pattern] = identifier
+        let newPattern = pattern
+            .replacingOccurrences(of: "pattern1", with: identifier)
+            .replacingOccurrences(of: "patternDraw1", with: draw)
+            .replacingOccurrences(of: "patternCallback1", with: callback)
+            .split(separator: "\n")
+            .map(String.init)
+        lines.append(contentsOf: newPattern)
+
+        return identifier
+    }
+
+    func pushState() {
+        lines.append("ctx.saveGState()")
+    }
+
+    func popState() {
+        lines.append("ctx.restoreGState()")
+    }
+
+    func pushTransparencyLayer() {
+        lines.append("ctx.beginTransparencyLayer(auxiliaryInfo: nil)")
+    }
+
+    func popTransparencyLayer() {
+        lines.append("ctx.endTransparencyLayer()")
+    }
+
+    func concatenate(transform: String) {
+        let identifier = createOrGetTransform(transform)
+        lines.append("ctx.concatenate(\(identifier))")
+    }
+
+    func translate(tx: LayerTree.Float, ty: LayerTree.Float) {
+        lines.append("ctx.translateBy(x: \(formatter.format(tx)), y: \(formatter.format(ty)))")
+    }
+
+    func rotate(angle: LayerTree.Float) {
+        lines.append("ctx.rotate(by: \(formatter.format(angle)))")
+    }
+
+    func scale(sx: LayerTree.Float, sy: LayerTree.Float) {
+        lines.append("ctx.scaleBy(x: \(formatter.format(sx)), y: \(formatter.format(sy)))")
+    }
+
+    func setFill(color: String) {
+        let identifier = createOrGetColor(color)
+        lines.append("ctx.setFillColor(\(identifier))")
+    }
+
+    func setFill(pattern: String) {
+        let identifier = createOrGetPattern(pattern)
+        let alpha = identifier.replacingOccurrences(of: "pattern", with: "patternAlpha")
+        lines.append("ctx.setFillColorSpace(CGColorSpace(patternBaseSpace: nil)!)")
+        lines.append("var \(alpha) : CGFloat = 1.0")
+        lines.append("ctx.setFillPattern(\(identifier), colorComponents: &\(alpha))")
+    }
+
+    func setStroke(color: String) {
+        let identifier = createOrGetColor(color)
+        lines.append("ctx.setStrokeColor(\(identifier))")
+    }
+
+    func setLine(width: LayerTree.Float) {
+        lines.append("ctx.setLineWidth(\(formatter.format(width)))")
+    }
+
+    func setLine(cap: String) {
+        lines.append("ctx.setLineCap(\(cap))")
+    }
+
+    func setLine(join: String) {
+        lines.append("ctx.setLineJoin(\(join))")
+    }
+
+    func setLine(miterLimit: LayerTree.Float) {
+        lines.append("ctx.setMiterLimit(\(formatter.format(miterLimit)))")
+    }
+
+    func setLineDash(phase: LayerTree.Float, lengths: [LayerTree.Float]) {
+        let values = lengths.map { formatter.format($0) }.joined(separator: ", ")
+        lines.append("ctx.setLineDash(phase: \(formatter.format(phase)), lengths: [\(values)])")
+    }
+
+    func setClip(path: [LayerTree.Shape], rule: String) {
+        let identifier = createOrGetPath(path)
+        lines.append("ctx.addPath(\(identifier))")
+        if rule == ".winding" {
+            lines.append("ctx.clip()")
         } else {
-          canvas
-            .frame(width: \(commandSize.width), height: \(commandSize.width))
+            lines.append("ctx.clip(using: \(rule))")
         }
-      }
-
-      private var isResizable = false
-
-      func resizable() -> Self {
-         var copy = self 
-         copy.isResizable = true
-         return copy
-      }
-
-      var canvas: some View {
-        Canvas(
-          opaque: false,
-          colorMode: .linear,
-          rendersAsynchronously: false
-        ) { context, size in
-          let scale = CGSize(width: size.width / \(commandSize.width), height: size.height / \(commandSize.height))                                  
-          context.withCGContext { ctx in
-    
-    """
-  }
-
-  func makeUIKit() -> String {
-    """
-    import CoreGraphics
-    import UIKit
-
-    extension UIImage {
-      static func svg\(name)(size: CGSize = CGSize(width: \(size.width), height: \(size.height))) -> UIImage {
-        let f = UIGraphicsImageRendererFormat.preferred()
-        f.opaque = false
-        let scale = CGSize(width: size.width / \(commandSize.width), height: size.height / \(commandSize.height))
-        return UIGraphicsImageRenderer(size: size, format: f).image {
-          draw\(name)(in: $0.cgContext, scale: scale)
-        }
-      }
-
-      private static func draw\(name)(in ctx: CGContext, scale: CGSize) {
-
-    """
-  }
-
-  func makeAppKit() -> String {
-    """
-    import Cocoa
-    import CoreGraphics
-
-    
-    extension NSImage {
-      static func svgKey(size: NSSize = NSSize(width: \(size.width), height: \(size.height))) -> NSImage {
-        NSImage(size: size, flipped: true) { rect in
-            guard let ctx = NSGraphicsContext.current?.cgContext else { return false }
-            let scale = CGSize(width: rect.width / \(commandSize.width), height: rect.height / \(commandSize.height))
-            draw\(name)(in: ctx, scale: scale)
-            return true
-        }
-      }
-
-    private static func draw\(name)(in ctx: CGContext, scale: CGSize) {
-
-    """
-  }
-
-  func makeTemplateStart() -> String {
-    switch api {
-    case .appKit:
-      return makeAppKit()
-    case .uiKit:
-      return makeUIKit()
-    case .swiftUI:
-        return makeSwiftUI()
     }
-  }
 
-  func makeTemplateEnd() -> String {
-      switch api {
-      case .appKit, .uiKit:
-        return "\n  }\n}"
-      case .swiftUI:
-          return """
-                  
+    // The generated code draws the mask contents into a greyscale bitmap and clips to it, as CGRenderer does.
+    // The contents are generated in a nested scope where `ctx` is the bitmap; identifiers declared there
+    // are out of scope afterwards, so the caches are restored when it ends.
+    func clip(toMask contents: [RendererCommand<CGTextTypes>]) {
+        maskCount += 1
+        let device = "maskDevice".makeIdentifier(maskCount)
+        let rect = "maskRect".makeIdentifier(maskCount)
+        let context = "maskContext".makeIdentifier(maskCount)
+        let code = """
+        let \(device) = ctx.userSpaceToDeviceSpaceTransform
+        let \(rect) = ctx.boundingBoxOfClipPath.applying(\(device)).integral
+        let \(context) = CGContext(
+          data: nil,
+          width: max(1, Int(\(rect).width)),
+          height: max(1, Int(\(rect).height)),
+          bitsPerComponent: 8,
+          bytesPerRow: 0,
+          space: CGColorSpaceCreateDeviceGray(),
+          bitmapInfo: CGImageAlphaInfo.none.rawValue
+        )!
+        \(context).fill(CGRect(x: 0, y: 0, width: \(context).width, height: \(context).height))
+        \(context).translateBy(x: -\(rect).minX, y: -\(rect).minY)
+        \(context).concatenate(\(device))
+        """.split(separator: "\n").map(String.init)
+        lines.append(contentsOf: code)
+
+        let outer = (lines, colorSpaces, colors, paths, transforms, gradients, patterns)
+        lines = []
+        perform(contents)
+        var inner = ["let ctx = \(context)"]
+        if patterns.count > outer.6.count {
+            // CGPattern matrices are relative to the bitmap's default space
+            inner.append("let baseCTM = CGAffineTransform.identity")
+        }
+        inner.append(contentsOf: lines)
+        (lines, colorSpaces, colors, paths, transforms, gradients, patterns) = outer
+
+        lines.append("do {")
+        lines.append(contentsOf: inner.map { "  \($0)" })
+        lines.append("}")
+        lines.append("ctx.concatenate(\(device).inverted())")
+        lines.append("ctx.clip(to: \(rect), mask: \(context).makeImage()!)")
+        lines.append("ctx.concatenate(\(device))")
+    }
+
+    func setClip(mask: [AnyHashable], frame: String) {
+        lines.append("ctx.clip(to: \(frame), mask: \(mask))")
+    }
+
+    func setAlpha(_ alpha: LayerTree.Float) {
+        lines.append("ctx.setAlpha(\(formatter.format(alpha)))")
+    }
+
+    func setBlend(mode: String) {
+        lines.append("ctx.setBlendMode(\(mode))")
+    }
+
+    func stroke(path: [LayerTree.Shape]) {
+        if let frame = getSimpleRect(from: path) {
+            lines.append("ctx.stroke(\(frame))")
+        } else if let frame = getSimpleEllipse(from: path) {
+            lines.append("ctx.strokeEllipse(in: \(frame))")
+        } else {
+            let identifier = createOrGetPath(path)
+            lines.append("ctx.addPath(\(identifier))")
+            lines.append("ctx.strokePath()")
+        }
+    }
+
+    func clipStrokeOutline(path: [LayerTree.Shape]) {
+        let identifier = createOrGetPath(path)
+        lines.append("ctx.addPath(\(identifier))")
+        lines.append("ctx.replacePathWithStrokedPath()")
+        lines.append("ctx.clip()")
+    }
+
+    func fill(path: [LayerTree.Shape], rule: String) {
+        if let frame = getSimpleRect(from: path) {
+            lines.append("ctx.fill(\(frame))")
+        } else if let frame = getSimpleEllipse(from: path) {
+            lines.append("ctx.fillEllipse(in: \(frame))")
+        } else {
+            let identifier = createOrGetPath(path)
+            lines.append("ctx.addPath(\(identifier))")
+            if rule == ".winding" {
+                lines.append("ctx.fillPath()")
+            } else {
+                lines.append("ctx.fillPath(using: \(rule))")
+            }
+        }
+    }
+
+    func draw(image: LayerTree.Image, in rect: String) {
+        // the generated code embeds no bitmaps: it cannot draw, nor letterbox (the bitmap size is unknown here)
+        lines.append("// warning: image dropped, <image> is not supported in generated code")
+    }
+
+    func draw(linear gradient: LayerTree.Gradient, from start: String, to end: String) {
+        let identifier = createOrGetGradient(gradient)
+        lines.append("""
+        ctx.drawLinearGradient(\(identifier),
+                               start: \(start),
+                               end: \(end),
+                               options: [.drawsAfterEndLocation, .drawsBeforeStartLocation])
+        """)
+    }
+
+    func draw(radial gradient: LayerTree.Gradient, startCenter: String, startRadius: LayerTree.Float, endCenter: String, endRadius: LayerTree.Float) {
+        let identifier = createOrGetGradient(gradient)
+        lines.append("""
+        ctx.drawRadialGradient(\(identifier),
+                               startCenter: \(startCenter),
+                               startRadius: \(formatter.format(startRadius)),
+                               endCenter: \(endCenter),
+                               endRadius: \(formatter.format(endRadius)),
+                               options: [.drawsAfterEndLocation, .drawsBeforeStartLocation])
+        """)
+    }
+
+    // Filters are not generated: the contents are drawn unfiltered, in their own graphics state.
+    func pushFilterLayer(_ filter: LayerTree.FilterLayer) {
+        lines.append("// warning: filter dropped (\(filter.effects.count) effect(s)), contents drawn unfiltered")
+        lines.append("ctx.saveGState()")
+    }
+
+    func setFilterImage(primitive: Int, contents: [RendererCommand<CGTextTypes>]) { }
+
+    func popFilterLayer() {
+        lines.append("ctx.restoreGState()")
+    }
+
+    func makeSwiftUI() -> String {
+        """
+        import SwiftUI
+
+        struct \(name)View: View {
+
+          var body: some View {
+            if isResizable {
+              canvas
+                .frame(idealWidth: \(commandSize.width), idealHeight: \(commandSize.width))
+            } else {
+              canvas
+                .frame(width: \(commandSize.width), height: \(commandSize.width))
+            }
+          }
+
+          private var isResizable = false
+
+          func resizable() -> Self {
+             var copy = self 
+             copy.isResizable = true
+             return copy
+          }
+
+          var canvas: some View {
+            Canvas(
+              opaque: false,
+              colorMode: .linear,
+              rendersAsynchronously: false
+            ) { context, size in
+              let scale = CGSize(width: size.width / \(commandSize.width), height: size.height / \(commandSize.height))                                  
+              context.withCGContext { ctx in
+        
+        """
+    }
+
+    func makeUIKit() -> String {
+        """
+        import CoreGraphics
+        import UIKit
+
+        extension UIImage {
+          static func svg\(name)(size: CGSize = CGSize(width: \(size.width), height: \(size.height))) -> UIImage {
+            let f = UIGraphicsImageRendererFormat.preferred()
+            f.opaque = false
+            let scale = CGSize(width: size.width / \(commandSize.width), height: size.height / \(commandSize.height))
+            return UIGraphicsImageRenderer(size: size, format: f).image {
+              draw\(name)(in: $0.cgContext, scale: scale)
+            }
+          }
+
+          private static func draw\(name)(in ctx: CGContext, scale: CGSize) {
+
+        """
+    }
+
+    func makeAppKit() -> String {
+        """
+        import Cocoa
+        import CoreGraphics
+
+        
+        extension NSImage {
+          static func svgKey(size: NSSize = NSSize(width: \(size.width), height: \(size.height))) -> NSImage {
+            NSImage(size: size, flipped: true) { rect in
+                guard let ctx = NSGraphicsContext.current?.cgContext else { return false }
+                let scale = CGSize(width: rect.width / \(commandSize.width), height: rect.height / \(commandSize.height))
+                draw\(name)(in: ctx, scale: scale)
+                return true
+            }
+          }
+
+        private static func draw\(name)(in ctx: CGContext, scale: CGSize) {
+
+        """
+    }
+
+    func makeTemplateStart() -> String {
+        switch api {
+        case .appKit:
+            return makeAppKit()
+        case .uiKit:
+            return makeUIKit()
+        case .swiftUI:
+            return makeSwiftUI()
+        }
+    }
+
+    func makeTemplateEnd() -> String {
+        switch api {
+        case .appKit, .uiKit:
+            return "\n  }\n}"
+        case .swiftUI:
+            return """
+                    
+                      }
                     }
                   }
                 }
-              }
-              """
-      }
-  }
-
-  func makeIndent() -> String {
-      switch api {
-      case .appKit, .uiKit:
-        return String(repeating: " ", count: 4)
-      case .swiftUI:
-        return String(repeating: " ", count: 8)
-      }
-  }
-
-  func makeText() -> String {
-    var template = makeTemplateStart()
-
-    lines.insert("ctx.scaleBy(x: scale.width, y: scale.height)", at: 0)
-    if !patterns.isEmpty {
-        lines.insert("let baseCTM = ctx.ctm", at: 0)
+                """
+        }
     }
 
-    let indent = makeIndent()
-    let lines = self.lines.map { "\(indent)\($0)" }
-    template.append(lines.joined(separator: "\n"))
-    template.append(makeTemplateEnd())
-    return template
-  }
+    func makeIndent() -> String {
+        switch api {
+        case .appKit, .uiKit:
+            return String(repeating: " ", count: 4)
+        case .swiftUI:
+            return String(repeating: " ", count: 8)
+        }
+    }
+
+    func makeText() -> String {
+        var template = makeTemplateStart()
+
+        lines.insert("ctx.scaleBy(x: scale.width, y: scale.height)", at: 0)
+        if !patterns.isEmpty {
+            lines.insert("let baseCTM = ctx.ctm", at: 0)
+        }
+
+        let indent = makeIndent()
+        let lines = self.lines.map { "\(indent)\($0)" }
+        template.append(lines.joined(separator: "\n"))
+        template.append(makeTemplateEnd())
+        return template
+    }
 }
 
 extension String.StringInterpolation {
-  mutating func appendInterpolation(_ points: [LayerTree.Point], indent: Int) {
-    let indentation = String(repeating: " ", count: indent)
-    let provider = CGTextProvider(formatter: .init(delimeter: .commaSpace, precision: .capped(max: 3)))
-    let elements = points
-      .map { "\(indentation)\(provider.createPoint(from: $0))" }
-      .joined(separator: ",\n")
-    appendLiteral(elements)
-  }
+    mutating func appendInterpolation(_ points: [LayerTree.Point], indent: Int) {
+        let indentation = String(repeating: " ", count: indent)
+        let provider = CGTextProvider(formatter: .init(delimeter: .commaSpace, precision: .capped(max: 3)))
+        let elements = points
+            .map { "\(indentation)\(provider.createPoint(from: $0))" }
+            .joined(separator: ",\n")
+        appendLiteral(elements)
+    }
 }
 
 private extension String {
 
-  func makeIdentifier(_ index: Int) -> String {
-    guard index > 0 else {
-      return self
+    func makeIdentifier(_ index: Int) -> String {
+        guard index > 0 else {
+            return self
+        }
+        return "\(self)\(index)"
     }
-    return "\(self)\(index)"
-  }
 }

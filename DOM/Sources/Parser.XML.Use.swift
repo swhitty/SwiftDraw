@@ -30,27 +30,27 @@
 //
 
 extension XMLParser {
-  
-  func parseUse(_ att: any AttributeParser) throws -> DOM.Use {
-      let href: DOM.URL = try {
-          do {
-            return try att.parseUrl("href")
-          } catch XMLParser.Error.missingAttribute(_) {
-              /// Backward compatibility for the deprecated "xlink:href"
-              /// https://www.w3.org/TR/SVG/linking.html#XLinkRefAttrs
-              return try att.parseUrl("xlink:href")
-          }
-      }()
-      
-    let use = DOM.Use(href: href)
-    use.x = parseDefaultedLength(att, "x", .horizontal)
-    use.y = parseDefaultedLength(att, "y", .vertical)
-    // only a referenced <symbol> uses these: missing (or invalid) falls back to the symbol's
-    // own size, and then to 100% of the enclosing viewport
-    use.width = parseDefaultedLength(att, "width", .horizontal)
-    use.height = parseDefaultedLength(att, "height", .vertical)
-    use.viewport = lengthContext.viewports.last
-    
-    return use
-  }
+
+    func parseUse(_ att: any AttributeParser) throws -> DOM.Use {
+        let href: DOM.URL = try {
+            do {
+                return try att.parseUrl("href")
+            } catch XMLParser.Error.missingAttribute(_) {
+                /// Backward compatibility for the deprecated "xlink:href"
+                /// https://www.w3.org/TR/SVG/linking.html#XLinkRefAttrs
+                return try att.parseUrl("xlink:href")
+            }
+        }()
+
+        let use = DOM.Use(href: href)
+        use.x = parseDefaultedLength(att, "x", .horizontal)
+        use.y = parseDefaultedLength(att, "y", .vertical)
+        // only a referenced <symbol> uses these: missing (or invalid) falls back to the symbol's
+        // own size, and then to 100% of the enclosing viewport
+        use.width = parseDefaultedLength(att, "width", .horizontal)
+        use.height = parseDefaultedLength(att, "height", .vertical)
+        use.viewport = lengthContext.viewports.last
+
+        return use
+    }
 }

@@ -30,6 +30,10 @@ It runs `swift test` in a `swift:6.4` container (Apple's `container` tool, as CI
 SWIFT_VERSION=6.2 ./container-run-tests.sh
 ``` Tests that must run everywhere should go through `DOM.SVG.parse` and `LayerTree` (with `LayerTreeProvider`) rather than `SVG(data:)`.
 
+### Formatting
+
+Indent with 4 spaces, never tabs or 2 spaces (`.editorconfig` sets this for editors). Continuation lines may align under an opening parenthesis. Code inside a multi-line string literal, such as generated Swift or SVG test input, keeps the indentation it has.
+
 ### Locking
 
 Guard shared mutable state with `Mutex` (`DOM/Sources/Mutex.swift`, `package` in SwiftDrawDOM), not `NSLock`, `os_unfair_lock`, `DispatchQueue` or `@unchecked Sendable` with a hand-rolled lock. Keep the state inside the mutex (`Mutex(State())` and `withLock { $0… }`) so it can't be read without holding the lock, and a class holding only a `Mutex` and immutable properties can be plain `Sendable`. It backports `Synchronization.Mutex` on Darwin and is `Synchronization.Mutex` elsewhere, so on Linux a file that calls `withLock` must import `Synchronization` itself:
