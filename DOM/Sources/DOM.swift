@@ -245,12 +245,55 @@ extension DOM {
         }
     }
 
+    /// `dominant-baseline` and `alignment-baseline` (CSS Inline 3, SVG 1.1): the baseline of the
+    /// font that sits on the text's `y`
     package enum TextBaseline: String {
         case auto
+        case alphabetic
         case middle
         case central
         case hanging
-        case alphabetic
+        case mathematical
+        case ideographic
+        case textBeforeEdge = "text-before-edge"
+        case textAfterEdge = "text-after-edge"
+
+        /// A value, with the aliases SVG 1.1 and CSS Inline 3 give some of them. nil for `inherit`
+        /// and unknown values, which leave the inherited baseline.
+        package init?(css value: String) {
+            switch value.trimmingCharacters(in: .whitespaces).lowercased() {
+            case "auto", "baseline", "use-script": self = .auto
+            // SVG 1.1: keep the parent's baseline, as `inherit`
+            case "no-change", "reset-size": return nil
+            case "text-top", "before-edge": self = .textBeforeEdge
+            case "text-bottom", "after-edge": self = .textAfterEdge
+            case let other: self.init(rawValue: other)
+            }
+        }
+    }
+
+    /// `baseline-shift`: how far a `<tspan>` (and the text within it) is raised from the baseline of
+    /// its parent. Shifts of nested elements add up.
+    package enum BaselineShift: Equatable {
+        case baseline
+        case sub
+        case `super`
+        /// positive raises; a percentage is of the font-size (the line-height)
+        case length(DashLength)
+        /// the value of the parent element: `baseline-shift` is not inherited otherwise
+        case inherit
+
+        package init?(css value: String) {
+            switch value.trimmingCharacters(in: .whitespaces).lowercased() {
+            case "baseline": self = .baseline
+            case "sub": self = .sub
+            case "super": self = .super
+            case "inherit": self = .inherit
+            default:
+                guard let length = XMLParser.parseDashLength(value) else { return nil }
+                self = .length(length)
+            }
+        }
     }
 
     package enum Transform: Equatable {

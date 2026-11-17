@@ -456,7 +456,12 @@ extension XMLParser {
         el.fontWeight = lenient { try att.parseString("font-weight") as String? }.flatMap(DOM.FontWeight.init)
         el.fontStyle = lenient { try att.parseString("font-style") as String? }.flatMap(DOM.FontStyle.init)
         el.textAnchor = lenient { try att.parseRaw("text-anchor") }
-        el.dominantBaseline = lenient { try att.parseRaw("dominant-baseline") }
+        el.dominantBaseline = lenient { try att.parseString("dominant-baseline") as String? }
+            .flatMap { DOM.TextBaseline(css: XMLParser.Attributes.removingImportant(from: $0)) }
+        el.alignmentBaseline = lenient { try att.parseString("alignment-baseline") as String? }
+            .flatMap { DOM.TextBaseline(css: XMLParser.Attributes.removingImportant(from: $0)) }
+        el.baselineShift = lenient { try att.parseString("baseline-shift") as String? }
+            .flatMap { DOM.BaselineShift(css: XMLParser.Attributes.removingImportant(from: $0)) }
         // a percentage is of the viewport width, as for other horizontal lengths (as resvg; CSS Text 4
         // makes it a percentage of the font-size)
         let viewportWidth = lengthContext.viewports.last?.width

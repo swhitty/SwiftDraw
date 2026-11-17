@@ -692,7 +692,7 @@ extension LayerTree.Builder {
             weight: state.fontWeight,
             isItalic: state.fontStyle != .normal,
             anchor: state.textAnchor,
-            baseline: state.textBaseline
+            baseline: state.alignmentBaseline ?? state.textBaseline
         )
     }
 
@@ -1173,7 +1173,15 @@ extension LayerTree.Builder {
         var fontWeight: Int
         var fontStyle: DOM.FontStyle
         var textAnchor: DOM.TextAnchor
+        /// `dominant-baseline`, inherited
         var textBaseline: DOM.TextBaseline
+        /// `alignment-baseline` of the element itself (not inherited); nil uses `textBaseline`
+        var alignmentBaseline: DOM.TextBaseline?
+        /// `baseline-shift` of the element itself, for a child's `inherit`
+        var baselineShift: DOM.BaselineShift?
+        /// the `baseline-shift` of the text content element and each of its text content ancestors,
+        /// outermost first, with the font-size each was declared at: they add up
+        var baselineShifts: [BaselineShiftEntry] = []
         /// CSS `letter-spacing` and `word-spacing`, computed: inherited as absolute lengths
         var letterSpacing: DOM.Float
         var wordSpacing: DOM.Float
@@ -1213,6 +1221,11 @@ extension LayerTree.Builder {
             fontStyle = .normal
             paintOrder = .normal
         }
+    }
+
+    struct BaselineShiftEntry {
+        var shift: DOM.BaselineShift
+        var fontSize: DOM.Float
     }
 
     func createState(for element: DOM.GraphicsElement, inheriting existing: State) -> State {
@@ -1269,6 +1282,9 @@ extension LayerTree.Builder {
         state.fontStyle = attributes.fontStyle ?? existing.fontStyle
         state.textAnchor = attributes.textAnchor ?? existing.textAnchor
         state.textBaseline = attributes.dominantBaseline ?? existing.textBaseline
+        state.alignmentBaseline = attributes.alignmentBaseline == .auto ? nil : attributes.alignmentBaseline
+        state.baselineShift = attributes.baselineShift == .inherit ? existing.baselineShift : attributes.baselineShift
+        state.baselineShifts = existing.baselineShifts
         // `em` is of the element's computed font-size; the parser resolves percentages of the viewport
         func spacing(_ length: DOM.DashLength) -> DOM.Float {
             switch length {
