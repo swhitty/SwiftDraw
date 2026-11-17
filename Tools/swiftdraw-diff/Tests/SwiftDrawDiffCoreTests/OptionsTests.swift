@@ -13,7 +13,7 @@ struct OptionsTests {
         let o = try Self.parse(["Samples.bundle"])
         #expect(o.command == .report)
         #expect(o.inputs == [URL(fileURLWithPath: "Samples.bundle")])
-        #expect(o.resvg == nil)
+        #expect(!o.usesResvg)
         #expect(o.scale == 2)
         #expect(o.match == 1)
         #expect(o.tolerance == 0.5)
@@ -26,18 +26,33 @@ struct OptionsTests {
         #expect(o.command == .compare)
         #expect(o.base == "0.30.0")
         #expect(o.head == "main")
-        #expect(o.resvg == .cli)
+        #expect(o.resvgCLI)
+        #expect(o.resvgPNG == nil)
         #expect(o.tolerance == 1)
         #expect(o.inputs.count == 2)
     }
 
     @Test
     func resvgSources() throws {
-        #expect(try Self.parse(["--resvg-png", "sibling", "a.svg"]).resvg == .sibling)
-        #expect(try Self.parse(["--resvg-png", "pngs", "a.svg"]).resvg == .directory(URL(fileURLWithPath: "pngs")))
+        let sibling = try Self.parse(["--resvg-png", "sibling", "a.svg"])
+        #expect(sibling.resvgPNG == .sibling)
+        #expect(!sibling.resvgCLI)
+        #expect(sibling.usesResvg)
+        #expect(try Self.parse(["--resvg-png", "pngs", "a.svg"]).resvgPNG == .directory(URL(fileURLWithPath: "pngs")))
         let o = try Self.parse(["--resvg-path", "/opt/resvg", "a.svg"])
-        #expect(o.resvg == .cli)
+        #expect(o.resvgCLI)
         #expect(o.resvgPath == URL(fileURLWithPath: "/opt/resvg"))
+    }
+
+    @Test(arguments: [
+        ["--resvg", "--resvg-png", "sibling", "a.svg"],
+        ["--resvg-png", "sibling", "--resvg", "a.svg"],
+        ["--resvg-png", "sibling", "--resvg-path", "/opt/resvg", "a.svg"],
+    ])
+    func resvgPNGWithCLIFallback(_ args: [String]) throws {
+        let o = try Self.parse(args)
+        #expect(o.resvgPNG == .sibling)
+        #expect(o.resvgCLI)
     }
 
     @Test
@@ -59,7 +74,6 @@ struct OptionsTests {
         ["--bogus", "a.svg"],
         ["--base", "main", "a.svg"],                    // --base is for compare
         ["--head", "main", "--swiftdraw-path", "/bin/sd", "a.svg"],
-        ["--resvg-png", "sibling", "--resvg-path", "/opt/resvg", "a.svg"],
         ["a.svg", "--head"],                            // missing value
     ])
     func rejects(_ args: [String]) {
@@ -69,15 +83,21 @@ struct OptionsTests {
     }
 
     @Test
-    func directoriesListTheirSVGsSorted() throws {
+    func directoriesListTheirSVGsRecursivelyByRelativePath() throws {
         let dir = FileManager.default.temporaryDirectory.appendingPathComponent("OptionsTests-\(UUID().uuidString)")
-        try FileManager.default.createDirectory(at: dir.appendingPathComponent("nested"), withIntermediateDirectories: true)
-        defer { try? FileManager.default.removeItem(at: dir) }
-        for name in ["b.svg", "a.SVG", "c.png", "nested/d.svg"] {
+        let fm = FileManager.default
+        for sub in ["text/text-anchor", "a", ".hidden"] {
+            try fm.createDirectory(at: dir.appendingPathComponent(sub), withIntermediateDirectories: true)
+        }
+        defer { try? fm.removeItem(at: dir) }
+        for name in ["b.svg", "a.SVG", "c.png", "text/text-anchor/simple-case.svg", "text/text-anchor/simple-case.png",
+                     "a/z.svg", ".hidden/x.svg", ".dot.svg"] {
             try Data().write(to: dir.appendingPathComponent(name))
         }
         var o = Options()
-        o.inputs = [dir]
-        #expect(o.svgFiles().map(\.lastPathComponent) == ["a.SVG", "b.svg"])
+        o.inputs = [dir, dir.appendingPathComponent("b.svg")]
+        let files = o.svgFiles()
+        #expect(files.map(\.name) == ["a", "a/z", "b", "text/text-anchor/simple-case", "b"])
+        #expect(files[3].url.lastPathComponent == "simple-case.svg")
     }
 }

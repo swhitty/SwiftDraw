@@ -64,11 +64,13 @@ public struct ScoresReport: Codable, Sendable {
     /// Percent; the verdict threshold.
     public var match: Double
     public var fontSmoothing: Bool
+    /// The reference files containing text are judged by: "resvg", or "webkit" without resvg.
+    public var textReference: String
     public var generated: Date
     public var results: [Score]
 
     public init(swiftdraw: String, engine: String, resvg: String?, os: String, scale: Int, match: Double,
-                fontSmoothing: Bool, generated: Date, results: [Score]) {
+                fontSmoothing: Bool, textReference: String, generated: Date, results: [Score]) {
         self.swiftdraw = swiftdraw
         self.engine = engine
         self.resvg = resvg
@@ -76,6 +78,7 @@ public struct ScoresReport: Codable, Sendable {
         self.scale = scale
         self.match = match
         self.fontSmoothing = fontSmoothing
+        self.textReference = textReference
         self.generated = generated
         self.results = results
     }
@@ -91,6 +94,8 @@ public struct ScoresReport: Codable, Sendable {
         /// WebKit against resvg, 0...1.
         public var webkitResvg: Double?
         public var verdict: Verdict?
+        /// True when the file contains text, which is judged by resvg.
+        public var text: Bool?
         /// Points, as rendered.
         public var size: PointSize?
         public var errors: [String: String]?
@@ -122,11 +127,13 @@ public struct CompareReport: Codable, Sendable {
     public var tolerance: Double
     public var match: Double
     public var fontSmoothing: Bool
+    /// The reference files containing text are judged by: "resvg", or "webkit" without resvg.
+    public var textReference: String
     public var generated: Date
     public var results: [Entry]
 
     public init(base: String, head: String, engine: String, resvg: String?, os: String, scale: Int, tolerance: Double,
-                match: Double, fontSmoothing: Bool, generated: Date, results: [Entry]) {
+                match: Double, fontSmoothing: Bool, textReference: String, generated: Date, results: [Entry]) {
         self.base = base
         self.head = head
         self.engine = engine
@@ -136,6 +143,7 @@ public struct CompareReport: Codable, Sendable {
         self.tolerance = tolerance
         self.match = match
         self.fontSmoothing = fontSmoothing
+        self.textReference = textReference
         self.generated = generated
         self.results = results
     }
@@ -155,6 +163,10 @@ public struct CompareReport: Codable, Sendable {
         public var webkitResvg: Double?
         public var baseVerdict: Verdict?
         public var headVerdict: Verdict?
+        /// True when the file contains text, which is judged by resvg.
+        public var text: Bool?
+        /// The references the category was decided by ("webkit", "resvg"); the others are for information.
+        public var judgedBy: [String]?
         /// Pixels that differ between base and head (exact, unblurred).
         public var pixelsChanged: Int?
         /// "rendered" or "failed".

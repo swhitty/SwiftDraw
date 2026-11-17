@@ -44,22 +44,39 @@ struct OutputDirs {
     }
 
     func png(_ dir: URL, _ name: String) -> URL { dir.appendingPathComponent("\(name).png") }
+
+    /// Creates the subfolders that names with a relative path (`text/text-anchor/simple-case`) are written into.
+    func createSubfolders(for names: [String], base: Bool, resvg: Bool) throws {
+        let parents = Set(names.compactMap { name -> String? in
+            let parent = (name as NSString).deletingLastPathComponent
+            return parent.isEmpty ? nil : parent
+        })
+        guard !parents.isEmpty else { return }
+        var dirs = [head, webkit, svg, diff]
+        if base { dirs.append(self.base) }
+        if resvg { dirs.append(self.resvg) }
+        for dir in dirs {
+            for parent in parents { try FileManager.default.createDirectory(at: dir.appendingPathComponent(parent), withIntermediateDirectories: true) }
+        }
+    }
 }
 
 enum Pipeline {
 
-    /// Reads the input SVGs. Names must be unique: outputs are named after them.
-    static func inputs(_ options: Options, copyTo svgDir: URL) throws -> [InputFile] {
-        let urls = options.svgFiles()
-        guard !urls.isEmpty else { throw ToolError("no SVG files found") }
+    /// Reads the input SVGs and creates the output subfolders their names need. Names must be unique:
+    /// outputs are named after them.
+    static func inputs(_ options: Options, dirs: OutputDirs, base: Bool) throws -> [InputFile] {
+        let inputs = options.svgFiles()
+        guard !inputs.isEmpty else { throw ToolError("no SVG files found") }
+        try dirs.createSubfolders(for: inputs.map(\.name), base: base, resvg: options.usesResvg)
         var seen: [String: URL] = [:]
-        return try urls.map { url in
-            let name = url.deletingPathExtension().lastPathComponent
+        return try inputs.map { input in
+            let name = input.name, url = input.url
             if let other = seen[name] { throw ToolError("two inputs are named \(name): \(other.path) and \(url.path)") }
             seen[name] = url
             let data = (try? Data(contentsOf: url)) ?? Data()
-            try? data.write(to: svgDir.appendingPathComponent("\(name).svg"))
-            return InputFile(name: name, svg: url, data: data, hash: RenderCache.hash(data))
+            try? data.write(to: dirs.svg.appendingPathComponent("\(name).svg"))
+            return InputFile(name: name, svg: url, data: data, hash: RenderCache.hash(data), text: TextContent.contains(data))
         }
     }
 
@@ -96,10 +113,10 @@ enum Pipeline {
         }
 
         if let resvg {
-            step(resvg.isPNG ? "Reading \(resvg.label)" : "Rendering with \(resvg.label)")
+            step(resvg.cli == nil ? "Reading \(resvg.label)" : "Rendering with \(resvg.label)")
             let results = await concurrentMap(rendered) { r -> RenderResult in
                 guard let size = r.size else { return .failed("no size") }
-                return await resvg.render(r.file, pixels: size.pixels(scale: scale), cache: cache, to: dirs.png(dirs.resvg, r.file.name))
+                return await resvg.render(r.file, pixels: size.pixels(scale: scale), scale: scale, cache: cache, to: dirs.png(dirs.resvg, r.file.name))
             }
             for i in rendered.indices { rendered[i].resvg = results[i] }
         }
@@ -114,7 +131,7 @@ enum Pipeline {
 
     /// Loads a rendered image at the compare size. SwiftDraw's and WebKit's must already be that size;
     /// resvg's CLI output is padded or cropped (it keeps the aspect ratio when fitting -w × -h);
-    /// pre-rendered PNGs must match.
+    /// pre-rendered PNGs were only used when they matched.
     static func load(_ url: URL, size: (width: Int, height: Int), fit: Bool) -> Result<Bitmap, ToolError> {
         do {
             let bitmap = try Bitmap(contentsOf: url)

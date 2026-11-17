@@ -5,11 +5,14 @@ import System
 
 /// One SVG to render.
 struct InputFile: Sendable {
+    /// The report name: the path relative to the input directory, without `.svg`. May contain `/`.
     var name: String
     var svg: URL
     var data: Data
     /// SHA-256 of the SVG's bytes, the cache key for every renderer.
     var hash: String
+    /// Contains a `<text>` element.
+    var text: Bool
 }
 
 /// The repository this tool lives in.
@@ -73,21 +76,30 @@ struct WebKitRenderer: Sendable {
         guard !missing.isEmpty else { return results }
 
         step("Rendering \(missing.count) file\(missing.count == 1 ? "" : "s") with WebKit")
+        // webkit-render takes plain file names; report names may be relative paths
         struct Job: Encodable { var name: String; var svg: String }
+        let jobs = missing.enumerated().map { i, file in
+            (Job(name: "\(i)-\(file.svg.deletingPathExtension().lastPathComponent)", svg: file.svg.path), file)
+        }
         let jobsURL = scratch.appendingPathComponent("webkit-jobs.json")
-        try JSONEncoder().encode(missing.map { Job(name: $0.name, svg: $0.svg.path) }).write(to: jobsURL)
+        let jobsOut = scratch.appendingPathComponent("webkit")
+        let fm = FileManager.default
+        try fm.createDirectory(at: jobsOut, withIntermediateDirectories: true)
+        try JSONEncoder().encode(jobs.map(\.0)).write(to: jobsURL)
         let output = try await execute(binary, [
-            "--jobs", jobsURL.path, "--out", dir.path,
+            "--jobs", jobsURL.path, "--out", jobsOut.path,
             "--scale", "\(options.scale)", "--max", "\(options.maxDimension)",
         ] + (options.fontSmoothing ? ["--font-smoothing"] : []))
         guard output.success else { throw ToolError("webkit-render failed: \(output.reason)") }
-        let manifest = try JSONDecoder().decode([WebKitManifestEntry].self, from: Data(contentsOf: dir.appendingPathComponent("manifest.json")))
-        try? FileManager.default.removeItem(at: dir.appendingPathComponent("manifest.json"))
-        let byName = Dictionary(uniqueKeysWithValues: missing.map { ($0.name, $0) })
-        for entry in manifest {
-            results[entry.name] = entry
-            guard let file = byName[entry.name] else { continue }
-            let png = dir.appendingPathComponent("\(entry.name).png")
+        let manifest = try JSONDecoder().decode([WebKitManifestEntry].self, from: Data(contentsOf: jobsOut.appendingPathComponent("manifest.json")))
+        let byJob = Dictionary(uniqueKeysWithValues: jobs.map { ($0.0.name, $0.1) })
+        for var entry in manifest {
+            guard let file = byJob[entry.name] else { continue }
+            let rendered = jobsOut.appendingPathComponent("\(entry.name).png")
+            entry.name = file.name
+            results[file.name] = entry
+            let png = dir.appendingPathComponent("\(file.name).png")
+            if entry.rendered { try? fm.moveItem(at: rendered, to: png) }
             // a redrawn image came from a WebKit timing glitch; don't keep it in the cache
             if entry.redrawn == nil {
                 cache.store(cacheID, file.hash, meta: entry, png: entry.rendered ? png : nil)
@@ -204,52 +216,46 @@ struct SwiftDrawRenderer: Sendable {
 
 // MARK: - resvg
 
-/// resvg, run as a CLI or read from pre-rendered PNGs.
+/// resvg, read from pre-rendered PNGs, run as a CLI, or both: PNGs where they fit, the CLI otherwise.
 struct ResvgRenderer: Sendable {
-    enum Source: Sendable {
-        case cli(URL)
-        case sibling
-        case directory(URL)
-    }
-
-    var source: Source
+    var png: Options.ResvgPNGSource?
+    var cli: URL?
     /// e.g. "resvg 0.50.0", or "resvg PNGs (…)".
     var label: String
     var cacheID: String?
 
-    /// SwiftDraw's fallback fonts, so text is drawn with the same faces.
+    /// SwiftDraw's fallback fonts, so text is drawn with the same faces, and CSS `medium` (16px) as the
+    /// default font size like browsers and SwiftDraw; resvg's CLI defaults to 12.
     static let fontArguments = [
         "--font-family", "Times", "--serif-family", "Times", "--sans-serif-family", "Helvetica",
         "--monospace-family", "Courier", "--cursive-family", "Apple Chancery", "--fantasy-family", "Papyrus",
+        "--font-size", "16",
     ]
 
-    var isPNG: Bool {
-        if case .cli = source { return false }
-        return true
-    }
-
     static func prepare(_ options: Options) async throws -> ResvgRenderer? {
-        switch options.resvg {
-        case nil:
-            return nil
-        case .sibling:
-            return ResvgRenderer(source: .sibling, label: "resvg PNGs (beside each SVG)", cacheID: nil)
-        case let .directory(dir):
-            return ResvgRenderer(source: .directory(dir), label: "resvg PNGs (\(dir.path))", cacheID: nil)
-        case .cli:
-            let output: ProcessOutput
-            do {
-                output = try await execute(options.resvgPath.map { .path(.init($0.path)) } ?? .name("resvg"), ["--version"])
-            } catch {
-                throw ToolError("resvg not found\(options.resvgPath.map { " at \($0.path)" } ?? " on PATH"). Install it with `brew install resvg`, or pass --resvg-path")
-            }
-            guard output.success else { throw ToolError("resvg --version failed: \(output.reason)") }
-            let version = output.stdout.trimmingCharacters(in: .whitespacesAndNewlines)
-            let binary: URL
-            if let path = options.resvgPath { binary = path } else { binary = try await resolve("resvg") }
-            let id = RenderCache.hash("resvg", version, fontArguments.joined(separator: " "))
-            return ResvgRenderer(source: .cli(binary), label: "resvg \(version)", cacheID: "resvg-\(id)")
+        guard options.usesResvg else { return nil }
+        var labels: [String] = []
+        switch options.resvgPNG {
+        case nil: break
+        case .sibling: labels.append("resvg PNGs (beside each SVG)")
+        case let .directory(dir): labels.append("resvg PNGs (\(dir.path))")
         }
+        guard options.resvgCLI else {
+            return ResvgRenderer(png: options.resvgPNG, cli: nil, label: labels.joined(), cacheID: nil)
+        }
+        let output: ProcessOutput
+        do {
+            output = try await execute(options.resvgPath.map { .path(.init($0.path)) } ?? .name("resvg"), ["--version"])
+        } catch {
+            throw ToolError("resvg not found\(options.resvgPath.map { " at \($0.path)" } ?? " on PATH"). Install it with `brew install resvg`, or pass --resvg-path")
+        }
+        guard output.success else { throw ToolError("resvg --version failed: \(output.reason)") }
+        let version = output.stdout.trimmingCharacters(in: .whitespacesAndNewlines)
+        let binary: URL
+        if let path = options.resvgPath { binary = path } else { binary = try await resolve("resvg") }
+        let id = RenderCache.hash("resvg", version, fontArguments.joined(separator: " "))
+        labels.append("resvg \(version)")
+        return ResvgRenderer(png: options.resvgPNG, cli: binary, label: labels.joined(separator: ", else "), cacheID: "resvg-\(id)")
     }
 
     private static func resolve(_ name: String) async throws -> URL {
@@ -257,39 +263,59 @@ struct ResvgRenderer: Sendable {
         return URL(fileURLWithPath: path)
     }
 
-    /// Renders (or copies) one file's image to `png` at `pixels`.
-    func render(_ file: InputFile, pixels: (width: Int, height: Int), cache: RenderCache, to png: URL) async -> RenderResult {
+    /// Renders (or copies) one file's image to `png` at `pixels`. A pre-rendered PNG is used only when it
+    /// is exactly `pixels`; otherwise the CLI renders it, or, without the CLI, the file has no resvg image.
+    func render(_ file: InputFile, pixels: (width: Int, height: Int), scale: Int, cache: RenderCache, to png: URL) async -> RenderResult {
         let fm = FileManager.default
-        switch source {
-        case .sibling, .directory:
+        var unusable: String?
+        if let source = self.png {
             let src: URL
-            if case let .directory(dir) = source {
-                src = dir.appendingPathComponent("\(file.name).png")
+            switch source {
+            case let .directory(dir): src = dir.appendingPathComponent("\(file.name).png")
+            case .sibling: src = file.svg.deletingPathExtension().appendingPathExtension("png")
+            }
+            if !fm.fileExists(atPath: src.path) {
+                unusable = "no \(src.lastPathComponent)"
+            } else if let size = Bitmap.size(of: src), size != (pixels.width, pixels.height) {
+                unusable = "\(src.lastPathComponent) is \(size.width)×\(size.height), expected \(pixels.width)×\(pixels.height)"
+                    + Self.scaleHint(png: size, pixels: pixels, scale: scale)
             } else {
-                src = file.svg.deletingPathExtension().appendingPathExtension("png")
+                do { try fm.copyItem(at: src, to: png) } catch { return .failed("\(error)") }
+                return .ok
             }
-            guard fm.fileExists(atPath: src.path) else { return .failed("no \(src.lastPathComponent)") }
-            do { try fm.copyItem(at: src, to: png) } catch { return .failed("\(error)") }
-            return .ok
-
-        case let .cli(binary):
-            let key = "\(file.hash)-\(pixels.width)x\(pixels.height)"
-            if let cacheID, let hit = cache.lookup(cacheID, key, as: RenderResult.self) {
-                if let src = hit.png { try? fm.copyItem(at: src, to: png) }
-                if !hit.meta.rendered || hit.png != nil { return hit.meta }
-            }
-            // resvg fits -w × -h keeping the aspect ratio; the result is padded or cropped to size when scored.
-            let args = ["-w", "\(pixels.width)", "-h", "\(pixels.height)", "--background", "white"]
-                + Self.fontArguments + [file.svg.path, png.path]
-            let result: RenderResult
-            do {
-                let output = try await execute(binary, args)
-                result = output.success && fm.fileExists(atPath: png.path) ? .ok : .failed(output.reason)
-            } catch {
-                result = .failed("\(error)")
-            }
-            if let cacheID { cache.store(cacheID, key, meta: result, png: result.rendered ? png : nil) }
-            return result
         }
+        guard let cli else { return .failed(unusable ?? "no resvg image") }
+        return await render(file, cli: cli, pixels: pixels, cache: cache, to: png)
+    }
+
+    /// The `--scale` that would make a pre-rendered PNG fit, when there is one.
+    static func scaleHint(png: (width: Int, height: Int), pixels: (width: Int, height: Int), scale: Int) -> String {
+        guard pixels.width > 0, pixels.height > 0, scale > 0 else { return "" }
+        let points = (pixels.width / scale, pixels.height / scale)
+        for s in 1...3 where s != scale && png.width == points.0 * s && png.height == points.1 * s {
+            return " (use --scale \(s))"
+        }
+        return ""
+    }
+
+    private func render(_ file: InputFile, cli binary: URL, pixels: (width: Int, height: Int), cache: RenderCache, to png: URL) async -> RenderResult {
+        let fm = FileManager.default
+        let key = "\(file.hash)-\(pixels.width)x\(pixels.height)"
+        if let cacheID, let hit = cache.lookup(cacheID, key, as: RenderResult.self) {
+            if let src = hit.png { try? fm.copyItem(at: src, to: png) }
+            if !hit.meta.rendered || hit.png != nil { return hit.meta }
+        }
+        // resvg fits -w × -h keeping the aspect ratio; the result is padded or cropped to size when scored.
+        let args = ["-w", "\(pixels.width)", "-h", "\(pixels.height)", "--background", "white"]
+            + Self.fontArguments + [file.svg.path, png.path]
+        let result: RenderResult
+        do {
+            let output = try await execute(binary, args)
+            result = output.success && fm.fileExists(atPath: png.path) ? .ok : .failed(output.reason)
+        } catch {
+            result = .failed("\(error)")
+        }
+        if let cacheID { cache.store(cacheID, key, meta: result, png: result.rendered ? png : nil) }
+        return result
     }
 }
