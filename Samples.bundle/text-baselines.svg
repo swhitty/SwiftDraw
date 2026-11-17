@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="220" viewBox="0 0 240 220" font-family="Times" font-size="18">
+  <!-- dominant-baseline: which baseline of the font sits on y (the grey line) -->
+  <path d="M0 30 H240 M0 70 H240" stroke="silver"/>
+  <text x="4" y="30">Abg</text>
+  <text x="44" y="30" dominant-baseline="middle" fill="teal">Abg</text>
+  <text x="84" y="30" dominant-baseline="central" fill="purple">Abg</text>
+  <text x="124" y="30" dominant-baseline="hanging" fill="crimson">Abg</text>
+  <text x="164" y="30" dominant-baseline="text-before-edge" fill="orange">Abg</text>
+  <text x="204" y="30" dominant-baseline="text-after-edge" fill="green">Abg</text>
+  <!-- alignment-baseline aligns one tspan; dominant-baseline is inherited by the others -->
+  <text x="4" y="70" dominant-baseline="middle">middle <tspan alignment-baseline="hanging" fill="crimson">hanging</tspan> middle</text>
+
+  <!-- baseline-shift: sub and super from the font, lengths and percentages, nested shifts add up -->
+  <g font-size="28">
+    <text x="10" y="125">E = mc<tspan baseline-shift="super" font-size="18">2</tspan></text>
+    <text x="130" y="125">H<tspan baseline-shift="sub" font-size="18">2</tspan>O</text>
+    <text x="10" y="190">e<tspan baseline-shift="super" font-size="18">x<tspan baseline-shift="super" font-size="13">2</tspan></tspan>
+      + a<tspan baseline-shift="-30%" font-size="18" fill="teal">i,j</tspan>
+      + b<tspan baseline-shift="8" font-size="18" fill="crimson">up</tspan></text>
+  </g>
+</svg>

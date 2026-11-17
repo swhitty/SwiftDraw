@@ -500,7 +500,7 @@ extension LayerTree.Builder {
                 let ascent = LayerTree.Float(CTFontGetAscent(font))
                 let descent = LayerTree.Float(CTFontGetDescent(font))
                 let origin = LayerTree.Point(run.origin.x + shift, run.origin.y)
-                let baseline = origin.y + makeBaselineOffset(with: attributes)
+                let baseline = origin.y + makeBaselineOffset(with: attributes, shifts: run.state.baselineShifts)
                 let extent = run.horizontalExtent
                 var cell = LayerTree.Rect(x: extent.lowerBound + shift, y: baseline - ascent,
                                           width: extent.upperBound - extent.lowerBound, height: ascent + descent)
@@ -528,7 +528,7 @@ extension LayerTree.Builder {
                              bounds: () -> LayerTree.Rect? = { nil }) -> LayerTree.Layer.Contents? {
         // state already holds the cascaded font-family, font-size, font-weight, font-style and text-anchor
         let att = makeTextAttributes(with: state)
-        let baseline = Self.makeBaselineOffset(with: att)
+        let baseline = Self.makeBaselineOffset(with: att, shifts: state.baselineShifts)
         var point = point
         point.y += baseline
         let rotation = rotate == 0 ? [] : Self.makeRotation(rotate, about: point)
@@ -621,16 +621,64 @@ extension LayerTree.Builder {
         return LayerTree.Float(text.toWidth(font: font.font, synthesis: font.synthesis(for:)))
     }
 
-    static func makeBaselineOffset(with attributes: LayerTree.TextAttributes) -> LayerTree.Float {
-        makeYOffset(font: CGProvider.createFont(for: attributes).font, baseline: attributes.baseline)
+    static func makeBaselineOffset(with attributes: LayerTree.TextAttributes,
+                                   shifts: [BaselineShiftEntry] = []) -> LayerTree.Float {
+        let font = CGProvider.createFont(for: attributes).font
+        var offset = makeYOffset(font: font, baseline: attributes.baseline)
+        for entry in shifts {
+            offset -= makeBaselineShift(entry.shift, font: font, fontSize: entry.fontSize)
+        }
+        return offset
+    }
+
+    /// How far `baseline-shift` raises the text (CSS Inline 3 §4.3, SVG 1.1 §10.9.2): `sub` and
+    /// `super` by the font's own subscript and superscript offsets (its OS/2 table), percentages of
+    /// the font-size it was declared at.
+    static func makeBaselineShift(_ shift: DOM.BaselineShift, font: CTFont, fontSize: LayerTree.Float) -> LayerTree.Float {
+        switch shift {
+        case .baseline, .inherit:
+            return 0
+        case .sub:
+            return -(makeScriptOffsets(font: font, fontSize: fontSize)?.sub ?? fontSize * 0.2)
+        case .super:
+            return makeScriptOffsets(font: font, fontSize: fontSize)?.super ?? fontSize / 3
+        case .length(.absolute(let value)):
+            return value
+        case .length(.em(let value)):
+            return value * fontSize
+        case .length(.percentage(let value)):
+            return value / 100 * fontSize
+        }
+    }
+
+    /// `ySubscriptYOffset` and `ySuperscriptYOffset` of the font's OS/2 table, at `fontSize`
+    static func makeScriptOffsets(font: CTFont, fontSize: LayerTree.Float) -> (sub: LayerTree.Float, super: LayerTree.Float)? {
+        guard let table = CTFontCopyTable(font, CTFontTableTag(kCTFontTableOS2), []) as Data?,
+              table.count >= 26 else { return nil }
+        func int16(_ offset: Int) -> LayerTree.Float {
+            let index = table.startIndex + offset
+            return LayerTree.Float(Int16(bitPattern: UInt16(table[index]) << 8 | UInt16(table[index + 1])))
+        }
+        let unitsPerEm = LayerTree.Float(CTFontGetUnitsPerEm(font))
+        guard unitsPerEm > 0 else { return nil }
+        return (int16(16) / unitsPerEm * fontSize, int16(24) / unitsPerEm * fontSize)
     }
 #else
     static func makeAdvance(for text: String, with attributes: LayerTree.TextAttributes) -> LayerTree.Float {
         0
     }
 
-    static func makeBaselineOffset(with attributes: LayerTree.TextAttributes) -> LayerTree.Float {
-        0
+    static func makeBaselineOffset(with attributes: LayerTree.TextAttributes,
+                                   shifts: [BaselineShiftEntry] = []) -> LayerTree.Float {
+        // no font metrics: only the shifts that are lengths
+        shifts.reduce(0) { offset, entry in
+            switch entry.shift {
+            case .length(.absolute(let value)): offset - value
+            case .length(.em(let value)): offset - value * entry.fontSize
+            case .length(.percentage(let value)): offset - value / 100 * entry.fontSize
+            case .baseline, .inherit, .sub, .super: offset
+            }
+        }
     }
 #endif
 
@@ -644,20 +692,28 @@ extension LayerTree.Builder {
         )
     }
 
+    /// How far down the glyphs move so that `baseline` of the font sits on the text's `y`, from the
+    /// font's ascent, descent and x-height, as resvg and browsers derive the baselines a font does
+    /// not list (CSS Inline 3 §4.2).
     static func makeYOffset(font: CTFont, baseline: DOM.TextBaseline) -> LayerTree.Float {
+        let ascent = LayerTree.Float(CTFontGetAscent(font))
+        let descent = LayerTree.Float(CTFontGetDescent(font))
         switch baseline {
-        case .central:
-            let capHeight = CTFontGetCapHeight(font)
-            return LayerTree.Float(capHeight / 2)
-        case .alphabetic, .auto:
+        case .auto, .alphabetic:
             return 0
-        case .hanging:
-            let leading = CTFontGetLeading(font)
-            let ascent = CTFontGetAscent(font) - leading
-            return LayerTree.Float(-ascent)
+        case .textBeforeEdge:
+            return ascent
+        case .textAfterEdge, .ideographic:
+            return -descent
+        case .central:
+            // the middle of the em box
+            return (ascent - descent) / 2
         case .middle:
-            let xHeight = CTFontGetXHeight(font)
-            return LayerTree.Float(xHeight / 2)
+            return LayerTree.Float(CTFontGetXHeight(font)) / 2
+        case .hanging:
+            return ascent * 0.8
+        case .mathematical:
+            return ascent * 0.5
         }
     }
 #else

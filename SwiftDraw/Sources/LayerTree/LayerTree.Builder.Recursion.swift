@@ -135,7 +135,14 @@ extension LayerTree.Builder {
     /// The state of an element before invalid references are dropped.
     func createReferencedState(for element: DOM.GraphicsElement, inheriting existing: State) -> State {
         let attributes = DOM.presentationAttributes(for: element, styles: svg.styles)
-        return Self.createState(for: attributes, inheriting: existing, viewportDiagonal: viewportDiagonal)
+        var state = Self.createState(for: attributes, inheriting: existing, viewportDiagonal: viewportDiagonal)
+        // `baseline-shift` applies to the text content elements within <text> (as resvg, not to the
+        // <text> itself), and those nested add up
+        if element is DOM.TextSpan || element is DOM.TextPath,
+           let shift = state.baselineShift {
+            state.baselineShifts.append(BaselineShiftEntry(shift: shift, fontSize: state.fontSize))
+        }
+        return state
     }
 
     func makeInvalidReferences() -> Set<Reference> {

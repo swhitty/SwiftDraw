@@ -61,6 +61,9 @@ package extension DOM {
         package var fontStyle: FontStyle?
         package var textAnchor: TextAnchor?
         package var dominantBaseline: TextBaseline?
+        /// not inherited: the baseline of a `<tspan>` itself, when not its `dominant-baseline`
+        package var alignmentBaseline: TextBaseline?
+        package var baselineShift: BaselineShift?
         /// CSS `letter-spacing` and `word-spacing`; `normal` is a length of 0
         package var letterSpacing: DashLength?
         package var wordSpacing: DashLength?
@@ -203,6 +206,8 @@ extension DOM.PresentationAttributes {
         merged.fontStyle = att.fontStyle ?? fontStyle
         merged.textAnchor = att.textAnchor ?? textAnchor
         merged.dominantBaseline = att.dominantBaseline ?? dominantBaseline
+        merged.alignmentBaseline = att.alignmentBaseline ?? alignmentBaseline
+        merged.baselineShift = att.baselineShift ?? baselineShift
         merged.letterSpacing = att.letterSpacing ?? letterSpacing
         merged.wordSpacing = att.wordSpacing ?? wordSpacing
 
