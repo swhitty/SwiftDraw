@@ -223,17 +223,23 @@ struct CGFilterLayerCacheTests {
     func concurrentFillsRunOnce() async throws {
         let cache = CGFilterLayerCache()
         let runs = RunCounter()
+        let callers = 5
         await withTaskGroup(of: Void.self) { group in
-            for _ in 0..<5 {
+            for _ in 0..<callers {
                 group.addTask {
                     await cache.fill {
                         runs.increment()
-                        Thread.sleep(forTimeInterval: 0.05)
+                        // hold the fill until every caller waits for it, however late its task starts
+                        let deadline = Date().addingTimeInterval(10)
+                        while cache.fillWaiterCount < callers, Date() < deadline {
+                            Thread.sleep(forTimeInterval: 0.001)
+                        }
                     }
                 }
             }
         }
         #expect(runs.value == 1)
+        #expect(cache.fillWaiterCount == 0)
     }
 
     final class RunCounter: Sendable {
