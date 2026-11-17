@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="160" viewBox="0 0 240 160">
+  <!-- Patterns drawn inside another pattern's tile. Inner tiles are a fractional number of pixels,
+       and their content overflows the tile, which clips it. -->
+  <defs>
+    <!-- a 3.25 wide tile whose bar overflows it: only a quarter-width bar is drawn -->
+    <pattern id="bars" patternUnits="userSpaceOnUse" width="3.25" height="5.5">
+      <rect x="2.4" width="3" height="4" fill="#2E8B57"/>
+    </pattern>
+    <pattern id="barsInTile" patternUnits="userSpaceOnUse" width="24" height="24">
+      <rect width="12" height="12" fill="#A0A0A0"/>
+      <rect x="12" y="12" width="12" height="12" fill="url(#bars)"/>
+    </pattern>
+
+    <!-- tile and content in the bounding box of the shape inside the outer tile -->
+    <pattern id="checks" width="0.3" height="0.4" patternContentUnits="objectBoundingBox">
+      <rect width="0.2" height="0.2" fill="#A0A0A0"/>
+      <rect x="0.2" y="0.2" width="0.2" height="0.2" fill="#2E8B57"/>
+    </pattern>
+    <pattern id="checksInTile" patternUnits="userSpaceOnUse" width="20" height="20">
+      <rect width="10" height="10" fill="#A0A0A0"/>
+      <rect x="10" y="10" width="10" height="10" fill="url(#checks)"/>
+    </pattern>
+
+    <!-- three deep, each tile 37.5 x 22.5 -->
+    <pattern id="deep3" patternUnits="userSpaceOnUse" width="7.5" height="7.5">
+      <circle cx="3.75" cy="3.75" r="3" fill="#34A0F2"/>
+    </pattern>
+    <pattern id="deep2" patternUnits="userSpaceOnUse" width="37.5" height="22.5">
+      <rect x="3" y="3" width="31.5" height="16.5" fill="url(#deep3)" stroke="#8C67C2"/>
+    </pattern>
+    <pattern id="deep1" patternUnits="userSpaceOnUse" width="37.5" height="22.5">
+      <rect width="37.5" height="22.5" fill="url(#deep2)" stroke="#2E8B57"/>
+    </pattern>
+  </defs>
+  <rect x="10" y="10" width="100" height="60" fill="url(#barsInTile)" stroke="black"/>
+  <rect x="130" y="10" width="100" height="60" fill="url(#checksInTile)" stroke="black"/>
+  <rect x="10" y="90" width="220" height="60" fill="url(#deep1)" stroke="black"/>
+</svg>

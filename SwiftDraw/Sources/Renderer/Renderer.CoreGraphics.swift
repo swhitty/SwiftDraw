@@ -72,6 +72,9 @@ struct CGTransformingPattern: Hashable {
     }
 
     func draw(_ ctx: CGContext) {
+        // with .noDistortion, CoreGraphics draws a cell whose size in device pixels is fractional
+        // without clipping it to the tile, so its contents would spill into the next tile
+        ctx.clip(to: bounds)
         // the cell is a bitmap whose default space is the identity: a pattern drawn inside the cell
         // is relative to it, including the device scale the cell is drawn at
         let renderer = CGRenderer(context: ctx, baseCTM: .identity)
