@@ -228,7 +228,7 @@ extension LayerTree {
                     commands.append(.fill(path, rule: rule))
                 }
             case .pattern(let fillPattern):
-                if let pattern = makePattern(fillPattern, in: provider.getBounds(from: shape), colorConverter: colorConverter) {
+                if let pattern = makePattern(fillPattern, in: fill.boundingBox ?? provider.getBounds(from: shape), colorConverter: colorConverter) {
                     let rule = provider.createFillRule(from: fill.rule)
                     commands.append(contentsOf: renderCommands(withOpacity: fill.opacity, [
                         .setFillPattern(pattern),
@@ -243,7 +243,7 @@ extension LayerTree {
 
                     let pathBounds = provider.getBounds(from: shape)
                     commands.append(contentsOf: renderCommands(forLinear: gradient,
-                                                               in: pathBounds,
+                                                               in: fill.boundingBox ?? pathBounds,
                                                                covering: pathBounds,
                                                                opacity: fill.opacity,
                                                                colorConverter: colorConverter))
@@ -256,7 +256,7 @@ extension LayerTree {
                     commands.append(.setClip(path: path, rule: rule))
                     let pathBounds = provider.getBounds(from: shape)
                     commands.append(contentsOf: renderCommands(forRadial: gradient,
-                                                               in: pathBounds,
+                                                               in: fill.boundingBox ?? pathBounds,
                                                                opacity: fill.opacity,
                                                                colorConverter: colorConverter))
                     commands.append(.popState)
@@ -304,7 +304,7 @@ extension LayerTree {
                     commands.append(.clipStrokeOutline(path))
 
                     commands.append(contentsOf: renderCommands(forLinear: gradient,
-                                                               in: pathBounds,
+                                                               in: stroke.boundingBox ?? pathBounds,
                                                                covering: pathBounds.outset(by: stroke.coverage),
                                                                opacity: stroke.opacity,
                                                                colorConverter: colorConverter))
@@ -327,7 +327,7 @@ extension LayerTree {
                     commands.append(.clipStrokeOutline(path))
 
                     commands.append(contentsOf: renderCommands(forRadial: gradient,
-                                                               in: pathBounds,
+                                                               in: stroke.boundingBox ?? pathBounds,
                                                                opacity: stroke.opacity,
                                                                colorConverter: colorConverter))
                     commands.append(contentsOf: renderCommands(forDashResetOf: stroke))
@@ -336,7 +336,7 @@ extension LayerTree {
             case .pattern(let strokePattern):
                 // objectBoundingBox resolves against the geometry, not the stroke (SVG 1.1 §13.3)
                 if stroke.width > 0, let pathBounds = shape.bounds,
-                   let pattern = makePattern(strokePattern, in: pathBounds, colorConverter: colorConverter) {
+                   let pattern = makePattern(strokePattern, in: stroke.boundingBox ?? pathBounds, colorConverter: colorConverter) {
                     let width = provider.createFloat(from: stroke.width)
                     let cap = provider.createLineCap(from: stroke.cap)
                     let join = provider.createLineJoin(from: stroke.join)

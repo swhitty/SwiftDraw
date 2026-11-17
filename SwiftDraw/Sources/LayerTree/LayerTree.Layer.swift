@@ -132,6 +132,9 @@ extension LayerTree {
         var dashOffset: Float = 0
         /// stroke-opacity for paint servers; a colour carries it in its alpha.
         var opacity: Float = 1.0
+        /// The box objectBoundingBox paint servers resolve against, when it is not the shape's own
+        /// (the whole text for each of its runs, SVG 2 §8.10)
+        var boundingBox: Rect?
 
         enum Stroke: Hashable {
             case color(Color)
@@ -147,6 +150,9 @@ extension LayerTree {
         var fill: Fill = .color(.none)
         var opacity: Float = 1.0
         var rule: FillRule
+        /// The box objectBoundingBox paint servers resolve against, when it is not the shape's own
+        /// (the whole text for each of its runs, SVG 2 §8.10)
+        var boundingBox: Rect?
 
         init(color: Color, rule: FillRule) {
             self.fill = .color(color)

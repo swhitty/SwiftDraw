@@ -84,26 +84,40 @@ extension CGPath {
 
 extension CGPath {
 
+    /// The path as LayerTree segments. A quadratic curve (TrueType glyph outlines) becomes the cubic
+    /// that traces it exactly, with control points two thirds of the way from each end to its control.
     func makePath() -> LayerTree.Path {
-        let s = segments()
-        return LayerTree.Path(
-            s.map(Self.makeSegment)
-        )
+        var segments = [LayerTree.Path.Segment]()
+        var current = CGPoint.zero
+        var start = CGPoint.zero
+        for segment in self.segments() {
+            switch segment {
+            case .move(let point):
+                segments.append(.move(to: .init(point)))
+                current = point
+                start = point
+            case .line(let point):
+                segments.append(.line(to: .init(point)))
+                current = point
+            case .cubic(let control1, let control2, let point):
+                segments.append(.cubic(to: .init(point), control1: .init(control1), control2: .init(control2)))
+                current = point
+            case .quad(let control, let point):
+                let (control1, control2) = Self.makeCubicControls(from: current, quadControl: control, to: point)
+                segments.append(.cubic(to: .init(point), control1: .init(control1), control2: .init(control2)))
+                current = point
+            case .close:
+                segments.append(.close)
+                current = start
+            }
+        }
+        return LayerTree.Path(segments)
     }
 
-    static func makeSegment(for segment: Segment) -> LayerTree.Path.Segment {
-        switch segment {
-        case .move(let point):
-            return .move(to: .init(point))
-        case .line(let point):
-            return .line(to: .init(point))
-        case .cubic(let control1, let control2, let point):
-            return .cubic(to: .init(point), control1: .init(control1), control2: .init(control2))
-        case .close:
-            return .close
-        case .quad(let control1, let point):
-            return .cubic(to: .init(point), control1: .init(control1), control2: .init(control1))
-        }
+    /// The control points of the cubic Bézier equal to the quadratic from `start` through `control` to `end`
+    static func makeCubicControls(from start: CGPoint, quadControl control: CGPoint, to end: CGPoint) -> (CGPoint, CGPoint) {
+        (CGPoint(x: start.x + 2 / 3 * (control.x - start.x), y: start.y + 2 / 3 * (control.y - start.y)),
+         CGPoint(x: end.x + 2 / 3 * (control.x - end.x), y: end.y + 2 / 3 * (control.y - end.y)))
     }
 }
 

@@ -53,10 +53,10 @@ extension LayerTree.Builder {
         var clipID: String?
     }
 
-    func makeClip(for element: DOM.GraphicsElement) -> Clip? {
+    func makeClip(for element: DOM.GraphicsElement, state: State? = nil) -> Clip? {
         let attributes = DOM.presentationAttributes(for: element, styles: svg.styles)
         guard let clipID = attributes.clipPath?.fragmentID else { return nil }
-        return makeClip(id: clipID, bounds: { makeBoundingBox(for: element) })
+        return makeClip(id: clipID, bounds: { makeBoundingBox(for: element, state: state) })
     }
 
     /// `bounds` is the bounding box of the referencing element, evaluated only for objectBoundingBox units.
@@ -177,15 +177,15 @@ extension LayerTree.Builder {
             } else if let contents = makeTextContents(from: text, with: state, isClip: true) {
                 l.appendContents(contents)
             }
-            applyMemberClip(of: member, to: l)
+            applyMemberClip(of: member, to: l, state: state)
         }
         return l
     }
 
     /// A `clip-path` on a `<clipPath>` child clips that child only, in the child's user space.
-    private func applyMemberClip(of member: ClipMember, to layer: LayerTree.Layer) {
+    private func applyMemberClip(of member: ClipMember, to layer: LayerTree.Layer, state: State? = nil) {
         guard let id = member.clipID,
-              let clip = makeClip(id: id, bounds: { makeBoundingBox(for: member.element) }) else { return }
+              let clip = makeClip(id: id, bounds: { makeBoundingBox(for: member.element, state: state) }) else { return }
         apply(clip, to: layer)
     }
 
@@ -252,9 +252,11 @@ extension LayerTree.Builder {
     /// The object bounding box of an element in its own user space: the fill geometry of its shapes,
     /// without stroke (SVG 1.1 §7.11). Nil when unknown: text, or a container holding text, since
     /// a box measured without it would cut the text away.
-    func makeBoundingBox(for element: DOM.GraphicsElement) -> LayerTree.Rect? {
+    /// - Parameter state: the element's computed state, when the caller has it. Text is measured with
+    ///   its cascaded font, so without a state its bounding box is unknown.
+    func makeBoundingBox(for element: DOM.GraphicsElement, state: State? = nil) -> LayerTree.Rect? {
         var visited = Set<String>()
-        switch makeBounds(for: element, depth: 0, visited: &visited) {
+        switch makeBounds(for: element, state: state, depth: 0, visited: &visited) {
         case .known(let rect): return rect
         case .empty, .unknown: return nil
         }
@@ -270,7 +272,7 @@ extension LayerTree.Builder {
 
     /// Measurement keeps its own visited set, depth cap and step budget: it never spends the
     /// document-wide reference budget that `<use>`, masks and patterns share.
-    private func makeBounds(for element: DOM.GraphicsElement, depth: Int, visited: inout Set<String>) -> Bounds {
+    private func makeBounds(for element: DOM.GraphicsElement, state: State?, depth: Int, visited: inout Set<String>) -> Bounds {
         guard depth < 32, measurement.spend() else { return .unknown }
 
         if let shape = Self.makeShape(from: element) {
@@ -283,7 +285,8 @@ extension LayerTree.Builder {
                   let referenced = svg.firstGraphicsElement(with: id) else { return .empty }
             guard visited.insert(id).inserted else { return .empty }
             defer { visited.remove(id) }
-            let referencedBounds = makeBounds(for: referenced, depth: depth + 1, visited: &visited)
+            let referencedState = state.map { createState(for: referenced, inheriting: $0) }
+            let referencedBounds = makeBounds(for: referenced, state: referencedState, depth: depth + 1, visited: &visited)
             guard case .known(let bounds) = referencedBounds else { return referencedBounds }
             if let symbol = referenced as? DOM.Symbol {
                 let viewport = makeSymbolViewport(for: use, symbol: symbol)
@@ -301,7 +304,8 @@ extension LayerTree.Builder {
             for child in container.childElements where !(child is DOM.Symbol) {
                 let childAttributes = DOM.presentationAttributes(for: child, styles: svg.styles)
                 guard childAttributes.display != DOM.DisplayMode.none else { continue }
-                switch makeBounds(for: child, depth: depth + 1, visited: &visited) {
+                let childState = state.map { createState(for: child, inheriting: $0) }
+                switch makeBounds(for: child, state: childState, depth: depth + 1, visited: &visited) {
                 case .unknown:
                     return .unknown
                 case .empty:
@@ -322,8 +326,9 @@ extension LayerTree.Builder {
                 }
             }
             return result.map(Bounds.known) ?? .empty
-        } else if element is DOM.Text {
-            return .unknown
+        } else if let text = element as? DOM.Text {
+            guard let state, let bounds = makeTextBounds(for: text, with: state) else { return .unknown }
+            return Bounds(bounds)
         }
         return .empty
     }

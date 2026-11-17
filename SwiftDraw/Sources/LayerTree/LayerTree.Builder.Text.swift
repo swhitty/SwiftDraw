@@ -239,8 +239,19 @@ extension LayerTree.Builder {
     /// within a layer; nil when nothing is drawn.
     /// - Parameter isClip: the text is part of a `<clipPath>`: its glyphs are filled white, whatever their paint
     func makeTextContents(from text: DOM.Text, with state: State, isClip: Bool = false) -> LayerTree.Layer.Contents? {
+        let chunks = makeTextChunks(for: text, with: state)
+        // SVG 2 §8.10: paint servers in objectBoundingBox units fill the whole text's box, so every run
+        // of a gradient continues where the previous one ends. Measured only when a run needs it.
+        var bounds: LayerTree.Rect??
+        func textBounds() -> LayerTree.Rect? {
+            if let bounds { return bounds }
+            let measured = Self.makeTextBounds(for: chunks, builder: self)
+            bounds = .some(measured)
+            return measured
+        }
+
         var contents = [LayerTree.Layer.Contents]()
-        for chunk in makeTextChunks(for: text, with: state) {
+        for chunk in chunks {
             let shift = chunk.shift
             for run in chunk.runs {
                 // SVG 1.1 §11.6.2: a hidden run is not drawn, but keeps its advance
@@ -252,17 +263,9 @@ extension LayerTree.Builder {
                     state.stroke = .color(.none)
                 }
                 let point = LayerTree.Point(run.origin.x + shift, run.origin.y)
-                guard let runContents = makeTextRunContents(run.string, at: point, with: state) else { continue }
-                if run.rotate == 0 {
+                if let runContents = makeTextRunContents(run.string, at: point, with: state, rotate: run.rotate,
+                                                         for: text, bounds: textBounds) {
                     contents.append(runContents)
-                } else {
-                    // `rotate` turns the glyph about its origin, clockwise in degrees
-                    let layer = LayerTree.Layer()
-                    layer.transform = [.translate(tx: point.x, ty: point.y),
-                                       .rotate(radians: run.rotate * .pi / 180),
-                                       .translate(tx: -point.x, ty: -point.y)]
-                    layer.appendContents(runContents)
-                    contents.append(.layer(layer))
                 }
             }
         }
@@ -279,12 +282,59 @@ extension LayerTree.Builder {
         }
     }
 
-    /// One run of characters starting at `point` on the line, shifted to the baseline of its state
-    func makeTextRunContents(_ string: String, at point: LayerTree.Point, with state: State) -> LayerTree.Layer.Contents? {
+    /// `rotate` of a glyph: clockwise in degrees about `point`
+    static func makeRotation(_ degrees: LayerTree.Float, about point: LayerTree.Point) -> [LayerTree.Transform] {
+        [.translate(tx: point.x, ty: point.y),
+         .rotate(radians: degrees * .pi / 180),
+         .translate(tx: -point.x, ty: -point.y)]
+    }
+
+    /// SVG 2 §8.10 bounding box of text: the union of its glyph cells, each run's advance by its font's
+    /// ascent and descent (as resvg and browsers measure it, not the ink of the glyphs). Hidden runs
+    /// count too. nil when there is nothing to measure, or no CoreText to measure it with.
+    func makeTextBounds(for text: DOM.Text, with state: State) -> LayerTree.Rect? {
+        guard text.textPath == nil else { return nil }
+        return Self.makeTextBounds(for: makeTextChunks(for: text, with: state), builder: self)
+    }
+
+    static func makeTextBounds(for chunks: [TextChunk], builder: LayerTree.Builder) -> LayerTree.Rect? {
+#if canImport(CoreText)
+        var result: LayerTree.Rect?
+        for chunk in chunks {
+            let shift = chunk.shift
+            for run in chunk.runs {
+                let attributes = builder.makeTextAttributes(with: run.state)
+                let font = CGProvider.createFont(for: attributes).font
+                let ascent = LayerTree.Float(CTFontGetAscent(font))
+                let descent = LayerTree.Float(CTFontGetDescent(font))
+                let origin = LayerTree.Point(run.origin.x + shift, run.origin.y)
+                let baseline = origin.y + makeBaselineOffset(with: attributes)
+                var cell = LayerTree.Rect(x: origin.x, y: baseline - ascent,
+                                          width: run.advance, height: ascent + descent)
+                if run.rotate != 0 {
+                    cell = cell.applying(makeRotation(run.rotate, about: LayerTree.Point(origin.x, baseline)).toMatrix())
+                }
+                result = result.map { $0.union(cell) } ?? cell
+            }
+        }
+        return result
+#else
+        return nil
+#endif
+    }
+
+    /// One run of characters starting at `point` on the line, shifted to the baseline of its state.
+    /// Its fill and stroke follow `paint-order`; `bounds` is the text's box for objectBoundingBox paint.
+    /// - Parameter rotate: `rotate` of a single glyph, clockwise in degrees about its origin
+    func makeTextRunContents(_ string: String, at point: LayerTree.Point, with state: State,
+                             rotate: LayerTree.Float = 0,
+                             for text: DOM.Text? = nil,
+                             bounds: () -> LayerTree.Rect? = { nil }) -> LayerTree.Layer.Contents? {
         // state already holds the cascaded font-family, font-size, font-weight, font-style and text-anchor
         let att = makeTextAttributes(with: state)
         var point = point
         point.y += Self.makeBaselineOffset(with: att)
+        let rotation = rotate == 0 ? [] : Self.makeRotation(rotate, about: point)
 
 #if canImport(CoreText)
         // text painted with a paint server or a stroke is drawn as its glyph outlines, through the
@@ -294,10 +344,23 @@ extension LayerTree.Builder {
             var state = state
             // glyph outlines are designed for nonzero; fill-rule does not apply to text in browsers
             state.fillRule = .nonzero
-            return makeShapeContents(from: .path(outlines.makePath()), with: state)
+            // the outlines are turned rather than drawn in a turned layer: the paint stays in the
+            // text's user space, where the text's bounding box is
+            var path = outlines.makePath()
+            if !rotation.isEmpty {
+                path = path.applying(matrix: rotation.toMatrix())
+            }
+            let shape = LayerTree.Shape.path(path)
+            let contents = makeShapeContents(from: shape, with: state, boundingBox: bounds())
+            guard let text else { return contents }
+            return makePaintedContents(contents, for: text, with: state)
         }
 #endif
-        return .text(string, point, att)
+        guard !rotation.isEmpty else { return .text(string, point, att) }
+        let layer = LayerTree.Layer()
+        layer.transform = rotation
+        layer.appendContents(.text(string, point, att))
+        return .layer(layer)
     }
 
     static func makeXOffset(width: Double, anchor: DOM.TextAnchor) -> LayerTree.Float {

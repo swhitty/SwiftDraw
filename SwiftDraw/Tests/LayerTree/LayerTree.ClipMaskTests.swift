@@ -478,6 +478,27 @@ struct LayerTreeClipMaskTests {
         #expect(fills(c).count == count)
     }
 
+#if canImport(CoreText)
+    @Test
+    func groupWithTextIsMeasuredWithItsGlyphCells() throws {
+        let svg = try DOM.SVG.parse(xml: """
+        <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">
+          <clipPath id="c" clipPathUnits="objectBoundingBox"><rect width="0.5" height="1"/></clipPath>
+          <g id="clipped" clip-path="url(#c)"><rect width="10" height="10"/><text x="50" y="50">Hi</text></g>
+        </svg>
+        """)
+        let builder = LayerTree.Builder(svg: svg)
+        let group = svg.childElements[0]
+        // text is measured with its cascaded font: without a state its box is unknown
+        #expect(builder.makeBoundingBox(for: group) == nil)
+        let bounds = try #require(builder.makeBoundingBox(for: group, state: builder.createState(for: group, inheriting: .init())))
+        #expect(bounds.x == 0 && bounds.y == 0)
+        #expect(bounds.x + bounds.width > 60)
+        #expect(bounds.y + bounds.height > 50)
+        // the objectBoundingBox clip now applies
+        #expect(findLayer(in: builder.makeLayer()) { !$0.clip.isEmpty } != nil)
+    }
+#else
     @Test
     func groupWithTextHasUnknownBoundingBox() throws {
         // a bbox measured without the text would cut it away: the region and the bbox clip are skipped
@@ -497,6 +518,7 @@ struct LayerTreeClipMaskTests {
         #expect(findLayer(in: mask) { !$0.clip.isEmpty } == nil)
         #expect(findLayer(in: layer) { !$0.clip.isEmpty } == nil)
     }
+#endif
 
     @Test
     func moveOnlyPathDoesNotCollapseGroupBoundingBox() throws {
