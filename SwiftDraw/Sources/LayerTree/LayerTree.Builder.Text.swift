@@ -297,9 +297,9 @@ extension LayerTree.Builder {
 
         func shape() {
             guard let (font, ligatures) = groupFont else { return }
-            let string = String(group.map(\.character))
-            let runs = Self.makeShapedText(string, with: font, ligatures: ligatures)
-            result.append(contentsOf: Self.makeShapedCharacters(runs, for: string))
+            let characters = group.map(\.character)
+            let runs = Self.makeShapedText(String(characters), with: font, ligatures: ligatures)
+            result.append(contentsOf: Self.makeShapedCharacters(runs, for: characters))
             group = []
         }
 

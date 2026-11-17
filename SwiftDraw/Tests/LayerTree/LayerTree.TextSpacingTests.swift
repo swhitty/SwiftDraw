@@ -174,6 +174,23 @@ struct LayerTreeTextSpacingTests {
     }
 
     @Test
+    func charactersMergedByJoiningKeepTheirOwnGlyphs() {
+        // и and a combining breve from separate text nodes: joined they are one grapheme
+        let characters: [Character] = ["\u{0438}", "\u{0306}"]
+        #expect(String(characters).count == 1)
+        let runs = [LayerTree.Builder.ShapedRun(fontName: "Main", glyphs: [
+            .init(glyph: 1, x: 0, advance: 10, index: 0),
+            .init(glyph: 2, x: 2, y: 5, advance: 0, index: 1),
+        ])]
+        let shaped = LayerTree.Builder.makeShapedCharacters(runs, for: characters)
+        #expect(shaped.count == 2)
+        #expect(shaped.map(\.advance) == [10, 0])
+        #expect(shaped.map(\.glyphs.count) == [1, 1])
+        // the breve stays over the и: back from where the и ends, and raised
+        #expect(shaped[1].glyphs.first?.offset == LayerTree.Point(-8, -5))
+    }
+
+    @Test
     func wordSeparators() {
         #expect(LayerTree.Builder.isWordSeparator(" "))
         #expect(LayerTree.Builder.isWordSeparator("\u{00A0}"))

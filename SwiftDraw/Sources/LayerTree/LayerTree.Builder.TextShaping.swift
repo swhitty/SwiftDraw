@@ -73,10 +73,17 @@ extension LayerTree.Builder {
     /// The glyphs of each character of `text` (grapheme clusters, as Swift's `Character`), from the
     /// glyphs the shaper produced for it.
     static func makeShapedCharacters(_ runs: [ShapedRun], for text: String) -> [ShapedCharacter] {
+        makeShapedCharacters(runs, for: Array(text))
+    }
+
+    /// The glyphs of each of `characters`, shaped as one string. The characters are taken as given:
+    /// joined, two of them can merge into one grapheme (a tspan starting with a combining mark),
+    /// and each still gets its own glyphs.
+    static func makeShapedCharacters(_ runs: [ShapedRun], for characters: [Character]) -> [ShapedCharacter] {
         // UTF-16 offset of the start of each character
         var starts = [Int]()
         var offset = 0
-        for character in text {
+        for character in characters {
             starts.append(offset)
             offset += character.utf16.count
         }
@@ -93,10 +100,16 @@ extension LayerTree.Builder {
                 glyphs[lower].append((run.fontName, glyph))
             }
         }
+        // a character's glyphs are placed about its leftmost one; a mark with no advance of its own (a
+        // combining character in a tspan of its own) is placed from where the characters before it
+        // end, so it keeps its place over its base
+        var end = LayerTree.Float(0)
         return glyphs.map { glyphs in
-            let start = glyphs.map(\.1.x).min() ?? 0
+            let advance = glyphs.reduce(0) { $0 + $1.1.advance }
+            let start = advance == 0 ? end : glyphs.map(\.1.x).min() ?? end
+            end += advance
             return ShapedCharacter(
-                advance: glyphs.reduce(0) { $0 + $1.1.advance },
+                advance: advance,
                 glyphs: glyphs.map {
                     CharacterGlyph(fontName: $0.0, glyph: $0.1.glyph, offset: LayerTree.Point($0.1.x - start, -$0.1.y))
                 }
