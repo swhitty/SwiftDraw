@@ -100,11 +100,12 @@ extension LayerTree.Builder {
     /// `overflow` is visible; nil when it references itself.
     func makeMarkerContents(for marker: DOM.Marker) -> LayerTree.Layer? {
         // A marker drawn inside itself draws nothing
-        building(ObjectIdentifier(marker), cycle: nil) {
+        building(ObjectIdentifier(marker), cycle: nil) { buildingContents {
             let attributes = DOM.presentationAttributes(for: marker, styles: svg.styles)
-            // the contents inherit from the marker, not from the shape (SVG 2 §11.6.2), and
-            // `display` does not apply to <marker>
-            var markerState = Self.createState(for: attributes, inheriting: State(), viewportDiagonal: viewportDiagonal)
+            // the contents inherit from the marker and its ancestors, not from the shape (SVG 2 §11.6.2),
+            // and `display` does not apply to <marker>
+            var markerState = Self.createState(for: attributes, inheriting: makeInheritedState(from: marker.ancestors),
+                                               viewportDiagonal: viewportDiagonal)
             markerState.display = .inline
             let l = LayerTree.Layer()
             l.opacity = markerState.opacity
@@ -122,7 +123,7 @@ extension LayerTree.Builder {
                 l.clip = [LayerTree.ClipShape(shape: .rect(within: viewport, radii: .zero), transform: .identity)]
             }
             return l
-        }
+        }}
     }
 
     /// One marker placed at a vertex: its viewport positioned so `refX`/`refY` falls on the vertex,
