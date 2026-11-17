@@ -224,7 +224,7 @@ private struct SelectorScanner {
     var index = 0
 
     init(_ text: String) {
-        chars = Array(text)
+        self.chars = Array(text)
     }
 
     var isEOF: Bool { index >= chars.count }

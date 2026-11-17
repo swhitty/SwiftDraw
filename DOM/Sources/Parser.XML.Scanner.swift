@@ -40,20 +40,20 @@ package extension XMLParser {
 
         package init(text: String) {
             self.scanner = Foundation.Scanner(string: text)
-            self.currentIndex = self.scanner.currentIndex
-            self.scanner.charactersToBeSkipped = Foundation.CharacterSet.whitespacesAndNewlines
+            self.currentIndex = scanner.currentIndex
+            scanner.charactersToBeSkipped = Foundation.CharacterSet.whitespacesAndNewlines
         }
         
         package var isEOF: Bool { return scanner.isAtEnd }
 
         @discardableResult
         package mutating func scanString(_ token: String) throws -> Bool {
-            return try self.scanString(matchingAny: [token]) == token
+            return try scanString(matchingAny: [token]) == token
         }
         
         @discardableResult
         package mutating func scanStringIfPossible(_ token: String) -> Bool {
-            return (try? self.scanString(token)) == true
+            return (try? scanString(token)) == true
         }
 
         @discardableResult
@@ -308,7 +308,7 @@ package extension XMLParser {
         }
         
         package mutating func scanBool() throws -> Bool {
-            return try self.scanCase(from: Boolean.self).boolValue
+            return try scanCase(from: Boolean.self).boolValue
         }
         
         package mutating func scanCoordinate() throws -> DOM.Coordinate {

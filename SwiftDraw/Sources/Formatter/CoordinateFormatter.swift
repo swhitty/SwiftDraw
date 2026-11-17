@@ -41,7 +41,7 @@ struct CoordinateFormatter {
         self.delimeter = delimeter
         self.precision = precision
         self.formatter = NumberFormatter()
-        self.formatter.locale = .init(identifier: "en_US")
+        formatter.locale = .init(identifier: "en_US")
     }
 
     enum Precision {

@@ -152,17 +152,17 @@ struct PerlinNoise {
              numOctaves: Int,
              isFractalNoise: Bool,
              stitchTile: (Double, Double, Double, Double)? = nil) {
-            frequencyX = baseFrequencyX
-            frequencyY = baseFrequencyY
+            self.frequencyX = baseFrequencyX
+            self.frequencyY = baseFrequencyY
             self.numOctaves = numOctaves
             self.isFractalNoise = isFractalNoise
             guard let (x, y, width, height) = stitchTile else { return }
             // the frequencies must be adjusted so that the tile borders are continuous
-            frequencyX = PerlinNoise.stitchedFrequency(frequencyX, tileSize: width)
-            frequencyY = PerlinNoise.stitchedFrequency(frequencyY, tileSize: height)
+            self.frequencyX = PerlinNoise.stitchedFrequency(frequencyX, tileSize: width)
+            self.frequencyY = PerlinNoise.stitchedFrequency(frequencyY, tileSize: height)
             let stitchWidth = PerlinNoise.int(width * frequencyX + 0.5)
             let stitchHeight = PerlinNoise.int(height * frequencyY + 0.5)
-            stitch = Stitch(width: stitchWidth,
+            self.stitch = Stitch(width: stitchWidth,
                             height: stitchHeight,
                             wrapX: PerlinNoise.int(x * frequencyX + PerlinNoise.perlinN + Double(stitchWidth)),
                             wrapY: PerlinNoise.int(y * frequencyY + PerlinNoise.perlinN + Double(stitchHeight)))

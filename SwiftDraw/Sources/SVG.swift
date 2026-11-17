@@ -176,7 +176,7 @@ extension SVG {
                                                    options: options)
 
         let optimizer = LayerTree.CommandOptimizer<CGTypes>()
-        commands = optimizer.optimizeCommands(
+        self.commands = optimizer.optimizeCommands(
             generator.renderCommands(for: layer, colorConverter: .default)
         )
     }
@@ -191,7 +191,7 @@ public struct SVG: Sendable {
     public let size: CGSize
 
     init(dom: DOM.SVG, options: Options) {
-        size = CGSize(width: CGFloat(dom.width), height: CGFloat(dom.height))
+        self.size = CGSize(width: CGFloat(dom.width), height: CGFloat(dom.height))
     }
 
     public struct Options: OptionSet {

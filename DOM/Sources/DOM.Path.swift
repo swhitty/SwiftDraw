@@ -40,7 +40,7 @@ package extension DOM {
 
         package init(x: Coordinate, y: Coordinate) {
             let s = Segment.move(x: x, y: y, space: .absolute)
-            segments = [s]
+            self.segments = [s]
             super.init()
         }
         

@@ -84,7 +84,7 @@ struct PairedSequence<S: Sequence>: Sequence {
             } else {
                 first = element
                 if let another = inner.next() {
-                    self.previous = another
+                    previous = another
                     return (element, another)
                 } else {
                     isComplete = true

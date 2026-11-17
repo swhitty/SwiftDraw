@@ -35,7 +35,7 @@ struct Stack<Element> {
 
     init(root: Element) {
         self.root = root
-        storage = [Element]()
+        self.storage = [Element]()
     }
 
     var top: Element {

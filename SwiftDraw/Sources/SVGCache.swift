@@ -43,7 +43,7 @@ public final class SVGGCache: Sendable {
 
     public init(totalCostLimit: Int = defaultTotalCostLimit) {
         self.cache = NSCache()
-        self.cache.totalCostLimit = totalCostLimit
+        cache.totalCostLimit = totalCostLimit
     }
 
     public func svg(fileURL: URL) -> SVG? {

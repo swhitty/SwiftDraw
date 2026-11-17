@@ -1202,33 +1202,33 @@ extension LayerTree.Builder {
 
         init() {
             //default root SVG element state
-            opacity = 1.0
-            display = .inline
-            visibility = .visible
-            color = .keyword(.black)
+            self.opacity = 1.0
+            self.display = .inline
+            self.visibility = .visible
+            self.color = .keyword(.black)
 
-            stroke = .color(.none)
-            strokeWidth = 1.0
-            strokeOpacity = 1.0
-            strokeLineCap = .butt
-            strokeLineJoin = .miter
-            strokeLineMiterLimit = 4.0
-            strokeDashArray = []
-            strokeDashOffset = .absolute(0)
+            self.stroke = .color(.none)
+            self.strokeWidth = 1.0
+            self.strokeOpacity = 1.0
+            self.strokeLineCap = .butt
+            self.strokeLineJoin = .miter
+            self.strokeLineMiterLimit = 4.0
+            self.strokeDashArray = []
+            self.strokeDashOffset = .absolute(0)
 
-            fill = .color(.keyword(.black))
-            fillOpacity = 1.0
-            fillRule = .nonzero
-            textAnchor = .start
-            letterSpacing = 0
-            wordSpacing = 0
-            textBaseline = .auto
+            self.fill = .color(.keyword(.black))
+            self.fillOpacity = 1.0
+            self.fillRule = .nonzero
+            self.textAnchor = .start
+            self.letterSpacing = 0
+            self.wordSpacing = 0
+            self.textBaseline = .auto
 
-            fontFamily = [.keyword(.serif)]
-            fontSize = DOM.FontSize.initial
-            fontWeight = 400
-            fontStyle = .normal
-            paintOrder = .normal
+            self.fontFamily = [.keyword(.serif)]
+            self.fontSize = DOM.FontSize.initial
+            self.fontWeight = 400
+            self.fontStyle = .normal
+            self.paintOrder = .normal
         }
     }
 

@@ -49,7 +49,7 @@ extension Data {
 
     @available(macOS 26.0, iOS 26.0, tvOS 26.0, watchOS 26.0, visionOS 26.0, *)
     private func _decompressBrotliSpan(decompressedSize: Int) throws(BrotliError) -> Data {
-        let srcSpan = self.bytes
+        let srcSpan = bytes
         var decompressedData = Data(count: decompressedSize)
         var dstSpan = decompressedData.mutableBytes
         var actualSize = 0
@@ -84,7 +84,7 @@ extension Data {
         var actualSize = 0
         var thrownError: BrotliError?
         
-        self.withUnsafeBytes { srcBuffer in
+        withUnsafeBytes { srcBuffer in
             guard let srcPtr = srcBuffer.baseAddress?.assumingMemoryBound(to: UInt8.self) else {
                 thrownError = .decompressionFailed
                 return

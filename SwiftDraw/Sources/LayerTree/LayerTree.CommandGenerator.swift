@@ -1228,8 +1228,8 @@ private extension LayerTree.StrokeAttributes {
     /// How far the stroke may reach beyond the path's bounds: half the width, √2 times that at
     /// square caps, up to the miter limit at miter joins.
     var coverage: LayerTree.Float {
-        let cap: LayerTree.Float = self.cap == .square ? LayerTree.Float(2).squareRoot() : 1
-        let join: LayerTree.Float = self.join == .miter ? max(1, miterLimit) : 1
+        let cap: LayerTree.Float = cap == .square ? LayerTree.Float(2).squareRoot() : 1
+        let join: LayerTree.Float = join == .miter ? max(1, miterLimit) : 1
         return width / 2 * max(cap, join)
     }
 }

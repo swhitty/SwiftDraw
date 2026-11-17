@@ -30,9 +30,9 @@ final class WebKitRenderer: NSObject, WKNavigationDelegate {
     var timeout: TimeInterval = 30
 
     override init() {
-        webView = WKWebView(frame: CGRect(x: 0, y: 0, width: 64, height: 64))
+        self.webView = WKWebView(frame: CGRect(x: 0, y: 0, width: 64, height: 64))
         // Hosting in a window (never ordered on screen) keeps WebKit from treating the page as detached.
-        window = NSWindow(contentRect: webView.frame, styleMask: [.borderless], backing: .buffered, defer: false)
+        self.window = NSWindow(contentRect: webView.frame, styleMask: [.borderless], backing: .buffered, defer: false)
         window.isReleasedWhenClosed = false
         window.contentView = webView
         super.init()

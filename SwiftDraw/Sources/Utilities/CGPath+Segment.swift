@@ -61,7 +61,7 @@ extension CGPath {
 
     func segments() -> [Segment] {
         var segments = [Segment]()
-        self.doApply {
+        doApply {
             let p = $0
             switch (p.type) {
             case .moveToPoint:

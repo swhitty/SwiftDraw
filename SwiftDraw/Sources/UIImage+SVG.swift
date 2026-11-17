@@ -116,7 +116,7 @@ public extension SVG {
 #endif
 
     func rasterize(size: CGSize, scale: CGFloat = 0) -> UIImage {
-        self.sized(size).rasterize(scale: scale)
+        sized(size).rasterize(scale: scale)
     }
 
     func pngData(scale: CGFloat = 0) throws -> Data {

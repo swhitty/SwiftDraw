@@ -37,7 +37,7 @@ extension Bundle {
     static let test = Bundle(url: Bundle.module.url(forResource: "Test", withExtension: "bundle")!)!
 
     func url(forResource named: String) throws -> URL {
-        guard let url = self.url(forResource: named, withExtension: nil) else {
+        guard let url = url(forResource: named, withExtension: nil) else {
             throw Error.invalid
         }
         return url

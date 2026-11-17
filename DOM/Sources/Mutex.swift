@@ -65,7 +65,7 @@ final class Storage<Value: ~Copyable> {
 
     init(_ initialValue: consuming Value) {
         self._lock = .allocate(capacity: 1)
-        self._lock.initialize(to: os_unfair_lock())
+        _lock.initialize(to: os_unfair_lock())
         self.value = initialValue
     }
 

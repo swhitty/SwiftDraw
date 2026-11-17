@@ -58,11 +58,11 @@ package extension XML {
 
         private init(data: Data) {
             self.parser = FoundationXMLParser(data: data)
-            elements = [Element]()
+            self.elements = [Element]()
             super.init()
 
-            self.parser.delegate = self
-            self.parser.shouldProcessNamespaces = true
+            parser.delegate = self
+            parser.shouldProcessNamespaces = true
         }
 
         package static func parse(data: Data) throws -> Element {

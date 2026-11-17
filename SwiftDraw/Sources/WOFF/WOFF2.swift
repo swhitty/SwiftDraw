@@ -84,7 +84,7 @@ struct WOFF2 {
         // Build sfnt file from decompressed data, applying transforms
         self.fontData = try Self.buildSfntFile(
             flavor: parsedHeader.flavor,
-            tables: self.tables,
+            tables: tables,
             tableDirectory: tableDirectory,
             decompressedData: decompressedData
         )
@@ -842,7 +842,7 @@ private extension Data {
         var result: UInt32 = 0
         
         for i in 0..<5 {
-            guard offset < self.count else {
+            guard offset < count else {
                 throw WOFF2Error.invalidFormat
             }
             

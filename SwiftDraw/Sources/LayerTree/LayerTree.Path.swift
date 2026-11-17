@@ -77,7 +77,7 @@ extension LayerTree {
         }
 
         func hash(into hasher: inout Hasher) {
-            hasher.combine(self.segments)
+            hasher.combine(segments)
         }
 
         static func ==(lhs: LayerTree.Path, rhs: LayerTree.Path) -> Bool {

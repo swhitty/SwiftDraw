@@ -790,7 +790,7 @@ public final class CGTextRenderer: Renderer {
         }
 
         let indent = makeIndent()
-        let lines = self.lines.map { "\(indent)\($0)" }
+        let lines = lines.map { "\(indent)\($0)" }
         template.append(lines.joined(separator: "\n"))
         template.append(makeTemplateEnd())
         return template

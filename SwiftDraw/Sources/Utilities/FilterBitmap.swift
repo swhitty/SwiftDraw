@@ -358,7 +358,7 @@ extension FilterBitmap {
     // Each row y moved right by shift(y) pixels into a bitmap of the width, interpolated linearly
     func shiftingRows(width newWidth: Int, by shift: (Int) -> Float) -> FilterBitmap {
         var result = FilterBitmap(width: newWidth, height: height)
-        let width = self.width
+        let width = width
         pixels.withUnsafeBytes { src in
             result.pixels.withUnsafeMutableBytes { dst in
                 for y in 0..<height {

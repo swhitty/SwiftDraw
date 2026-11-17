@@ -87,8 +87,8 @@ extension LayerTree {
         }
 
         var simpleContents: Contents? {
-            guard self.contents.count == 1,
-                  let first = self.contents.first,
+            guard contents.count == 1,
+                  let first = contents.first,
                   `class` == nil,
                   opacity == 1.0,
                   transform == [],

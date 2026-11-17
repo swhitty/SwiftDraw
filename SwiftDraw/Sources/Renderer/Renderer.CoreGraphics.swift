@@ -947,26 +947,26 @@ struct FilterLayerGeometry {
 
     /// - Parameter isVector: rasterize as for a vector context (PDF, SwiftUI Canvas): at 2x, without a colour space
     init(filter: LayerTree.FilterLayer, parent: CGContext, maxFilterLayerPixels: Int, isVector: Bool) {
-        region = CGRect(x: CGFloat(filter.region.x),
+        self.region = CGRect(x: CGFloat(filter.region.x),
                         y: CGFloat(filter.region.y),
                         width: CGFloat(filter.region.width),
                         height: CGFloat(filter.region.height))
         let toDevice = parent.userSpaceToDeviceSpaceTransform
         self.toDevice = toDevice
         // a blur that is not along the device axes (rotation or skew) is sheared by the primitive tree
-        isBlurChain = filter.isBlurChain && !filter.effects.contains { $0.isSheared(toDevice) }
-        deviations = isBlurChain ? filter.effects.compactMap { $0.deviceStdDeviation(toDevice) } : []
+        self.isBlurChain = filter.isBlurChain && !filter.effects.contains { $0.isSheared(toDevice) }
+        self.deviations = isBlurChain ? filter.effects.compactMap { $0.deviceStdDeviation(toDevice) } : []
         self.isVector = isVector
-        oversample = isVector ? 2 : 1
+        self.oversample = isVector ? 2 : 1
         // the offscreen itself, plus the bitmaps of the primitive tree
-        maxPixels = isBlurChain ? maxFilterLayerPixels : maxFilterLayerPixels / (filter.peakBitmapCount + 1)
+        self.maxPixels = isBlurChain ? maxFilterLayerPixels : maxFilterLayerPixels / (filter.peakBitmapCount + 1)
         // Only a bitmap context has a colour space to match: asking a SwiftUI Canvas or other non-bitmap
         // context for one logs "CGBitmapContextGetColorSpace: invalid context". The layer is sRGB then.
-        colorSpace = isVector ? nil : parent.colorSpace
+        self.colorSpace = isVector ? nil : parent.colorSpace
 
         let visible = parent.boundingBoxOfClipPath
         guard !visible.isNull, !visible.isEmpty else {
-            deviceRect = nil
+            self.deviceRect = nil
             return
         }
         var rect = region.applying(toDevice)
@@ -974,7 +974,7 @@ struct FilterLayerGeometry {
             let spread = filter.deviceSpread(toDevice)
             rect = rect.intersection(visible.applying(toDevice).insetBy(dx: -spread.width, dy: -spread.height))
         }
-        deviceRect = rect
+        self.deviceRect = rect
     }
 
     // blur chains too small to change a pixel (every box size 1) draw straight into the parent
@@ -1216,11 +1216,11 @@ extension CGContext {
     func applyFilter(_ filter: LayerTree.FilterLayer,
                      toPixels transform: CGAffineTransform,
                      image: @escaping (Int) -> FilterBitmap? = { _ in nil }) {
-        let width = self.width
-        let height = self.height
-        let bytesPerRow = self.bytesPerRow
-        let colorSpace = self.colorSpace
-        guard let data = self.data, width > 0, height > 0 else { return }
+        let width = width
+        let height = height
+        let bytesPerRow = bytesPerRow
+        let colorSpace = colorSpace
+        guard let data = data, width > 0, height > 0 else { return }
         let rowBytes = width * 4
 
         var pixels = [UInt8](repeating: 0, count: rowBytes * height)
