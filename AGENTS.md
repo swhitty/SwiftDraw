@@ -24,7 +24,11 @@ The library is cross-platform: CI builds and tests on macOS, Linux (Swift 6.2 an
 ./container-run-tests.sh
 ```
 
-It runs `swift test` in a `swift:6.4` container (Apple's `container` tool, as CI's `linux_swift_6_4` job) and passes extra arguments on, e.g. `--filter SVGHostileTests`. Tests that must run everywhere should go through `DOM.SVG.parse` and `LayerTree` (with `LayerTreeProvider`) rather than `SVG(data:)`.
+It runs `swift test` in a `swift:6.4` container (Apple's `container` tool, as CI's `linux_swift_6_4` job) and passes extra arguments on, e.g. `--filter SVGHostileTests`. CI also builds with Swift 6.2, whose type checker fails on some code 6.4 accepts (for example a `@Test(arguments:)` array of tuples without an explicit type), so run that too when you add tests or generic code:
+
+```bash
+SWIFT_VERSION=6.2 ./container-run-tests.sh
+``` Tests that must run everywhere should go through `DOM.SVG.parse` and `LayerTree` (with `LayerTreeProvider`) rather than `SVG(data:)`.
 
 ### Locking
 
