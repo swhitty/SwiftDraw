@@ -5,6 +5,8 @@
   <ellipse cx="130" cy="30" fill="red"/>
   <rect x="160" y="10" width="-30" height="40" fill="red"/>
   <rect x="160" y="10" width="30" height="-40" fill="red"/>
+  <!-- A length with trailing characters is invalid -->
+  <rect x="160" y="10" width="30mmx" height="40" fill="red"/>
 
   <!-- SVG 2 auto radii: a missing or negative rx uses ry, and vice versa -->
   <ellipse cx="30" cy="85" ry="20" fill="green"/>
