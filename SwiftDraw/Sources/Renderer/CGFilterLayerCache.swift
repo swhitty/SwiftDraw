@@ -70,6 +70,8 @@ final class CGFilterLayerCache: Sendable {
         var sharedKey: SharedKey?
         // the fill running in the background, which other draws wait for rather than start another
         var fillTask: Task<Void, Never>?
+        // callers waiting for fillTask
+        var fillWaiters = 0
 
         var byteCount: Int {
             entries.values.joined().reduce(0) { $0 + $1.image.bytesPerRow * $1.image.height }
@@ -141,6 +143,7 @@ final class CGFilterLayerCache: Sendable {
     /// Runs `work` in the background to fill the cache, or waits for the fill already running.
     func fill(_ work: @escaping @Sendable () -> Void) async {
         let task = state.withLock {
+            $0.fillWaiters += 1
             if let task = $0.fillTask { return task }
             let task = Task.detached(priority: .userInitiated, operation: work)
             $0.fillTask = task
@@ -148,8 +151,14 @@ final class CGFilterLayerCache: Sendable {
         }
         await task.value
         state.withLock {
+            $0.fillWaiters -= 1
             if $0.fillTask == task { $0.fillTask = nil }
         }
+    }
+
+    // callers waiting for the fill running now
+    var fillWaiterCount: Int {
+        state.withLock { $0.fillWaiters }
     }
 
     // a 9-slice draws each filter layer in 9 device spaces per frame
