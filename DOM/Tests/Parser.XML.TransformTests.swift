@@ -37,12 +37,13 @@ struct ParserTransformTests {
 
     @Test
     func matrix() throws {
-        #expect(try XMLParser().parseTransform("matrix(0 1 2 3 4 5)") ==
-                [.matrix(a: 0, b: 1, c: 2, d: 3, e: 4, f: 5)])
-        #expect(try XMLParser().parseTransform("matrix(0,1,2,3,4,5)") ==
-                [.matrix(a: 0, b: 1, c: 2, d: 3, e: 4, f: 5)])
-        #expect(try XMLParser().parseTransform("matrix(1.1,1.2,1.3,1.4,1.5,1.6)") ==
-                [.matrix(a: 1.1, b: 1.2, c: 1.3, d: 1.4, e: 1.5, f: 1.6)])
+        #expect(try XMLParser().parseTransform("matrix(0 1 2 3 4 5)") == [.matrix(a: 0, b: 1, c: 2, d: 3, e: 4, f: 5)])
+        #expect(try XMLParser().parseTransform("matrix(0,1,2,3,4,5)") == [.matrix(a: 0, b: 1, c: 2, d: 3, e: 4, f: 5)])
+        #expect(
+            try XMLParser().parseTransform("matrix(1.1,1.2,1.3,1.4,1.5,1.6)") == [
+                .matrix(a: 1.1, b: 1.2, c: 1.3, d: 1.4, e: 1.5, f: 1.6)
+            ]
+        )
 
         #expect(throws: (any Error).self) { _ = try XMLParser().parseTransform("matrix(0 1 a b 4 5)") }
         #expect(throws: (any Error).self) { _ = try XMLParser().parseTransform("matrix(0 1 2)") }
@@ -52,14 +53,10 @@ struct ParserTransformTests {
 
     @Test
     func translate() throws {
-        #expect(try XMLParser().parseTransform("translate(5)") ==
-                [.translate(tx: 5, ty: 0)])
-        #expect(try XMLParser().parseTransform("translate(5, 6)") ==
-                [.translate(tx: 5, ty: 6)])
-        #expect(try XMLParser().parseTransform("translate(5 6)") ==
-                [.translate(tx: 5, ty: 6)])
-        #expect(try XMLParser().parseTransform("translate(1.3, 4.5)") ==
-                [.translate(tx: 1.3, ty: 4.5)])
+        #expect(try XMLParser().parseTransform("translate(5)") == [.translate(tx: 5, ty: 0)])
+        #expect(try XMLParser().parseTransform("translate(5, 6)") == [.translate(tx: 5, ty: 6)])
+        #expect(try XMLParser().parseTransform("translate(5 6)") == [.translate(tx: 5, ty: 6)])
+        #expect(try XMLParser().parseTransform("translate(1.3, 4.5)") == [.translate(tx: 1.3, ty: 4.5)])
 
         #expect(throws: (any Error).self) { _ = try XMLParser().parseTransform("translate(5 a)") }
         #expect(throws: (any Error).self) { _ = try XMLParser().parseTransform("translate(0 1 2)") }
@@ -69,14 +66,10 @@ struct ParserTransformTests {
 
     @Test
     func scale() throws {
-        #expect(try XMLParser().parseTransform("scale(5)") ==
-                [.scale(sx: 5, sy: 5)])
-        #expect(try XMLParser().parseTransform("scale(5, 6)") ==
-                [.scale(sx: 5, sy: 6)])
-        #expect(try XMLParser().parseTransform("scale(5 6)") ==
-                [.scale(sx: 5, sy: 6)])
-        #expect(try XMLParser().parseTransform("scale(1.3, 4.5)") ==
-                [.scale(sx: 1.3, sy: 4.5)])
+        #expect(try XMLParser().parseTransform("scale(5)") == [.scale(sx: 5, sy: 5)])
+        #expect(try XMLParser().parseTransform("scale(5, 6)") == [.scale(sx: 5, sy: 6)])
+        #expect(try XMLParser().parseTransform("scale(5 6)") == [.scale(sx: 5, sy: 6)])
+        #expect(try XMLParser().parseTransform("scale(1.3, 4.5)") == [.scale(sx: 1.3, sy: 4.5)])
 
         #expect(throws: (any Error).self) { _ = try XMLParser().parseTransform("scale(5 a)") }
         #expect(throws: (any Error).self) { _ = try XMLParser().parseTransform("scale(0 1 2)") }
@@ -86,8 +79,7 @@ struct ParserTransformTests {
 
     @Test
     func rotate() throws {
-        #expect(try XMLParser().parseTransform("rotate(5)") ==
-                [.rotate(angle: 5)])
+        #expect(try XMLParser().parseTransform("rotate(5)") == [.rotate(angle: 5)])
 
         #expect(throws: (any Error).self) { _ = try XMLParser().parseTransform("rotate(a)") }
         #expect(throws: (any Error).self) { _ = try XMLParser().parseTransform("rotate()") }
@@ -97,10 +89,8 @@ struct ParserTransformTests {
 
     @Test
     func rotatePoint() throws {
-        #expect(try XMLParser().parseTransform("rotate(5, 10, 20)") ==
-                [.rotatePoint(angle: 5, cx: 10, cy: 20)])
-        #expect(try XMLParser().parseTransform("rotate(5 10 20)") ==
-                [.rotatePoint(angle: 5, cx: 10, cy: 20)])
+        #expect(try XMLParser().parseTransform("rotate(5, 10, 20)") == [.rotatePoint(angle: 5, cx: 10, cy: 20)])
+        #expect(try XMLParser().parseTransform("rotate(5 10 20)") == [.rotatePoint(angle: 5, cx: 10, cy: 20)])
 
         #expect(throws: (any Error).self) { _ = try XMLParser().parseTransform("rotate(5 10 a)") }
         #expect(throws: (any Error).self) { _ = try XMLParser().parseTransform("rotate(5 10)") }
@@ -110,12 +100,9 @@ struct ParserTransformTests {
 
     @Test
     func skewX() throws {
-        #expect(try XMLParser().parseTransform("skewX(5)") ==
-                [.skewX(angle: 5)])
-        #expect(try XMLParser().parseTransform("skewX(6.7)") ==
-                [.skewX(angle: 6.7)])
-        #expect(try XMLParser().parseTransform("skewX(0)") ==
-                [.skewX(angle: 0)])
+        #expect(try XMLParser().parseTransform("skewX(5)") == [.skewX(angle: 5)])
+        #expect(try XMLParser().parseTransform("skewX(6.7)") == [.skewX(angle: 6.7)])
+        #expect(try XMLParser().parseTransform("skewX(0)") == [.skewX(angle: 0)])
 
         #expect(throws: (any Error).self) { _ = try XMLParser().parseTransform("skewX(a)") }
         #expect(throws: (any Error).self) { _ = try XMLParser().parseTransform("skewX()") }
@@ -125,12 +112,9 @@ struct ParserTransformTests {
 
     @Test
     func skewY() throws {
-        #expect(try XMLParser().parseTransform("skewY(5)") ==
-                [.skewY(angle: 5)])
-        #expect(try XMLParser().parseTransform("skewY(6.7)") ==
-                [.skewY(angle: 6.7)])
-        #expect(try XMLParser().parseTransform("skewY(0)") ==
-                [.skewY(angle: 0)])
+        #expect(try XMLParser().parseTransform("skewY(5)") == [.skewY(angle: 5)])
+        #expect(try XMLParser().parseTransform("skewY(6.7)") == [.skewY(angle: 6.7)])
+        #expect(try XMLParser().parseTransform("skewY(0)") == [.skewY(angle: 0)])
 
         #expect(throws: (any Error).self) { _ = try XMLParser().parseTransform("skewY(a)") }
         #expect(throws: (any Error).self) { _ = try XMLParser().parseTransform("skewY()") }
@@ -140,9 +124,12 @@ struct ParserTransformTests {
 
     @Test
     func transform() throws {
-        #expect(try XMLParser().parseTransform("scale(2) translate(4) scale(5, 5) ") ==
-                [.scale(sx: 2, sy: 2),
-                 .translate(tx: 4, ty: 0),
-                 .scale(sx: 5, sy: 5)])
+        #expect(
+            try XMLParser().parseTransform("scale(2) translate(4) scale(5, 5) ") == [
+                .scale(sx: 2, sy: 2),
+                .translate(tx: 4, ty: 0),
+                .scale(sx: 5, sy: 5),
+            ]
+        )
     }
 }

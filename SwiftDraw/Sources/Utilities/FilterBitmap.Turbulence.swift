@@ -42,12 +42,14 @@ extension FilterBitmap {
     // Filter Effects 1 §9.21: Perlin noise per channel, sampled at the top-left corner of each pixel mapped
     // into user space (as resvg), and written in the primitive's colour space. turbulence is the sum
     // of |noise| over the octaves; fractalNoise is (sum + 1) / 2. The stitch tile is the primitive subregion.
-    static func turbulence(width: Int,
-                           height: Int,
-                           _ turbulence: LayerTree.FilterLayer.Turbulence,
-                           tile: LayerTree.Rect,
-                           transform: LayerTree.Transform.Matrix,
-                           linear: Bool) -> FilterBitmap {
+    static func turbulence(
+        width: Int,
+        height: Int,
+        _ turbulence: LayerTree.FilterLayer.Turbulence,
+        tile: LayerTree.Rect,
+        transform: LayerTree.Transform.Matrix,
+        linear: Bool
+    ) -> FilterBitmap {
         var result = FilterBitmap(width: width, height: height)
         guard width > 0, height > 0, let inverse = transform.invertedMatrix() else { return result }
 
@@ -57,7 +59,8 @@ extension FilterBitmap {
             baseFrequencyY: Double(turbulence.baseFrequencyY),
             numOctaves: Swift.min(turbulence.numOctaves, maxTurbulenceOctaves),
             isFractalNoise: turbulence.isFractalNoise,
-            stitchTile: turbulence.stitchTiles ? (Double(tile.x), Double(tile.y), Double(tile.width), Double(tile.height)) : nil
+            stitchTile: turbulence.stitchTiles
+                ? (Double(tile.x), Double(tile.y), Double(tile.width), Double(tile.height)) : nil
         )
         let isFractal = turbulence.isFractalNoise
         let encoding = encodingTable
@@ -73,10 +76,12 @@ extension FilterBitmap {
                 while y < height {
                     var x = 0
                     while x < width {
-                        var sum = PerlinNoise.turbulence(tables,
-                                                         a * Double(x) + c * Double(y) + tx,
-                                                         b * Double(x) + d * Double(y) + ty,
-                                                         parameters)
+                        var sum = PerlinNoise.turbulence(
+                            tables,
+                            a * Double(x) + c * Double(y) + tx,
+                            b * Double(x) + d * Double(y) + ty,
+                            parameters
+                        )
                         if isFractal {
                             sum.r = (sum.r + 1) / 2
                             sum.g = (sum.g + 1) / 2
@@ -84,10 +89,12 @@ extension FilterBitmap {
                             sum.a = (sum.a + 1) / 2
                         }
                         let alpha = clamp01(Float(sum.a))
-                        let pixel = FilterPixel(r: clamp01(Float(sum.r)) * alpha,
-                                                g: clamp01(Float(sum.g)) * alpha,
-                                                b: clamp01(Float(sum.b)) * alpha,
-                                                a: alpha)
+                        let pixel = FilterPixel(
+                            r: clamp01(Float(sum.r)) * alpha,
+                            g: clamp01(Float(sum.g)) * alpha,
+                            b: clamp01(Float(sum.b)) * alpha,
+                            a: alpha
+                        )
                         let value = quantize(pixel, linear: linear, encoding: encoding)
                         if value != 0 {
                             store(value, out, (y * width + x) * 4)
@@ -147,25 +154,29 @@ struct PerlinNoise {
         var stitch: Stitch?
 
         // the spec's turbulence() up to its octave loop; stitchTile is x, y, width and height
-        init(baseFrequencyX: Double,
-             baseFrequencyY: Double,
-             numOctaves: Int,
-             isFractalNoise: Bool,
-             stitchTile: (Double, Double, Double, Double)? = nil) {
-            frequencyX = baseFrequencyX
-            frequencyY = baseFrequencyY
+        init(
+            baseFrequencyX: Double,
+            baseFrequencyY: Double,
+            numOctaves: Int,
+            isFractalNoise: Bool,
+            stitchTile: (Double, Double, Double, Double)? = nil
+        ) {
+            self.frequencyX = baseFrequencyX
+            self.frequencyY = baseFrequencyY
             self.numOctaves = numOctaves
             self.isFractalNoise = isFractalNoise
             guard let (x, y, width, height) = stitchTile else { return }
             // the frequencies must be adjusted so that the tile borders are continuous
-            frequencyX = PerlinNoise.stitchedFrequency(frequencyX, tileSize: width)
-            frequencyY = PerlinNoise.stitchedFrequency(frequencyY, tileSize: height)
+            self.frequencyX = PerlinNoise.stitchedFrequency(frequencyX, tileSize: width)
+            self.frequencyY = PerlinNoise.stitchedFrequency(frequencyY, tileSize: height)
             let stitchWidth = PerlinNoise.int(width * frequencyX + 0.5)
             let stitchHeight = PerlinNoise.int(height * frequencyY + 0.5)
-            stitch = Stitch(width: stitchWidth,
-                            height: stitchHeight,
-                            wrapX: PerlinNoise.int(x * frequencyX + PerlinNoise.perlinN + Double(stitchWidth)),
-                            wrapY: PerlinNoise.int(y * frequencyY + PerlinNoise.perlinN + Double(stitchHeight)))
+            self.stitch = Stitch(
+                width: stitchWidth,
+                height: stitchHeight,
+                wrapX: PerlinNoise.int(x * frequencyX + PerlinNoise.perlinN + Double(stitchWidth)),
+                wrapY: PerlinNoise.int(y * frequencyY + PerlinNoise.perlinN + Double(stitchHeight))
+            )
         }
     }
 
@@ -258,10 +269,10 @@ struct PerlinNoise {
         }
     }
 
-    static let randM = 2147483647 // 2³¹ - 1
-    static let randA = 16807 // 7⁵, a primitive root of m
-    static let randQ = 127773 // m / a
-    static let randR = 2836 // m % a
+    static let randM = 2147483647  // 2³¹ - 1
+    static let randA = 16807  // 7⁵, a primitive root of m
+    static let randQ = 127773  // m / a
+    static let randR = 2836  // m % a
 
     static func setupSeed(_ seed: Int) -> Int {
         var seed = seed

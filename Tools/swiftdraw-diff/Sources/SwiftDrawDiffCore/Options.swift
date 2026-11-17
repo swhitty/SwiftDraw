@@ -70,7 +70,10 @@ public struct Options: Equatable, Sendable {
     }
 
     /// Parses arguments, excluding the executable name. Input paths must exist.
-    public static func parse(_ args: [String], fileExists: (String) -> Bool = { FileManager.default.fileExists(atPath: $0) }) throws(Error) -> Options {
+    public static func parse(
+        _ args: [String],
+        fileExists: (String) -> Bool = { FileManager.default.fileExists(atPath: $0) }
+    ) throws(Error) -> Options {
         var o = Options()
         var rest = args[...]
         if let first = rest.first, let command = Command(rawValue: first) {
@@ -84,7 +87,9 @@ public struct Options: Equatable, Sendable {
         }
         func number(_ flag: String, _ valid: (Double) -> Bool) throws(Error) -> Double {
             let text = try value(flag)
-            guard let v = Double(text), v.isFinite, valid(v) else { throw Error("invalid value for \(flag): '\(text)'") }
+            guard let v = Double(text), v.isFinite, valid(v) else {
+                throw Error("invalid value for \(flag): '\(text)'")
+            }
             return v
         }
         func path(_ flag: String) throws(Error) -> URL { URL(fileURLWithPath: try value(flag)) }
@@ -97,7 +102,9 @@ public struct Options: Equatable, Sendable {
             case "--match": o.match = try number(a) { $0 > 0 && $0 <= 100 }
             case "--scale":
                 let text = try value(a)
-                guard let s = Int(text), (1...3).contains(s) else { throw Error("--scale must be 1, 2 or 3 (swiftdrawcli's 1x, 2x, 3x), got '\(text)'") }
+                guard let s = Int(text), (1...3).contains(s) else {
+                    throw Error("--scale must be 1, 2 or 3 (swiftdrawcli's 1x, 2x, 3x), got '\(text)'")
+                }
                 o.scale = s
             case "--max": o.maxDimension = try number(a) { $0 >= 1 }
             case "--font-smoothing": o.fontSmoothing = true
@@ -131,9 +138,12 @@ public struct Options: Equatable, Sendable {
             var isDir: ObjCBool = false
             fm.fileExists(atPath: url.path, isDirectory: &isDir)
             let url = url.standardizedFileURL.resolvingSymlinksInPath()
-            guard isDir.boolValue else { return [SVGInput(url: url, name: url.deletingPathExtension().lastPathComponent)] }
+            guard isDir.boolValue else {
+                return [SVGInput(url: url, name: url.deletingPathExtension().lastPathComponent)]
+            }
             let root = url.path.hasSuffix("/") ? url.path : url.path + "/"
-            let items = fm.enumerator(at: url, includingPropertiesForKeys: nil, options: [.skipsHiddenFiles])?
+            let items =
+                fm.enumerator(at: url, includingPropertiesForKeys: nil, options: [.skipsHiddenFiles])?
                 .compactMap { $0 as? URL } ?? []
             return items.filter { $0.pathExtension.lowercased() == "svg" }
                 .compactMap { item -> SVGInput? in
@@ -147,50 +157,50 @@ public struct Options: Equatable, Sendable {
     }
 
     public static let usage = """
-    usage:
-      swiftdraw-diff [report] <file.svg | dir>... [--head <ref>] [--resvg] [--html]
-          Render with SwiftDraw (the working copy, or --head) and score each file against WebKit,
-          and against resvg with --resvg.
+        usage:
+          swiftdraw-diff [report] <file.svg | dir>... [--head <ref>] [--resvg] [--html]
+              Render with SwiftDraw (the working copy, or --head) and score each file against WebKit,
+              and against resvg with --resvg.
 
-      swiftdraw-diff compare [--base main] [--head <ref>] <file.svg | dir>... [--tolerance 0.5] [--resvg] [--html]
-          Render with SwiftDraw at --base and at --head (default: the working copy), score both and
-          report what changed. Exits 1 if any file regressed: moved further from a reference by more
-          than --tolerance percentage points without moving closer to the other.
+          swiftdraw-diff compare [--base main] [--head <ref>] <file.svg | dir>... [--tolerance 0.5] [--resvg] [--html]
+              Render with SwiftDraw at --base and at --head (default: the working copy), score both and
+              report what changed. Exits 1 if any file regressed: moved further from a reference by more
+              than --tolerance percentage points without moving closer to the other.
 
-    references:
-      WebKit always (Tools/webkit-render, built on first use). It also decides each SVG's size.
-      --resvg                 also score against resvg (on PATH; brew install resvg)
-      --resvg-png sibling|DIR also score against pre-rendered PNGs: foo.png beside foo.svg, or in DIR.
-                              A PNG must be the compare size. With --resvg too, the resvg CLI renders
-                              files whose PNG is missing or another size, and every file with <text>:
-                              pre-rendered PNGs use their own fonts (resvg's suite uses Noto), while the
-                              CLI uses SwiftDraw's fallback fonts. Without --resvg, text is compared
-                              against the PNGs, and the summary says so.
-                              resvg's bundled test PNGs are 300×300 and WebKit sizes its 200×200
-                              viewBox-only tests at 150×150 pt, so they need --scale 2
-      --match 1               percent below which two images count as the same in verdicts
+        references:
+          WebKit always (Tools/webkit-render, built on first use). It also decides each SVG's size.
+          --resvg                 also score against resvg (on PATH; brew install resvg)
+          --resvg-png sibling|DIR also score against pre-rendered PNGs: foo.png beside foo.svg, or in DIR.
+                                  A PNG must be the compare size. With --resvg too, the resvg CLI renders
+                                  files whose PNG is missing or another size, and every file with <text>:
+                                  pre-rendered PNGs use their own fonts (resvg's suite uses Noto), while the
+                                  CLI uses SwiftDraw's fallback fonts. Without --resvg, text is compared
+                                  against the PNGs, and the summary says so.
+                                  resvg's bundled test PNGs are 300×300 and WebKit sizes its 200×200
+                                  viewBox-only tests at 150×150 pt, so they need --scale 2
+          --match 1               percent below which two images count as the same in verdicts
 
-    text:
-      With resvg, files containing <text> are judged by resvg alone: their verdict and compare
-      category ignore WebKit, which offsets middle- and end-anchored text. Their WebKit score is
-      still shown, for information.
+        text:
+          With resvg, files containing <text> are judged by resvg alone: their verdict and compare
+          category ignore WebKit, which offsets middle- and end-anchored text. Their WebKit score is
+          still shown, for information.
 
-    renderers (built or found automatically; override with a path):
-      --swiftdraw-path BIN    a swiftdrawcli binary to score instead of building one
-      --webkit-render-path BIN
-      --resvg-path BIN        (implies --resvg)
+        renderers (built or found automatically; override with a path):
+          --swiftdraw-path BIN    a swiftdrawcli binary to score instead of building one
+          --webkit-render-path BIN
+          --resvg-path BIN        (implies --resvg)
 
-    common:
-      --scale 2               pixels per point: 1, 2 or 3
-      --max 1024              longest side in points
-      --font-smoothing        keep WebKit's font smoothing (off by default: text is compared with
-                              its glyph outlines, as SwiftDraw draws it)
-      --out DIR               output folder (default .build/report or .build/compare/report)
-      --html                  also write index.html, a visual report for people (large: every image
-                              is embedded; agents should not read it)
-      --cache DIR             cache for swiftdrawcli builds and renders (default
-                              ~/Library/Caches/swiftdraw-diff); --no-cache to render everything
+        common:
+          --scale 2               pixels per point: 1, 2 or 3
+          --max 1024              longest side in points
+          --font-smoothing        keep WebKit's font smoothing (off by default: text is compared with
+                                  its glyph outlines, as SwiftDraw draws it)
+          --out DIR               output folder (default .build/report or .build/compare/report)
+          --html                  also write index.html, a visual report for people (large: every image
+                                  is embedded; agents should not read it)
+          --cache DIR             cache for swiftdrawcli builds and renders (default
+                                  ~/Library/Caches/swiftdraw-diff); --no-cache to render everything
 
-    exit status: 0 ok, 1 regressions (compare), 2 error
-    """
+        exit status: 0 ok, 1 regressions (compare), 2 error
+        """
 }

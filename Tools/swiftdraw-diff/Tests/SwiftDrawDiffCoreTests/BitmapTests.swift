@@ -10,8 +10,8 @@ struct BitmapTests {
     @Test
     func pngRoundTrip() throws {
         var image = Bitmap.white(width: 3, height: 2)
-        image.pixels.replaceSubrange(0..<4, with: [10, 20, 30, 255])         // top-left
-        image.pixels.replaceSubrange(20..<24, with: [200, 100, 50, 255])     // bottom-right
+        image.pixels.replaceSubrange(0..<4, with: [10, 20, 30, 255])  // top-left
+        image.pixels.replaceSubrange(20..<24, with: [200, 100, 50, 255])  // bottom-right
         let decoded = try Bitmap(imageData: image.pngData())
         #expect(decoded == image)
         #expect(!decoded.isBlank)
@@ -43,8 +43,8 @@ struct BitmapTests {
         let padded = image.fitted(width: 3, height: 3)
         #expect(padded.width == 3 && padded.height == 3)
         #expect(Array(padded.pixels[0..<4]) == [0, 0, 0, 0])
-        #expect(Array(padded.pixels[8..<12]) == [255, 255, 255, 255])      // new column
-        #expect(Array(padded.pixels[24..<28]) == [255, 255, 255, 255])     // new row
+        #expect(Array(padded.pixels[8..<12]) == [255, 255, 255, 255])  // new column
+        #expect(Array(padded.pixels[24..<28]) == [255, 255, 255, 255])  // new row
         let cropped = image.fitted(width: 1, height: 1)
         #expect(cropped.pixels == [0, 0, 0, 0])
         #expect(image.fitted(width: 2, height: 2) == image)
@@ -54,7 +54,7 @@ struct BitmapTests {
     func diffScoresInkThatDiffers() throws {
         let white = Bitmap.white(width: 10, height: 10)
         var mark = white
-        for p in 0..<10 { mark.pixels.replaceSubrange((p * 4)..<(p * 4 + 3), with: [0, 0, 0]) } // top row black
+        for p in 0..<10 { mark.pixels.replaceSubrange((p * 4)..<(p * 4 + 3), with: [0, 0, 0]) }  // top row black
         #expect(try #require(Diff.compare(white, white, blur: 0)).score == 0)
         let d = try #require(Diff.compare(white, mark, blur: 0))
         #expect(d.ink == 10)
@@ -65,13 +65,25 @@ struct BitmapTests {
 
     static func png(width: Int, height: Int, rgba: [UInt8], colorSpace: CGColorSpace) throws -> Data {
         let provider = try #require(CGDataProvider(data: Data(rgba) as CFData))
-        let image = try #require(CGImage(
-            width: width, height: height, bitsPerComponent: 8, bitsPerPixel: 32, bytesPerRow: width * 4,
-            space: colorSpace, bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.last.rawValue),
-            provider: provider, decode: nil, shouldInterpolate: false, intent: .defaultIntent
-        ))
+        let image = try #require(
+            CGImage(
+                width: width,
+                height: height,
+                bitsPerComponent: 8,
+                bitsPerPixel: 32,
+                bytesPerRow: width * 4,
+                space: colorSpace,
+                bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.last.rawValue),
+                provider: provider,
+                decode: nil,
+                shouldInterpolate: false,
+                intent: .defaultIntent
+            )
+        )
         let data = NSMutableData()
-        let dest = try #require(CGImageDestinationCreateWithData(data as CFMutableData, UTType.png.identifier as CFString, 1, nil))
+        let dest = try #require(
+            CGImageDestinationCreateWithData(data as CFMutableData, UTType.png.identifier as CFString, 1, nil)
+        )
         CGImageDestinationAddImage(dest, image, nil)
         #expect(CGImageDestinationFinalize(dest))
         return data as Data
@@ -82,7 +94,9 @@ struct RenderCacheTests {
 
     @Test
     func storesAndFindsRenders() throws {
-        let root = FileManager.default.temporaryDirectory.appendingPathComponent("RenderCacheTests-\(UUID().uuidString)")
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(
+            "RenderCacheTests-\(UUID().uuidString)"
+        )
         defer { try? FileManager.default.removeItem(at: root) }
         let cache = RenderCache(root: root)
         #expect(cache.lookup("r", "k", as: RenderResult.self) == nil)

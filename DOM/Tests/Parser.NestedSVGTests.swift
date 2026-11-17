@@ -33,14 +33,16 @@ struct ParserNestedSVGTests {
 
     @Test
     func nestedSVGChildrenAreParsedOnce() throws {
-        let svg = try DOM.SVG.parse(xml: """
-        <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">
-          <svg width="50" height="50">
-            <rect width="10" height="10"/>
-            <g><circle r="5"/></g>
-          </svg>
-        </svg>
-        """)
+        let svg = try DOM.SVG.parse(
+            xml: """
+                <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">
+                  <svg width="50" height="50">
+                    <rect width="10" height="10"/>
+                    <g><circle r="5"/></g>
+                  </svg>
+                </svg>
+                """
+        )
         let nested = try #require(svg.childElements.first as? DOM.SVG)
         #expect(svg.childElements.count == 1)
         #expect(nested.childElements.count == 2)

@@ -74,12 +74,14 @@ struct AsyncSVGViewTests {
 
     @Test
     func loaderRejectsHTTPFailure() throws {
-        let response = try #require(HTTPURLResponse(
-            url: URL(string: "https://example.com/image.svg")!,
-            statusCode: 404,
-            httpVersion: nil,
-            headerFields: nil
-        ))
+        let response = try #require(
+            HTTPURLResponse(
+                url: URL(string: "https://example.com/image.svg")!,
+                statusCode: 404,
+                httpVersion: nil,
+                headerFields: nil
+            )
+        )
 
         do {
             try AsyncSVGLoader.validate(response)
@@ -91,12 +93,14 @@ struct AsyncSVGViewTests {
 
     @Test
     func loaderAcceptsSuccessfulHTTPResponse() throws {
-        let response = try #require(HTTPURLResponse(
-            url: URL(string: "https://example.com/image.svg")!,
-            statusCode: 200,
-            httpVersion: nil,
-            headerFields: nil
-        ))
+        let response = try #require(
+            HTTPURLResponse(
+                url: URL(string: "https://example.com/image.svg")!,
+                statusCode: 200,
+                httpVersion: nil,
+                headerFields: nil
+            )
+        )
 
         #expect(throws: Never.self) {
             try AsyncSVGLoader.validate(response)
@@ -104,10 +108,10 @@ struct AsyncSVGViewTests {
     }
 
     private static let validSVG = """
-    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="10">
-      <rect width="20" height="10" fill="red" />
-    </svg>
-    """
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="10">
+          <rect width="20" height="10" fill="red" />
+        </svg>
+        """
 }
 
 private final class SVGTestURLProtocol: URLProtocol, @unchecked Sendable {
@@ -138,12 +142,14 @@ private final class SVGTestURLProtocol: URLProtocol, @unchecked Sendable {
         client?.urlProtocolDidFinishLoading(self)
     }
 
-    override func stopLoading() { }
+    override func stopLoading() {}
 
-    private static let svgData = Data("""
-    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="10">
-      <rect width="20" height="10" fill="red" />
-    </svg>
-    """.utf8)
+    private static let svgData = Data(
+        """
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="10">
+          <rect width="20" height="10" fill="red" />
+        </svg>
+        """.utf8
+    )
 }
 #endif

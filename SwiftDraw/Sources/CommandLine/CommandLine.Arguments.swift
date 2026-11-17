@@ -89,7 +89,7 @@ extension CommandLine {
         var args = args
         var modifiers = [Modifier: String?]()
         while let pair = try args.takeModifier() {
-            if modifiers.keys.contains(pair.0) == false  {
+            if modifiers.keys.contains(pair.0) == false {
                 modifiers[pair.0] = pair.1
             } else {
                 throw Error.invalid
@@ -118,7 +118,8 @@ private extension Array where Element == String {
         }
 
         guard self[0].hasPrefix("--"),
-              let modifier = CommandLine.Modifier.make(from: String(self[0].dropFirst(2))) else {
+            let modifier = CommandLine.Modifier.make(from: String(self[0].dropFirst(2)))
+        else {
             throw CommandLine.Error.invalid
         }
 

@@ -40,23 +40,25 @@ struct ParserFontShorthandTests {
         XMLParser.parseFontShorthand(value)?.map { "\($0.name): \($0.value)" }
     }
 
-    @Test(arguments: [
-        // matplotlib's SVG output with svg.fonttype='none'
-        ("12px 'DejaVu Sans'", ["normal", "normal", "12px", "'DejaVu Sans'"]),
-        ("italic bold 20px/1.5 Helvetica, sans-serif", ["italic", "bold", "20px", "Helvetica, sans-serif"]),
-        ("bold italic 20px serif", ["italic", "bold", "20px", "serif"]),
-        ("small-caps 650 condensed 2em monospace", ["normal", "650", "2em", "monospace"]),
-        ("oblique 10deg 12px serif", ["oblique", "normal", "12px", "serif"]),
-        ("normal normal 12px serif", ["normal", "normal", "12px", "serif"]),
-        ("12px / 2 serif", ["normal", "normal", "12px", "serif"]),
-        ("12px/ 2 serif", ["normal", "normal", "12px", "serif"]),
-        ("12px /2 serif", ["normal", "normal", "12px", "serif"]),
-        ("x-large \"Times New Roman\"", ["normal", "normal", "x-large", "\"Times New Roman\""]),
-        ("0 serif", ["normal", "normal", "0", "serif"]),
-        // system fonts
-        ("menu", ["normal", "normal", "13px", "sans-serif"]),
-        ("Caption", ["normal", "normal", "13px", "sans-serif"]),
-    ] as [(String, [String])])
+    @Test(
+        arguments: [
+            // matplotlib's SVG output with svg.fonttype='none'
+            ("12px 'DejaVu Sans'", ["normal", "normal", "12px", "'DejaVu Sans'"]),
+            ("italic bold 20px/1.5 Helvetica, sans-serif", ["italic", "bold", "20px", "Helvetica, sans-serif"]),
+            ("bold italic 20px serif", ["italic", "bold", "20px", "serif"]),
+            ("small-caps 650 condensed 2em monospace", ["normal", "650", "2em", "monospace"]),
+            ("oblique 10deg 12px serif", ["oblique", "normal", "12px", "serif"]),
+            ("normal normal 12px serif", ["normal", "normal", "12px", "serif"]),
+            ("12px / 2 serif", ["normal", "normal", "12px", "serif"]),
+            ("12px/ 2 serif", ["normal", "normal", "12px", "serif"]),
+            ("12px /2 serif", ["normal", "normal", "12px", "serif"]),
+            ("x-large \"Times New Roman\"", ["normal", "normal", "x-large", "\"Times New Roman\""]),
+            ("0 serif", ["normal", "normal", "0", "serif"]),
+            // system fonts
+            ("menu", ["normal", "normal", "13px", "sans-serif"]),
+            ("Caption", ["normal", "normal", "13px", "sans-serif"]),
+        ] as [(String, [String])]
+    )
     func expandsToLonghands(value: String, expected: [String]) {
         let names = ["font-style", "font-weight", "font-size", "font-family"]
         #expect(longhands(value) == zip(names, expected).map { "\($0): \($1)" })
@@ -64,16 +66,18 @@ struct ParserFontShorthandTests {
 
     @Test(arguments: [
         "", "serif", "12px", "bold serif", "-12px serif", "12px/ serif", "big serif",
-        "italic italic 12px serif", "normal normal normal normal normal 12px serif", "inherit"
+        "italic italic 12px serif", "normal normal normal normal normal 12px serif", "inherit",
     ])
     func rejectsInvalidValues(value: String) {
         #expect(longhands(value) == nil)
     }
 
     private func element(_ body: String) throws -> DOM.GraphicsElement {
-        let svg = try DOM.SVG.parse(xml: """
-        <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">\(body)</svg>
-        """)
+        let svg = try DOM.SVG.parse(
+            xml: """
+                <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">\(body)</svg>
+                """
+        )
         return try #require(svg.childElements.last)
     }
 

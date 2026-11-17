@@ -36,8 +36,11 @@ extension LayerTree.Builder {
 
     /// - Parameter boundingBox: the box objectBoundingBox paint servers resolve against, when it is not
     ///   the shape's own (each run of a text uses the whole text's)
-    func makeShapeContents(from shape: LayerTree.Shape, with state: State,
-                           boundingBox: LayerTree.Rect? = nil) -> LayerTree.Layer.Contents {
+    func makeShapeContents(
+        from shape: LayerTree.Shape,
+        with state: State,
+        boundingBox: LayerTree.Rect? = nil
+    ) -> LayerTree.Layer.Contents {
         let bounds = boundingBox ?? shape.bounds
         var stroke = makeStrokeAttributes(with: state, bounds: bounds)
         var fill = makeFillAttributes(with: state, bounds: bounds)
@@ -49,7 +52,8 @@ extension LayerTree.Builder {
     func makeUseLayerContents(from use: DOM.Use, with state: State) throws -> LayerTree.Layer.Contents {
         guard
             let id = use.href.fragmentID,
-            let element = svg.firstGraphicsElement(with: id) else {
+            let element = svg.firstGraphicsElement(with: id)
+        else {
             throw LayerTree.Error.invalid("missing referenced element: \(use.href)")
         }
 
@@ -94,11 +98,20 @@ extension LayerTree.Builder {
             transform.append(.translate(tx: use.x ?? 0, ty: use.y ?? 0))
         }
         // as a nested <svg> in the document, its own transform is replaced by the viewport mapping
-        transform += Self.makeTransform(x: nested.x, y: nested.y, viewBox: nested.viewBox,
-                                        width: width, height: height,
-                                        preserveAspectRatio: nested.preserveAspectRatio)
-        let bounds = Self.makeViewportClip(viewBox: nested.viewBox, width: width, height: height,
-                                           preserveAspectRatio: nested.preserveAspectRatio)
+        transform += Self.makeTransform(
+            x: nested.x,
+            y: nested.y,
+            viewBox: nested.viewBox,
+            width: width,
+            height: height,
+            preserveAspectRatio: nested.preserveAspectRatio
+        )
+        let bounds = Self.makeViewportClip(
+            viewBox: nested.viewBox,
+            width: width,
+            height: height,
+            preserveAspectRatio: nested.preserveAspectRatio
+        )
         let clip = [LayerTree.ClipShape(shape: .rect(within: bounds, radii: .zero), transform: .identity)]
 
         // layer.clip applies after layer.transform; an <svg>'s own clip-path stays on an inner layer
@@ -121,14 +134,20 @@ extension LayerTree.Builder {
         let viewport = makeSymbolViewport(for: use, symbol: symbol)
         // SVG 2 §5.6: a zero (or negative) width or height disables rendering
         guard viewport.width > 0, viewport.height > 0,
-              viewport.width.isFinite, viewport.height.isFinite else {
+            viewport.width.isFinite, viewport.height.isFinite
+        else {
             return LayerTree.Layer()
         }
 
         // SVG 1.1 has no transform on <symbol>; WebKit and resvg ignore it, so it is dropped here too
         contents.transform = []
-        let transform = Self.makeSymbolTransform(symbol, x: viewport.x, y: viewport.y,
-                                                 width: viewport.width, height: viewport.height)
+        let transform = Self.makeSymbolTransform(
+            symbol,
+            x: viewport.x,
+            y: viewport.y,
+            width: viewport.width,
+            height: viewport.height
+        )
         var clip = [LayerTree.ClipShape]()
         if symbol.clipsToViewport {
             let bounds = Self.makeSymbolViewportClip(symbol, width: viewport.width, height: viewport.height)
@@ -152,25 +171,45 @@ extension LayerTree.Builder {
     /// The viewport a `<use>` gives a symbol (SVG 2 §5.6): positioned at the `<use>`'s x, y plus the
     /// symbol's own, sized by the `<use>`'s width and height, else the symbol's, else 100% of the
     /// viewport containing the `<use>` (the root viewport for a `<use>` built without one).
-    func makeSymbolViewport(for use: DOM.Use, symbol: DOM.Symbol) -> (x: DOM.Coordinate, y: DOM.Coordinate, width: DOM.Coordinate, height: DOM.Coordinate) {
+    func makeSymbolViewport(
+        for use: DOM.Use,
+        symbol: DOM.Symbol
+    ) -> (x: DOM.Coordinate, y: DOM.Coordinate, width: DOM.Coordinate, height: DOM.Coordinate) {
         let root = svg.viewBox.map { (width: $0.width, height: $0.height) } ?? (width: svg.width, height: svg.height)
         let enclosing = use.viewport.map { (width: $0.width, height: $0.height) } ?? root
-        return ((use.x ?? 0) + (symbol.x ?? 0),
-                (use.y ?? 0) + (symbol.y ?? 0),
-                use.width ?? symbol.width ?? enclosing.width,
-                use.height ?? symbol.height ?? enclosing.height)
+        return (
+            (use.x ?? 0) + (symbol.x ?? 0),
+            (use.y ?? 0) + (symbol.y ?? 0),
+            use.width ?? symbol.width ?? enclosing.width,
+            use.height ?? symbol.height ?? enclosing.height
+        )
     }
 
     /// The viewport mapping of a symbol. With `refX` / `refY` (SVG 2) that point of the viewBox
     /// lands on x, y and the alignment of `preserveAspectRatio` no longer applies.
-    static func makeSymbolTransform(_ symbol: DOM.Symbol, x: DOM.Coordinate?, y: DOM.Coordinate?,
-                                    width: DOM.Coordinate, height: DOM.Coordinate) -> [LayerTree.Transform] {
+    static func makeSymbolTransform(
+        _ symbol: DOM.Symbol,
+        x: DOM.Coordinate?,
+        y: DOM.Coordinate?,
+        width: DOM.Coordinate,
+        height: DOM.Coordinate
+    ) -> [LayerTree.Transform] {
         guard symbol.refX != nil || symbol.refY != nil else {
-            return makeTransform(x: x, y: y, viewBox: symbol.viewBox, width: width, height: height,
-                                 preserveAspectRatio: symbol.preserveAspectRatio)
+            return makeTransform(
+                x: x,
+                y: y,
+                viewBox: symbol.viewBox,
+                width: width,
+                height: height,
+                preserveAspectRatio: symbol.preserveAspectRatio
+            )
         }
-        let fit = makeViewBoxFit(viewBox: symbol.viewBox, width: width, height: height,
-                                 preserveAspectRatio: symbol.preserveAspectRatio)
+        let fit = makeViewBoxFit(
+            viewBox: symbol.viewBox,
+            width: width,
+            height: height,
+            preserveAspectRatio: symbol.preserveAspectRatio
+        )
         var transform: [LayerTree.Transform] = [.translate(tx: x ?? 0, ty: y ?? 0)]
         if fit.sx != 1 || fit.sy != 1 {
             transform.append(.scale(sx: fit.sx, sy: fit.sy))
@@ -180,16 +219,31 @@ extension LayerTree.Builder {
     }
 
     /// The viewport of a symbol in the viewBox space of its contents, where `overflow: hidden` clips.
-    static func makeSymbolViewportClip(_ symbol: DOM.Symbol, width: DOM.Coordinate, height: DOM.Coordinate) -> LayerTree.Rect {
+    static func makeSymbolViewportClip(
+        _ symbol: DOM.Symbol,
+        width: DOM.Coordinate,
+        height: DOM.Coordinate
+    ) -> LayerTree.Rect {
         guard symbol.refX != nil || symbol.refY != nil else {
-            return makeViewportClip(viewBox: symbol.viewBox, width: width, height: height,
-                                    preserveAspectRatio: symbol.preserveAspectRatio)
+            return makeViewportClip(
+                viewBox: symbol.viewBox,
+                width: width,
+                height: height,
+                preserveAspectRatio: symbol.preserveAspectRatio
+            )
         }
-        let fit = makeViewBoxFit(viewBox: symbol.viewBox, width: width, height: height,
-                                 preserveAspectRatio: symbol.preserveAspectRatio)
-        return LayerTree.Rect(x: symbol.refX ?? 0, y: symbol.refY ?? 0,
-                              width: LayerTree.Float(width) / fit.sx,
-                              height: LayerTree.Float(height) / fit.sy)
+        let fit = makeViewBoxFit(
+            viewBox: symbol.viewBox,
+            width: width,
+            height: height,
+            preserveAspectRatio: symbol.preserveAspectRatio
+        )
+        return LayerTree.Rect(
+            x: symbol.refX ?? 0,
+            y: symbol.refY ?? 0,
+            width: LayerTree.Float(width) / fit.sx,
+            height: LayerTree.Float(height) / fit.sy
+        )
     }
 
     /// Whether text with `state` paints more than a solid fill: a paint server fill, or any stroke.
@@ -212,7 +266,8 @@ extension LayerTree.Builder {
     static func makeImageContents(from image: DOM.Image) throws -> LayerTree.Layer.Contents {
         guard
             let decoded = image.href.decodedData,
-            var im = LayerTree.Image(mimeType: decoded.mimeType, data: decoded.data) else {
+            var im = LayerTree.Image(mimeType: decoded.mimeType, data: decoded.data)
+        else {
             throw LayerTree.Error.invalid("Cannot decode image")
         }
 

@@ -29,7 +29,6 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-
 #if canImport(CoreGraphics)
 @testable import SwiftDraw
 import SwiftDrawDOM
@@ -48,7 +47,7 @@ struct CGRendererGradientSpreadTests {
         ("repeat", 21, true),
         ("pad", 21, false),
         ("reflect", 11, false),
-        ("reflect", 19, true)
+        ("reflect", 19, true),
     ])
     func linearSpread(spread: String, x: Int, isRed: Bool) throws {
         let redness = try renderRedness(spread: spread, x: x)
@@ -66,25 +65,45 @@ struct CGRendererGradientSpreadTests {
         #expect(try renderRedness(spread: "pad", x: 20, units: "objectBoundingBox", x2: "0.25", stroke: true) < -0.5)
     }
 
-    func renderRedness(spread: String, x: Int,
-                       units: String = "userSpaceOnUse", x2: String = "10",
-                       stroke: Bool = false) throws -> CGFloat {
-        let shape = stroke
+    func renderRedness(
+        spread: String,
+        x: Int,
+        units: String = "userSpaceOnUse",
+        x2: String = "10",
+        stroke: Bool = false
+    ) throws -> CGFloat {
+        let shape =
+            stroke
             ? #"<rect y="2" width="40" height="0.5" fill="none" stroke="url(#g)" stroke-width="8"/>"#
             : #"<rect width="40" height="4" fill="url(#g)"/>"#
-        let svg = try DOM.SVG.parse(xml: """
-        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="4">
-          <defs><linearGradient id="g" gradientUnits="\(units)" x1="0" x2="\(x2)" spreadMethod="\(spread)">
-            <stop offset="0" stop-color="red"/><stop offset="1" stop-color="blue"/>
-          </linearGradient></defs>
-          \(shape)
-        </svg>
-        """)
+        let svg = try DOM.SVG.parse(
+            xml: """
+                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="4">
+                  <defs><linearGradient id="g" gradientUnits="\(units)" x1="0" x2="\(x2)" spreadMethod="\(spread)">
+                    <stop offset="0" stop-color="red"/><stop offset="1" stop-color="blue"/>
+                  </linearGradient></defs>
+                  \(shape)
+                </svg>
+                """
+        )
         let space = CGColorSpace(name: CGColorSpace.sRGB)!
-        let ctx = try #require(CGContext(data: nil, width: 40, height: 4, bitsPerComponent: 8, bytesPerRow: 160,
-                                         space: space, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue))
+        let ctx = try #require(
+            CGContext(
+                data: nil,
+                width: 40,
+                height: 4,
+                bitsPerComponent: 8,
+                bytesPerRow: 160,
+                space: space,
+                bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+            )
+        )
         let layer = LayerTree.Builder(svg: svg).makeLayer()
-        let generator = LayerTree.CommandGenerator(provider: CGProvider(), size: LayerTree.Size(40, 4), options: .default)
+        let generator = LayerTree.CommandGenerator(
+            provider: CGProvider(),
+            size: LayerTree.Size(40, 4),
+            options: .default
+        )
         CGRenderer(context: ctx).perform(generator.renderCommands(for: layer, colorConverter: .default))
         let data = try #require(ctx.data).assumingMemoryBound(to: UInt8.self)
         let i = (2 * 40 + x) * 4

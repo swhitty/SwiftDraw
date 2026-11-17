@@ -29,23 +29,22 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-
 import Foundation
 
 extension Bundle {
 
-  static let test = Bundle(url: Bundle.module.url(forResource: "Test", withExtension: "bundle")!)!
+    static let test = Bundle(url: Bundle.module.url(forResource: "Test", withExtension: "bundle")!)!
 
-  func url(forResource named: String) throws -> URL {
-    guard let url = self.url(forResource: named, withExtension: nil) else {
-      throw Error.invalid
+    func url(forResource named: String) throws -> URL {
+        guard let url = url(forResource: named, withExtension: nil) else {
+            throw Error.invalid
+        }
+        return url
     }
-    return url
-  }
-  
-  private enum Error: Swift.Error {
-    case invalid
-  }
-  
-  private class Marker { }
+
+    private enum Error: Swift.Error {
+        case invalid
+    }
+
+    private class Marker {}
 }

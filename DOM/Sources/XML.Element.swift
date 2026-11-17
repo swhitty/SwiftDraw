@@ -29,7 +29,7 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-package enum XML { /* namespace */ }
+package enum XML { /* namespace */  }
 
 package extension XML {
     final class Element {

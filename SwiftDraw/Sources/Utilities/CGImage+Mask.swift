@@ -34,76 +34,85 @@ import CoreGraphics
 import Foundation
 
 func CGColorSpaceCreateExtendedGray() -> CGColorSpace {
-  return CGColorSpace.extendedGraySpace
+    return CGColorSpace.extendedGraySpace
 }
 
 extension CGColorSpace {
-  // SVG and CSS colours are sRGB; color(display-p3 …) stays Display P3. DeviceRGB is never used,
-  // so the destination context alone decides the output space.
-  static let sRGBSpace = CGColorSpace(name: CGColorSpace.sRGB)!
-  static let displayP3Space = CGColorSpace(name: CGColorSpace.displayP3)!
-  // Extended gray uses the sRGB transfer function, so its greys match sRGB greys pixel for pixel.
-  static let extendedGraySpace = CGColorSpace(name: CGColorSpace.extendedGray)!
+    // SVG and CSS colours are sRGB; color(display-p3 …) stays Display P3. DeviceRGB is never used,
+    // so the destination context alone decides the output space.
+    static let sRGBSpace = CGColorSpace(name: CGColorSpace.sRGB)!
+    static let displayP3Space = CGColorSpace(name: CGColorSpace.displayP3)!
+    // Extended gray uses the sRGB transfer function, so its greys match sRGB greys pixel for pixel.
+    static let extendedGraySpace = CGColorSpace(name: CGColorSpace.extendedGray)!
 }
 
 extension CGImage {
 
-  static func makeMask(size: CGSize, draw: (CGContext) -> ()) -> CGImage {
+    static func makeMask(size: CGSize, draw: (CGContext) -> ()) -> CGImage {
 
-    let width = Int(size.width)
-    let height = Int(size.height)
+        let width = Int(size.width)
+        let height = Int(size.height)
 
-    var data = Data(repeating: 0xff, count: width*height)
-    data.withUnsafeMutableBytes {
-      let ctx = CGContext(data: $0.baseAddress,
-                          width: width,
-                          height: height,
-                          bitsPerComponent: 8,
-                          bytesPerRow: width,
-                          space: CGColorSpaceCreateDeviceGray(),
-                          bitmapInfo: 0)!
-      draw(ctx)
+        var data = Data(repeating: 0xff, count: width * height)
+        data.withUnsafeMutableBytes {
+            let ctx = CGContext(
+                data: $0.baseAddress,
+                width: width,
+                height: height,
+                bitsPerComponent: 8,
+                bytesPerRow: width,
+                space: CGColorSpaceCreateDeviceGray(),
+                bitmapInfo: 0
+            )!
+            draw(ctx)
+        }
+
+        return CGImage(
+            maskWidth: width,
+            height: height,
+            bitsPerComponent: 8,
+            bitsPerPixel: 8,
+            bytesPerRow: width,
+            provider: CGDataProvider(data: data as CFData)!,
+            decode: nil,
+            shouldInterpolate: true
+        )!
     }
-
-    return CGImage(maskWidth: width,
-                   height: height,
-                   bitsPerComponent: 8,
-                   bitsPerPixel: 8,
-                   bytesPerRow: width,
-                   provider: CGDataProvider(data: data as CFData)!,
-                   decode: nil,
-                   shouldInterpolate: true)!
-  }
 }
 
 extension CGContext {
 
-  // A DeviceGray bitmap covering deviceRect, filled black, with its CTM mapping device space onto it.
-  // Rendered at up to oversample pixels per device pixel, scaled down to stay within maxPixels.
-  static func makeLuminanceMask(deviceRect: CGRect, oversample: CGFloat, maxPixels: Int) -> CGContext? {
-    guard !deviceRect.isNull, !deviceRect.isInfinite,
-          deviceRect.minX.isFinite, deviceRect.minY.isFinite,
-          deviceRect.width >= 1, deviceRect.height >= 1,
-          deviceRect.width.isFinite, deviceRect.height.isFinite else { return nil }
+    // A DeviceGray bitmap covering deviceRect, filled black, with its CTM mapping device space onto it.
+    // Rendered at up to oversample pixels per device pixel, scaled down to stay within maxPixels.
+    static func makeLuminanceMask(deviceRect: CGRect, oversample: CGFloat, maxPixels: Int) -> CGContext? {
+        guard !deviceRect.isNull, !deviceRect.isInfinite,
+            deviceRect.minX.isFinite, deviceRect.minY.isFinite,
+            deviceRect.width >= 1, deviceRect.height >= 1,
+            deviceRect.width.isFinite, deviceRect.height.isFinite
+        else { return nil }
 
-    let pixels = deviceRect.width * deviceRect.height
-    let scale = min(oversample, (CGFloat(maxPixels) / pixels).squareRoot())
-    let width = max(1, Int((deviceRect.width * scale).rounded(.up)))
-    let height = max(1, Int((deviceRect.height * scale).rounded(.up)))
-    guard let ctx = CGContext(data: nil,
-                              width: width,
-                              height: height,
-                              bitsPerComponent: 8,
-                              bytesPerRow: 0,
-                              space: CGColorSpaceCreateDeviceGray(),
-                              bitmapInfo: CGImageAlphaInfo.none.rawValue) else { return nil }
+        let pixels = deviceRect.width * deviceRect.height
+        let scale = min(oversample, (CGFloat(maxPixels) / pixels).squareRoot())
+        let width = max(1, Int((deviceRect.width * scale).rounded(.up)))
+        let height = max(1, Int((deviceRect.height * scale).rounded(.up)))
+        guard
+            let ctx = CGContext(
+                data: nil,
+                width: width,
+                height: height,
+                bitsPerComponent: 8,
+                bytesPerRow: 0,
+                space: CGColorSpaceCreateDeviceGray(),
+                bitmapInfo: CGImageAlphaInfo.none.rawValue
+            )
+        else { return nil }
 
-    ctx.setFillColor(gray: 0, alpha: 1)
-    ctx.fill(CGRect(x: 0, y: 0, width: width, height: height))
-    ctx.scaleBy(x: scale, y: scale)
-    ctx.translateBy(x: -deviceRect.minX, y: -deviceRect.minY)
-    return ctx
-  }
+        ctx.setFillColor(gray: 0, alpha: 1)
+        ctx.fill(CGRect(x: 0, y: 0, width: width, height: height))
+        ctx.scaleBy(x: scale, y: scale)
+        ctx.translateBy(x: -deviceRect.minX, y: -deviceRect.minY)
+        return ctx
+    }
 }
 
 #endif

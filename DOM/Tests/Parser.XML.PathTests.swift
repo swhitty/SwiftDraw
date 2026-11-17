@@ -98,11 +98,19 @@ struct ParserXMLPathTests {
         #expect(parseSegment("M  10;  20    ") == move(10, 20, .absolute))
         #expect(parseSegment("M10-20") == move(10, -20, .absolute))
 
-        #expect(parseSegments("M10-20 5 1") == [move(10, -20, .absolute),
-                                                line(5, 1, .absolute)])
+        #expect(
+            parseSegments("M10-20 5 1") == [
+                move(10, -20, .absolute),
+                line(5, 1, .absolute),
+            ]
+        )
 
-        #expect(parseSegments("m10-20 5 1") == [move(10, -20, .relative),
-                                                line(5, 1, .relative)])
+        #expect(
+            parseSegments("m10-20 5 1") == [
+                move(10, -20, .relative),
+                line(5, 1, .relative),
+            ]
+        )
     }
 
     @Test
@@ -114,8 +122,12 @@ struct ParserXMLPathTests {
         #expect(parseSegment("  L 10;20  ") == line(10, 20, .absolute))
         #expect(parseSegment("L10-20  ") == line(10, -20, .absolute))
 
-        #expect(parseSegments("L10-20 5 1") == [line(10, -20, .absolute),
-                                                line(5, 1, .absolute)])
+        #expect(
+            parseSegments("L10-20 5 1") == [
+                line(10, -20, .absolute),
+                line(5, 1, .absolute),
+            ]
+        )
     }
 
     @Test
@@ -126,8 +138,12 @@ struct ParserXMLPathTests {
         #expect(parseSegment("H10;") == horizontal(10, .absolute))
         #expect(parseSegment("  H10 ") == horizontal(10, .absolute))
 
-        #expect(parseSegments("h10 5") == [horizontal(10, .relative),
-                                           horizontal(5, .relative)])
+        #expect(
+            parseSegments("h10 5") == [
+                horizontal(10, .relative),
+                horizontal(5, .relative),
+            ]
+        )
     }
 
     @Test
@@ -250,19 +266,35 @@ private func vertical(_ y: Coordinate, _ space: CoordinateSpace) -> Segment {
     return .vertical(y: y, space: space)
 }
 
-private func cubic(_ x1: Coordinate, _ y1: Coordinate,
-                   _ x2: Coordinate, _ y2: Coordinate,
-                   _ x: Coordinate, _ y: Coordinate, _ space: CoordinateSpace) -> Segment {
+private func cubic(
+    _ x1: Coordinate,
+    _ y1: Coordinate,
+    _ x2: Coordinate,
+    _ y2: Coordinate,
+    _ x: Coordinate,
+    _ y: Coordinate,
+    _ space: CoordinateSpace
+) -> Segment {
     return .cubic(x1: x1, y1: y1, x2: x2, y2: y2, x: x, y: y, space: space)
 }
 
-private func cubicSmooth(_ x2: Coordinate, _ y2: Coordinate,
-                         _ x: Coordinate, _ y: Coordinate, _ space: CoordinateSpace) -> Segment {
+private func cubicSmooth(
+    _ x2: Coordinate,
+    _ y2: Coordinate,
+    _ x: Coordinate,
+    _ y: Coordinate,
+    _ space: CoordinateSpace
+) -> Segment {
     return .cubicSmooth(x2: x2, y2: y2, x: x, y: y, space: space)
 }
 
-private func quadratic(_ x1: Coordinate, _ y1: Coordinate,
-                       _ x: Coordinate, _ y: Coordinate, _ space: CoordinateSpace) -> Segment {
+private func quadratic(
+    _ x1: Coordinate,
+    _ y1: Coordinate,
+    _ x: Coordinate,
+    _ y: Coordinate,
+    _ space: CoordinateSpace
+) -> Segment {
     return .quadratic(x1: x1, y1: y1, x: x, y: y, space: space)
 }
 
@@ -270,10 +302,24 @@ private func quadraticSmooth(_ x: Coordinate, _ y: Coordinate, _ space: Coordina
     return .quadraticSmooth(x: x, y: y, space: space)
 }
 
-private func arc(_ rx: Coordinate, _ ry: Coordinate, _ rotate: Coordinate,
-                 _ large: Bool, _ sweep: Bool,
-                 _ x: Coordinate, _ y: Coordinate, _ space: CoordinateSpace) -> Segment {
-    return .arc(rx: rx, ry: ry, rotate: rotate,
-                large: large, sweep: sweep,
-                x: x, y: y, space: space)
+private func arc(
+    _ rx: Coordinate,
+    _ ry: Coordinate,
+    _ rotate: Coordinate,
+    _ large: Bool,
+    _ sweep: Bool,
+    _ x: Coordinate,
+    _ y: Coordinate,
+    _ space: CoordinateSpace
+) -> Segment {
+    return .arc(
+        rx: rx,
+        ry: ry,
+        rotate: rotate,
+        large: large,
+        sweep: sweep,
+        x: x,
+        y: y,
+        space: space
+    )
 }

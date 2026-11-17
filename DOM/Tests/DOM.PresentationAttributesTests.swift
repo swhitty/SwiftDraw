@@ -107,24 +107,27 @@ struct PresentationAttributesTests {
         )
 
         #expect(
-            DOM.makeSelectors(for: .circle(id: "c1")) ==
-            [.element("circle"),
-             .id("c1")]
+            DOM.makeSelectors(for: .circle(id: "c1")) == [
+                .element("circle"),
+                .id("c1"),
+            ]
         )
 
         #expect(
-            DOM.makeSelectors(for: .circle(class: "c")) ==
-            [.element("circle"),
-             .class("c")]
+            DOM.makeSelectors(for: .circle(class: "c")) == [
+                .element("circle"),
+                .class("c"),
+            ]
         )
 
         #expect(
-            DOM.makeSelectors(for: .circle(id: "c1 ", class: "a  b c")) ==
-            [.element("circle"),
-             .class("a"),
-             .class("b"),
-             .class("c"),
-             .id("c1")]
+            DOM.makeSelectors(for: .circle(id: "c1 ", class: "a  b c")) == [
+                .element("circle"),
+                .class("a"),
+                .class("b"),
+                .class("c"),
+                .id("c1"),
+            ]
         )
     }
 
@@ -158,20 +161,26 @@ struct PresentationAttributesTests {
         sheet[.class("c")].opacity = 0.2
 
         #expect(
-            DOM.presentationAttributes(for: .circle(id: "c1", class: "b c"),
-                                       styles: [sheet])
+            DOM.presentationAttributes(
+                for: .circle(id: "c1", class: "b c"),
+                styles: [sheet]
+            )
             .opacity == 0.5
         )
 
         #expect(
-            DOM.presentationAttributes(for: .circle(id: "c2", class: "b c"),
-                                       styles: [sheet])
+            DOM.presentationAttributes(
+                for: .circle(id: "c2", class: "b c"),
+                styles: [sheet]
+            )
             .opacity == 0.2
         )
 
         #expect(
-            DOM.presentationAttributes(for: .circle(id: "c2", class: "z"),
-                                       styles: [sheet])
+            DOM.presentationAttributes(
+                for: .circle(id: "c2", class: "z"),
+                styles: [sheet]
+            )
             .opacity == 1
         )
     }

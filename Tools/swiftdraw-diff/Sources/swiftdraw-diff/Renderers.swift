@@ -24,8 +24,14 @@ struct Repo: Sendable {
     static func find() async throws -> Repo {
         let cwd = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
         let root = URL(fileURLWithPath: try await git(["rev-parse", "--show-toplevel"], in: cwd))
-        guard FileManager.default.fileExists(atPath: root.appendingPathComponent("Tools/webkit-render/Package.swift").path) else {
-            throw ToolError("expected Tools/webkit-render in \(root.path); run swiftdraw-diff from inside the SwiftDraw repo")
+        guard
+            FileManager.default.fileExists(
+                atPath: root.appendingPathComponent("Tools/webkit-render/Package.swift").path
+            )
+        else {
+            throw ToolError(
+                "expected Tools/webkit-render in \(root.path); run swiftdraw-diff from inside the SwiftDraw repo"
+            )
         }
         return Repo(root: root)
     }
@@ -48,26 +54,45 @@ struct WebKitRenderer: Sendable {
         } else {
             step("Building webkit-render")
             let package = repo.root.appendingPathComponent("Tools/webkit-render")
-            try await check(.name("swift"), ["build", "-c", "release", "-q", "--package-path", package.path], label: "webkit-render build")
+            try await check(
+                .name("swift"),
+                ["build", "-c", "release", "-q", "--package-path", package.path],
+                label: "webkit-render build"
+            )
             binary = package.appendingPathComponent(".build/release/webkit-render")
         }
         let output = try await execute(binary, ["--version"])
         guard output.success else { throw ToolError("\(binary.path) --version failed: \(output.reason)") }
         let version = output.stdout.trimmingCharacters(in: .whitespacesAndNewlines)
         let binaryHash = RenderCache.hash((try? Data(contentsOf: binary)) ?? Data())
-        let id = RenderCache.hash("webkit", version, binaryHash, "\(options.scale)", "\(options.maxDimension)", "\(options.fontSmoothing)")
+        let id = RenderCache.hash(
+            "webkit",
+            version,
+            binaryHash,
+            "\(options.scale)",
+            "\(options.maxDimension)",
+            "\(options.fontSmoothing)"
+        )
         return WebKitRenderer(binary: binary, version: version, cacheID: "webkit-\(id)")
     }
 
     /// Renders `files` into `dir/<name>.png`, reusing cached renders.
-    func render(_ files: [InputFile], options: Options, cache: RenderCache, into dir: URL, scratch: URL) async throws -> [String: WebKitManifestEntry] {
+    func render(
+        _ files: [InputFile],
+        options: Options,
+        cache: RenderCache,
+        into dir: URL,
+        scratch: URL
+    ) async throws -> [String: WebKitManifestEntry] {
         var results: [String: WebKitManifestEntry] = [:]
         var missing: [InputFile] = []
         for file in files {
             if let hit = cache.lookup(cacheID, file.hash, as: WebKitManifestEntry.self) {
                 var entry = hit.meta
                 entry.name = file.name
-                if let png = hit.png { try FileManager.default.copyItem(at: png, to: dir.appendingPathComponent("\(file.name).png")) }
+                if let png = hit.png {
+                    try FileManager.default.copyItem(at: png, to: dir.appendingPathComponent("\(file.name).png"))
+                }
                 results[file.name] = entry
             } else {
                 missing.append(file)
@@ -86,12 +111,18 @@ struct WebKitRenderer: Sendable {
         let fm = FileManager.default
         try fm.createDirectory(at: jobsOut, withIntermediateDirectories: true)
         try JSONEncoder().encode(jobs.map(\.0)).write(to: jobsURL)
-        let output = try await execute(binary, [
-            "--jobs", jobsURL.path, "--out", jobsOut.path,
-            "--scale", "\(options.scale)", "--max", "\(options.maxDimension)",
-        ] + (options.fontSmoothing ? ["--font-smoothing"] : []))
+        let output = try await execute(
+            binary,
+            [
+                "--jobs", jobsURL.path, "--out", jobsOut.path,
+                "--scale", "\(options.scale)", "--max", "\(options.maxDimension)",
+            ] + (options.fontSmoothing ? ["--font-smoothing"] : [])
+        )
         guard output.success else { throw ToolError("webkit-render failed: \(output.reason)") }
-        let manifest = try JSONDecoder().decode([WebKitManifestEntry].self, from: Data(contentsOf: jobsOut.appendingPathComponent("manifest.json")))
+        let manifest = try JSONDecoder().decode(
+            [WebKitManifestEntry].self,
+            from: Data(contentsOf: jobsOut.appendingPathComponent("manifest.json"))
+        )
         let byJob = Dictionary(uniqueKeysWithValues: jobs.map { ($0.0.name, $0.1) })
         for var entry in manifest {
             guard let file = byJob[entry.name] else { continue }
@@ -126,19 +157,32 @@ struct SwiftDrawRenderer: Sendable {
     var cacheID: String?
 
     /// Builds (or finds the cached) swiftdrawcli for `revision`. `slot` names the reusable worktree.
-    static func prepare(_ revision: Revision, slot: String, repo: Repo, cache: RenderCache, scale: Int) async throws -> SwiftDrawRenderer {
+    static func prepare(
+        _ revision: Revision,
+        slot: String,
+        repo: Repo,
+        cache: RenderCache,
+        scale: Int
+    ) async throws -> SwiftDrawRenderer {
         switch revision {
         case let .binary(url):
             return SwiftDrawRenderer(binary: url, label: url.path, cacheID: nil)
 
         case .workingCopy:
             let sha = try await git(["rev-parse", "HEAD"], in: repo.root)
-            let dirty = !(try await git(["status", "--porcelain", "--", "SwiftDraw", "DOM", "Package.swift"], in: repo.root)).isEmpty
+            let dirty =
+                !(try await git(["status", "--porcelain", "--", "SwiftDraw", "DOM", "Package.swift"], in: repo.root))
+                .isEmpty
             step("Building swiftdrawcli (working copy)")
             let scratch = repo.work.appendingPathComponent("swiftdrawcli-working")
-            try await check(.name("swift"), ["build", "-c", "release", "-q", "--product", "swiftdrawcli",
-                                             "--package-path", repo.root.path, "--scratch-path", scratch.path],
-                            label: "swiftdrawcli build")
+            try await check(
+                .name("swift"),
+                [
+                    "build", "-c", "release", "-q", "--product", "swiftdrawcli",
+                    "--package-path", repo.root.path, "--scratch-path", scratch.path,
+                ],
+                label: "swiftdrawcli build"
+            )
             return SwiftDrawRenderer(
                 binary: scratch.appendingPathComponent("release/swiftdrawcli"),
                 label: "working copy (\(sha.prefix(7))\(dirty ? " + uncommitted changes" : ""))",
@@ -154,8 +198,11 @@ struct SwiftDrawRenderer: Sendable {
             let worktree = repo.work.appendingPathComponent("compare/\(slot)-src")
             try await prepareWorktree(worktree, sha: sha, repo: repo.root)
             step("Building swiftdrawcli @ \(sha.prefix(7))")
-            try await check(.name("swift"), ["build", "-c", "release", "-q", "--product", "swiftdrawcli", "--package-path", worktree.path],
-                            label: "swiftdrawcli build at \(sha.prefix(7))")
+            try await check(
+                .name("swift"),
+                ["build", "-c", "release", "-q", "--product", "swiftdrawcli", "--package-path", worktree.path],
+                label: "swiftdrawcli build at \(sha.prefix(7))"
+            )
             let built = worktree.appendingPathComponent(".build/release/swiftdrawcli")
             guard let cached = cache.swiftdrawBinary(sha: sha) else {
                 return SwiftDrawRenderer(binary: built, label: label, cacheID: nil)
@@ -184,7 +231,13 @@ struct SwiftDrawRenderer: Sendable {
 
     /// Renders one file to `png` at `size` points, or at its own size when `size` is nil.
     /// Returns the result and the size it rendered at.
-    func render(_ file: InputFile, size: PointSize?, scale: Int, cache: RenderCache, to png: URL) async -> (RenderResult, PointSize?) {
+    func render(
+        _ file: InputFile,
+        size: PointSize?,
+        scale: Int,
+        cache: RenderCache,
+        to png: URL
+    ) async -> (RenderResult, PointSize?) {
         let key = "\(file.hash)-\(size.map { "\($0.width)x\($0.height)" } ?? "natural")"
         if let cacheID, let hit = cache.lookup(cacheID, key, as: CachedResult.self) {
             if let src = hit.png { try? FileManager.default.copyItem(at: src, to: png) }
@@ -208,7 +261,12 @@ struct SwiftDrawRenderer: Sendable {
             result = .failed("\(error)")
         }
         if let cacheID {
-            cache.store(cacheID, key, meta: CachedResult(result: result, size: rendered), png: result.rendered ? png : nil)
+            cache.store(
+                cacheID,
+                key,
+                meta: CachedResult(result: result, size: rendered),
+                png: result.rendered ? png : nil
+            )
         }
         return (result, rendered)
     }
@@ -247,7 +305,9 @@ struct ResvgRenderer: Sendable {
         do {
             output = try await execute(options.resvgPath.map { .path(.init($0.path)) } ?? .name("resvg"), ["--version"])
         } catch {
-            throw ToolError("resvg not found\(options.resvgPath.map { " at \($0.path)" } ?? " on PATH"). Install it with `brew install resvg`, or pass --resvg-path")
+            throw ToolError(
+                "resvg not found\(options.resvgPath.map { " at \($0.path)" } ?? " on PATH"). Install it with `brew install resvg`, or pass --resvg-path"
+            )
         }
         guard output.success else { throw ToolError("resvg --version failed: \(output.reason)") }
         let version = output.stdout.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -255,7 +315,12 @@ struct ResvgRenderer: Sendable {
         if let path = options.resvgPath { binary = path } else { binary = try await resolve("resvg") }
         let id = RenderCache.hash("resvg", version, fontArguments.joined(separator: " "))
         labels.append(labels.isEmpty ? "resvg \(version)" : "resvg \(version) for text and unusable PNGs")
-        return ResvgRenderer(png: options.resvgPNG, cli: binary, label: labels.joined(separator: ", "), cacheID: "resvg-\(id)")
+        return ResvgRenderer(
+            png: options.resvgPNG,
+            cli: binary,
+            label: labels.joined(separator: ", "),
+            cacheID: "resvg-\(id)"
+        )
     }
 
     private static func resolve(_ name: String) async throws -> URL {
@@ -267,7 +332,13 @@ struct ResvgRenderer: Sendable {
     /// is exactly `pixels`; otherwise the CLI renders it, or, without the CLI, the file has no resvg image.
     /// With the CLI, text is always rendered by it: pre-rendered PNGs (such as resvg's test suite, drawn
     /// with its own Noto fonts) use other fonts than SwiftDraw's fallbacks.
-    func render(_ file: InputFile, pixels: (width: Int, height: Int), scale: Int, cache: RenderCache, to png: URL) async -> RenderResult {
+    func render(
+        _ file: InputFile,
+        pixels: (width: Int, height: Int),
+        scale: Int,
+        cache: RenderCache,
+        to png: URL
+    ) async -> RenderResult {
         let fm = FileManager.default
         var unusable: String?
         if let source = self.png, Options.prefersResvgPNG(hasPNGs: true, hasCLI: cli != nil, text: file.text) {
@@ -279,7 +350,8 @@ struct ResvgRenderer: Sendable {
             if !fm.fileExists(atPath: src.path) {
                 unusable = "no \(src.lastPathComponent)"
             } else if let size = Bitmap.size(of: src), size != (pixels.width, pixels.height) {
-                unusable = "\(src.lastPathComponent) is \(size.width)×\(size.height), expected \(pixels.width)×\(pixels.height)"
+                unusable =
+                    "\(src.lastPathComponent) is \(size.width)×\(size.height), expected \(pixels.width)×\(pixels.height)"
                     + Self.scaleHint(png: size, pixels: pixels, scale: scale)
             } else {
                 do { try fm.copyItem(at: src, to: png) } catch { return .failed("\(error)").from("png") }
@@ -300,7 +372,13 @@ struct ResvgRenderer: Sendable {
         return ""
     }
 
-    private func render(_ file: InputFile, cli binary: URL, pixels: (width: Int, height: Int), cache: RenderCache, to png: URL) async -> RenderResult {
+    private func render(
+        _ file: InputFile,
+        cli binary: URL,
+        pixels: (width: Int, height: Int),
+        cache: RenderCache,
+        to png: URL
+    ) async -> RenderResult {
         let fm = FileManager.default
         let key = "\(file.hash)-\(pixels.width)x\(pixels.height)"
         if let cacheID, let hit = cache.lookup(cacheID, key, as: RenderResult.self) {
@@ -308,7 +386,8 @@ struct ResvgRenderer: Sendable {
             if !hit.meta.rendered || hit.png != nil { return hit.meta }
         }
         // resvg fits -w × -h keeping the aspect ratio; the result is padded or cropped to size when scored.
-        let args = ["-w", "\(pixels.width)", "-h", "\(pixels.height)", "--background", "white"]
+        let args =
+            ["-w", "\(pixels.width)", "-h", "\(pixels.height)", "--background", "white"]
             + Self.fontArguments + [file.svg.path, png.path]
         let result: RenderResult
         do {

@@ -29,7 +29,6 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-
 import Foundation
 import Testing
 @testable import SwiftDrawDOM
@@ -92,15 +91,17 @@ struct ParserXMLTransformOriginTests {
 
     @Test
     func attributeStyleAndStylesheet() throws {
-        let svg = try DOM.SVG.parse(xml: """
-        <svg xmlns="http://www.w3.org/2000/svg" width="200" height="200">
-          <style>.c { transform-origin: right bottom; }</style>
-          <rect id="a" width="10" height="10" transform-origin="center" />
-          <rect id="b" width="10" height="10" style="transform-origin: 10px 20px" />
-          <rect id="c" class="c" width="10" height="10" />
-          <rect id="d" width="10" height="10" transform-origin="nonsense" />
-        </svg>
-        """)
+        let svg = try DOM.SVG.parse(
+            xml: """
+                <svg xmlns="http://www.w3.org/2000/svg" width="200" height="200">
+                  <style>.c { transform-origin: right bottom; }</style>
+                  <rect id="a" width="10" height="10" transform-origin="center" />
+                  <rect id="b" width="10" height="10" style="transform-origin: 10px 20px" />
+                  <rect id="c" class="c" width="10" height="10" />
+                  <rect id="d" width="10" height="10" transform-origin="nonsense" />
+                </svg>
+                """
+        )
 
         func origin(_ id: String) throws -> Origin? {
             let element = try #require(svg.firstGraphicsElement(with: id))
@@ -114,13 +115,15 @@ struct ParserXMLTransformOriginTests {
 
     @Test
     func paintServers() throws {
-        let svg = try DOM.SVG.parse(xml: """
-        <svg xmlns="http://www.w3.org/2000/svg" width="200" height="200">
-          <linearGradient id="l" gradientTransform="scale(2)" transform-origin="0.5 0.5" />
-          <radialGradient id="r" transform-origin="center" />
-          <pattern id="p" width="1" height="1" transform-origin="top" />
-        </svg>
-        """)
+        let svg = try DOM.SVG.parse(
+            xml: """
+                <svg xmlns="http://www.w3.org/2000/svg" width="200" height="200">
+                  <linearGradient id="l" gradientTransform="scale(2)" transform-origin="0.5 0.5" />
+                  <radialGradient id="r" transform-origin="center" />
+                  <pattern id="p" width="1" height="1" transform-origin="top" />
+                </svg>
+                """
+        )
         #expect(svg.defs.linearGradients.first?.transformOrigin == Origin(x: .length(0.5), y: .length(0.5)))
         #expect(svg.defs.radialGradients.first?.transformOrigin == Origin(x: .fraction(0.5), y: .fraction(0.5)))
         #expect(svg.defs.patterns.first?.transformOrigin == Origin(x: .fraction(0.5), y: .fraction(0)))

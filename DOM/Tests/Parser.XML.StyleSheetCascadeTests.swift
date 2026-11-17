@@ -48,7 +48,9 @@ struct ParserXMLStyleSheetCascadeTests {
         #expect(s.compounds[1].element == "rect")
         #expect(s.compounds[1].ids == ["a"])
         #expect(s.compounds[1].classes == ["b"])
-        #expect(s.compounds[1].attributes == [.init(name: "fill", match: .equals, value: "red", caseInsensitive: false)])
+        #expect(
+            s.compounds[1].attributes == [.init(name: "fill", match: .equals, value: "red", caseInsensitive: false)]
+        )
         #expect(s.compounds[1].pseudoClasses == [.firstChild])
     }
 
@@ -153,12 +155,14 @@ struct ParserXMLStyleSheetCascadeTests {
     // MARK: - Matching and cascade
 
     private func fill(of id: String, style: String, body: String) throws -> DOM.Fill? {
-        let svg = try DOM.SVG.parse(xml: """
-        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10">
-        <style>\(style)</style>
-        \(body)
-        </svg>
-        """)
+        let svg = try DOM.SVG.parse(
+            xml: """
+                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10">
+                <style>\(style)</style>
+                \(body)
+                </svg>
+                """
+        )
         let element = try #require(Self.find(id, in: svg.childElements))
         return DOM.presentationAttributes(for: element, styles: svg.styles).fill
     }
@@ -184,7 +188,8 @@ struct ParserXMLStyleSheetCascadeTests {
 
     @Test
     func siblingCombinatorsAndStructuralPseudoClasses() throws {
-        let body = #"<g><rect id="a" width="1" height="1"/><title>t</title><rect id="b" width="1" height="1"/><rect id="c" width="1" height="1"/></g>"#
+        let body =
+            #"<g><rect id="a" width="1" height="1"/><title>t</title><rect id="b" width="1" height="1"/><rect id="c" width="1" height="1"/></g>"#
         #expect(try fill(of: "a", style: "rect:first-child { fill: red }", body: body) == .color(.keyword(.red)))
         #expect(try fill(of: "b", style: "rect:first-child { fill: red }", body: body) == nil)
         #expect(try fill(of: "c", style: "rect:last-child { fill: red }", body: body) == .color(.keyword(.red)))
@@ -213,7 +218,10 @@ struct ParserXMLStyleSheetCascadeTests {
     func specificityBeatsSourceOrder() throws {
         let body = #"<g class="l"><rect id="r" class="a" width="1" height="1"/></g>"#
         #expect(try fill(of: "r", style: ".l .a { fill: red } .a { fill: blue }", body: body) == .color(.keyword(.red)))
-        #expect(try fill(of: "r", style: "#r { fill: red } .l > rect.a { fill: blue }", body: body) == .color(.keyword(.red)))
+        #expect(
+            try fill(of: "r", style: "#r { fill: red } .l > rect.a { fill: blue }", body: body)
+                == .color(.keyword(.red))
+        )
     }
 
     @Test
@@ -222,12 +230,16 @@ struct ParserXMLStyleSheetCascadeTests {
         #expect(try fill(of: "r", style: ".b { fill: red } .a { fill: blue }", body: body) == .color(.keyword(.blue)))
         #expect(try fill(of: "r", style: ".a { fill: blue } .b { fill: red }", body: body) == .color(.keyword(.red)))
         // later <style> elements come later in source order
-        let svg = try DOM.SVG.parse(xml: """
-        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10">
-        <style>.b { fill: red }</style>\(body)<style>.a { fill: blue }</style>
-        </svg>
-        """)
-        #expect(DOM.presentationAttributes(for: svg.childElements[0], styles: svg.styles).fill == .color(.keyword(.blue)))
+        let svg = try DOM.SVG.parse(
+            xml: """
+                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10">
+                <style>.b { fill: red }</style>\(body)<style>.a { fill: blue }</style>
+                </svg>
+                """
+        )
+        #expect(
+            DOM.presentationAttributes(for: svg.childElements[0], styles: svg.styles).fill == .color(.keyword(.blue))
+        )
     }
 
     @Test
@@ -250,26 +262,32 @@ struct ParserXMLStyleSheetCascadeTests {
 
     @Test
     func matchesInsideDefsAndMasks() throws {
-        let svg = try DOM.SVG.parse(xml: """
-        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10">
-        <style>mask > rect { fill: white } #m { opacity: 0.5 }</style>
-        <defs><mask id="m"><rect width="1" height="1"/></mask></defs>
-        </svg>
-        """)
+        let svg = try DOM.SVG.parse(
+            xml: """
+                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10">
+                <style>mask > rect { fill: white } #m { opacity: 0.5 }</style>
+                <defs><mask id="m"><rect width="1" height="1"/></mask></defs>
+                </svg>
+                """
+        )
         let mask = try #require(svg.defs.masks.first)
         #expect(DOM.presentationAttributes(for: mask, styles: svg.styles).opacity == 0.5)
-        #expect(DOM.presentationAttributes(for: mask.childElements[0], styles: svg.styles).fill == .color(.keyword(.white)))
+        #expect(
+            DOM.presentationAttributes(for: mask.childElements[0], styles: svg.styles).fill == .color(.keyword(.white))
+        )
     }
 
     // MARK: - Second review
 
     private func cascaded(_ id: String, style: String, body: String) throws -> DOM.PresentationAttributes {
-        let svg = try DOM.SVG.parse(xml: """
-        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10">
-        <style>\(style)</style>
-        \(body)
-        </svg>
-        """)
+        let svg = try DOM.SVG.parse(
+            xml: """
+                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10">
+                <style>\(style)</style>
+                \(body)
+                </svg>
+                """
+        )
         let element = try #require(Self.find(id, in: svg.childElements))
         return DOM.presentationAttributes(for: element, styles: svg.styles)
     }
@@ -277,8 +295,14 @@ struct ParserXMLStyleSheetCascadeTests {
     @Test
     func mediaBlocksAreSkippedInADocument() throws {
         let body = #"<rect id="r" class="a" width="1" height="1"/>"#
-        #expect(try fill(of: "r", style: "@media (min-width: 1px) { .a { fill: red } } .a { stroke: blue }", body: body) == nil)
-        #expect(try cascaded("r", style: "@media print { .a { fill: red } } .a { stroke: blue }", body: body).stroke == .color(.keyword(.blue)))
+        #expect(
+            try fill(of: "r", style: "@media (min-width: 1px) { .a { fill: red } } .a { stroke: blue }", body: body)
+                == nil
+        )
+        #expect(
+            try cascaded("r", style: "@media print { .a { fill: red } } .a { stroke: blue }", body: body).stroke
+                == .color(.keyword(.blue))
+        )
     }
 
     @Test
@@ -339,7 +363,10 @@ struct ParserXMLStyleSheetCascadeTests {
     @Test
     func importantBeatsHigherSpecificity() throws {
         let body = #"<g id="g"><rect id="r" class="a" width="1" height="1"/></g>"#
-        #expect(try fill(of: "r", style: "rect { fill: red !important } #g > #r.a { fill: blue }", body: body) == .color(.keyword(.red)))
+        #expect(
+            try fill(of: "r", style: "rect { fill: red !important } #g > #r.a { fill: blue }", body: body)
+                == .color(.keyword(.red))
+        )
     }
 
     @Test
@@ -353,8 +380,14 @@ struct ParserXMLStyleSheetCascadeTests {
     @Test
     func fallbackDeclarationsKeepTheLastValidValue() throws {
         let body = #"<rect id="r" class="a" width="1" height="1"/>"#
-        #expect(try fill(of: "r", style: ".a { fill: #f00; fill: color(rec2020 1 0 0) }", body: body) == .color(.hex(255, 0, 0)))
-        #expect(try fill(of: "r", style: ".a { fill: #f00; fill: color(display-p3 1 0 0) }", body: body) == .color(.p3(1, 0, 0)))
+        #expect(
+            try fill(of: "r", style: ".a { fill: #f00; fill: color(rec2020 1 0 0) }", body: body)
+                == .color(.hex(255, 0, 0))
+        )
+        #expect(
+            try fill(of: "r", style: ".a { fill: #f00; fill: color(display-p3 1 0 0) }", body: body)
+                == .color(.p3(1, 0, 0))
+        )
         #expect(try fill(of: "r", style: ".a { fill: red; fill: var(--x) }", body: body) == .color(.keyword(.red)))
         let inline = #"<rect id="r" style="fill: red; fill: var(--x)" width="1" height="1"/>"#
         #expect(try fill(of: "r", style: "", body: inline) == .color(.keyword(.red)))
@@ -363,9 +396,9 @@ struct ParserXMLStyleSheetCascadeTests {
     @Test
     func noneOverridesALowerRule() throws {
         let style = """
-        rect { clip-path: url(#c); mask: url(#m); filter: url(#f); transform: scale(2) }
-        #r { clip-path: none; mask: none; filter: none; transform: none }
-        """
+            rect { clip-path: url(#c); mask: url(#m); filter: url(#f); transform: scale(2) }
+            #r { clip-path: none; mask: none; filter: none; transform: none }
+            """
         let att = try cascaded("r", style: style, body: #"<rect id="r" width="1" height="1"/>"#)
         #expect(att.clipPath == DOM.noneURL)
         #expect(att.mask == DOM.noneURL)
@@ -376,11 +409,13 @@ struct ParserXMLStyleSheetCascadeTests {
     @Test
     func rootInlineStyleBeatsStyleSheet() throws {
         for selector in ["svg", ":root", "*"] {
-            let svg = try DOM.SVG.parse(xml: """
-            <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="green" style="fill: red">
-            <style>\(selector) { fill: blue; stroke: blue }</style>
-            </svg>
-            """)
+            let svg = try DOM.SVG.parse(
+                xml: """
+                    <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="green" style="fill: red">
+                    <style>\(selector) { fill: blue; stroke: blue }</style>
+                    </svg>
+                    """
+            )
             let att = DOM.presentationAttributes(for: svg, styles: svg.styles)
             #expect(att.fill == .color(.keyword(.red)))
             #expect(att.stroke == .color(.keyword(.blue)))
@@ -389,16 +424,18 @@ struct ParserXMLStyleSheetCascadeTests {
 
     @Test
     func stopPropertiesFromTheCascade() throws {
-        let svg = try DOM.SVG.parse(xml: """
-        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10">
-        <style>.st0 { stop-color: #00ff00; stop-opacity: 0.5 } .st1 { stop-color: red }</style>
-        <linearGradient id="g">
-          <stop offset="0" class="st0"/>
-          <stop offset="1" class="st1" style="stop-color: blue" stop-opacity="0.25"/>
-        </linearGradient>
-        <radialGradient id="r"><stop offset="0" class="st0"/></radialGradient>
-        </svg>
-        """)
+        let svg = try DOM.SVG.parse(
+            xml: """
+                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10">
+                <style>.st0 { stop-color: #00ff00; stop-opacity: 0.5 } .st1 { stop-color: red }</style>
+                <linearGradient id="g">
+                  <stop offset="0" class="st0"/>
+                  <stop offset="1" class="st1" style="stop-color: blue" stop-opacity="0.25"/>
+                </linearGradient>
+                <radialGradient id="r"><stop offset="0" class="st0"/></radialGradient>
+                </svg>
+                """
+        )
         let stops = try #require(svg.defs.linearGradients.first).stops
         #expect(stops[0].color == .hex(0, 255, 0))
         #expect(stops[0].opacity == 0.5)
@@ -413,11 +450,13 @@ struct ParserXMLStyleSheetCascadeTests {
         let rules = (0..<300).map { ".c\($0) { fill: #\(String(format: "%06x", $0)) }" }.joined(separator: "\n")
         let elements = (0..<5000).map { #"<rect class="x c\#($0 % 300)" width="1" height="1"/>"# }.joined()
         let siblings = "g > rect ~ rect + rect { stroke: red } svg rect:last-child { stroke-width: 2 }"
-        let svg = try DOM.SVG.parse(xml: """
-        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10">
-        <style>\(rules) \(siblings)</style><g>\(elements)</g>
-        </svg>
-        """)
+        let svg = try DOM.SVG.parse(
+            xml: """
+                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10">
+                <style>\(rules) \(siblings)</style><g>\(elements)</g>
+                </svg>
+                """
+        )
         let group = try #require(svg.childElements.first as? DOM.Group)
         #expect(group.childElements.count == 5000)
         let last = DOM.presentationAttributes(for: group.childElements[4999], styles: svg.styles)
@@ -445,13 +484,19 @@ struct ParserXMLStyleSheetCascadeTests {
         #expect(try #require(Selector.parse(".a:first-child")).compounds[0].pseudoClasses == [.firstChild])
 
         let body = #"<rect id="r" class="hierarchical-0:secondary" width="1" height="1"/>"#
-        #expect(try fill(of: "r", style: ".hierarchical-0:secondary { fill: red }", body: body) == .color(.keyword(.red)))
+        #expect(
+            try fill(of: "r", style: ".hierarchical-0:secondary { fill: red }", body: body) == .color(.keyword(.red))
+        )
     }
 
     @Test
     func cssWideKeywordsAreDropped() throws {
         let body = #"<text id="t" class="a" x="0" y="0">t</text>"#
-        let att = try cascaded("t", style: "text { font-family: Helvetica; fill: red } .a { font-family: inherit; fill: unset }", body: body)
+        let att = try cascaded(
+            "t",
+            style: "text { font-family: Helvetica; fill: red } .a { font-family: inherit; fill: unset }",
+            body: body
+        )
         #expect(att.fontFamily == [.name("Helvetica")])
         #expect(att.fill == .color(.keyword(.red)))
         let inline = #"<text id="t" style="fill: initial" x="0" y="0">t</text>"#
@@ -492,9 +537,13 @@ struct ParserXMLStyleSheetCascadeTests {
     }
 
     private func matcher(style: String, body: String) throws -> (DOM.StyleSheet.Matcher, XML.Element) {
-        let root = try XML.SAXParser.parse(data: Data("""
-        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10">\(body)</svg>
-        """.utf8))
+        let root = try XML.SAXParser.parse(
+            data: Data(
+                """
+                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10">\(body)</svg>
+                """.utf8
+            )
+        )
         let sheet = try XMLParser().parseStyleSheetElement(style)
         return (DOM.StyleSheet.Matcher(sheets: [sheet], root: root), root)
     }

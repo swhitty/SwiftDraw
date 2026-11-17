@@ -29,7 +29,6 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-
 @testable import SwiftDraw
 
 #if canImport(AppKit) && !targetEnvironment(macCatalyst)
@@ -43,10 +42,12 @@ struct CGClipMaskTests {
     @Test
     func clipPathUnitsObjectBoundingBox() throws {
         // bbox (0,0,16,16): clip to x in 8...16
-        let colors = try render(#"""
+        let colors = try render(
+            #"""
             <clipPath id="c" clipPathUnits="objectBoundingBox"><rect x="0.5" width="0.5" height="1" /></clipPath>
             <rect width="16" height="16" fill="red" clip-path="url(#c)" />
-            """#)
+            """#
+        )
         #expect(colors(4) == .white)
         #expect(colors(12) == .red)
     }
@@ -54,10 +55,12 @@ struct CGClipMaskTests {
     @Test
     func clipRuleFromClipPathContents() throws {
         // outer 0...16, hole 4...12; evenodd on the path cuts the hole
-        let colors = try render(#"""
+        let colors = try render(
+            #"""
             <clipPath id="c"><path clip-rule="evenodd" d="M0 0h16v16h-16z M4 0h8v16h-8z" /></clipPath>
             <rect width="16" height="16" fill="red" clip-path="url(#c)" />
-            """#)
+            """#
+        )
         #expect(colors(2) == .red)
         #expect(colors(8) == .white)
         #expect(colors(14) == .red)
@@ -65,13 +68,15 @@ struct CGClipMaskTests {
 
     @Test
     func mixedClipRulesUnion() throws {
-        let colors = try render(#"""
+        let colors = try render(
+            #"""
             <clipPath id="c">
               <rect width="4" height="16" clip-rule="evenodd" />
               <rect x="12" width="4" height="16" />
             </clipPath>
             <rect width="16" height="16" fill="red" clip-path="url(#c)" />
-            """#)
+            """#
+        )
         #expect(colors(2) == .red)
         #expect(colors(8) == .white)
         #expect(colors(14) == .red)
@@ -79,11 +84,13 @@ struct CGClipMaskTests {
 
     @Test
     func useInsideClipPath() throws {
-        let colors = try render(#"""
+        let colors = try render(
+            #"""
             <defs><rect id="r" width="4" height="16" /></defs>
             <clipPath id="c"><use xlink:href="#r" x="8" /></clipPath>
             <rect width="16" height="16" fill="red" clip-path="url(#c)" />
-            """#)
+            """#
+        )
         #expect(colors(4) == .white)
         #expect(colors(10) == .red)
         #expect(colors(14) == .white)
@@ -91,11 +98,13 @@ struct CGClipMaskTests {
 
     @Test
     func clipPathOnClipPath() throws {
-        let colors = try render(#"""
+        let colors = try render(
+            #"""
             <clipPath id="inner"><rect x="4" width="12" height="16" /></clipPath>
             <clipPath id="c" clip-path="url(#inner)"><rect width="10" height="16" /></clipPath>
             <rect width="16" height="16" fill="red" clip-path="url(#c)" />
-            """#)
+            """#
+        )
         #expect(colors(2) == .white)
         #expect(colors(6) == .red)
         #expect(colors(12) == .white)
@@ -103,10 +112,12 @@ struct CGClipMaskTests {
 
     @Test
     func maskContentUnitsObjectBoundingBox() throws {
-        let colors = try render(#"""
+        let colors = try render(
+            #"""
             <mask id="m" maskContentUnits="objectBoundingBox"><rect width="0.5" height="1" fill="white" /></mask>
             <rect x="8" width="8" height="16" fill="red" mask="url(#m)" />
-            """#)
+            """#
+        )
         #expect(colors(4) == .white)
         #expect(colors(10) == .red)
         #expect(colors(14) == .white)
@@ -114,20 +125,24 @@ struct CGClipMaskTests {
 
     @Test
     func maskRegionClipsMask() throws {
-        let colors = try render(#"""
+        let colors = try render(
+            #"""
             <mask id="m" x="0" y="0" width="0.25" height="1"><rect width="16" height="16" fill="white" /></mask>
             <rect width="16" height="16" fill="red" mask="url(#m)" />
-            """#)
+            """#
+        )
         #expect(colors(2) == .red)
         #expect(colors(8) == .white)
     }
 
     @Test
     func maskZeroRegionHidesElement() throws {
-        let colors = try render(#"""
+        let colors = try render(
+            #"""
             <mask id="m" width="0"><rect width="16" height="16" fill="white" /></mask>
             <rect width="16" height="16" fill="red" mask="url(#m)" />
-            """#)
+            """#
+        )
         #expect(colors(2) == .white)
         #expect(colors(8) == .white)
         #expect(colors(14) == .white)
@@ -136,14 +151,16 @@ struct CGClipMaskTests {
     @Test
     func filterWithMaskTypeClip() throws {
         // mixed clip-rules make the clip a mask; the blur stays inside the clipped columns
-        let colors = try render(#"""
+        let colors = try render(
+            #"""
             <filter id="f"><feGaussianBlur stdDeviation="0.5" /></filter>
             <clipPath id="c">
               <rect width="6" height="16" clip-rule="evenodd" />
               <rect x="10" width="6" height="16" />
             </clipPath>
             <rect width="16" height="16" fill="red" filter="url(#f)" clip-path="url(#c)" />
-            """#)
+            """#
+        )
         #expect(colors(2) == .red)
         #expect(colors(8) == .white)
         #expect(colors(13) == .red)
@@ -151,12 +168,14 @@ struct CGClipMaskTests {
 
     @Test
     func clipPathWithoutShapesClipsEverything() throws {
-        let colors = try render(#"""
+        let colors = try render(
+            #"""
             <clipPath id="c"><rect width="0" height="0" /></clipPath>
             <clipPath id="empty" />
             <rect width="16" height="16" fill="red" clip-path="url(#c)" />
             <rect width="16" height="16" fill="red" clip-path="url(#empty)" />
-            """#)
+            """#
+        )
         #expect(colors(2) == .white)
         #expect(colors(8) == .white)
         #expect(colors(13) == .white)
@@ -170,11 +189,11 @@ struct CGClipMaskTests {
 
     func render(_ body: String) throws -> (Int) -> Pixel {
         let xml = """
-        <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="16" height="16">
-            <rect width="16" height="16" fill="white" />
-            \(body)
-        </svg>
-        """
+            <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="16" height="16">
+                <rect width="16" height="16" fill="white" />
+                \(body)
+            </svg>
+            """
         let svg = try #require(SVG(xml: xml))
         let image = svg.rasterize(with: CGSize(width: 16, height: 16), scale: 1)
         let canvas = NSBitmapImageRep(pixelsWide: 16, pixelsHigh: 16)

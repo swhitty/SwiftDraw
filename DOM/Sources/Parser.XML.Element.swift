@@ -35,20 +35,30 @@ extension XMLParser {
     /// leaves it unset so the default applies, rather than invalidating the element.
     /// Sizes without a usable default (`width`, `height`, `r`) are still required.
     /// Units, percentages and `em`/`ex` resolve as in `resolveLength(_:_:)`.
-    func parseDefaultedLength(_ att: any AttributeParser, _ key: String, _ direction: LengthDirection) -> DOM.Coordinate? {
+    func parseDefaultedLength(
+        _ att: any AttributeParser,
+        _ key: String,
+        _ direction: LengthDirection
+    ) -> DOM.Coordinate? {
         try? parseLength(att, key, direction) as DOM.Coordinate?
     }
 
     func parseLine(_ att: any AttributeParser) throws -> DOM.Line {
         // x1, y1, x2 and y2 default to 0
-        DOM.Line(x1: parseDefaultedLength(att, "x1", .horizontal) ?? 0,
-                 y1: parseDefaultedLength(att, "y1", .vertical) ?? 0,
-                 x2: parseDefaultedLength(att, "x2", .horizontal) ?? 0,
-                 y2: parseDefaultedLength(att, "y2", .vertical) ?? 0)
+        DOM.Line(
+            x1: parseDefaultedLength(att, "x1", .horizontal) ?? 0,
+            y1: parseDefaultedLength(att, "y1", .vertical) ?? 0,
+            x2: parseDefaultedLength(att, "x2", .horizontal) ?? 0,
+            y2: parseDefaultedLength(att, "y2", .vertical) ?? 0
+        )
     }
 
     /// A non-negative length; a negative value is an error (SVG 2 §10.2, §10.3, §10.4).
-    func parseNonNegativeLength(_ att: any AttributeParser, _ key: String, _ direction: LengthDirection) throws -> DOM.Coordinate {
+    func parseNonNegativeLength(
+        _ att: any AttributeParser,
+        _ key: String,
+        _ direction: LengthDirection
+    ) throws -> DOM.Coordinate {
         let length: DOM.Coordinate = try parseLength(att, key, direction)
         guard length >= 0 else { throw XMLParser.Error.invalid }
         return length
@@ -62,18 +72,23 @@ extension XMLParser {
 
     func parseCircle(_ att: any AttributeParser) throws -> DOM.Circle {
         let r = try parseNonNegativeLength(att, "r", .other)
-        return DOM.Circle(cx: parseDefaultedLength(att, "cx", .horizontal),
-                          cy: parseDefaultedLength(att, "cy", .vertical),
-                          r: r)
+        return DOM.Circle(
+            cx: parseDefaultedLength(att, "cx", .horizontal),
+            cy: parseDefaultedLength(att, "cy", .vertical),
+            r: r
+        )
     }
 
     func parseEllipse(_ att: any AttributeParser) throws -> DOM.Ellipse {
         // SVG 2: an auto rx uses ry and vice versa; both auto is 0, which disables rendering
         let rx = parseAutoRadius(att, "rx", .horizontal)
         let ry = parseAutoRadius(att, "ry", .vertical)
-        return DOM.Ellipse(cx: parseDefaultedLength(att, "cx", .horizontal),
-                           cy: parseDefaultedLength(att, "cy", .vertical),
-                           rx: rx ?? ry ?? 0, ry: ry ?? rx ?? 0)
+        return DOM.Ellipse(
+            cx: parseDefaultedLength(att, "cx", .horizontal),
+            cy: parseDefaultedLength(att, "cy", .vertical),
+            rx: rx ?? ry ?? 0,
+            ry: ry ?? rx ?? 0
+        )
     }
 
     func parseRect(_ att: any AttributeParser) throws -> DOM.Rect {
@@ -105,8 +120,12 @@ extension XMLParser {
         let style = parseStyleDeclarations(e)
         let matched = styleContext.matcher?.match(e)
         // `em` and `ex` lengths of this element (and font-size inherited by its children)
-        lengthContext.fontSize = fontSize(attributes: attributes, style: style, matched: matched,
-                                          inheriting: lengthContext.fontSize)
+        lengthContext.fontSize = fontSize(
+            attributes: attributes,
+            style: style,
+            matched: matched,
+            inheriting: lengthContext.fontSize
+        )
 
         switch e.name {
         case "g": ge = try parseGroup(e)
@@ -142,7 +161,8 @@ extension XMLParser {
         ge.matchedStyle = matched
 
         if let id = ge.id, referenceContext.firstWithID.contains(ObjectIdentifier(e)),
-           referenceContext.elements[id] == nil {
+            referenceContext.elements[id] == nil
+        {
             referenceContext.elements[id] = ge
         }
         return ge
@@ -153,7 +173,8 @@ extension XMLParser {
         // each element inherits the font-size of its parent for `em` and `ex` lengths
         let fontSize = lengthContext.fontSize
         defer { lengthContext.fontSize = fontSize }
-        var stack: [(XML.Element, parent: (any ContainerElement)?, fontSize: DOM.Float)] = elements
+        var stack: [(XML.Element, parent: (any ContainerElement)?, fontSize: DOM.Float)] =
+            elements
             .reversed()
             .map { ($0, parent: nil, fontSize: fontSize) }
 
@@ -198,7 +219,8 @@ extension XMLParser {
     /// Kept out of line: the recursive `parse…s(_:)` walkers call it so their own frames stay small
     /// (500 nested groups must still fit the small stacks of test threads).
     @inline(never)
-    func appendSkippingInvalid<T>(_ array: inout [T], _ element: XML.Element, _ parse: (XML.Element) throws -> T) throws {
+    func appendSkippingInvalid<T>(_ array: inout [T], _ element: XML.Element, _ parse: (XML.Element) throws -> T) throws
+    {
         do {
             array.append(try parse(element))
         } catch is CancellationError {
@@ -210,7 +232,8 @@ extension XMLParser {
         }
     }
 
-    func parseError(for error: any Swift.Error, parsing element: XML.Element, with options: Options) -> XMLParser.Error? {
+    func parseError(for error: any Swift.Error, parsing element: XML.Element, with options: Options) -> XMLParser.Error?
+    {
         guard options.contains(.skipInvalidElements) == false else {
             Self.logParsingError(for: error, filename: filename, parsing: element)
             return nil
@@ -218,15 +241,19 @@ extension XMLParser {
 
         switch error {
         case let XMLParser.Error.invalidElement(name, error, line, column):
-            return .invalidElement(name: name,
-                                   error: error,
-                                   line: line,
-                                   column: column)
+            return .invalidElement(
+                name: name,
+                error: error,
+                line: line,
+                column: column
+            )
         default:
-            return .invalidElement(name: element.name,
-                                   error: error,
-                                   line: element.parsedLocation?.line,
-                                   column: element.parsedLocation?.column)
+            return .invalidElement(
+                name: element.name,
+                error: error,
+                line: element.parsedLocation?.line,
+                column: element.parsedLocation?.column
+            )
         }
     }
 
@@ -248,19 +275,23 @@ extension XMLParser {
 
     func parseAttributes(_ e: XML.Element) throws -> Attributes {
         guard let styleText = e.attributes["style"] else {
-            return Attributes(parser: ValueParser(),
-                              options: options,
-                              element: e.attributes,
-                              style: [:])
+            return Attributes(
+                parser: ValueParser(),
+                options: options,
+                element: e.attributes,
+                style: [:]
+            )
         }
 
         let style = try parseStyleAttributes(styleText)
         var element = e.attributes
         element["style"] = nil
-        return Attributes(parser: ValueParser(),
-                          options: options,
-                          element: element,
-                          style: style)
+        return Attributes(
+            parser: ValueParser(),
+            options: options,
+            element: element,
+            style: style
+        )
     }
 
     /// SVG 1.1 §11.4: `none` or a list of non-negative lengths / percentages; returns nil when invalid.
@@ -269,7 +300,8 @@ extension XMLParser {
         if trimmed == "none" {
             return []
         }
-        let tokens = trimmed
+        let tokens =
+            trimmed
             .split(whereSeparator: { $0 == "," || $0 == " " || $0 == "\t" || $0 == "\n" || $0 == "\r" })
             .map(String.init)
         guard !tokens.isEmpty else { return nil }
@@ -312,7 +344,9 @@ extension XMLParser {
 
     // style="" in source order: the last valid declaration of a property wins,
     // `!important` ones are kept apart so they can override `!important` stylesheet rules
-    func parseStyleDeclarations(_ e: XML.Element) -> (normal: DOM.PresentationAttributes, important: DOM.PresentationAttributes) {
+    func parseStyleDeclarations(
+        _ e: XML.Element
+    ) -> (normal: DOM.PresentationAttributes, important: DOM.PresentationAttributes) {
         guard let styleText = e.attributes["style"] else {
             return (DOM.PresentationAttributes(), DOM.PresentationAttributes())
         }
@@ -322,8 +356,10 @@ extension XMLParser {
         guard !important.isEmpty else {
             return (parsePresentationAttributes(declarations), DOM.PresentationAttributes())
         }
-        return (parsePresentationAttributes(declarations.filter { !$0.important }),
-                parsePresentationAttributes(important))
+        return (
+            parsePresentationAttributes(declarations.filter { !$0.important }),
+            parsePresentationAttributes(important)
+        )
     }
 
     // Declarations are parsed once as a dictionary; only properties that repeat are
@@ -476,7 +512,9 @@ extension XMLParser {
         // makes it a percentage of the font-size)
         let viewportWidth = lengthContext.viewports.last?.width
         func spacing(_ key: String) -> DOM.DashLength? {
-            guard let length = lenient({ try att.parseString(key) as String? }).flatMap(Self.parseSpacing) else { return nil }
+            guard let length = lenient({ try att.parseString(key) as String? }).flatMap(Self.parseSpacing) else {
+                return nil
+            }
             guard case .percentage(let percent) = length else { return length }
             return viewportWidth.map { .absolute(percent / 100 * $0) }
         }
@@ -488,7 +526,9 @@ extension XMLParser {
             el.transform = Self.isNone(val) ? [] : try? parseTransform(val)
         }
         // not inherited: it only applies to the element's own transform
-        el.transformOrigin = lenient { try att.parseString("transform-origin") as String? }.flatMap(parseTransformOrigin)
+        el.transformOrigin = lenient { try att.parseString("transform-origin") as String? }.flatMap(
+            parseTransformOrigin
+        )
 
         el.clipPath = urlOrNone(att, "clip-path")
         el.clipRule = lenient { try att.parseRaw("clip-rule") }
@@ -565,7 +605,8 @@ extension XMLParser {
             current.append(character)
         }
         entries.append(current)
-        return entries
+        return
+            entries
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
             .filter { !$0.isEmpty }
     }
@@ -593,11 +634,19 @@ extension XMLParser {
         }
     }
 
-    package static func logParsingError(for error: any Swift.Error, filename: String?, parsing element: XML.Element? = nil) {
+    package static func logParsingError(
+        for error: any Swift.Error,
+        filename: String?,
+        parsing element: XML.Element? = nil
+    ) {
         LogSink.error(makeParsingErrorMessage(for: error, filename: filename, parsing: element))
     }
 
-    package static func makeParsingErrorMessage(for error: any Swift.Error, filename: String?, parsing element: XML.Element? = nil) -> String {
+    package static func makeParsingErrorMessage(
+        for error: any Swift.Error,
+        filename: String?,
+        parsing element: XML.Element? = nil
+    ) -> String {
         let elementName = element.map { "<\($0.name)>" } ?? ""
         let filename = filename ?? ""
         switch error {
@@ -616,7 +665,8 @@ extension XMLParser {
             }
         default:
             if let location = element?.parsedLocation {
-                return "[parsing error] \(filename) \(elementName) line: \(location.line) column: \(location.column) error: \(error)"
+                return
+                    "[parsing error] \(filename) \(elementName) line: \(location.line) column: \(location.column) error: \(error)"
             } else {
                 return "[parsing error] \(filename) \(elementName) error: \(error)"
             }
@@ -625,7 +675,7 @@ extension XMLParser {
 }
 
 extension DOM.PresentationAttributes {
-    
+
     mutating func updateAttributes(from attributes: Self) {
         opacity = attributes.opacity
         display = attributes.display

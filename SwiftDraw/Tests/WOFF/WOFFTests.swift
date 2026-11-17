@@ -40,42 +40,42 @@ struct WOFFTests {
     @Test
     func parses_WOFF_from_Roboto() throws {
         let woff = try WOFF(contentsOf: Bundle.test.url(forResource: "Roboto-Regular.woff"))
-        
+
         #expect(woff.header.numTables > 0)
         #expect(!woff.tables.isEmpty)
         #expect(woff.fontData.count > 0)
     }
-    
+
     @Test
     func extracts_postscript_name_from_Roboto_WOFF() throws {
         let woff = try WOFF(contentsOf: Bundle.test.url(forResource: "Roboto-Regular.woff"))
-        
+
         #expect(woff.postScriptName == "Roboto-Regular")
     }
-    
+
     @Test
     func throws_on_invalid_data() {
         let invalidData = Data([0x00, 0x01, 0x02, 0x03])
-        
+
         #expect(throws: WOFFError.self) {
             try WOFF(data: invalidData)
         }
     }
-    
+
     @Test
     func throws_on_empty_data() {
         let emptyData = Data()
-        
+
         #expect(throws: WOFFError.self) {
             try WOFF(data: emptyData)
         }
     }
-    
+
     @Test
     func makes_CGFont_from_Roboto_WOFF() throws {
         let woff = try WOFF(contentsOf: Bundle.test.url(forResource: "Roboto-Regular.woff"))
         let cgFont = try woff.makeCGFont()
-        
+
         #expect(cgFont.postScriptName == "Roboto-Regular" as CFString)
     }
 }

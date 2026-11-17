@@ -137,7 +137,10 @@ extension LayerTree.Builder {
         collectTextCharacters(for: text, with: state).lengths
     }
 
-    private func collectTextCharacters(for text: DOM.Text, with state: State) -> (characters: [TextCharacter], lengths: [TextLength]) {
+    private func collectTextCharacters(
+        for text: DOM.Text,
+        with state: State
+    ) -> (characters: [TextCharacter], lengths: [TextLength]) {
         struct Lists {
             var range: Range<Int>
             var x: [DOM.Coordinate]
@@ -166,25 +169,51 @@ extension LayerTree.Builder {
                     guard spanState.display != .none else { continue }
                     let index = lists.count
                     let start = characters.count
-                    lists.append(Lists(range: start..<start, x: span.xList, y: span.yList,
-                                       dx: span.dxList, dy: span.dyList, rotate: span.rotateList))
+                    lists.append(
+                        Lists(
+                            range: start..<start,
+                            x: span.xList,
+                            y: span.yList,
+                            dx: span.dxList,
+                            dy: span.dyList,
+                            rotate: span.rotateList
+                        )
+                    )
                     collect(span.runs, state: spanState)
                     lists[index].range = start..<characters.count
                     if let length = span.textLength {
-                        lengths.append(TextLength(range: start..<characters.count, length: LayerTree.Float(length),
-                                                  adjust: span.lengthAdjust ?? .spacing))
+                        lengths.append(
+                            TextLength(
+                                range: start..<characters.count,
+                                length: LayerTree.Float(length),
+                                adjust: span.lengthAdjust ?? .spacing
+                            )
+                        )
                     }
                 }
             }
         }
 
-        lists.append(Lists(range: 0..<0, x: text.xList, y: text.yList,
-                           dx: text.dxList, dy: text.dyList, rotate: text.rotateList))
+        lists.append(
+            Lists(
+                range: 0..<0,
+                x: text.xList,
+                y: text.yList,
+                dx: text.dxList,
+                dy: text.dyList,
+                rotate: text.rotateList
+            )
+        )
         collect(text.runs, state: state)
         lists[0].range = 0..<characters.count
         if let length = text.textLength {
-            lengths.append(TextLength(range: 0..<characters.count, length: LayerTree.Float(length),
-                                      adjust: text.lengthAdjust ?? .spacing))
+            lengths.append(
+                TextLength(
+                    range: 0..<characters.count,
+                    length: LayerTree.Float(length),
+                    adjust: text.lengthAdjust ?? .spacing
+                )
+            )
         }
 
         for list in lists {
@@ -256,9 +285,17 @@ extension LayerTree.Builder {
 
         func flush() {
             guard let s = segment else { return }
-            current.runs.append(TextRunPlacement(string: s.string, state: s.state, origin: s.origin,
-                                                 advance: s.end - s.origin.x, extent: s.extent,
-                                                 rotate: s.rotate, glyphs: s.isNatural ? nil : s.glyphs))
+            current.runs.append(
+                TextRunPlacement(
+                    string: s.string,
+                    state: s.state,
+                    origin: s.origin,
+                    advance: s.end - s.origin.x,
+                    extent: s.extent,
+                    rotate: s.rotate,
+                    glyphs: s.isNatural ? nil : s.glyphs
+                )
+            )
             segment = nil
         }
 
@@ -282,8 +319,13 @@ extension LayerTree.Builder {
             return spacing
         }
         let advances = shaped.map(\.advance)
-        let fitted = Self.makeFittedSpacing(lengths, characters: characters, isDrawn: isDrawn,
-                                            advances: advances, spacings: spacings)
+        let fitted = Self.makeFittedSpacing(
+            lengths,
+            characters: characters,
+            isDrawn: isDrawn,
+            advances: advances,
+            spacings: spacings
+        )
         spacings = fitted.spacings
         let scales = fitted.scales
 
@@ -304,23 +346,37 @@ extension LayerTree.Builder {
             pen.y += character.dy
 
             if var s = segment, s.run == character.run, s.rotate == 0, character.rotate == 0,
-               s.scale == scale, !isAbsolute {
+                s.scale == scale, !isAbsolute
+            {
                 // spacing or a move between two characters: they are no longer where the font puts them
                 if s.spacing != 0 || isMoved { s.isNatural = false }
                 segment = s
             } else {
                 flush()
-                segment = Segment(string: "", state: character.state, run: character.run,
-                                  rotate: character.rotate, scale: scale, origin: pen,
-                                  isNatural: character.rotate == 0 && scale == 1, end: pen.x, extent: pen.x...pen.x)
+                segment = Segment(
+                    string: "",
+                    state: character.state,
+                    run: character.run,
+                    rotate: character.rotate,
+                    scale: scale,
+                    origin: pen,
+                    isNatural: character.rotate == 0 && scale == 1,
+                    end: pen.x,
+                    extent: pen.x...pen.x
+                )
             }
 
             segment?.string.append(character.character)
-            segment?.glyphs.append(contentsOf: shape.glyphs.map {
-                PlacedGlyph(fontName: $0.fontName, glyph: $0.glyph,
-                            position: LayerTree.Point(pen.x + $0.offset.x * scale, pen.y + $0.offset.y),
-                            scaleX: scale)
-            })
+            segment?.glyphs.append(
+                contentsOf: shape.glyphs.map {
+                    PlacedGlyph(
+                        fontName: $0.fontName,
+                        glyph: $0.glyph,
+                        position: LayerTree.Point(pen.x + $0.offset.x * scale, pen.y + $0.offset.y),
+                        scaleX: scale
+                    )
+                }
+            )
             let advance = shape.advance * scale
             let cell = min(pen.x, pen.x + advance)...max(pen.x, pen.x + advance)
             pen.x += advance
@@ -345,9 +401,15 @@ extension LayerTree.Builder {
     /// scaling their advances, the spacing between them and their glyphs (`spacingAndGlyphs`). The
     /// characters after the element move with it. An element whose characters a descendant already
     /// fitted, or that starts a new text chunk within itself, keeps its natural length.
-    static func makeFittedSpacing(_ lengths: [TextLength], characters: [TextCharacter], isDrawn: [Bool],
-                                  advances: [LayerTree.Float], spacings: [LayerTree.Float])
-    -> (spacings: [LayerTree.Float], scales: [LayerTree.Float]) {
+    static func makeFittedSpacing(
+        _ lengths: [TextLength],
+        characters: [TextCharacter],
+        isDrawn: [Bool],
+        advances: [LayerTree.Float],
+        spacings: [LayerTree.Float]
+    )
+        -> (spacings: [LayerTree.Float], scales: [LayerTree.Float])
+    {
         var spacings = spacings
         var scales = Array(repeating: LayerTree.Float(1), count: characters.count)
         var isFitted = Array(repeating: false, count: characters.count)
@@ -355,7 +417,8 @@ extension LayerTree.Builder {
         for length in lengths {
             let range = length.range.clamped(to: characters.indices)
             guard !range.contains(where: { isFitted[$0] }),
-                  !range.dropFirst().contains(where: { characters[$0].x != nil || characters[$0].y != nil }) else { continue }
+                !range.dropFirst().contains(where: { characters[$0].x != nil || characters[$0].y != nil })
+            else { continue }
             let members = range.filter { isDrawn[$0] }
             guard !members.isEmpty else { continue }
             // the space between consecutive characters: the spacing after one and the dx of the next
@@ -452,11 +515,22 @@ extension LayerTree.Builder {
                 }
                 let point = LayerTree.Point(run.origin.x + shift, run.origin.y)
                 let glyphs = run.glyphs?.map {
-                    PlacedGlyph(fontName: $0.fontName, glyph: $0.glyph,
-                                position: LayerTree.Point($0.position.x + shift, $0.position.y), scaleX: $0.scaleX)
+                    PlacedGlyph(
+                        fontName: $0.fontName,
+                        glyph: $0.glyph,
+                        position: LayerTree.Point($0.position.x + shift, $0.position.y),
+                        scaleX: $0.scaleX
+                    )
                 }
-                if let runContents = makeTextRunContents(run.string, glyphs: glyphs, at: point, with: state,
-                                                         rotate: run.rotate, for: text, bounds: textBounds) {
+                if let runContents = makeTextRunContents(
+                    run.string,
+                    glyphs: glyphs,
+                    at: point,
+                    with: state,
+                    rotate: run.rotate,
+                    for: text,
+                    bounds: textBounds
+                ) {
                     contents.append(runContents)
                 }
             }
@@ -476,9 +550,11 @@ extension LayerTree.Builder {
 
     /// `rotate` of a glyph: clockwise in degrees about `point`
     static func makeRotation(_ degrees: LayerTree.Float, about point: LayerTree.Point) -> [LayerTree.Transform] {
-        [.translate(tx: point.x, ty: point.y),
-         .rotate(radians: degrees * .pi / 180),
-         .translate(tx: -point.x, ty: -point.y)]
+        [
+            .translate(tx: point.x, ty: point.y),
+            .rotate(radians: degrees * .pi / 180),
+            .translate(tx: -point.x, ty: -point.y),
+        ]
     }
 
     /// SVG 2 §8.10 bounding box of text: the union of its glyph cells, each run's advance by its font's
@@ -490,7 +566,7 @@ extension LayerTree.Builder {
     }
 
     static func makeTextBounds(for chunks: [TextChunk], builder: LayerTree.Builder) -> LayerTree.Rect? {
-#if canImport(CoreText)
+        #if canImport(CoreText)
         var result: LayerTree.Rect?
         for chunk in chunks {
             let shift = chunk.shift
@@ -502,18 +578,24 @@ extension LayerTree.Builder {
                 let origin = LayerTree.Point(run.origin.x + shift, run.origin.y)
                 let baseline = origin.y + makeBaselineOffset(with: attributes, shifts: run.state.baselineShifts)
                 let extent = run.horizontalExtent
-                var cell = LayerTree.Rect(x: extent.lowerBound + shift, y: baseline - ascent,
-                                          width: extent.upperBound - extent.lowerBound, height: ascent + descent)
+                var cell = LayerTree.Rect(
+                    x: extent.lowerBound + shift,
+                    y: baseline - ascent,
+                    width: extent.upperBound - extent.lowerBound,
+                    height: ascent + descent
+                )
                 if run.rotate != 0 {
-                    cell = cell.applying(makeRotation(run.rotate, about: LayerTree.Point(origin.x, baseline)).toMatrix())
+                    cell = cell.applying(
+                        makeRotation(run.rotate, about: LayerTree.Point(origin.x, baseline)).toMatrix()
+                    )
                 }
                 result = result.map { $0.union(cell) } ?? cell
             }
         }
         return result
-#else
+        #else
         return nil
-#endif
+        #endif
     }
 
     /// One run of characters starting at `point` on the line, shifted to the baseline of its state.
@@ -521,11 +603,15 @@ extension LayerTree.Builder {
     /// - Parameter rotate: `rotate` of a single glyph, clockwise in degrees about its origin
     /// - Parameter glyphs: the run's glyphs placed one by one, on the line before the baseline shift;
     ///   nil draws `string` as text from `point`
-    func makeTextRunContents(_ string: String, glyphs: [PlacedGlyph]? = nil,
-                             at point: LayerTree.Point, with state: State,
-                             rotate: LayerTree.Float = 0,
-                             for text: DOM.Text? = nil,
-                             bounds: () -> LayerTree.Rect? = { nil }) -> LayerTree.Layer.Contents? {
+    func makeTextRunContents(
+        _ string: String,
+        glyphs: [PlacedGlyph]? = nil,
+        at point: LayerTree.Point,
+        with state: State,
+        rotate: LayerTree.Float = 0,
+        for text: DOM.Text? = nil,
+        bounds: () -> LayerTree.Rect? = { nil }
+    ) -> LayerTree.Layer.Contents? {
         // state already holds the cascaded font-family, font-size, font-weight, font-style and text-anchor
         let att = makeTextAttributes(with: state)
         let baseline = Self.makeBaselineOffset(with: att, shifts: state.baselineShifts)
@@ -534,11 +620,13 @@ extension LayerTree.Builder {
         let rotation = rotate == 0 ? [] : Self.makeRotation(rotate, about: point)
         let glyphRuns = glyphs.map { Self.makeGlyphRuns($0, attributes: att, baseline: baseline) }
 
-#if canImport(CoreText)
+        #if canImport(CoreText)
         // text painted with a paint server or a stroke is drawn as its glyph outlines, through the
         // shape pipeline, so it gets gradients, patterns, strokes and the text's bounding box for free
         if needsOutlines(for: state),
-           let outlines = glyphRuns.map(Self.makeGlyphOutlines) ?? CGProvider().createPath(from: string, at: point, with: att) {
+            let outlines = glyphRuns.map(Self.makeGlyphOutlines)
+                ?? CGProvider().createPath(from: string, at: point, with: att)
+        {
             var state = state
             // glyph outlines are designed for nonzero; fill-rule does not apply to text in browsers
             state.fillRule = .nonzero
@@ -553,7 +641,7 @@ extension LayerTree.Builder {
             guard let text else { return contents }
             return makePaintedContents(contents, for: text, with: state)
         }
-#endif
+        #endif
         let contents: LayerTree.Layer.Contents
         if let glyphRuns {
             guard !glyphRuns.isEmpty else { return nil }
@@ -575,8 +663,11 @@ extension LayerTree.Builder {
     }
 
     /// Placed glyphs in runs of one face, shifted to the baseline
-    static func makeGlyphRuns(_ glyphs: [PlacedGlyph], attributes: LayerTree.TextAttributes,
-                              baseline: LayerTree.Float) -> [LayerTree.GlyphRun] {
+    static func makeGlyphRuns(
+        _ glyphs: [PlacedGlyph],
+        attributes: LayerTree.TextAttributes,
+        baseline: LayerTree.Float
+    ) -> [LayerTree.GlyphRun] {
         var runs = [LayerTree.GlyphRun]()
         for glyph in glyphs {
             let position = LayerTree.Point(glyph.position.x, glyph.position.y + baseline)
@@ -584,14 +675,21 @@ extension LayerTree.Builder {
                 runs[runs.count - 1].glyphs.append(glyph.glyph)
                 runs[runs.count - 1].positions.append(position)
             } else {
-                runs.append(LayerTree.GlyphRun(attributes: attributes, fontName: glyph.fontName,
-                                               glyphs: [glyph.glyph], positions: [position], scaleX: glyph.scaleX))
+                runs.append(
+                    LayerTree.GlyphRun(
+                        attributes: attributes,
+                        fontName: glyph.fontName,
+                        glyphs: [glyph.glyph],
+                        positions: [position],
+                        scaleX: glyph.scaleX
+                    )
+                )
             }
         }
         return runs
     }
 
-#if canImport(CoreText)
+    #if canImport(CoreText)
     static func makeGlyphOutlines(_ runs: [LayerTree.GlyphRun]) -> CGPath? {
         let path = CGMutablePath()
         for run in runs {
@@ -601,12 +699,12 @@ extension LayerTree.Builder {
         }
         return path
     }
-#endif
+    #endif
 
     static func makeXOffset(width: Double, anchor: DOM.TextAnchor) -> LayerTree.Float {
         switch anchor {
         case .start:
-           return 0
+            return 0
         case .middle:
             return LayerTree.Float(-width / 2)
         case .end:
@@ -614,15 +712,17 @@ extension LayerTree.Builder {
         }
     }
 
-#if canImport(CoreText)
+    #if canImport(CoreText)
     /// The advance width of `text` in the font of `attributes`, kerned
     static func makeAdvance(for text: String, with attributes: LayerTree.TextAttributes) -> LayerTree.Float {
         let font = CGProvider.createFont(for: attributes)
         return LayerTree.Float(text.toWidth(font: font.font, synthesis: font.synthesis(for:)))
     }
 
-    static func makeBaselineOffset(with attributes: LayerTree.TextAttributes,
-                                   shifts: [BaselineShiftEntry] = []) -> LayerTree.Float {
+    static func makeBaselineOffset(
+        with attributes: LayerTree.TextAttributes,
+        shifts: [BaselineShiftEntry] = []
+    ) -> LayerTree.Float {
         let font = CGProvider.createFont(for: attributes).font
         var offset = makeYOffset(font: font, baseline: attributes.baseline)
         for entry in shifts {
@@ -634,7 +734,11 @@ extension LayerTree.Builder {
     /// How far `baseline-shift` raises the text (CSS Inline 3 §4.3, SVG 1.1 §10.9.2): `sub` and
     /// `super` by the font's own subscript and superscript offsets (its OS/2 table), percentages of
     /// the font-size it was declared at.
-    static func makeBaselineShift(_ shift: DOM.BaselineShift, font: CTFont, fontSize: LayerTree.Float) -> LayerTree.Float {
+    static func makeBaselineShift(
+        _ shift: DOM.BaselineShift,
+        font: CTFont,
+        fontSize: LayerTree.Float
+    ) -> LayerTree.Float {
         switch shift {
         case .baseline, .inherit:
             return 0
@@ -652,9 +756,13 @@ extension LayerTree.Builder {
     }
 
     /// `ySubscriptYOffset` and `ySuperscriptYOffset` of the font's OS/2 table, at `fontSize`
-    static func makeScriptOffsets(font: CTFont, fontSize: LayerTree.Float) -> (sub: LayerTree.Float, super: LayerTree.Float)? {
+    static func makeScriptOffsets(
+        font: CTFont,
+        fontSize: LayerTree.Float
+    ) -> (sub: LayerTree.Float, super: LayerTree.Float)? {
         guard let table = CTFontCopyTable(font, CTFontTableTag(kCTFontTableOS2), []) as Data?,
-              table.count >= 26 else { return nil }
+            table.count >= 26
+        else { return nil }
         func int16(_ offset: Int) -> LayerTree.Float {
             let index = table.startIndex + offset
             return LayerTree.Float(Int16(bitPattern: UInt16(table[index]) << 8 | UInt16(table[index + 1])))
@@ -663,13 +771,15 @@ extension LayerTree.Builder {
         guard unitsPerEm > 0 else { return nil }
         return (int16(16) / unitsPerEm * fontSize, int16(24) / unitsPerEm * fontSize)
     }
-#else
+    #else
     static func makeAdvance(for text: String, with attributes: LayerTree.TextAttributes) -> LayerTree.Float {
         0
     }
 
-    static func makeBaselineOffset(with attributes: LayerTree.TextAttributes,
-                                   shifts: [BaselineShiftEntry] = []) -> LayerTree.Float {
+    static func makeBaselineOffset(
+        with attributes: LayerTree.TextAttributes,
+        shifts: [BaselineShiftEntry] = []
+    ) -> LayerTree.Float {
         // no font metrics: only the shifts that are lengths
         shifts.reduce(0) { offset, entry in
             switch entry.shift {
@@ -680,9 +790,9 @@ extension LayerTree.Builder {
             }
         }
     }
-#endif
+    #endif
 
-#if canImport(CoreText)
+    #if canImport(CoreText)
     static func makeOffset(for text: String, with attributes: LayerTree.TextAttributes) -> LayerTree.Size {
         let font = CGProvider.createFont(for: attributes)
         let width = text.toWidth(font: font.font, synthesis: font.synthesis(for:))
@@ -716,11 +826,11 @@ extension LayerTree.Builder {
             return ascent * 0.5
         }
     }
-#else
+    #else
     static func makeOffset(for text: String, with attributes: LayerTree.TextAttributes) -> LayerTree.Size {
         return .zero
     }
-#endif
+    #endif
 
 }
 

@@ -58,8 +58,10 @@ struct FilterBitmapTests {
 
     @Test
     func wholeOffset() {
-        let source = FilterBitmap.make([[red, blue, clear],
-                                        [clear, clear, clear]])
+        let source = FilterBitmap.make([
+            [red, blue, clear],
+            [clear, clear, clear],
+        ])
         let shifted = FilterBitmap.offset(source, dx: 1, dy: 1)
         #expect(shifted.row(0) == [clear, clear, clear])
         #expect(shifted.row(1) == [clear, red, blue])
@@ -77,9 +79,11 @@ struct FilterBitmapTests {
         #expect(FilterBitmap.offset(source, dx: 0.9999, dy: 0).row(0) == [clear, white, clear])
 
         // inside a solid area the colour is exact, both axes interpolate at its edges
-        let solid = FilterBitmap.make([[white, white, white],
-                                       [white, white, white],
-                                       [clear, clear, clear]])
+        let solid = FilterBitmap.make([
+            [white, white, white],
+            [white, white, white],
+            [clear, clear, clear],
+        ])
         let diagonal = FilterBitmap.offset(solid, dx: 0.5, dy: 0.5)
         #expect(diagonal.row(0) == [[64, 64, 64, 64], [128, 128, 128, 128], [128, 128, 128, 128]])
         #expect(diagonal.row(1) == [[128, 128, 128, 128], white, white])
@@ -109,21 +113,50 @@ struct FilterBitmapTests {
         #expect(composite(.lighter) == [255, 0, 128, 255])
         // Figma's inner shadow: in2 - in, clamped
         #expect(composite(.arithmetic(k1: 0, k2: -1, k3: 1, k4: 0)) == clear)
-        #expect(FilterBitmap.composite(b, a, op: .arithmetic(k1: 0, k2: -1, k3: 1, k4: 0), linear: false).pixel(x: 0, y: 0) == [127, 0, 0, 127])
+        #expect(
+            FilterBitmap.composite(b, a, op: .arithmetic(k1: 0, k2: -1, k3: 1, k4: 0), linear: false).pixel(x: 0, y: 0)
+                == [127, 0, 0, 127]
+        )
         // k4 alone fills transparent pixels; colour never exceeds alpha
-        #expect(FilterBitmap.composite(FilterBitmap.make([[clear]]), FilterBitmap.make([[clear]]),
-                                       op: .arithmetic(k1: 0, k2: 0, k3: 0, k4: 0.5), linear: false).pixel(x: 0, y: 0) == [128, 128, 128, 128])
-        #expect(FilterBitmap.composite(a, b, op: .arithmetic(k1: 0, k2: 1, k3: 0, k4: -0.5), linear: false).pixel(x: 0, y: 0) == [128, 0, 0, 128])
+        #expect(
+            FilterBitmap.composite(
+                FilterBitmap.make([[clear]]),
+                FilterBitmap.make([[clear]]),
+                op: .arithmetic(k1: 0, k2: 0, k3: 0, k4: 0.5),
+                linear: false
+            ).pixel(x: 0, y: 0) == [128, 128, 128, 128]
+        )
+        #expect(
+            FilterBitmap.composite(a, b, op: .arithmetic(k1: 0, k2: 1, k3: 0, k4: -0.5), linear: false).pixel(
+                x: 0,
+                y: 0
+            ) == [128, 0, 0, 128]
+        )
         // huge coefficients cannot produce NaN pixels
-        #expect(FilterBitmap.composite(a, a, op: .arithmetic(k1: 3e38, k2: 3e38, k3: -3e38, k4: 0), linear: false).pixel(x: 0, y: 0).count == 4)
+        #expect(
+            FilterBitmap.composite(a, a, op: .arithmetic(k1: 3e38, k2: 3e38, k3: -3e38, k4: 0), linear: false).pixel(
+                x: 0,
+                y: 0
+            ).count == 4
+        )
     }
 
     // Filter Effects 1 §9.16: the first node at the bottom
     @Test
     func mergeOrder() {
-        let merged = FilterBitmap.merge([FilterBitmap.make([[red]]), FilterBitmap.make([[halfBlue]])], width: 1, height: 1, linear: false)
+        let merged = FilterBitmap.merge(
+            [FilterBitmap.make([[red]]), FilterBitmap.make([[halfBlue]])],
+            width: 1,
+            height: 1,
+            linear: false
+        )
         #expect(merged.pixel(x: 0, y: 0) == [127, 0, 128, 255])
-        let reversed = FilterBitmap.merge([FilterBitmap.make([[halfBlue]]), FilterBitmap.make([[red]])], width: 1, height: 1, linear: false)
+        let reversed = FilterBitmap.merge(
+            [FilterBitmap.make([[halfBlue]]), FilterBitmap.make([[red]])],
+            width: 1,
+            height: 1,
+            linear: false
+        )
         #expect(reversed.pixel(x: 0, y: 0) == red)
         #expect(FilterBitmap.merge([], width: 1, height: 1, linear: false).pixel(x: 0, y: 0) == clear)
     }
@@ -178,19 +211,40 @@ struct FilterBitmapTests {
         let source = FilterBitmap.make([[red, [0, 0, 0, 3], clear]])
         // Figma's hard alpha: any coverage becomes opaque black
         let hardAlpha: [Float] = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 127, 0]
-        #expect(FilterBitmap.colorMatrix(source, matrix: hardAlpha, linear: false).row(0) == [[0, 0, 0, 255], [0, 0, 0, 255], clear])
+        #expect(
+            FilterBitmap.colorMatrix(source, matrix: hardAlpha, linear: false).row(0) == [
+                [0, 0, 0, 255], [0, 0, 0, 255], clear,
+            ]
+        )
 
         // a grey of red: 0.2126 in sRGB values, 0.2126 of linear light in linearRGB
         let grey = DOM.Filter.ColorMatrix.saturate(0).values
-        #expect(FilterBitmap.colorMatrix(FilterBitmap.make([[red]]), matrix: grey, linear: false).pixel(x: 0, y: 0) == [54, 54, 54, 255])
-        #expect(FilterBitmap.colorMatrix(FilterBitmap.make([[red]]), matrix: grey, linear: true).pixel(x: 0, y: 0) == [127, 127, 127, 255])
+        #expect(
+            FilterBitmap.colorMatrix(FilterBitmap.make([[red]]), matrix: grey, linear: false).pixel(x: 0, y: 0) == [
+                54, 54, 54, 255,
+            ]
+        )
+        #expect(
+            FilterBitmap.colorMatrix(FilterBitmap.make([[red]]), matrix: grey, linear: true).pixel(x: 0, y: 0) == [
+                127, 127, 127, 255,
+            ]
+        )
 
         // the matrix works on straight colour: a half transparent red stays red
         let identity = DOM.Filter.ColorMatrix.identity
-        #expect(FilterBitmap.colorMatrix(FilterBitmap.make([[[128, 0, 0, 128]]]), matrix: identity, linear: true).pixel(x: 0, y: 0) == [128, 0, 0, 128])
+        #expect(
+            FilterBitmap.colorMatrix(FilterBitmap.make([[[128, 0, 0, 128]]]), matrix: identity, linear: true).pixel(
+                x: 0,
+                y: 0
+            ) == [128, 0, 0, 128]
+        )
         // an alpha offset gives transparent pixels black coverage
         let opaque: [Float] = [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1]
-        #expect(FilterBitmap.colorMatrix(FilterBitmap.make([[clear]]), matrix: opaque, linear: false).pixel(x: 0, y: 0) == [0, 0, 0, 255])
+        #expect(
+            FilterBitmap.colorMatrix(FilterBitmap.make([[clear]]), matrix: opaque, linear: false).pixel(x: 0, y: 0) == [
+                0, 0, 0, 255,
+            ]
+        )
         // a wrong matrix size is a pass through
         #expect(FilterBitmap.colorMatrix(source, matrix: [1, 2], linear: false) == source)
     }
@@ -200,8 +254,14 @@ struct FilterBitmapTests {
     func linearRGBCompositing() {
         let halfWhite = FilterBitmap.make([[[128, 128, 128, 128]]])
         let black = FilterBitmap.make([[[0, 0, 0, 255]]])
-        #expect(FilterBitmap.composite(halfWhite, black, op: .over, linear: false).pixel(x: 0, y: 0) == [128, 128, 128, 255])
-        #expect(FilterBitmap.composite(halfWhite, black, op: .over, linear: true).pixel(x: 0, y: 0) == [188, 188, 188, 255])
+        #expect(
+            FilterBitmap.composite(halfWhite, black, op: .over, linear: false).pixel(x: 0, y: 0) == [
+                128, 128, 128, 255,
+            ]
+        )
+        #expect(
+            FilterBitmap.composite(halfWhite, black, op: .over, linear: true).pixel(x: 0, y: 0) == [188, 188, 188, 255]
+        )
 
         // dark colours survive a linearRGB pass unchanged
         let dark = FilterBitmap.make([[[3, 5, 1, 255], [2, 1, 0, 128]]])
@@ -246,16 +306,27 @@ struct FilterBitmapTests {
     func evaluateFigmaDropShadow() {
         let source = makeSquare(size: 8, from: 2, to: 4)
         let region = LayerTree.Rect(x: 0, y: 0, width: 8, height: 8)
-        let filter = LayerTree.FilterLayer(region: region, primitives: [
-            primitive(.flood(.rgba(r: 0, g: 0, b: 0, a: 0, space: .srgb)), [], region),
-            primitive(.colorMatrix([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 127, 0]), [.sourceAlpha], region),
-            primitive(.offset(dx: 0, dy: 4), [.primitive(1)], region),
-            primitive(.gaussianBlur(stdDeviation: 0, stdDeviationY: 0), [.primitive(2)], region),
-            primitive(.composite(.out), [.primitive(3), .primitive(1)], region),
-            primitive(.colorMatrix([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.25, 0]), [.primitive(4)], region),
-            primitive(.blend(.normal), [.primitive(5), .primitive(0)], region),
-            primitive(.blend(.normal), [.sourceGraphic, .primitive(6)], region)
-        ])
+        let filter = LayerTree.FilterLayer(
+            region: region,
+            primitives: [
+                primitive(.flood(.rgba(r: 0, g: 0, b: 0, a: 0, space: .srgb)), [], region),
+                primitive(
+                    .colorMatrix([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 127, 0]),
+                    [.sourceAlpha],
+                    region
+                ),
+                primitive(.offset(dx: 0, dy: 4), [.primitive(1)], region),
+                primitive(.gaussianBlur(stdDeviation: 0, stdDeviationY: 0), [.primitive(2)], region),
+                primitive(.composite(.out), [.primitive(3), .primitive(1)], region),
+                primitive(
+                    .colorMatrix([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.25, 0]),
+                    [.primitive(4)],
+                    region
+                ),
+                primitive(.blend(.normal), [.primitive(5), .primitive(0)], region),
+                primitive(.blend(.normal), [.sourceGraphic, .primitive(6)], region),
+            ]
+        )
 
         let result = filter.evaluate(source: source, environment: .init(transform: .identity, blur: { _, _, _ in }))
         #expect(result.pixel(x: 3, y: 3) == white)
@@ -270,13 +341,16 @@ struct FilterBitmapTests {
     func evaluateInkscapeDropShadow() {
         let source = makeSquare(size: 8, from: 1, to: 3, color: red)
         let region = LayerTree.Rect(x: 0, y: 0, width: 8, height: 8)
-        let filter = LayerTree.FilterLayer(region: region, primitives: [
-            primitive(.flood(.rgba(r: 0, g: 0, b: 0, a: 0.5, space: .srgb)), [], region),
-            primitive(.composite(.in), [.primitive(0), .sourceGraphic], region),
-            primitive(.gaussianBlur(stdDeviation: 1, stdDeviationY: 1), [.primitive(1)], region),
-            primitive(.offset(dx: 2, dy: 2), [.primitive(2)], region),
-            primitive(.composite(.over), [.sourceGraphic, .primitive(3)], region)
-        ])
+        let filter = LayerTree.FilterLayer(
+            region: region,
+            primitives: [
+                primitive(.flood(.rgba(r: 0, g: 0, b: 0, a: 0.5, space: .srgb)), [], region),
+                primitive(.composite(.in), [.primitive(0), .sourceGraphic], region),
+                primitive(.gaussianBlur(stdDeviation: 1, stdDeviationY: 1), [.primitive(1)], region),
+                primitive(.offset(dx: 2, dy: 2), [.primitive(2)], region),
+                primitive(.composite(.over), [.sourceGraphic, .primitive(3)], region),
+            ]
+        )
 
         var deviations = [(Float, Float)]()
         let environment = LayerTree.FilterLayer.Environment(
@@ -295,10 +369,13 @@ struct FilterBitmapTests {
     func evaluateMapsUserSpaceToPixels() {
         let source = makeSquare(size: 8, from: 3, to: 3)
         let region = LayerTree.Rect(x: -100, y: -100, width: 200, height: 200)
-        let filter = LayerTree.FilterLayer(region: region, primitives: [
-            primitive(.gaussianBlur(stdDeviation: 3, stdDeviationY: 1), [.sourceGraphic], region),
-            primitive(.offset(dx: 1, dy: 1), [.primitive(0)], region)
-        ])
+        let filter = LayerTree.FilterLayer(
+            region: region,
+            primitives: [
+                primitive(.gaussianBlur(stdDeviation: 3, stdDeviationY: 1), [.sourceGraphic], region),
+                primitive(.offset(dx: 1, dy: 1), [.primitive(0)], region),
+            ]
+        )
         var deviations = [(Float, Float)]()
         let environment = LayerTree.FilterLayer.Environment(
             transform: LayerTree.Transform.Matrix(a: 2, b: 0, c: 0, d: -2, tx: 0, ty: 8),
@@ -316,10 +393,13 @@ struct FilterBitmapTests {
     func evaluateDisabledPrimitiveIsTransparent() {
         let source = makeSquare(size: 4, from: 0, to: 3)
         let region = LayerTree.Rect(x: 0, y: 0, width: 4, height: 4)
-        let filter = LayerTree.FilterLayer(region: region, primitives: [
-            primitive(.offset(dx: 0, dy: 0), [.sourceGraphic], .zero),
-            primitive(.merge, [.primitive(0), .transparent], region)
-        ])
+        let filter = LayerTree.FilterLayer(
+            region: region,
+            primitives: [
+                primitive(.offset(dx: 0, dy: 0), [.sourceGraphic], .zero),
+                primitive(.merge, [.primitive(0), .transparent], region),
+            ]
+        )
         let result = filter.evaluate(source: source, environment: .init(transform: .identity, blur: { _, _, _ in }))
         #expect(result == FilterBitmap(width: 4, height: 4))
     }
@@ -329,15 +409,21 @@ struct FilterBitmapTests {
     func evaluateKeepsSharedResults() {
         let source = makeSquare(size: 4, from: 1, to: 2)
         let region = LayerTree.Rect(x: 0, y: 0, width: 4, height: 4)
-        let filter = LayerTree.FilterLayer(region: region, primitives: [
-            primitive(.offset(dx: 1, dy: 0), [.sourceGraphic], region),
-            primitive(.gaussianBlur(stdDeviation: 1, stdDeviationY: 1), [.primitive(0)], region),
-            primitive(.merge, [.primitive(1), .primitive(0), .sourceGraphic], region)
-        ])
+        let filter = LayerTree.FilterLayer(
+            region: region,
+            primitives: [
+                primitive(.offset(dx: 1, dy: 0), [.sourceGraphic], region),
+                primitive(.gaussianBlur(stdDeviation: 1, stdDeviationY: 1), [.primitive(0)], region),
+                primitive(.merge, [.primitive(1), .primitive(0), .sourceGraphic], region),
+            ]
+        )
         // a "blur" that clears its bitmap
-        let environment = LayerTree.FilterLayer.Environment(transform: .identity, blur: { bitmap, _, _ in
-            bitmap = FilterBitmap(width: bitmap.width, height: bitmap.height)
-        })
+        let environment = LayerTree.FilterLayer.Environment(
+            transform: .identity,
+            blur: { bitmap, _, _ in
+                bitmap = FilterBitmap(width: bitmap.width, height: bitmap.height)
+            }
+        )
         let result = filter.evaluate(source: source, environment: environment)
         #expect(result.pixel(x: 1, y: 1) == white)
         #expect(result.pixel(x: 3, y: 1) == white)
@@ -347,11 +433,21 @@ struct FilterBitmapTests {
     @Test
     func floodColorFromEnvironment() {
         let region = LayerTree.Rect(x: 0, y: 0, width: 2, height: 2)
-        let filter = LayerTree.FilterLayer(region: region, primitives: [
-            primitive(.flood(.rgba(r: 1, g: 0, b: 0, a: 1, space: .p3)), [], LayerTree.Rect(x: 0, y: 0, width: 1, height: 2))
-        ])
-        let environment = LayerTree.FilterLayer.Environment(transform: .identity, blur: { _, _, _ in },
-                                                            color: { _ in SIMD4(0, 1, 0, 1) })
+        let filter = LayerTree.FilterLayer(
+            region: region,
+            primitives: [
+                primitive(
+                    .flood(.rgba(r: 1, g: 0, b: 0, a: 1, space: .p3)),
+                    [],
+                    LayerTree.Rect(x: 0, y: 0, width: 1, height: 2)
+                )
+            ]
+        )
+        let environment = LayerTree.FilterLayer.Environment(
+            transform: .identity,
+            blur: { _, _, _ in },
+            color: { _ in SIMD4(0, 1, 0, 1) }
+        )
         let result = filter.evaluate(source: FilterBitmap(width: 2, height: 2), environment: environment)
         #expect(result.row(0) == [[0, 255, 0, 255], clear])
     }
@@ -359,18 +455,22 @@ struct FilterBitmapTests {
 
 private extension FilterBitmapTests {
 
-    func primitive(_ effect: LayerTree.FilterLayer.Effect,
-                   _ inputs: [LayerTree.FilterLayer.Input],
-                   _ subregion: LayerTree.Rect) -> LayerTree.FilterLayer.Primitive {
+    func primitive(
+        _ effect: LayerTree.FilterLayer.Effect,
+        _ inputs: [LayerTree.FilterLayer.Input],
+        _ subregion: LayerTree.Rect
+    ) -> LayerTree.FilterLayer.Primitive {
         LayerTree.FilterLayer.Primitive(effect: effect, inputs: inputs, subregion: subregion, colorInterpolation: .sRGB)
     }
 
     func makeSquare(size: Int, from: Int, to: Int, color: [UInt8]? = nil) -> FilterBitmap {
         var rows = [[[UInt8]]]()
         for y in 0..<size {
-            rows.append((0..<size).map { x in
-                (from...to).contains(x) && (from...to).contains(y) ? (color ?? white) : clear
-            })
+            rows.append(
+                (0..<size).map { x in
+                    (from...to).contains(x) && (from...to).contains(y) ? (color ?? white) : clear
+                }
+            )
         }
         return FilterBitmap.make(rows)
     }

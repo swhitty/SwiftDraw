@@ -44,11 +44,13 @@ extension View {
         if #available(iOS 15.0, macOS 12.0, tvOS 15.0, watchOS 8.0, *) {
             task(id: id, priority: priority, action)
         } else {
-            modifier(CompatibilityTaskModifier(
-                id: id,
-                priority: priority,
-                action: action
-            ))
+            modifier(
+                CompatibilityTaskModifier(
+                    id: id,
+                    priority: priority,
+                    action: action
+                )
+            )
         }
     }
 }

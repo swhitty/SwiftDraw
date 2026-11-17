@@ -34,7 +34,7 @@ package extension DOM {
     final class RadialGradient: Element {
         package typealias Units = LinearGradient.Units
         package typealias SpreadMethod = LinearGradient.SpreadMethod
-        
+
         package var id: String
         package var r: Coordinate?
         package var cx: Coordinate?
@@ -70,7 +70,7 @@ package extension DOM {
             self.stops = []
             self.gradientTransform = []
         }
-        
+
         package struct Stop: Equatable {
             package var offset: Float
             package var color: Color
@@ -86,7 +86,7 @@ package extension DOM {
 }
 
 extension DOM.RadialGradient: Equatable {
-    package static func ==(lhs: DOM.RadialGradient, rhs: DOM.RadialGradient) -> Bool {
+    package static func == (lhs: DOM.RadialGradient, rhs: DOM.RadialGradient) -> Bool {
         return lhs.id == rhs.id && lhs.stops == rhs.stops
     }
 }

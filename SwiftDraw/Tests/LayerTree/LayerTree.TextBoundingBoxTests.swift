@@ -40,12 +40,14 @@ import CoreText
 struct LayerTreeTextBoundingBoxTests {
 
     private func parse(_ body: String) throws -> DOM.SVG {
-        try DOM.SVG.parse(xml: """
-        <svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" font-family="Helvetica" font-size="20">
-          <linearGradient id="g"><stop offset="0" stop-color="red"/><stop offset="1" stop-color="blue"/></linearGradient>
-          \(body)
-        </svg>
-        """)
+        try DOM.SVG.parse(
+            xml: """
+                <svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" font-family="Helvetica" font-size="20">
+                  <linearGradient id="g"><stop offset="0" stop-color="red"/><stop offset="1" stop-color="blue"/></linearGradient>
+                  \(body)
+                </svg>
+                """
+        )
     }
 
     private func shapes(in layer: LayerTree.Layer) -> [(LayerTree.StrokeAttributes, LayerTree.FillAttributes)] {
@@ -59,10 +61,11 @@ struct LayerTreeTextBoundingBoxTests {
     }
 
     private func layers(in layer: LayerTree.Layer) -> [LayerTree.Layer] {
-        [layer] + layer.contents.flatMap { contents -> [LayerTree.Layer] in
-            guard case .layer(let child) = contents else { return [] }
-            return layers(in: child)
-        }
+        [layer]
+            + layer.contents.flatMap { contents -> [LayerTree.Layer] in
+                guard case .layer(let child) = contents else { return [] }
+                return layers(in: child)
+            }
     }
 
     @Test
@@ -76,7 +79,8 @@ struct LayerTreeTextBoundingBoxTests {
         let shape = LayerTree.Shape.rect(within: LayerTree.Rect(x: 10, y: 10, width: 10, height: 10), radii: .zero)
 
         guard case let .shape(_, stroke, fill) = builder.makeShapeContents(from: shape, with: state, boundingBox: box),
-              case let .shape(_, plainStroke, plainFill) = builder.makeShapeContents(from: shape, with: state) else {
+            case let .shape(_, plainStroke, plainFill) = builder.makeShapeContents(from: shape, with: state)
+        else {
             Issue.record("expected shapes")
             return
         }
@@ -94,17 +98,26 @@ struct LayerTreeTextBoundingBoxTests {
         state.fill = .url(try #require(URL(string: "#g")))
         let shape = LayerTree.Shape.rect(within: LayerTree.Rect(x: 10, y: 10, width: 10, height: 10), radii: .zero)
         let layer = LayerTree.Layer()
-        layer.appendContents(builder.makeShapeContents(from: shape, with: state,
-                                                       boundingBox: LayerTree.Rect(x: 0, y: 0, width: 100, height: 50)))
+        layer.appendContents(
+            builder.makeShapeContents(
+                from: shape,
+                with: state,
+                boundingBox: LayerTree.Rect(x: 0, y: 0, width: 100, height: 50)
+            )
+        )
 
-        let generator = LayerTree.CommandGenerator(provider: LayerTreeProvider(), size: .init(200, 200), options: .default)
+        let generator = LayerTree.CommandGenerator(
+            provider: LayerTreeProvider(),
+            size: .init(200, 200),
+            options: .default
+        )
         let commands = generator.renderCommands(for: layer, colorConverter: .default)
         // the gradient's unit square maps onto the given box, not the 10×10 shape
         #expect(commands.contains { if case .scale(100, 50) = $0 { true } else { false } })
         #expect(!commands.contains { if case .scale(10, 10) = $0 { true } else { false } })
     }
 
-#if canImport(CoreText)
+    #if canImport(CoreText)
     @Test
     func textBoundsAreTheUnionOfItsGlyphCells() throws {
         let svg = try parse(#"<text x="10" y="100">Te<tspan font-size="40">xt</tspan></text>"#)
@@ -131,7 +144,9 @@ struct LayerTreeTextBoundingBoxTests {
         let builder = LayerTree.Builder(svg: svg)
         // the text inherits the root's font-family and font-size
         let root = builder.createState(for: svg, inheriting: .init())
-        let bounds = try #require(builder.makeTextBounds(for: text, with: builder.createState(for: text, inheriting: root)))
+        let bounds = try #require(
+            builder.makeTextBounds(for: text, with: builder.createState(for: text, inheriting: root))
+        )
         let fills = shapes(in: builder.makeLayer()).map(\.1)
         #expect(fills.count == 2)
         #expect(fills.allSatisfy { $0.boundingBox == bounds })
@@ -140,7 +155,8 @@ struct LayerTreeTextBoundingBoxTests {
     @Test
     func rotatedGlyphsArePaintedInTheTextsSpace() throws {
         // the outlines are turned, not drawn in a turned layer, so the gradient does not turn with them
-        let layer = LayerTree.Builder(svg: try parse(#"<text x="10" y="100" fill="url(#g)" rotate="0 30">AB</text>"#)).makeLayer()
+        let layer = LayerTree.Builder(svg: try parse(#"<text x="10" y="100" fill="url(#g)" rotate="0 30">AB</text>"#))
+            .makeLayer()
         #expect(shapes(in: layer).count == 2)
         let transforms = layers(in: layer).map(\.transform)
         #expect(transforms.allSatisfy { $0.isEmpty })
@@ -148,7 +164,11 @@ struct LayerTreeTextBoundingBoxTests {
 
     @Test
     func strokeAttributesReachTheOutlines() throws {
-        let layer = LayerTree.Builder(svg: try parse(#"<text x="10" y="100" stroke="blue" stroke-width="3" stroke-dasharray="2 1" stroke-linejoin="round" stroke-opacity="0.5">Text</text>"#)).makeLayer()
+        let layer = LayerTree.Builder(
+            svg: try parse(
+                #"<text x="10" y="100" stroke="blue" stroke-width="3" stroke-dasharray="2 1" stroke-linejoin="round" stroke-opacity="0.5">Text</text>"#
+            )
+        ).makeLayer()
         let stroke = try #require(shapes(in: layer).first?.0)
         #expect(stroke.width == 3)
         #expect(stroke.join == .round)
@@ -158,7 +178,9 @@ struct LayerTreeTextBoundingBoxTests {
 
     @Test
     func paintOrderDrawsTheStrokeOfTextFirst() throws {
-        let layer = LayerTree.Builder(svg: try parse(#"<text x="10" y="100" fill="green" stroke="blue" paint-order="stroke">Text</text>"#)).makeLayer()
+        let layer = LayerTree.Builder(
+            svg: try parse(#"<text x="10" y="100" fill="green" stroke="blue" paint-order="stroke">Text</text>"#)
+        ).makeLayer()
         let ordered = try #require(layers(in: layer).first { $0.isPaintOrdered })
         let painted = shapes(in: ordered)
         try #require(painted.count == 2)
@@ -168,17 +190,23 @@ struct LayerTreeTextBoundingBoxTests {
 
     @Test
     func paintOrderOnATspanAppliesToItsRunOnly() throws {
-        let layer = LayerTree.Builder(svg: try parse(#"<text x="10" y="100" fill="green" stroke="blue">Te<tspan paint-order="stroke fill">xt</tspan></text>"#)).makeLayer()
+        let layer = LayerTree.Builder(
+            svg: try parse(
+                #"<text x="10" y="100" fill="green" stroke="blue">Te<tspan paint-order="stroke fill">xt</tspan></text>"#
+            )
+        ).makeLayer()
         #expect(layers(in: layer).filter(\.isPaintOrdered).count == 1)
         #expect(shapes(in: layer).count == 3)
     }
 
     @Test
     func objectBoundingBoxClipOnTextUsesItsBounds() throws {
-        let svg = try parse("""
-        <clipPath id="c" clipPathUnits="objectBoundingBox"><rect width="0.5" height="1"/></clipPath>
-        <text x="10" y="100" clip-path="url(#c)">Text</text>
-        """)
+        let svg = try parse(
+            """
+            <clipPath id="c" clipPathUnits="objectBoundingBox"><rect width="0.5" height="1"/></clipPath>
+            <text x="10" y="100" clip-path="url(#c)">Text</text>
+            """
+        )
         #expect(layers(in: LayerTree.Builder(svg: svg).makeLayer()).contains { !$0.clip.isEmpty })
     }
 
@@ -190,13 +218,19 @@ struct LayerTreeTextBoundingBoxTests {
         path.closeSubpath()
         path.addQuadCurve(to: CGPoint(x: 6, y: 0), control: CGPoint(x: 3, y: 3))
 
-        #expect(path.makePath().segments == [
-            .move(to: LayerTree.Point(0, 0)),
-            .cubic(to: LayerTree.Point(30, 0), control1: LayerTree.Point(10, 20), control2: LayerTree.Point(20, 20)),
-            .close,
-            // after a close the curve starts from the start of the subpath
-            .cubic(to: LayerTree.Point(6, 0), control1: LayerTree.Point(2, 2), control2: LayerTree.Point(4, 2))
-        ])
+        #expect(
+            path.makePath().segments == [
+                .move(to: LayerTree.Point(0, 0)),
+                .cubic(
+                    to: LayerTree.Point(30, 0),
+                    control1: LayerTree.Point(10, 20),
+                    control2: LayerTree.Point(20, 20)
+                ),
+                .close,
+                // after a close the curve starts from the start of the subpath
+                .cubic(to: LayerTree.Point(6, 0), control1: LayerTree.Point(2, 2), control2: LayerTree.Point(4, 2)),
+            ]
+        )
     }
-#endif
+    #endif
 }

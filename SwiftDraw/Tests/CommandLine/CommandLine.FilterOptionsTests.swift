@@ -36,8 +36,10 @@ import Testing
 struct CommandLineFilterOptionsTests {
 
     private func options(_ args: String...) throws -> SVG.Options {
-        try CommandLine.parseConfiguration(from: ["swiftdraw", "file.svg", "--format", "png"] + args,
-                                           baseDirectory: URL(fileURLWithPath: "/")).options
+        try CommandLine.parseConfiguration(
+            from: ["swiftdraw", "file.svg", "--format", "png"] + args,
+            baseDirectory: URL(fileURLWithPath: "/")
+        ).options
     }
 
     @Test

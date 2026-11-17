@@ -29,7 +29,6 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-
 @testable import SwiftDrawDOM
 import Testing
 
@@ -252,10 +251,13 @@ struct ParserSVGTests {
 
     @Test
     func clipPathPresentationAttributes() throws {
-        let node = XML.Element(name: "clipPath", attributes: [
-            "id": "c", "clipPathUnits": "objectBoundingBox", "clip-rule": "evenodd",
-            "transform": "translate(1 2)", "clip-path": "url(#d)"
-        ])
+        let node = XML.Element(
+            name: "clipPath",
+            attributes: [
+                "id": "c", "clipPathUnits": "objectBoundingBox", "clip-rule": "evenodd",
+                "transform": "translate(1 2)", "clip-path": "url(#d)",
+            ]
+        )
         let parsed = try XMLParser().parseClipPath(node)
         #expect(parsed.clipPathUnits == .objectBoundingBox)
         #expect(parsed.attributes.clipRule == .evenodd)
@@ -272,10 +274,13 @@ struct ParserSVGTests {
 
     @Test
     func maskUnitsAndRegion() throws {
-        let node = XML.Element(name: "mask", attributes: [
-            "id": "m", "maskUnits": "userSpaceOnUse", "maskContentUnits": "objectBoundingBox",
-            "x": "5", "y": "10%", "width": "abc"
-        ])
+        let node = XML.Element(
+            name: "mask",
+            attributes: [
+                "id": "m", "maskUnits": "userSpaceOnUse", "maskContentUnits": "objectBoundingBox",
+                "x": "5", "y": "10%", "width": "abc",
+            ]
+        )
         let parsed = try XMLParser().parseMask(node)
         #expect(parsed.maskUnits == .userSpaceOnUse)
         #expect(parsed.maskContentUnits == .objectBoundingBox)
@@ -307,15 +312,17 @@ struct ParserSVGTests {
 
     @Test
     func use() throws {
-        let svg = try DOM.SVG.parse(xml: #"""
-        <?xml version="1.0" encoding="UTF-8"?>
-        <svg width="64" height="64" version="1.1" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-                <rect id="a" x="10" y="20" width="30" height="40" />
-            </defs>
-            <circle id="b" cx="50" cy="60" r="70" />
-        </svg>
-        """#)
+        let svg = try DOM.SVG.parse(
+            xml: #"""
+                <?xml version="1.0" encoding="UTF-8"?>
+                <svg width="64" height="64" version="1.1" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <rect id="a" x="10" y="20" width="30" height="40" />
+                    </defs>
+                    <circle id="b" cx="50" cy="60" r="70" />
+                </svg>
+                """#
+        )
 
         let rect = try #require(svg.firstGraphicsElement(with: "a") as? DOM.Rect)
         #expect(rect.id == "a")
@@ -326,15 +333,17 @@ struct ParserSVGTests {
 
     @Test
     func missingNamespce() throws {
-        let svg = try DOM.SVG.parse(xml: #"""
-        <?xml version="1.0" encoding="UTF-8"?>
-        <svg width="64" height="64" version="1.1">
-            <defs>
-                <rect id="a" x="10" y="20" width="30" height="40" />
-            </defs>
-            <circle id="b" cx="50" cy="60" r="70" />
-        </svg>
-        """#)
+        let svg = try DOM.SVG.parse(
+            xml: #"""
+                <?xml version="1.0" encoding="UTF-8"?>
+                <svg width="64" height="64" version="1.1">
+                    <defs>
+                        <rect id="a" x="10" y="20" width="30" height="40" />
+                    </defs>
+                    <circle id="b" cx="50" cy="60" r="70" />
+                </svg>
+                """#
+        )
 
         let rect = try #require(svg.firstGraphicsElement(with: "a") as? DOM.Rect)
         #expect(rect.id == "a")
@@ -349,14 +358,16 @@ struct ParserSVGTests {
         let groupClose = String(repeating: "</g>", count: 500)
 
         // If this throws, the test will fail automatically
-        _ = try DOM.SVG.parse(xml: #"""
-            <?xml version="1.0" encoding="UTF-8"?>
-            <svg width="64" height="64" version="1.1">
-                \#(groupOpen)
-                <circle id="b" cx="50" cy="60" r="70" />
-                \#(groupClose)
-            </svg>
-            """#)
+        _ = try DOM.SVG.parse(
+            xml: #"""
+                <?xml version="1.0" encoding="UTF-8"?>
+                <svg width="64" height="64" version="1.1">
+                    \#(groupOpen)
+                    <circle id="b" cx="50" cy="60" r="70" />
+                    \#(groupClose)
+                </svg>
+                """#
+        )
     }
 
     @Test
@@ -366,13 +377,15 @@ struct ParserSVGTests {
                 task?.cancel()
             }
 
-            _ = try DOM.SVG.parse(xml: #"""
-                <svg width="64" height="64">
-                    <g>
-                        <circle cx="32" cy="32" r="16" />
-                    </g>
-                </svg>
-                """#)
+            _ = try DOM.SVG.parse(
+                xml: #"""
+                    <svg width="64" height="64">
+                        <g>
+                            <circle cx="32" cy="32" r="16" />
+                        </g>
+                    </svg>
+                    """#
+            )
         }
 
         await #expect(throws: CancellationError.self) {

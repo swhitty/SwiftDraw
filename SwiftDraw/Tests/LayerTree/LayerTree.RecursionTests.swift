@@ -29,7 +29,6 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-
 import Foundation
 import SwiftDrawDOM
 import Testing
@@ -40,9 +39,11 @@ import Testing
 struct LayerTreeRecursionTests {
 
     private func parse(_ body: String) throws -> DOM.SVG {
-        try DOM.SVG.parse(xml: """
-        <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="200" height="200">\(body)</svg>
-        """)
+        try DOM.SVG.parse(
+            xml: """
+                <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="200" height="200">\(body)</svg>
+                """
+        )
     }
 
     /// Every element in the document with an id, including the contents of masks, patterns and markers.
@@ -74,64 +75,97 @@ struct LayerTreeRecursionTests {
     // MARK: - references dropped
 
     static let recursive: [(name: String, body: String, invalid: [String])] = [
-        ("pattern self-recursive", """
-        <pattern id="p1" patternUnits="userSpaceOnUse" width="40" height="25">
-          <rect id="r1" width="40" height="25" fill="url(#p1)" stroke="green"/>
-        </pattern>
-        <rect width="160" height="160" fill="url(#p1)"/>
-        """, ["r1.fill"]),
-        ("pattern recursive on child drops only the reference closing the cycle", """
-        <pattern id="p1" patternUnits="userSpaceOnUse" width="40" height="25">
-          <rect id="r1" width="40" height="25" fill="url(#p2)"/>
-        </pattern>
-        <pattern id="p2" patternUnits="userSpaceOnUse" width="40" height="25">
-          <rect id="r2" width="40" height="25" fill="url(#p1)"/>
-        </pattern>
-        """, ["r2.fill"]),
-        ("pattern stroke recursive through three patterns", """
-        <pattern id="p1" width="1" height="1"><rect id="r1" width="1" height="1" stroke="url(#p2)"/></pattern>
-        <pattern id="p2" width="1" height="1"><rect id="r2" width="1" height="1" stroke="url(#p3)"/></pattern>
-        <pattern id="p3" width="1" height="1"><rect id="r3" width="1" height="1" stroke="url(#p1)"/></pattern>
-        """, ["r3.stroke"]),
-        ("pattern recursive on an inherited fill", """
-        <g fill="url(#p1)">
-          <pattern id="p1" patternUnits="userSpaceOnUse" width="40" height="40">
-            <rect id="r1" width="20" height="20" fill="green"/>
-            <rect id="r2" x="22" y="22" width="16" height="16"/>
-          </pattern>
-        </g>
-        """, ["r2.fill"]),
-        ("mask self-recursive", """
-        <mask id="m1"><rect id="r1" width="160" height="160" fill="white" mask="url(#m1)"/></mask>
-        """, ["r1.mask"]),
-        ("mask recursive through three masks", """
-        <mask id="m1"><rect id="r1" width="1" height="1" mask="url(#m2)"/></mask>
-        <mask id="m2"><rect id="r2" width="1" height="1" mask="url(#m3)"/></mask>
-        <mask id="m3"><rect id="r3" width="1" height="1" mask="url(#m1)"/></mask>
-        """, ["r3.mask"]),
-        ("marker recursive via mask, the mask first", """
-        <mask id="m1"><path id="p1" d="M 40 140 L 160 140" stroke="white" marker-start="url(#k1)"/></mask>
-        <marker id="k1"><rect id="r1" width="36" height="36" mask="url(#m1)"/></marker>
-        """, ["r1.mask"]),
-        ("marker recursive via pattern, the marker first", """
-        <marker id="k1"><rect id="r1" width="36" height="36" fill="url(#p1)"/></marker>
-        <pattern id="p1" width="20" height="20"><path id="p2" d="M 2 10 L 18 10" marker-start="url(#k1)"/></pattern>
-        """, ["p2.markerStart"]),
-        ("mask recursive on an inherited marker", """
-        <g marker-start="url(#k1)">
-          <mask id="m1"><path id="p1" d="M 40 160 L 160 160" stroke="white"/></mask>
-        </g>
-        <marker id="k1"><rect id="r1" width="36" height="36" mask="url(#m1)"/></marker>
-        """, ["r1.mask"]),
-        ("each copy a use draws is checked on its own", """
-        <marker id="k1"><use href="#p1"/></marker>
-        <marker id="k2"><use href="#p1"/></marker>
-        <path id="p1" d="M 1 1 5 3 1 5" marker-start="url(#k1)" marker-end="url(#k2)"/>
-        """, ["p1.markerEnd@1", "p1.markerStart@1", "p1.markerStart@1"]),
-        ("nested definitions referencing their parent are not recursive", """
-        <mask id="m1"><mask id="m2"><rect id="r1" width="200" height="200" mask="url(#m1)"/></mask></mask>
-        <marker id="k1"><marker id="k2"><path id="p1" d="M 0 0 L 10 0" marker-start="url(#k1)"/></marker></marker>
-        """, [])
+        (
+            "pattern self-recursive",
+            """
+            <pattern id="p1" patternUnits="userSpaceOnUse" width="40" height="25">
+              <rect id="r1" width="40" height="25" fill="url(#p1)" stroke="green"/>
+            </pattern>
+            <rect width="160" height="160" fill="url(#p1)"/>
+            """, ["r1.fill"]
+        ),
+        (
+            "pattern recursive on child drops only the reference closing the cycle",
+            """
+            <pattern id="p1" patternUnits="userSpaceOnUse" width="40" height="25">
+              <rect id="r1" width="40" height="25" fill="url(#p2)"/>
+            </pattern>
+            <pattern id="p2" patternUnits="userSpaceOnUse" width="40" height="25">
+              <rect id="r2" width="40" height="25" fill="url(#p1)"/>
+            </pattern>
+            """, ["r2.fill"]
+        ),
+        (
+            "pattern stroke recursive through three patterns",
+            """
+            <pattern id="p1" width="1" height="1"><rect id="r1" width="1" height="1" stroke="url(#p2)"/></pattern>
+            <pattern id="p2" width="1" height="1"><rect id="r2" width="1" height="1" stroke="url(#p3)"/></pattern>
+            <pattern id="p3" width="1" height="1"><rect id="r3" width="1" height="1" stroke="url(#p1)"/></pattern>
+            """, ["r3.stroke"]
+        ),
+        (
+            "pattern recursive on an inherited fill",
+            """
+            <g fill="url(#p1)">
+              <pattern id="p1" patternUnits="userSpaceOnUse" width="40" height="40">
+                <rect id="r1" width="20" height="20" fill="green"/>
+                <rect id="r2" x="22" y="22" width="16" height="16"/>
+              </pattern>
+            </g>
+            """, ["r2.fill"]
+        ),
+        (
+            "mask self-recursive",
+            """
+            <mask id="m1"><rect id="r1" width="160" height="160" fill="white" mask="url(#m1)"/></mask>
+            """, ["r1.mask"]
+        ),
+        (
+            "mask recursive through three masks",
+            """
+            <mask id="m1"><rect id="r1" width="1" height="1" mask="url(#m2)"/></mask>
+            <mask id="m2"><rect id="r2" width="1" height="1" mask="url(#m3)"/></mask>
+            <mask id="m3"><rect id="r3" width="1" height="1" mask="url(#m1)"/></mask>
+            """, ["r3.mask"]
+        ),
+        (
+            "marker recursive via mask, the mask first",
+            """
+            <mask id="m1"><path id="p1" d="M 40 140 L 160 140" stroke="white" marker-start="url(#k1)"/></mask>
+            <marker id="k1"><rect id="r1" width="36" height="36" mask="url(#m1)"/></marker>
+            """, ["r1.mask"]
+        ),
+        (
+            "marker recursive via pattern, the marker first",
+            """
+            <marker id="k1"><rect id="r1" width="36" height="36" fill="url(#p1)"/></marker>
+            <pattern id="p1" width="20" height="20"><path id="p2" d="M 2 10 L 18 10" marker-start="url(#k1)"/></pattern>
+            """, ["p2.markerStart"]
+        ),
+        (
+            "mask recursive on an inherited marker",
+            """
+            <g marker-start="url(#k1)">
+              <mask id="m1"><path id="p1" d="M 40 160 L 160 160" stroke="white"/></mask>
+            </g>
+            <marker id="k1"><rect id="r1" width="36" height="36" mask="url(#m1)"/></marker>
+            """, ["r1.mask"]
+        ),
+        (
+            "each copy a use draws is checked on its own",
+            """
+            <marker id="k1"><use href="#p1"/></marker>
+            <marker id="k2"><use href="#p1"/></marker>
+            <path id="p1" d="M 1 1 5 3 1 5" marker-start="url(#k1)" marker-end="url(#k2)"/>
+            """, ["p1.markerEnd@1", "p1.markerStart@1", "p1.markerStart@1"]
+        ),
+        (
+            "nested definitions referencing their parent are not recursive",
+            """
+            <mask id="m1"><mask id="m2"><rect id="r1" width="200" height="200" mask="url(#m1)"/></mask></mask>
+            <marker id="k1"><marker id="k2"><path id="p1" d="M 0 0 L 10 0" marker-start="url(#k1)"/></marker></marker>
+            """, []
+        ),
     ]
 
     @Test(arguments: recursive)
@@ -160,11 +194,11 @@ struct LayerTreeRecursionTests {
     func recursiveUseOfAnAncestorDrawsNothing() throws {
         // structure/use/indirect-recursive-2: Chrome and resvg draw the rect once, not a copy through the use
         let body = """
-        <g id="g1">
-          <use id="u1" x="20" y="20" href="#g1"/>
-          <rect width="10" height="10" fill="red"/>
-        </g>
-        """
+            <g id="g1">
+              <use id="u1" x="20" y="20" href="#g1"/>
+              <rect width="10" height="10" fill="red"/>
+            </g>
+            """
         #expect(try fills(body).count == 1)
         let svg = try parse(body)
         let use = try #require(svg.firstGraphicsElement(with: "u1") as? DOM.Use)
@@ -173,10 +207,12 @@ struct LayerTreeRecursionTests {
 
     @Test
     func useOfARecursiveUseIsNotRecursive() throws {
-        let svg = try parse("""
-        <g id="g1"><use id="u1" href="#g1"/><rect width="10" height="10"/></g>
-        <use id="u2" href="#g1"/>
-        """)
+        let svg = try parse(
+            """
+            <g id="g1"><use id="u1" href="#g1"/><rect width="10" height="10"/></g>
+            <use id="u2" href="#g1"/>
+            """
+        )
         let builder = LayerTree.Builder(svg: svg)
         let u1 = try #require(svg.firstGraphicsElement(with: "u1") as? DOM.Use)
         let u2 = try #require(svg.firstGraphicsElement(with: "u2") as? DOM.Use)
@@ -187,10 +223,12 @@ struct LayerTreeRecursionTests {
     @Test
     func selfRecursiveMaskIsIgnoredInsideItself() throws {
         // masking/mask/self-recursive: the rect inside the mask draws unmasked, so the mask is not empty
-        let svg = try parse("""
-        <mask id="m1"><rect id="r1" width="160" height="160" fill="white" mask="url(#m1)"/></mask>
-        <rect id="r2" width="160" height="160" fill="green" mask="url(#m1)"/>
-        """)
+        let svg = try parse(
+            """
+            <mask id="m1"><rect id="r1" width="160" height="160" fill="white" mask="url(#m1)"/></mask>
+            <rect id="r2" width="160" height="160" fill="green" mask="url(#m1)"/>
+            """
+        )
         let builder = LayerTree.Builder(svg: svg)
         let r2 = try #require(svg.firstGraphicsElement(with: "r2"))
         let mask = try #require(builder.createMaskLayer(for: r2))
@@ -206,14 +244,16 @@ struct LayerTreeRecursionTests {
 
     @Test
     func patternContentsInheritFromThePatternsAncestors() throws {
-        let fills = try fills("""
-        <g fill="blue">
-          <pattern id="p1" patternUnits="userSpaceOnUse" width="10" height="10">
-            <rect width="5" height="5"/>
-          </pattern>
-        </g>
-        <rect width="20" height="20" fill="url(#p1)"/>
-        """)
+        let fills = try fills(
+            """
+            <g fill="blue">
+              <pattern id="p1" patternUnits="userSpaceOnUse" width="10" height="10">
+                <rect width="5" height="5"/>
+              </pattern>
+            </g>
+            <rect width="20" height="20" fill="url(#p1)"/>
+            """
+        )
         guard case let .pattern(pattern) = fills.first else {
             Issue.record("expected a pattern fill")
             return
@@ -225,12 +265,14 @@ struct LayerTreeRecursionTests {
 
     @Test
     func nestedDefinitionsAreFound() throws {
-        let svg = try parse("""
-        <pattern id="p1" width="1" height="1">
-          <g fill="red"><pattern id="p2" width="1" height="1"/></g>
-          <mask id="m1"><marker id="k1"/></mask>
-        </pattern>
-        """)
+        let svg = try parse(
+            """
+            <pattern id="p1" width="1" height="1">
+              <g fill="red"><pattern id="p2" width="1" height="1"/></g>
+              <mask id="m1"><marker id="k1"/></mask>
+            </pattern>
+            """
+        )
         #expect(svg.defs.patterns.map(\.id) == ["p1", "p2"])
         #expect(svg.defs.masks.map(\.id) == ["m1"])
         #expect(svg.defs.markers.map(\.id) == ["k1"])
@@ -249,7 +291,7 @@ struct LayerTreeRecursionTests {
             .setAlpha(0.5),
             .pushTransparencyLayer,
             .popTransparencyLayer,
-            .popTransparencyLayer
+            .popTransparencyLayer,
         ]
         let optimized = LayerTree.CommandOptimizer<LayerTreeTypes>().optimizeCommands(commands)
         #expect(optimized.count == commands.count)

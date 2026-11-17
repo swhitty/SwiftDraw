@@ -39,7 +39,7 @@ package extension DOM {
         case rgbf(DOM.Float, DOM.Float, DOM.Float, DOM.Float)
         case p3(DOM.Float, DOM.Float, DOM.Float)
         case hex(UInt8, UInt8, UInt8)
-        
+
         // see: https://www.w3.org/TR/SVG11/types.html#ColorKeywords
         package enum Keyword: String {
             case aliceblue
@@ -196,7 +196,7 @@ package extension DOM {
 }
 
 package extension DOM.Color.Keyword {
-    
+
     // each color keyword maps to an rgbi
     var rgbi: (UInt8, UInt8, UInt8) {
         switch self {

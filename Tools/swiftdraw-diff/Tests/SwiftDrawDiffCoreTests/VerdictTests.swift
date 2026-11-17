@@ -7,12 +7,12 @@ struct VerdictTests {
     @Test(arguments: [
         // webkit, resvg, webkit↔resvg (fractions), expected; match is 1%
         (0.0, 0.0, 0.0, Verdict.pass),
-        (0.009, 0.009, 0.5, .pass),                 // both close enough, even if the references disagree
-        (0.20, 0.0, 0.20, .webkitDiffers),          // e.g. WebKit's text-anchor offset
-        (0.0, 0.30, 0.30, .resvgDiffers),           // e.g. a CSS filter neither WebKit's <img> nor SwiftDraw supports
+        (0.009, 0.009, 0.5, .pass),  // both close enough, even if the references disagree
+        (0.20, 0.0, 0.20, .webkitDiffers),  // e.g. WebKit's text-anchor offset
+        (0.0, 0.30, 0.30, .resvgDiffers),  // e.g. a CSS filter neither WebKit's <img> nor SwiftDraw supports
         (0.30, 0.30, 0.0, .swiftdrawBug),
         (0.30, 0.30, 0.20, .unclear),
-        (0.01, 0.0, 0.01, .webkitDiffers),          // the threshold is exclusive
+        (0.01, 0.0, 0.01, .webkitDiffers),  // the threshold is exclusive
     ])
     func verdict(webkit: Double, resvg: Double, webkitResvg: Double, expected: Verdict) {
         #expect(Verdict(webkit: webkit, resvg: resvg, webkitResvg: webkitResvg, match: 0.01) == expected)
@@ -20,7 +20,7 @@ struct VerdictTests {
 
     @Test(arguments: [
         // with text, resvg decides where all three differ; everything else is as without
-        (0.30, 0.30, 0.20, Verdict.swiftdrawBug),   // WebKit's anchor offset no longer makes it unclear
+        (0.30, 0.30, 0.20, Verdict.swiftdrawBug),  // WebKit's anchor offset no longer makes it unclear
         (0.20, 0.0, 0.20, .webkitDiffers),
         (0.0, 0.30, 0.30, .resvgDiffers),
         (0.0, 0.0, 0.0, .pass),
@@ -44,7 +44,9 @@ struct VerdictTests {
 
     @Test
     func encodesAsKebabCase() {
-        #expect(Verdict.allCases.map(\.rawValue) == ["pass", "webkit-differs", "resvg-differs", "swiftdraw-bug", "unclear"])
+        #expect(
+            Verdict.allCases.map(\.rawValue) == ["pass", "webkit-differs", "resvg-differs", "swiftdraw-bug", "unclear"]
+        )
     }
 }
 
@@ -57,18 +59,25 @@ struct CompareCategoryTests {
         ([0.6], 10, .regressed),
         ([-0.6], 10, .improved),
         ([0.0, 0.0], 0, .unchanged),
-        ([0.6, 0.0], 10, .regressed),               // further from WebKit, no closer to resvg
-        ([0.0, 0.6], 10, .regressed),               // further from resvg, no closer to WebKit
-        ([0.6, 0.4], 10, .regressed),               // a little closer to resvg is within tolerance
-        ([0.6, -0.6], 10, .mixed),                  // e.g. fixing WebKit's text-anchor offset
+        ([0.6, 0.0], 10, .regressed),  // further from WebKit, no closer to resvg
+        ([0.0, 0.6], 10, .regressed),  // further from resvg, no closer to WebKit
+        ([0.6, 0.4], 10, .regressed),  // a little closer to resvg is within tolerance
+        ([0.6, -0.6], 10, .mixed),  // e.g. fixing WebKit's text-anchor offset
         ([-0.6, 0.6], 10, .mixed),
         ([-0.6, 0.0], 10, .improved),
         ([0.3, -0.3], 10, .changed),
-        ([], 10, .error),                           // no reference rendered
+        ([], 10, .error),  // no reference rendered
     ])
     func category(deltas: [Double], pixelsChanged: Int, expected: CompareCategory) {
-        #expect(CompareCategory.of(baseRendered: true, headRendered: true,
-                                   deltas: deltas, pixelsChanged: pixelsChanged, tolerance: 0.5) == expected)
+        #expect(
+            CompareCategory.of(
+                baseRendered: true,
+                headRendered: true,
+                deltas: deltas,
+                pixelsChanged: pixelsChanged,
+                tolerance: 0.5
+            ) == expected
+        )
     }
 
     @Test(arguments: [
@@ -78,8 +87,16 @@ struct CompareCategoryTests {
         ([0.2], .changed),
     ])
     func missingReference(deltas: [Double], expected: CompareCategory) {
-        #expect(CompareCategory.of(baseRendered: true, headRendered: true, deltas: deltas, pixelsChanged: 10,
-                                   tolerance: 0.5, missingReference: true) == expected)
+        #expect(
+            CompareCategory.of(
+                baseRendered: true,
+                headRendered: true,
+                deltas: deltas,
+                pixelsChanged: 10,
+                tolerance: 0.5,
+                missingReference: true
+            ) == expected
+        )
     }
 
     @Test

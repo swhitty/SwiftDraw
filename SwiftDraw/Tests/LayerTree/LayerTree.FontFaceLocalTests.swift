@@ -29,7 +29,6 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-
 #if canImport(CoreText)
 @testable import SwiftDraw
 @testable import SwiftDrawDOM
@@ -39,8 +38,10 @@ import Testing
 
 struct LayerTreeFontFaceLocalTests {
 
-    @Test(arguments: [("Helvetica-Bold", "Helvetica-Bold"), ("helvetica-bold", "Helvetica-Bold"),
-                      ("Helvetica Light", "Helvetica-Light"), ("HELVETICA LIGHT", "Helvetica-Light")])
+    @Test(arguments: [
+        ("Helvetica-Bold", "Helvetica-Bold"), ("helvetica-bold", "Helvetica-Bold"),
+        ("Helvetica Light", "Helvetica-Light"), ("HELVETICA LIGHT", "Helvetica-Light"),
+    ])
     func resolvesInstalledFontByPostScriptOrFullName(name: String, postScriptName: String) {
         #expect(CGProvider.installedFontPostScriptName(name) == postScriptName)
     }
@@ -52,22 +53,32 @@ struct LayerTreeFontFaceLocalTests {
     }
 
     private func fonts(_ src: String) throws -> [LayerTree.TextAttributes.Font] {
-        let svg = try DOM.SVG.parse(xml: """
-        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"><style>
-          @font-face { font-family: 'F'; src: \(src); }
-        </style></svg>
-        """)
+        let svg = try DOM.SVG.parse(
+            xml: """
+                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"><style>
+                  @font-face { font-family: 'F'; src: \(src); }
+                </style></svg>
+                """
+        )
         return LayerTree.Builder(svg: svg).makeFonts(faceName: "F")
     }
 
     @Test
     func localFaceIsUsedWhenInstalled() throws {
-        #expect(try fonts("local('Helvetica Light'), url(data:font/truetype;base64,AAAA) format('truetype')") == [.postScript("Helvetica-Light")])
+        #expect(
+            try fonts("local('Helvetica Light'), url(data:font/truetype;base64,AAAA) format('truetype')") == [
+                .postScript("Helvetica-Light")
+            ]
+        )
     }
 
     @Test
     func missingLocalFallsBackToNextSource() throws {
-        #expect(try fonts("local('No Such Font'), url(data:font/truetype;base64,AAAA) format('truetype')") == [.truetype(Data(base64Encoded: "AAAA")!)])
+        #expect(
+            try fonts("local('No Such Font'), url(data:font/truetype;base64,AAAA) format('truetype')") == [
+                .truetype(Data(base64Encoded: "AAAA")!)
+            ]
+        )
     }
 
     @Test

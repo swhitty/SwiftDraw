@@ -30,9 +30,9 @@ final class WebKitRenderer: NSObject, WKNavigationDelegate {
     var timeout: TimeInterval = 30
 
     override init() {
-        webView = WKWebView(frame: CGRect(x: 0, y: 0, width: 64, height: 64))
+        self.webView = WKWebView(frame: CGRect(x: 0, y: 0, width: 64, height: 64))
         // Hosting in a window (never ordered on screen) keeps WebKit from treating the page as detached.
-        window = NSWindow(contentRect: webView.frame, styleMask: [.borderless], backing: .buffered, defer: false)
+        self.window = NSWindow(contentRect: webView.frame, styleMask: [.borderless], backing: .buffered, defer: false)
         window.isReleasedWhenClosed = false
         window.contentView = webView
         super.init()
@@ -49,8 +49,9 @@ final class WebKitRenderer: NSObject, WKNavigationDelegate {
     func measure(svg: Data) async throws -> WebKitRenderCore.Size {
         let result = try await call("return await measureSVG(src, timeout);", ["src": Self.dataURI(svg)])
         guard let object = result as? [String: Any],
-              let w = (object["w"] as? NSNumber)?.doubleValue,
-              let h = (object["h"] as? NSNumber)?.doubleValue else {
+            let w = (object["w"] as? NSNumber)?.doubleValue,
+            let h = (object["h"] as? NSNumber)?.doubleValue
+        else {
             throw Failure(description: "page returned no size")
         }
         guard w > 0, h > 0 else { throw Failure(description: "WebKit reports no natural size (\(w)×\(h))") }
@@ -58,11 +59,14 @@ final class WebKitRenderer: NSObject, WKNavigationDelegate {
     }
 
     func render(svg: Data, width: Int, height: Int) async throws -> Output {
-        let result = try await call("return await renderSVG(src, w, h, timeout);",
-                                    ["src": Self.dataURI(svg), "w": width, "h": height])
+        let result = try await call(
+            "return await renderSVG(src, w, h, timeout);",
+            ["src": Self.dataURI(svg), "w": width, "h": height]
+        )
         guard let object = result as? [String: Any],
-              let base64 = object["png"] as? String,
-              let png = Data(base64Encoded: base64) else {
+            let base64 = object["png"] as? String,
+            let png = Data(base64Encoded: base64)
+        else {
             throw Failure(description: "page returned no PNG")
         }
         return Output(png: png, redrawn: (object["redrawn"] as? Int) ?? 0)
@@ -111,11 +115,19 @@ final class WebKitRenderer: NSObject, WKNavigationDelegate {
     }
 
     nonisolated func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: any Error) {
-        MainActor.assumeIsolated { finishNavigation(Failure(description: "page load failed: \(error.localizedDescription)")) }
+        MainActor.assumeIsolated {
+            finishNavigation(Failure(description: "page load failed: \(error.localizedDescription)"))
+        }
     }
 
-    nonisolated func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: any Error) {
-        MainActor.assumeIsolated { finishNavigation(Failure(description: "page load failed: \(error.localizedDescription)")) }
+    nonisolated func webView(
+        _ webView: WKWebView,
+        didFailProvisionalNavigation navigation: WKNavigation!,
+        withError error: any Error
+    ) {
+        MainActor.assumeIsolated {
+            finishNavigation(Failure(description: "page load failed: \(error.localizedDescription)"))
+        }
     }
 
     nonisolated func webViewWebContentProcessDidTerminate(_ webView: WKWebView) {
@@ -128,94 +140,94 @@ final class WebKitRenderer: NSObject, WKNavigationDelegate {
 
     /// The host page. Images are data: URIs, so the canvas is never tainted.
     static let page = #"""
-    <!doctype html>
-    <html><head><meta charset="utf-8"></head><body>
-    <script>
-    function loadImage(src) {
-      return new Promise((resolve, reject) => {
-        const img = new Image();
-        img.onload = () => img.decode().then(() => resolve(img), () => resolve(img));
-        img.onerror = () => reject(new Error('WebKit could not load the SVG'));
-        img.src = src;
-      });
-    }
+        <!doctype html>
+        <html><head><meta charset="utf-8"></head><body>
+        <script>
+        function loadImage(src) {
+          return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.onload = () => img.decode().then(() => resolve(img), () => resolve(img));
+            img.onerror = () => reject(new Error('WebKit could not load the SVG'));
+            img.src = src;
+          });
+        }
 
-    function draw(img, w, h) {
-      const c = document.createElement('canvas');
-      c.width = w; c.height = h;
-      const ctx = c.getContext('2d', { alpha: false, colorSpace: 'srgb' });
-      ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, w, h);
-      ctx.drawImage(img, 0, 0, w, h);
-      return c;
-    }
+        function draw(img, w, h) {
+          const c = document.createElement('canvas');
+          c.width = w; c.height = h;
+          const ctx = c.getContext('2d', { alpha: false, colorSpace: 'srgb' });
+          ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, w, h);
+          ctx.drawImage(img, 0, 0, w, h);
+          return c;
+        }
 
-    function isBlank(c) {
-      const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
-      for (let i = 0; i < d.length; i += 4) if (d[i] < 250 || d[i + 1] < 250 || d[i + 2] < 250) return false;
-      return true;
-    }
+        function isBlank(c) {
+          const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
+          for (let i = 0; i < d.length; i += 4) if (d[i] < 250 || d[i + 1] < 250 || d[i + 2] < 250) return false;
+          return true;
+        }
 
-    const REDRAW_DELAYS = [100, 400, 1000]; // ms; at most three extra attempts
+        const REDRAW_DELAYS = [100, 400, 1000]; // ms; at most three extra attempts
 
-    // As drawChecked in swiftdraw-diff: a draw that comes out entirely white is retried from a
-    // fresh load. redrawn counts retries only when one recovers a non-blank image, so an SVG
-    // that really is blank costs a little time but still renders (blank).
-    async function drawChecked(src, w, h) {
-      let canvas = draw(await loadImage(src), w, h);
-      let attempts = 0;
-      for (const delay of REDRAW_DELAYS) {
-        if (!isBlank(canvas)) break;
-        await new Promise(resolve => setTimeout(resolve, delay));
-        canvas = draw(await loadImage(src), w, h);
-        attempts++;
-      }
-      const redrawn = attempts > 0 && !isBlank(canvas) ? attempts : 0;
-      return { canvas, redrawn };
-    }
+        // As drawChecked in swiftdraw-diff: a draw that comes out entirely white is retried from a
+        // fresh load. redrawn counts retries only when one recovers a non-blank image, so an SVG
+        // that really is blank costs a little time but still renders (blank).
+        async function drawChecked(src, w, h) {
+          let canvas = draw(await loadImage(src), w, h);
+          let attempts = 0;
+          for (const delay of REDRAW_DELAYS) {
+            if (!isBlank(canvas)) break;
+            await new Promise(resolve => setTimeout(resolve, delay));
+            canvas = draw(await loadImage(src), w, h);
+            attempts++;
+          }
+          const redrawn = attempts > 0 && !isBlank(canvas) ? attempts : 0;
+          return { canvas, redrawn };
+        }
 
-    async function exportPNG(canvas) {
-      const blob = await new Promise((resolve, reject) =>
-        canvas.toBlob(b => b ? resolve(b) : reject(new Error('canvas.toBlob failed')), 'image/png'));
-      const url = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = () => reject(new Error('could not read PNG blob'));
-        reader.readAsDataURL(blob);
-      });
-      return url.slice(url.indexOf(',') + 1);
-    }
+        async function exportPNG(canvas) {
+          const blob = await new Promise((resolve, reject) =>
+            canvas.toBlob(b => b ? resolve(b) : reject(new Error('canvas.toBlob failed')), 'image/png'));
+          const url = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = () => reject(new Error('could not read PNG blob'));
+            reader.readAsDataURL(blob);
+          });
+          return url.slice(url.indexOf(',') + 1);
+        }
 
-    function withTimeout(work, timeout) {
-      const limit = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error(`timed out after ${timeout} ms`)), timeout));
-      return Promise.race([work, limit]);
-    }
+        function withTimeout(work, timeout) {
+          const limit = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error(`timed out after ${timeout} ms`)), timeout));
+          return Promise.race([work, limit]);
+        }
 
-    // The <img>'s natural size, as a browser lays it out without width or height attributes. For an
-    // SVG without an absolute width and height this is the HTML default object size (300×150,
-    // fitted to the viewBox's aspect ratio). naturalWidth/naturalHeight are whole numbers (300×90.87
-    // reports 300×90), so the image is laid out in a box naturalWidth wide and measured: that keeps
-    // fractions, and an SVG without an intrinsic width fills the box rather than the window.
-    async function measureSVG(src, timeout) {
-      const img = await withTimeout(loadImage(src), timeout);
-      const box = document.createElement('div');
-      box.style.cssText = `position:absolute; left:0; top:0; width:${img.naturalWidth}px`;
-      img.style.display = 'block';
-      box.appendChild(img);
-      document.body.appendChild(box);
-      const r = img.getBoundingClientRect();
-      box.remove();
-      return { w: r.width, h: r.height };
-    }
+        // The <img>'s natural size, as a browser lays it out without width or height attributes. For an
+        // SVG without an absolute width and height this is the HTML default object size (300×150,
+        // fitted to the viewBox's aspect ratio). naturalWidth/naturalHeight are whole numbers (300×90.87
+        // reports 300×90), so the image is laid out in a box naturalWidth wide and measured: that keeps
+        // fractions, and an SVG without an intrinsic width fills the box rather than the window.
+        async function measureSVG(src, timeout) {
+          const img = await withTimeout(loadImage(src), timeout);
+          const box = document.createElement('div');
+          box.style.cssText = `position:absolute; left:0; top:0; width:${img.naturalWidth}px`;
+          img.style.display = 'block';
+          box.appendChild(img);
+          document.body.appendChild(box);
+          const r = img.getBoundingClientRect();
+          box.remove();
+          return { w: r.width, h: r.height };
+        }
 
-    async function renderSVG(src, w, h, timeout) {
-      const work = (async () => {
-        const { canvas, redrawn } = await drawChecked(src, w, h);
-        return { png: await exportPNG(canvas), redrawn };
-      })();
-      return withTimeout(work, timeout);
-    }
-    </script>
-    </body></html>
-    """#
+        async function renderSVG(src, w, h, timeout) {
+          const work = (async () => {
+            const { canvas, redrawn } = await drawChecked(src, w, h);
+            return { png: await exportPNG(canvas), redrawn };
+          })();
+          return withTimeout(work, timeout);
+        }
+        </script>
+        </body></html>
+        """#
 }

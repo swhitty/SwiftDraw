@@ -29,7 +29,6 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-
 @testable import SwiftDraw
 @testable import SwiftDrawDOM
 import Foundation
@@ -38,9 +37,11 @@ import Testing
 struct LayerTreeFontWeightTests {
 
     private func textAttributes(_ body: String, styles: String = "") throws -> [LayerTree.TextAttributes] {
-        let svg = try DOM.SVG.parse(xml: """
-        <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><style>\(styles)</style>\(body)</svg>
-        """)
+        let svg = try DOM.SVG.parse(
+            xml: """
+                <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><style>\(styles)</style>\(body)</svg>
+                """
+        )
         func collect(_ layer: LayerTree.Layer) -> [LayerTree.TextAttributes] {
             layer.contents.flatMap { contents -> [LayerTree.TextAttributes] in
                 switch contents {
@@ -55,15 +56,17 @@ struct LayerTreeFontWeightTests {
 
     @Test
     func weightAndStyleAreInheritedAndResolved() throws {
-        let attributes = try textAttributes(#"""
-        <text>a</text>
-        <g font-weight="bold" font-style="italic">
-          <text>b</text>
-          <text font-weight="bolder">c</text>
-          <text font-weight="lighter" font-style="normal">d</text>
-          <g font-weight="300"><text font-weight="bolder">e</text></g>
-        </g>
-        """#)
+        let attributes = try textAttributes(
+            #"""
+            <text>a</text>
+            <g font-weight="bold" font-style="italic">
+              <text>b</text>
+              <text font-weight="bolder">c</text>
+              <text font-weight="lighter" font-style="normal">d</text>
+              <g font-weight="300"><text font-weight="bolder">e</text></g>
+            </g>
+            """#
+        )
         #expect(attributes.map(\.weight) == [400, 700, 900, 400, 400])  // lighter of 700 is 400
         #expect(attributes.map(\.isItalic) == [false, true, true, false, true])
     }
@@ -89,7 +92,8 @@ struct LayerTreeFontWeightTests {
         #expect(match(faces, weight: 200) == ["300"])  // below 400: nothing lighter, so heavier
         #expect(match(faces, weight: 900) == ["700"])  // above 500: nothing heavier, so lighter
         #expect(match([face("300", 300...300), face("700", 700...700)], weight: 450) == ["300"])  // then lighter
-        #expect(match([face("700", 700...700), face("900", 900...900)], weight: 450) == ["700"])  // then heavier past 500
+        // then heavier past 500
+        #expect(match([face("700", 700...700), face("900", 900...900)], weight: 450) == ["700"])
     }
 
     @Test
@@ -115,11 +119,18 @@ struct LayerTreeFontWeightTests {
     @Test
     func fontFaceIsChosenByWeight() throws {
         let styles = """
-        @font-face { font-family: 'F'; font-weight: 400; src: url(data:font/truetype;base64,AAAA) format('truetype'); }
-        @font-face { font-family: 'F'; font-weight: 700; src: url(data:font/truetype;base64,AAAAAA==) format('truetype'); }
-        """
-        let attributes = try textAttributes(#"<text font-family="F">a</text><text font-family="F" font-weight="bold">b</text>"#, styles: styles)
-        #expect(attributes.map(\.font) == [[.truetype(Data(base64Encoded: "AAAA")!)], [.truetype(Data(base64Encoded: "AAAAAA==")!)]])
+            @font-face { font-family: 'F'; font-weight: 400; src: url(data:font/truetype;base64,AAAA) format('truetype'); }
+            @font-face { font-family: 'F'; font-weight: 700; src: url(data:font/truetype;base64,AAAAAA==) format('truetype'); }
+            """
+        let attributes = try textAttributes(
+            #"<text font-family="F">a</text><text font-family="F" font-weight="bold">b</text>"#,
+            styles: styles
+        )
+        #expect(
+            attributes.map(\.font) == [
+                [.truetype(Data(base64Encoded: "AAAA")!)], [.truetype(Data(base64Encoded: "AAAAAA==")!)],
+            ]
+        )
     }
 }
 
@@ -153,13 +164,15 @@ struct CGProviderFontWeightTests {
     }
 
     // CSS Fonts 4 §5.2 over the installed faces, not CoreText's nearest weight trait
-    @Test(arguments: [
-        (450, "HelveticaNeue-Medium"),  // 400–500: heavier up to 500 first
-        (550, "HelveticaNeue-Bold"),    // above 500: heavier first, not the nearer Medium
-        (650, "HelveticaNeue-Bold"),
-        (350, "HelveticaNeue-Light"),   // below 400: lighter first
-        (900, "HelveticaNeue-Bold"),    // nothing heavier of normal width: lighter, not CondensedBlack
-    ] as [(Int, String)])
+    @Test(
+        arguments: [
+            (450, "HelveticaNeue-Medium"),  // 400–500: heavier up to 500 first
+            (550, "HelveticaNeue-Bold"),  // above 500: heavier first, not the nearer Medium
+            (650, "HelveticaNeue-Bold"),
+            (350, "HelveticaNeue-Light"),  // below 400: lighter first
+            (900, "HelveticaNeue-Bold"),  // nothing heavier of normal width: lighter, not CondensedBlack
+        ] as [(Int, String)]
+    )
     func systemFamilyFaceIsMatchedLikeCSS(weight: Int, expected: String) {
         #expect(postScriptName("Helvetica Neue", weight: weight) == expected)
     }

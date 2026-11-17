@@ -41,36 +41,40 @@ import CoreGraphics
 
 /// A parsed WOFF (Web Open Font Format 1.0) file
 struct WOFF {
-    
+
     /// The WOFF file header
     let header: Header
-    
+
     /// The font tables contained in the file
     let tables: [Table]
-    
+
     /// The decompressed font data
     let fontData: Data
-    
+
     /// The PostScript name of the font, if present in the name table
     var postScriptName: String? {
         parsePostScriptName()
     }
-    
+
     /// Creates a WOFF by reading and parsing a file
     /// - Parameter url: The URL of the WOFF file
     /// - Throws: Error if reading or parsing fails
     init(contentsOf url: URL) throws {
         try self.init(data: Data(contentsOf: url))
     }
-    
+
     /// Creates a WOFF by parsing and decompressing file data
     /// - Parameter data: The WOFF file data
     /// - Throws: WOFFError if parsing or decompression fails
     init(data: Data) throws {
         let parsedHeader = try Self.parseHeader(from: data)
         let tableDirectory = try Self.parseTableDirectory(from: data, numTables: parsedHeader.numTables)
-        let decompressedData = try Self.decompressTables(from: data, tables: tableDirectory, flavor: parsedHeader.flavor)
-        
+        let decompressedData = try Self.decompressTables(
+            from: data,
+            tables: tableDirectory,
+            flavor: parsedHeader.flavor
+        )
+
         self.header = Header(
             flavor: parsedHeader.flavor,
             numTables: parsedHeader.numTables,
@@ -78,7 +82,7 @@ struct WOFF {
             majorVersion: parsedHeader.majorVersion,
             minorVersion: parsedHeader.minorVersion
         )
-        
+
         self.tables = tableDirectory.map { entry in
             Table(
                 tag: entry.tag,
@@ -88,25 +92,25 @@ struct WOFF {
                 origChecksum: entry.origChecksum
             )
         }
-        
+
         self.fontData = decompressedData
     }
-    
+
     // MARK: - Header Parsing
-    
+
     private static func parseHeader(from data: Data) throws -> WOFFHeader {
         guard data.count >= 44 else {
             throw WOFFError.invalidHeader
         }
-        
+
         var offset = 0
-        
+
         // Read signature (should be 0x774F4646 = "wOFF")
         let signature = data.readUInt32(at: &offset)
         guard signature == 0x774F4646 else {
             throw WOFFError.invalidSignature
         }
-        
+
         let flavor = data.readUInt32(at: &offset)
         let length = data.readUInt32(at: &offset)
         let numTables = data.readUInt16(at: &offset)
@@ -119,7 +123,7 @@ struct WOFF {
         let metaOrigLength = data.readUInt32(at: &offset)
         let privOffset = data.readUInt32(at: &offset)
         let privLength = data.readUInt32(at: &offset)
-        
+
         return WOFFHeader(
             signature: signature,
             flavor: flavor,
@@ -136,57 +140,60 @@ struct WOFF {
             privLength: privLength
         )
     }
-    
+
     // MARK: - Table Directory Parsing
-    
+
     private static func parseTableDirectory(from data: Data, numTables: UInt16) throws -> [TableDirectoryEntry] {
-        var offset = 44 // After header
+        var offset = 44  // After header
         var entries: [TableDirectoryEntry] = []
-        
+
         for _ in 0..<numTables {
             guard offset + 20 <= data.count else {
                 throw WOFFError.invalidTableDirectory
             }
-            
+
             // Read 4-byte tag as string
             let tagBytes = data.subdata(in: offset..<(offset + 4))
             let tag = String(bytes: tagBytes, encoding: .ascii) ?? "????"
             offset += 4
-            
+
             let tableOffset = data.readUInt32(at: &offset)
             let compLength = data.readUInt32(at: &offset)
             let origLength = data.readUInt32(at: &offset)
             let origChecksum = data.readUInt32(at: &offset)
-            
-            entries.append(TableDirectoryEntry(
-                tag: tag,
-                offset: tableOffset,
-                compLength: compLength,
-                origLength: origLength,
-                origChecksum: origChecksum
-            ))
+
+            entries.append(
+                TableDirectoryEntry(
+                    tag: tag,
+                    offset: tableOffset,
+                    compLength: compLength,
+                    origLength: origLength,
+                    origChecksum: origChecksum
+                )
+            )
         }
-        
+
         return entries
     }
-    
+
     // MARK: - Table Decompression
-    
-    private static func decompressTables(from data: Data, tables: [TableDirectoryEntry], flavor: UInt32) throws -> Data {
+
+    private static func decompressTables(from data: Data, tables: [TableDirectoryEntry], flavor: UInt32) throws -> Data
+    {
         // First, decompress all tables and collect their data
         var tableDataMap: [(entry: TableDirectoryEntry, data: Data)] = []
-        
+
         for table in tables {
             let tableOffset = Int(table.offset)
             let compLength = Int(table.compLength)
             let origLength = Int(table.origLength)
-            
+
             guard tableOffset + compLength <= data.count else {
                 throw WOFFError.invalidCompressedData
             }
-            
+
             let compressedTableData = data.subdata(in: tableOffset..<(tableOffset + compLength))
-            
+
             let tableData: Data
             if compLength == origLength {
                 // Table is not compressed
@@ -195,17 +202,17 @@ struct WOFF {
                 // Table is zlib compressed
                 tableData = try decompressZlib(compressedTableData, decompressedSize: origLength)
             }
-            
+
             tableDataMap.append((table, tableData))
         }
-        
+
         // Build a proper sfnt file
         return buildSfntFile(flavor: flavor, tables: tableDataMap)
     }
-    
+
     private static func buildSfntFile(flavor: UInt32, tables: [(entry: TableDirectoryEntry, data: Data)]) -> Data {
         let numTables = UInt16(tables.count)
-        
+
         // Calculate searchRange, entrySelector, rangeShift
         var searchRange: UInt16 = 1
         var entrySelector: UInt16 = 0
@@ -215,34 +222,34 @@ struct WOFF {
         }
         searchRange *= 16
         let rangeShift = numTables * 16 - searchRange
-        
+
         var sfntData = Data()
-        
+
         // Write sfnt header (12 bytes)
         sfntData.appendUInt32(flavor)
         sfntData.appendUInt16(numTables)
         sfntData.appendUInt16(searchRange)
         sfntData.appendUInt16(entrySelector)
         sfntData.appendUInt16(rangeShift)
-        
+
         // Calculate where table data starts (after header + table directory)
         let headerSize = 12
         let tableDirectorySize = Int(numTables) * 16
         var currentOffset = UInt32(headerSize + tableDirectorySize)
-        
+
         // Build table directory entries and collect offsets
         var tableOffsets: [(tag: String, checksum: UInt32, offset: UInt32, length: UInt32)] = []
-        
+
         for (entry, tableData) in tables {
             let checksum = entry.origChecksum
             let length = UInt32(tableData.count)
             tableOffsets.append((entry.tag, checksum, currentOffset, length))
-            
+
             // Advance offset, padding to 4-byte boundary
             let paddedLength = (length + 3) & ~3
             currentOffset += paddedLength
         }
-        
+
         // Write table directory (sorted by tag for binary search)
         let sortedTables = tableOffsets.sorted { $0.tag < $1.tag }
         for table in sortedTables {
@@ -250,27 +257,27 @@ struct WOFF {
             if let tagData = table.tag.data(using: .ascii), tagData.count == 4 {
                 sfntData.append(tagData)
             } else {
-                sfntData.append(Data([0x3F, 0x3F, 0x3F, 0x3F])) // "????"
+                sfntData.append(Data([0x3F, 0x3F, 0x3F, 0x3F]))  // "????"
             }
             sfntData.appendUInt32(table.checksum)
             sfntData.appendUInt32(table.offset)
             sfntData.appendUInt32(table.length)
         }
-        
+
         // Write table data in original order
         for (_, tableData) in tables {
             sfntData.append(tableData)
-            
+
             // Pad to 4-byte boundary
             let padding = (4 - (tableData.count % 4)) % 4
             if padding > 0 {
                 sfntData.append(Data(count: padding))
             }
         }
-        
+
         return sfntData
     }
-    
+
     private static func decompressZlib(_ data: Data, decompressedSize: Int) throws -> Data {
         // WOFF uses zlib-wrapped deflate. The Compression framework's COMPRESSION_ZLIB
         // expects raw deflate, so we need to strip the 2-byte zlib header and 4-byte
@@ -278,105 +285,108 @@ struct WOFF {
         guard data.count > 6 else {
             throw WOFFError.decompressionFailed
         }
-        
+
         // Skip 2-byte zlib header (CMF + FLG) and 4-byte Adler-32 trailer
         let rawDeflate = data.dropFirst(2).dropLast(4)
-        
+
         var decompressedData = Data(count: decompressedSize)
         var actualSize = 0
-        
+
         rawDeflate.withUnsafeBytes { srcBuffer in
             decompressedData.withUnsafeMutableBytes { dstBuffer in
                 guard let srcPtr = srcBuffer.baseAddress?.assumingMemoryBound(to: UInt8.self),
-                      let dstPtr = dstBuffer.baseAddress?.assumingMemoryBound(to: UInt8.self) else {
+                    let dstPtr = dstBuffer.baseAddress?.assumingMemoryBound(to: UInt8.self)
+                else {
                     return
                 }
                 actualSize = compression_decode_buffer(
-                    dstPtr, decompressedSize,
-                    srcPtr, rawDeflate.count,
+                    dstPtr,
+                    decompressedSize,
+                    srcPtr,
+                    rawDeflate.count,
                     nil,
                     COMPRESSION_ZLIB
                 )
             }
         }
-        
+
         guard actualSize > 0 else {
             throw WOFFError.decompressionFailed
         }
-        
+
         decompressedData.count = actualSize
         return decompressedData
     }
-    
+
     // MARK: - Name Table Parsing
-    
+
     private func parsePostScriptName() -> String? {
         // fontData is now a proper sfnt file, so we need to read the table directory
         // to find the name table offset
         guard fontData.count >= 12 else { return nil }
-        
-        var offset = 4 // Skip sfnt version
+
+        var offset = 4  // Skip sfnt version
         let numTables = fontData.readUInt16(at: &offset)
-        offset = 12 // Skip rest of header (searchRange, entrySelector, rangeShift)
-        
+        offset = 12  // Skip rest of header (searchRange, entrySelector, rangeShift)
+
         // Find the name table in the table directory
         var nameTableOffset: Int?
         for _ in 0..<numTables {
             guard offset + 16 <= fontData.count else { return nil }
-            
+
             let tagBytes = fontData.subdata(in: offset..<(offset + 4))
             let tag = String(bytes: tagBytes, encoding: .ascii) ?? "????"
             offset += 4
-            
-            offset += 4 // Skip checksum
+
+            offset += 4  // Skip checksum
             let tableOffset = fontData.readUInt32(at: &offset)
-            offset += 4 // Skip length
-            
+            offset += 4  // Skip length
+
             if tag == "name" {
                 nameTableOffset = Int(tableOffset)
                 break
             }
         }
-        
+
         guard let nameTableOffset else { return nil }
-        
+
         offset = nameTableOffset
-        
+
         // Read the name table header
         guard offset + 6 <= fontData.count else { return nil }
-        
-        _ = fontData.readUInt16(at: &offset) // format
+
+        _ = fontData.readUInt16(at: &offset)  // format
         let count = fontData.readUInt16(at: &offset)
         let storageOffset = fontData.readUInt16(at: &offset)
-        
+
         // Look for PostScript name (nameID = 6)
         for _ in 0..<count {
             guard offset + 12 <= fontData.count else { return nil }
-            
+
             let platformID = fontData.readUInt16(at: &offset)
-            _ = fontData.readUInt16(at: &offset) // encodingID
-            _ = fontData.readUInt16(at: &offset) // languageID
+            _ = fontData.readUInt16(at: &offset)  // encodingID
+            _ = fontData.readUInt16(at: &offset)  // languageID
             let nameID = fontData.readUInt16(at: &offset)
             let length = fontData.readUInt16(at: &offset)
             let stringOffset = fontData.readUInt16(at: &offset)
-            
+
             // PostScript name has nameID = 6
             if nameID == 6 {
                 // storageOffset is relative to the start of the name table
                 let actualOffset = nameTableOffset + Int(storageOffset) + Int(stringOffset)
                 guard actualOffset + Int(length) <= fontData.count else { return nil }
-                
+
                 let nameData = fontData.subdata(in: actualOffset..<(actualOffset + Int(length)))
-                
+
                 // Decode based on platform
-                if platformID == 1 { // Macintosh
+                if platformID == 1 {  // Macintosh
                     return String(data: nameData, encoding: .macOSRoman)
-                } else if platformID == 3 { // Windows
+                } else if platformID == 3 {  // Windows
                     return String(data: nameData, encoding: .utf16BigEndian)
                 }
             }
         }
-        
+
         return nil
     }
 }
@@ -397,7 +407,7 @@ extension WOFF {
         /// Minor version of the WOFF file
         let minorVersion: UInt16
     }
-    
+
     /// A table contained in the WOFF file
     struct Table {
         /// Four-character table tag (e.g., "name", "glyf", "head")
@@ -461,7 +471,8 @@ extension WOFF {
     /// - Throws: WOFFError.invalidFontData if the font cannot be created
     func makeCGFont() throws -> CGFont {
         guard let provider = CGDataProvider(data: fontData as CFData),
-              let font = CGFont(provider) else {
+            let font = CGFont(provider)
+        else {
             throw WOFFError.invalidFontData
         }
         return font
@@ -477,21 +488,20 @@ private extension Data {
         offset += 2
         return value
     }
-    
+
     func readUInt32(at offset: inout Int) -> UInt32 {
-        let value = UInt32(self[offset]) << 24 |
-                    UInt32(self[offset + 1]) << 16 |
-                    UInt32(self[offset + 2]) << 8 |
-                    UInt32(self[offset + 3])
+        let value =
+            UInt32(self[offset]) << 24 | UInt32(self[offset + 1]) << 16 | UInt32(self[offset + 2]) << 8
+            | UInt32(self[offset + 3])
         offset += 4
         return value
     }
-    
+
     mutating func appendUInt16(_ value: UInt16) {
         append(UInt8((value >> 8) & 0xFF))
         append(UInt8(value & 0xFF))
     }
-    
+
     mutating func appendUInt32(_ value: UInt32) {
         append(UInt8((value >> 24) & 0xFF))
         append(UInt8((value >> 16) & 0xFF))

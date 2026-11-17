@@ -78,8 +78,16 @@ public struct ManifestEntry: Codable, Equatable, Sendable {
     public var naturalWidth: Double?
     public var naturalHeight: Double?
 
-    public init(name: String, status: Status, error: String? = nil, redrawn: Int? = nil, width: Int, height: Int,
-                layout: Size? = nil, natural: Size? = nil) {
+    public init(
+        name: String,
+        status: Status,
+        error: String? = nil,
+        redrawn: Int? = nil,
+        width: Int,
+        height: Int,
+        layout: Size? = nil,
+        natural: Size? = nil
+    ) {
         self.name = name
         self.status = status
         self.error = error

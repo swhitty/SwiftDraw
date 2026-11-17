@@ -108,26 +108,36 @@ final class LayerTreeShapeTests: XCTestCase {
     func testRectBuilder() {
         let rect = DOM.Rect(x: 10, y: 20, width: 30, height: 40)
         let shape = LayerTree.Builder.makeShape(from: rect)
-        XCTAssertEqual(shape, .rect(within: Rect(x: 10, y: 20, width: 30, height: 40),
-                                    radii: .zero))
+        XCTAssertEqual(
+            shape,
+            .rect(
+                within: Rect(x: 10, y: 20, width: 30, height: 40),
+                radii: .zero
+            )
+        )
 
         //add corner radii
         rect.rx = 2
         rect.ry = 4
         let another = LayerTree.Builder.makeShape(from: rect)
-        XCTAssertEqual(another, .rect(within: Rect(x: 10, y: 20, width: 30, height: 40),
-                                      radii: Size(2, 4)))
+        XCTAssertEqual(
+            another,
+            .rect(
+                within: Rect(x: 10, y: 20, width: 30, height: 40),
+                radii: Size(2, 4)
+            )
+        )
     }
 
     func testPolylineBuilder() {
-        let line = DOM.Polyline(10,20,30,40,50,60)
+        let line = DOM.Polyline(10, 20, 30, 40, 50, 60)
         let shape = LayerTree.Builder.makeShape(from: line)
 
         XCTAssertEqual(shape, .line(between: [Point(10, 20), Point(30, 40), Point(50, 60)]))
     }
 
     func testPolygonBuilder() {
-        let poly = DOM.Polygon(10,20,30,40,50,60)
+        let poly = DOM.Polygon(10, 20, 30, 40, 50, 60)
         let shape = LayerTree.Builder.makeShape(from: poly)
 
         XCTAssertEqual(shape, .polygon(between: [Point(10, 20), Point(30, 40), Point(50, 60)]))
@@ -147,7 +157,7 @@ final class LayerTreeShapeTests: XCTestCase {
         let shape = LayerTree.Shape.line(between: [
             Point(100, 100),
             Point(200, 100),
-            Point(300, 300)
+            Point(300, 300),
         ])
 
         XCTAssertEqual(
@@ -155,7 +165,7 @@ final class LayerTreeShapeTests: XCTestCase {
             LayerTree.Path([
                 .move(to: Point(100, 100)),
                 .line(to: Point(200, 100)),
-                .line(to: Point(300, 300))
+                .line(to: Point(300, 300)),
             ])
         )
 
@@ -169,7 +179,7 @@ final class LayerTreeShapeTests: XCTestCase {
         let shape = LayerTree.Shape.polygon(between: [
             Point(100, 100),
             Point(200, 100),
-            Point(300, 300)
+            Point(300, 300),
         ])
 
         XCTAssertEqual(
@@ -178,7 +188,7 @@ final class LayerTreeShapeTests: XCTestCase {
                 .move(to: Point(100, 100)),
                 .line(to: Point(200, 100)),
                 .line(to: Point(300, 300)),
-                .close
+                .close,
             ])
         )
 
@@ -226,18 +236,20 @@ final class LayerTreeShapeTests: XCTestCase {
     }
 
     func testPath_CreatesPath() {
-        let shape = LayerTree.Shape.path(.init([
-            .move(to: .zero),
-            .line(to: Point(10, 10)),
-            .close
-        ]))
+        let shape = LayerTree.Shape.path(
+            .init([
+                .move(to: .zero),
+                .line(to: Point(10, 10)),
+                .close,
+            ])
+        )
 
         XCTAssertEqual(
             shape.path,
             LayerTree.Path([
                 .move(to: .zero),
                 .line(to: Point(10, 10)),
-                .close
+                .close,
             ])
         )
     }

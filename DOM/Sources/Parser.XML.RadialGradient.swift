@@ -77,12 +77,13 @@ extension XMLParser {
 
         // an unreadable value is dropped like the other attributes, the gradient is kept (SVG 1.1 §13.2.2)
         node.gradientUnits = (try? nodeAtt.parseRaw("gradientUnits")) ?? nil
-        node.href  = try? nodeAtt.parseHref()
+        node.href = try? nodeAtt.parseHref()
         node.viewport = lengthContext.viewports.last
 
         // an empty value is the identity and overrides an inherited transform; an invalid one is dropped
         if let val = try? nodeAtt.parseString("gradientTransform"),
-           let t = try? parseTransform(val) {
+            let t = try? parseTransform(val)
+        {
             node.gradientTransform = t
             node.hasGradientTransform = true
         }

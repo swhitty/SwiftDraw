@@ -40,15 +40,17 @@ struct LayerTreeMaskTests {
 
     @Test
     func maskClipsBeforeContentsAreDrawn() throws {
-        let commands = try makeCommands(#"""
-        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
-            <mask id="m">
-                <rect width="100" height="100" fill="white" />
-                <rect width="50" height="100" fill="black" opacity="0.5" />
-            </mask>
-            <rect width="100" height="100" fill="green" mask="url(#m)" />
-        </svg>
-        """#)
+        let commands = try makeCommands(
+            #"""
+            <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+                <mask id="m">
+                    <rect width="100" height="100" fill="white" />
+                    <rect width="50" height="100" fill="black" opacity="0.5" />
+                </mask>
+                <rect width="100" height="100" fill="green" mask="url(#m)" />
+            </svg>
+            """#
+        )
 
         let mask = try #require(commands.firstIndex { $0.maskContents != nil })
         let push = try #require(commands.firstIndex { $0.isPushTransparencyLayer })
@@ -62,15 +64,17 @@ struct LayerTreeMaskTests {
 
     @Test
     func maskContentsAreDrawnWithNormalCompositing() throws {
-        let commands = try makeCommands(#"""
-        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
-            <mask id="m">
-                <rect width="100" height="100" fill="white" />
-                <rect width="50" height="100" fill="black" opacity="0.5" />
-            </mask>
-            <rect width="100" height="100" fill="green" mask="url(#m)" />
-        </svg>
-        """#)
+        let commands = try makeCommands(
+            #"""
+            <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+                <mask id="m">
+                    <rect width="100" height="100" fill="white" />
+                    <rect width="50" height="100" fill="black" opacity="0.5" />
+                </mask>
+                <rect width="100" height="100" fill="green" mask="url(#m)" />
+            </svg>
+            """#
+        )
 
         let contents = try #require(commands.compactMap(\.maskContents).first)
         #expect(!contents.contains { $0.isSetBlend })
@@ -81,14 +85,16 @@ struct LayerTreeMaskTests {
 
     @Test
     func maskContentColoursAreLuminanceGrey() throws {
-        let commands = try makeCommands(#"""
-        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
-            <mask id="m">
-                <rect width="100" height="100" fill="red" fill-opacity="0.5" />
-            </mask>
-            <rect width="100" height="100" fill="green" mask="url(#m)" />
-        </svg>
-        """#)
+        let commands = try makeCommands(
+            #"""
+            <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+                <mask id="m">
+                    <rect width="100" height="100" fill="red" fill-opacity="0.5" />
+                </mask>
+                <rect width="100" height="100" fill="green" mask="url(#m)" />
+            </svg>
+            """#
+        )
 
         let contents = try #require(commands.compactMap(\.maskContents).first)
         let fills = contents.compactMap(\.fillColor)
@@ -102,7 +108,7 @@ struct LayerTreeMaskTests {
         (.srgb(r: 0, g: 1, b: 0, a: 0.5), .gray(white: 0.7152, a: 0.5)),
         (.srgb(r: 0, g: 0, b: 1, a: 1), .gray(white: 0.0722, a: 1.0)),
         (.gray(white: 0.3, a: 0.4), .gray(white: 0.3, a: 0.4)),
-        (.none, .none)
+        (.none, .none),
     ])
     func luminanceConverter(color: LayerTree.Color, expected: LayerTree.Color) {
         #expect(LuminanceColorConverter().createColor(from: color) == expected)
@@ -115,15 +121,17 @@ struct LayerTreeMaskTests {
         #"<style>.a { mask-type: alpha }</style><mask id="m" class="a">"#,
     ])
     func alphaMaskContentColoursAreWhite(mask: String) throws {
-        let commands = try makeCommands(#"""
-        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
-            \#(mask)
-                <rect width="100" height="100" fill="black" fill-opacity="0.5" />
-                <rect width="50" height="100" fill="red" />
-            </mask>
-            <rect width="100" height="100" fill="green" mask="url(#m)" />
-        </svg>
-        """#)
+        let commands = try makeCommands(
+            #"""
+            <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+                \#(mask)
+                    <rect width="100" height="100" fill="black" fill-opacity="0.5" />
+                    <rect width="50" height="100" fill="red" />
+                </mask>
+                <rect width="100" height="100" fill="green" mask="url(#m)" />
+            </svg>
+            """#
+        )
 
         let contents = try #require(commands.compactMap(\.maskContents).first)
         let fills = contents.compactMap(\.fillColor)
@@ -136,14 +144,16 @@ struct LayerTreeMaskTests {
         #"<mask id="m" mask-type="bogus">"#,
     ])
     func luminanceMaskIsTheDefault(mask: String) throws {
-        let commands = try makeCommands(#"""
-        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
-            \#(mask)
-                <rect width="100" height="100" fill="black" fill-opacity="0.5" />
-            </mask>
-            <rect width="100" height="100" fill="green" mask="url(#m)" />
-        </svg>
-        """#)
+        let commands = try makeCommands(
+            #"""
+            <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+                \#(mask)
+                    <rect width="100" height="100" fill="black" fill-opacity="0.5" />
+                </mask>
+                <rect width="100" height="100" fill="green" mask="url(#m)" />
+            </svg>
+            """#
+        )
 
         let contents = try #require(commands.compactMap(\.maskContents).first)
         #expect(contents.compactMap(\.fillColor) == [.gray(white: 0, a: 0.5)])
@@ -154,7 +164,7 @@ struct LayerTreeMaskTests {
         (.black, .gray(white: 1.0, a: 1.0)),
         (.srgb(r: 0, g: 1, b: 0, a: 0.5), .gray(white: 1.0, a: 0.5)),
         (.gray(white: 0.3, a: 0.4), .gray(white: 1.0, a: 0.4)),
-        (.none, .none)
+        (.none, .none),
     ])
     func alphaConverter(color: LayerTree.Color, expected: LayerTree.Color) {
         #expect(AlphaColorConverter().createColor(from: color) == expected)

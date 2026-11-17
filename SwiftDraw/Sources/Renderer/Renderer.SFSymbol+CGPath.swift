@@ -35,14 +35,16 @@ import CoreGraphics
 
 extension SFSymbolRenderer {
 
-
-    static func expandOutlines(for path: LayerTree.Path,
-                               stroke: LayerTree.StrokeAttributes) -> LayerTree.Path? {
+    static func expandOutlines(
+        for path: LayerTree.Path,
+        stroke: LayerTree.StrokeAttributes
+    ) -> LayerTree.Path? {
 
         var mediaBox = CGRect(x: 0.0, y: 0.0, width: 100, height: 100)
         let data = NSMutableData()
         guard let consumer = CGDataConsumer(data: data as CFMutableData),
-              let ctx = CGContext(consumer: consumer, mediaBox: &mediaBox, nil) else {
+            let ctx = CGContext(consumer: consumer, mediaBox: &mediaBox, nil)
+        else {
             return nil
         }
 

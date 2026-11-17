@@ -43,9 +43,10 @@ private func almostEqual<T: FloatingPoint>(_ a: T, _ b: T) -> Bool {
     return a >= b.nextDown && a <= b.nextUp
 }
 
-func vectorAngle(ux: LayerTree.Float, uy: LayerTree.Float, vx: LayerTree.Float, vy: LayerTree.Float) -> LayerTree.Float {
+func vectorAngle(ux: LayerTree.Float, uy: LayerTree.Float, vx: LayerTree.Float, vy: LayerTree.Float) -> LayerTree.Float
+{
     let sign: LayerTree.Float = (ux * vy - uy * vx) < 0.0 ? -1.0 : 1.0
-    let dot  = (ux * vx + uy * vy).clamped(to: -1.0...1.0)
+    let dot = (ux * vx + uy * vy).clamped(to: -1.0...1.0)
     return sign * acos(dot)
 }
 
@@ -56,34 +57,39 @@ private extension LayerTree.Float {
     }
 }
 
-private func getArcCenter(from origin: LayerTree.Point, to destination: LayerTree.Point,
-                          fa: Bool, fs: Bool,
-                          rx: LayerTree.Float, ry: LayerTree.Float,
-                          sin_phi: LayerTree.Float,
-                          cos_phi: LayerTree.Float) -> (point: LayerTree.Point, theta: LayerTree.Float, deltaT: LayerTree.Float) {
+private func getArcCenter(
+    from origin: LayerTree.Point,
+    to destination: LayerTree.Point,
+    fa: Bool,
+    fs: Bool,
+    rx: LayerTree.Float,
+    ry: LayerTree.Float,
+    sin_phi: LayerTree.Float,
+    cos_phi: LayerTree.Float
+) -> (point: LayerTree.Point, theta: LayerTree.Float, deltaT: LayerTree.Float) {
 
-    let x1p =  cos_phi * (origin.x - destination.x) / 2 + sin_phi * (origin.y - destination.y) / 2
+    let x1p = cos_phi * (origin.x - destination.x) / 2 + sin_phi * (origin.y - destination.y) / 2
     let y1p = -sin_phi * (origin.x - destination.x) / 2 + cos_phi * (origin.y - destination.y) / 2
 
-    let rx_sq  =  rx * rx
-    let ry_sq  =  ry * ry
+    let rx_sq = rx * rx
+    let ry_sq = ry * ry
     let x1p_sq = x1p * x1p
     let y1p_sq = y1p * y1p
 
     var radicant = max((rx_sq * ry_sq) - (rx_sq * y1p_sq) - (ry_sq * x1p_sq), 0.0)
     let radicantSign: LayerTree.Float = fa == fs ? -1.0 : 1.0
 
-    radicant /=  (rx_sq * y1p_sq) + (ry_sq * x1p_sq)
+    radicant /= (rx_sq * y1p_sq) + (ry_sq * x1p_sq)
     radicant = radicant.squareRoot() * radicantSign
 
-    let cxp = radicant *  rx / ry * y1p
+    let cxp = radicant * rx / ry * y1p
     let cyp = radicant * -ry / rx * x1p
 
     let cx = cos_phi * cxp - sin_phi * cyp + (origin.x + destination.x) / 2
     let cy = sin_phi * cxp + cos_phi * cyp + (origin.y + destination.y) / 2
 
-    let v1x =  (x1p - cxp) / rx
-    let v1y =  (y1p - cyp) / ry
+    let v1x = (x1p - cxp) / rx
+    let v1y = (y1p - cyp) / ry
     let v2x = (-x1p - cxp) / rx
     let v2y = (-y1p - cyp) / ry
 
@@ -108,18 +114,27 @@ private func approximateUnitArc(theta: LayerTree.Float, deltaT: LayerTree.Float)
     let x2 = cos(theta + deltaT)
     let y2 = sin(theta + deltaT)
 
-    return [x1,
-            y1,
-            x1 - y1 * alpha,
-            y1 + x1 * alpha,
-            x2 + y2 * alpha,
-            y2 - x2 * alpha,
-            x2,
-            y2]
+    return [
+        x1,
+        y1,
+        x1 - y1 * alpha,
+        y1 + x1 * alpha,
+        x2 + y2 * alpha,
+        y2 - x2 * alpha,
+        x2,
+        y2,
+    ]
 }
 
-
-private func makePoint(x: LayerTree.Float, y: LayerTree.Float, rx: LayerTree.Float, ry: LayerTree.Float, cos_phi: LayerTree.Float, sin_phi: LayerTree.Float, center: LayerTree.Point) -> LayerTree.Point {
+private func makePoint(
+    x: LayerTree.Float,
+    y: LayerTree.Float,
+    rx: LayerTree.Float,
+    ry: LayerTree.Float,
+    cos_phi: LayerTree.Float,
+    sin_phi: LayerTree.Float,
+    center: LayerTree.Point
+) -> LayerTree.Point {
 
     let x1 = x * rx
     let y1 = y * ry
@@ -130,15 +145,20 @@ private func makePoint(x: LayerTree.Float, y: LayerTree.Float, rx: LayerTree.Flo
     return LayerTree.Point(xp + center.x, yp + center.y)
 }
 
-func makeCubic(from origin: LayerTree.Point, to destination: LayerTree.Point,
-               large: Bool, sweep: Bool,
-               rx: LayerTree.Float, ry: LayerTree.Float,
-               rotation: LayerTree.Float) -> [(p: LayerTree.Point, cp1: LayerTree.Point, cp2: LayerTree.Point)] {
+func makeCubic(
+    from origin: LayerTree.Point,
+    to destination: LayerTree.Point,
+    large: Bool,
+    sweep: Bool,
+    rx: LayerTree.Float,
+    ry: LayerTree.Float,
+    rotation: LayerTree.Float
+) -> [(p: LayerTree.Point, cp1: LayerTree.Point, cp2: LayerTree.Point)] {
 
     let sin_phi = sin(rotation * .tau / 360.0)
     let cos_phi = cos(rotation * .tau / 360.0)
 
-    let x1p =  cos_phi * (origin.x - destination.x) / 2.0 + sin_phi * (origin.y - destination.y) / 2.0
+    let x1p = cos_phi * (origin.x - destination.x) / 2.0 + sin_phi * (origin.y - destination.y) / 2.0
     let y1p = -sin_phi * (origin.x - destination.x) / 2.0 + cos_phi * (origin.y - destination.y) / 2.0
 
     if almostEqual(x1p, 0.0) && almostEqual(y1p, 0.0) {
@@ -159,7 +179,16 @@ func makeCubic(from origin: LayerTree.Point, to destination: LayerTree.Point,
         ry1 *= lambdaSquareRoot
     }
 
-    let cc = getArcCenter(from: origin, to: destination, fa: large, fs: sweep, rx: rx1, ry: ry1, sin_phi: sin_phi, cos_phi: cos_phi)
+    let cc = getArcCenter(
+        from: origin,
+        to: destination,
+        fa: large,
+        fs: sweep,
+        rx: rx1,
+        ry: ry1,
+        sin_phi: sin_phi,
+        cos_phi: cos_phi
+    )
 
     var result = [[LayerTree.Float]]()
 

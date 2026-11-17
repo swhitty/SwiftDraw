@@ -130,7 +130,12 @@ extension LayerTree.FilterLayer {
                 case .composite(let op):
                     result = FilterBitmap.composite(input(0), input(1), op: op, linear: isLinear)
                 case .merge:
-                    result = FilterBitmap.merge(primitive.inputs.indices.map(input), width: width, height: height, linear: isLinear)
+                    result = FilterBitmap.merge(
+                        primitive.inputs.indices.map(input),
+                        width: width,
+                        height: height,
+                        linear: isLinear
+                    )
                 case .blend(let mode):
                     result = FilterBitmap.blend(input(0), input(1), mode: mode, linear: isLinear)
                 case .colorMatrix(let matrix):
@@ -139,20 +144,35 @@ extension LayerTree.FilterLayer {
                     result = FilterBitmap.componentTransfer(input(0), transfer, linear: isLinear)
                 case let .morphology(op, radiusX: rx, radiusY: ry):
                     let radius = environment.transform.pixelRadius(rx, ry)
-                    result = FilterBitmap.morphology(input(0), op, radiusX: radius.x, radiusY: radius.y, linear: isLinear)
+                    result = FilterBitmap.morphology(
+                        input(0),
+                        op,
+                        radiusX: radius.x,
+                        radiusY: radius.y,
+                        linear: isLinear
+                    )
                 case .turbulence(let turbulence):
-                    result = FilterBitmap.turbulence(width: width, height: height, turbulence,
-                                                     tile: primitive.subregion, transform: environment.transform,
-                                                     linear: isLinear)
+                    result = FilterBitmap.turbulence(
+                        width: width,
+                        height: height,
+                        turbulence,
+                        tile: primitive.subregion,
+                        transform: environment.transform,
+                        linear: isLinear
+                    )
                 case .convolveMatrix(let matrix):
                     // the kernel stays on the pixel axes, facing user space's x and y (it is not rotated)
-                    result = FilterBitmap.convolve(input(0), matrix,
-                                                   flipX: environment.transform.a < 0,
-                                                   flipY: environment.transform.d < 0,
-                                                   linear: isLinear)
+                    result = FilterBitmap.convolve(
+                        input(0),
+                        matrix,
+                        flipX: environment.transform.a < 0,
+                        flipY: environment.transform.d < 0,
+                        linear: isLinear
+                    )
                 case .image:
                     // drawn in the encoding of the bitmaps, which linearRGB primitives decode as they read it
-                    result = environment.image(index).flatMap { $0.width == width && $0.height == height ? $0 : nil }
+                    result =
+                        environment.image(index).flatMap { $0.width == width && $0.height == height ? $0 : nil }
                         ?? FilterBitmap(width: width, height: height)
                 }
                 result.clip(to: primitive.subregion, transform: environment.transform)
@@ -178,7 +198,9 @@ extension LayerTree.FilterLayer {
         for (index, primitive) in primitives.enumerated() {
             // results still needed, SourceGraphic, SourceAlpha, transparent inputs and the result itself
             var alive = (0..<index).filter { lastUse[$0] >= index }.count + 2
-            if lastUse.sourceAlpha >= index && primitives.prefix(index + 1).contains(where: { $0.inputs.contains(.sourceAlpha) }) {
+            if lastUse.sourceAlpha >= index
+                && primitives.prefix(index + 1).contains(where: { $0.inputs.contains(.sourceAlpha) })
+            {
                 alive += 1
             }
             alive += primitive.inputs.filter { $0 == .transparent }.count
@@ -270,8 +292,9 @@ extension LayerTree.Transform.Matrix {
         var r = b * b * vx + d * d * vy
         let q = a * b * vx + c * d * vy
         guard p.isFinite, r.isFinite, q.isFinite, p > 0, r > 0,
-              // within a thousandth of the deviations the blur is along the axes
-              q * q > 1e-6 * p * r else { return nil }
+            // within a thousandth of the deviations the blur is along the axes
+            q * q > 1e-6 * p * r
+        else { return nil }
         let isTransposed = p > r
         if isTransposed {
             swap(&p, &r)
@@ -303,10 +326,14 @@ extension LayerTree.Transform.Matrix {
     func invertedMatrix() -> Self? {
         let determinant = a * d - b * c
         guard determinant != 0, determinant.isFinite else { return nil }
-        return Self(a: d / determinant, b: -b / determinant,
-                    c: -c / determinant, d: a / determinant,
-                    tx: (c * ty - d * tx) / determinant,
-                    ty: (b * tx - a * ty) / determinant)
+        return Self(
+            a: d / determinant,
+            b: -b / determinant,
+            c: -c / determinant,
+            d: a / determinant,
+            tx: (c * ty - d * tx) / determinant,
+            ty: (b * tx - a * ty) / determinant
+        )
     }
 }
 
@@ -358,7 +385,7 @@ extension FilterBitmap {
     // Each row y moved right by shift(y) pixels into a bitmap of the width, interpolated linearly
     func shiftingRows(width newWidth: Int, by shift: (Int) -> Float) -> FilterBitmap {
         var result = FilterBitmap(width: newWidth, height: height)
-        let width = self.width
+        let width = width
         pixels.withUnsafeBytes { src in
             result.pixels.withUnsafeMutableBytes { dst in
                 for y in 0..<height {
@@ -412,7 +439,10 @@ extension FilterBitmap {
     // color-interpolation-filters does not apply to feFlood (Filter Effects 1 §10).
     static func flood(width: Int, height: Int, color: SIMD4<Float>) -> FilterBitmap {
         var result = FilterBitmap(width: width, height: height)
-        let pixel = encode(FilterPixel(r: color.x * color.w, g: color.y * color.w, b: color.z * color.w, a: color.w), linear: false)
+        let pixel = encode(
+            FilterPixel(r: color.x * color.w, g: color.y * color.w, b: color.z * color.w, a: color.w),
+            linear: false
+        )
         guard pixel != [0, 0, 0, 0] else { return result }
         result.pixels.withUnsafeMutableBufferPointer { dst in
             var i = 0
@@ -432,8 +462,10 @@ extension FilterBitmap {
         // not stored through a pointer into a local array: optimized builds (Swift 6.4, -O) kept only the
         // first byte, so every flood was transparent in Release while Debug tests passed
         let bytes = quantize(pixel, linear: linear, encoding: encodingTable)
-        return [UInt8(truncatingIfNeeded: bytes), UInt8(truncatingIfNeeded: bytes >> 8),
-                UInt8(truncatingIfNeeded: bytes >> 16), UInt8(truncatingIfNeeded: bytes >> 24)]
+        return [
+            UInt8(truncatingIfNeeded: bytes), UInt8(truncatingIfNeeded: bytes >> 8),
+            UInt8(truncatingIfNeeded: bytes >> 16), UInt8(truncatingIfNeeded: bytes >> 24),
+        ]
     }
 
     // Filter Effects 1 §9.18: shifted by a vector in pixels; uncovered pixels are transparent black and
@@ -483,9 +515,11 @@ extension FilterBitmap {
                     var y = Swift.max(0, sy)
                     let yEnd = Swift.min(height, height + sy)
                     while y < yEnd {
-                        memcpy(dstBase + y * rowBytes + xStart * 4,
-                               srcBase + (y - sy) * rowBytes + (xStart - sx) * 4,
-                               (xEnd - xStart) * 4)
+                        memcpy(
+                            dstBase + y * rowBytes + xStart * 4,
+                            srcBase + (y - sy) * rowBytes + (xStart - sx) * 4,
+                            (xEnd - xStart) * 4
+                        )
                         y += 1
                     }
                     return
@@ -512,10 +546,18 @@ extension FilterBitmap {
                         let o = y * rowBytes + x * 4
 
                         // transparent or uniform neighbourhoods need no weighting
-                        let p11 = hasRow1 && hasColumn1 ? raw.loadUnaligned(fromByteOffset: row1 + x1 * 4, as: UInt32.self) : 0
-                        let p01 = hasRow1 && hasColumn0 ? raw.loadUnaligned(fromByteOffset: row1 + x0 * 4, as: UInt32.self) : 0
-                        let p10 = hasRow0 && hasColumn1 ? raw.loadUnaligned(fromByteOffset: row0 + x1 * 4, as: UInt32.self) : 0
-                        let p00 = hasRow0 && hasColumn0 ? raw.loadUnaligned(fromByteOffset: row0 + x0 * 4, as: UInt32.self) : 0
+                        let p11 =
+                            hasRow1 && hasColumn1
+                            ? raw.loadUnaligned(fromByteOffset: row1 + x1 * 4, as: UInt32.self) : 0
+                        let p01 =
+                            hasRow1 && hasColumn0
+                            ? raw.loadUnaligned(fromByteOffset: row1 + x0 * 4, as: UInt32.self) : 0
+                        let p10 =
+                            hasRow0 && hasColumn1
+                            ? raw.loadUnaligned(fromByteOffset: row0 + x1 * 4, as: UInt32.self) : 0
+                        let p00 =
+                            hasRow0 && hasColumn0
+                            ? raw.loadUnaligned(fromByteOffset: row0 + x0 * 4, as: UInt32.self) : 0
                         let isUniform = (wx == 0 || p01 == p11) && (wy == 0 || (p10 == p11 && (wx == 0 || p00 == p11)))
                         if isUniform {
                             if p11 != 0 {
@@ -546,7 +588,12 @@ extension FilterBitmap {
 
     // Filter Effects 1 §9.8: `a` (in) is the source and `b` (in2) the destination of the Porter-Duff operator
     // (Compositing and Blending 1 §9.1); arithmetic is clamped to 0...1 with colour never above alpha.
-    static func composite(_ a: FilterBitmap, _ b: FilterBitmap, op: DOM.Filter.CompositeOperator, linear: Bool) -> FilterBitmap {
+    static func composite(
+        _ a: FilterBitmap,
+        _ b: FilterBitmap,
+        op: DOM.Filter.CompositeOperator,
+        linear: Bool
+    ) -> FilterBitmap {
         switch op {
         case .over:
             return combine(a, b, linear: linear, .over)
@@ -591,13 +638,19 @@ extension FilterBitmap {
     // Filter Effects 1 §9.7: on non-premultiplied values, each result clamped to 0...1.
     // Each function is sampled into a table, read with linear interpolation: exact for the table and linear
     // types between their breakpoints, within 1/255 for the others.
-    static func componentTransfer(_ source: FilterBitmap, _ transfer: DOM.Filter.ComponentTransfer, linear: Bool) -> FilterBitmap {
+    static func componentTransfer(
+        _ source: FilterBitmap,
+        _ transfer: DOM.Filter.ComponentTransfer,
+        linear: Bool
+    ) -> FilterBitmap {
         let functions = [transfer.r, transfer.g, transfer.b, transfer.a]
         guard functions.contains(where: { $0 != .identity }) else { return source }
         var table = [Float](repeating: 0, count: 4 * (transferSegments + 1))
         for (channel, function) in functions.enumerated() {
             for index in 0...transferSegments {
-                table[channel * (transferSegments + 1) + index] = function.evaluate(Float(index) / Float(transferSegments))
+                table[channel * (transferSegments + 1) + index] = function.evaluate(
+                    Float(index) / Float(transferSegments)
+                )
             }
         }
         return table.withUnsafeBufferPointer { t in
@@ -611,11 +664,13 @@ extension FilterBitmap {
     // rectangle 2·radius + 1 pixels wide, in the colour space of the primitive. Pixels outside the bitmap
     // are not in the rectangle, as in resvg and Skia. Separable, and each pass is van Herk/Gil-Werman:
     // three comparisons a pixel whatever the radius.
-    static func morphology(_ source: FilterBitmap,
-                           _ op: DOM.Filter.MorphologyOperator,
-                           radiusX: Int,
-                           radiusY: Int,
-                           linear: Bool) -> FilterBitmap {
+    static func morphology(
+        _ source: FilterBitmap,
+        _ op: DOM.Filter.MorphologyOperator,
+        radiusX: Int,
+        radiusY: Int,
+        linear: Bool
+    ) -> FilterBitmap {
         let width = source.width
         let height = source.height
         let rx = Swift.min(Swift.max(radiusX, 0), width)
@@ -632,7 +687,12 @@ extension FilterBitmap {
             guard let raw = src.baseAddress else { return }
             var i = 0
             while i < count {
-                let p = load(raw.loadUnaligned(fromByteOffset: i * 4, as: UInt32.self), linear: linear, unit: unit, decoding: decoding)
+                let p = load(
+                    raw.loadUnaligned(fromByteOffset: i * 4, as: UInt32.self),
+                    linear: linear,
+                    unit: unit,
+                    decoding: decoding
+                )
                 values[i * 4] = p.r
                 values[i * 4 + 1] = p.g
                 values[i * 4 + 2] = p.b
@@ -650,7 +710,14 @@ extension FilterBitmap {
             while y < height {
                 var channel = 0
                 while channel < 4 {
-                    extremes(values + y * width * 4 + channel, stride: 4, count: width, radius: rx, isMax: isDilate, scratch: scratch)
+                    extremes(
+                        values + y * width * 4 + channel,
+                        stride: 4,
+                        count: width,
+                        radius: rx,
+                        isMax: isDilate,
+                        scratch: scratch
+                    )
                     channel += 1
                 }
                 y += 1
@@ -684,8 +751,14 @@ extension FilterBitmap {
     // The line is padded by radius at each end with a value that never wins, then split into blocks of the
     // window size: a window spans at most two blocks, so it is the suffix extreme of one and the prefix
     // extreme of the next. scratch holds 3 × (count + 2 × radius) values.
-    static func extremes(_ line: UnsafeMutablePointer<Float>, stride: Int, count: Int, radius: Int, isMax: Bool,
-                         scratch: UnsafeMutablePointer<Float>) {
+    static func extremes(
+        _ line: UnsafeMutablePointer<Float>,
+        stride: Int,
+        count: Int,
+        radius: Int,
+        isMax: Bool,
+        scratch: UnsafeMutablePointer<Float>
+    ) {
         let window = 2 * radius + 1
         let length = count + 2 * radius
         let padded = scratch
@@ -735,7 +808,7 @@ extension FilterBitmap {
             LayerTree.Point(rect.minX, rect.minY),
             LayerTree.Point(rect.maxX, rect.minY),
             LayerTree.Point(rect.maxX, rect.maxY),
-            LayerTree.Point(rect.minX, rect.maxY)
+            LayerTree.Point(rect.minX, rect.maxY),
         ].map(transform.transform(point:))
         let isAxisAligned = (transform.b == 0 && transform.c == 0) || (transform.a == 0 && transform.d == 0)
 
@@ -746,7 +819,10 @@ extension FilterBitmap {
             let minX = Swift.max(0, Swift.min(width, Int((xs.min()! - 0.5).rounded(.up).clamped(-1, Float(width)))))
             let maxX = Swift.max(minX, Swift.min(width, Int((xs.max()! - 0.5).rounded(.up).clamped(-1, Float(width)))))
             let minY = Swift.max(0, Swift.min(height, Int((ys.min()! - 0.5).rounded(.up).clamped(-1, Float(height)))))
-            let maxY = Swift.max(minY, Swift.min(height, Int((ys.max()! - 0.5).rounded(.up).clamped(-1, Float(height)))))
+            let maxY = Swift.max(
+                minY,
+                Swift.min(height, Int((ys.max()! - 0.5).rounded(.up).clamped(-1, Float(height))))
+            )
             guard minX > 0 || minY > 0 || maxX < width || maxY < height else { return }
             let w = width
             pixels.withUnsafeMutableBufferPointer { dst in
@@ -841,7 +917,9 @@ extension FilterBitmap {
         a.pixels.withUnsafeBufferPointer { pa in
             b.pixels.withUnsafeBufferPointer { pb in
                 result.pixels.withUnsafeMutableBufferPointer { dst in
-                    guard let baseA = pa.baseAddress, let baseB = pb.baseAddress, let base = dst.baseAddress else { return }
+                    guard let baseA = pa.baseAddress, let baseB = pb.baseAddress, let base = dst.baseAddress else {
+                        return
+                    }
                     let out = UnsafeMutableRawPointer(base)
                     let rawA = UnsafeRawPointer(baseA)
                     let rawB = UnsafeRawPointer(baseB)
@@ -886,18 +964,30 @@ extension FilterBitmap {
         case .atop:
             let ks = d.a
             let kd = 1 - s.a
-            return FilterPixel(r: s.r * ks + d.r * kd, g: s.g * ks + d.g * kd, b: s.b * ks + d.b * kd, a: s.a * ks + d.a * kd)
+            return FilterPixel(
+                r: s.r * ks + d.r * kd,
+                g: s.g * ks + d.g * kd,
+                b: s.b * ks + d.b * kd,
+                a: s.a * ks + d.a * kd
+            )
         case .xor:
             let ks = 1 - d.a
             let kd = 1 - s.a
-            return FilterPixel(r: s.r * ks + d.r * kd, g: s.g * ks + d.g * kd, b: s.b * ks + d.b * kd, a: s.a * ks + d.a * kd)
+            return FilterPixel(
+                r: s.r * ks + d.r * kd,
+                g: s.g * ks + d.g * kd,
+                b: s.b * ks + d.b * kd,
+                a: s.a * ks + d.a * kd
+            )
         case .lighter:
             return FilterPixel(r: s.r + d.r, g: s.g + d.g, b: s.b + d.b, a: s.a + d.a)
         case let .arithmetic(k1, k2, k3, k4):
-            return FilterPixel(r: k1 * s.r * d.r + k2 * s.r + k3 * d.r + k4,
-                               g: k1 * s.g * d.g + k2 * s.g + k3 * d.g + k4,
-                               b: k1 * s.b * d.b + k2 * s.b + k3 * d.b + k4,
-                               a: k1 * s.a * d.a + k2 * s.a + k3 * d.a + k4)
+            return FilterPixel(
+                r: k1 * s.r * d.r + k2 * s.r + k3 * d.r + k4,
+                g: k1 * s.g * d.g + k2 * s.g + k3 * d.g + k4,
+                b: k1 * s.b * d.b + k2 * s.b + k3 * d.b + k4,
+                a: k1 * s.a * d.a + k2 * s.a + k3 * d.a + k4
+            )
         case .blend(let mode):
             return blend(s, d, mode: mode)
         }
@@ -909,7 +999,12 @@ extension FilterBitmap {
         let alphaB = d.a
         let ks = 1 - alphaB
         let kd = 1 - alphaS
-        var result = FilterPixel(r: s.r * ks + d.r * kd, g: s.g * ks + d.g * kd, b: s.b * ks + d.b * kd, a: s.a * ks + d.a * kd)
+        var result = FilterPixel(
+            r: s.r * ks + d.r * kd,
+            g: s.g * ks + d.g * kd,
+            b: s.b * ks + d.b * kd,
+            a: s.a * ks + d.a * kd
+        )
         guard alphaS > 0, alphaB > 0 else { return result }
         let alpha = alphaS * alphaB
         let sr = s.r / alphaS, sg = s.g / alphaS, sb = s.b / alphaS
@@ -954,8 +1049,11 @@ extension FilterBitmap {
                     let pixel = raw.loadUnaligned(fromByteOffset: i, as: UInt32.self)
                     if pixel != key {
                         key = pixel
-                        value = quantize(apply(op, load(pixel, linear: linear, unit: unit, decoding: decoding)),
-                                         linear: linear, encoding: encoding)
+                        value = quantize(
+                            apply(op, load(pixel, linear: linear, unit: unit, decoding: decoding)),
+                            linear: linear,
+                            encoding: encoding
+                        )
                     }
                     if value != 0 {
                         store(value, out, i)
@@ -1023,7 +1121,12 @@ extension FilterBitmap {
     // the pixel's 4 bytes as loaded from memory, premultiplied, 0...1, in linear light when linear.
     // Channels come from the loaded word rather than pointer subscripts, generic calls when unoptimized.
     @inline(__always)
-    static func load(_ pixel: UInt32, linear: Bool, unit: UnsafePointer<Float>, decoding: UnsafePointer<Float>) -> FilterPixel {
+    static func load(
+        _ pixel: UInt32,
+        linear: Bool,
+        unit: UnsafePointer<Float>,
+        decoding: UnsafePointer<Float>
+    ) -> FilterPixel {
         let bytes = UInt32(littleEndian: pixel)
         let r = Int(bytes & 0xFF)
         let g = Int((bytes >> 8) & 0xFF)
@@ -1033,10 +1136,12 @@ extension FilterBitmap {
             return FilterPixel(r: unit[r], g: unit[g], b: unit[b], a: unit[a])
         }
         let alpha = unit[a]
-        return FilterPixel(r: decode(r, a, decoding) * alpha,
-                           g: decode(g, a, decoding) * alpha,
-                           b: decode(b, a, decoding) * alpha,
-                           a: alpha)
+        return FilterPixel(
+            r: decode(r, a, decoding) * alpha,
+            g: decode(g, a, decoding) * alpha,
+            b: decode(b, a, decoding) * alpha,
+            a: alpha
+        )
     }
 
     // the bytes of quantize, r first in memory

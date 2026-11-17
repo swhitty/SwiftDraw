@@ -65,11 +65,13 @@ struct LogTests {
         handler(.warning, "\(token) unsupported")
         handler(.error, "\(token) invalid")
 
-        #expect(messages.lines == [
-            "info: \(token) alignment",
-            "warning: \(token) unsupported",
-            "error: \(token) invalid"
-        ])
+        #expect(
+            messages.lines == [
+                "info: \(token) alignment",
+                "warning: \(token) unsupported",
+                "error: \(token) invalid",
+            ]
+        )
     }
 
     @Test
@@ -113,16 +115,18 @@ struct LogTests {
         LogSink.warning("\(token) unsupported")
         LogSink.error("\(token) invalid")
 
-        #expect(messages.lines == [
-            "info: \(token) alignment",
-            "warning: \(token) unsupported",
-            "error: \(token) invalid"
-        ])
+        #expect(
+            messages.lines == [
+                "info: \(token) alignment",
+                "warning: \(token) unsupported",
+                "error: \(token) invalid",
+            ]
+        )
     }
 
     // Commands are only generated when CoreGraphics is available; the renderer
     // emits no warnings on other platforms.
-#if canImport(CoreGraphics)
+    #if canImport(CoreGraphics)
     @Test
     func renderingWarningsReachTheHandler() throws {
         let messages = Messages(filter: nil)
@@ -132,24 +136,24 @@ struct LogTests {
         Log.handler = { messages.append($0, $1) }
 
         let xml = #"""
-        <?xml version="1.0" encoding="UTF-8"?>
-        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-                <linearGradient id="fade">
-                    <stop offset="0" stop-color="black" stop-opacity="0"/>
-                    <stop offset="1" stop-color="black" stop-opacity="1"/>
-                </linearGradient>
-            </defs>
-            <rect width="100" height="100" fill="url(#fade)"/>
-        </svg>
-        """#
+            <?xml version="1.0" encoding="UTF-8"?>
+            <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="fade">
+                        <stop offset="0" stop-color="black" stop-opacity="0"/>
+                        <stop offset="1" stop-color="black" stop-opacity="1"/>
+                    </linearGradient>
+                </defs>
+                <rect width="100" height="100" fill="url(#fade)"/>
+            </svg>
+            """#
 
         let dom = try DOM.SVG.parse(data: Data(xml.utf8))
         _ = SVG(dom: dom, options: [.disableTransparencyLayers])
 
         #expect(messages.lines.contains("warning: PDF does not support gradients with stop-opacity"))
     }
-#endif
+    #endif
 
     @Test
     func parsingErrorsReachTheHandler() throws {

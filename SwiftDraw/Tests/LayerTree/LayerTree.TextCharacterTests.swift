@@ -43,9 +43,11 @@ struct LayerTreeTextCharacterTests {
     }
 
     private func parse(_ text: String) throws -> DOM.SVG {
-        try DOM.SVG.parse(xml: """
-        <svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" font-family="Helvetica" font-size="20">\(text)</svg>
-        """)
+        try DOM.SVG.parse(
+            xml: """
+                <svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" font-family="Helvetica" font-size="20">\(text)</svg>
+                """
+        )
     }
 
     private func characters(_ text: String) throws -> [LayerTree.Builder.TextCharacter] {
@@ -96,9 +98,15 @@ struct LayerTreeTextCharacterTests {
     @Test
     func rotateRepeatsItsLastValue() throws {
         #expect(try characters(#"<text rotate="10 20">ABCD</text>"#).map(\.rotate) == [10, 20, 20, 20])
-        #expect(try characters(#"<text rotate="1 2 3 4 5">A<tspan rotate="9">BC</tspan>DE</text>"#).map(\.rotate) == [1, 9, 9, 4, 5])
+        #expect(
+            try characters(#"<text rotate="1 2 3 4 5">A<tspan rotate="9">BC</tspan>DE</text>"#).map(\.rotate) == [
+                1, 9, 9, 4, 5,
+            ]
+        )
         // a span without its own list takes its ancestor's values for its characters
-        #expect(try characters(#"<text rotate="1 2 3">A<tspan fill="red">BC</tspan></text>"#).map(\.rotate) == [1, 2, 3])
+        #expect(
+            try characters(#"<text rotate="1 2 3">A<tspan fill="red">BC</tspan></text>"#).map(\.rotate) == [1, 2, 3]
+        )
     }
 
     @Test
@@ -146,10 +154,14 @@ struct LayerTreeTextCharacterTests {
             chunk.runs.map { run in
                 var run = run
                 run.origin.x += chunk.shift
-                run.extent = run.horizontalExtent.lowerBound + chunk.shift...run.horizontalExtent.upperBound + chunk.shift
+                run.extent =
+                    run.horizontalExtent.lowerBound + chunk.shift...run.horizontalExtent.upperBound + chunk.shift
                 run.glyphs = run.glyphs?.map {
-                    LayerTree.Builder.PlacedGlyph(fontName: $0.fontName, glyph: $0.glyph,
-                                                  position: LayerTree.Point($0.position.x + chunk.shift, $0.position.y))
+                    LayerTree.Builder.PlacedGlyph(
+                        fontName: $0.fontName,
+                        glyph: $0.glyph,
+                        position: LayerTree.Point($0.position.x + chunk.shift, $0.position.y)
+                    )
                 }
                 return run
             }
@@ -168,7 +180,7 @@ struct LayerTreeTextCharacterTests {
         #expect(placed.map(\.string) == ["ABC"])
         let run = try #require(placed.first)
         #expect(run.origin == LayerTree.Point(11, 23))
-#if canImport(CoreText)
+        #if canImport(CoreText)
         let glyphs = try #require(run.glyphs)
         try #require(glyphs.count == 3)
         #expect(glyphs[0].position == LayerTree.Point(11, 23))
@@ -176,9 +188,9 @@ struct LayerTreeTextCharacterTests {
         #expect(abs(glyphs[1].position.x - (13 + advance("AB", run) - advance("B", run))) < 0.01)
         #expect(glyphs[1].position.y == 27)
         #expect(glyphs[2].position.y == 27)
-#else
+        #else
         #expect(run.glyphs != nil)
-#endif
+        #endif
     }
 
     @Test
@@ -206,12 +218,12 @@ struct LayerTreeTextCharacterTests {
         let run = try #require(placed.first)
         #expect(placed.count == 1)
         #expect(abs(run.horizontalExtent.lowerBound - 100) < 0.001)
-#if canImport(CoreText)
+        #if canImport(CoreText)
         let glyphs = try #require(run.glyphs)
         try #require(glyphs.count == 2)
         #expect(abs(glyphs[1].position.x - 100) < 0.001)
         #expect(glyphs[0].position.x > glyphs[1].position.x)
-#endif
+        #endif
     }
 
     @Test
@@ -224,7 +236,7 @@ struct LayerTreeTextCharacterTests {
         #expect(placed.last?.glyphs != nil)
     }
 
-#if canImport(CoreText)
+    #if canImport(CoreText)
     @Test
     func rotateTurnsEachGlyphAboutItsOrigin() throws {
         let layer = LayerTree.Builder(svg: try parse(#"<text x="10" y="20" rotate="0 90">AB</text>"#)).makeLayer()
@@ -237,11 +249,15 @@ struct LayerTreeTextCharacterTests {
         }
         let (glyphLayer, run) = try #require(rotated(layer).first)
         let p = try #require(run.positions.first)
-        #expect(glyphLayer.transform == [.translate(tx: p.x, ty: p.y),
-                                         .rotate(radians: .pi / 2),
-                                         .translate(tx: -p.x, ty: -p.y)])
+        #expect(
+            glyphLayer.transform == [
+                .translate(tx: p.x, ty: p.y),
+                .rotate(radians: .pi / 2),
+                .translate(tx: -p.x, ty: -p.y),
+            ]
+        )
     }
-#endif
+    #endif
 
     @Test(arguments: [
         #"<text x="10" y="20">Text</text>"#,

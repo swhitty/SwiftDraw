@@ -33,9 +33,11 @@ import Testing
 struct LayerTreeNestedSVGTests {
 
     private func layer(_ body: String, attributes: String = "") throws -> LayerTree.Layer {
-        let svg = try DOM.SVG.parse(xml: """
-        <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" \(attributes)>\(body)</svg>
-        """)
+        let svg = try DOM.SVG.parse(
+            xml: """
+                <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" \(attributes)>\(body)</svg>
+                """
+        )
         return LayerTree.Builder(svg: svg).makeLayer()
     }
 
@@ -52,7 +54,7 @@ struct LayerTreeNestedSVGTests {
     @Test(arguments: [
         #"<svg width="50" height="50"><rect width="10" height="10"/></svg>"#,
         #"<g><svg width="50" height="50" viewBox="0 0 10 10"><rect width="10" height="10"/></svg></g>"#,
-        #"<svg width="50" height="50"><svg width="20" height="20"><rect width="10" height="10"/></svg></svg>"#
+        #"<svg width="50" height="50"><svg width="20" height="20"><rect width="10" height="10"/></svg></svg>"#,
     ])
     func nestedSVGContentIsBuiltOnce(body: String) throws {
         #expect(try shapes(in: layer(body)).count == 1)

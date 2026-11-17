@@ -106,7 +106,7 @@ struct SVGTests {
         }
     }
 
-#if canImport(UIKit)
+    #if canImport(UIKit)
     @Test
     func rasterize() {
         let svg = SVG(named: "gradient-apple.svg", in: .test)!
@@ -120,7 +120,7 @@ struct SVGTests {
         #expect(reloaded.size == CGSize(width: 300, height: 300))
         #expect(reloaded.scale == 1)
     }
-#endif
+    #endif
 
     @Test
     func size() {
@@ -327,47 +327,81 @@ struct SVGHostileTests {
 
     @Test
     func mutualUseCycleDoesNotRecurse() {
-        #expect(load("\(Self.head) width=\"9\" height=\"9\"><g id=\"a\"><use href=\"#b\"/></g><g id=\"b\"><use href=\"#a\"/></g><use href=\"#a\"/></svg>") != nil)
+        #expect(
+            load(
+                "\(Self.head) width=\"9\" height=\"9\"><g id=\"a\"><use href=\"#b\"/></g><g id=\"b\"><use href=\"#a\"/></g><use href=\"#a\"/></svg>"
+            ) != nil
+        )
     }
 
     @Test
     func patternUseCycleDoesNotRecurse() {
-        #expect(load("\(Self.head) width=\"9\" height=\"9\"><pattern id=\"p\" width=\"2\" height=\"2\"><use href=\"#r\"/></pattern><rect id=\"r\" width=\"9\" height=\"9\" fill=\"url(#p)\"/><use href=\"#r\"/></svg>") != nil)
+        #expect(
+            load(
+                "\(Self.head) width=\"9\" height=\"9\"><pattern id=\"p\" width=\"2\" height=\"2\"><use href=\"#r\"/></pattern><rect id=\"r\" width=\"9\" height=\"9\" fill=\"url(#p)\"/><use href=\"#r\"/></svg>"
+            ) != nil
+        )
     }
 
     @Test
     func useGradientCycleDoesNotRecurse() {
-        #expect(load("\(Self.head) width=\"9\" height=\"9\"><g id=\"a\"><use href=\"#b\"/></g><g id=\"b\" fill=\"url(#a)\"/></svg>") != nil)
+        #expect(
+            load(
+                "\(Self.head) width=\"9\" height=\"9\"><g id=\"a\"><use href=\"#b\"/></g><g id=\"b\" fill=\"url(#a)\"/></svg>"
+            ) != nil
+        )
     }
 
     @Test
     func useExternalFileCycleDoesNotRecurse() {
-        #expect(load("\(Self.head) width=\"9\" height=\"9\"><g id=\"a\"><use xlink:href=\"p.svg#a\"/></g></svg>") != nil)
+        #expect(
+            load("\(Self.head) width=\"9\" height=\"9\"><g id=\"a\"><use xlink:href=\"p.svg#a\"/></g></svg>") != nil
+        )
     }
 
     @Test
     func maskCycleDoesNotRecurse() {
-        #expect(load("\(Self.head) width=\"9\" height=\"9\"><mask id=\"m\"><rect width=\"5\" height=\"5\" mask=\"url(#m)\"/></mask><rect width=\"9\" height=\"9\" mask=\"url(#m)\"/></svg>") != nil)
+        #expect(
+            load(
+                "\(Self.head) width=\"9\" height=\"9\"><mask id=\"m\"><rect width=\"5\" height=\"5\" mask=\"url(#m)\"/></mask><rect width=\"9\" height=\"9\" mask=\"url(#m)\"/></svg>"
+            ) != nil
+        )
     }
 
     @Test
     func maskPercentEncodedCycleDoesNotRecurse() {
-        #expect(load("\(Self.head) width=\"9\" height=\"9\"><mask id=\"m\"><rect width=\"5\" height=\"5\" mask=\"url(#%6d)\"/></mask><rect width=\"9\" height=\"9\" mask=\"url(#m)\"/></svg>") != nil)
+        #expect(
+            load(
+                "\(Self.head) width=\"9\" height=\"9\"><mask id=\"m\"><rect width=\"5\" height=\"5\" mask=\"url(#%6d)\"/></mask><rect width=\"9\" height=\"9\" mask=\"url(#m)\"/></svg>"
+            ) != nil
+        )
     }
 
     @Test
     func clipPathCycleDoesNotRecurse() {
-        #expect(load("\(Self.head) width=\"9\" height=\"9\"><clipPath id=\"c\"><rect width=\"5\" height=\"5\" clip-path=\"url(#c)\"/></clipPath><rect width=\"9\" height=\"9\" clip-path=\"url(#c)\"/></svg>") != nil)
+        #expect(
+            load(
+                "\(Self.head) width=\"9\" height=\"9\"><clipPath id=\"c\"><rect width=\"5\" height=\"5\" clip-path=\"url(#c)\"/></clipPath><rect width=\"9\" height=\"9\" clip-path=\"url(#c)\"/></svg>"
+            ) != nil
+        )
     }
 
     @Test
     func patternCycleDoesNotRecurse() {
-        #expect(load("\(Self.head) width=\"9\" height=\"9\"><pattern id=\"p\" width=\"2\" height=\"2\"><rect width=\"1\" height=\"1\" fill=\"url(#p)\"/></pattern><rect width=\"9\" height=\"9\" fill=\"url(#p)\"/></svg>") != nil)
+        #expect(
+            load(
+                "\(Self.head) width=\"9\" height=\"9\"><pattern id=\"p\" width=\"2\" height=\"2\"><rect width=\"1\" height=\"1\" fill=\"url(#p)\"/></pattern><rect width=\"9\" height=\"9\" fill=\"url(#p)\"/></svg>"
+            ) != nil
+        )
     }
 
     @Test
     func markerCycleDoesNotRecurse() {
-        #expect(load("\(Self.head) width=\"9\" height=\"9\"><marker id=\"m\"><path d=\"M0 0L1 1\" marker-end=\"url(#m)\"/></marker><path d=\"M0 0L5 5\" marker-end=\"url(#m)\"/></svg>") != nil)
+        #expect(
+            load(
+                "\(Self.head) width=\"9\" height=\"9\"><marker id=\"m\"><path d=\"M0 0L1 1\" marker-end=\"url(#m)\"/></marker><path d=\"M0 0L5 5\" marker-end=\"url(#m)\"/></svg>"
+            ) != nil
+        )
     }
 
     /// Level n is a group that uses level n - 1 `fanOut` times: `fanOut ^ depth` rects from a tiny file.
@@ -407,6 +441,10 @@ struct SVGHostileTests {
 
     @Test
     func gradientHrefCycleDoesNotRecurse() {
-        #expect(load("\(Self.head) width=\"9\" height=\"9\"><linearGradient id=\"a\" href=\"#b\"/><linearGradient id=\"b\" href=\"#a\"/><rect width=\"9\" height=\"9\" fill=\"url(#a)\"/></svg>") != nil)
+        #expect(
+            load(
+                "\(Self.head) width=\"9\" height=\"9\"><linearGradient id=\"a\" href=\"#b\"/><linearGradient id=\"b\" href=\"#a\"/><rect width=\"9\" height=\"9\" fill=\"url(#a)\"/></svg>"
+            ) != nil
+        )
     }
 }

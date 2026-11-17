@@ -41,18 +41,20 @@ struct CGRendererFilterPrimitivesTests {
     // Inkscape's drop shadow: a half black copy of the shape, offset, under the shape
     @Test
     func inkscapeDropShadow() throws {
-        let bitmap = try render(#"""
-        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
-            <filter style="color-interpolation-filters:sRGB" id="shadow" x="-0.5" y="-0.5" width="2" height="2">
-                <feFlood flood-opacity="0.498039" flood-color="rgb(0,0,0)" result="flood" />
-                <feComposite in="flood" in2="SourceGraphic" operator="in" result="composite1" />
-                <feGaussianBlur in="composite1" stdDeviation="0" result="blur" />
-                <feOffset dx="10" dy="10" result="offset" />
-                <feComposite in="SourceGraphic" in2="offset" operator="over" result="composite2" />
-            </filter>
-            <rect x="20" y="20" width="40" height="40" fill="red" filter="url(#shadow)" />
-        </svg>
-        """#)
+        let bitmap = try render(
+            #"""
+            <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+                <filter style="color-interpolation-filters:sRGB" id="shadow" x="-0.5" y="-0.5" width="2" height="2">
+                    <feFlood flood-opacity="0.498039" flood-color="rgb(0,0,0)" result="flood" />
+                    <feComposite in="flood" in2="SourceGraphic" operator="in" result="composite1" />
+                    <feGaussianBlur in="composite1" stdDeviation="0" result="blur" />
+                    <feOffset dx="10" dy="10" result="offset" />
+                    <feComposite in="SourceGraphic" in2="offset" operator="over" result="composite2" />
+                </filter>
+                <rect x="20" y="20" width="40" height="40" fill="red" filter="url(#shadow)" />
+            </svg>
+            """#
+        )
 
         #expect(bitmap.rgba(x: 40, y: 40) == [255, 0, 0, 255])
         // the shadow alone, below and right of the shape
@@ -64,19 +66,21 @@ struct CGRendererFilterPrimitivesTests {
     // Illustrator's AI_Shadow: blurred SourceAlpha offset under SourceGraphic, in linearRGB
     @Test
     func illustratorShadow() throws {
-        let bitmap = try render(#"""
-        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
-            <filter id="AI_Shadow_1" filterUnits="objectBoundingBox" x="-0.5" y="-0.5" width="2" height="2">
-                <feGaussianBlur in="SourceAlpha" stdDeviation="2" result="blur" />
-                <feOffset dx="10" dy="10" in="blur" result="offsetBlurredAlpha" />
-                <feMerge>
-                    <feMergeNode in="offsetBlurredAlpha" />
-                    <feMergeNode in="SourceGraphic" />
-                </feMerge>
-            </filter>
-            <rect x="20" y="20" width="40" height="40" fill="#0000ff" filter="url(#AI_Shadow_1)" />
-        </svg>
-        """#)
+        let bitmap = try render(
+            #"""
+            <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+                <filter id="AI_Shadow_1" filterUnits="objectBoundingBox" x="-0.5" y="-0.5" width="2" height="2">
+                    <feGaussianBlur in="SourceAlpha" stdDeviation="2" result="blur" />
+                    <feOffset dx="10" dy="10" in="blur" result="offsetBlurredAlpha" />
+                    <feMerge>
+                        <feMergeNode in="offsetBlurredAlpha" />
+                        <feMergeNode in="SourceGraphic" />
+                    </feMerge>
+                </filter>
+                <rect x="20" y="20" width="40" height="40" fill="#0000ff" filter="url(#AI_Shadow_1)" />
+            </svg>
+            """#
+        )
 
         #expect(bitmap.rgba(x: 40, y: 40) == [0, 0, 255, 255])
         // the shadow alone, more than three deviations inside its edges
@@ -89,21 +93,23 @@ struct CGRendererFilterPrimitivesTests {
     // Figma's drop shadow: hard alpha, offset, blur, the shape cut out, a 25% black colour matrix
     @Test
     func figmaDropShadow() throws {
-        let bitmap = try render(#"""
-        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
-            <filter id="filter0_d" x="0" y="0" width="100" height="100" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-                <feFlood flood-opacity="0" result="BackgroundImageFix"/>
-                <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
-                <feOffset dy="10"/>
-                <feGaussianBlur stdDeviation="1"/>
-                <feComposite in2="hardAlpha" operator="out"/>
-                <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.25 0"/>
-                <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow"/>
-                <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow" result="shape"/>
-            </filter>
-            <rect x="20" y="20" width="40" height="40" fill="#00ff00" filter="url(#filter0_d)" />
-        </svg>
-        """#)
+        let bitmap = try render(
+            #"""
+            <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+                <filter id="filter0_d" x="0" y="0" width="100" height="100" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+                    <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+                    <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+                    <feOffset dy="10"/>
+                    <feGaussianBlur stdDeviation="1"/>
+                    <feComposite in2="hardAlpha" operator="out"/>
+                    <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.25 0"/>
+                    <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow"/>
+                    <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow" result="shape"/>
+                </filter>
+                <rect x="20" y="20" width="40" height="40" fill="#00ff00" filter="url(#filter0_d)" />
+            </svg>
+            """#
+        )
 
         #expect(bitmap.rgba(x: 40, y: 40) == [0, 255, 0, 255])
         #expect(abs(bitmap.alpha(x: 40, y: 65) - 0.25) <= 0.02)
@@ -115,14 +121,16 @@ struct CGRendererFilterPrimitivesTests {
     // Filter Effects 1 §9.4 example: the flood fills its subregion only, hiding the shape
     @Test
     func floodSubregion() throws {
-        let bitmap = try render(#"""
-        <svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">
-            <filter id="flood" x="0" y="0" width="100%" height="100%" primitiveUnits="objectBoundingBox">
-                <feFlood x="25%" y="25%" width="50%" height="50%" flood-color="green" flood-opacity="0.75"/>
-            </filter>
-            <circle fill="red" filter="url(#flood)" cx="100" cy="100" r="90"/>
-        </svg>
-        """#)
+        let bitmap = try render(
+            #"""
+            <svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">
+                <filter id="flood" x="0" y="0" width="100%" height="100%" primitiveUnits="objectBoundingBox">
+                    <feFlood x="25%" y="25%" width="50%" height="50%" flood-color="green" flood-opacity="0.75"/>
+                </filter>
+                <circle fill="red" filter="url(#flood)" cx="100" cy="100" r="90"/>
+            </svg>
+            """#
+        )
 
         assertPixel(bitmap.rgba(x: 100, y: 100), [0, 96, 0, 191])
         assertPixel(bitmap.rgba(x: 60, y: 140), [0, 96, 0, 191])
@@ -135,15 +143,17 @@ struct CGRendererFilterPrimitivesTests {
     @Test
     func colorInterpolationFilters() throws {
         func draw(_ space: String) throws -> Bitmap {
-            try render(#"""
-            <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
-                <filter id="f" \#(space)>
-                    <feFlood flood-color="black" result="black" />
-                    <feMerge><feMergeNode in="black" /><feMergeNode in="SourceGraphic" /></feMerge>
-                </filter>
-                <rect x="20" y="20" width="60" height="60" fill="white" fill-opacity="0.5" filter="url(#f)" />
-            </svg>
-            """#)
+            try render(
+                #"""
+                <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+                    <filter id="f" \#(space)>
+                        <feFlood flood-color="black" result="black" />
+                        <feMerge><feMergeNode in="black" /><feMergeNode in="SourceGraphic" /></feMerge>
+                    </filter>
+                    <rect x="20" y="20" width="60" height="60" fill="white" fill-opacity="0.5" filter="url(#f)" />
+                </svg>
+                """#
+            )
         }
 
         let linear = try draw("")
@@ -155,14 +165,16 @@ struct CGRendererFilterPrimitivesTests {
 
     @Test
     func colorMatrixSaturate() throws {
-        let bitmap = try render(#"""
-        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
-            <filter id="grey" color-interpolation-filters="sRGB"><feColorMatrix type="saturate" values="0" /></filter>
-            <filter id="hue" color-interpolation-filters="sRGB"><feColorMatrix type="hueRotate" values="180" /></filter>
-            <rect x="0" y="0" width="50" height="50" fill="red" filter="url(#grey)" />
-            <rect x="50" y="0" width="50" height="50" fill="#808080" filter="url(#hue)" />
-        </svg>
-        """#)
+        let bitmap = try render(
+            #"""
+            <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+                <filter id="grey" color-interpolation-filters="sRGB"><feColorMatrix type="saturate" values="0" /></filter>
+                <filter id="hue" color-interpolation-filters="sRGB"><feColorMatrix type="hueRotate" values="180" /></filter>
+                <rect x="0" y="0" width="50" height="50" fill="red" filter="url(#grey)" />
+                <rect x="50" y="0" width="50" height="50" fill="#808080" filter="url(#hue)" />
+            </svg>
+            """#
+        )
 
         #expect(bitmap.rgba(x: 25, y: 25) == [54, 54, 54, 255])
         // a hue rotation keeps greys
@@ -171,15 +183,17 @@ struct CGRendererFilterPrimitivesTests {
 
     @Test
     func blendMultiplyOntoFlood() throws {
-        let bitmap = try render(#"""
-        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
-            <filter id="f" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
-                <feFlood flood-color="#ffff00" result="yellow" />
-                <feBlend mode="multiply" in="SourceGraphic" in2="yellow" />
-            </filter>
-            <rect x="0" y="0" width="100" height="100" fill="#ff00ff" filter="url(#f)" />
-        </svg>
-        """#)
+        let bitmap = try render(
+            #"""
+            <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+                <filter id="f" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+                    <feFlood flood-color="#ffff00" result="yellow" />
+                    <feBlend mode="multiply" in="SourceGraphic" in2="yellow" />
+                </filter>
+                <rect x="0" y="0" width="100" height="100" fill="#ff00ff" filter="url(#f)" />
+            </svg>
+            """#
+        )
 
         #expect(bitmap.rgba(x: 50, y: 50) == [255, 0, 0, 255])
     }
@@ -187,17 +201,19 @@ struct CGRendererFilterPrimitivesTests {
     // the visible area grows by the offset: content clipped away can be moved into view
     @Test
     func offsetBringsContentIntoTheClip() throws {
-        let bitmap = try render(#"""
-        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
-            <filter id="f" filterUnits="userSpaceOnUse" x="0" y="0" width="100" height="100">
-                <feOffset dx="50" />
-            </filter>
-            <clipPath id="right"><rect x="50" y="0" width="50" height="100" /></clipPath>
-            <g clip-path="url(#right)">
-                <rect x="0" y="0" width="40" height="40" fill="black" filter="url(#f)" />
-            </g>
-        </svg>
-        """#)
+        let bitmap = try render(
+            #"""
+            <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+                <filter id="f" filterUnits="userSpaceOnUse" x="0" y="0" width="100" height="100">
+                    <feOffset dx="50" />
+                </filter>
+                <clipPath id="right"><rect x="50" y="0" width="50" height="100" /></clipPath>
+                <g clip-path="url(#right)">
+                    <rect x="0" y="0" width="40" height="40" fill="black" filter="url(#f)" />
+                </g>
+            </svg>
+            """#
+        )
 
         #expect(bitmap.alpha(x: 70, y: 20) == 1)
         #expect(bitmap.alpha(x: 20, y: 20) == 0)
@@ -207,21 +223,26 @@ struct CGRendererFilterPrimitivesTests {
     // offsets are in user space: scaled to device pixels, turned with the shape
     @Test
     func offsetFollowsScaleAndRotation() throws {
-        let scaled = try render(#"""
-        <svg width="50" height="50" xmlns="http://www.w3.org/2000/svg">
-            <filter id="f" filterUnits="userSpaceOnUse" x="0" y="0" width="50" height="50"><feOffset dx="10" /></filter>
-            <rect x="0" y="0" width="10" height="10" fill="black" filter="url(#f)" />
-        </svg>
-        """#, scale: 2)
+        let scaled = try render(
+            #"""
+            <svg width="50" height="50" xmlns="http://www.w3.org/2000/svg">
+                <filter id="f" filterUnits="userSpaceOnUse" x="0" y="0" width="50" height="50"><feOffset dx="10" /></filter>
+                <rect x="0" y="0" width="10" height="10" fill="black" filter="url(#f)" />
+            </svg>
+            """#,
+            scale: 2
+        )
         #expect(scaled.alpha(x: 30, y: 10) == 1)
         #expect(scaled.alpha(x: 10, y: 10) == 0)
 
-        let rotated = try render(#"""
-        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
-            <filter id="f" filterUnits="userSpaceOnUse" x="-100" y="-100" width="300" height="300"><feOffset dx="30" /></filter>
-            <rect x="40" y="10" width="20" height="20" fill="black" transform="rotate(90 50 50)" filter="url(#f)" />
-        </svg>
-        """#)
+        let rotated = try render(
+            #"""
+            <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+                <filter id="f" filterUnits="userSpaceOnUse" x="-100" y="-100" width="300" height="300"><feOffset dx="30" /></filter>
+                <rect x="40" y="10" width="20" height="20" fill="black" transform="rotate(90 50 50)" filter="url(#f)" />
+            </svg>
+            """#
+        )
         // rotate(90) maps the rect to x 70...90, y 40...60 and +x to +y
         #expect(rotated.alpha(x: 80, y: 80) == 1)
         #expect(rotated.alpha(x: 80, y: 50) == 0)
@@ -230,16 +251,18 @@ struct CGRendererFilterPrimitivesTests {
     // a disconnected branch, and primitives after it, follow the primary tree only
     @Test
     func onlyPrimaryTreeIsDrawn() throws {
-        let bitmap = try render(#"""
-        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
-            <filter id="f" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
-                <feFlood flood-color="red" />
-                <feFlood flood-color="blue" result="blue" />
-                <feComposite in="blue" in2="SourceAlpha" operator="in" />
-            </filter>
-            <rect x="10" y="10" width="80" height="80" fill="black" fill-opacity="0.5" filter="url(#f)" />
-        </svg>
-        """#)
+        let bitmap = try render(
+            #"""
+            <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+                <filter id="f" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+                    <feFlood flood-color="red" />
+                    <feFlood flood-color="blue" result="blue" />
+                    <feComposite in="blue" in2="SourceAlpha" operator="in" />
+                </filter>
+                <rect x="10" y="10" width="80" height="80" fill="black" fill-opacity="0.5" filter="url(#f)" />
+            </svg>
+            """#
+        )
 
         assertPixel(bitmap.rgba(x: 50, y: 50), [0, 0, 128, 128])
     }
@@ -247,15 +270,18 @@ struct CGRendererFilterPrimitivesTests {
     // the pixel budget is shared by the bitmaps of the tree: still drawn, at a reduced scale
     @Test
     func overPixelCapStillFilters() throws {
-        let bitmap = try render(#"""
-        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
-            <filter id="f" filterUnits="userSpaceOnUse" x="0" y="0" width="100" height="100">
-                <feOffset in="SourceAlpha" dx="20" dy="20" result="o" />
-                <feMerge><feMergeNode in="o" /><feMergeNode in="SourceGraphic" /></feMerge>
-            </filter>
-            <rect x="10" y="10" width="40" height="40" fill="white" filter="url(#f)" />
-        </svg>
-        """#, maxFilterLayerPixels: 2_000)
+        let bitmap = try render(
+            #"""
+            <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+                <filter id="f" filterUnits="userSpaceOnUse" x="0" y="0" width="100" height="100">
+                    <feOffset in="SourceAlpha" dx="20" dy="20" result="o" />
+                    <feMerge><feMergeNode in="o" /><feMergeNode in="SourceGraphic" /></feMerge>
+                </filter>
+                <rect x="10" y="10" width="40" height="40" fill="white" filter="url(#f)" />
+            </svg>
+            """#,
+            maxFilterLayerPixels: 2_000
+        )
 
         #expect(bitmap.alpha(x: 30, y: 30) > 0.9)
         #expect(bitmap.rgba(x: 30, y: 30)[0] > 200)
@@ -266,13 +292,15 @@ struct CGRendererFilterPrimitivesTests {
 
     @Test
     func hugeOffsetDoesNotTrap() throws {
-        let bitmap = try render(#"""
-        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
-            <filter id="f" primitiveUnits="objectBoundingBox"><feOffset dx="1e30" dy="-1e30" /></filter>
-            <rect x="10" y="10" width="40" height="40" fill="black" filter="url(#f)" />
-            <rect x="60" y="60" width="20" height="20" fill="black" />
-        </svg>
-        """#)
+        let bitmap = try render(
+            #"""
+            <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+                <filter id="f" primitiveUnits="objectBoundingBox"><feOffset dx="1e30" dy="-1e30" /></filter>
+                <rect x="10" y="10" width="40" height="40" fill="black" filter="url(#f)" />
+                <rect x="60" y="60" width="20" height="20" fill="black" />
+            </svg>
+            """#
+        )
 
         #expect(bitmap.alpha(x: 30, y: 30) == 0)
         #expect(bitmap.alpha(x: 70, y: 70) == 1)
@@ -282,13 +310,15 @@ struct CGRendererFilterPrimitivesTests {
     // and the filter's transform applies to it (link-on-an-element-with-transform)
     @Test
     func imageDrawsTheReferencedElement() throws {
-        let bitmap = try render(##"""
-        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
-            <defs><rect id="r" width="30" height="30" fill="#00ff00" /></defs>
-            <filter id="f" x="0" y="0" width="1" height="1"><feImage href="#r" x="10" /></filter>
-            <rect x="20" y="20" width="40" height="40" fill="red" filter="url(#f)" transform="translate(10 10)" />
-        </svg>
-        """##)
+        let bitmap = try render(
+            ##"""
+            <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+                <defs><rect id="r" width="30" height="30" fill="#00ff00" /></defs>
+                <filter id="f" x="0" y="0" width="1" height="1"><feImage href="#r" x="10" /></filter>
+                <rect x="20" y="20" width="40" height="40" fill="red" filter="url(#f)" transform="translate(10 10)" />
+            </svg>
+            """##
+        )
 
         // the element at 10...40 × 20...50 in the filter's user space, clipped to the region from 20, then moved by 10
         #expect(bitmap.rgba(x: 32, y: 35) == [0, 255, 0, 255])
@@ -303,13 +333,17 @@ struct CGRendererFilterPrimitivesTests {
     @Test
     func imageDrawsAnEmbeddedPNG() throws {
         let svg = ##"""
-        <svg width="160" height="160" xmlns="http://www.w3.org/2000/svg">
-            <filter id="f" x="0" y="0" width="1" height="1">
-                <feImage image-rendering="RENDERING" href="PNG" />
-            </filter>
-            <rect width="160" height="160" fill="red" filter="url(#f)" />
-        </svg>
-        """##.replacingOccurrences(of: "PNG", with: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQAQMAAAAlPW0iAAAAB3RJTUUH4gMLDwAjrsLbtwAAAAlwSFlzAAAuIwAALiMBeKU/dgAAABl0RVh0Q29tbWVudABDcmVhdGVkIHdpdGggR0lNUFeBDhcAAAAGUExURQAA/xjQP14JpdQAAAABYktHRACIBR1IAAAAFklEQVR42mMAgvp/IJTAhgdB1ADVAgDvdAnxN1Ib1gAAAABJRU5ErkJggg==")
+            <svg width="160" height="160" xmlns="http://www.w3.org/2000/svg">
+                <filter id="f" x="0" y="0" width="1" height="1">
+                    <feImage image-rendering="RENDERING" href="PNG" />
+                </filter>
+                <rect width="160" height="160" fill="red" filter="url(#f)" />
+            </svg>
+            """##.replacingOccurrences(
+                of: "PNG",
+                with:
+                    "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQAQMAAAAlPW0iAAAAB3RJTUUH4gMLDwAjrsLbtwAAAAlwSFlzAAAuIwAALiMBeKU/dgAAABl0RVh0Q29tbWVudABDcmVhdGVkIHdpdGggR0lNUFeBDhcAAAAGUExURQAA/xjQP14JpdQAAAABYktHRACIBR1IAAAAFklEQVR42mMAgvp/IJTAhgdB1ADVAgDvdAnxN1Ib1gAAAABJRU5ErkJggg=="
+            )
         let sharp = try render(svg.replacingOccurrences(of: "RENDERING", with: "optimizeSpeed"))
         let smooth = try render(svg.replacingOccurrences(of: "RENDERING", with: "auto"))
 
@@ -322,17 +356,18 @@ struct CGRendererFilterPrimitivesTests {
         #expect(Set((0..<160).map { smooth.rgba(x: $0, y: 80) }).count > 2)
     }
 
-
     // the flood colour goes through the same colour matching as a fill
     @Test
     func floodMatchesFillColor() throws {
-        let bitmap = try render(#"""
-        <svg width="100" height="50" xmlns="http://www.w3.org/2000/svg">
-            <filter id="f" x="0" y="0" width="1" height="1"><feFlood flood-color="#3a7bd5" /></filter>
-            <rect x="0" y="0" width="50" height="50" fill="black" filter="url(#f)" />
-            <rect x="50" y="0" width="50" height="50" fill="#3a7bd5" />
-        </svg>
-        """#)
+        let bitmap = try render(
+            #"""
+            <svg width="100" height="50" xmlns="http://www.w3.org/2000/svg">
+                <filter id="f" x="0" y="0" width="1" height="1"><feFlood flood-color="#3a7bd5" /></filter>
+                <rect x="0" y="0" width="50" height="50" fill="black" filter="url(#f)" />
+                <rect x="50" y="0" width="50" height="50" fill="#3a7bd5" />
+            </svg>
+            """#
+        )
 
         #expect(bitmap.rgba(x: 25, y: 25) == bitmap.rgba(x: 75, y: 25))
     }
@@ -357,24 +392,42 @@ private struct Bitmap {
 private extension CGRendererFilterPrimitivesTests {
 
     // colours other than primaries may move by a step through colour matching and rounding
-    func assertPixel(_ pixel: [UInt8], _ expected: [UInt8], accuracy: Int = 2,
-                     sourceLocation: SourceLocation = #_sourceLocation) {
+    func assertPixel(
+        _ pixel: [UInt8],
+        _ expected: [UInt8],
+        accuracy: Int = 2,
+        sourceLocation: SourceLocation = #_sourceLocation
+    ) {
         #expect(pixel.count == expected.count, sourceLocation: sourceLocation)
         for (value, target) in zip(pixel, expected) {
-            #expect(abs(Int(value) - Int(target)) <= accuracy, "\(pixel) is not \(expected)", sourceLocation: sourceLocation)
+            #expect(
+                abs(Int(value) - Int(target)) <= accuracy,
+                "\(pixel) is not \(expected)",
+                sourceLocation: sourceLocation
+            )
         }
     }
 
-    func render(_ xml: String, scale: CGFloat = 1, maxFilterLayerPixels: Int = CGRenderer.defaultMaxFilterLayerPixels) throws -> Bitmap {
+    func render(
+        _ xml: String,
+        scale: CGFloat = 1,
+        maxFilterLayerPixels: Int = CGRenderer.defaultMaxFilterLayerPixels
+    ) throws -> Bitmap {
         let svg = try #require(SVG(xml: xml))
         let width = Int(svg.size.width * scale)
         let height = Int(svg.size.height * scale)
         var bytes = [UInt8](repeating: 0, count: width * height * 4)
         let space = CGColorSpace(name: CGColorSpace.sRGB)!
         bytes.withUnsafeMutableBytes { buffer in
-            let ctx = CGContext(data: buffer.baseAddress, width: width, height: height,
-                                bitsPerComponent: 8, bytesPerRow: width * 4, space: space,
-                                bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!
+            let ctx = CGContext(
+                data: buffer.baseAddress,
+                width: width,
+                height: height,
+                bitsPerComponent: 8,
+                bytesPerRow: width * 4,
+                space: space,
+                bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+            )!
             // SVG coordinates are y-down
             ctx.translateBy(x: 0, y: CGFloat(height))
             ctx.scaleBy(x: scale, y: -scale)

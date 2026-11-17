@@ -189,7 +189,7 @@ package extension XMLParser {
 
     private static let units: [String: DOM.Unit] = [
         "px": .pixel, "in": .inch, "cm": .centimeter, "mm": .millimeter,
-        "pt": .point, "pc": .pica, "em": .em, "ex": .ex
+        "pt": .point, "pc": .pica, "em": .em, "ex": .ex,
     ]
 
     /// `<angle> | <zero>` in degrees

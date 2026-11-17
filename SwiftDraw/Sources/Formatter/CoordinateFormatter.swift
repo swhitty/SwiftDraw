@@ -41,7 +41,7 @@ struct CoordinateFormatter {
         self.delimeter = delimeter
         self.precision = precision
         self.formatter = NumberFormatter()
-        self.formatter.locale = .init(identifier: "en_US")
+        formatter.locale = .init(identifier: "en_US")
     }
 
     enum Precision {
@@ -77,14 +77,16 @@ struct CoordinateFormatter {
 
     func format(_ coordinates: DOM.Coordinate..., precision: Precision? = nil) -> String {
         let precision = precision ?? self.precision
-        return coordinates
+        return
+            coordinates
             .map { formatValue(Double($0), precision: precision) }
             .joined(separator: delimeter.rawValue)
     }
 
     func format(_ coordinates: Double..., precision: Precision? = nil) -> String {
         let precision = precision ?? self.precision
-        return coordinates
+        return
+            coordinates
             .map { formatValue($0, precision: precision) }
             .joined(separator: delimeter.rawValue)
     }

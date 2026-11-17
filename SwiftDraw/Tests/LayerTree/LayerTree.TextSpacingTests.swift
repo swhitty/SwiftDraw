@@ -38,9 +38,11 @@ import Testing
 struct LayerTreeTextSpacingTests {
 
     private func parse(_ text: String) throws -> DOM.SVG {
-        try DOM.SVG.parse(xml: """
-        <svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" font-family="Helvetica" font-size="20">\(text)</svg>
-        """)
+        try DOM.SVG.parse(
+            xml: """
+                <svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" font-family="Helvetica" font-size="20">\(text)</svg>
+                """
+        )
     }
 
     private func placements(_ text: String) throws -> [LayerTree.Builder.TextRunPlacement] {
@@ -65,17 +67,21 @@ struct LayerTreeTextSpacingTests {
 
     // MARK: - parsing
 
-    @Test(arguments: [
-        ("5", DOM.DashLength.absolute(5)),
-        ("-3", .absolute(-3)),
-        ("normal", .absolute(0)),
-        ("0.5em", .em(0.5)),
-        ("1in", .absolute(96)),
-        // a percentage is of the viewport width
-        ("5%", .absolute(10)),
-    ] as [(String, DOM.DashLength)])
+    @Test(
+        arguments: [
+            ("5", DOM.DashLength.absolute(5)),
+            ("-3", .absolute(-3)),
+            ("normal", .absolute(0)),
+            ("0.5em", .em(0.5)),
+            ("1in", .absolute(96)),
+            // a percentage is of the viewport width
+            ("5%", .absolute(10)),
+        ] as [(String, DOM.DashLength)]
+    )
     func spacingIsParsed(value: String, expected: DOM.DashLength) throws {
-        let text = try #require(try parse(#"<text letter-spacing="\#(value)" word-spacing="\#(value)">A</text>"#).childElements.first)
+        let text = try #require(
+            try parse(#"<text letter-spacing="\#(value)" word-spacing="\#(value)">A</text>"#).childElements.first
+        )
         #expect(text.attributes.letterSpacing == expected)
         #expect(text.attributes.wordSpacing == expected)
     }
@@ -103,7 +109,10 @@ struct LayerTreeTextSpacingTests {
     func wordSpacingGoesAfterEachSpace() throws {
         let natural = try width(#"<text x="10">A B C</text>"#)
         #expect(abs(try width(#"<text x="10" word-spacing="7">A B C</text>"#) - (natural + 14)) < 0.01)
-        #expect(abs(try width(#"<text x="10" word-spacing="7" letter-spacing="1">A B C</text>"#) - (natural + 14 + 4)) < 0.01)
+        #expect(
+            abs(try width(#"<text x="10" word-spacing="7" letter-spacing="1">A B C</text>"#) - (natural + 14 + 4))
+                < 0.01
+        )
     }
 
     @Test
@@ -111,7 +120,12 @@ struct LayerTreeTextSpacingTests {
         let natural = try width(#"<text x="10">ABC<tspan>DE</tspan></text>"#)
         #expect(abs(try width(#"<text x="10" letter-spacing="1">ABC<tspan>DE</tspan></text>"#) - (natural + 4)) < 0.01)
         // the tspan's own spacing follows each of its characters
-        #expect(abs(try width(#"<text x="10" letter-spacing="1">ABC<tspan letter-spacing="10">DE</tspan></text>"#) - (natural + 3 + 10)) < 0.01)
+        #expect(
+            abs(
+                try width(#"<text x="10" letter-spacing="1">ABC<tspan letter-spacing="10">DE</tspan></text>"#)
+                    - (natural + 3 + 10)
+            ) < 0.01
+        )
     }
 
     @Test
@@ -123,11 +137,16 @@ struct LayerTreeTextSpacingTests {
 
     @Test
     func textWithoutSpacingStaysText() throws {
-        for text in [#"<text x="10">ABC</text>"#, #"<text x="10" letter-spacing="normal" word-spacing="0">A B</text>"#] {
+        for text in [#"<text x="10">ABC</text>"#, #"<text x="10" letter-spacing="normal" word-spacing="0">A B</text>"#]
+        {
             #expect(try placements(text).allSatisfy { $0.glyphs == nil })
         }
         // spacing after the only character of a run changes nothing within it
-        #expect(try placements(#"<text x="10" letter-spacing="5">A<tspan fill="red">B</tspan></text>"#).allSatisfy { $0.glyphs == nil })
+        #expect(
+            try placements(#"<text x="10" letter-spacing="5">A<tspan fill="red">B</tspan></text>"#).allSatisfy {
+                $0.glyphs == nil
+            }
+        )
     }
 
     @Test
@@ -140,7 +159,9 @@ struct LayerTreeTextSpacingTests {
     @Test
     func cursiveScriptsAreNotLetterSpaced() throws {
         // Arabic letters join: neither they nor the spaces between them are spaced
-        let placed = try placements("<text x=\"10\" letter-spacing=\"10\">\u{0628}\u{0639}\u{0636} \u{0627}\u{0644}\u{0646}\u{0635}</text>")
+        let placed = try placements(
+            "<text x=\"10\" letter-spacing=\"10\">\u{0628}\u{0639}\u{0636} \u{0627}\u{0644}\u{0646}\u{0635}</text>"
+        )
         #expect(placed.allSatisfy { $0.glyphs == nil })
         #expect(LayerTree.Builder.isCursive("\u{0628}"))
         #expect(!LayerTree.Builder.isCursive("A"))
@@ -153,13 +174,19 @@ struct LayerTreeTextSpacingTests {
         typealias Glyph = LayerTree.Builder.ShapedGlyph
         // "fié" with an "fi" ligature, and é as e and a combining acute (two UTF-16 units, one character)
         let runs = [
-            LayerTree.Builder.ShapedRun(fontName: "Main", glyphs: [
-                Glyph(glyph: 1, x: 0, advance: 10, index: 0),
-                Glyph(glyph: 2, x: 10, advance: 6, index: 2),
-            ]),
-            LayerTree.Builder.ShapedRun(fontName: "Fallback", glyphs: [
-                Glyph(glyph: 3, x: 11, y: 4, advance: 0, index: 3),
-            ]),
+            LayerTree.Builder.ShapedRun(
+                fontName: "Main",
+                glyphs: [
+                    Glyph(glyph: 1, x: 0, advance: 10, index: 0),
+                    Glyph(glyph: 2, x: 10, advance: 6, index: 2),
+                ]
+            ),
+            LayerTree.Builder.ShapedRun(
+                fontName: "Fallback",
+                glyphs: [
+                    Glyph(glyph: 3, x: 11, y: 4, advance: 0, index: 3)
+                ]
+            ),
         ]
         let characters = LayerTree.Builder.makeShapedCharacters(runs, for: "fie\u{0301}")
         #expect(characters.count == 3)
@@ -167,10 +194,16 @@ struct LayerTreeTextSpacingTests {
         #expect(characters[0] == .init(advance: 10, glyphs: [.init(fontName: "Main", glyph: 1, offset: .zero)]))
         #expect(characters[1] == .init(advance: 0, glyphs: []))
         // the mark sits above, about its character's origin (y down)
-        #expect(characters[2] == .init(advance: 6, glyphs: [
-            .init(fontName: "Main", glyph: 2, offset: .zero),
-            .init(fontName: "Fallback", glyph: 3, offset: LayerTree.Point(1, -4)),
-        ]))
+        #expect(
+            characters[2]
+                == .init(
+                    advance: 6,
+                    glyphs: [
+                        .init(fontName: "Main", glyph: 2, offset: .zero),
+                        .init(fontName: "Fallback", glyph: 3, offset: LayerTree.Point(1, -4)),
+                    ]
+                )
+        )
     }
 
     @Test
@@ -178,10 +211,15 @@ struct LayerTreeTextSpacingTests {
         // и and a combining breve from separate text nodes: joined they are one grapheme
         let characters: [Character] = ["\u{0438}", "\u{0306}"]
         #expect(String(characters).count == 1)
-        let runs = [LayerTree.Builder.ShapedRun(fontName: "Main", glyphs: [
-            .init(glyph: 1, x: 0, advance: 10, index: 0),
-            .init(glyph: 2, x: 2, y: 5, advance: 0, index: 1),
-        ])]
+        let runs = [
+            LayerTree.Builder.ShapedRun(
+                fontName: "Main",
+                glyphs: [
+                    .init(glyph: 1, x: 0, advance: 10, index: 0),
+                    .init(glyph: 2, x: 2, y: 5, advance: 0, index: 1),
+                ]
+            )
+        ]
         let shaped = LayerTree.Builder.makeShapedCharacters(runs, for: characters)
         #expect(shaped.count == 2)
         #expect(shaped.map(\.advance) == [10, 0])
@@ -198,10 +236,16 @@ struct LayerTreeTextSpacingTests {
         #expect(!LayerTree.Builder.isWordSeparator("A"))
     }
 
-#if canImport(CoreText)
+    #if canImport(CoreText)
     @Test
     func shapingFollowsTheFontsAdvances() throws {
-        let attributes = LayerTree.TextAttributes(color: .black, font: [.name("Times")], size: 40, anchor: .start, baseline: .auto)
+        let attributes = LayerTree.TextAttributes(
+            color: .black,
+            font: [.name("Times")],
+            size: 40,
+            anchor: .start,
+            baseline: .auto
+        )
         let runs = LayerTree.Builder.makeShapedText("AVA", with: attributes)
         let glyphs = runs.flatMap(\.glyphs)
         #expect(glyphs.count == 3)
@@ -212,7 +256,13 @@ struct LayerTreeTextSpacingTests {
 
     @Test
     func letterSpacingTurnsOptionalLigaturesOff() throws {
-        let attributes = LayerTree.TextAttributes(color: .black, font: [.name("Times")], size: 40, anchor: .start, baseline: .auto)
+        let attributes = LayerTree.TextAttributes(
+            color: .black,
+            font: [.name("Times")],
+            size: 40,
+            anchor: .start,
+            baseline: .auto
+        )
         let ligated = LayerTree.Builder.makeShapedText("ffi", with: attributes).flatMap(\.glyphs)
         let separate = LayerTree.Builder.makeShapedText("ffi", with: attributes, ligatures: false).flatMap(\.glyphs)
         #expect(separate.count == 3)
@@ -221,7 +271,9 @@ struct LayerTreeTextSpacingTests {
 
     @Test
     func spacedGlyphsAreDrawnAsAGlyphRun() throws {
-        let layer = LayerTree.Builder(svg: try parse(#"<text x="10" y="50" letter-spacing="5" fill="green">ABC</text>"#)).makeLayer()
+        let layer = LayerTree.Builder(
+            svg: try parse(#"<text x="10" y="50" letter-spacing="5" fill="green">ABC</text>"#)
+        ).makeLayer()
         func runs(_ layer: LayerTree.Layer) -> [LayerTree.GlyphRun] {
             layer.contents.flatMap { contents -> [LayerTree.GlyphRun] in
                 switch contents {
@@ -238,5 +290,5 @@ struct LayerTreeTextSpacingTests {
         #expect(abs(run.positions[1].x - (10 + a + 5)) < 0.5)
         #expect(run.attributes.color == .rgba(r: 0, g: LayerTree.Float(128) / 255, b: 0, a: 1, space: .srgb))
     }
-#endif
+    #endif
 }

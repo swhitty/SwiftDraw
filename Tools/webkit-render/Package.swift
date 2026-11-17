@@ -28,7 +28,7 @@ let package = Package(
             name: "WebKitRenderCoreTests",
             dependencies: ["WebKitRenderCore"],
             swiftSettings: .upcomingFeatures
-        )
+        ),
     ]
 )
 
@@ -50,7 +50,7 @@ extension Array where Element == SwiftSetting {
             .enableUpcomingFeature("MemberImportVisibility"),
             .enableUpcomingFeature("InternalImportsByDefault"),
 
-            .swiftLanguageMode(.v6)
+            .swiftLanguageMode(.v6),
         ]
     }
 }

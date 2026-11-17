@@ -56,7 +56,7 @@ struct GalleryView: View {
         "effigy.svg",
         "d10.svg",
         "mathjax-latex.svg",
-        "stylesheet-multiple.svg"
+        "stylesheet-multiple.svg",
     ]
 
     var body: some View {
@@ -67,9 +67,14 @@ struct GalleryView: View {
                     .resizable()
                     .scaledToFit()
 
-                AsyncSVGView(url: URL(string: "https://raw.githubusercontent.com/swhitty/SwiftDraw/refs/heads/main/Samples.bundle/spider.svg"))
-                    .resizable()
-                    .scaledToFit()
+                AsyncSVGView(
+                    url: URL(
+                        string:
+                            "https://raw.githubusercontent.com/swhitty/SwiftDraw/refs/heads/main/Samples.bundle/spider.svg"
+                    )
+                )
+                .resizable()
+                .scaledToFit()
 
                 ForEach(images, id: \.self) { image in
                     SVGView(image, bundle: .samples)

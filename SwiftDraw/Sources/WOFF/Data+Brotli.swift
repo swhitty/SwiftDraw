@@ -34,7 +34,7 @@ import Foundation
 import Compression
 
 extension Data {
-    
+
     /// Decompresses Brotli-compressed data.
     /// - Parameter decompressedSize: The size of the decompressed data.
     /// - Returns: The decompressed data.
@@ -49,15 +49,16 @@ extension Data {
 
     @available(macOS 26.0, iOS 26.0, tvOS 26.0, watchOS 26.0, visionOS 26.0, *)
     private func _decompressBrotliSpan(decompressedSize: Int) throws(BrotliError) -> Data {
-        let srcSpan = self.bytes
+        let srcSpan = bytes
         var decompressedData = Data(count: decompressedSize)
         var dstSpan = decompressedData.mutableBytes
         var actualSize = 0
-        
+
         srcSpan.withUnsafeBytes { srcBuffer in
             dstSpan.withUnsafeMutableBytes { dstBuffer in
                 guard let srcPtr = srcBuffer.baseAddress?.assumingMemoryBound(to: UInt8.self),
-                      let dstPtr = dstBuffer.baseAddress?.assumingMemoryBound(to: UInt8.self) else {
+                    let dstPtr = dstBuffer.baseAddress?.assumingMemoryBound(to: UInt8.self)
+                else {
                     return
                 }
                 actualSize = compression_decode_buffer(
@@ -70,11 +71,11 @@ extension Data {
                 )
             }
         }
-        
+
         guard actualSize > 0 else {
             throw .decompressionFailed
         }
-        
+
         decompressedData.count = actualSize
         return decompressedData
     }
@@ -83,13 +84,13 @@ extension Data {
         var decompressedData = Data(count: decompressedSize)
         var actualSize = 0
         var thrownError: BrotliError?
-        
-        self.withUnsafeBytes { srcBuffer in
+
+        withUnsafeBytes { srcBuffer in
             guard let srcPtr = srcBuffer.baseAddress?.assumingMemoryBound(to: UInt8.self) else {
                 thrownError = .decompressionFailed
                 return
             }
-            
+
             actualSize = decompressedData.withUnsafeMutableBytes { dstBuffer -> Int in
                 guard let dstPtr = dstBuffer.baseAddress?.assumingMemoryBound(to: UInt8.self) else {
                     return 0
@@ -104,15 +105,15 @@ extension Data {
                 )
             }
         }
-        
+
         if let error = thrownError {
             throw error
         }
-        
+
         guard actualSize > 0 else {
             throw .decompressionFailed
         }
-        
+
         decompressedData.count = actualSize
         return decompressedData
     }

@@ -102,8 +102,12 @@ extension LayerTree {
                         // what each feImage draws, for the renderer to rasterize into the filter's pixels
                         for (index, primitive) in filterLayer.primitives.enumerated() {
                             if case .image(let image) = primitive.effect {
-                                commands.append(.filterImage(primitive: index,
-                                                             contents: renderCommands(for: image.layer, colorConverter: colorConverter)))
+                                commands.append(
+                                    .filterImage(
+                                        primitive: index,
+                                        contents: renderCommands(for: image.layer, colorConverter: colorConverter)
+                                    )
+                                )
                             }
                         }
                     }
@@ -188,7 +192,10 @@ extension LayerTree {
             )
         }
 
-        func renderCommands(for contents: Layer.Contents, colorConverter: any ColorConverter) -> [RendererCommand<P.Types>] {
+        func renderCommands(
+            for contents: Layer.Contents,
+            colorConverter: any ColorConverter
+        ) -> [RendererCommand<P.Types>] {
             switch makeRenderContents(for: contents, colorConverter: colorConverter) {
             case .simple(let commands):
                 return commands
@@ -205,7 +212,7 @@ extension LayerTree {
             case layer(LayerTree.Layer)
         }
 
-        func makeRenderContents(for contents: Layer.Contents, colorConverter: any ColorConverter) -> RenderContents  {
+        func makeRenderContents(for contents: Layer.Contents, colorConverter: any ColorConverter) -> RenderContents {
             switch contents {
             case .shape(let shape, let stroke, let fill):
                 return .simple(renderCommands(for: shape, stroke: stroke, fill: fill, colorConverter: colorConverter))
@@ -220,10 +227,12 @@ extension LayerTree {
             }
         }
 
-        func renderCommands(for shape: Shape,
-                            stroke: StrokeAttributes,
-                            fill: FillAttributes,
-                            colorConverter: any ColorConverter) -> [RendererCommand<P.Types>] {
+        func renderCommands(
+            for shape: Shape,
+            stroke: StrokeAttributes,
+            fill: FillAttributes,
+            colorConverter: any ColorConverter
+        ) -> [RendererCommand<P.Types>] {
             var commands = [RendererCommand<P.Types>]()
             let path = makeCachedPath(from: shape)
 
@@ -237,12 +246,21 @@ extension LayerTree {
                     commands.append(.fill(path, rule: rule))
                 }
             case .pattern(let fillPattern):
-                if let pattern = makePattern(fillPattern, in: fill.boundingBox ?? provider.getBounds(from: shape), colorConverter: colorConverter) {
+                if let pattern = makePattern(
+                    fillPattern,
+                    in: fill.boundingBox ?? provider.getBounds(from: shape),
+                    colorConverter: colorConverter
+                ) {
                     let rule = provider.createFillRule(from: fill.rule)
-                    commands.append(contentsOf: renderCommands(withOpacity: fill.opacity, [
-                        .setFillPattern(pattern),
-                        .fill(path, rule: rule)
-                    ]))
+                    commands.append(
+                        contentsOf: renderCommands(
+                            withOpacity: fill.opacity,
+                            [
+                                .setFillPattern(pattern),
+                                .fill(path, rule: rule),
+                            ]
+                        )
+                    )
                 }
             case .linearGradient(let gradient):
                 if canRenderGradient(gradient.gradient) {
@@ -251,11 +269,15 @@ extension LayerTree {
                     commands.append(.setClip(path: path, rule: rule))
 
                     let pathBounds = provider.getBounds(from: shape)
-                    commands.append(contentsOf: renderCommands(forLinear: gradient,
-                                                               in: fill.boundingBox ?? pathBounds,
-                                                               covering: pathBounds,
-                                                               opacity: fill.opacity,
-                                                               colorConverter: colorConverter))
+                    commands.append(
+                        contentsOf: renderCommands(
+                            forLinear: gradient,
+                            in: fill.boundingBox ?? pathBounds,
+                            covering: pathBounds,
+                            opacity: fill.opacity,
+                            colorConverter: colorConverter
+                        )
+                    )
                     commands.append(.popState)
                 }
             case .radialGradient(let gradient):
@@ -264,10 +286,14 @@ extension LayerTree {
                     let rule = provider.createFillRule(from: fill.rule)
                     commands.append(.setClip(path: path, rule: rule))
                     let pathBounds = provider.getBounds(from: shape)
-                    commands.append(contentsOf: renderCommands(forRadial: gradient,
-                                                               in: fill.boundingBox ?? pathBounds,
-                                                               opacity: fill.opacity,
-                                                               colorConverter: colorConverter))
+                    commands.append(
+                        contentsOf: renderCommands(
+                            forRadial: gradient,
+                            in: fill.boundingBox ?? pathBounds,
+                            opacity: fill.opacity,
+                            colorConverter: colorConverter
+                        )
+                    )
                     commands.append(.popState)
                 }
             }
@@ -312,11 +338,15 @@ extension LayerTree {
                     commands.append(contentsOf: renderCommands(forDash: stroke))
                     commands.append(.clipStrokeOutline(path))
 
-                    commands.append(contentsOf: renderCommands(forLinear: gradient,
-                                                               in: stroke.boundingBox ?? pathBounds,
-                                                               covering: pathBounds.outset(by: stroke.coverage),
-                                                               opacity: stroke.opacity,
-                                                               colorConverter: colorConverter))
+                    commands.append(
+                        contentsOf: renderCommands(
+                            forLinear: gradient,
+                            in: stroke.boundingBox ?? pathBounds,
+                            covering: pathBounds.outset(by: stroke.coverage),
+                            opacity: stroke.opacity,
+                            colorConverter: colorConverter
+                        )
+                    )
                     commands.append(contentsOf: renderCommands(forDashResetOf: stroke))
                     commands.append(.popState)
                 }
@@ -335,22 +365,33 @@ extension LayerTree {
                     commands.append(contentsOf: renderCommands(forDash: stroke))
                     commands.append(.clipStrokeOutline(path))
 
-                    commands.append(contentsOf: renderCommands(forRadial: gradient,
-                                                               in: stroke.boundingBox ?? pathBounds,
-                                                               opacity: stroke.opacity,
-                                                               colorConverter: colorConverter))
+                    commands.append(
+                        contentsOf: renderCommands(
+                            forRadial: gradient,
+                            in: stroke.boundingBox ?? pathBounds,
+                            opacity: stroke.opacity,
+                            colorConverter: colorConverter
+                        )
+                    )
                     commands.append(contentsOf: renderCommands(forDashResetOf: stroke))
                     commands.append(.popState)
                 }
             case .pattern(let strokePattern):
                 // objectBoundingBox resolves against the geometry, not the stroke (SVG 1.1 §13.3)
                 if stroke.width > 0, let pathBounds = shape.bounds,
-                   let pattern = makePattern(strokePattern, in: stroke.boundingBox ?? pathBounds, colorConverter: colorConverter) {
+                    let pattern = makePattern(
+                        strokePattern,
+                        in: stroke.boundingBox ?? pathBounds,
+                        colorConverter: colorConverter
+                    )
+                {
                     let width = provider.createFloat(from: stroke.width)
                     let cap = provider.createLineCap(from: stroke.cap)
                     let join = provider.createLineJoin(from: stroke.join)
                     let limit = provider.createFloat(from: stroke.miterLimit)
-                    let area = provider.createPath(from: .rect(within: pathBounds.outset(by: stroke.coverage), radii: .zero))
+                    let area = provider.createPath(
+                        from: .rect(within: pathBounds.outset(by: stroke.coverage), radii: .zero)
+                    )
 
                     commands.append(.pushState)
                     commands.append(.setLineCap(cap))
@@ -375,7 +416,11 @@ extension LayerTree {
         }
 
         /// The pattern resolved against `bounds`, with its contents rendered; nil when it disables rendering.
-        func makePattern(_ pattern: LayerTree.Pattern, in bounds: @autoclosure () -> LayerTree.Rect, colorConverter: any ColorConverter) -> P.Types.Pattern? {
+        func makePattern(
+            _ pattern: LayerTree.Pattern,
+            in bounds: @autoclosure () -> LayerTree.Rect,
+            colorConverter: any ColorConverter
+        ) -> P.Types.Pattern? {
             guard let (resolvedPattern, contentTransform) = Self.resolvePattern(pattern, in: bounds()) else {
                 return nil
             }
@@ -394,15 +439,22 @@ extension LayerTree {
         }
 
         /// Wraps `commands` in a state with the given alpha, when it is less than 1.
-        func renderCommands(withOpacity opacity: LayerTree.Float, _ commands: [RendererCommand<P.Types>]) -> [RendererCommand<P.Types>] {
+        func renderCommands(
+            withOpacity opacity: LayerTree.Float,
+            _ commands: [RendererCommand<P.Types>]
+        ) -> [RendererCommand<P.Types>] {
             guard opacity < 1 else { return commands }
             return [.pushState, .setAlpha(provider.createFloat(from: opacity))] + commands + [.popState]
         }
 
         func renderCommands(forDash stroke: StrokeAttributes) -> [RendererCommand<P.Types>] {
             guard !stroke.dashArray.isEmpty else { return [] }
-            return [.setLineDash(phase: provider.createFloat(from: stroke.dashOffset),
-                                 lengths: stroke.dashArray.map(provider.createFloat))]
+            return [
+                .setLineDash(
+                    phase: provider.createFloat(from: stroke.dashOffset),
+                    lengths: stroke.dashArray.map(provider.createFloat)
+                )
+            ]
         }
 
         /// The optimizer may strip a lone push/pop pair (CGText), so a dash must be reset explicitly.
@@ -412,29 +464,39 @@ extension LayerTree {
         }
 
         func renderCommands(for image: Image) -> [RendererCommand<P.Types>] {
-            guard let renderImage = makeCachedImage(from: image) else { return  [] }
+            guard let renderImage = makeCachedImage(from: image) else { return [] }
             let size = provider.createSize(from: renderImage)
             guard size.width > 0 && size.height > 0 else { return [] }
 
             let (dest, clip) = makeImagePlacement(for: image, bitmapSize: size)
             let draw = RendererCommand<P.Types>.draw(image: renderImage, in: provider.createRect(from: dest))
             guard let clip else { return [draw] }
-            return [.pushState,
-                    .setClip(path: makeCachedPath(from: .rect(within: clip, radii: .zero)), rule: provider.createFillRule(from: .nonzero)),
-                    draw,
-                    .popState]
+            return [
+                .pushState,
+                .setClip(
+                    path: makeCachedPath(from: .rect(within: clip, radii: .zero)),
+                    rule: provider.createFillRule(from: .nonzero)
+                ),
+                draw,
+                .popState,
+            ]
         }
 
         /// Where the bitmap is drawn and, for `slice` overflowing its frame, the rect that clips it.
         /// With both width and height the bitmap is fitted to the frame per preserveAspectRatio (SVG 1.1 §7.8).
-        func makeImagePlacement(for image: Image, bitmapSize size: LayerTree.Size) -> (dest: LayerTree.Rect, clip: LayerTree.Rect?) {
+        func makeImagePlacement(
+            for image: Image,
+            bitmapSize size: LayerTree.Size
+        ) -> (dest: LayerTree.Rect, clip: LayerTree.Rect?) {
             let frame = makeImageFrame(for: image, bitmapSize: size)
             guard image.width != nil, image.height != nil, frame.width > 0, frame.height > 0 else {
                 return (frame, nil)
             }
             let fit = image.preserveAspectRatio.fit(
-                contentWidth: size.width, contentHeight: size.height,
-                viewportWidth: frame.width, viewportHeight: frame.height
+                contentWidth: size.width,
+                contentHeight: size.height,
+                viewportWidth: frame.width,
+                viewportHeight: frame.height
             )
             let dest = LayerTree.Rect(
                 x: frame.x + fit.tx,
@@ -444,7 +506,9 @@ extension LayerTree {
             )
             // a meet or equal-aspect fit only differs from the frame by rounding noise
             let epsilon = 1e-4 * max(frame.width, frame.height)
-            let overflows = image.preserveAspectRatio.align != .none && (dest.width > frame.width + epsilon || dest.height > frame.height + epsilon)
+            let overflows =
+                image.preserveAspectRatio.align != .none
+                && (dest.width > frame.width + epsilon || dest.height > frame.height + epsilon)
             return (dest, overflows ? frame : nil)
         }
 
@@ -487,33 +551,47 @@ extension LayerTree {
             return frame
         }
 
-        func renderCommands(for text: String, at point: Point, attributes: TextAttributes, colorConverter: any ColorConverter = .default) -> [RendererCommand<P.Types>] {
+        func renderCommands(
+            for text: String,
+            at point: Point,
+            attributes: TextAttributes,
+            colorConverter: any ColorConverter = .default
+        ) -> [RendererCommand<P.Types>] {
             guard let path = provider.createPath(from: text, at: point, with: attributes) else { return [] }
 
             let converted = colorConverter.createColor(from: attributes.color)
             let color = provider.createColor(from: converted)
             let rule = provider.createFillRule(from: .nonzero)
 
-            return [.setFill(color: color),
-                    .fill(path, rule: rule)]
+            return [
+                .setFill(color: color),
+                .fill(path, rule: rule),
+            ]
         }
 
-        func renderCommands(for run: GlyphRun, colorConverter: any ColorConverter = .default) -> [RendererCommand<P.Types>] {
+        func renderCommands(
+            for run: GlyphRun,
+            colorConverter: any ColorConverter = .default
+        ) -> [RendererCommand<P.Types>] {
             guard let path = provider.createPath(from: run) else { return [] }
             let color = provider.createColor(from: colorConverter.createColor(from: run.attributes.color))
-            return [.setFill(color: color),
-                    .fill(path, rule: provider.createFillRule(from: .nonzero))]
+            return [
+                .setFill(color: color),
+                .fill(path, rule: provider.createFillRule(from: .nonzero)),
+            ]
         }
 
         func renderCommands(forOpacity opacity: Float) -> [RendererCommand<P.Types>] {
             guard opacity < 1.0 else { return [] }
 
-            return [.setAlpha(provider.createFloat(from: opacity)),
-                    .pushTransparencyLayer]
+            return [
+                .setAlpha(provider.createFloat(from: opacity)),
+                .pushTransparencyLayer,
+            ]
         }
 
         func renderCommands(forTransforms transforms: [Transform]) -> [RendererCommand<P.Types>] {
-            return transforms.map{ renderCommand(forTransform: $0) }
+            return transforms.map { renderCommand(forTransform: $0) }
         }
 
         func renderCommand(forTransform transform: Transform) -> RendererCommand<P.Types> {
@@ -555,7 +633,6 @@ extension LayerTree {
             }
         }
 
-
         // The mask contents are drawn with normal compositing in greyscale (colours converted to their luminance,
         // or to white for `mask-type: alpha`), so overlapping, translucent and opacity-grouped mask contents
         // combine as they would in colour.
@@ -564,12 +641,13 @@ extension LayerTree {
         func renderCommands(forMask layer: Layer?) -> [RendererCommand<P.Types>] {
             guard let layer = layer else { return [] }
             //commands.append(contentsOf: renderCommands(forClip: layer.clip))
-            let converter: any ColorConverter = switch layer.maskType {
-            case .luminance: .luminance
-            case .linearLuminance: .linearLuminance
-            case .alpha: .alpha
-            }
-            let drawMask = layer.contents.flatMap{
+            let converter: any ColorConverter =
+                switch layer.maskType {
+                case .luminance: .luminance
+                case .linearLuminance: .linearLuminance
+                case .alpha: .alpha
+                }
+            let drawMask = layer.contents.flatMap {
                 renderCommands(for: $0, colorConverter: converter)
             }
             return [.clipToMask(drawMask)]
@@ -600,9 +678,11 @@ extension LayerTree {
         // objectBoundingBox gradients are drawn in the unit space of the bounding box (SVG 1.1 §13.2.2),
         // with gradientTransform applied within it, so they stretch with a wide or tall box.
         // A box with no width or height ignores the gradient and paints nothing.
-        func renderCommands(forGradientUnits units: LayerTree.Gradient.Units,
-                            transform: [LayerTree.Transform],
-                            in bounds: LayerTree.Rect) -> [RendererCommand<P.Types>]? {
+        func renderCommands(
+            forGradientUnits units: LayerTree.Gradient.Units,
+            transform: [LayerTree.Transform],
+            in bounds: LayerTree.Rect
+        ) -> [RendererCommand<P.Types>]? {
             guard let transforms = Self.makeGradientTransforms(units: units, transform: transform, in: bounds) else {
                 return nil
             }
@@ -611,21 +691,28 @@ extension LayerTree {
 
         // CoreGraphics only pads, so reflect and repeat (SVG 1.1 §13.2.2 spreadMethod) are drawn by
         // laying the periods that cover `area` end to end as one padded gradient. (after SD6, PR #142)
-        func renderCommands(forLinear gradient: LayerTree.LinearGradient,
-                            in bounds: LayerTree.Rect,
-                            covering area: LayerTree.Rect?,
-                            opacity: LayerTree.Float,
-                            colorConverter: any ColorConverter) -> [RendererCommand<P.Types>] {
-            guard let transforms = Self.makeGradientTransforms(units: gradient.units,
-                                                               transform: gradient.transform,
-                                                               in: bounds) else { return [] }
+        func renderCommands(
+            forLinear gradient: LayerTree.LinearGradient,
+            in bounds: LayerTree.Rect,
+            covering area: LayerTree.Rect?,
+            opacity: LayerTree.Float,
+            colorConverter: any ColorConverter
+        ) -> [RendererCommand<P.Types>] {
+            guard
+                let transforms = Self.makeGradientTransforms(
+                    units: gradient.units,
+                    transform: gradient.transform,
+                    in: bounds
+                )
+            else { return [] }
             var commands = renderCommands(forTransforms: transforms)
             var pathStart = gradient.start
             var pathEnd = gradient.end
 
             var stops = gradient.gradient
             if gradient.spread != .pad, let area,
-               let periods = Self.spreadPeriods(start: pathStart, end: pathEnd, transform: transforms, covering: area) {
+                let periods = Self.spreadPeriods(start: pathStart, end: pathEnd, transform: transforms, covering: area)
+            {
                 if periods.count <= Self.maxSpreadPeriods(stopCount: stops.stops.count) {
                     let vector = LayerTree.Point(pathEnd.x - pathStart.x, pathEnd.y - pathStart.y)
                     stops = stops.spread(gradient.spread, periods: periods)
@@ -647,13 +734,19 @@ extension LayerTree {
             return commands
         }
 
-        func renderCommands(forRadial gradient: RadialGradient,
-                            in bounds: LayerTree.Rect,
-                            opacity: LayerTree.Float,
-                            colorConverter: any ColorConverter) -> [RendererCommand<P.Types>] {
-            guard var commands = renderCommands(forGradientUnits: gradient.units,
-                                                transform: gradient.transform,
-                                                in: bounds) else { return [] }
+        func renderCommands(
+            forRadial gradient: RadialGradient,
+            in bounds: LayerTree.Rect,
+            opacity: LayerTree.Float,
+            colorConverter: any ColorConverter
+        ) -> [RendererCommand<P.Types>] {
+            guard
+                var commands = renderCommands(
+                    forGradientUnits: gradient.units,
+                    transform: gradient.transform,
+                    in: bounds
+                )
+            else { return [] }
             let startCenter = gradient.center
             let startRadius = gradient.radius
             let endCenter = gradient.endCenter
@@ -663,13 +756,15 @@ extension LayerTree {
             let gradient = provider.createGradient(from: converted)
             let apha = provider.createFloat(from: opacity)
             commands.append(.setAlpha(apha))
-            commands.append(.drawRadialGradient(
-                gradient,
-                startCenter: provider.createPoint(from: startCenter),
-                startRadius: provider.createFloat(from: startRadius),
-                endCenter: provider.createPoint(from: endCenter),
-                endRadius: provider.createFloat(from: endRadius)
-            ))
+            commands.append(
+                .drawRadialGradient(
+                    gradient,
+                    startCenter: provider.createPoint(from: startCenter),
+                    startRadius: provider.createFloat(from: startRadius),
+                    endCenter: provider.createPoint(from: endCenter),
+                    endRadius: provider.createFloat(from: endRadius)
+                )
+            )
             return commands
         }
     }
@@ -679,9 +774,11 @@ extension LayerTree.CommandGenerator {
 
     /// The transforms from gradient space to user space: the bounding box for objectBoundingBox
     /// (SVG 1.1 §13.2.2), then gradientTransform. nil when the box has no width or height.
-    static func makeGradientTransforms(units: LayerTree.Gradient.Units,
-                                       transform: [LayerTree.Transform],
-                                       in bounds: LayerTree.Rect) -> [LayerTree.Transform]? {
+    static func makeGradientTransforms(
+        units: LayerTree.Gradient.Units,
+        transform: [LayerTree.Transform],
+        in bounds: LayerTree.Rect
+    ) -> [LayerTree.Transform]? {
         guard units == .objectBoundingBox else { return transform }
         guard bounds.width > 0, bounds.height > 0 else { return nil }
         return [.translate(tx: bounds.x, ty: bounds.y), .scale(sx: bounds.width, sy: bounds.height)] + transform
@@ -698,9 +795,12 @@ extension LayerTree.CommandGenerator {
 
     /// The periods of a linear gradient (0 being start...end) needed to cover `area`, which is in
     /// user space; `transform` maps gradient space to user space. nil when they cannot be computed.
-    static func spreadPeriods(start: LayerTree.Point, end: LayerTree.Point,
-                              transform: [LayerTree.Transform],
-                              covering area: LayerTree.Rect) -> ClosedRange<Int>? {
+    static func spreadPeriods(
+        start: LayerTree.Point,
+        end: LayerTree.Point,
+        transform: [LayerTree.Transform],
+        covering area: LayerTree.Rect
+    ) -> ClosedRange<Int>? {
         let dx = end.x - start.x
         let dy = end.y - start.y
         let length = dx * dx + dy * dy
@@ -710,7 +810,8 @@ extension LayerTree.CommandGenerator {
             return ((p.x - start.x) * dx + (p.y - start.y) * dy) / length
         }
         guard let lower = offsets.min(), let upper = offsets.max(),
-              lower.isFinite, upper.isFinite else { return nil }
+            lower.isFinite, upper.isFinite
+        else { return nil }
         // bounded so the conversion to Int cannot trap; anything this large is averaged anyway
         let limit: LayerTree.Float = 1_000_000
         let first = Int(max(-limit, lower.rounded(.down)))
@@ -721,10 +822,13 @@ extension LayerTree.CommandGenerator {
     // Resolves the layer's filter into its user space; nil when a primitive is unsupported
     // or the filter region cannot be resolved (e.g. text-only contents under objectBoundingBox),
     // in which case the contents are drawn unfiltered.
-    func makeFilterLayer(for layer: LayerTree.Layer,
-                         colorConverter: any ColorConverter = DefaultColorConverter()) -> LayerTree.FilterLayer? {
+    func makeFilterLayer(
+        for layer: LayerTree.Layer,
+        colorConverter: any ColorConverter = DefaultColorConverter()
+    ) -> LayerTree.FilterLayer? {
         guard !layer.filters.isEmpty,
-              !layer.hasUnsupportedFilters else { return nil }
+            !layer.hasUnsupportedFilters
+        else { return nil }
 
         let region = layer.filterRegion
         let bounds = makeBounds(for: layer)
@@ -767,7 +871,10 @@ extension LayerTree.CommandGenerator {
         var positions = [Int: Int]()
         var primitives = [LayerTree.FilterLayer.Primitive]()
         let tree = LayerTree.FilterLayer.primaryTree(of: inputs)
-        guard LayerTree.FilterLayer.primitiveCount(of: tree.map { layer.filters[$0] }) <= LayerTree.FilterLayer.maxPrimitives else {
+        guard
+            LayerTree.FilterLayer.primitiveCount(of: tree.map { layer.filters[$0] })
+                <= LayerTree.FilterLayer.maxPrimitives
+        else {
             return nil
         }
         for index in tree {
@@ -776,40 +883,63 @@ extension LayerTree.CommandGenerator {
                 guard case .primitive(let source) = input else { return input }
                 return positions[source].map { .primitive($0) } ?? .transparent
             }
-            let subregion = makeSubregion(for: primitive, inputs: sources, resolved: primitives,
-                                          region: filterRegion, units: units)
-            let colorInterpolation: LayerTree.FilterLayer.ColorInterpolation = primitive.colorInterpolation == .linearRGB ? .linearRGB : .sRGB
+            let subregion = makeSubregion(
+                for: primitive,
+                inputs: sources,
+                resolved: primitives,
+                region: filterRegion,
+                units: units
+            )
+            let colorInterpolation: LayerTree.FilterLayer.ColorInterpolation =
+                primitive.colorInterpolation == .linearRGB ? .linearRGB : .sRGB
             if case .image(let image) = primitive.effect {
-                let placement = makeUnclippedSubregion(for: primitive, inputs: sources, resolved: primitives,
-                                                       region: filterRegion, units: units)
-                positions[index] = primitives.count
-                primitives.append(LayerTree.FilterLayer.Primitive(
-                    effect: makeFilterImage(image, element: layer.filterImages[index], placement: placement),
+                let placement = makeUnclippedSubregion(
+                    for: primitive,
                     inputs: sources,
-                    subregion: subregion,
-                    colorInterpolation: colorInterpolation
-                ))
+                    resolved: primitives,
+                    region: filterRegion,
+                    units: units
+                )
+                positions[index] = primitives.count
+                primitives.append(
+                    LayerTree.FilterLayer.Primitive(
+                        effect: makeFilterImage(image, element: layer.filterImages[index], placement: placement),
+                        inputs: sources,
+                        subregion: subregion,
+                        colorInterpolation: colorInterpolation
+                    )
+                )
                 continue
             }
             if case .dropShadow(let shadow) = primitive.effect {
-                primitives.append(contentsOf: makeDropShadow(shadow, input: sources.first ?? .sourceGraphic,
-                                                             first: primitives.count,
-                                                             subregion: subregion, region: filterRegion,
-                                                             scale: units.size, colorInterpolation: colorInterpolation,
-                                                             colorConverter: colorConverter))
+                primitives.append(
+                    contentsOf: makeDropShadow(
+                        shadow,
+                        input: sources.first ?? .sourceGraphic,
+                        first: primitives.count,
+                        subregion: subregion,
+                        region: filterRegion,
+                        scale: units.size,
+                        colorInterpolation: colorInterpolation,
+                        colorConverter: colorConverter
+                    )
+                )
                 positions[index] = primitives.count - 1
                 continue
             }
-            guard let effect = makeFilterEffect(primitive.effect, scale: units.size, colorConverter: colorConverter) else {
+            guard let effect = makeFilterEffect(primitive.effect, scale: units.size, colorConverter: colorConverter)
+            else {
                 return nil
             }
             positions[index] = primitives.count
-            primitives.append(LayerTree.FilterLayer.Primitive(
-                effect: effect,
-                inputs: sources,
-                subregion: subregion,
-                colorInterpolation: colorInterpolation
-            ))
+            primitives.append(
+                LayerTree.FilterLayer.Primitive(
+                    effect: effect,
+                    inputs: sources,
+                    subregion: subregion,
+                    colorInterpolation: colorInterpolation
+                )
+            )
         }
 
         return LayerTree.FilterLayer(region: filterRegion, primitives: primitives)
@@ -818,13 +948,22 @@ extension LayerTree.CommandGenerator {
     // Filter Effects 1 §9.4: x, y, width and height default to the union of the subregions of the inputs, or to
     // the filter region when there is no input or one is a standard input. The subregion never exceeds the
     // filter region (SVG 1.1 §15.7.3); zero or negative sizes disable the primitive (empty rect).
-    func makeSubregion(for primitive: LayerTree.FilterPrimitive,
-                       inputs: [LayerTree.FilterLayer.Input],
-                       resolved: [LayerTree.FilterLayer.Primitive],
-                       region: LayerTree.Rect,
-                       units: LayerTree.Rect) -> LayerTree.Rect {
-        guard let rect = makeUnclippedSubregion(for: primitive, inputs: inputs, resolved: resolved,
-                                                region: region, units: units) else { return .zero }
+    func makeSubregion(
+        for primitive: LayerTree.FilterPrimitive,
+        inputs: [LayerTree.FilterLayer.Input],
+        resolved: [LayerTree.FilterLayer.Primitive],
+        region: LayerTree.Rect,
+        units: LayerTree.Rect
+    ) -> LayerTree.Rect {
+        guard
+            let rect = makeUnclippedSubregion(
+                for: primitive,
+                inputs: inputs,
+                resolved: resolved,
+                region: region,
+                units: units
+            )
+        else { return .zero }
         // the default is already within the region: keep it exact
         guard primitive.x != nil || primitive.y != nil || primitive.width != nil || primitive.height != nil else {
             return rect
@@ -839,11 +978,13 @@ extension LayerTree.CommandGenerator {
 
     // The subregion's x, y, width and height in user space, before the filter region clips them;
     // nil when the primitive is disabled
-    func makeUnclippedSubregion(for primitive: LayerTree.FilterPrimitive,
-                                inputs: [LayerTree.FilterLayer.Input],
-                                resolved: [LayerTree.FilterLayer.Primitive],
-                                region: LayerTree.Rect,
-                                units: LayerTree.Rect) -> LayerTree.Rect? {
+    func makeUnclippedSubregion(
+        for primitive: LayerTree.FilterPrimitive,
+        inputs: [LayerTree.FilterLayer.Input],
+        resolved: [LayerTree.FilterLayer.Primitive],
+        region: LayerTree.Rect,
+        units: LayerTree.Rect
+    ) -> LayerTree.Rect? {
         var rect: LayerTree.Rect? = inputs.isEmpty ? region : nil
         for input in inputs {
             guard case .primitive(let source) = input else {
@@ -876,9 +1017,11 @@ extension LayerTree.CommandGenerator {
     // subregion's size does not scale it, as in resvg and Chrome. An image is fitted into the subregion per
     // preserveAspectRatio, as <image> into its viewport. Anything else (a missing, recursive or non-graphics
     // element, an image that cannot be loaded, a disabled primitive) is transparent black.
-    func makeFilterImage(_ image: DOM.Filter.Image,
-                         element: LayerTree.Layer?,
-                         placement: LayerTree.Rect?) -> LayerTree.FilterLayer.Effect {
+    func makeFilterImage(
+        _ image: DOM.Filter.Image,
+        element: LayerTree.Layer?,
+        placement: LayerTree.Rect?
+    ) -> LayerTree.FilterLayer.Effect {
         guard let placement else { return .flood(.none) }
         let layer = LayerTree.Layer()
         if let element {
@@ -887,7 +1030,8 @@ extension LayerTree.CommandGenerator {
             }
             layer.appendContents(.layer(element))
         } else if let decoded = image.href?.decodedData,
-                  var bitmap = LayerTree.Image(mimeType: decoded.mimeType, data: decoded.data) {
+            var bitmap = LayerTree.Image(mimeType: decoded.mimeType, data: decoded.data)
+        {
             bitmap.origin = placement.origin
             bitmap.width = placement.width
             bitmap.height = placement.height
@@ -903,37 +1047,51 @@ extension LayerTree.CommandGenerator {
     // shadow colour, under the input. The colour comes from the flood `in` the offset blur, so the blur
     // can read the input itself: only its alpha reaches the result. The steps between are unclipped
     // (the filter region), the shadow's own subregion clips the merged result.
-    func makeDropShadow(_ shadow: DOM.Filter.DropShadow,
-                        input: LayerTree.FilterLayer.Input,
-                        first: Int,
-                        subregion: LayerTree.Rect,
-                        region: LayerTree.Rect,
-                        scale: LayerTree.Size,
-                        colorInterpolation: LayerTree.FilterLayer.ColorInterpolation,
-                        colorConverter: any ColorConverter) -> [LayerTree.FilterLayer.Primitive] {
+    func makeDropShadow(
+        _ shadow: DOM.Filter.DropShadow,
+        input: LayerTree.FilterLayer.Input,
+        first: Int,
+        subregion: LayerTree.Rect,
+        region: LayerTree.Rect,
+        scale: LayerTree.Size,
+        colorInterpolation: LayerTree.FilterLayer.ColorInterpolation,
+        colorConverter: any ColorConverter
+    ) -> [LayerTree.FilterLayer.Primitive] {
         func make(_ filter: LayerTree.Filter) -> LayerTree.FilterLayer.Effect {
             // only feDropShadow's own values reach here, all of them supported
             makeFilterEffect(filter, scale: scale, colorConverter: colorConverter)!
         }
-        func primitive(_ effect: LayerTree.FilterLayer.Effect,
-                       _ inputs: [LayerTree.FilterLayer.Input],
-                       _ subregion: LayerTree.Rect) -> LayerTree.FilterLayer.Primitive {
-            LayerTree.FilterLayer.Primitive(effect: effect, inputs: inputs, subregion: subregion,
-                                            colorInterpolation: colorInterpolation)
+        func primitive(
+            _ effect: LayerTree.FilterLayer.Effect,
+            _ inputs: [LayerTree.FilterLayer.Input],
+            _ subregion: LayerTree.Rect
+        ) -> LayerTree.FilterLayer.Primitive {
+            LayerTree.FilterLayer.Primitive(
+                effect: effect,
+                inputs: inputs,
+                subregion: subregion,
+                colorInterpolation: colorInterpolation
+            )
         }
         return [
-            primitive(make(.gaussianBlur(stdDeviation: shadow.stdDeviation, stdDeviationY: shadow.stdDeviationY)), [input], region),
+            primitive(
+                make(.gaussianBlur(stdDeviation: shadow.stdDeviation, stdDeviationY: shadow.stdDeviationY)),
+                [input],
+                region
+            ),
             primitive(make(.offset(dx: shadow.dx, dy: shadow.dy)), [.primitive(first)], region),
             primitive(make(.flood(color: shadow.color, opacity: shadow.opacity)), [], region),
             primitive(.composite(.in), [.primitive(first + 2), .primitive(first + 1)], region),
-            primitive(.merge, [.primitive(first + 3), input], subregion)
+            primitive(.merge, [.primitive(first + 3), input], subregion),
         ]
     }
 
     // The effect in user units; nil when unsupported.
-    func makeFilterEffect(_ effect: LayerTree.Filter,
-                          scale: LayerTree.Size,
-                          colorConverter: any ColorConverter) -> LayerTree.FilterLayer.Effect? {
+    func makeFilterEffect(
+        _ effect: LayerTree.Filter,
+        scale: LayerTree.Size,
+        colorConverter: any ColorConverter
+    ) -> LayerTree.FilterLayer.Effect? {
         // renderers clamp to their pixel limits; keep the values finite
         let maximum = LayerTree.Float.greatestFiniteMagnitude
         switch effect {
@@ -943,13 +1101,17 @@ extension LayerTree.CommandGenerator {
             guard x >= 0, y >= 0 else {
                 return .gaussianBlur(stdDeviation: 0, stdDeviationY: 0)
             }
-            return .gaussianBlur(stdDeviation: min(x * scale.width, maximum),
-                                 stdDeviationY: min(y * scale.height, maximum))
+            return .gaussianBlur(
+                stdDeviation: min(x * scale.width, maximum),
+                stdDeviationY: min(y * scale.height, maximum)
+            )
         case .unsupported:
             return nil
         case let .offset(dx: dx, dy: dy):
-            return .offset(dx: max(-maximum, min(dx * scale.width, maximum)),
-                           dy: max(-maximum, min(dy * scale.height, maximum)))
+            return .offset(
+                dx: max(-maximum, min(dx * scale.width, maximum)),
+                dy: max(-maximum, min(dy * scale.height, maximum))
+            )
         case let .flood(color: color, opacity: opacity):
             // Filter Effects 1 §9.13: flood-opacity multiplies the alpha of flood-color
             let flood = LayerTree.Color.create(from: color, current: .none).withAlpha(opacity)
@@ -974,8 +1136,11 @@ extension LayerTree.CommandGenerator {
             }
             if x == 0 { x = 1 }
             if y == 0 { y = 1 }
-            return .morphology(op, radiusX: min(x * scale.width, maximum),
-                               radiusY: min(y * scale.height, maximum))
+            return .morphology(
+                op,
+                radiusX: min(x * scale.width, maximum),
+                radiusY: min(y * scale.height, maximum)
+            )
         case .turbulence(let turbulence):
             return makeTurbulence(turbulence)
         case .convolveMatrix(let matrix):
@@ -997,14 +1162,16 @@ extension LayerTree.CommandGenerator {
             return .flood(.none)
         }
         let seed = turbulence.seed.rounded(.towardZero)
-        return .turbulence(LayerTree.FilterLayer.Turbulence(
-            baseFrequencyX: turbulence.baseFrequencyX,
-            baseFrequencyY: turbulence.baseFrequencyY,
-            numOctaves: max(0, turbulence.numOctaves),
-            seed: Int(max(-2_147_483_648, min(Double(seed), 2_147_483_647))),
-            isFractalNoise: turbulence.type == .fractalNoise,
-            stitchTiles: turbulence.stitchTiles
-        ))
+        return .turbulence(
+            LayerTree.FilterLayer.Turbulence(
+                baseFrequencyX: turbulence.baseFrequencyX,
+                baseFrequencyY: turbulence.baseFrequencyY,
+                numOctaves: max(0, turbulence.numOctaves),
+                seed: Int(max(-2_147_483_648, min(Double(seed), 2_147_483_647))),
+                isFractalNoise: turbulence.type == .fractalNoise,
+                stitchTiles: turbulence.stitchTiles
+            )
+        )
     }
 
     // Filter Effects 1 §9.9: an order that is not a positive integer, a kernelMatrix of another size than
@@ -1016,10 +1183,11 @@ extension LayerTree.CommandGenerator {
         let targetY = matrix.targetY ?? matrix.orderY / 2
         let size = matrix.orderX.multipliedReportingOverflow(by: matrix.orderY)
         guard matrix.orderX > 0, matrix.orderY > 0, !size.overflow,
-              matrix.kernelMatrix.count == size.partialValue,
-              (0..<matrix.orderX).contains(targetX),
-              (0..<matrix.orderY).contains(targetY),
-              matrix.divisor != 0 else {
+            matrix.kernelMatrix.count == size.partialValue,
+            (0..<matrix.orderX).contains(targetX),
+            (0..<matrix.orderY).contains(targetY),
+            matrix.divisor != 0
+        else {
             return .flood(.none)
         }
         var divisor: Float
@@ -1030,17 +1198,19 @@ extension LayerTree.CommandGenerator {
             let magnitude = matrix.kernelMatrix.reduce(0) { $0 + abs($1) }
             divisor = abs(sum) > magnitude * 1e-5 && sum.isFinite ? sum : 1
         }
-        return .convolveMatrix(LayerTree.FilterLayer.ConvolveMatrix(
-            orderX: matrix.orderX,
-            orderY: matrix.orderY,
-            kernelMatrix: matrix.kernelMatrix,
-            divisor: divisor,
-            bias: matrix.bias,
-            targetX: targetX,
-            targetY: targetY,
-            edgeMode: matrix.edgeMode,
-            preserveAlpha: matrix.preserveAlpha
-        ))
+        return .convolveMatrix(
+            LayerTree.FilterLayer.ConvolveMatrix(
+                orderX: matrix.orderX,
+                orderY: matrix.orderY,
+                kernelMatrix: matrix.kernelMatrix,
+                divisor: divisor,
+                bias: matrix.bias,
+                targetX: targetX,
+                targetY: targetY,
+                edgeMode: matrix.edgeMode,
+                preserveAlpha: matrix.preserveAlpha
+            )
+        )
     }
 
     // Geometry bounding box of the layer contents in the layer's user space; stroke excluded.
@@ -1054,7 +1224,11 @@ extension LayerTree.CommandGenerator {
 
     /// Appends the corners of the layer's contents; false when it draws text without a measured box.
     /// - Parameter isTextMeasured: an ancestor's `textBounds` already covers the text of this layer
-    private func appendBounds(of layer: LayerTree.Layer, to points: inout [LayerTree.Point], isTextMeasured: Bool) -> Bool {
+    private func appendBounds(
+        of layer: LayerTree.Layer,
+        to points: inout [LayerTree.Point],
+        isTextMeasured: Bool
+    ) -> Bool {
         var isTextMeasured = isTextMeasured
         if let bounds = layer.textBounds {
             points.append(contentsOf: bounds.corners)
@@ -1068,7 +1242,10 @@ extension LayerTree.CommandGenerator {
                 }
             case .image(let image):
                 if let width = image.width, let height = image.height {
-                    points.append(contentsOf: LayerTree.Rect(x: image.origin.x, y: image.origin.y, width: width, height: height).corners)
+                    points.append(
+                        contentsOf: LayerTree.Rect(x: image.origin.x, y: image.origin.y, width: width, height: height)
+                            .corners
+                    )
                 }
             case .text, .glyphs:
                 guard isTextMeasured else { return false }
@@ -1086,7 +1263,8 @@ extension LayerTree.CommandGenerator {
         guard !hasLoggedFilterWarning else { return }
         // name only what is unsupported: the rest of the filter renders
         let unsupported = filters.map(\.effect).filter { !$0.isSupported }
-        let name = unsupported.isEmpty
+        let name =
+            unsupported.isEmpty
             ? "A filter of more than \(LayerTree.FilterLayer.maxPrimitives) primitives"
             : Set(unsupported.map(\.name)).sorted().joined(separator: ", ")
 
@@ -1094,11 +1272,11 @@ extension LayerTree.CommandGenerator {
         if options.contains(.commandLine) {
             hint = "[--hideUnsupportedFilters]"
         } else {
-        #if canImport(UIKit)
+            #if canImport(UIKit)
             hint = "UIImage(svgNamed:, options: .hideUnsupportedFilters)"
-        #else
+            #else
             hint = "NSImage(svgNamed:, options: .hideUnsupportedFilters)"
-        #endif
+            #endif
         }
 
         LogSink.warning("\(name) is not supported. Elements with this filter can be hidden with \(hint)")
@@ -1113,7 +1291,9 @@ extension LayerTree.CommandGenerator {
 
     func logUnsupportedSpread() {
         guard !hasLoggedSpreadWarning else { return }
-        LogSink.warning("spreadMethod needs more than \(Self.maxSpreadStops) gradient stops; painting the average colour")
+        LogSink.warning(
+            "spreadMethod needs more than \(Self.maxSpreadStops) gradient stops; painting the average colour"
+        )
         hasLoggedSpreadWarning = true
     }
 
@@ -1123,7 +1303,6 @@ extension LayerTree.CommandGenerator {
         hasLoggedMaskWarning = true
     }
 }
-
 
 extension LayerTree.Gradient {
 
@@ -1138,8 +1317,13 @@ extension LayerTree.Gradient {
         for (index, k) in periods.enumerated() {
             let source = spread == .reflect && k % 2 != 0 ? mirrored : period
             for stop in source {
-                result.append(Stop(offset: (LayerTree.Float(index) + stop.offset) / count,
-                                   color: stop.color, opacity: stop.opacity))
+                result.append(
+                    Stop(
+                        offset: (LayerTree.Float(index) + stop.offset) / count,
+                        color: stop.color,
+                        opacity: stop.opacity
+                    )
+                )
             }
         }
         return LayerTree.Gradient(stops: result, interpolation: interpolation)
@@ -1171,16 +1355,21 @@ extension LayerTree.Gradient {
                 sum = (sum.r + c.r * weight, sum.g + c.g * weight, sum.b + c.b * weight, sum.a + c.a * weight)
             }
         }
-        let color: LayerTree.Color = sum.a > 0
+        let color: LayerTree.Color =
+            sum.a > 0
             ? .rgba(r: sum.r / sum.a, g: sum.g / sum.a, b: sum.b / sum.a, a: sum.a, space: space)
             : .none
-        return LayerTree.Gradient(stops: [Stop(offset: 0, color: color, opacity: 1),
-                                          Stop(offset: 1, color: color, opacity: 1)])
+        return LayerTree.Gradient(stops: [
+            Stop(offset: 0, color: color, opacity: 1),
+            Stop(offset: 1, color: color, opacity: 1),
+        ])
     }
 }
 
 private extension LayerTree.Gradient.Stop {
-    func premultiplied(in space: LayerTree.ColorSpace) -> (r: LayerTree.Float, g: LayerTree.Float, b: LayerTree.Float, a: LayerTree.Float) {
+    func premultiplied(
+        in space: LayerTree.ColorSpace
+    ) -> (r: LayerTree.Float, g: LayerTree.Float, b: LayerTree.Float, a: LayerTree.Float) {
         switch color {
         case .none:
             return (0, 0, 0, 0)
@@ -1209,18 +1398,27 @@ extension LayerTree.Color {
     }
 
     /// Display P3 shares sRGB's transfer curve: convert through linear light. Clamped to 0...1.
-    static func convert(r: LayerTree.Float, g: LayerTree.Float, b: LayerTree.Float,
-                        from: LayerTree.ColorSpace, to: LayerTree.ColorSpace) -> (LayerTree.Float, LayerTree.Float, LayerTree.Float) {
+    static func convert(
+        r: LayerTree.Float,
+        g: LayerTree.Float,
+        b: LayerTree.Float,
+        from: LayerTree.ColorSpace,
+        to: LayerTree.ColorSpace
+    ) -> (LayerTree.Float, LayerTree.Float, LayerTree.Float) {
         guard from != to else { return (r, g, b) }
         let (lr, lg, lb) = (linear(r), linear(g), linear(b))
         if from == .p3 {
-            return (encode(1.2249401 * lr - 0.2249404 * lg),
-                    encode(-0.0420569 * lr + 1.0420571 * lg),
-                    encode(-0.0196376 * lr - 0.0786361 * lg + 1.0982735 * lb))
+            return (
+                encode(1.2249401 * lr - 0.2249404 * lg),
+                encode(-0.0420569 * lr + 1.0420571 * lg),
+                encode(-0.0196376 * lr - 0.0786361 * lg + 1.0982735 * lb)
+            )
         }
-        return (encode(0.8224621 * lr + 0.1775380 * lg),
-                encode(0.0331941 * lr + 0.9668058 * lg),
-                encode(0.0170827 * lr + 0.0723974 * lg + 0.9105199 * lb))
+        return (
+            encode(0.8224621 * lr + 0.1775380 * lg),
+            encode(0.0331941 * lr + 0.9668058 * lg),
+            encode(0.0170827 * lr + 0.0723974 * lg + 0.9105199 * lb)
+        )
     }
 }
 
@@ -1228,8 +1426,8 @@ private extension LayerTree.StrokeAttributes {
     /// How far the stroke may reach beyond the path's bounds: half the width, √2 times that at
     /// square caps, up to the miter limit at miter joins.
     var coverage: LayerTree.Float {
-        let cap: LayerTree.Float = self.cap == .square ? LayerTree.Float(2).squareRoot() : 1
-        let join: LayerTree.Float = self.join == .miter ? max(1, miterLimit) : 1
+        let cap: LayerTree.Float = cap == .square ? LayerTree.Float(2).squareRoot() : 1
+        let join: LayerTree.Float = join == .miter ? max(1, miterLimit) : 1
         return width / 2 * max(cap, join)
     }
 }
@@ -1244,10 +1442,14 @@ private extension LayerTree.Transform.Matrix {
     func inverted() -> Self? {
         let determinant = a * d - b * c
         guard determinant != 0, determinant.isFinite else { return nil }
-        return Self(a: d / determinant, b: -b / determinant,
-                    c: -c / determinant, d: a / determinant,
-                    tx: (c * ty - d * tx) / determinant,
-                    ty: (b * tx - a * ty) / determinant)
+        return Self(
+            a: d / determinant,
+            b: -b / determinant,
+            c: -c / determinant,
+            d: a / determinant,
+            tx: (c * ty - d * tx) / determinant,
+            ty: (b * tx - a * ty) / determinant
+        )
     }
 }
 
@@ -1297,10 +1499,12 @@ private extension LayerTree.Rect {
     }
 
     var corners: [LayerTree.Point] {
-        [origin,
-         LayerTree.Point(maxX, minY),
-         LayerTree.Point(maxX, maxY),
-         LayerTree.Point(minX, maxY)]
+        [
+            origin,
+            LayerTree.Point(maxX, minY),
+            LayerTree.Point(maxX, maxY),
+            LayerTree.Point(minX, maxY),
+        ]
     }
 }
 
@@ -1314,14 +1518,19 @@ extension LayerTree.CommandGenerator {
     /// pattern disables rendering: a zero or negative tile, an empty bounding box with
     /// objectBoundingBox units, an empty viewBox, or a non-finite or non-invertible patternTransform.
     /// `bounds` is only evaluated when objectBoundingBox units need it.
-    static func resolvePattern(_ pattern: LayerTree.Pattern, in boundingBox: @autoclosure () -> LayerTree.Rect) -> (LayerTree.Pattern, LayerTree.Transform.Matrix)? {
+    static func resolvePattern(
+        _ pattern: LayerTree.Pattern,
+        in boundingBox: @autoclosure () -> LayerTree.Rect
+    ) -> (LayerTree.Pattern, LayerTree.Transform.Matrix)? {
         let t = pattern.transform
         let determinant = t.a * t.d - t.b * t.c
         guard [t.a, t.b, t.c, t.d, t.tx, t.ty].allSatisfy(\.isFinite),
-              determinant.isFinite, determinant != 0 else { return nil }
+            determinant.isFinite, determinant != 0
+        else { return nil }
 
-        let needsBounds = pattern.units == .objectBoundingBox ||
-            (pattern.viewBox == nil && pattern.contentUnits == .objectBoundingBox)
+        let needsBounds =
+            pattern.units == .objectBoundingBox
+            || (pattern.viewBox == nil && pattern.contentUnits == .objectBoundingBox)
         let bounds = needsBounds ? boundingBox() : .zero
 
         var tile = pattern.frame
@@ -1334,20 +1543,26 @@ extension LayerTree.CommandGenerator {
             )
         }
         guard [tile.x, tile.y, tile.width, tile.height].allSatisfy(\.isFinite),
-              tile.width > 0, tile.height > 0 else { return nil }
+            tile.width > 0, tile.height > 0
+        else { return nil }
 
         var contentTransform = LayerTree.Transform.Matrix.identity
         if let viewBox = pattern.viewBox {
             // the viewBox is fitted into the tile per the pattern's preserveAspectRatio (SVG 1.1 §7.8)
             guard viewBox.width > 0, viewBox.height > 0 else { return nil }
             let fit = pattern.preserveAspectRatio.fit(
-                contentWidth: viewBox.width, contentHeight: viewBox.height,
-                viewportWidth: tile.width, viewportHeight: tile.height
+                contentWidth: viewBox.width,
+                contentHeight: viewBox.height,
+                viewportWidth: tile.width,
+                viewportHeight: tile.height
             )
             // a tiny viewBox in a large tile can overflow the scale: no pattern, not an infinite matrix
             guard [fit.sx, fit.sy, fit.tx, fit.ty].allSatisfy(\.isFinite) else { return nil }
             contentTransform = LayerTree.Transform.Matrix(
-                a: fit.sx, b: 0, c: 0, d: fit.sy,
+                a: fit.sx,
+                b: 0,
+                c: 0,
+                d: fit.sy,
                 tx: fit.tx - viewBox.x * fit.sx,
                 ty: fit.ty - viewBox.y * fit.sy
             )

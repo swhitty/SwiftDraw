@@ -29,7 +29,6 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-
 @testable import SwiftDrawDOM
 @testable import SwiftDraw
 import Foundation
@@ -39,12 +38,14 @@ struct LayerTreeFilterTests {
 
     @Test
     func blurGeneratesFilterLayerWithDefaultRegion() throws {
-        let commands = try makeCommands(#"""
-        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
-            <filter id="blur"><feGaussianBlur stdDeviation="5" /></filter>
-            <rect x="25" y="25" width="40" height="40" filter="url(#blur)" />
-        </svg>
-        """#)
+        let commands = try makeCommands(
+            #"""
+            <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+                <filter id="blur"><feGaussianBlur stdDeviation="5" /></filter>
+                <rect x="25" y="25" width="40" height="40" filter="url(#blur)" />
+            </svg>
+            """#
+        )
 
         let filter = try #require(commands.filterLayers.first)
         #expect(commands.filterLayers.count == 1)
@@ -55,14 +56,16 @@ struct LayerTreeFilterTests {
 
     @Test
     func blurTwoValuesAndUserSpaceRegion() throws {
-        let commands = try makeCommands(#"""
-        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
-            <filter id="blur" filterUnits="userSpaceOnUse" x="0" y="10" width="90" height="80">
-                <feGaussianBlur stdDeviation="4 2" />
-            </filter>
-            <rect x="25" y="25" width="50" height="50" filter="url(#blur)" />
-        </svg>
-        """#)
+        let commands = try makeCommands(
+            #"""
+            <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+                <filter id="blur" filterUnits="userSpaceOnUse" x="0" y="10" width="90" height="80">
+                    <feGaussianBlur stdDeviation="4 2" />
+                </filter>
+                <rect x="25" y="25" width="50" height="50" filter="url(#blur)" />
+            </svg>
+            """#
+        )
 
         let filter = try #require(commands.filterLayers.first)
         #expect(filter.region == LayerTree.Rect(x: 0, y: 10, width: 90, height: 80))
@@ -71,14 +74,16 @@ struct LayerTreeFilterTests {
 
     @Test
     func primitiveUnitsObjectBoundingBoxScalesDeviation() throws {
-        let commands = try makeCommands(#"""
-        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
-            <filter id="blur" primitiveUnits="objectBoundingBox" x="0" y="0" width="1" height="1">
-                <feGaussianBlur stdDeviation="0.1" />
-            </filter>
-            <rect x="0" y="0" width="50" height="20" filter="url(#blur)" />
-        </svg>
-        """#)
+        let commands = try makeCommands(
+            #"""
+            <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+                <filter id="blur" primitiveUnits="objectBoundingBox" x="0" y="0" width="1" height="1">
+                    <feGaussianBlur stdDeviation="0.1" />
+                </filter>
+                <rect x="0" y="0" width="50" height="20" filter="url(#blur)" />
+            </svg>
+            """#
+        )
 
         let filter = try #require(commands.filterLayers.first)
         #expect(filter.region == LayerTree.Rect(x: 0, y: 0, width: 50, height: 20))
@@ -87,121 +92,142 @@ struct LayerTreeFilterTests {
 
     @Test
     func negativeDeviationDisablesBlur() throws {
-        let commands = try makeCommands(#"""
-        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
-            <filter id="blur"><feGaussianBlur stdDeviation="-3" /></filter>
-            <rect x="0" y="0" width="50" height="50" filter="url(#blur)" />
-        </svg>
-        """#)
+        let commands = try makeCommands(
+            #"""
+            <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+                <filter id="blur"><feGaussianBlur stdDeviation="-3" /></filter>
+                <rect x="0" y="0" width="50" height="50" filter="url(#blur)" />
+            </svg>
+            """#
+        )
 
         #expect(commands.filterLayers.first?.effects == [.gaussianBlur(stdDeviation: 0, stdDeviationY: 0)])
     }
 
     @Test
     func filterRegionIncludesChildTransforms() throws {
-        let commands = try makeCommands(#"""
-        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
-            <filter id="blur" x="0" y="0" width="1" height="1"><feGaussianBlur stdDeviation="1" /></filter>
-            <g filter="url(#blur)">
-                <rect x="0" y="0" width="10" height="10" />
-                <rect x="0" y="0" width="10" height="10" transform="translate(30, 40)" />
-            </g>
-        </svg>
-        """#)
+        let commands = try makeCommands(
+            #"""
+            <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+                <filter id="blur" x="0" y="0" width="1" height="1"><feGaussianBlur stdDeviation="1" /></filter>
+                <g filter="url(#blur)">
+                    <rect x="0" y="0" width="10" height="10" />
+                    <rect x="0" y="0" width="10" height="10" transform="translate(30, 40)" />
+                </g>
+            </svg>
+            """#
+        )
 
         #expect(commands.filterLayers.first?.region == LayerTree.Rect(x: 0, y: 0, width: 40, height: 50))
     }
 
     @Test
     func filterIsNotInheritedByChildren() throws {
-        let commands = try makeCommands(#"""
-        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
-            <filter id="blur"><feGaussianBlur stdDeviation="2" /></filter>
-            <g filter="url(#blur)">
-                <rect x="0" y="0" width="10" height="10" />
-                <rect x="20" y="0" width="10" height="10" />
-            </g>
-        </svg>
-        """#)
+        let commands = try makeCommands(
+            #"""
+            <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+                <filter id="blur"><feGaussianBlur stdDeviation="2" /></filter>
+                <g filter="url(#blur)">
+                    <rect x="0" y="0" width="10" height="10" />
+                    <rect x="20" y="0" width="10" height="10" />
+                </g>
+            </svg>
+            """#
+        )
 
         #expect(commands.filterLayers.count == 1)
     }
 
     @Test
     func emptyFilterRegionDrawsNothing() throws {
-        let commands = try makeCommands(#"""
-        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
-            <filter id="blur"><feGaussianBlur stdDeviation="2" /></filter>
-            <line x1="0" y1="10" x2="100" y2="10" stroke="black" filter="url(#blur)" />
-        </svg>
-        """#)
+        let commands = try makeCommands(
+            #"""
+            <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+                <filter id="blur"><feGaussianBlur stdDeviation="2" /></filter>
+                <line x1="0" y1="10" x2="100" y2="10" stroke="black" filter="url(#blur)" />
+            </svg>
+            """#
+        )
 
         #expect(commands.names == [])
     }
 
     @Test
     func unsupportedPrimitiveDrawsUnfiltered() throws {
-        let commands = try makeCommands(#"""
-        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
-            <filter id="shadow">
-                <feGaussianBlur in="SourceAlpha" stdDeviation="2" />
-                <feDisplacementMap scale="10" />
-            </filter>
-            <rect x="0" y="0" width="10" height="10" filter="url(#shadow)" />
-        </svg>
-        """#)
+        let commands = try makeCommands(
+            #"""
+            <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+                <filter id="shadow">
+                    <feGaussianBlur in="SourceAlpha" stdDeviation="2" />
+                    <feDisplacementMap scale="10" />
+                </filter>
+                <rect x="0" y="0" width="10" height="10" filter="url(#shadow)" />
+            </svg>
+            """#
+        )
 
         #expect(commands.names == ["setFillColor", "fillPath"])
     }
 
     @Test
     func unsupportedPrimitiveIsHiddenWithOption() throws {
-        let commands = try makeCommands(#"""
-        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
-            <filter id="noise"><feDisplacementMap scale="10" /></filter>
-            <rect x="0" y="0" width="10" height="10" filter="url(#noise)" />
-            <rect x="20" y="0" width="10" height="10" />
-        </svg>
-        """#, options: .hideUnsupportedFilters)
+        let commands = try makeCommands(
+            #"""
+            <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+                <filter id="noise"><feDisplacementMap scale="10" /></filter>
+                <rect x="0" y="0" width="10" height="10" filter="url(#noise)" />
+                <rect x="20" y="0" width="10" height="10" />
+            </svg>
+            """#,
+            options: .hideUnsupportedFilters
+        )
 
         #expect(commands.names == ["setFillColor", "fillPath"])
     }
 
     @Test
     func filterIsAppliedBeforeOpacityClipAndMask() throws {
-        let commands = try makeCommands(#"""
-        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
-            <filter id="blur"><feGaussianBlur stdDeviation="2" /></filter>
-            <clipPath id="clip"><rect x="0" y="0" width="50" height="100" /></clipPath>
-            <mask id="mask"><rect x="0" y="0" width="100" height="100" fill="white" /></mask>
-            <rect x="10" y="10" width="80" height="80" opacity="0.5" clip-path="url(#clip)" mask="url(#mask)" filter="url(#blur)" />
-        </svg>
-        """#)
+        let commands = try makeCommands(
+            #"""
+            <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+                <filter id="blur"><feGaussianBlur stdDeviation="2" /></filter>
+                <clipPath id="clip"><rect x="0" y="0" width="50" height="100" /></clipPath>
+                <mask id="mask"><rect x="0" y="0" width="100" height="100" fill="white" /></mask>
+                <rect x="10" y="10" width="80" height="80" opacity="0.5" clip-path="url(#clip)" mask="url(#mask)" filter="url(#blur)" />
+            </svg>
+            """#
+        )
 
-        #expect(commands.names == [
-            "pushState", "setAlpha", "pushTransparencyLayer", "setClip", "clipToMask", "pushTransparencyLayer",
-            "pushFilterLayer", "setFillColor", "fillPath", "popFilterLayer",
-            "popTransparencyLayer",
-            "popTransparencyLayer", "popState"
-        ])
+        #expect(
+            commands.names == [
+                "pushState", "setAlpha", "pushTransparencyLayer", "setClip", "clipToMask", "pushTransparencyLayer",
+                "pushFilterLayer", "setFillColor", "fillPath", "popFilterLayer",
+                "popTransparencyLayer",
+                "popTransparencyLayer", "popState",
+            ]
+        )
     }
 
     @Test
     func nestedFilterLayers() throws {
-        let commands = try makeCommands(#"""
-        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
-            <filter id="blur"><feGaussianBlur stdDeviation="2" /></filter>
-            <g filter="url(#blur)">
-                <rect x="10" y="10" width="20" height="20" filter="url(#blur)" />
-                <rect x="50" y="50" width="20" height="20" />
-            </g>
-        </svg>
-        """#)
+        let commands = try makeCommands(
+            #"""
+            <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+                <filter id="blur"><feGaussianBlur stdDeviation="2" /></filter>
+                <g filter="url(#blur)">
+                    <rect x="10" y="10" width="20" height="20" filter="url(#blur)" />
+                    <rect x="50" y="50" width="20" height="20" />
+                </g>
+            </svg>
+            """#
+        )
 
-        #expect(commands.names == [
-            "pushFilterLayer", "pushFilterLayer", "setFillColor", "fillPath", "popFilterLayer",
-            "setFillColor", "fillPath", "popFilterLayer"
-        ])
+        #expect(
+            commands.names == [
+                "pushFilterLayer", "pushFilterLayer", "setFillColor", "fillPath", "popFilterLayer",
+                "setFillColor", "fillPath", "popFilterLayer",
+            ]
+        )
     }
 
     // SVG 2 §8.10: the objectBoundingBox filter region of text is that of its glyph cells, measured
@@ -209,15 +235,21 @@ struct LayerTreeFilterTests {
     // hidden as unsupported
     @Test
     func textWithObjectBoundingBoxBlurIsFilteredByItsBoundingBox() throws {
-        let svg = try DOM.SVG.parse(xml: #"""
-        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
-            <filter id="blur"><feGaussianBlur stdDeviation="2" /></filter>
-            <text x="10" y="50" font-family="Times" font-size="20" filter="url(#blur)">Hi</text>
-        </svg>
-        """#)
+        let svg = try DOM.SVG.parse(
+            xml: #"""
+                <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+                    <filter id="blur"><feGaussianBlur stdDeviation="2" /></filter>
+                    <text x="10" y="50" font-family="Times" font-size="20" filter="url(#blur)">Hi</text>
+                </svg>
+                """#
+        )
         let root = LayerTree.Builder(svg: svg).makeLayer()
         let layer = try #require(root.allLayers.first { !$0.filters.isEmpty })
-        let generator = LayerTree.CommandGenerator(provider: LayerTreeProvider(), size: .init(100, 100), options: .hideUnsupportedFilters)
+        let generator = LayerTree.CommandGenerator(
+            provider: LayerTreeProvider(),
+            size: .init(100, 100),
+            options: .hideUnsupportedFilters
+        )
 
         #expect(!layer.hasUnsupportedFilters)
         #if canImport(CoreText)
@@ -225,10 +257,15 @@ struct LayerTreeFilterTests {
         #expect(bounds.x == 10)
         #expect(bounds.y < 50 && bounds.y + bounds.height > 50)
         let filter = try #require(generator.makeFilterLayer(for: layer))
-        #expect(filter.region == LayerTree.Rect(
-            x: bounds.x - 0.1 * bounds.width, y: bounds.y - 0.1 * bounds.height,
-            width: 1.2 * bounds.width, height: 1.2 * bounds.height
-        ))
+        #expect(
+            filter.region
+                == LayerTree.Rect(
+                    x: bounds.x - 0.1 * bounds.width,
+                    y: bounds.y - 0.1 * bounds.height,
+                    width: 1.2 * bounds.width,
+                    height: 1.2 * bounds.height
+                )
+        )
         #else
         #expect(generator.makeFilterLayer(for: layer) == nil)
         #endif
@@ -237,15 +274,18 @@ struct LayerTreeFilterTests {
     // a group mixing shapes and text: its box includes the text's, so the text is not clipped away
     @Test
     func groupWithTextIsFilteredByTheUnionOfItsContents() throws {
-        let commands = try makeCommands(#"""
-        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
-            <filter id="flood" x="0" y="0" width="1" height="1"><feFlood flood-color="green" /></filter>
-            <g filter="url(#flood)">
-                <rect x="10" y="10" width="10" height="10" />
-                <text x="10" y="80" font-family="Times" font-size="20">Hello</text>
-            </g>
-        </svg>
-        """#, options: .hideUnsupportedFilters)
+        let commands = try makeCommands(
+            #"""
+            <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+                <filter id="flood" x="0" y="0" width="1" height="1"><feFlood flood-color="green" /></filter>
+                <g filter="url(#flood)">
+                    <rect x="10" y="10" width="10" height="10" />
+                    <text x="10" y="80" font-family="Times" font-size="20">Hello</text>
+                </g>
+            </svg>
+            """#,
+            options: .hideUnsupportedFilters
+        )
 
         #if canImport(CoreText)
         let region = try #require(commands.filterLayers.first?.region)
@@ -260,40 +300,46 @@ struct LayerTreeFilterTests {
     // the text's own box is not measured where no filter needs it
     @Test
     func textIsOnlyMeasuredUnderAFilter() throws {
-        let svg = try DOM.SVG.parse(xml: #"""
-        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
-            <text x="10" y="50">Hi</text>
-        </svg>
-        """#)
+        let svg = try DOM.SVG.parse(
+            xml: #"""
+                <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+                    <text x="10" y="50">Hi</text>
+                </svg>
+                """#
+        )
         let root = LayerTree.Builder(svg: svg).makeLayer()
         #expect(root.allLayers.allSatisfy { $0.textBounds == nil })
     }
 
     @Test
     func groupWithTextKeepsUserSpaceFilter() throws {
-        let commands = try makeCommands(#"""
-        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
-            <filter id="blur" filterUnits="userSpaceOnUse" x="0" y="0" width="100" height="100">
-                <feGaussianBlur stdDeviation="2" />
-            </filter>
-            <g filter="url(#blur)">
-                <rect x="10" y="10" width="10" height="10" />
-                <text x="10" y="80">Hello</text>
-            </g>
-        </svg>
-        """#)
+        let commands = try makeCommands(
+            #"""
+            <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+                <filter id="blur" filterUnits="userSpaceOnUse" x="0" y="0" width="100" height="100">
+                    <feGaussianBlur stdDeviation="2" />
+                </filter>
+                <g filter="url(#blur)">
+                    <rect x="10" y="10" width="10" height="10" />
+                    <text x="10" y="80">Hello</text>
+                </g>
+            </svg>
+            """#
+        )
 
         #expect(commands.filterLayers.first?.region == LayerTree.Rect(x: 0, y: 0, width: 100, height: 100))
     }
 
     @Test
     func hugeDeviationStaysFinite() throws {
-        let commands = try makeCommands(#"""
-        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
-            <filter id="blur" primitiveUnits="objectBoundingBox"><feGaussianBlur stdDeviation="1e38" /></filter>
-            <rect x="0" y="0" width="50" height="50" filter="url(#blur)" />
-        </svg>
-        """#)
+        let commands = try makeCommands(
+            #"""
+            <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+                <filter id="blur" primitiveUnits="objectBoundingBox"><feGaussianBlur stdDeviation="1e38" /></filter>
+                <rect x="0" y="0" width="50" height="50" filter="url(#blur)" />
+            </svg>
+            """#
+        )
 
         let effect = try #require(commands.filterLayers.first?.effects.first)
         guard case let .gaussianBlur(x, y) = effect else {
@@ -307,36 +353,46 @@ struct LayerTreeFilterTests {
     // renderers isolate a filter layer, but the optimizer does not elide state after it
     @Test
     func optimizerResetsStateAroundFilterLayer() {
-        let filter = LayerTree.FilterLayer(region: .init(x: 0, y: 0, width: 10, height: 10),
-                                           effects: [.gaussianBlur(stdDeviation: 1, stdDeviationY: 1)])
+        let filter = LayerTree.FilterLayer(
+            region: .init(x: 0, y: 0, width: 10, height: 10),
+            effects: [.gaussianBlur(stdDeviation: 1, stdDeviationY: 1)]
+        )
         let commands: [RendererCommand<LayerTreeTypes>] = [
             .setFill(color: .black),
             .pushFilterLayer(filter),
             .setFill(color: .black),
             .popFilterLayer,
-            .setFill(color: .black)
+            .setFill(color: .black),
         ]
 
         let optimized = LayerTree.CommandOptimizer<LayerTreeTypes>().optimizeCommands(commands)
-        #expect(optimized.names == ["setFillColor", "pushFilterLayer", "setFillColor", "popFilterLayer", "setFillColor"])
+        #expect(
+            optimized.names == ["setFillColor", "pushFilterLayer", "setFillColor", "popFilterLayer", "setFillColor"]
+        )
     }
 
     // hideUnsupportedFilters hides only unsupported filters: a blur is rendered
-    @Test(arguments: [("feGaussianBlur stdDeviation=\"2\"", true),
-                      ("feFlood flood-color=\"blue\"", true),
-                      ("feDisplacementMap scale=\"10\"", false)])
+    @Test(arguments: [
+        ("feGaussianBlur stdDeviation=\"2\"", true),
+        ("feFlood flood-color=\"blue\"", true),
+        ("feDisplacementMap scale=\"10\"", false),
+    ])
     func hideUnsupportedFiltersKeepsSupportedFilterContents(primitive: String, hasContents: Bool) throws {
-        let svg = try DOM.SVG.parse(xml: """
-        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
-            <filter id="f"><\(primitive) /></filter>
-            <rect x="10" y="10" width="20" height="20" filter="url(#f)" />
-        </svg>
-        """)
+        let svg = try DOM.SVG.parse(
+            xml: """
+                <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+                    <filter id="f"><\(primitive) /></filter>
+                    <rect x="10" y="10" width="20" height="20" filter="url(#f)" />
+                </svg>
+                """
+        )
         let root = LayerTree.Builder(svg: svg).makeLayer()
         let layer = try #require(root.allLayers.first { !$0.filters.isEmpty })
-        let generator = LayerTree.CommandGenerator(provider: LayerTreeProvider(),
-                                                   size: .init(100, 100),
-                                                   options: .hideUnsupportedFilters)
+        let generator = LayerTree.CommandGenerator(
+            provider: LayerTreeProvider(),
+            size: .init(100, 100),
+            options: .hideUnsupportedFilters
+        )
         #expect(generator.makeCommandState(for: layer, colorConverter: .default).hasContents == hasContents)
     }
 
@@ -344,11 +400,11 @@ struct LayerTreeFilterTests {
     @Test
     func disableFiltersDrawsWithoutFilterLayer() throws {
         let xml = #"""
-        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
-            <filter id="blur"><feGaussianBlur stdDeviation="2" /></filter>
-            <rect x="10" y="10" width="20" height="20" filter="url(#blur)" />
-        </svg>
-        """#
+            <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+                <filter id="blur"><feGaussianBlur stdDeviation="2" /></filter>
+                <rect x="10" y="10" width="20" height="20" filter="url(#blur)" />
+            </svg>
+            """#
         #expect(try makeCommands(xml).names.contains("pushFilterLayer"))
         let disabled = try makeCommands(xml, options: .disableFilters)
         #expect(!disabled.names.contains("pushFilterLayer"))
@@ -358,11 +414,11 @@ struct LayerTreeFilterTests {
     @Test
     func disableFiltersTakesPrecedenceOverHideUnsupportedFilters() throws {
         let xml = #"""
-        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
-            <filter id="noise"><feDisplacementMap scale="10" /></filter>
-            <rect x="10" y="10" width="20" height="20" filter="url(#noise)" />
-        </svg>
-        """#
+            <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+                <filter id="noise"><feDisplacementMap scale="10" /></filter>
+                <rect x="10" y="10" width="20" height="20" filter="url(#noise)" />
+            </svg>
+            """#
         #expect(!(try makeCommands(xml, options: .hideUnsupportedFilters).names.contains("fillPath")))
         #expect(try makeCommands(xml, options: [.hideUnsupportedFilters, .disableFilters]).names.contains("fillPath"))
     }
@@ -373,9 +429,11 @@ private extension LayerTreeFilterTests {
     func makeCommands(_ xml: String, options: SVG.Options = .default) throws -> [RendererCommand<LayerTreeTypes>] {
         let svg = try DOM.SVG.parse(xml: xml)
         let layer = LayerTree.Builder(svg: svg).makeLayer()
-        let generator = LayerTree.CommandGenerator(provider: LayerTreeProvider(),
-                                                   size: .init(100, 100),
-                                                   options: options)
+        let generator = LayerTree.CommandGenerator(
+            provider: LayerTreeProvider(),
+            size: .init(100, 100),
+            options: options
+        )
         let commands = generator.renderCommands(for: layer, colorConverter: .default)
         return LayerTree.CommandOptimizer<LayerTreeTypes>().optimizeCommands(commands)
     }
@@ -400,9 +458,10 @@ private extension Array where Element == RendererCommand<LayerTreeTypes> {
 private extension LayerTree.Layer {
 
     var allLayers: [LayerTree.Layer] {
-        [self] + contents.flatMap { contents -> [LayerTree.Layer] in
-            if case .layer(let layer) = contents { return layer.allLayers }
-            return []
-        }
+        [self]
+            + contents.flatMap { contents -> [LayerTree.Layer] in
+                if case .layer(let layer) = contents { return layer.allLayers }
+                return []
+            }
     }
 }

@@ -42,74 +42,94 @@ struct LayerTreeGradientUnitsTests {
 
     @Test
     func radialGradientIsDrawnInBoundingBoxSpace() throws {
-        let commands = try makeCommands(#"""
-        <radialGradient id="g"><stop offset="0" stop-color="red" /><stop offset="1" stop-color="blue" /></radialGradient>
-        <rect x="10" y="20" width="200" height="50" fill="url(#g)" />
-        """#)
+        let commands = try makeCommands(
+            #"""
+            <radialGradient id="g"><stop offset="0" stop-color="red" /><stop offset="1" stop-color="blue" /></radialGradient>
+            <rect x="10" y="20" width="200" height="50" fill="url(#g)" />
+            """#
+        )
 
-        #expect(commands.gradientSteps == [
-            .translate(10, 20),
-            .scale(200, 50),
-            .radial(LayerTree.Point(0.5, 0.5), 0, LayerTree.Point(0.5, 0.5), 0.5)
-        ])
+        #expect(
+            commands.gradientSteps == [
+                .translate(10, 20),
+                .scale(200, 50),
+                .radial(LayerTree.Point(0.5, 0.5), 0, LayerTree.Point(0.5, 0.5), 0.5),
+            ]
+        )
     }
 
     @Test
     func linearGradientIsDrawnInBoundingBoxSpace() throws {
-        let commands = try makeCommands(#"""
-        <linearGradient id="g" x2="1" y2="1"><stop offset="0" stop-color="red" /><stop offset="1" stop-color="blue" /></linearGradient>
-        <rect x="10" y="20" width="200" height="50" fill="url(#g)" />
-        """#)
+        let commands = try makeCommands(
+            #"""
+            <linearGradient id="g" x2="1" y2="1"><stop offset="0" stop-color="red" /><stop offset="1" stop-color="blue" /></linearGradient>
+            <rect x="10" y="20" width="200" height="50" fill="url(#g)" />
+            """#
+        )
 
-        #expect(commands.gradientSteps == [
-            .translate(10, 20),
-            .scale(200, 50),
-            .linear(LayerTree.Point(0, 0), LayerTree.Point(1, 1))
-        ])
+        #expect(
+            commands.gradientSteps == [
+                .translate(10, 20),
+                .scale(200, 50),
+                .linear(LayerTree.Point(0, 0), LayerTree.Point(1, 1)),
+            ]
+        )
     }
 
     @Test
     func gradientTransformIsAppliedWithinBoundingBox() throws {
-        let commands = try makeCommands(#"""
-        <radialGradient id="g" gradientTransform="scale(0.5 1)"><stop offset="0" stop-color="red" /><stop offset="1" stop-color="blue" /></radialGradient>
-        <rect x="10" y="20" width="200" height="50" fill="url(#g)" />
-        """#)
+        let commands = try makeCommands(
+            #"""
+            <radialGradient id="g" gradientTransform="scale(0.5 1)"><stop offset="0" stop-color="red" /><stop offset="1" stop-color="blue" /></radialGradient>
+            <rect x="10" y="20" width="200" height="50" fill="url(#g)" />
+            """#
+        )
 
-        #expect(commands.gradientSteps == [
-            .translate(10, 20),
-            .scale(200, 50),
-            .scale(0.5, 1),
-            .radial(LayerTree.Point(0.5, 0.5), 0, LayerTree.Point(0.5, 0.5), 0.5)
-        ])
+        #expect(
+            commands.gradientSteps == [
+                .translate(10, 20),
+                .scale(200, 50),
+                .scale(0.5, 1),
+                .radial(LayerTree.Point(0.5, 0.5), 0, LayerTree.Point(0.5, 0.5), 0.5),
+            ]
+        )
     }
 
     @Test
     func userSpaceGradientIsNotScaled() throws {
-        let commands = try makeCommands(#"""
-        <radialGradient id="g" gradientUnits="userSpaceOnUse" cx="50" cy="40" r="30" gradientTransform="translate(5 0)">
-            <stop offset="0" stop-color="red" /><stop offset="1" stop-color="blue" />
-        </radialGradient>
-        <rect x="10" y="20" width="200" height="50" fill="url(#g)" />
-        """#)
+        let commands = try makeCommands(
+            #"""
+            <radialGradient id="g" gradientUnits="userSpaceOnUse" cx="50" cy="40" r="30" gradientTransform="translate(5 0)">
+                <stop offset="0" stop-color="red" /><stop offset="1" stop-color="blue" />
+            </radialGradient>
+            <rect x="10" y="20" width="200" height="50" fill="url(#g)" />
+            """#
+        )
 
-        #expect(commands.gradientSteps == [
-            .translate(5, 0),
-            .radial(LayerTree.Point(50, 40), 0, LayerTree.Point(50, 40), 30)
-        ])
+        #expect(
+            commands.gradientSteps == [
+                .translate(5, 0),
+                .radial(LayerTree.Point(50, 40), 0, LayerTree.Point(50, 40), 30),
+            ]
+        )
     }
 
     @Test
     func strokeGradientUsesShapeBoundingBox() throws {
-        let commands = try makeCommands(#"""
-        <linearGradient id="g"><stop offset="0" stop-color="red" /><stop offset="1" stop-color="blue" /></linearGradient>
-        <polyline points="10,20 210,20 210,70" fill="none" stroke="url(#g)" stroke-width="4" />
-        """#)
+        let commands = try makeCommands(
+            #"""
+            <linearGradient id="g"><stop offset="0" stop-color="red" /><stop offset="1" stop-color="blue" /></linearGradient>
+            <polyline points="10,20 210,20 210,70" fill="none" stroke="url(#g)" stroke-width="4" />
+            """#
+        )
 
-        #expect(commands.gradientSteps == [
-            .translate(10, 20),
-            .scale(200, 50),
-            .linear(LayerTree.Point(0, 0), LayerTree.Point(1, 0))
-        ])
+        #expect(
+            commands.gradientSteps == [
+                .translate(10, 20),
+                .scale(200, 50),
+                .linear(LayerTree.Point(0, 0), LayerTree.Point(1, 0)),
+            ]
+        )
     }
 
     @Test(arguments: [
@@ -117,20 +137,24 @@ struct LayerTreeGradientUnitsTests {
         #"<line x1="10" y1="20" x2="10" y2="80" stroke="url(#g)" stroke-width="4" />"#,
     ])
     func boundingBoxWithoutAreaIgnoresGradient(shape: String) throws {
-        let commands = try makeCommands(#"""
-        <linearGradient id="g"><stop offset="0" stop-color="red" /><stop offset="1" stop-color="blue" /></linearGradient>
-        \#(shape)
-        """#)
+        let commands = try makeCommands(
+            #"""
+            <linearGradient id="g"><stop offset="0" stop-color="red" /><stop offset="1" stop-color="blue" /></linearGradient>
+            \#(shape)
+            """#
+        )
 
         #expect(commands.gradientSteps.isEmpty)
     }
 
     func makeCommands(_ contents: String) throws -> [Command] {
-        let svg = try DOM.SVG.parse(xml: #"""
-        <svg width="300" height="100" xmlns="http://www.w3.org/2000/svg">
-            \#(contents)
-        </svg>
-        """#)
+        let svg = try DOM.SVG.parse(
+            xml: #"""
+                <svg width="300" height="100" xmlns="http://www.w3.org/2000/svg">
+                    \#(contents)
+                </svg>
+                """#
+        )
         let layer = LayerTree.Builder(svg: svg).makeLayer()
         let generator = LayerTree.CommandGenerator(provider: LayerTreeProvider(), size: .zero, options: .default)
         return generator.renderCommands(for: layer, colorConverter: .default)
@@ -148,11 +172,13 @@ private extension Array where Element == RendererCommand<LayerTreeTypes> {
 
     // the transforms and draws between the gradient's clip and its draw call
     var gradientSteps: [GradientStep] {
-        guard let clip = firstIndex(where: {
-            if case .setClip = $0 { return true }
-            if case .clipStrokeOutline = $0 { return true }
-            return false
-        }) else { return [] }
+        guard
+            let clip = firstIndex(where: {
+                if case .setClip = $0 { return true }
+                if case .clipStrokeOutline = $0 { return true }
+                return false
+            })
+        else { return [] }
         var steps = [GradientStep]()
         for command in self[clip...] {
             switch command {

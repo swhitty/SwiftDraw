@@ -42,61 +42,89 @@ struct LayerTreeFilterGraphTests {
     // Inkscape 1.x Filters ▸ Shadows and Glows ▸ Drop Shadow
     @Test
     func inkscapeDropShadow() throws {
-        let filter = try makeFilterLayer(#"""
-        <svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">
-            <filter style="color-interpolation-filters:sRGB" id="filter1" x="-0.1" y="-0.1" width="1.2" height="1.2">
-                <feFlood flood-opacity="0.498039" flood-color="rgb(0,0,0)" result="flood" />
-                <feComposite in="flood" in2="SourceGraphic" operator="in" result="composite1" />
-                <feGaussianBlur in="composite1" stdDeviation="3" result="blur" />
-                <feOffset dx="6" dy="6" result="offset" />
-                <feComposite in="SourceGraphic" in2="offset" operator="over" result="composite2" />
-            </filter>
-            <rect x="10" y="10" width="100" height="50" filter="url(#filter1)" />
-        </svg>
-        """#)
+        let filter = try makeFilterLayer(
+            #"""
+            <svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">
+                <filter style="color-interpolation-filters:sRGB" id="filter1" x="-0.1" y="-0.1" width="1.2" height="1.2">
+                    <feFlood flood-opacity="0.498039" flood-color="rgb(0,0,0)" result="flood" />
+                    <feComposite in="flood" in2="SourceGraphic" operator="in" result="composite1" />
+                    <feGaussianBlur in="composite1" stdDeviation="3" result="blur" />
+                    <feOffset dx="6" dy="6" result="offset" />
+                    <feComposite in="SourceGraphic" in2="offset" operator="over" result="composite2" />
+                </filter>
+                <rect x="10" y="10" width="100" height="50" filter="url(#filter1)" />
+            </svg>
+            """#
+        )
 
         let region = filter.region
         #expect(abs(region.x - 0) <= 0.001)
         #expect(abs(region.y - 5) <= 0.001)
         #expect(abs(region.width - 120) <= 0.001)
         #expect(abs(region.height - 60) <= 0.001)
-        #expect(filter.primitives == [
-            Primitive(effect: .flood(.rgba(r: 0, g: 0, b: 0, a: 0.498039, space: .srgb)),
-                      inputs: [], subregion: region, colorInterpolation: .sRGB),
-            Primitive(effect: .composite(.in), inputs: [.primitive(0), .sourceGraphic],
-                      subregion: region, colorInterpolation: .sRGB),
-            Primitive(effect: .gaussianBlur(stdDeviation: 3, stdDeviationY: 3), inputs: [.primitive(1)],
-                      subregion: region, colorInterpolation: .sRGB),
-            Primitive(effect: .offset(dx: 6, dy: 6), inputs: [.primitive(2)],
-                      subregion: region, colorInterpolation: .sRGB),
-            Primitive(effect: .composite(.over), inputs: [.sourceGraphic, .primitive(3)],
-                      subregion: region, colorInterpolation: .sRGB)
-        ])
+        #expect(
+            filter.primitives == [
+                Primitive(
+                    effect: .flood(.rgba(r: 0, g: 0, b: 0, a: 0.498039, space: .srgb)),
+                    inputs: [],
+                    subregion: region,
+                    colorInterpolation: .sRGB
+                ),
+                Primitive(
+                    effect: .composite(.in),
+                    inputs: [.primitive(0), .sourceGraphic],
+                    subregion: region,
+                    colorInterpolation: .sRGB
+                ),
+                Primitive(
+                    effect: .gaussianBlur(stdDeviation: 3, stdDeviationY: 3),
+                    inputs: [.primitive(1)],
+                    subregion: region,
+                    colorInterpolation: .sRGB
+                ),
+                Primitive(
+                    effect: .offset(dx: 6, dy: 6),
+                    inputs: [.primitive(2)],
+                    subregion: region,
+                    colorInterpolation: .sRGB
+                ),
+                Primitive(
+                    effect: .composite(.over),
+                    inputs: [.sourceGraphic, .primitive(3)],
+                    subregion: region,
+                    colorInterpolation: .sRGB
+                ),
+            ]
+        )
         #expect(!filter.isBlurChain)
     }
 
     // Illustrator's AI_Shadow: no color-interpolation-filters, so linearRGB
     @Test
     func illustratorShadow() throws {
-        let filter = try makeFilterLayer(#"""
-        <svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">
-            <filter id="AI_Shadow_1" filterUnits="objectBoundingBox">
-                <feGaussianBlur in="SourceAlpha" stdDeviation="2" result="blur" />
-                <feOffset dx="4" dy="4" in="blur" result="offsetBlurredAlpha" />
-                <feMerge>
-                    <feMergeNode in="offsetBlurredAlpha" />
-                    <feMergeNode in="SourceGraphic" />
-                </feMerge>
-            </filter>
-            <rect x="0" y="0" width="100" height="100" filter="url(#AI_Shadow_1)" />
-        </svg>
-        """#)
+        let filter = try makeFilterLayer(
+            #"""
+            <svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">
+                <filter id="AI_Shadow_1" filterUnits="objectBoundingBox">
+                    <feGaussianBlur in="SourceAlpha" stdDeviation="2" result="blur" />
+                    <feOffset dx="4" dy="4" in="blur" result="offsetBlurredAlpha" />
+                    <feMerge>
+                        <feMergeNode in="offsetBlurredAlpha" />
+                        <feMergeNode in="SourceGraphic" />
+                    </feMerge>
+                </filter>
+                <rect x="0" y="0" width="100" height="100" filter="url(#AI_Shadow_1)" />
+            </svg>
+            """#
+        )
 
-        #expect(filter.effects == [
-            .gaussianBlur(stdDeviation: 2, stdDeviationY: 2),
-            .offset(dx: 4, dy: 4),
-            .merge
-        ])
+        #expect(
+            filter.effects == [
+                .gaussianBlur(stdDeviation: 2, stdDeviationY: 2),
+                .offset(dx: 4, dy: 4),
+                .merge,
+            ]
+        )
         #expect(filter.primitives.map(\.inputs) == [[.sourceAlpha], [.primitive(0)], [.primitive(1), .sourceGraphic]])
         #expect(Set(filter.primitives.map(\.colorInterpolation)) == [.linearRGB])
     }
@@ -104,43 +132,49 @@ struct LayerTreeFilterGraphTests {
     // Figma's drop shadow: a transparent BackgroundImageFix flood, a hard alpha from SourceAlpha, implicit inputs
     @Test
     func figmaDropShadow() throws {
-        let filter = try makeFilterLayer(#"""
-        <svg width="108" height="108" xmlns="http://www.w3.org/2000/svg">
-            <filter id="filter0_d" x="0" y="0" width="108" height="108" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-                <feFlood flood-opacity="0" result="BackgroundImageFix"/>
-                <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
-                <feOffset dy="4"/>
-                <feGaussianBlur stdDeviation="2"/>
-                <feComposite in2="hardAlpha" operator="out"/>
-                <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.25 0"/>
-                <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow"/>
-                <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow" result="shape"/>
-            </filter>
-            <rect x="4" y="0" width="100" height="100" fill="white" filter="url(#filter0_d)" />
-        </svg>
-        """#)
+        let filter = try makeFilterLayer(
+            #"""
+            <svg width="108" height="108" xmlns="http://www.w3.org/2000/svg">
+                <filter id="filter0_d" x="0" y="0" width="108" height="108" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+                    <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+                    <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+                    <feOffset dy="4"/>
+                    <feGaussianBlur stdDeviation="2"/>
+                    <feComposite in2="hardAlpha" operator="out"/>
+                    <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.25 0"/>
+                    <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow"/>
+                    <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow" result="shape"/>
+                </filter>
+                <rect x="4" y="0" width="100" height="100" fill="white" filter="url(#filter0_d)" />
+            </svg>
+            """#
+        )
 
         #expect(filter.region == LayerTree.Rect(x: 0, y: 0, width: 108, height: 108))
-        #expect(filter.effects == [
-            .flood(.rgba(r: 0, g: 0, b: 0, a: 0, space: .srgb)),
-            .colorMatrix([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 127, 0]),
-            .offset(dx: 0, dy: 4),
-            .gaussianBlur(stdDeviation: 2, stdDeviationY: 2),
-            .composite(.out),
-            .colorMatrix([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.25, 0]),
-            .blend(.normal),
-            .blend(.normal)
-        ])
-        #expect(filter.primitives.map(\.inputs) == [
-            [],
-            [.sourceAlpha],
-            [.primitive(1)],
-            [.primitive(2)],
-            [.primitive(3), .primitive(1)],
-            [.primitive(4)],
-            [.primitive(5), .primitive(0)],
-            [.sourceGraphic, .primitive(6)]
-        ])
+        #expect(
+            filter.effects == [
+                .flood(.rgba(r: 0, g: 0, b: 0, a: 0, space: .srgb)),
+                .colorMatrix([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 127, 0]),
+                .offset(dx: 0, dy: 4),
+                .gaussianBlur(stdDeviation: 2, stdDeviationY: 2),
+                .composite(.out),
+                .colorMatrix([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.25, 0]),
+                .blend(.normal),
+                .blend(.normal),
+            ]
+        )
+        #expect(
+            filter.primitives.map(\.inputs) == [
+                [],
+                [.sourceAlpha],
+                [.primitive(1)],
+                [.primitive(2)],
+                [.primitive(3), .primitive(1)],
+                [.primitive(4)],
+                [.primitive(5), .primitive(0)],
+                [.sourceGraphic, .primitive(6)],
+            ]
+        )
     }
 
     // Filter Effects 1 §9.2: missing, forward and unknown references take the previous result
@@ -154,55 +188,64 @@ struct LayerTreeFilterGraphTests {
             primitive([.result("later")], result: "a"),
             primitive([.result("a"), .result("missing")], result: "later"),
             primitive([.backgroundImage, .backgroundAlpha, .fillPaint, .strokePaint]),
-            primitive([.sourceGraphic, .sourceAlpha, .result("later"), nil])
+            primitive([.sourceGraphic, .sourceAlpha, .result("later"), nil]),
         ])
 
-        #expect(inputs == [
-            [.sourceGraphic],
-            [.primitive(0)],
-            // the closest preceding "a"
-            [.primitive(1), .primitive(1)],
-            // the deprecated inputs, as in resvg and WebKit
-            [.sourceGraphic, .sourceGraphic, .sourceGraphic, .sourceGraphic],
-            [.sourceGraphic, .sourceAlpha, .primitive(2), .primitive(3)]
-        ])
+        #expect(
+            inputs == [
+                [.sourceGraphic],
+                [.primitive(0)],
+                // the closest preceding "a"
+                [.primitive(1), .primitive(1)],
+                // the deprecated inputs, as in resvg and WebKit
+                [.sourceGraphic, .sourceGraphic, .sourceGraphic, .sourceGraphic],
+                [.sourceGraphic, .sourceAlpha, .primitive(2), .primitive(3)],
+            ]
+        )
     }
 
     // Filter Effects 1 §9.3: only the tree rooted at the last primitive is evaluated
     @Test
     func onlyThePrimaryTreeIsKept() throws {
-        let filter = try makeFilterLayer(#"""
-        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
-            <filter id="f">
-                <feColorMatrix type="hueRotate" values="45" />
-                <feOffset dx="10" dy="10" />
-                <feGaussianBlur stdDeviation="3" />
-                <feFlood flood-color="green" result="flood" />
-                <feComposite operator="in" in="SourceAlpha" in2="flood" />
-            </filter>
-            <rect x="10" y="10" width="50" height="50" filter="url(#f)" />
-        </svg>
-        """#)
+        let filter = try makeFilterLayer(
+            #"""
+            <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+                <filter id="f">
+                    <feColorMatrix type="hueRotate" values="45" />
+                    <feOffset dx="10" dy="10" />
+                    <feGaussianBlur stdDeviation="3" />
+                    <feFlood flood-color="green" result="flood" />
+                    <feComposite operator="in" in="SourceAlpha" in2="flood" />
+                </filter>
+                <rect x="10" y="10" width="50" height="50" filter="url(#f)" />
+            </svg>
+            """#
+        )
 
-        #expect(filter.effects == [
-            .flood(.rgba(r: 0, g: Float(128) / 255, b: 0, a: 1, space: .srgb)),
-            .composite(.in)
-        ])
+        #expect(
+            filter.effects == [
+                .flood(.rgba(r: 0, g: Float(128) / 255, b: 0, a: 1, space: .srgb)),
+                .composite(.in),
+            ]
+        )
         #expect(filter.primitives.map(\.inputs) == [[], [.sourceAlpha, .primitive(0)]])
     }
 
     // an unsupported primitive outside the primary tree is never drawn, so the filter still applies
     @Test
     func unsupportedPrimitiveOutsidePrimaryTree() throws {
-        let commands = try makeCommands(#"""
-        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
-            <filter id="f">
-                <feDisplacementMap scale="10" result="noise" />
-                <feOffset in="SourceGraphic" dx="2" />
-            </filter>
-            <rect x="10" y="10" width="50" height="50" filter="url(#f)" />
-        </svg>
-        """#, options: .hideUnsupportedFilters)
+        let commands = try makeCommands(
+            #"""
+            <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+                <filter id="f">
+                    <feDisplacementMap scale="10" result="noise" />
+                    <feOffset in="SourceGraphic" dx="2" />
+                </filter>
+                <rect x="10" y="10" width="50" height="50" filter="url(#f)" />
+            </svg>
+            """#,
+            options: .hideUnsupportedFilters
+        )
 
         #expect(commands.filterLayers.first?.effects == [.offset(dx: 2, dy: 0)])
         #expect(commands.names == ["pushFilterLayer", "setFillColor", "fillPath", "popFilterLayer"])
@@ -210,15 +253,17 @@ struct LayerTreeFilterGraphTests {
 
     @Test
     func unsupportedPrimitiveInPrimaryTreeDrawsUnfiltered() throws {
-        let commands = try makeCommands(#"""
-        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
-            <filter id="f">
-                <feOffset dx="2" result="o" />
-                <feDisplacementMap in="o" scale="10" />
-            </filter>
-            <rect x="10" y="10" width="50" height="50" filter="url(#f)" />
-        </svg>
-        """#)
+        let commands = try makeCommands(
+            #"""
+            <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+                <filter id="f">
+                    <feOffset dx="2" result="o" />
+                    <feDisplacementMap in="o" scale="10" />
+                </filter>
+                <rect x="10" y="10" width="50" height="50" filter="url(#f)" />
+            </svg>
+            """#
+        )
 
         #expect(commands.names == ["setFillColor", "fillPath"])
     }
@@ -227,36 +272,42 @@ struct LayerTreeFilterGraphTests {
     // all within the filter region
     @Test
     func subregionInUserSpace() throws {
-        let filter = try makeFilterLayer(#"""
-        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
-            <filter id="f" filterUnits="userSpaceOnUse" x="0" y="0" width="100" height="100">
-                <feFlood flood-color="red" x="10" width="30" result="a" />
-                <feFlood flood-color="red" x="80" y="-20" width="50" height="50%" result="b" />
-                <feMerge><feMergeNode in="a" /><feMergeNode in="b" /></feMerge>
-            </filter>
-            <rect x="10" y="10" width="50" height="50" filter="url(#f)" />
-        </svg>
-        """#)
+        let filter = try makeFilterLayer(
+            #"""
+            <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+                <filter id="f" filterUnits="userSpaceOnUse" x="0" y="0" width="100" height="100">
+                    <feFlood flood-color="red" x="10" width="30" result="a" />
+                    <feFlood flood-color="red" x="80" y="-20" width="50" height="50%" result="b" />
+                    <feMerge><feMergeNode in="a" /><feMergeNode in="b" /></feMerge>
+                </filter>
+                <rect x="10" y="10" width="50" height="50" filter="url(#f)" />
+            </svg>
+            """#
+        )
 
-        #expect(filter.primitives.map(\.subregion) == [
-            LayerTree.Rect(x: 10, y: 0, width: 30, height: 100),
-            // 50% of the viewport height, clipped to the filter region
-            LayerTree.Rect(x: 80, y: 0, width: 20, height: 30),
-            LayerTree.Rect(x: 10, y: 0, width: 90, height: 100)
-        ])
+        #expect(
+            filter.primitives.map(\.subregion) == [
+                LayerTree.Rect(x: 10, y: 0, width: 30, height: 100),
+                // 50% of the viewport height, clipped to the filter region
+                LayerTree.Rect(x: 80, y: 0, width: 20, height: 30),
+                LayerTree.Rect(x: 10, y: 0, width: 90, height: 100),
+            ]
+        )
     }
 
     @Test
     func subregionInBoundingBoxUnits() throws {
-        let filter = try makeFilterLayer(#"""
-        <svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">
-            <filter id="f" primitiveUnits="objectBoundingBox">
-                <feFlood flood-color="green" x="25%" y="25%" width="50%" height="50%" />
-                <feOffset dx="0.1" dy="0.5" />
-            </filter>
-            <rect x="0" y="100" width="200" height="40" filter="url(#f)" />
-        </svg>
-        """#)
+        let filter = try makeFilterLayer(
+            #"""
+            <svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">
+                <filter id="f" primitiveUnits="objectBoundingBox">
+                    <feFlood flood-color="green" x="25%" y="25%" width="50%" height="50%" />
+                    <feOffset dx="0.1" dy="0.5" />
+                </filter>
+                <rect x="0" y="100" width="200" height="40" filter="url(#f)" />
+            </svg>
+            """#
+        )
 
         let flood = LayerTree.Rect(x: 50, y: 110, width: 100, height: 20)
         #expect(filter.primitives.map(\.subregion) == [flood, flood])
@@ -266,53 +317,61 @@ struct LayerTreeFilterGraphTests {
     // the default subregion of a primitive reading only results is the union of theirs
     @Test
     func subregionDefaultsToUnionOfInputs() throws {
-        let filter = try makeFilterLayer(#"""
-        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
-            <filter id="f" filterUnits="userSpaceOnUse" x="0" y="0" width="100" height="100">
-                <feFlood x="10" y="10" width="10" height="10" result="a" />
-                <feFlood x="50" y="60" width="10" height="10" result="b" />
-                <feMerge><feMergeNode in="a" /><feMergeNode in="b" /></feMerge>
-                <feMerge><feMergeNode /><feMergeNode in="SourceGraphic" /></feMerge>
-            </filter>
-            <rect x="10" y="10" width="50" height="50" filter="url(#f)" />
-        </svg>
-        """#)
+        let filter = try makeFilterLayer(
+            #"""
+            <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+                <filter id="f" filterUnits="userSpaceOnUse" x="0" y="0" width="100" height="100">
+                    <feFlood x="10" y="10" width="10" height="10" result="a" />
+                    <feFlood x="50" y="60" width="10" height="10" result="b" />
+                    <feMerge><feMergeNode in="a" /><feMergeNode in="b" /></feMerge>
+                    <feMerge><feMergeNode /><feMergeNode in="SourceGraphic" /></feMerge>
+                </filter>
+                <rect x="10" y="10" width="50" height="50" filter="url(#f)" />
+            </svg>
+            """#
+        )
 
-        #expect(filter.primitives.map(\.subregion) == [
-            LayerTree.Rect(x: 10, y: 10, width: 10, height: 10),
-            LayerTree.Rect(x: 50, y: 60, width: 10, height: 10),
-            LayerTree.Rect(x: 10, y: 10, width: 50, height: 60),
-            // SourceGraphic is a standard input: the filter region
-            LayerTree.Rect(x: 0, y: 0, width: 100, height: 100)
-        ])
+        #expect(
+            filter.primitives.map(\.subregion) == [
+                LayerTree.Rect(x: 10, y: 10, width: 10, height: 10),
+                LayerTree.Rect(x: 50, y: 60, width: 10, height: 10),
+                LayerTree.Rect(x: 10, y: 10, width: 50, height: 60),
+                // SourceGraphic is a standard input: the filter region
+                LayerTree.Rect(x: 0, y: 0, width: 100, height: 100),
+            ]
+        )
     }
 
     // zero or negative sizes, or no overlap with the filter region, disable the primitive
     @Test
     func emptySubregionDisablesPrimitive() throws {
-        let filter = try makeFilterLayer(#"""
-        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
-            <filter id="f" filterUnits="userSpaceOnUse" x="0" y="0" width="100" height="100">
-                <feFlood width="0" result="a" />
-                <feFlood height="-5" result="b" />
-                <feFlood x="200" result="c" />
-                <feMerge><feMergeNode in="a" /><feMergeNode in="b" /><feMergeNode in="c" /></feMerge>
-            </filter>
-            <rect x="10" y="10" width="50" height="50" filter="url(#f)" />
-        </svg>
-        """#)
+        let filter = try makeFilterLayer(
+            #"""
+            <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+                <filter id="f" filterUnits="userSpaceOnUse" x="0" y="0" width="100" height="100">
+                    <feFlood width="0" result="a" />
+                    <feFlood height="-5" result="b" />
+                    <feFlood x="200" result="c" />
+                    <feMerge><feMergeNode in="a" /><feMergeNode in="b" /><feMergeNode in="c" /></feMerge>
+                </filter>
+                <rect x="10" y="10" width="50" height="50" filter="url(#f)" />
+            </svg>
+            """#
+        )
 
         #expect(filter.primitives.map(\.subregion) == [.zero, .zero, .zero, .zero])
     }
 
     @Test
     func floodColorAndOpacity() throws {
-        let filter = try makeFilterLayer(#"""
-        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
-            <filter id="f"><feFlood flood-color="rgba(255, 0, 0, 0.5)" flood-opacity="0.5" /></filter>
-            <rect x="10" y="10" width="50" height="50" filter="url(#f)" />
-        </svg>
-        """#)
+        let filter = try makeFilterLayer(
+            #"""
+            <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+                <filter id="f"><feFlood flood-color="rgba(255, 0, 0, 0.5)" flood-opacity="0.5" /></filter>
+                <rect x="10" y="10" width="50" height="50" filter="url(#f)" />
+            </svg>
+            """#
+        )
 
         #expect(filter.effects == [.flood(.rgba(r: 1, g: 0, b: 0, a: 0.25, space: .srgb))])
     }
@@ -331,20 +390,30 @@ struct LayerTreeFilterGraphTests {
         // saturate(0) is a grey: each row is the luminance
         #expect(Array(DOM.Filter.ColorMatrix.saturate(0).values[0..<3]) == [0.2126, 0.7152, 0.0722])
         #expect(Array(DOM.Filter.ColorMatrix.saturate(0).values[5..<8]) == [0.2126, 0.7152, 0.0722])
-        #expect(DOM.Filter.ColorMatrix.luminanceToAlpha.values == [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.2126, 0.7152, 0.0722, 0, 0])
+        #expect(
+            DOM.Filter.ColorMatrix.luminanceToAlpha.values == [
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.2126, 0.7152, 0.0722, 0, 0,
+            ]
+        )
     }
 
     @Test
     func floodGoesThroughColorConverter() throws {
-        let svg = try DOM.SVG.parse(xml: #"""
-        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
-            <filter id="f"><feFlood flood-color="white" /></filter>
-            <rect x="10" y="10" width="50" height="50" filter="url(#f)" />
-        </svg>
-        """#)
+        let svg = try DOM.SVG.parse(
+            xml: #"""
+                <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+                    <filter id="f"><feFlood flood-color="white" /></filter>
+                    <rect x="10" y="10" width="50" height="50" filter="url(#f)" />
+                </svg>
+                """#
+        )
         let layer = LayerTree.Builder(svg: svg).makeLayer()
         let filtered = try #require(layer.allLayers.first { !$0.filters.isEmpty })
-        let generator = LayerTree.CommandGenerator(provider: LayerTreeProvider(), size: .init(100, 100), options: .default)
+        let generator = LayerTree.CommandGenerator(
+            provider: LayerTreeProvider(),
+            size: .init(100, 100),
+            options: .default
+        )
         let filter = try #require(generator.makeFilterLayer(for: filtered, colorConverter: .luminance))
 
         // white has a luminance of 1 (#162: the luminance is the grey, the alpha is kept)
@@ -359,27 +428,33 @@ struct LayerTreeFilterGraphTests {
     // SD2's blur chains keep their in-place path; anything else is a primitive tree
     @Test
     func blurChain() throws {
-        let chain = try makeFilterLayer(#"""
-        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
-            <filter id="f">
-                <feGaussianBlur stdDeviation="1" result="a" />
-                <feGaussianBlur in="a" stdDeviation="2" />
-            </filter>
-            <rect x="10" y="10" width="50" height="50" filter="url(#f)" />
-        </svg>
-        """#)
-        let alpha = try makeFilterLayer(#"""
-        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
-            <filter id="f"><feGaussianBlur in="SourceAlpha" stdDeviation="1" /></filter>
-            <rect x="10" y="10" width="50" height="50" filter="url(#f)" />
-        </svg>
-        """#)
-        let subregion = try makeFilterLayer(#"""
-        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
-            <filter id="f"><feGaussianBlur stdDeviation="1" x="20" /></filter>
-            <rect x="10" y="10" width="50" height="50" filter="url(#f)" />
-        </svg>
-        """#)
+        let chain = try makeFilterLayer(
+            #"""
+            <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+                <filter id="f">
+                    <feGaussianBlur stdDeviation="1" result="a" />
+                    <feGaussianBlur in="a" stdDeviation="2" />
+                </filter>
+                <rect x="10" y="10" width="50" height="50" filter="url(#f)" />
+            </svg>
+            """#
+        )
+        let alpha = try makeFilterLayer(
+            #"""
+            <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+                <filter id="f"><feGaussianBlur in="SourceAlpha" stdDeviation="1" /></filter>
+                <rect x="10" y="10" width="50" height="50" filter="url(#f)" />
+            </svg>
+            """#
+        )
+        let subregion = try makeFilterLayer(
+            #"""
+            <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+                <filter id="f"><feGaussianBlur stdDeviation="1" x="20" /></filter>
+                <rect x="10" y="10" width="50" height="50" filter="url(#f)" />
+            </svg>
+            """#
+        )
 
         #expect(chain.isBlurChain)
         #expect(!alpha.isBlurChain)
@@ -406,23 +481,33 @@ struct LayerTreeFilterGraphTests {
             Primitive(effect: .merge, inputs: inputs, subregion: region, colorInterpolation: .sRGB)
         }
         // source and one result at a time
-        #expect(LayerTree.FilterLayer(region: region, effects: [.offset(dx: 1, dy: 1), .offset(dx: 1, dy: 1)]).peakBitmapCount == 3)
+        #expect(
+            LayerTree.FilterLayer(region: region, effects: [.offset(dx: 1, dy: 1), .offset(dx: 1, dy: 1)])
+                .peakBitmapCount == 3
+        )
         // two results kept for the merge, SourceAlpha alive until its last reader
-        let tree = LayerTree.FilterLayer(region: region, primitives: [
-            primitive([.sourceAlpha]),
-            primitive([.sourceAlpha]),
-            primitive([.primitive(0), .primitive(1), .transparent])
-        ])
+        let tree = LayerTree.FilterLayer(
+            region: region,
+            primitives: [
+                primitive([.sourceAlpha]),
+                primitive([.sourceAlpha]),
+                primitive([.primitive(0), .primitive(1), .transparent]),
+            ]
+        )
         #expect(tree.peakBitmapCount == 5)
     }
 
     // every filter of the samples resolves: none is drawn unfiltered or hidden as unsupported
     // read from the source tree, which a device or emulator run does not have
-    @Test(.enabled(if: FileManager.default.fileExists(atPath: samples.path), "Samples.bundle not reachable"),
-          arguments: [("filter-drop-shadow", 3), ("filter-primitives", 8),
-                       ("filter-feDropShadow", 2), ("filter-feDropShadow-color", 2),
-                       ("filter-feDropShadow-stddeviation", 2), ("filter-feDropShadow-bbox", 2),
-                       ("filter-feDropShadow-chain", 2)])
+    @Test(
+        .enabled(if: FileManager.default.fileExists(atPath: samples.path), "Samples.bundle not reachable"),
+        arguments: [
+            ("filter-drop-shadow", 3), ("filter-primitives", 8),
+            ("filter-feDropShadow", 2), ("filter-feDropShadow-color", 2),
+            ("filter-feDropShadow-stddeviation", 2), ("filter-feDropShadow-bbox", 2),
+            ("filter-feDropShadow-chain", 2),
+        ]
+    )
     func samplesResolveEveryFilter(name: String, count: Int) throws {
         let xml = try String(contentsOf: Self.samples.appendingPathComponent("\(name).svg"), encoding: .utf8)
         let filters = try makeCommands(xml, options: .hideUnsupportedFilters).filterLayers
@@ -440,21 +525,25 @@ struct LayerTreeFilterGraphTests {
     // the merge's region-wide result keeps the whole region in the command stream
     @Test
     func filterLayerCommandsForGraph() throws {
-        let commands = try makeCommands(#"""
-        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
-            <filter id="f">
-                <feOffset in="SourceAlpha" dx="2" dy="2" result="o" />
-                <feMerge><feMergeNode in="o" /><feMergeNode in="SourceGraphic" /></feMerge>
-            </filter>
-            <rect x="10" y="10" width="50" height="50" filter="url(#f)" opacity="0.5" />
-        </svg>
-        """#)
+        let commands = try makeCommands(
+            #"""
+            <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+                <filter id="f">
+                    <feOffset in="SourceAlpha" dx="2" dy="2" result="o" />
+                    <feMerge><feMergeNode in="o" /><feMergeNode in="SourceGraphic" /></feMerge>
+                </filter>
+                <rect x="10" y="10" width="50" height="50" filter="url(#f)" opacity="0.5" />
+            </svg>
+            """#
+        )
 
-        #expect(commands.names == [
-            "pushState", "setAlpha", "pushTransparencyLayer",
-            "pushFilterLayer", "setFillColor", "fillPath", "popFilterLayer",
-            "popTransparencyLayer", "popState"
-        ])
+        #expect(
+            commands.names == [
+                "pushState", "setAlpha", "pushTransparencyLayer",
+                "pushFilterLayer", "setFillColor", "fillPath", "popFilterLayer",
+                "popTransparencyLayer", "popState",
+            ]
+        )
     }
 }
 
@@ -463,9 +552,11 @@ private extension LayerTreeFilterGraphTests {
     func makeCommands(_ xml: String, options: SVG.Options = .default) throws -> [RendererCommand<LayerTreeTypes>] {
         let svg = try DOM.SVG.parse(xml: xml)
         let layer = LayerTree.Builder(svg: svg).makeLayer()
-        let generator = LayerTree.CommandGenerator(provider: LayerTreeProvider(),
-                                                   size: .init(svg.width, svg.height),
-                                                   options: options)
+        let generator = LayerTree.CommandGenerator(
+            provider: LayerTreeProvider(),
+            size: .init(svg.width, svg.height),
+            options: options
+        )
         let commands = generator.renderCommands(for: layer, colorConverter: .default)
         return LayerTree.CommandOptimizer<LayerTreeTypes>().optimizeCommands(commands)
     }
@@ -495,9 +586,10 @@ private extension Array where Element == RendererCommand<LayerTreeTypes> {
 private extension LayerTree.Layer {
 
     var allLayers: [LayerTree.Layer] {
-        [self] + contents.flatMap { contents -> [LayerTree.Layer] in
-            if case .layer(let layer) = contents { return layer.allLayers }
-            return []
-        }
+        [self]
+            + contents.flatMap { contents -> [LayerTree.Layer] in
+                if case .layer(let layer) = contents { return layer.allLayers }
+                return []
+            }
     }
 }

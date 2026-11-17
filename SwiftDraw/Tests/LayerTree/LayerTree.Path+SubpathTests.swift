@@ -44,19 +44,22 @@ final class LayerTreePathSubpathTests: XCTestCase {
             .line(to: Point(200, 200)),
             .move(to: Point(-50, -50)),
             .move(to: Point(0, 0)),
-            .line(to: Point(0, 200))
+            .line(to: Point(0, 200)),
         ])
 
         XCTAssertEqual(
-            path.subpaths.count, 1
+            path.subpaths.count,
+            1
         )
 
         XCTAssertEqual(
             path.subpaths[0].segments,
-            [.move(to: Point(100, 100)),
-             .line(to: Point(200, 200)),
-             .move(to: Point(0, 0)),
-             .line(to: Point(0, 200))]
+            [
+                .move(to: Point(100, 100)),
+                .line(to: Point(200, 200)),
+                .move(to: Point(0, 0)),
+                .line(to: Point(0, 200)),
+            ]
         )
     }
 
@@ -69,11 +72,12 @@ final class LayerTreePathSubpathTests: XCTestCase {
             .line(to: Point(0, 200)),
             .line(to: Point(0, 100)),
             .close,
-            .move(to: Point(500, 500))
+            .move(to: Point(500, 500)),
         ])
 
         XCTAssertEqual(
-            path.subpaths.count, 2
+            path.subpaths.count,
+            2
         )
 
         XCTAssertEqual(
@@ -82,10 +86,12 @@ final class LayerTreePathSubpathTests: XCTestCase {
         )
         XCTAssertEqual(
             path.subpaths[0].segments,
-            [.move(to: Point(100, 100)),
-             .line(to: Point(200, 200)),
-             .line(to: Point(200, 100)),
-             .close]
+            [
+                .move(to: Point(100, 100)),
+                .line(to: Point(200, 200)),
+                .line(to: Point(200, 100)),
+                .close,
+            ]
         )
 
         XCTAssertEqual(
@@ -94,10 +100,12 @@ final class LayerTreePathSubpathTests: XCTestCase {
         )
         XCTAssertEqual(
             path.subpaths[1].segments,
-            [.move(to: Point(100, 100)),
-             .line(to: Point(0, 200)),
-             .line(to: Point(0, 100)),
-             .close]
+            [
+                .move(to: Point(100, 100)),
+                .line(to: Point(0, 200)),
+                .line(to: Point(0, 100)),
+                .close,
+            ]
         )
     }
 }

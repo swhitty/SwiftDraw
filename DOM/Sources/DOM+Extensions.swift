@@ -32,41 +32,41 @@
 import Foundation
 
 package extension DOM.Polyline {
-  // requires even number of elements
-  convenience init(_ p: DOM.Coordinate...) {
-    
-    var points = [DOM.Point]()
-    
-    for index in stride(from: 0, to: p.count, by: 2) {
-      points.append(DOM.Point(p[index], p[index + 1]))
+    // requires even number of elements
+    convenience init(_ p: DOM.Coordinate...) {
+
+        var points = [DOM.Point]()
+
+        for index in stride(from: 0, to: p.count, by: 2) {
+            points.append(DOM.Point(p[index], p[index + 1]))
+        }
+
+        self.init(points: points)
     }
-    
-    self.init(points: points)
-  }
 }
 
 package extension DOM.Polygon {
-  // requires even number of elements
-  convenience init(_ p: DOM.Coordinate...) {
-    
-    var points = [DOM.Point]()
-    
-    for index in stride(from: 0, to: p.count, by: 2) {
-      points.append(DOM.Point(p[index], p[index + 1]))
+    // requires even number of elements
+    convenience init(_ p: DOM.Coordinate...) {
+
+        var points = [DOM.Point]()
+
+        for index in stride(from: 0, to: p.count, by: 2) {
+            points.append(DOM.Point(p[index], p[index + 1]))
+        }
+
+        self.init(points: points)
     }
-    
-    self.init(points: points)
-  }
 }
 
 package extension XML.Element {
-  convenience init(_ name: String, style: String) {
-    self.init(name: name, attributes: ["style": style])
-  }
-  
-  convenience init(_ name: String, id: String, style: String) {
-    self.init(name: name, attributes: ["id": id, "style": style])
-  }
+    convenience init(_ name: String, style: String) {
+        self.init(name: name, attributes: ["style": style])
+    }
+
+    convenience init(_ name: String, id: String, style: String) {
+        self.init(name: name, attributes: ["id": id, "style": style])
+    }
 }
 
 package extension DOM.SVG {

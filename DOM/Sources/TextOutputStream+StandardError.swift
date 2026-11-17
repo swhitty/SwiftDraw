@@ -38,7 +38,7 @@ package extension TextOutputStream where Self == StandardErrorStream {
         }
         // the stream is stateless; ignoring the write-back keeps concurrent parses (and tests)
         // from racing on a shared global
-        set { }
+        set {}
     }
 }
 

@@ -46,7 +46,7 @@ public extension SVG {
 
     @available(*, deprecated, message: "set size via SVG.size() before pngData")
     func pngData(size: CGSize, scale: CGFloat = 0) throws -> Data {
-        try self.sized(size).pngData(scale: scale)
+        try sized(size).pngData(scale: scale)
     }
 
     @available(*, deprecated, message: "add insets via SVG.expand() before jpegData")
@@ -56,14 +56,14 @@ public extension SVG {
 
     @available(*, deprecated, message: "set size via SVG.size() before jpegData")
     func jpegData(size: CGSize, scale: CGFloat = 0, compressionQuality quality: CGFloat = 1) throws -> Data {
-        try self.sized(size).jpegData(scale: scale, compressionQuality: quality)
+        try sized(size).jpegData(scale: scale, compressionQuality: quality)
     }
 
     private func inset(_ insets: Insets) -> SVG {
         expanded(top: -insets.top, left: -insets.left, bottom: -insets.bottom, right: -insets.right)
     }
 
-#if canImport(UIKit)
+    #if canImport(UIKit)
     @available(*, deprecated, message: "add insets via SVG.expand() before rasterize()")
     func rasterize(scale: CGFloat = 0, insets: UIEdgeInsets) -> UIImage {
         inset(insets).rasterize(scale: scale)
@@ -82,7 +82,7 @@ public extension SVG {
     private func inset(_ insets: UIEdgeInsets) -> SVG {
         expanded(top: -insets.top, left: -insets.left, bottom: -insets.bottom, right: -insets.right)
     }
-#endif
+    #endif
 
 }
 #endif

@@ -29,7 +29,6 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-
 import Foundation
 
 extension XMLParser {
@@ -84,11 +83,13 @@ extension XMLParser {
     /// SVG 1.1 §13.2.4 / CSS Color 4: `stop-color="inherit"` takes the gradient's `stop-color`, and
     /// `currentColor` the `color` in effect on the <stop>, inherited from the gradient and its
     /// ancestors in the document (not from the element being painted).
-    func resolveStopColor(_ stop: XML.Element,
-                          _ att: any AttributeParser,
-                          cascaded: DOM.Color?,
-                          gradient: XML.Element,
-                          ancestors: [XML.Element]) -> DOM.Color {
+    func resolveStopColor(
+        _ stop: XML.Element,
+        _ att: any AttributeParser,
+        cascaded: DOM.Color?,
+        gradient: XML.Element,
+        ancestors: [XML.Element]
+    ) -> DOM.Color {
         var color: DOM.Color? = try? att.parseFill("stop-color").getColor()
         if color == nil, Self.isInherit(att, "stop-color") {
             color = specifiedStopColor(gradient)
@@ -133,13 +134,20 @@ extension XMLParser {
         for (prelude, declarations) in blocks.rules {
             guard let selectors = DOM.StyleSheet.ComplexSelector.parseList(prelude) else { continue }
             let important = declarations.filter(\.important)
-            let attributes = parsePresentationAttributes(important.isEmpty ? declarations : declarations.filter { !$0.important })
-            let importantAttributes = important.isEmpty ? DOM.PresentationAttributes() : parsePresentationAttributes(important)
+            let attributes = parsePresentationAttributes(
+                important.isEmpty ? declarations : declarations.filter { !$0.important }
+            )
+            let importantAttributes =
+                important.isEmpty ? DOM.PresentationAttributes() : parsePresentationAttributes(important)
 
             for selector in selectors {
-                sheet.rules.append(DOM.StyleSheet.Rule(selector: selector,
-                                                       attributes: attributes,
-                                                       importantAttributes: importantAttributes))
+                sheet.rules.append(
+                    DOM.StyleSheet.Rule(
+                        selector: selector,
+                        attributes: attributes,
+                        importantAttributes: importantAttributes
+                    )
+                )
                 if let simple = selector.simple {
                     sheet.attributes[simple] = (sheet.attributes[simple] ?? DOM.PresentationAttributes())
                         .applyingAttributes(attributes)
@@ -154,7 +162,10 @@ extension XMLParser {
 
     /// With `.skipInvalidElements` an unusable `@font-face` is logged and dropped on its own,
     /// keeping the rest of the sheet. Otherwise it throws, like an invalid element.
-    private func parseFontFace(_ entry: Result<[String: String], any Swift.Error>, in element: XML.Element?) throws -> DOM.FontFace? {
+    private func parseFontFace(
+        _ entry: Result<[String: String], any Swift.Error>,
+        in element: XML.Element?
+    ) throws -> DOM.FontFace? {
         do {
             return try parseFontFace(entry.get())
         } catch {
@@ -211,7 +222,12 @@ extension XMLParser {
     // Splits a sheet into qualified rules and @font-face blocks; other at-rules
     // (@media, @supports, @import…) are skipped with their nested blocks.
     // Each @font-face is its descriptors, or the error for a block that could not be read.
-    static func parseCSSBlocks(_ text: String) -> (rules: [(prelude: String, declarations: [CSSDeclaration])], fontFaces: [Result<[String: String], any Swift.Error>]) {
+    static func parseCSSBlocks(
+        _ text: String
+    ) -> (
+        rules: [(prelude: String, declarations: [CSSDeclaration])],
+        fontFaces: [Result<[String: String], any Swift.Error>]
+    ) {
         let chars = Array(removeCSSComments(from: text))
         var i = 0
         var rules = [(prelude: String, declarations: [CSSDeclaration])]()
@@ -375,8 +391,14 @@ extension XMLParser {
             value = stripped.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !value.isEmpty else { return nil }
             // CSS-wide keywords are not supported: drop them so a lower rule still applies
-            guard !["inherit", "initial", "unset", "revert", "revert-layer"].contains(value.lowercased()) else { return nil }
-            return CSSDeclaration(name: name.hasPrefix("--") ? name : name.lowercased(), value: value, important: important)
+            guard !["inherit", "initial", "unset", "revert", "revert-layer"].contains(value.lowercased()) else {
+                return nil
+            }
+            return CSSDeclaration(
+                name: name.hasPrefix("--") ? name : name.lowercased(),
+                value: value,
+                important: important
+            )
         }
     }
 
@@ -470,7 +492,8 @@ extension XMLParser.Scanner {
     mutating func scanUnknownAtRule() -> String? {
         guard doScanString("@") else { return nil }
         guard let name = try? scanString(upTo: .init(charactersIn: "{")),
-              doScanString("{") else { return nil }
+            doScanString("{")
+        else { return nil }
         var depth = 1
         while depth > 0 && !isEOF {
             if doScanString("{") {
@@ -502,7 +525,7 @@ extension XMLParser.Scanner {
         return name
     }
 
-     mutating func scanSelectorTypes() throws -> [DOM.StyleSheet.Selector] {
+    mutating func scanSelectorTypes() throws -> [DOM.StyleSheet.Selector] {
         var selectors: [DOM.StyleSheet.Selector] = []
         while let next = try scanNextSelectorType() {
             selectors.append(next)
@@ -559,8 +582,7 @@ extension XMLParser.Scanner {
 
 extension String {
     var unquoted: String {
-        if (hasPrefix("'") && hasSuffix("'")) ||
-           (hasPrefix("\"") && hasSuffix("\"")) {
+        if (hasPrefix("'") && hasSuffix("'")) || (hasPrefix("\"") && hasSuffix("\"")) {
             return String(dropFirst().dropLast())
         }
         return self

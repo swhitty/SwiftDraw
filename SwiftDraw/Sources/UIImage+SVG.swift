@@ -73,17 +73,17 @@ public extension UIImage {
 
 public extension SVG {
 
-#if os(watchOS)
+    #if os(watchOS)
     func rasterize(scale: CGFloat = 0) -> UIImage {
         let (bounds, pixelsWide, pixelsHigh) = SVG.makeBounds(size: size, scale: 1)
         let actualScale = scale <= 0 ? SVG.defaultScale : scale
         UIGraphicsBeginImageContextWithOptions(CGSize(width: pixelsWide, height: pixelsHigh), false, actualScale)
         defer { UIGraphicsEndImageContext() }
-        
+
         if let context = UIGraphicsGetCurrentContext() {
             context.draw(self, in: bounds)
         }
-        
+
         return UIGraphicsGetImageFromCurrentImageContext() ?? UIImage()
     }
 
@@ -91,7 +91,7 @@ public extension SVG {
     private func exportImage(scale: CGFloat) -> UIImage {
         rasterize(scale: scale)
     }
-#else
+    #else
     // PNG and JPEG data are always sRGB, whatever the screen supports.
     private func exportImage(scale: CGFloat) -> UIImage {
         rasterize(scale: scale, range: .standard)
@@ -113,10 +113,10 @@ public extension SVG {
             $0.draw(self, in: bounds)
         }
     }
-#endif
+    #endif
 
     func rasterize(size: CGSize, scale: CGFloat = 0) -> UIImage {
-        self.sized(size).rasterize(scale: scale)
+        sized(size).rasterize(scale: scale)
     }
 
     func pngData(scale: CGFloat = 0) throws -> Data {
@@ -139,13 +139,13 @@ public extension SVG {
 extension SVG {
 
     static var defaultScale: CGFloat {
-#if os(watchOS)
+        #if os(watchOS)
         WKInterfaceDevice.current().screenScale
-#elseif os(visionOS)
+        #elseif os(visionOS)
         1.0
-#else
+        #else
         MainActor.syncIsolated { UIScreen.main.scale }
-#endif
+        #endif
     }
 
     private struct Error: LocalizedError {

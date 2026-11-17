@@ -39,11 +39,11 @@ public final class SVGGCache: Sendable {
 
     public static let shared = SVGGCache()
 
-    nonisolated(unsafe)private let cache: NSCache<NSURL, Box<SVG>>
+    nonisolated(unsafe) private let cache: NSCache<NSURL, Box<SVG>>
 
     public init(totalCostLimit: Int = defaultTotalCostLimit) {
         self.cache = NSCache()
-        self.cache.totalCostLimit = totalCostLimit
+        cache.totalCostLimit = totalCostLimit
     }
 
     public func svg(fileURL: URL) -> SVG? {
@@ -60,16 +60,16 @@ public final class SVGGCache: Sendable {
     }
 
     public static var defaultTotalCostLimit: Int {
-    #if canImport(WatchKit)
+        #if canImport(WatchKit)
         // 2 MB
         return 2 * 1024 * 1024
-    #elseif canImport(AppKit)
+        #elseif canImport(AppKit)
         // 200 MB
         return 200 * 1024 * 1024
-    #else
+        #else
         // 50 MB
         return 50 * 1024 * 1024
-    #endif
+        #endif
     }
 }
 #endif

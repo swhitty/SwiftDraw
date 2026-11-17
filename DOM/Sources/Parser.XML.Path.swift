@@ -65,7 +65,8 @@ package extension XMLParser {
         // SVG 2 §9.5.4: render the path up to (not including) the first command in error
         repeat {
             guard let cmd = nextPathCommand(&scanner, lastCommand: lastCommand),
-                  let segment = try? parsePathSegment(for: cmd, with: &scanner) else {
+                let segment = try? parsePathSegment(for: cmd, with: &scanner)
+            else {
                 guard !segments.isEmpty else { throw Error.invalid }
                 break
             }
@@ -90,7 +91,6 @@ package extension XMLParser {
             return lastCommand
         }
     }
-
 
     func parsePathSegment(for command: Command, with scanner: inout PathScanner) throws -> Segment {
         switch command {
@@ -119,7 +119,8 @@ package extension XMLParser {
 
     func parseCommand(_ scanner: inout PathScanner) -> Command? {
         guard let char = scanner.scan(first: .commands),
-              let command = Command(rawValue: char) else {
+            let command = Command(rawValue: char)
+        else {
             return nil
         }
         return command
@@ -225,9 +226,16 @@ package extension XMLParser {
         let y = try scanner.scanCoordinate()
         _ = scanner.scan(first: .delimeter)
 
-        return .arc(rx: rx, ry: ry, rotate: rotate,
-                    large: large, sweep: sweep,
-                    x: x, y: y, space: command.coordinateSpace)
+        return .arc(
+            rx: rx,
+            ry: ry,
+            rotate: rotate,
+            large: large,
+            sweep: sweep,
+            x: x,
+            y: y,
+            space: command.coordinateSpace
+        )
     }
 }
 

@@ -36,7 +36,7 @@ package extension DOM {
     // PresentationAttributes cascade;
     // element.attributes --> .element() --> .class() ---> .id() ---> element.style ---> layerTree.state
     // (parsed documents: element.attributes --> matched rules --> element.style --> !important rules --> !important style)
-    
+
     struct PresentationAttributes {
         package var opacity: DOM.Float?
         package var display: DOM.DisplayMode?
@@ -88,34 +88,44 @@ package extension DOM {
         package var stopColor: DOM.Color?
         package var stopOpacity: DOM.Float?
     }
-    
-    static func presentationAttributes(for element: DOM.GraphicsElement,
-                                       styles: [StyleSheet]) -> PresentationAttributes {
-        cascade(attributes: element.attributes,
-                matched: element.matchedStyle,
-                selectors: makeSelectors(for: element),
-                style: element.style,
-                importantStyle: element.importantStyle,
-                styles: styles)
+
+    static func presentationAttributes(
+        for element: DOM.GraphicsElement,
+        styles: [StyleSheet]
+    ) -> PresentationAttributes {
+        cascade(
+            attributes: element.attributes,
+            matched: element.matchedStyle,
+            selectors: makeSelectors(for: element),
+            style: element.style,
+            importantStyle: element.importantStyle,
+            styles: styles
+        )
     }
 
     /// The cascade of a `<clipPath>` itself (SD8), in the same order as other elements.
-    static func presentationAttributes(for clipPath: ClipPath,
-                                       styles: [StyleSheet]) -> PresentationAttributes {
-        cascade(attributes: clipPath.attributes,
-                matched: clipPath.matchedStyle,
-                selectors: makeSelectors(elementName: "clipPath", class: clipPath.class, id: clipPath.id),
-                style: clipPath.style,
-                importantStyle: clipPath.importantStyle,
-                styles: styles)
+    static func presentationAttributes(
+        for clipPath: ClipPath,
+        styles: [StyleSheet]
+    ) -> PresentationAttributes {
+        cascade(
+            attributes: clipPath.attributes,
+            matched: clipPath.matchedStyle,
+            selectors: makeSelectors(elementName: "clipPath", class: clipPath.class, id: clipPath.id),
+            style: clipPath.style,
+            importantStyle: clipPath.importantStyle,
+            styles: styles
+        )
     }
 
-    private static func cascade(attributes: PresentationAttributes,
-                                matched: StyleSheet.Matched?,
-                                selectors: @autoclosure () -> [StyleSheet.Selector],
-                                style: PresentationAttributes,
-                                importantStyle: PresentationAttributes,
-                                styles: [StyleSheet]) -> PresentationAttributes {
+    private static func cascade(
+        attributes: PresentationAttributes,
+        matched: StyleSheet.Matched?,
+        selectors: @autoclosure () -> [StyleSheet.Selector],
+        style: PresentationAttributes,
+        importantStyle: PresentationAttributes,
+        styles: [StyleSheet]
+    ) -> PresentationAttributes {
         var attributes = attributes
 
         if let matched {
@@ -146,48 +156,50 @@ package extension DOM {
 
     static func makeSelectors(elementName: String?, class: String?, id: String?) -> [StyleSheet.Selector] {
         var selectors = [StyleSheet.Selector]()
-        
+
         if let elementName {
             selectors.append(.element(elementName))
         }
-        
+
         if let classes = `class`?.split(separator: " ") {
-            selectors.append(contentsOf: classes
-                .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-                .map(StyleSheet.Selector.class)
+            selectors.append(
+                contentsOf:
+                    classes
+                    .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+                    .map(StyleSheet.Selector.class)
             )
         }
-        
+
         if let id {
             selectors.append(.id(id.trimmingCharacters(in: .whitespacesAndNewlines)))
         }
-        
+
         return selectors
     }
-    
+
     static func makeAttributes(for selector: StyleSheet.Selector, styles: [StyleSheet]) -> PresentationAttributes {
         var attributes = PresentationAttributes()
-        
+
         for sheet in styles {
             if let att = sheet.attributes[selector] {
                 attributes = attributes.applyingAttributes(att)
             }
         }
-        
+
         return attributes
     }
 }
 
 extension DOM.PresentationAttributes {
-    
+
     func applyingAttributes(_ att: Self) -> Self {
         var merged = DOM.PresentationAttributes()
-        
+
         merged.opacity = att.opacity ?? opacity
         merged.display = att.display ?? display
         merged.visibility = att.visibility ?? visibility
         merged.color = att.color ?? color
-        
+
         merged.stroke = att.stroke ?? stroke
         merged.strokeWidth = att.strokeWidth ?? strokeWidth
         merged.strokeOpacity = att.strokeOpacity ?? strokeOpacity
@@ -195,11 +207,11 @@ extension DOM.PresentationAttributes {
         merged.strokeLineJoin = att.strokeLineJoin ?? strokeLineJoin
         merged.strokeDashArray = att.strokeDashArray ?? strokeDashArray
         merged.strokeDashOffset = att.strokeDashOffset ?? strokeDashOffset
-        
+
         merged.fill = att.fill ?? fill
         merged.fillOpacity = att.fillOpacity ?? fillOpacity
         merged.fillRule = att.fillRule ?? fillRule
-        
+
         merged.fontFamily = att.fontFamily ?? fontFamily
         merged.fontSize = att.fontSize ?? fontSize
         merged.fontWeight = att.fontWeight ?? fontWeight
@@ -228,13 +240,13 @@ extension DOM.PresentationAttributes {
 
         merged.stopColor = att.stopColor ?? stopColor
         merged.stopOpacity = att.stopOpacity ?? stopOpacity
-        
+
         return merged
     }
 }
 
 extension DOM.GraphicsElement {
-    
+
     var elementName: String? {
         switch self {
         case is DOM.Line:

@@ -31,7 +31,7 @@
 
 import SwiftDrawDOM
 
-enum LayerTree { /* namespace */ }
+enum LayerTree { /* namespace */  }
 
 extension LayerTree {
 

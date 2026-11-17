@@ -70,7 +70,9 @@ struct CGFilterLayerCacheTests {
         let svg = try #require(SVG(xml: Self.filtered))
         let cache = CGFilterLayerCache()
 
-        _ = try Self.render { $0.draw(svg, in: CGRect(x: 0, y: 0, width: 40, height: 30), baseCTM: nil, filters: CGFilterLayerDraw(cache)) }
+        _ = try Self.render {
+            $0.draw(svg, in: CGRect(x: 0, y: 0, width: 40, height: 30), baseCTM: nil, filters: CGFilterLayerDraw(cache))
+        }
         let resized = try Self.render {
             $0.draw(svg, in: CGRect(x: 0, y: 0, width: 60, height: 45), baseCTM: nil, filters: CGFilterLayerDraw(cache))
         }
@@ -107,10 +109,24 @@ struct CGFilterLayerCacheTests {
 
         let uncached = try Self.render { $0.draw(svg, in: rect, capInsets: insets, byTiling: false) }
         _ = try Self.render {
-            $0.draw(svg, in: rect, capInsets: insets, byTiling: false, tileScale: nil, filters: CGFilterLayerDraw(cache))
+            $0.draw(
+                svg,
+                in: rect,
+                capInsets: insets,
+                byTiling: false,
+                tileScale: nil,
+                filters: CGFilterLayerDraw(cache)
+            )
         }
         let second = try Self.render {
-            $0.draw(svg, in: rect, capInsets: insets, byTiling: false, tileScale: nil, filters: CGFilterLayerDraw(cache))
+            $0.draw(
+                svg,
+                in: rect,
+                capInsets: insets,
+                byTiling: false,
+                tileScale: nil,
+                filters: CGFilterLayerDraw(cache)
+            )
         }
         #expect(cache.hitCount > 0)
         #expect(second == uncached)
@@ -134,7 +150,9 @@ struct CGFilterLayerCacheTests {
         let svg = try #require(SVG(xml: Self.filtered))
         let size = CGSize(width: 41, height: 31)
         let cache = CGFilterLayerCache.shared(for: svg, size: size)
-        _ = try Self.render { $0.draw(svg, in: CGRect(origin: .zero, size: size), baseCTM: nil, filters: CGFilterLayerDraw(cache)) }
+        _ = try Self.render {
+            $0.draw(svg, in: CGRect(origin: .zero, size: size), baseCTM: nil, filters: CGFilterLayerDraw(cache))
+        }
         #expect(cache.byteCount > 0)
 
         // e.g. a LazyVStack row scrolled away and back: a new view, the same SVG
@@ -201,9 +219,11 @@ struct CGFilterLayerCacheTests {
         pdf.beginPage(mediaBox: &mediaBox)
 
         let layers = CGFilterLayerDraw(cache, defersMisses: true)
-        let fill = try #require(CGFilterLayerFill(context: pdf, cache: cache) { context, filters in
-            context.draw(svg, in: nil, baseCTM: nil, filters: filters)
-        })
+        let fill = try #require(
+            CGFilterLayerFill(context: pdf, cache: cache) { context, filters in
+                context.draw(svg, in: nil, baseCTM: nil, filters: filters)
+            }
+        )
         pdf.draw(svg, in: nil, baseCTM: nil, filters: layers)
         #expect(layers.didDefer)
         #expect(fill.isVector)
@@ -252,9 +272,11 @@ struct CGFilterLayerCacheTests {
     func matchingPopSkipsNestedLayers() throws {
         let svg = try #require(SVG(xml: Self.filtered))
         let commands = svg.commands
-        let first = try #require(commands.firstIndex {
-            if case .pushFilterLayer = $0 { return true } else { return false }
-        })
+        let first = try #require(
+            commands.firstIndex {
+                if case .pushFilterLayer = $0 { return true } else { return false }
+            }
+        )
         let end = try #require(RendererCommand.matchingPop(in: commands, from: first))
         let pushes = commands[first...end].filter { if case .pushFilterLayer = $0 { true } else { false } }.count
         let pops = commands[first...end].filter { if case .popFilterLayer = $0 { true } else { false } }.count
@@ -264,26 +286,34 @@ struct CGFilterLayerCacheTests {
 
     // a filter nested inside another, then a sibling filter
     static let filtered = """
-    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="15">
-      <filter id="shift" x="-50%" y="-50%" width="200%" height="200%">
-        <feOffset dx="1" dy="1" result="o"/>
-        <feColorMatrix in="o" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 1  0 0 0 0.5 0"/>
-        <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
-      </filter>
-      <filter id="blur"><feGaussianBlur stdDeviation="0.8"/></filter>
-      <g filter="url(#shift)">
-        <rect x="2" y="2" width="6" height="5" fill="red"/>
-        <circle cx="12" cy="6" r="3" fill="green" filter="url(#blur)"/>
-      </g>
-      <rect x="4" y="10" width="10" height="3" fill="orange" filter="url(#blur)"/>
-    </svg>
-    """
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="15">
+          <filter id="shift" x="-50%" y="-50%" width="200%" height="200%">
+            <feOffset dx="1" dy="1" result="o"/>
+            <feColorMatrix in="o" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 1  0 0 0 0.5 0"/>
+            <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+          <filter id="blur"><feGaussianBlur stdDeviation="0.8"/></filter>
+          <g filter="url(#shift)">
+            <rect x="2" y="2" width="6" height="5" fill="red"/>
+            <circle cx="12" cy="6" r="3" fill="green" filter="url(#blur)"/>
+          </g>
+          <rect x="4" y="10" width="10" height="3" fill="orange" filter="url(#blur)"/>
+        </svg>
+        """
 
     static func render(flipped: Bool = false, _ draw: (CGContext) -> Void) throws -> [UInt8] {
         let width = 128, height = 96
-        let ctx = try #require(CGContext(data: nil, width: width, height: height, bitsPerComponent: 8,
-                                         bytesPerRow: width * 4, space: CGColorSpace(name: CGColorSpace.sRGB)!,
-                                         bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue))
+        let ctx = try #require(
+            CGContext(
+                data: nil,
+                width: width,
+                height: height,
+                bitsPerComponent: 8,
+                bytesPerRow: width * 4,
+                space: CGColorSpace(name: CGColorSpace.sRGB)!,
+                bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+            )
+        )
         if flipped {
             ctx.translateBy(x: 0, y: CGFloat(height))
             ctx.scaleBy(x: 1, y: -1)

@@ -29,7 +29,6 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-
 @testable import SwiftDraw
 @testable import SwiftDrawDOM
 import XCTest
@@ -41,7 +40,7 @@ final class LayerTreePaintFallbackTests: XCTestCase {
         let commands: [RendererCommand<LayerTreeTypes>] = [
             .setFill(color: .black),
             .setFillPattern(LayerTree.Pattern(frame: .init(x: 0, y: 0, width: 2, height: 2))),
-            .setFill(color: .black)
+            .setFill(color: .black),
         ]
         let optimized = LayerTree.CommandOptimizer<LayerTreeTypes>().optimizeCommands(commands)
         XCTAssertEqual(optimized.names, ["setFillColor", "setFillPattern", "setFillColor"])
@@ -50,7 +49,7 @@ final class LayerTreePaintFallbackTests: XCTestCase {
     func testOptimizerStillDropsRepeatedFill() {
         let commands: [RendererCommand<LayerTreeTypes>] = [
             .setFill(color: .black),
-            .setFill(color: .black)
+            .setFill(color: .black),
         ]
         let optimized = LayerTree.CommandOptimizer<LayerTreeTypes>().optimizeCommands(commands)
         XCTAssertEqual(optimized.names, ["setFillColor"])
@@ -88,14 +87,20 @@ final class LayerTreePaintFallbackTests: XCTestCase {
     }
 
     func testStrokeFallback() throws {
-        let svg = try DOM.SVG.parse(xml: #"""
-        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10">
-            <rect width="5" height="5" fill="none" stroke="url(#missing) #00ff00" stroke-width="2" />
-        </svg>
-        """#)
+        let svg = try DOM.SVG.parse(
+            xml: #"""
+                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10">
+                    <rect width="5" height="5" fill="none" stroke="url(#missing) #00ff00" stroke-width="2" />
+                </svg>
+                """#
+        )
         let commands = LayerTree.CommandGenerator(provider: LayerTreeProvider(), size: .init(10, 10), options: .default)
             .renderCommands(for: LayerTree.Builder(svg: svg).makeLayer(), colorConverter: .default)
-        XCTAssertTrue(commands.contains { if case .setStroke(let c) = $0 { return c == .init(0, 255, 0) }; return false })
+        XCTAssertTrue(
+            commands.contains {
+                if case .setStroke(let c) = $0 { return c == .init(0, 255, 0) }; return false
+            }
+        )
     }
 
     // WebKit and resvg drop the whole declaration (resvg suite: valid-FuncIRI-with-a-fallback-ICC-color)
@@ -113,19 +118,30 @@ final class LayerTreePaintFallbackTests: XCTestCase {
         #"<linearGradient id="g"><stop offset="0" stop-color="blue" /><stop offset="1" stop-color="white" /></linearGradient>"#
     }
 
-    func makeCommands(fill first: String?, then second: String? = nil, style: String? = nil, defs: String = "") throws -> [RendererCommand<LayerTreeTypes>] {
+    func makeCommands(
+        fill first: String?,
+        then second: String? = nil,
+        style: String? = nil,
+        defs: String = ""
+    ) throws -> [RendererCommand<LayerTreeTypes>] {
         func rect(_ fill: String?, _ style: String?) -> String {
             "<rect width=\"10\" height=\"10\"\(fill.map { " fill=\"\($0)\"" } ?? "")\(style.map { " style=\"\($0)\"" } ?? "") />"
         }
-        let svg = try DOM.SVG.parse(xml: """
-        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10">
-            <defs>\(defs)</defs>
-            \(rect(first, style))
-            \(second.map { rect($0, nil) } ?? "")
-            \(second != nil ? rect(first, nil) : "")
-        </svg>
-        """)
-        let generator = LayerTree.CommandGenerator(provider: LayerTreeProvider(), size: .init(10, 10), options: .default)
+        let svg = try DOM.SVG.parse(
+            xml: """
+                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10">
+                    <defs>\(defs)</defs>
+                    \(rect(first, style))
+                    \(second.map { rect($0, nil) } ?? "")
+                    \(second != nil ? rect(first, nil) : "")
+                </svg>
+                """
+        )
+        let generator = LayerTree.CommandGenerator(
+            provider: LayerTreeProvider(),
+            size: .init(10, 10),
+            options: .default
+        )
         let commands = generator.renderCommands(for: LayerTree.Builder(svg: svg).makeLayer(), colorConverter: .default)
         return LayerTree.CommandOptimizer<LayerTreeTypes>().optimizeCommands(commands)
     }
@@ -140,6 +156,8 @@ private extension Array where Element == RendererCommand<LayerTreeTypes> {
     }
 
     var fillColors: [LayerTree.Color] {
-        compactMap { if case .setFill(let c) = $0 { return c }; return nil }
+        compactMap {
+            if case .setFill(let c) = $0 { return c }; return nil
+        }
     }
 }

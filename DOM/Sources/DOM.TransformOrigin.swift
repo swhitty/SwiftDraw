@@ -102,8 +102,9 @@ package extension XMLParser {
             return .init(x: x, y: y)
         }
         if case .keyword(let a) = first, case .keyword(let b) = second,
-           let y = first.vertical, let x = second.horizontal,
-           a.isVertical || b.isHorizontal {
+            let y = first.vertical, let x = second.horizontal,
+            a.isVertical || b.isHorizontal
+        {
             return .init(x: x, y: y)
         }
         return nil

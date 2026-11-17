@@ -39,15 +39,19 @@ struct LayerTreeInvalidElementTests {
 
     @Test
     func validSiblingsOfInvalidElementsStillProduceCommands() throws {
-        let dom = try DOM.SVG.parse(data: Data("""
-        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10">
-          <path fill="red"/>
-          <rect width="5" height="5" fill="#ff0000"/>
-          <rect height="5"/>
-          <rect width="2" height="2" x="" fill="#00ff00"/>
-          <rect width="3" height="3" fill="#0000ff"/>
-        </svg>
-        """.utf8))
+        let dom = try DOM.SVG.parse(
+            data: Data(
+                """
+                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10">
+                  <path fill="red"/>
+                  <rect width="5" height="5" fill="#ff0000"/>
+                  <rect height="5"/>
+                  <rect width="2" height="2" x="" fill="#00ff00"/>
+                  <rect width="3" height="3" fill="#0000ff"/>
+                </svg>
+                """.utf8
+            )
+        )
         let layer = LayerTree.Builder(svg: dom).makeLayer()
         let generator = LayerTree.CommandGenerator(provider: LayerTreeProvider(), size: .zero, options: .default)
         let commands = generator.renderCommands(for: layer, colorConverter: .default)
@@ -56,10 +60,12 @@ struct LayerTreeInvalidElementTests {
             return nil
         }
         // the path without d and the rect without width are dropped; x="" falls back to 0
-        #expect(fills == [
-            .rgba(r: 1, g: 0, b: 0, a: 1, space: .srgb),
-            .rgba(r: 0, g: 1, b: 0, a: 1, space: .srgb),
-            .rgba(r: 0, g: 0, b: 1, a: 1, space: .srgb)
-        ])
+        #expect(
+            fills == [
+                .rgba(r: 1, g: 0, b: 0, a: 1, space: .srgb),
+                .rgba(r: 0, g: 1, b: 0, a: 1, space: .srgb),
+                .rgba(r: 0, g: 0, b: 1, a: 1, space: .srgb),
+            ]
+        )
     }
 }

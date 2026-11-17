@@ -39,27 +39,29 @@ struct LayerTreeFilterMorphologyTests {
 
     typealias Effect = LayerTree.FilterLayer.Effect
 
-    @Test(arguments: [
-        (#"radius="10""#, Effect.morphology(.erode, radiusX: 10, radiusY: 10)),
-        (#"radius="10" operator="dilate""#, .morphology(.dilate, radiusX: 10, radiusY: 10)),
-        (#"radius="1 10""#, .morphology(.erode, radiusX: 1, radiusY: 10)),
-        (#"radius="1,10" operator="erode""#, .morphology(.erode, radiusX: 1, radiusY: 10)),
-        // an unknown operator is erode
-        (#"radius="2" operator="open""#, .morphology(.erode, radiusX: 2, radiusY: 2)),
-        // radius=10-0: one zero radius is 1, as resvg, Chrome and Safari
-        (#"radius="10 0""#, .morphology(.erode, radiusX: 10, radiusY: 1)),
-        (#"radius="0 10""#, .morphology(.erode, radiusX: 1, radiusY: 10)),
-        // zero-radius, negative-radius, no-radius, empty-radius, radius-with-too-many-values: the input
-        (#"radius="0""#, .morphology(.erode, radiusX: 0, radiusY: 0)),
-        (#"radius="-5""#, .morphology(.erode, radiusX: 0, radiusY: 0)),
-        (#"radius="10 -1""#, .morphology(.erode, radiusX: 0, radiusY: 0)),
-        ("", .morphology(.erode, radiusX: 0, radiusY: 0)),
-        (#"radius="""#, .morphology(.erode, radiusX: 0, radiusY: 0)),
-        (#"radius="10 20 30""#, .morphology(.erode, radiusX: 0, radiusY: 0)),
-        (#"radius="10px""#, .morphology(.erode, radiusX: 0, radiusY: 0)),
-        // huge-radius stays finite
-        (#"radius="1e38 1e38""#, .morphology(.erode, radiusX: 1e38, radiusY: 1e38))
-    ] as [(String, LayerTree.FilterLayer.Effect)])
+    @Test(
+        arguments: [
+            (#"radius="10""#, Effect.morphology(.erode, radiusX: 10, radiusY: 10)),
+            (#"radius="10" operator="dilate""#, .morphology(.dilate, radiusX: 10, radiusY: 10)),
+            (#"radius="1 10""#, .morphology(.erode, radiusX: 1, radiusY: 10)),
+            (#"radius="1,10" operator="erode""#, .morphology(.erode, radiusX: 1, radiusY: 10)),
+            // an unknown operator is erode
+            (#"radius="2" operator="open""#, .morphology(.erode, radiusX: 2, radiusY: 2)),
+            // radius=10-0: one zero radius is 1, as resvg, Chrome and Safari
+            (#"radius="10 0""#, .morphology(.erode, radiusX: 10, radiusY: 1)),
+            (#"radius="0 10""#, .morphology(.erode, radiusX: 1, radiusY: 10)),
+            // zero-radius, negative-radius, no-radius, empty-radius, radius-with-too-many-values: the input
+            (#"radius="0""#, .morphology(.erode, radiusX: 0, radiusY: 0)),
+            (#"radius="-5""#, .morphology(.erode, radiusX: 0, radiusY: 0)),
+            (#"radius="10 -1""#, .morphology(.erode, radiusX: 0, radiusY: 0)),
+            ("", .morphology(.erode, radiusX: 0, radiusY: 0)),
+            (#"radius="""#, .morphology(.erode, radiusX: 0, radiusY: 0)),
+            (#"radius="10 20 30""#, .morphology(.erode, radiusX: 0, radiusY: 0)),
+            (#"radius="10px""#, .morphology(.erode, radiusX: 0, radiusY: 0)),
+            // huge-radius stays finite
+            (#"radius="1e38 1e38""#, .morphology(.erode, radiusX: 1e38, radiusY: 1e38)),
+        ] as [(String, LayerTree.FilterLayer.Effect)]
+    )
     func parsesRadius(attributes: String, effect: LayerTree.FilterLayer.Effect) throws {
         let layer = try makeFilterLayer(#"<feMorphology \#(attributes)/>"#)
         #expect(layer.effects == [effect])
@@ -79,11 +81,13 @@ struct LayerTreeFilterMorphologyTests {
     }
 
     // simple-case: a radius of 10 erodes 10 units from each edge of the rect at 20...180
-    @Test(arguments: [
-        (Float(1), [(29, 0), (30, 255), (169, 255), (170, 0)]),
-        // at 1.5x, as resvg renders the test: 15 pixels
-        (1.5, [(44, 0), (45, 255), (254, 255), (255, 0)])
-    ] as [(Float, [(Int, UInt8)])])
+    @Test(
+        arguments: [
+            (Float(1), [(29, 0), (30, 255), (169, 255), (170, 0)]),
+            // at 1.5x, as resvg renders the test: 15 pixels
+            (1.5, [(44, 0), (45, 255), (254, 255), (255, 0)]),
+        ] as [(Float, [(Int, UInt8)])]
+    )
     func erodesFromEachEdge(scale: Float, alphas: [(Int, UInt8)]) throws {
         let layer = try makeFilterLayer(#"<feMorphology radius="10"/>"#)
         let size = Int(200 * scale)
@@ -116,37 +120,48 @@ struct LayerTreeFilterMorphologyTests {
 
 private extension LayerTreeFilterMorphologyTests {
 
-    func makeFilterLayer(_ primitive: String, primitiveUnits: String = "userSpaceOnUse") throws -> LayerTree.FilterLayer {
-        let svg = try DOM.SVG.parse(xml: #"""
-        <svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">
-            <filter id="f" primitiveUnits="\#(primitiveUnits)">\#(primitive)</filter>
-            <rect x="20" y="20" width="160" height="160" fill="green" filter="url(#f)" />
-        </svg>
-        """#)
+    func makeFilterLayer(_ primitive: String, primitiveUnits: String = "userSpaceOnUse") throws -> LayerTree.FilterLayer
+    {
+        let svg = try DOM.SVG.parse(
+            xml: #"""
+                <svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">
+                    <filter id="f" primitiveUnits="\#(primitiveUnits)">\#(primitive)</filter>
+                    <rect x="20" y="20" width="160" height="160" fill="green" filter="url(#f)" />
+                </svg>
+                """#
+        )
         let layer = LayerTree.Builder(svg: svg).makeLayer()
-        let generator = LayerTree.CommandGenerator(provider: LayerTreeProvider(), size: .init(200, 200), options: .default)
+        let generator = LayerTree.CommandGenerator(
+            provider: LayerTreeProvider(),
+            size: .init(200, 200),
+            options: .default
+        )
         let commands = generator.renderCommands(for: layer, colorConverter: .default)
-        return try #require(commands.compactMap {
-            if case .pushFilterLayer(let filter) = $0 { return filter }
-            return nil
-        }.first)
+        return try #require(
+            commands.compactMap {
+                if case .pushFilterLayer(let filter) = $0 { return filter }
+                return nil
+            }.first
+        )
     }
 }
 
 // the kernel against the definition: the minimum or maximum over the rectangle within the bitmap
 struct FilterBitmapMorphologyTests {
 
-    @Test(arguments: [
-        (DOM.Filter.MorphologyOperator.erode, 1, 1, false),
-        (.dilate, 1, 1, false),
-        (.erode, 2, 0, false),
-        (.dilate, 0, 3, false),
-        (.erode, 3, 1, true),
-        (.dilate, 1, 4, true),
-        // larger than the bitmap: every window is the whole row or column
-        (.erode, 20, 2, false),
-        (.dilate, 5, 50, true)
-    ] as [(DOM.Filter.MorphologyOperator, Int, Int, Bool)])
+    @Test(
+        arguments: [
+            (DOM.Filter.MorphologyOperator.erode, 1, 1, false),
+            (.dilate, 1, 1, false),
+            (.erode, 2, 0, false),
+            (.dilate, 0, 3, false),
+            (.erode, 3, 1, true),
+            (.dilate, 1, 4, true),
+            // larger than the bitmap: every window is the whole row or column
+            (.erode, 20, 2, false),
+            (.dilate, 5, 50, true),
+        ] as [(DOM.Filter.MorphologyOperator, Int, Int, Bool)]
+    )
     func matchesTheDefinition(op: DOM.Filter.MorphologyOperator, rx: Int, ry: Int, linear: Bool) {
         let source = makeNoise(width: 13, height: 9)
         let result = FilterBitmap.morphology(source, op, radiusX: rx, radiusY: ry, linear: linear)
@@ -199,7 +214,13 @@ private extension FilterBitmapMorphologyTests {
     }
 
     // the minimum or maximum of each channel's value in the primitive's space, then encoded as the kernel does
-    func naiveMorphology(_ source: FilterBitmap, _ op: DOM.Filter.MorphologyOperator, rx: Int, ry: Int, linear: Bool) -> FilterBitmap {
+    func naiveMorphology(
+        _ source: FilterBitmap,
+        _ op: DOM.Filter.MorphologyOperator,
+        rx: Int,
+        ry: Int,
+        linear: Bool
+    ) -> FilterBitmap {
         func value(_ x: Int, _ y: Int, _ channel: Int) -> Float {
             let p = source.pixel(x: x, y: y)
             let alpha = Float(p[3]) / 255

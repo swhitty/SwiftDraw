@@ -55,7 +55,7 @@ final class RendererSFSymbolTests: XCTestCase {
             template.black.contents.paths.isEmpty
         )
     }
-    
+
     func testWidthGreaterThanHeightSymbol() throws {
         // This svg has a width of 24, but a height of 4. When scaling in SFSymbolRenderer makeTransformation
         // the height was being used to create scale causing the width to be 440 instead of 108.
@@ -74,14 +74,16 @@ final class RendererSFSymbolTests: XCTestCase {
     }
 
     func testTransparentLayers_Are_Removed() throws {
-        let source = try DOM.SVG.parse(#"""
-        <?xml version="1.0" encoding="UTF-8"?>
-        <svg width="64" height="64" version="1.1" xmlns="http://www.w3.org/2000/svg">
-            <rect width="100" height="100" fill="currentColor" />
-            <rect width="100" height="100" fill="transparent" />
-            <rect width="100" height="100" fill="currentColor" opacity="0" />
-        </svg>
-        """#)
+        let source = try DOM.SVG.parse(
+            #"""
+            <?xml version="1.0" encoding="UTF-8"?>
+            <svg width="64" height="64" version="1.1" xmlns="http://www.w3.org/2000/svg">
+                <rect width="100" height="100" fill="currentColor" />
+                <rect width="100" height="100" fill="transparent" />
+                <rect width="100" height="100" fill="currentColor" opacity="0" />
+            </svg>
+            """#
+        )
 
         let template = try SFSymbolTemplate.parse(
             SFSymbolRenderer.render(svg: source)
@@ -102,14 +104,16 @@ final class RendererSFSymbolTests: XCTestCase {
     }
 
     func testTransparentSFSymboleLayers_AreNot_Removed() throws {
-        let source = try DOM.SVG.parse(#"""
-        <?xml version="1.0" encoding="UTF-8"?>
-        <svg width="64" height="64" version="1.1" xmlns="http://www.w3.org/2000/svg">
-            <rect width="100" height="100" fill="currentColor" />
-            <rect width="100" height="100" fill="transparent" class="multicolor-0:custom" />
-            <rect width="100" height="100" fill="currentColor" opacity="0" class="SFSymbolsPreview" />
-        </svg>
-        """#)
+        let source = try DOM.SVG.parse(
+            #"""
+            <?xml version="1.0" encoding="UTF-8"?>
+            <svg width="64" height="64" version="1.1" xmlns="http://www.w3.org/2000/svg">
+                <rect width="100" height="100" fill="currentColor" />
+                <rect width="100" height="100" fill="transparent" class="multicolor-0:custom" />
+                <rect width="100" height="100" fill="currentColor" opacity="0" class="SFSymbolsPreview" />
+            </svg>
+            """#
+        )
 
         let template = try SFSymbolTemplate.parse(
             SFSymbolRenderer.render(svg: source)
@@ -148,13 +152,15 @@ final class RendererSFSymbolTests: XCTestCase {
     }
 
     func testStrokeText() throws {
-        let source = try DOM.SVG.parse(#"""
-        <?xml version="1.0" encoding="UTF-8"?>
-        <svg width="64" height="64" version="1.1" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="32" cy="32" r="28" fill="none" stroke="black" stroke-width="4" />
-            <text font-size="35" x="14" y="45">W</text>
-        </svg>
-        """#)
+        let source = try DOM.SVG.parse(
+            #"""
+            <?xml version="1.0" encoding="UTF-8"?>
+            <svg width="64" height="64" version="1.1" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="32" cy="32" r="28" fill="none" stroke="black" stroke-width="4" />
+                <text font-size="35" x="14" y="45">W</text>
+            </svg>
+            """#
+        )
 
         let template = try SFSymbolTemplate.parse(
             SFSymbolRenderer.render(svg: source)
@@ -183,17 +189,17 @@ final class RendererSFSymbolTests: XCTestCase {
         var a: [DOM.Path.Segment] = [
             .move(x: 0, y: 0, space: .absolute),
             .cubic(x1: 1, y1: 0, x2: 2, y2: 1, x: 3, y: 1, space: .absolute),
-            .close
+            .close,
         ]
         var b: [DOM.Path.Segment] = [
             .move(x: 0, y: 0, space: .absolute),
             .line(x: 3, y: 1, space: .absolute),
-            .close
+            .close,
         ]
         var c: [DOM.Path.Segment] = [
             .move(x: 0, y: 0, space: .absolute),
             .line(x: 3, y: 1, space: .absolute),
-            .close
+            .close,
         ]
 
         SFSymbolTemplate.normalizeSegments(&a, &b, &c)
@@ -214,19 +220,19 @@ final class RendererSFSymbolTests: XCTestCase {
             .line(x: 5, y: 0, space: .absolute),
             .cubic(x1: 5, y1: 0, x2: 7, y2: 2, x: 10, y: 5, space: .absolute),
             .line(x: 10, y: 10, space: .absolute),
-            .close
+            .close,
         ]
         var b: [DOM.Path.Segment] = [
             .move(x: 0, y: 0, space: .absolute),
             .line(x: 5, y: 0, space: .absolute),
             .line(x: 10, y: 10, space: .absolute),
-            .close
+            .close,
         ]
         var c: [DOM.Path.Segment] = [
             .move(x: 0, y: 0, space: .absolute),
             .line(x: 5, y: 0, space: .absolute),
             .line(x: 10, y: 10, space: .absolute),
-            .close
+            .close,
         ]
 
         SFSymbolTemplate.normalizeSegments(&a, &b, &c)
@@ -246,7 +252,7 @@ final class RendererSFSymbolTests: XCTestCase {
         var a: [DOM.Path.Segment] = [
             .move(x: 0, y: 0, space: .absolute),
             .line(x: 10, y: 10, space: .absolute),
-            .close
+            .close,
         ]
         var b = a
         var c = a
@@ -261,7 +267,10 @@ final class RendererSFSymbolTests: XCTestCase {
     func testCommandType() {
         XCTAssertEqual(DOM.Path.Segment.move(x: 0, y: 0, space: .absolute).commandType, .move)
         XCTAssertEqual(DOM.Path.Segment.line(x: 0, y: 0, space: .absolute).commandType, .line)
-        XCTAssertEqual(DOM.Path.Segment.cubic(x1: 0, y1: 0, x2: 0, y2: 0, x: 0, y: 0, space: .absolute).commandType, .cubic)
+        XCTAssertEqual(
+            DOM.Path.Segment.cubic(x1: 0, y1: 0, x2: 0, y2: 0, x: 0, y: 0, space: .absolute).commandType,
+            .cubic
+        )
         XCTAssertEqual(DOM.Path.Segment.close.commandType, .close)
         XCTAssertEqual(DOM.Path.Segment.horizontal(x: 0, space: .absolute).commandType, .line)
         XCTAssertEqual(DOM.Path.Segment.vertical(y: 0, space: .absolute).commandType, .line)
@@ -272,11 +281,11 @@ final class RendererSFSymbolTests: XCTestCase {
         let promoted = line.promoteToCubic(from: (x: 0, y: 0))
 
         if case .cubic(let x1, let y1, let x2, let y2, let x, let y, _) = promoted {
-            XCTAssertEqual(x1, 0)   // control1 at start
+            XCTAssertEqual(x1, 0)  // control1 at start
             XCTAssertEqual(y1, 0)
             XCTAssertEqual(x2, 10)  // control2 at end
             XCTAssertEqual(y2, 20)
-            XCTAssertEqual(x, 10)   // endpoint
+            XCTAssertEqual(x, 10)  // endpoint
             XCTAssertEqual(y, 20)
         } else {
             XCTFail("Expected cubic segment")
@@ -399,7 +408,7 @@ private extension [DOM.Path.Segment] {
             .move(x: 0, y: 0, space: .absolute),
             .line(x: 10, y: 0, space: .absolute),
             .line(x: 10, y: 10, space: .absolute),
-            .close
+            .close,
         ]
     }
 
@@ -407,7 +416,7 @@ private extension [DOM.Path.Segment] {
         [
             .move(x: 0, y: 0, space: .absolute),
             .line(x: 10, y: 0, space: .absolute),
-            .close
+            .close,
         ]
     }
 
@@ -416,7 +425,7 @@ private extension [DOM.Path.Segment] {
             .move(x: 0, y: 0, space: .absolute),
             .cubic(x1: 0, y1: 0, x2: 10, y2: 0, x: 10, y: 0, space: .absolute),
             .line(x: 10, y: 10, space: .absolute),
-            .close
+            .close,
         ]
     }
 }

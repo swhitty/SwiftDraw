@@ -51,7 +51,8 @@ extension LayerTree {
         /// patternTransform: maps the pattern tile space into the user space of the filled element
         var transform: LayerTree.Transform.Matrix
 
-        init(frame: LayerTree.Rect, contentUnits: PatternUnits = .userSpaceOnUse, units: PatternUnits = .userSpaceOnUse) {
+        init(frame: LayerTree.Rect, contentUnits: PatternUnits = .userSpaceOnUse, units: PatternUnits = .userSpaceOnUse)
+        {
             self.frame = frame
             self.contentUnits = contentUnits
             self.contents = []
@@ -71,8 +72,9 @@ extension LayerTree {
         }
 
         static func == (lhs: LayerTree.Pattern, rhs: LayerTree.Pattern) -> Bool {
-            return lhs.frame == rhs.frame && lhs.contentUnits == rhs.contentUnits && lhs.contents == rhs.contents &&
-                lhs.units == rhs.units && lhs.viewBox == rhs.viewBox && lhs.preserveAspectRatio == rhs.preserveAspectRatio && lhs.transform == rhs.transform
+            return lhs.frame == rhs.frame && lhs.contentUnits == rhs.contentUnits && lhs.contents == rhs.contents
+                && lhs.units == rhs.units && lhs.viewBox == rhs.viewBox
+                && lhs.preserveAspectRatio == rhs.preserveAspectRatio && lhs.transform == rhs.transform
         }
     }
 }

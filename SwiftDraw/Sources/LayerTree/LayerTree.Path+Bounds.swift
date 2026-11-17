@@ -158,10 +158,7 @@ extension LayerTree.Path {
         func value(for t: LayerTree.Float) -> LayerTree.Float {
             assert(t >= 0 && t <= 1)
             let mt = 1 - t
-            return (mt * mt * mt * p0) +
-                   (3 * mt * mt * t * p1) +
-                   (3 * mt * t * t * p2) +
-                   (t * t * t * p3)
+            return (mt * mt * mt * p0) + (3 * mt * mt * t * p1) + (3 * mt * t * t * p2) + (t * t * t * p3)
         }
     }
 }
@@ -194,7 +191,6 @@ extension LayerTree.Rect {
     }
 
     func contains(point: LayerTree.Point) -> Bool {
-        (minX...maxX).contains(point.x) &&
-        (minY...maxY).contains(point.y)
+        (minX...maxX).contains(point.x) && (minY...maxY).contains(point.y)
     }
 }

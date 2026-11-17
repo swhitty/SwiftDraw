@@ -72,7 +72,11 @@ enum StrokeWidthScaler {
         return count
     }
 
-    private static func scaleChildren(of container: any ContainerElement, by scale: SFSymbolRenderer.StrokeWidthScale, count: inout Int) {
+    private static func scaleChildren(
+        of container: any ContainerElement,
+        by scale: SFSymbolRenderer.StrokeWidthScale,
+        count: inout Int
+    ) {
         for child in container.childElements {
             scaleAttributes(of: child, by: scale, count: &count)
             if let nested = child as? any ContainerElement {
@@ -81,7 +85,11 @@ enum StrokeWidthScaler {
         }
     }
 
-    private static func scaleAttributes(of element: DOM.GraphicsElement, by scale: SFSymbolRenderer.StrokeWidthScale, count: inout Int) {
+    private static func scaleAttributes(
+        of element: DOM.GraphicsElement,
+        by scale: SFSymbolRenderer.StrokeWidthScale,
+        count: inout Int
+    ) {
         if let value = element.attributes.strokeWidth {
             element.attributes.strokeWidth = multiply(value, by: scale)
             count += 1
@@ -103,7 +111,11 @@ enum StrokeWidthScaler {
         }
     }
 
-    private static func scaleDefs(_ defs: inout DOM.SVG.Defs, by scale: SFSymbolRenderer.StrokeWidthScale, count: inout Int) {
+    private static func scaleDefs(
+        _ defs: inout DOM.SVG.Defs,
+        by scale: SFSymbolRenderer.StrokeWidthScale,
+        count: inout Int
+    ) {
         for clipPath in defs.clipPaths {
             scaleChildren(of: clipPath, by: scale, count: &count)
         }
@@ -122,7 +134,11 @@ enum StrokeWidthScaler {
         }
     }
 
-    private static func scaleStyles(_ styles: inout [DOM.StyleSheet], by scale: SFSymbolRenderer.StrokeWidthScale, count: inout Int) {
+    private static func scaleStyles(
+        _ styles: inout [DOM.StyleSheet],
+        by scale: SFSymbolRenderer.StrokeWidthScale,
+        count: inout Int
+    ) {
         for sheetIndex in styles.indices {
             for selector in styles[sheetIndex].attributes.keys {
                 if let value = styles[sheetIndex].attributes[selector]?.strokeWidth {
@@ -146,7 +162,8 @@ enum StrokeWidthScaler {
         }
     }
 
-    private static func multiply(_ value: DOM.DashLength, by scale: SFSymbolRenderer.StrokeWidthScale) -> DOM.DashLength {
+    private static func multiply(_ value: DOM.DashLength, by scale: SFSymbolRenderer.StrokeWidthScale) -> DOM.DashLength
+    {
         func multiply(_ value: DOM.Float) -> DOM.Float {
             DOM.Float(Double(value) * scale.multiplier)
         }
@@ -157,4 +174,3 @@ enum StrokeWidthScaler {
         }
     }
 }
-

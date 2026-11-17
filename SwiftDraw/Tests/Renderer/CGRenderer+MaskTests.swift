@@ -41,10 +41,12 @@ struct CGRendererMaskTests {
 
     @Test
     func opacityAfterEarlierMaskContent() throws {
-        let bitmap = try render(mask: #"""
-            <rect width="100" height="100" fill="white" />
-            <rect width="50" height="100" fill="black" opacity="0.5" />
-        """#)
+        let bitmap = try render(
+            mask: #"""
+                    <rect width="100" height="100" fill="white" />
+                    <rect width="50" height="100" fill="black" opacity="0.5" />
+                """#
+        )
 
         #expect(bitmap.alpha(x: 25, y: 50).isClose(to: 0.5))
         #expect(bitmap.alpha(x: 75, y: 50).isClose(to: 1))
@@ -52,15 +54,17 @@ struct CGRendererMaskTests {
 
     @Test
     func alphaMaskUsesContentAlpha() throws {
-        let bitmap = try render(#"""
-        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
-            <mask id="m" style="mask-type:alpha">
-                <rect width="50" height="100" fill="black" fill-opacity="0.5" />
-                <rect x="50" width="50" height="100" fill="black" />
-            </mask>
-            <rect width="100" height="100" fill="green" mask="url(#m)" />
-        </svg>
-        """#)
+        let bitmap = try render(
+            #"""
+            <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+                <mask id="m" style="mask-type:alpha">
+                    <rect width="50" height="100" fill="black" fill-opacity="0.5" />
+                    <rect x="50" width="50" height="100" fill="black" />
+                </mask>
+                <rect width="100" height="100" fill="green" mask="url(#m)" />
+            </svg>
+            """#
+        )
 
         #expect(bitmap.alpha(x: 25, y: 50).isClose(to: 0.5))
         #expect(bitmap.alpha(x: 75, y: 50).isClose(to: 1))
@@ -68,13 +72,15 @@ struct CGRendererMaskTests {
 
     @Test
     func groupOpacityFlattensOverlap() throws {
-        let bitmap = try render(mask: #"""
-            <rect width="100" height="100" fill="white" />
-            <g opacity="0.5">
-                <rect width="60" height="50" fill="black" />
-                <rect x="40" width="60" height="50" fill="black" />
-            </g>
-        """#)
+        let bitmap = try render(
+            mask: #"""
+                    <rect width="100" height="100" fill="white" />
+                    <g opacity="0.5">
+                        <rect width="60" height="50" fill="black" />
+                        <rect x="40" width="60" height="50" fill="black" />
+                    </g>
+                """#
+        )
 
         #expect(bitmap.alpha(x: 20, y: 25).isClose(to: 0.5))
         #expect(bitmap.alpha(x: 50, y: 25).isClose(to: 0.5))
@@ -84,11 +90,13 @@ struct CGRendererMaskTests {
 
     @Test
     func translucentFillsComposite() throws {
-        let bitmap = try render(mask: #"""
-            <rect width="100" height="100" fill="black" />
-            <rect width="70" height="100" fill="white" fill-opacity="0.6" />
-            <rect x="30" width="70" height="100" fill="white" fill-opacity="0.6" />
-        """#)
+        let bitmap = try render(
+            mask: #"""
+                    <rect width="100" height="100" fill="black" />
+                    <rect width="70" height="100" fill="white" fill-opacity="0.6" />
+                    <rect x="30" width="70" height="100" fill="white" fill-opacity="0.6" />
+                """#
+        )
 
         #expect(bitmap.alpha(x: 15, y: 50).isClose(to: 0.6))
         #expect(bitmap.alpha(x: 50, y: 50).isClose(to: 0.84))
@@ -97,10 +105,12 @@ struct CGRendererMaskTests {
 
     @Test
     func translucentStrokeOverWhite() throws {
-        let bitmap = try render(mask: #"""
-            <rect width="100" height="100" fill="white" />
-            <line x1="50" y1="0" x2="50" y2="100" stroke="black" stroke-width="20" stroke-opacity="0.7" />
-        """#)
+        let bitmap = try render(
+            mask: #"""
+                    <rect width="100" height="100" fill="white" />
+                    <line x1="50" y1="0" x2="50" y2="100" stroke="black" stroke-width="20" stroke-opacity="0.7" />
+                """#
+        )
 
         #expect(bitmap.alpha(x: 50, y: 50).isClose(to: 0.3))
         #expect(bitmap.alpha(x: 20, y: 50).isClose(to: 1))
@@ -112,7 +122,7 @@ struct CGRendererMaskTests {
         ("red", 0.2126),
         ("lime", 0.7152),
         ("blue", 0.0722),
-        ("black", 0.0)
+        ("black", 0.0),
     ])
     func luminanceOfFill(color: String, luminance: Double) throws {
         let bitmap = try render(mask: #"<rect width="100" height="100" fill="\#(color)" />"#)
@@ -129,15 +139,17 @@ struct CGRendererMaskTests {
 
     @Test
     func maskedContentsAreMaskedAsGroup() throws {
-        let bitmap = try render(#"""
-        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
-            <mask id="m"><rect width="100" height="100" fill="#808080" /></mask>
-            <g mask="url(#m)">
-                <rect width="60" height="100" fill="black" />
-                <rect x="40" width="60" height="100" fill="black" />
-            </g>
-        </svg>
-        """#)
+        let bitmap = try render(
+            #"""
+            <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+                <mask id="m"><rect width="100" height="100" fill="#808080" /></mask>
+                <g mask="url(#m)">
+                    <rect width="60" height="100" fill="black" />
+                    <rect x="40" width="60" height="100" fill="black" />
+                </g>
+            </svg>
+            """#
+        )
 
         // the overlap is not masked twice
         #expect(bitmap.alpha(x: 50, y: 50).isClose(to: 0.502))
@@ -146,15 +158,18 @@ struct CGRendererMaskTests {
 
     @Test
     func maskFollowsTransformAtDeviceScale() throws {
-        let bitmap = try render(#"""
-        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
-            <mask id="m">
-                <rect width="100" height="100" fill="white" />
-                <rect x="50" width="50" height="100" fill="black" opacity="0.5" />
-            </mask>
-            <rect width="100" height="100" fill="black" mask="url(#m)" transform="rotate(90 50 50)" />
-        </svg>
-        """#, scale: 2)
+        let bitmap = try render(
+            #"""
+            <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+                <mask id="m">
+                    <rect width="100" height="100" fill="white" />
+                    <rect x="50" width="50" height="100" fill="black" opacity="0.5" />
+                </mask>
+                <rect width="100" height="100" fill="black" mask="url(#m)" transform="rotate(90 50 50)" />
+            </svg>
+            """#,
+            scale: 2
+        )
 
         // the element's right half is rotated to the bottom
         #expect(bitmap.alpha(x: 100, y: 40).isClose(to: 1))
@@ -163,16 +178,18 @@ struct CGRendererMaskTests {
 
     @Test
     func nestedMaskInMaskContent() throws {
-        let bitmap = try render(#"""
-        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
-            <mask id="left"><rect width="50" height="100" fill="white" /></mask>
-            <mask id="m">
-                <rect width="100" height="100" fill="white" opacity="0.5" />
-                <rect width="100" height="100" fill="white" mask="url(#left)" />
-            </mask>
-            <rect width="100" height="100" fill="black" mask="url(#m)" />
-        </svg>
-        """#)
+        let bitmap = try render(
+            #"""
+            <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+                <mask id="left"><rect width="50" height="100" fill="white" /></mask>
+                <mask id="m">
+                    <rect width="100" height="100" fill="white" opacity="0.5" />
+                    <rect width="100" height="100" fill="white" mask="url(#left)" />
+                </mask>
+                <rect width="100" height="100" fill="black" mask="url(#m)" />
+            </svg>
+            """#
+        )
 
         #expect(bitmap.alpha(x: 25, y: 50).isClose(to: 1))
         #expect(bitmap.alpha(x: 75, y: 50).isClose(to: 0.5))
@@ -180,12 +197,15 @@ struct CGRendererMaskTests {
 
     @Test
     func patternInMaskContent() throws {
-        let bitmap = try render(mask: #"""
-            <pattern id="p" width="20" height="20" patternUnits="userSpaceOnUse">
-                <rect width="10" height="20" fill="white" />
-            </pattern>
-            <rect width="100" height="100" fill="url(#p)" />
-        """#, scale: 2)
+        let bitmap = try render(
+            mask: #"""
+                    <pattern id="p" width="20" height="20" patternUnits="userSpaceOnUse">
+                        <rect width="10" height="20" fill="white" />
+                    </pattern>
+                    <rect width="100" height="100" fill="url(#p)" />
+                """#,
+            scale: 2
+        )
 
         #expect(bitmap.alpha(x: 10, y: 100).isClose(to: 1))
         #expect(bitmap.alpha(x: 30, y: 100).isClose(to: 0))
@@ -194,10 +214,12 @@ struct CGRendererMaskTests {
 
     @Test
     func maskInVectorContext() throws {
-        let bitmap = try renderPDF(mask: #"""
-            <rect width="100" height="100" fill="white" />
-            <rect width="50" height="100" fill="black" opacity="0.5" />
-        """#)
+        let bitmap = try renderPDF(
+            mask: #"""
+                    <rect width="100" height="100" fill="white" />
+                    <rect width="50" height="100" fill="black" opacity="0.5" />
+                """#
+        )
 
         #expect(bitmap.alpha(x: 25, y: 50).isClose(to: 0.5))
         #expect(bitmap.alpha(x: 75, y: 50).isClose(to: 1))
@@ -271,9 +293,15 @@ private extension CGRendererMaskTests {
         var bytes = [UInt8](repeating: 0, count: width * height * 4)
         let space = CGColorSpace(name: CGColorSpace.sRGB)!
         bytes.withUnsafeMutableBytes { buffer in
-            let ctx = CGContext(data: buffer.baseAddress, width: width, height: height,
-                                bitsPerComponent: 8, bytesPerRow: width * 4, space: space,
-                                bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!
+            let ctx = CGContext(
+                data: buffer.baseAddress,
+                width: width,
+                height: height,
+                bitsPerComponent: 8,
+                bytesPerRow: width * 4,
+                space: space,
+                bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+            )!
             body(ctx)
         }
         return Bitmap(width: width, height: height, bytes: bytes)

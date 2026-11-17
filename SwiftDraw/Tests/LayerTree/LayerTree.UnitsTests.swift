@@ -29,7 +29,6 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-
 @testable import SwiftDraw
 @testable import SwiftDrawDOM
 import Testing
@@ -57,9 +56,12 @@ struct LayerTreeUnitsTests {
 
     private func union(_ a: LayerTree.Rect, _ b: LayerTree.Rect) -> LayerTree.Rect {
         let minX = min(a.minX, b.minX), minY = min(a.minY, b.minY)
-        return LayerTree.Rect(x: minX, y: minY,
-                              width: max(a.maxX, b.maxX) - minX,
-                              height: max(a.maxY, b.maxY) - minY)
+        return LayerTree.Rect(
+            x: minX,
+            y: minY,
+            width: max(a.maxX, b.maxX) - minX,
+            height: max(a.maxY, b.maxY) - minY
+        )
     }
 
     private func transforms(_ commands: [Command]) -> [String] {
@@ -75,12 +77,14 @@ struct LayerTreeUnitsTests {
 
     @Test
     func percentagesAndUnitsReachTheFillCommand() throws {
-        let commands = try commands("""
-        <svg xmlns="http://www.w3.org/2000/svg" width="200" height="100">
-        <rect x="10%" y="1in" width="50%" height="25.4mm" fill="red"/>
-        <circle cx="50%" cy="50%" r="2em" fill="red"/>
-        </svg>
-        """)
+        let commands = try commands(
+            """
+            <svg xmlns="http://www.w3.org/2000/svg" width="200" height="100">
+            <rect x="10%" y="1in" width="50%" height="25.4mm" fill="red"/>
+            <circle cx="50%" cy="50%" r="2em" fill="red"/>
+            </svg>
+            """
+        )
         let fills = fills(commands)
         #expect(fills.count == 2)
         #expect(abs(try #require(fills.first?.x) - 20) < 0.001)
@@ -95,10 +99,12 @@ struct LayerTreeUnitsTests {
     @Test
     func fractionalRootWithMatchingViewBoxHasNoTransform() throws {
         // stored as Int, 145.11934 became 145 and the viewBox was letterboxed by a fraction of a unit
-        let svg = try DOM.SVG.parse(xml: """
-        <svg xmlns="http://www.w3.org/2000/svg" width="145.11934" height="80" viewBox="0 0 145.11934 80">
-        <rect width="10" height="10"/></svg>
-        """)
+        let svg = try DOM.SVG.parse(
+            xml: """
+                <svg xmlns="http://www.w3.org/2000/svg" width="145.11934" height="80" viewBox="0 0 145.11934 80">
+                <rect width="10" height="10"/></svg>
+                """
+        )
         #expect(svg.width == 145.11934)
         #expect(LayerTree.Builder(svg: svg).makeLayer().transform == [])
     }
@@ -106,9 +112,11 @@ struct LayerTreeUnitsTests {
     @Test
     func rootWithOnlyWidthScalesTheViewBoxUniformly() throws {
         // browsers draw width="200" viewBox="0 0 100 50" at 200x100, a uniform x2
-        let svg = try DOM.SVG.parse(xml: """
-        <svg xmlns="http://www.w3.org/2000/svg" width="200" viewBox="0 0 100 50"><rect width="100" height="50"/></svg>
-        """)
+        let svg = try DOM.SVG.parse(
+            xml: """
+                <svg xmlns="http://www.w3.org/2000/svg" width="200" viewBox="0 0 100 50"><rect width="100" height="50"/></svg>
+                """
+        )
         #expect(svg.width == 200)
         #expect(svg.height == 100)
         #expect(LayerTree.Builder(svg: svg).makeLayer().transform == [.scale(sx: 2, sy: 2)])
@@ -117,12 +125,14 @@ struct LayerTreeUnitsTests {
     @Test
     func nestedSVGPercentagesUseTheEnclosingViewport() throws {
         // nested viewport: x=50 y=10 100x80; its 10x10 viewBox meets at x8, centred 10 units right
-        let commands = try commands("""
-        <svg xmlns="http://www.w3.org/2000/svg" width="200" height="100">
-        <svg x="25%" y="10%" width="50%" height="80%" viewBox="0 0 10 10">
-        <rect width="50%" height="100%" fill="red"/></svg>
-        </svg>
-        """)
+        let commands = try commands(
+            """
+            <svg xmlns="http://www.w3.org/2000/svg" width="200" height="100">
+            <svg x="25%" y="10%" width="50%" height="80%" viewBox="0 0 10 10">
+            <rect width="50%" height="100%" fill="red"/></svg>
+            </svg>
+            """
+        )
         #expect(transforms(commands) == ["translate(60.0, 10.0)", "scale(8.0, 8.0)"])
         #expect(fills(commands) == [LayerTree.Rect(x: 0, y: 0, width: 5, height: 10)])
     }

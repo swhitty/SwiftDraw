@@ -38,11 +38,11 @@ package extension XML {
 
     final class SAXParser: NSObject, XMLParserDelegate {
 
-#if canImport(FoundationXML)
+        #if canImport(FoundationXML)
         package typealias FoundationXMLParser = FoundationXML.XMLParser
-#else
+        #else
         package typealias FoundationXMLParser = Foundation.XMLParser
-#endif
+        #endif
 
         private let parser: FoundationXMLParser
         private let validNamespaces = Set(["http://www.w3.org/2000/svg", ""])
@@ -58,11 +58,11 @@ package extension XML {
 
         private init(data: Data) {
             self.parser = FoundationXMLParser(data: data)
-            elements = [Element]()
+            self.elements = [Element]()
             super.init()
 
-            self.parser.delegate = self
-            self.parser.shouldProcessNamespaces = true
+            parser.delegate = self
+            parser.shouldProcessNamespaces = true
         }
 
         package static func parse(data: Data) throws -> Element {
@@ -71,11 +71,14 @@ package extension XML {
             guard
                 parser.parser.parse(),
 
-                    let rootNode = parser.rootNode else {
-                throw XMLParser.Error.invalidDocument(error: parser.parser.parserError,
-                                                      element: parser.elements.last?.name,
-                                                      line: parser.parser.lineNumber,
-                                                      column: parser.parser.columnNumber)
+                let rootNode = parser.rootNode
+            else {
+                throw XMLParser.Error.invalidDocument(
+                    error: parser.parser.parserError,
+                    element: parser.elements.last?.name,
+                    line: parser.parser.lineNumber,
+                    column: parser.parser.columnNumber
+                )
             }
 
             return rootNode
@@ -90,7 +93,13 @@ package extension XML {
             validNamespaces.contains(uri ?? "")
         }
 
-        package func parser(_ parser: FoundationXMLParser, didStartElement elementName: String, namespaceURI: String?, qualifiedName _: String?, attributes attributeDict: [String: String] = [:]) {
+        package func parser(
+            _ parser: FoundationXMLParser,
+            didStartElement elementName: String,
+            namespaceURI: String?,
+            qualifiedName _: String?,
+            attributes attributeDict: [String: String] = [:]
+        ) {
             guard self.parser === parser else { return }
             guard foreignDepth == 0, isValidNamespaceURI(namespaceURI) else {
                 foreignDepth += 1
@@ -108,7 +117,12 @@ package extension XML {
             }
         }
 
-        package func parser(_ parser: FoundationXMLParser, didEndElement elementName: String, namespaceURI: String?, qualifiedName _: String?) {
+        package func parser(
+            _ parser: FoundationXMLParser,
+            didEndElement elementName: String,
+            namespaceURI: String?,
+            qualifiedName _: String?
+        ) {
             if foreignDepth > 0 {
                 foreignDepth -= 1
                 return

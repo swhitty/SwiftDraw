@@ -22,7 +22,9 @@ struct OptionsTests {
 
     @Test
     func compare() throws {
-        let o = try Self.parse(["compare", "--base", "0.30.0", "--head", "main", "--resvg", "--tolerance", "1", "a.svg", "b.svg"])
+        let o = try Self.parse([
+            "compare", "--base", "0.30.0", "--head", "main", "--resvg", "--tolerance", "1", "a.svg", "b.svg",
+        ])
         #expect(o.command == .compare)
         #expect(o.base == "0.30.0")
         #expect(o.head == "main")
@@ -57,7 +59,9 @@ struct OptionsTests {
 
     @Test
     func rendererPaths() throws {
-        let o = try Self.parse(["--swiftdraw-path", "/bin/sd", "--webkit-render-path", "/bin/wr", "--no-cache", "a.svg"])
+        let o = try Self.parse([
+            "--swiftdraw-path", "/bin/sd", "--webkit-render-path", "/bin/wr", "--no-cache", "a.svg",
+        ])
         #expect(o.swiftdrawPath == URL(fileURLWithPath: "/bin/sd"))
         #expect(o.webkitRenderPath == URL(fileURLWithPath: "/bin/wr"))
         #expect(!o.useCache)
@@ -65,9 +69,9 @@ struct OptionsTests {
 
     @Test(arguments: [
         // hasPNGs, hasCLI, text, expected
-        (true, true, false, true),      // PNG when usable, the CLI otherwise
-        (true, true, true, false),      // text always goes to the CLI: the PNGs use other fonts
-        (true, false, true, true),      // no CLI: text is compared against the PNG, and the summary says so
+        (true, true, false, true),  // PNG when usable, the CLI otherwise
+        (true, true, true, false),  // text always goes to the CLI: the PNGs use other fonts
+        (true, false, true, true),  // no CLI: text is compared against the PNG, and the summary says so
         (false, true, false, false),
         (false, true, true, false),
     ])
@@ -76,17 +80,17 @@ struct OptionsTests {
     }
 
     @Test(arguments: [
-        [],                                             // no inputs
-        ["missing.svg"],                                // no such file (and not a command)
-        ["help", "score"],                              // unknown subcommands are not files
-        ["--scale", "1.5", "a.svg"],                    // swiftdrawcli takes 1x, 2x or 3x
+        [],  // no inputs
+        ["missing.svg"],  // no such file (and not a command)
+        ["help", "score"],  // unknown subcommands are not files
+        ["--scale", "1.5", "a.svg"],  // swiftdrawcli takes 1x, 2x or 3x
         ["--scale", "4", "a.svg"],
         ["--match", "0", "a.svg"],
         ["--tolerance", "-1", "a.svg"],
         ["--bogus", "a.svg"],
-        ["--base", "main", "a.svg"],                    // --base is for compare
+        ["--base", "main", "a.svg"],  // --base is for compare
         ["--head", "main", "--swiftdraw-path", "/bin/sd", "a.svg"],
-        ["a.svg", "--head"],                            // missing value
+        ["a.svg", "--head"],  // missing value
     ])
     func rejects(_ args: [String]) {
         #expect(throws: Options.Error.self) {
@@ -102,8 +106,10 @@ struct OptionsTests {
             try fm.createDirectory(at: dir.appendingPathComponent(sub), withIntermediateDirectories: true)
         }
         defer { try? fm.removeItem(at: dir) }
-        for name in ["b.svg", "a.SVG", "c.png", "text/text-anchor/simple-case.svg", "text/text-anchor/simple-case.png",
-                     "a/z.svg", ".hidden/x.svg", ".dot.svg"] {
+        for name in [
+            "b.svg", "a.SVG", "c.png", "text/text-anchor/simple-case.svg", "text/text-anchor/simple-case.png",
+            "a/z.svg", ".hidden/x.svg", ".dot.svg",
+        ] {
             try Data().write(to: dir.appendingPathComponent(name))
         }
         var o = Options()

@@ -16,8 +16,12 @@ struct ProcessOutput {
 
     /// The most useful line of stderr (or stdout) for explaining a failure.
     var reason: String {
-        let lines = (stderr + "\n" + stdout).split(whereSeparator: \.isNewline).map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
-        let line = lines.first { $0.localizedCaseInsensitiveContains("error") || $0.hasPrefix("Failure") } ?? lines.first ?? status
+        let lines = (stderr + "\n" + stdout).split(whereSeparator: \.isNewline).map {
+            $0.trimmingCharacters(in: .whitespaces)
+        }.filter { !$0.isEmpty }
+        let line =
+            lines.first { $0.localizedCaseInsensitiveContains("error") || $0.hasPrefix("Failure") } ?? lines.first
+            ?? status
         return line.count > 200 ? String(line.prefix(200)) + "…" : line
     }
 }
@@ -45,7 +49,12 @@ func execute(_ executable: Executable, _ arguments: [String], in directory: URL?
 
 /// Runs a program that must succeed, returning trimmed stdout. On failure prints its output and throws.
 @discardableResult
-func check(_ executable: Executable, _ arguments: [String], in directory: URL? = nil, label: String) async throws -> String {
+func check(
+    _ executable: Executable,
+    _ arguments: [String],
+    in directory: URL? = nil,
+    label: String
+) async throws -> String {
     let output = try await execute(executable, arguments, in: directory)
     guard output.success else {
         FileHandle.standardError.write(Data((output.stdout + output.stderr).utf8))
@@ -77,7 +86,9 @@ final class Progress: Sendable {
 
     func tick() {
         guard isTTY else { return }
-        let d = done.withLock { $0 += 1; return $0 }
+        let d = done.withLock {
+            $0 += 1; return $0
+        }
         let line = d >= total ? "\r\u{1B}[K" : "\r\(label)… \(d)/\(total)\u{1B}[K"
         FileHandle.standardError.write(Data(line.utf8))
     }
@@ -85,7 +96,9 @@ final class Progress: Sendable {
 
 /// Maps `items` with at most `limit` running at once, keeping their order.
 func concurrentMap<T: Sendable, R: Sendable>(
-    _ items: [T], limit: Int = ProcessInfo.processInfo.activeProcessorCount, _ transform: @escaping @Sendable (T) async -> R
+    _ items: [T],
+    limit: Int = ProcessInfo.processInfo.activeProcessorCount,
+    _ transform: @escaping @Sendable (T) async -> R
 ) async -> [R] {
     await withTaskGroup(of: (Int, R).self) { group in
         var results = [R?](repeating: nil, count: items.count)

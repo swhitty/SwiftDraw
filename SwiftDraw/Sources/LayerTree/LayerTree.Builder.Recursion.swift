@@ -139,7 +139,8 @@ extension LayerTree.Builder {
         // `baseline-shift` applies to the text content elements within <text> (as resvg, not to the
         // <text> itself), and those nested add up
         if element is DOM.TextSpan || element is DOM.TextPath,
-           let shift = state.baselineShift {
+            let shift = state.baselineShift
+        {
             state.baselineShifts.append(BaselineShiftEntry(shift: shift, fontSize: state.fontSize))
         }
         return state
@@ -164,7 +165,10 @@ extension LayerTree.Builder {
         let lookup = ContainerLookup(
             masks: Dictionary(svg.defs.masks.compactMap { m in m.id.map { ($0, m) } }, uniquingKeysWith: { a, _ in a }),
             patterns: Dictionary(svg.defs.patterns.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a }),
-            markers: Dictionary(svg.defs.markers.compactMap { m in m.id.map { ($0, m) } }, uniquingKeysWith: { a, _ in a })
+            markers: Dictionary(
+                svg.defs.markers.compactMap { m in m.id.map { ($0, m) } },
+                uniquingKeysWith: { a, _ in a }
+            )
         )
         var edges = [ReferencedContainer: [(Reference, ReferencedContainer)]]()
         func edgesOf(_ container: ReferencedContainer) -> [(Reference, ReferencedContainer)] {
@@ -203,7 +207,10 @@ extension LayerTree.Builder {
 
     /// The references to patterns, masks and markers made by the contents of `container`,
     /// including what the `<use>` elements there draw.
-    func makeReferences(in container: ReferencedContainer, lookup: ContainerLookup) -> [(Reference, ReferencedContainer)] {
+    func makeReferences(
+        in container: ReferencedContainer,
+        lookup: ContainerLookup
+    ) -> [(Reference, ReferencedContainer)] {
         let children: [DOM.GraphicsElement]
         let state: State
         switch container {
@@ -257,7 +264,7 @@ extension LayerTree.Builder {
             }
             if isShape {
                 let markers: [(DOM.URL?, Reference.Property)] = [
-                    (state.markerStart, .markerStart), (state.markerMid, .markerMid), (state.markerEnd, .markerEnd)
+                    (state.markerStart, .markerStart), (state.markerMid, .markerMid), (state.markerEnd, .markerEnd),
                 ]
                 for (url, property) in markers {
                     if let id = url?.fragmentID, lookup.markers[id] != nil {
@@ -270,13 +277,17 @@ extension LayerTree.Builder {
                 // a recursive use draws nothing, and the building guard limits the depth
                 let key = ObjectIdentifier(use)
                 guard !instance.contains(key), instance.count < Self.maxReferenceDepth, !isRecursive(use),
-                      let target = use.href.fragmentID.flatMap(svg.firstGraphicsElement) else { continue }
+                    let target = use.href.fragmentID.flatMap(svg.firstGraphicsElement)
+                else { continue }
                 stack.append(Item(element: target, state: state, instance: instance + [key], isUseTarget: true))
             } else if !(element is DOM.Symbol) || item.isUseTarget,
-                      let container = element as? any ContainerElement {
-                stack.append(contentsOf: container.childElements.reversed().map {
-                    Item(element: $0, state: state, instance: instance)
-                })
+                let container = element as? any ContainerElement
+            {
+                stack.append(
+                    contentsOf: container.childElements.reversed().map {
+                        Item(element: $0, state: state, instance: instance)
+                    }
+                )
             }
         }
         return references
@@ -303,7 +314,8 @@ extension LayerTree.Builder {
                     break search
                 }
                 if visited.insert(ObjectIdentifier(inner)).inserted,
-                   let target = inner.href.fragmentID.flatMap(svg.firstGraphicsElement) {
+                    let target = inner.href.fragmentID.flatMap(svg.firstGraphicsElement)
+                {
                     stack.append(target)
                 }
             } else if let container = element as? any ContainerElement {

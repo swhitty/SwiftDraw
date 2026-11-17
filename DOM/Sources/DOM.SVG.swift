@@ -53,7 +53,7 @@ package extension DOM {
             self.width = width
             self.height = height
         }
-        
+
         package struct ViewBox: Equatable {
             package var x: Coordinate
             package var y: Coordinate
@@ -67,7 +67,7 @@ package extension DOM {
                 self.height = height
             }
         }
-        
+
         package struct Defs {
             package var clipPaths = [ClipPath]()
             package var linearGradients = [LinearGradient]()
@@ -82,7 +82,7 @@ package extension DOM {
             package var elements = [String: GraphicsElement]()
         }
     }
-    
+
     struct ClipPath: ContainerElement {
         package var id: String
         package var `class`: String?
@@ -102,7 +102,7 @@ package extension DOM {
             case objectBoundingBox
         }
     }
-    
+
     final class Mask: GraphicsElement, ContainerElement {
         package var childElements = [GraphicsElement]()
 
@@ -123,7 +123,7 @@ package extension DOM {
             self.childElements = childElements
         }
     }
-    
+
     struct StyleSheet {
 
         package enum Selector: Hashable, Comparable {
@@ -131,7 +131,7 @@ package extension DOM {
             case element(String)
             case `class`(String)
         }
-        
+
         package var attributes: [Selector: PresentationAttributes] = [:]
         package var fonts: [DOM.FontFace] = []
         // every rule in source order, including selectors `attributes` cannot key

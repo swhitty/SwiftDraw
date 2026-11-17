@@ -30,6 +30,31 @@ It runs `swift test` in a `swift:6.4` container (Apple's `container` tool, as CI
 SWIFT_VERSION=6.2 ./container-run-tests.sh
 ``` Tests that must run everywhere should go through `DOM.SVG.parse` and `LayerTree` (with `LayerTreeProvider`) rather than `SVG(data:)`.
 
+### Formatting
+
+The layout is set by `.swift-format`, for the `swift format` command that ships with Swift. Format the files you changed before committing, or everything with:
+
+```bash
+swift format format --in-place --recursive .
+```
+
+`swift format lint --strict --recursive .` lists anything left over, such as an end-of-line comment that pushes its line past the limit; move the comment onto its own line.
+
+- Indent with 4 spaces, never tabs (`.editorconfig` sets this for editors). Lines are at most 120 characters.
+- When a call, signature or collection literal doesn't fit on one line, put each argument on its own line and the closing bracket on a line of its own:
+
+  ```swift
+  func renderCommands(
+      for shape: Shape,
+      stroke: StrokeAttributes
+  ) -> [RendererCommand<P.Types>] {
+  ```
+
+- Don't write `self.` where Swift doesn't need it. Inside an `init`, always use `self.` for the type's own properties and methods. `swift format` doesn't check this, so follow it by hand.
+- Code inside a multi-line string literal, such as generated Swift or SVG test input, keeps its own indentation.
+
+`.git-blame-ignore-revs` lists the commits that only reformatted code. Run `git config blame.ignoreRevsFile .git-blame-ignore-revs` once so `git blame` skips them; GitHub's blame view skips them automatically.
+
 ### Locking
 
 Guard shared mutable state with `Mutex` (`DOM/Sources/Mutex.swift`, `package` in SwiftDrawDOM), not `NSLock`, `os_unfair_lock`, `DispatchQueue` or `@unchecked Sendable` with a hand-rolled lock. Keep the state inside the mutex (`Mutex(State())` and `withLock { $0… }`) so it can't be read without holding the lock, and a class holding only a `Mutex` and immutable properties can be plain `Sendable`. It backports `Synchronization.Mutex` on Darwin and is `Synchronization.Mutex` elsewhere, so on Linux a file that calls `withLock` must import `Synchronization` itself:

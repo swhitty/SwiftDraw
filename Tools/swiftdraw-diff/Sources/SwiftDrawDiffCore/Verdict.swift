@@ -76,11 +76,15 @@ public enum CompareCategory: String, Codable, Sendable, CaseIterable {
     ///   - tolerance: percentage points a score may move before it counts.
     ///   - missingReference: a second reference was expected but `deltas` lacks it.
     public static func of(
-        baseRendered: Bool, headRendered: Bool,
-        deltas: [Double], pixelsChanged: Int, tolerance: Double, missingReference: Bool = false
+        baseRendered: Bool,
+        headRendered: Bool,
+        deltas: [Double],
+        pixelsChanged: Int,
+        tolerance: Double,
+        missingReference: Bool = false
     ) -> CompareCategory {
         switch (baseRendered, headRendered) {
-        case (false, false): return .unchanged // e.g. an intentionally invalid SVG
+        case (false, false): return .unchanged  // e.g. an intentionally invalid SVG
         case (true, false): return .regressed
         case (false, true): return .improved
         case (true, true): break

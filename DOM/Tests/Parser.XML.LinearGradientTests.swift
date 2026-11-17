@@ -29,7 +29,6 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-
 import Foundation
 
 @testable import SwiftDrawDOM
@@ -51,13 +50,16 @@ struct ParserXMLLinearGradientTests {
 
     @Test
     func parseCoordinatesWithPercentage() throws {
-        let element = XML.Element(name: "linearGradient", attributes: [
-            "id": "a",
-            "x1": "3.309%",
-            "y1": "28.41%",
-            "x2": "103.216%",
-            "y2": "64.511%"
-        ])
+        let element = XML.Element(
+            name: "linearGradient",
+            attributes: [
+                "id": "a",
+                "x1": "3.309%",
+                "y1": "28.41%",
+                "x2": "103.216%",
+                "y2": "64.511%",
+            ]
+        )
         let gradient = try XMLParser().parseLinearGradient(element)
         #expect(abs((gradient.x1 ?? 0) - 0.03309) < 0.0001)
         #expect(abs((gradient.y1 ?? 0) - 0.2841) < 0.0001)
@@ -67,13 +69,16 @@ struct ParserXMLLinearGradientTests {
 
     @Test
     func parseCoordinatesWithoutPercentage() throws {
-        let element = XML.Element(name: "linearGradient", attributes: [
-            "id": "b",
-            "x1": "0",
-            "y1": "0.5",
-            "x2": "1",
-            "y2": "0.5"
-        ])
+        let element = XML.Element(
+            name: "linearGradient",
+            attributes: [
+                "id": "b",
+                "x1": "0",
+                "y1": "0.5",
+                "x2": "1",
+                "y2": "0.5",
+            ]
+        )
         let gradient = try XMLParser().parseLinearGradient(element)
         #expect(gradient.x1 == 0)
         #expect(gradient.y1 == 0.5)
@@ -83,27 +88,35 @@ struct ParserXMLLinearGradientTests {
 
     @Test
     func parseSpreadMethod() throws {
-        let a = try XMLParser().parseLinearGradient(XML.Element(name: "linearGradient", attributes: ["id": "a", "spreadMethod": "reflect"]))
+        let a = try XMLParser().parseLinearGradient(
+            XML.Element(name: "linearGradient", attributes: ["id": "a", "spreadMethod": "reflect"])
+        )
         #expect(a.spreadMethod == .reflect)
-        let b = try XMLParser().parseRadialGradient(XML.Element(name: "radialGradient", attributes: ["id": "b", "spreadMethod": "repeat"]))
+        let b = try XMLParser().parseRadialGradient(
+            XML.Element(name: "radialGradient", attributes: ["id": "b", "spreadMethod": "repeat"])
+        )
         #expect(b.spreadMethod == .repeat)
-        let c = try XMLParser().parseLinearGradient(XML.Element(name: "linearGradient", attributes: ["id": "c", "spreadMethod": "sideways"]))
+        let c = try XMLParser().parseLinearGradient(
+            XML.Element(name: "linearGradient", attributes: ["id": "c", "spreadMethod": "sideways"])
+        )
         #expect(c.spreadMethod == nil)
     }
 
     @Test
     func stopOffsetAndOpacityAreClamped() throws {
-        let svg = try DOM.SVG.parse(xml: """
-        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10">
-          <linearGradient id="a">
-            <stop offset="150%" stop-opacity="1.5"/><stop offset="-0.5" stop-opacity="-1"/><stop offset="40%" stop-opacity="50%"/>
-            <stop offset=" 0.25 " stop-opacity="junk"/>
-          </linearGradient>
-          <radialGradient id="b">
-            <stop offset="2" stop-opacity="200%"/>
-          </radialGradient>
-        </svg>
-        """)
+        let svg = try DOM.SVG.parse(
+            xml: """
+                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10">
+                  <linearGradient id="a">
+                    <stop offset="150%" stop-opacity="1.5"/><stop offset="-0.5" stop-opacity="-1"/><stop offset="40%" stop-opacity="50%"/>
+                    <stop offset=" 0.25 " stop-opacity="junk"/>
+                  </linearGradient>
+                  <radialGradient id="b">
+                    <stop offset="2" stop-opacity="200%"/>
+                  </radialGradient>
+                </svg>
+                """
+        )
         let stops = svg.defs.linearGradients.first?.stops ?? []
         #expect(stops.map(\.offset) == [1, 0, 0.4, 0.25])
         #expect(stops.map(\.opacity) == [1, 0, 0.5, 1])

@@ -87,9 +87,11 @@ extension XMLParser {
         return node
     }
 
-    func parsePrimitives(_ children: ArraySlice<XML.Element>,
-                         context: PrimitiveContext,
-                         skippingPrelude: Bool) throws -> [DOM.Filter.Primitive] {
+    func parsePrimitives(
+        _ children: ArraySlice<XML.Element>,
+        context: PrimitiveContext,
+        skippingPrelude: Bool
+    ) throws -> [DOM.Filter.Primitive] {
         var children = children
         // the source graphic stands in for the blend's result until a later primitive reuses its name
         var sourceAlias: String?
@@ -121,14 +123,15 @@ extension XMLParser {
         let flood = primitives[primitives.startIndex]
         let blend = primitives[primitives.startIndex + 1]
         guard flood.name == "feFlood", blend.name == "feBlend",
-              let floodResult = flood.attributes["result"],
-              let floodAtt = try? parseAttributes(flood),
-              let opacity = try? floodAtt.parsePercentage("flood-opacity") as DOM.Float?,
-              opacity == 0,
-              blend.attributes["in"] == "SourceGraphic",
-              blend.attributes["in2"] == floodResult,
-              (blend.attributes["mode"] ?? "normal") == "normal",
-              ["x", "y", "width", "height"].allSatisfy({ blend.attributes[$0] == nil }) else {
+            let floodResult = flood.attributes["result"],
+            let floodAtt = try? parseAttributes(flood),
+            let opacity = try? floodAtt.parsePercentage("flood-opacity") as DOM.Float?,
+            opacity == 0,
+            blend.attributes["in"] == "SourceGraphic",
+            blend.attributes["in2"] == floodResult,
+            (blend.attributes["mode"] ?? "normal") == "normal",
+            ["x", "y", "width", "height"].allSatisfy({ blend.attributes[$0] == nil })
+        else {
             return false
         }
         // the flood is dropped with the blend, so nothing after them may read it
@@ -204,7 +207,11 @@ extension XMLParser {
     }
 
     // flood-color and flood-opacity are not inherited, but an explicit `inherit` takes the <filter>'s
-    func inheritingFlood(_ effect: DOM.Filter.Effect, _ att: any AttributeParser, context: PrimitiveContext) -> DOM.Filter.Effect {
+    func inheritingFlood(
+        _ effect: DOM.Filter.Effect,
+        _ att: any AttributeParser,
+        context: PrimitiveContext
+    ) -> DOM.Filter.Effect {
         func isInherit(_ key: String) -> Bool {
             (try? att.parseString(key))?.trimmingCharacters(in: .whitespaces) == "inherit"
         }
@@ -249,8 +256,10 @@ extension XMLParser {
             return .gaussianBlur(stdDeviation: x, stdDeviationY: y)
         case "feOffset":
             let att: any AttributeParser = try parseAttributes(e)
-            return .offset(dx: parseFiniteFloat(att, "dx") ?? 0,
-                           dy: parseFiniteFloat(att, "dy") ?? 0)
+            return .offset(
+                dx: parseFiniteFloat(att, "dx") ?? 0,
+                dy: parseFiniteFloat(att, "dy") ?? 0
+            )
         case "feFlood":
             let att: any AttributeParser = try parseAttributes(e)
             return .flood(color: parseFloodColor(att), opacity: parseClampedFraction(att, "flood-opacity") ?? 1)
@@ -260,14 +269,16 @@ extension XMLParser {
             let values: [DOM.Float]? = (try? att.parseFloats("stdDeviation")).flatMap { values in
                 values.isEmpty || values.count > 2 || !values.allSatisfy(\.isFinite) ? nil : values
             }
-            return .dropShadow(DOM.Filter.DropShadow(
-                dx: parseFiniteFloat(att, "dx") ?? 2,
-                dy: parseFiniteFloat(att, "dy") ?? 2,
-                stdDeviation: values?[0] ?? 2,
-                stdDeviationY: values.flatMap { $0.count > 1 ? $0[1] : nil },
-                color: parseFloodColor(att),
-                opacity: parseClampedFraction(att, "flood-opacity") ?? 1
-            ))
+            return .dropShadow(
+                DOM.Filter.DropShadow(
+                    dx: parseFiniteFloat(att, "dx") ?? 2,
+                    dy: parseFiniteFloat(att, "dy") ?? 2,
+                    stdDeviation: values?[0] ?? 2,
+                    stdDeviationY: values.flatMap { $0.count > 1 ? $0[1] : nil },
+                    color: parseFloodColor(att),
+                    opacity: parseClampedFraction(att, "flood-opacity") ?? 1
+                )
+            )
         case "feComposite":
             let att: any AttributeParser = try parseAttributes(e)
             return .composite(parseCompositeOperator(att))
@@ -290,9 +301,11 @@ extension XMLParser {
                 values = []
             }
             let op: DOM.Filter.MorphologyOperator? = try? att.parseRaw("operator")
-            return .morphology(op ?? .erode,
-                               radius: values.first ?? 0,
-                               radiusY: values.count > 1 ? values[1] : nil)
+            return .morphology(
+                op ?? .erode,
+                radius: values.first ?? 0,
+                radiusY: values.count > 1 ? values[1] : nil
+            )
         case "feTurbulence":
             return .turbulence(try parseTurbulence(e))
         case "feConvolveMatrix":
@@ -300,10 +313,13 @@ extension XMLParser {
         case "feImage":
             let att: any AttributeParser = try parseAttributes(e)
             // SVG 2 href, falling back to xlink:href; image-rendering is inherited, so set by parsePrimitive
-            return .image(DOM.Filter.Image(
-                href: try? att.parseHref(),
-                preserveAspectRatio: parsePreserveAspectRatio(try? att.parseString("preserveAspectRatio")) ?? .default
-            ))
+            return .image(
+                DOM.Filter.Image(
+                    href: try? att.parseHref(),
+                    preserveAspectRatio: parsePreserveAspectRatio(try? att.parseString("preserveAspectRatio"))
+                        ?? .default
+                )
+            )
         default:
             guard e.name.hasPrefix("fe") else { return nil }
             return .unsupported(name: e.name)
@@ -345,10 +361,12 @@ extension XMLParser {
         case "lighter":
             return .lighter
         case "arithmetic":
-            return .arithmetic(k1: parseFiniteFloat(att, "k1") ?? 0,
-                               k2: parseFiniteFloat(att, "k2") ?? 0,
-                               k3: parseFiniteFloat(att, "k3") ?? 0,
-                               k4: parseFiniteFloat(att, "k4") ?? 0)
+            return .arithmetic(
+                k1: parseFiniteFloat(att, "k1") ?? 0,
+                k2: parseFiniteFloat(att, "k2") ?? 0,
+                k3: parseFiniteFloat(att, "k3") ?? 0,
+                k4: parseFiniteFloat(att, "k4") ?? 0
+            )
         default:
             return .over
         }
@@ -357,10 +375,12 @@ extension XMLParser {
     // Filter Effects 1 §9.6: missing values take the type's default; a wrong number of values is a pass through.
     // An unknown type is the initial `matrix`, so its values still apply, as in resvg and WebKit.
     func parseColorMatrix(_ att: any AttributeParser) -> DOM.Filter.ColorMatrix {
-        let identity: [DOM.Float] = [1, 0, 0, 0, 0,
-                                     0, 1, 0, 0, 0,
-                                     0, 0, 1, 0, 0,
-                                     0, 0, 0, 1, 0]
+        let identity: [DOM.Float] = [
+            1, 0, 0, 0, 0,
+            0, 1, 0, 0, 0,
+            0, 0, 1, 0, 0,
+            0, 0, 0, 1, 0,
+        ]
         let type = (try? att.parseString("type"))?.trimmingCharacters(in: .whitespaces) ?? "matrix"
         let values: [DOM.Float]? = (try? att.parseFloats("values")).flatMap { values in
             values.allSatisfy(\.isFinite) ? values : []
@@ -421,7 +441,11 @@ extension XMLParser {
         case "linear":
             return .linear(slope: number("slope", 1), intercept: number("intercept", 0))
         case "gamma":
-            return .gamma(amplitude: number("amplitude", 1), exponent: number("exponent", 1), offset: number("offset", 0))
+            return .gamma(
+                amplitude: number("amplitude", 1),
+                exponent: number("exponent", 1),
+                offset: number("offset", 0)
+            )
         default:
             return .identity
         }
@@ -442,12 +466,14 @@ extension XMLParser {
         }
         let type: DOM.Filter.TurbulenceType? = try? att.parseRaw("type")
         let stitch = (try? att.parseString("stitchTiles"))?.trimmingCharacters(in: .whitespaces) == "stitch"
-        return DOM.Filter.Turbulence(baseFrequencyX: frequency[0],
-                                     baseFrequencyY: frequency.count > 1 ? frequency[1] : frequency[0],
-                                     numOctaves: octaves,
-                                     seed: parseFiniteFloat(att, "seed") ?? 0,
-                                     type: type ?? .turbulence,
-                                     stitchTiles: stitch)
+        return DOM.Filter.Turbulence(
+            baseFrequencyX: frequency[0],
+            baseFrequencyY: frequency.count > 1 ? frequency[1] : frequency[0],
+            numOctaves: octaves,
+            seed: parseFiniteFloat(att, "seed") ?? 0,
+            type: type ?? .turbulence,
+            stitchTiles: stitch
+        )
     }
 
     // Filter Effects 1 §9.9: order is one or two positive integers, initially 3; anything else is an error
@@ -458,7 +484,8 @@ extension XMLParser {
         var matrix = DOM.Filter.ConvolveMatrix()
         if let order = try? att.parseString("order") {
             let values = (try? att.parser.parseFloats(order)) ?? []
-            let isValid = (1...2).contains(values.count) && values.allSatisfy { $0 >= 1 && $0 <= 1_000_000 && $0 == $0.rounded() }
+            let isValid =
+                (1...2).contains(values.count) && values.allSatisfy { $0 >= 1 && $0 <= 1_000_000 && $0 == $0.rounded() }
             matrix.orderX = isValid ? Int(values[0]) : 0
             matrix.orderY = isValid ? Int(values.count > 1 ? values[1] : values[0]) : 0
         }
@@ -487,11 +514,14 @@ extension XMLParser {
         let key = "color-interpolation-filters"
         var value = e.attributes[key]
         if let style = e.attributes["style"], style.contains(key),
-           let declared = try? parseStyleAttributes(style)[key] {
+            let declared = try? parseStyleAttributes(style)[key]
+        {
             value = declared
         }
         guard let value else { return nil }
-        return DOM.Filter.ColorInterpolation(rawValue: Attributes.removingImportant(from: value).trimmingCharacters(in: .whitespaces))
+        return DOM.Filter.ColorInterpolation(
+            rawValue: Attributes.removingImportant(from: value).trimmingCharacters(in: .whitespaces)
+        )
     }
 
     // image-rendering (CSS Images 3 §5.3, SVG 1.1 §15.16): true for the keywords that sample the nearest pixel,
@@ -501,7 +531,8 @@ extension XMLParser {
         let key = "image-rendering"
         var value = e.attributes[key]
         if let style = e.attributes["style"], style.contains(key),
-           let declared = try? parseStyleAttributes(style)[key] {
+            let declared = try? parseStyleAttributes(style)[key]
+        {
             value = declared
         }
         guard let value else { return nil }

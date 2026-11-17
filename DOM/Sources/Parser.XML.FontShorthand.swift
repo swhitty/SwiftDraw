@@ -108,17 +108,22 @@ extension XMLParser {
         return longhands(style: style ?? "normal", weight: weight ?? "normal", size: size, family: family)
     }
 
-    private static func longhands(style: String, weight: String, size: String, family: String) -> [(name: String, value: String)] {
+    private static func longhands(
+        style: String,
+        weight: String,
+        size: String,
+        family: String
+    ) -> [(name: String, value: String)] {
         [("font-style", style), ("font-weight", weight), ("font-size", size), ("font-family", family)]
     }
 
     private static let systemFontKeywords: Set<String> = [
-        "caption", "icon", "menu", "message-box", "small-caption", "status-bar"
+        "caption", "icon", "menu", "message-box", "small-caption", "status-bar",
     ]
 
     private static let stretchKeywords: Set<String> = [
         "ultra-condensed", "extra-condensed", "condensed", "semi-condensed",
-        "semi-expanded", "expanded", "extra-expanded", "ultra-expanded"
+        "semi-expanded", "expanded", "extra-expanded", "ultra-expanded",
     ]
 
     private static func isWeight(_ word: String) -> Bool {

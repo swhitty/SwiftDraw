@@ -58,10 +58,10 @@ extension LayerTree.Shape {
         case .path(let p):
             return p.bounds
         case .rect(within: let rect, _),
-             .ellipse(within: let rect):
+            .ellipse(within: let rect):
             return rect
         case .polygon(between: let points),
-             .line(between: let points):
+            .line(between: let points):
             return .makeBounds(between: points)
         }
     }
@@ -86,14 +86,15 @@ extension LayerTree.Path {
 
     static func makeLine(between points: [LayerTree.Point]) -> LayerTree.Path {
         guard let first = points.first else { return .init() }
-        let segments = [LayerTree.Path.Segment.move(to: first)] +
-        points.dropFirst().map(LayerTree.Path.Segment.line)
+        let segments = [LayerTree.Path.Segment.move(to: first)] + points.dropFirst().map(LayerTree.Path.Segment.line)
 
         return .init(segments)
     }
 
-    static func makeRect(within rect: LayerTree.Rect,
-                         radii: LayerTree.Size) -> LayerTree.Path {
+    static func makeRect(
+        within rect: LayerTree.Rect,
+        radii: LayerTree.Size
+    ) -> LayerTree.Path {
         if radii == .zero {
             let path = LayerTree.Path()
             path.move(to: .init(rect.maxX, rect.minY))
@@ -141,15 +142,17 @@ private extension LayerTree.Path {
 
     func arc(to point: LayerTree.Point, large: Bool = false, radii: LayerTree.Size) {
         guard let location = location else { return }
-        segments.append(contentsOf: LayerTree.Builder.makeArc(
-            from: location,
-            to: point,
-            large: large,
-            sweep: true,
-            rx: radii.width,
-            ry: radii.height,
-            rotation: 0
-        ))
+        segments.append(
+            contentsOf: LayerTree.Builder.makeArc(
+                from: location,
+                to: point,
+                large: large,
+                sweep: true,
+                rx: radii.width,
+                ry: radii.height,
+                rotation: 0
+            )
+        )
     }
 }
 

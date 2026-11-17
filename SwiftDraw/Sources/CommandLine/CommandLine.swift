@@ -31,4 +31,4 @@
 
 import Foundation
 
-public enum CommandLine { /* namespace */ }
+public enum CommandLine { /* namespace */  }

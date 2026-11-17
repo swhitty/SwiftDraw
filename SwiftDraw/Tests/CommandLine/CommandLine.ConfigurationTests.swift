@@ -263,8 +263,12 @@ final class CommandLineConfigurationTests: XCTestCase {
 
     func testParseConfigurationUltralightStrokeWidth() throws {
         let config = try parseConfiguration(
-            "swiftdraw", "file.svg", "--format", "sfsymbol",
-            "--ultralight-stroke-width", "50%"
+            "swiftdraw",
+            "file.svg",
+            "--format",
+            "sfsymbol",
+            "--ultralight-stroke-width",
+            "50%"
         )
         XCTAssertEqual(config.ultralightStrokeScale?.multiplier, 0.5)
         XCTAssertNil(config.blackStrokeScale)
@@ -272,8 +276,12 @@ final class CommandLineConfigurationTests: XCTestCase {
 
     func testParseConfigurationBlackStrokeWidth() throws {
         let config = try parseConfiguration(
-            "swiftdraw", "file.svg", "--format", "sfsymbol",
-            "--black-stroke-width", "2"
+            "swiftdraw",
+            "file.svg",
+            "--format",
+            "sfsymbol",
+            "--black-stroke-width",
+            "2"
         )
         XCTAssertEqual(config.blackStrokeScale?.multiplier, 2.0)
         XCTAssertNil(config.ultralightStrokeScale)
@@ -282,14 +290,22 @@ final class CommandLineConfigurationTests: XCTestCase {
     func testParseConfigurationStrokeWidthInvalid() {
         XCTAssertThrowsError(
             try parseConfiguration(
-                "swiftdraw", "file.svg", "--format", "sfsymbol",
-                "--ultralight-stroke-width", "abc"
+                "swiftdraw",
+                "file.svg",
+                "--format",
+                "sfsymbol",
+                "--ultralight-stroke-width",
+                "abc"
             )
         )
         XCTAssertThrowsError(
             try parseConfiguration(
-                "swiftdraw", "file.svg", "--format", "sfsymbol",
-                "--black-stroke-width", "0"
+                "swiftdraw",
+                "file.svg",
+                "--format",
+                "sfsymbol",
+                "--black-stroke-width",
+                "0"
             )
         )
     }

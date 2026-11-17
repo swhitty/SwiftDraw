@@ -113,8 +113,10 @@ extension LayerTree.Path {
             }
             let line = lines[low]
             let t = min(max((distance - line.offset) / line.length, 0), 1)
-            let point = Point(line.start.x + (line.end.x - line.start.x) * t,
-                              line.start.y + (line.end.y - line.start.y) * t)
+            let point = Point(
+                line.start.x + (line.end.x - line.start.x) * t,
+                line.start.y + (line.end.y - line.start.y) * t
+            )
             let angle = atan2(line.end.y - line.start.y, line.end.x - line.start.x)
             return (point, angle)
         }
@@ -125,8 +127,10 @@ extension LayerTree.Path {
             let b = 3 * mt * mt * t
             let c = 3 * mt * t * t
             let d = t * t * t
-            return Point(a * p0.x + b * p1.x + c * p2.x + d * p3.x,
-                         a * p0.y + b * p1.y + c * p2.y + d * p3.y)
+            return Point(
+                a * p0.x + b * p1.x + c * p2.x + d * p3.x,
+                a * p0.y + b * p1.y + c * p2.y + d * p3.y
+            )
         }
     }
 }

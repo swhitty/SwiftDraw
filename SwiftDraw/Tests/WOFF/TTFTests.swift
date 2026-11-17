@@ -41,68 +41,68 @@ struct TTFTests {
     @Test
     func parses_TTF_from_Roboto() throws {
         let ttf = try TTF(contentsOf: Bundle.test.url(forResource: "Roboto-Regular.ttf"))
-        
+
         #expect(ttf.header.numTables > 0)
         #expect(!ttf.tables.isEmpty)
         #expect(ttf.fontData.count > 0)
     }
-    
+
     @Test
     func extracts_postscript_name_from_Roboto_TTF() throws {
         let ttf = try TTF(contentsOf: Bundle.test.url(forResource: "Roboto-Regular.ttf"))
-        
+
         #expect(ttf.postScriptName == "RobotoRegular")
     }
-    
+
     @Test
     func parses_OTF_from_SourceCodePro() throws {
         let otf = try TTF(contentsOf: Bundle.test.url(forResource: "SourceCodePro-Regular.otf"))
-        
-        #expect(otf.header.sfntVersion == 0x4F54544F) // "OTTO"
+
+        #expect(otf.header.sfntVersion == 0x4F54544F)  // "OTTO"
         #expect(otf.header.numTables > 0)
         #expect(!otf.tables.isEmpty)
     }
-    
+
     @Test
     func extracts_postscript_name_from_SourceCodePro_OTF() throws {
         let otf = try TTF(contentsOf: Bundle.test.url(forResource: "SourceCodePro-Regular.otf"))
-        
+
         #expect(otf.postScriptName == "SourceCodePro-Regular")
     }
-    
+
     @Test
     func throws_on_invalid_data() {
         let invalidData = Data([0x00, 0x01, 0x02, 0x03])
-        
+
         #expect(throws: TTFError.self) {
             try TTF(data: invalidData)
         }
     }
-    
+
     @Test
     func throws_on_empty_data() {
         let emptyData = Data()
-        
+
         #expect(throws: TTFError.self) {
             try TTF(data: emptyData)
         }
     }
 
-#if canImport(CoreGraphics)
+    #if canImport(CoreGraphics)
     @Test
     func makes_CGFont_from_Roboto_TTF() throws {
         let ttf = try TTF(contentsOf: Bundle.test.url(forResource: "Roboto-Regular.ttf"))
         let cgFont = try ttf.makeCGFont()
-        
+
         #expect(cgFont.postScriptName == "RobotoRegular" as CFString)
     }
-    
+
     @Test
     func makes_CGFont_from_SourceCodePro_OTF() throws {
         let ttf = try TTF(contentsOf: Bundle.test.url(forResource: "SourceCodePro-Regular.otf"))
         let cgFont = try ttf.makeCGFont()
-        
+
         #expect(cgFont.postScriptName == "SourceCodePro-Regular" as CFString)
     }
-#endif
+    #endif
 }

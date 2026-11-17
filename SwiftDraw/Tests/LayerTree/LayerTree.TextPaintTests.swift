@@ -35,10 +35,10 @@ import Testing
 struct LayerTreeTextPaintTests {
 
     static let defs = """
-    <linearGradient id="lg"><stop offset="0" stop-color="white" /><stop offset="1" stop-color="black" /></linearGradient>
-    <radialGradient id="rg"><stop offset="0" stop-color="white" /><stop offset="1" stop-color="black" /></radialGradient>
-    <pattern id="pt" width="4" height="4" patternUnits="userSpaceOnUse"><rect width="2" height="2" fill="green" /></pattern>
-    """
+        <linearGradient id="lg"><stop offset="0" stop-color="white" /><stop offset="1" stop-color="black" /></linearGradient>
+        <radialGradient id="rg"><stop offset="0" stop-color="white" /><stop offset="1" stop-color="black" /></radialGradient>
+        <pattern id="pt" width="4" height="4" patternUnits="userSpaceOnUse"><rect width="2" height="2" fill="green" /></pattern>
+        """
 
     @Test
     func solidFillStaysText() throws {
@@ -62,25 +62,35 @@ struct LayerTreeTextPaintTests {
 
     @Test
     func clipPathTextIgnoresStrokeAndPaintServers() throws {
-        let svg = try DOM.SVG.parse(xml: """
-        <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">
-            <defs>\(Self.defs)<clipPath id="c"><text x="10" y="50" fill="url(#lg)" stroke="red">Text</text></clipPath></defs>
-            <rect width="100" height="100" clip-path="url(#c)" />
-        </svg>
-        """)
+        let svg = try DOM.SVG.parse(
+            xml: """
+                <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">
+                    <defs>\(Self.defs)<clipPath id="c"><text x="10" y="50" fill="url(#lg)" stroke="red">Text</text></clipPath></defs>
+                    <rect width="100" height="100" clip-path="url(#c)" />
+                </svg>
+                """
+        )
         let layer = LayerTree.Builder(svg: svg).makeLayer()
         let masks = layer.allLayers.compactMap(\.mask).flatMap(\.allContents)
         // the clip is the white text itself, never painted outlines
-        #expect(masks.contains { if case .text(_, _, let a) = $0 { return a.color == .white }; return false })
-        #expect(!masks.contains { if case .shape = $0 { return true }; return false })
+        #expect(
+            masks.contains {
+                if case .text(_, _, let a) = $0 { return a.color == .white }; return false
+            }
+        )
+        #expect(
+            !masks.contains {
+                if case .shape = $0 { return true }; return false
+            }
+        )
     }
 
-#if canImport(CoreText)
+    #if canImport(CoreText)
     @Test(arguments: [
         ("url(#lg)", "linear"),
         ("url(#rg)", "radial"),
         ("url(#pt)", "pattern"),
-        ("url(#lg) red", "linear")
+        ("url(#lg) red", "linear"),
     ])
     func paintServerFillIsOutlined(_ fill: String, _ kind: String) throws {
         let contents = try makeContents(#"fill="\#(fill)" fill-opacity="0.5""#)
@@ -102,7 +112,9 @@ struct LayerTreeTextPaintTests {
 
     @Test
     func strokedTextIsOutlined() throws {
-        let contents = try makeContents(#"fill="none" stroke="green" stroke-width="3" stroke-opacity="0.5" stroke-dasharray="2 1" stroke-linejoin="round""#)
+        let contents = try makeContents(
+            #"fill="none" stroke="green" stroke-width="3" stroke-opacity="0.5" stroke-dasharray="2 1" stroke-linejoin="round""#
+        )
         guard case .shape(.path, let stroke, let fill) = contents else {
             Issue.record("expected outlines, got \(contents)")
             return
@@ -138,28 +150,44 @@ struct LayerTreeTextPaintTests {
 
     @Test
     func outlinedTextIsPaintedWithTheGradient() throws {
-        let svg = try DOM.SVG.parse(xml: """
-        <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">
-            <defs>\(Self.defs)</defs>
-            <text x="10" y="50" font-size="40" fill="url(#lg)" stroke="black">Text</text>
-        </svg>
-        """)
-        let generator = LayerTree.CommandGenerator(provider: LayerTreeProvider(), size: .init(100, 100), options: .default)
+        let svg = try DOM.SVG.parse(
+            xml: """
+                <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">
+                    <defs>\(Self.defs)</defs>
+                    <text x="10" y="50" font-size="40" fill="url(#lg)" stroke="black">Text</text>
+                </svg>
+                """
+        )
+        let generator = LayerTree.CommandGenerator(
+            provider: LayerTreeProvider(),
+            size: .init(100, 100),
+            options: .default
+        )
         let commands = generator.renderCommands(for: LayerTree.Builder(svg: svg).makeLayer(), colorConverter: .default)
-        let gradient = try #require(commands.firstIndex { if case .drawLinearGradient = $0 { return true }; return false })
-        let stroke = try #require(commands.firstIndex { if case .stroke = $0 { return true }; return false })
+        let gradient = try #require(
+            commands.firstIndex {
+                if case .drawLinearGradient = $0 { return true }; return false
+            }
+        )
+        let stroke = try #require(
+            commands.firstIndex {
+                if case .stroke = $0 { return true }; return false
+            }
+        )
         // fill, then stroke
         #expect(gradient < stroke)
     }
-#endif
+    #endif
 
     func makeContents(_ attributes: String) throws -> LayerTree.Layer.Contents {
-        let svg = try DOM.SVG.parse(xml: """
-        <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">
-            <defs>\(Self.defs)</defs>
-            <text x="10" y="50" font-size="40" \(attributes)>Text</text>
-        </svg>
-        """)
+        let svg = try DOM.SVG.parse(
+            xml: """
+                <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">
+                    <defs>\(Self.defs)</defs>
+                    <text x="10" y="50" font-size="40" \(attributes)>Text</text>
+                </svg>
+                """
+        )
         let layer = LayerTree.Builder(svg: svg).makeLayer()
         return try #require(layer.allContents.first)
     }
@@ -177,9 +205,10 @@ private extension LayerTree.Layer {
 
     /// This layer, its sublayers and their masks.
     var allLayers: [LayerTree.Layer] {
-        [self] + (mask?.allLayers ?? []) + contents.flatMap { contents -> [LayerTree.Layer] in
-            if case .layer(let l) = contents { return l.allLayers }
-            return []
-        }
+        [self] + (mask?.allLayers ?? [])
+            + contents.flatMap { contents -> [LayerTree.Layer] in
+                if case .layer(let l) = contents { return l.allLayers }
+                return []
+            }
     }
 }

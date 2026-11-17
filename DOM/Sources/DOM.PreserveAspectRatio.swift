@@ -73,8 +73,10 @@ package extension DOM {
         /// Fits `content` into `viewport`, returning the uniform or (for `none`) non-uniform scale and the
         /// translation applied after scaling, both in viewport units: `viewport = content * scale + offset`.
         package func fit(
-            contentWidth: Float, contentHeight: Float,
-            viewportWidth: Float, viewportHeight: Float
+            contentWidth: Float,
+            contentHeight: Float,
+            viewportWidth: Float,
+            viewportHeight: Float
         ) -> (sx: Float, sy: Float, tx: Float, ty: Float) {
             var sx = viewportWidth / contentWidth
             var sy = viewportHeight / contentHeight
@@ -84,9 +86,11 @@ package extension DOM {
                 sy = s
             }
             let a = alignment
-            return (sx, sy,
-                    (viewportWidth - contentWidth * sx) * a.x,
-                    (viewportHeight - contentHeight * sy) * a.y)
+            return (
+                sx, sy,
+                (viewportWidth - contentWidth * sx) * a.x,
+                (viewportHeight - contentHeight * sy) * a.y
+            )
         }
     }
 }

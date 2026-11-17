@@ -81,7 +81,8 @@ struct ParserSVGImageTests {
     func starry() throws {
         let svg = try DOM.SVG.parse(fileNamed: "starry.svg", in: .test)
         guard let g = svg.childElements.first as? DOM.Group,
-              let g1 = g.childElements.first as? DOM.Group else {
+            let g1 = g.childElements.first as? DOM.Group
+        else {
             Issue.record("missing group")
             return
         }

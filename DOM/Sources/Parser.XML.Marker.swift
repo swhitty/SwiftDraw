@@ -29,7 +29,6 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-
 import Foundation
 
 extension XMLParser {
@@ -74,7 +73,7 @@ extension XMLParser {
         }
 
         let units: [(suffix: String, degrees: Double)] = [
-            ("deg", 1), ("grad", 0.9), ("rad", 180 / .pi), ("turn", 360)
+            ("deg", 1), ("grad", 0.9), ("rad", 180 / .pi), ("turn", 360),
         ]
         var number = Substring(text)
         var scale = 1.0

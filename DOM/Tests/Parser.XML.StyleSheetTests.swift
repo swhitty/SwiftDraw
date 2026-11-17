@@ -49,7 +49,7 @@ struct ParserXMLStyleSheetTests {
                 .class("g"),
                 .element("circle"),
                 .element("g"),
-                .id("a")
+                .id("a"),
             ]
         )
     }
@@ -63,14 +63,14 @@ struct ParserXMLStyleSheetTests {
                 stroke-width: 5 /* asd */;
                 fill-opacity: 0.3
             }
-            
+
             /* comment */
             /* another */
-            
+
              .b {
                 fill: blue;
             }
-            
+
             rect {
                 fill: pink;
             }
@@ -82,7 +82,7 @@ struct ParserXMLStyleSheetTests {
             entries == [
                 .class("s"): ["stroke": "darkgray", "stroke-width": "5", "fill-opacity": "0.3"],
                 .class("b"): ["fill": "blue"],
-                .element("rect"): ["fill": "pink"]
+                .element("rect"): ["fill": "pink"],
             ]
         )
     }
@@ -96,23 +96,23 @@ struct ParserXMLStyleSheetTests {
                 stroke-width: 5 /* asd */;
                 fill-opacity: 30%
             }
-            
+
             /* comment */
             /* another */
-            
+
              .b {
                 fill: blue;
             }
-            
+
             @font-face {
                 font-family: 'Silkscreen';
                 src: url('data:font/truetype;base64,ZXZlcnkgZ3JhaW4gb2Ygc2FuZA==');
             }
-            
+
             rect {
                 fill: pink;
             }
-            
+
             @font-face {
                 font-family: Claudette;
                 src: url('data:font/woff2;base64,ZXZlcnkgZ3JhaW4gb2Ygc2FuZA==') format('woff2');
@@ -134,12 +134,18 @@ struct ParserXMLStyleSheetTests {
             fonts == [
                 DOM.FontFace(
                     family: "Silkscreen",
-                    src: .url(url: DOM.URL(maybeData: "data:font/truetype;base64,ZXZlcnkgZ3JhaW4gb2Ygc2FuZA==")!, format: nil)
+                    src: .url(
+                        url: DOM.URL(maybeData: "data:font/truetype;base64,ZXZlcnkgZ3JhaW4gb2Ygc2FuZA==")!,
+                        format: nil
+                    )
                 ),
                 DOM.FontFace(
                     family: "Claudette",
-                    src: .url(url: DOM.URL(maybeData: "data:font/woff2;base64,ZXZlcnkgZ3JhaW4gb2Ygc2FuZA==")!, format: "woff2")
-                )
+                    src: .url(
+                        url: DOM.URL(maybeData: "data:font/woff2;base64,ZXZlcnkgZ3JhaW4gb2Ygc2FuZA==")!,
+                        format: "woff2"
+                    )
+                ),
             ]
         )
     }
@@ -186,7 +192,7 @@ struct ParserXMLStyleSheetTests {
         #expect(
             entries == [
                 .class("a"): ["fill": "red"],
-                .class("b"): ["fill": "red"]
+                .class("b"): ["fill": "red"],
             ]
         )
     }
@@ -227,7 +233,7 @@ struct ParserXMLStyleSheetTests {
         #expect(
             entries == [
                 .class("a"): ["fill": "red"],
-                .class("c"): ["stroke": "green"]
+                .class("c"): ["stroke": "green"],
             ]
         )
     }
@@ -250,12 +256,12 @@ struct ParserXMLStyleSheetTests {
             entries == [
                 [
                     "font-family": "'Silkscreen'",
-                    "src": "url('data:font/truetype;base64,ZXZlcnkgZ3JhaW4gb2Ygc2FuZA==') format('truetype')"
+                    "src": "url('data:font/truetype;base64,ZXZlcnkgZ3JhaW4gb2Ygc2FuZA==') format('truetype')",
                 ],
                 [
                     "font-family": "'Claudette'",
-                    "src": "url('data:font/woff2;base64,ZXZlcnkgZ3JhaW4gb2Ygc2FuZA==') format('woff2')"
-                ]
+                    "src": "url('data:font/woff2;base64,ZXZlcnkgZ3JhaW4gb2Ygc2FuZA==') format('woff2')",
+                ],
             ]
         )
     }

@@ -52,7 +52,7 @@ package struct Mutex<Value: ~Copyable>: ~Copyable {
     }
 }
 
-extension Mutex: @unchecked Sendable where Value: ~Copyable { }
+extension Mutex: @unchecked Sendable where Value: ~Copyable {}
 
 import struct os.os_unfair_lock_t
 import struct os.os_unfair_lock
@@ -65,7 +65,7 @@ final class Storage<Value: ~Copyable> {
 
     init(_ initialValue: consuming Value) {
         self._lock = .allocate(capacity: 1)
-        self._lock.initialize(to: os_unfair_lock())
+        _lock.initialize(to: os_unfair_lock())
         self.value = initialValue
     }
 

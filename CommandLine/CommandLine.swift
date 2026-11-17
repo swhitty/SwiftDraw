@@ -33,10 +33,12 @@ import Foundation
 import SwiftDraw
 
 extension SwiftDraw.CommandLine {
-    
-    static func run(with args: [String] = Swift.CommandLine.arguments,
-                    baseDirectory: URL = .currentDirectory) -> ExitCode {
-        
+
+    static func run(
+        with args: [String] = Swift.CommandLine.arguments,
+        baseDirectory: URL = .currentDirectory
+    ) -> ExitCode {
+
         guard let config = try? parseConfiguration(from: args, baseDirectory: baseDirectory) else {
             Log.error("Invalid Syntax.")
             printHelp()
@@ -68,56 +70,58 @@ extension SwiftDraw.CommandLine {
     }
 
     static func printHelp() {
-        Log.info("""
+        Log.info(
+            """
 
-swiftdraw, version 0.30.0
-copyright (c) 2026 Simon Whitty
+            swiftdraw, version 0.30.0
+            copyright (c) 2026 Simon Whitty
 
-usage: swiftdraw <file.svg> [--format png | pdf | jpeg | swift | sfsymbol] [--size wxh] [--scale 1x | 2x | 3x]
+            usage: swiftdraw <file.svg> [--format png | pdf | jpeg | swift | sfsymbol] [--size wxh] [--scale 1x | 2x | 3x]
 
-<file> svg file to be processed
+            <file> svg file to be processed
 
-Options:
- --format      format to output image: png | pdf | jpeg | swift | sfsymbol
- --size        size of output image: 100x200
- --scale       scale of output image: 1x | 2x | 3x
- --insets      crop inset of output image: top,left,bottom,right
- --precision   maximum number of decimal places
- --output      optional path of output file
- --quiet       suppress warnings and progress, reporting failures only
+            Options:
+             --format      format to output image: png | pdf | jpeg | swift | sfsymbol
+             --size        size of output image: 100x200
+             --scale       scale of output image: 1x | 2x | 3x
+             --insets      crop inset of output image: top,left,bottom,right
+             --precision   maximum number of decimal places
+             --output      optional path of output file
+             --quiet       suppress warnings and progress, reporting failures only
 
- --hide-unsupported-filters   hide elements with unsupported filters.
- --disable-filters            draw elements with filters without applying them.
+             --hide-unsupported-filters   hide elements with unsupported filters.
+             --disable-filters            draw elements with filters without applying them.
 
-Available keys for --format swift:
- --api                api of generated code:  swiftui | appkit | uikit
+            Available keys for --format swift:
+             --api                api of generated code:  swiftui | appkit | uikit
 
-Available keys for --format sfsymbol:
- --insets                   alignment of regular variant: top,left,bottom,right | auto
- --size                     size category to generate: small, medium large. (default is small)
- --ultralight               svg file of ultralight variant
- --ultralight-insets        alignment of ultralight variant: top,left,bottom,right | auto
- --ultralight-stroke-width  auto-generate ultralight variant by scaling regular stroke-width: 0.5 | 50%
- --black                    svg file of black variant
- --black-insets             alignment of black variant: top,left,bottom,right | auto
- --black-stroke-width       auto-generate black variant by scaling regular stroke-width: 2.0 | 200%
- --legacy                   use the original, less precise alignment logic from earlier swiftdraw versions.
+            Available keys for --format sfsymbol:
+             --insets                   alignment of regular variant: top,left,bottom,right | auto
+             --size                     size category to generate: small, medium large. (default is small)
+             --ultralight               svg file of ultralight variant
+             --ultralight-insets        alignment of ultralight variant: top,left,bottom,right | auto
+             --ultralight-stroke-width  auto-generate ultralight variant by scaling regular stroke-width: 0.5 | 50%
+             --black                    svg file of black variant
+             --black-insets             alignment of black variant: top,left,bottom,right | auto
+             --black-stroke-width       auto-generate black variant by scaling regular stroke-width: 2.0 | 200%
+             --legacy                   use the original, less precise alignment logic from earlier swiftdraw versions.
 
-Notes:
- An explicit --ultralight or --black file always wins over the matching stroke-width flag.
- Stroke-width scaling has no effect on shapes that lack a stroke (a warning is printed).
+            Notes:
+             An explicit --ultralight or --black file always wins over the matching stroke-width flag.
+             Stroke-width scaling has no effect on shapes that lack a stroke (a warning is printed).
 
 
-""")
+            """
+        )
     }
 }
 
 extension SwiftDraw.CommandLine {
-    
+
     // Represents the exit codes to the command line. See `man sysexits` for more information.
     enum ExitCode: Int32 {
-        case ok = 0 // EX_OK
-        case error = 70 // EX_SOFTWARE
+        case ok = 0  // EX_OK
+        case error = 70  // EX_SOFTWARE
     }
 }
 
@@ -128,7 +132,7 @@ private extension URL {
 }
 
 private extension CommandLine.Size {
-    
+
     var cgValue: CGSize? {
         switch self {
         case .default:
@@ -137,7 +141,7 @@ private extension CommandLine.Size {
             return CGSize(width: CGFloat(width), height: CGFloat(height))
         }
     }
-    
+
     var renderSize: CGTextRenderer.Size? {
         switch self {
         case .default:

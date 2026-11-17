@@ -51,10 +51,14 @@ struct LayerTreePathMeasureTests {
 
     @Test
     func moveDoesNotAddLength() {
-        let measure = LayerTree.Path.Measure(path(
-            .move(to: Point(0, 0)), .line(to: Point(10, 0)),
-            .move(to: Point(100, 100)), .line(to: Point(100, 20))
-        ))
+        let measure = LayerTree.Path.Measure(
+            path(
+                .move(to: Point(0, 0)),
+                .line(to: Point(10, 0)),
+                .move(to: Point(100, 100)),
+                .line(to: Point(100, 20))
+            )
+        )
         #expect(measure.length == 90)
         #expect(measure.position(at: 10)?.point == Point(10, 0))
         #expect(measure.position(at: 10.5)?.point == Point(100, 99.5))
@@ -62,9 +66,14 @@ struct LayerTreePathMeasureTests {
 
     @Test
     func closeAddsTheLineBackToTheStart() {
-        let measure = LayerTree.Path.Measure(path(
-            .move(to: Point(0, 0)), .line(to: Point(10, 0)), .line(to: Point(10, 10)), .close
-        ))
+        let measure = LayerTree.Path.Measure(
+            path(
+                .move(to: Point(0, 0)),
+                .line(to: Point(10, 0)),
+                .line(to: Point(10, 10)),
+                .close
+            )
+        )
         #expect(abs(measure.length - (20 + Float(200).squareRoot())) < 0.0001)
     }
 
@@ -75,15 +84,19 @@ struct LayerTreePathMeasureTests {
         #expect(abs(measure.length - 100 * .pi) < 0.05)
     }
 
-    @Test(arguments: [
-        (0, Point(0, 0), 0),
-        (5, Point(5, 0), 0),
-        (10, Point(10, 0), 0),
-        (15, Point(10, 5), Float.pi / 2),
-        (20, Point(10, 10), Float.pi / 2)
-    ] as [(Float, Point, Float)])
+    @Test(
+        arguments: [
+            (0, Point(0, 0), 0),
+            (5, Point(5, 0), 0),
+            (10, Point(10, 0), 0),
+            (15, Point(10, 5), Float.pi / 2),
+            (20, Point(10, 10), Float.pi / 2),
+        ] as [(Float, Point, Float)]
+    )
     func positionAndAngle(distance: Float, point: Point, angle: Float) throws {
-        let measure = LayerTree.Path.Measure(path(.move(to: Point(0, 0)), .line(to: Point(10, 0)), .line(to: Point(10, 10))))
+        let measure = LayerTree.Path.Measure(
+            path(.move(to: Point(0, 0)), .line(to: Point(10, 0)), .line(to: Point(10, 10)))
+        )
         let position = try #require(measure.position(at: distance))
         #expect(position.point == point)
         #expect(abs(position.angle - angle) < 0.0001)
@@ -91,7 +104,9 @@ struct LayerTreePathMeasureTests {
 
     @Test(arguments: [-0.1, 20.1] as [Float])
     func positionOffTheEndsIsNil(distance: Float) {
-        let measure = LayerTree.Path.Measure(path(.move(to: Point(0, 0)), .line(to: Point(10, 0)), .line(to: Point(10, 10))))
+        let measure = LayerTree.Path.Measure(
+            path(.move(to: Point(0, 0)), .line(to: Point(10, 0)), .line(to: Point(10, 10)))
+        )
         #expect(measure.position(at: distance) == nil)
     }
 
@@ -105,10 +120,12 @@ struct LayerTreePathMeasureTests {
     @Test
     func curveTangentFollowsTheCurve() throws {
         // a quarter circle-ish curve from heading right to heading down
-        let measure = LayerTree.Path.Measure(path(
-            .move(to: Point(0, 0)),
-            .cubic(to: Point(100, 100), control1: Point(55, 0), control2: Point(100, 45))
-        ))
+        let measure = LayerTree.Path.Measure(
+            path(
+                .move(to: Point(0, 0)),
+                .cubic(to: Point(100, 100), control1: Point(55, 0), control2: Point(100, 45))
+            )
+        )
         let start = try #require(measure.position(at: 0.01))
         let end = try #require(measure.position(at: measure.length))
         #expect(abs(start.angle) < 0.05)
@@ -122,13 +139,15 @@ struct LayerTreeTextPathTests {
     typealias Builder = LayerTree.Builder
     typealias Point = LayerTree.Point
 
-    @Test(arguments: [
-        (nil, 0),
-        (.length(25), 25),
-        (.length(-10), -10),
-        (.percentage(50), 100),
-        (.percentage(12.5), 25)
-    ] as [(DOM.TextPath.Offset?, Float)])
+    @Test(
+        arguments: [
+            (nil, 0),
+            (.length(25), 25),
+            (.length(-10), -10),
+            (.percentage(50), 100),
+            (.percentage(12.5), 25),
+        ] as [(DOM.TextPath.Offset?, Float)]
+    )
     func startOffset(offset: DOM.TextPath.Offset?, expected: Float) {
         #expect(Builder.makeStartOffset(offset, pathLength: 200) == expected)
     }
@@ -159,11 +178,13 @@ struct LayerTreeTextPathTests {
     }
 
     private func geometry(_ body: String) throws -> LayerTree.Path? {
-        let svg = try DOM.SVG.parse(xml: """
-        <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">
-          \(body)
-        </svg>
-        """)
+        let svg = try DOM.SVG.parse(
+            xml: """
+                <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">
+                  \(body)
+                </svg>
+                """
+        )
         let text = try #require(svg.childElements.compactMap { $0 as? DOM.Text }.first)
         let textPath = try #require(text.textPath)
         return Builder(svg: svg).makeTextPathGeometry(for: textPath)
@@ -171,28 +192,40 @@ struct LayerTreeTextPathTests {
 
     @Test
     func geometryIsTheReferencedPathWithItsTransform() throws {
-        let path = try #require(try geometry("""
-        <defs><path id="p" d="M 0 0 L 10 0" transform="translate(5 6)" /></defs>
-        <text><textPath href='#p'>a</textPath></text>
-        """))
+        let path = try #require(
+            try geometry(
+                """
+                <defs><path id="p" d="M 0 0 L 10 0" transform="translate(5 6)" /></defs>
+                <text><textPath href='#p'>a</textPath></text>
+                """
+            )
+        )
         #expect(path.segments == [.move(to: Point(5, 6)), .line(to: Point(15, 6))])
     }
 
     @Test
     func geometryOfABasicShape() throws {
-        let path = try #require(try geometry("""
-        <defs><line id="l" x1="1" y1="2" x2="3" y2="4" /></defs>
-        <text><textPath href="#l">a</textPath></text>
-        """))
+        let path = try #require(
+            try geometry(
+                """
+                <defs><line id="l" x1="1" y1="2" x2="3" y2="4" /></defs>
+                <text><textPath href="#l">a</textPath></text>
+                """
+            )
+        )
         #expect(path.segments == [.move(to: Point(1, 2)), .line(to: Point(3, 4))])
     }
 
     @Test
     func pathAttributeIsPreferredToHref() throws {
-        let path = try #require(try geometry("""
-        <defs><path id="p" d="M 0 0 L 10 0" /></defs>
-        <text><textPath href='#p' path="M 0 0 L 0 20">a</textPath></text>
-        """))
+        let path = try #require(
+            try geometry(
+                """
+                <defs><path id="p" d="M 0 0 L 10 0" /></defs>
+                <text><textPath href='#p' path="M 0 0 L 0 20">a</textPath></text>
+                """
+            )
+        )
         #expect(path.segments == [.move(to: Point(0, 0)), .line(to: Point(0, 20))])
     }
 
@@ -202,12 +235,14 @@ struct LayerTreeTextPathTests {
     }
 
     private func layer(_ body: String) throws -> LayerTree.Layer {
-        let svg = try DOM.SVG.parse(xml: """
-        <svg xmlns="http://www.w3.org/2000/svg" width="200" height="200">
-          <defs><path id="p" d="M 0 100 L 100 100" /></defs>
-          \(body)
-        </svg>
-        """)
+        let svg = try DOM.SVG.parse(
+            xml: """
+                <svg xmlns="http://www.w3.org/2000/svg" width="200" height="200">
+                  <defs><path id="p" d="M 0 100 L 100 100" /></defs>
+                  \(body)
+                </svg>
+                """
+        )
         return Builder(svg: svg).makeLayer()
     }
 
@@ -227,13 +262,19 @@ struct LayerTreeTextPathTests {
         #expect(shapes(in: layer).isEmpty)
     }
 
-#if canImport(CoreText)
+    #if canImport(CoreText)
     @Test
     func glyphsBecomeOutlinesFilledLikeShapes() throws {
-        let layer = try layer(#"<text font-size="20" fill="red"><textPath href='#p'>ab<tspan fill="blue">c</tspan></textPath></text>"#)
+        let layer = try layer(
+            #"<text font-size="20" fill="red"><textPath href='#p'>ab<tspan fill="blue">c</tspan></textPath></text>"#
+        )
         let shapes = shapes(in: layer)
-        #expect(shapes.map(\.1.fill) == [.color(.rgba(r: 1, g: 0, b: 0, a: 1, space: .srgb)),
-                                         .color(.rgba(r: 0, g: 0, b: 1, a: 1, space: .srgb))])
+        #expect(
+            shapes.map(\.1.fill) == [
+                .color(.rgba(r: 1, g: 0, b: 0, a: 1, space: .srgb)),
+                .color(.rgba(r: 0, g: 0, b: 1, a: 1, space: .srgb)),
+            ]
+        )
         let bounds = try #require(shapes.first?.0.bounds)
         // on the path's baseline, from its start
         #expect(bounds.minX >= 0 && bounds.minX < 5)
@@ -242,7 +283,9 @@ struct LayerTreeTextPathTests {
 
     @Test
     func spanWithoutDisplayIsNotDrawnAndTakesNoSpace() throws {
-        let hidden = try layer(#"<text font-size="20"><textPath href='#p'>a<tspan display="none" fill="red">MMM</tspan>b</textPath></text>"#)
+        let hidden = try layer(
+            #"<text font-size="20"><textPath href='#p'>a<tspan display="none" fill="red">MMM</tspan>b</textPath></text>"#
+        )
         let plain = try layer(#"<text font-size="20"><textPath href='#p'>ab</textPath></text>"#)
         let black = LayerTree.FillAttributes.Fill.color(.rgba(r: 0, g: 0, b: 0, a: 1, space: .srgb))
         #expect(shapes(in: hidden).map(\.1.fill) == [black, black])
@@ -263,15 +306,18 @@ struct LayerTreeTextPathTests {
 
     @Test
     func clipPathClipsWithTheGlyphOutlines() throws {
-        let layer = try layer("""
-        <clipPath id="c"><text font-size="20"><textPath href='#p' fill="red">a<tspan fill="blue">b</tspan></textPath></text></clipPath>
-        <rect width="200" height="200" clip-path="url(#c)" />
-        """)
+        let layer = try layer(
+            """
+            <clipPath id="c"><text font-size="20"><textPath href='#p' fill="red">a<tspan fill="blue">b</tspan></textPath></text></clipPath>
+            <rect width="200" height="200" clip-path="url(#c)" />
+            """
+        )
         func masks(in layer: LayerTree.Layer) -> [LayerTree.Layer] {
-            (layer.mask.map { [$0] } ?? []) + layer.contents.flatMap { contents -> [LayerTree.Layer] in
-                guard case .layer(let child) = contents else { return [] }
-                return masks(in: child)
-            }
+            (layer.mask.map { [$0] } ?? [])
+                + layer.contents.flatMap { contents -> [LayerTree.Layer] in
+                    guard case .layer(let child) = contents else { return [] }
+                    return masks(in: child)
+                }
         }
         let mask = try #require(masks(in: layer).first)
         let fills = shapes(in: mask).map(\.1.fill)
@@ -281,11 +327,13 @@ struct LayerTreeTextPathTests {
 
     @Test
     func middleAnchorCentresTheTextOnTheOffset() throws {
-        let layer = try layer(#"<text font-size="10" text-anchor="middle"><textPath href='#p' startOffset="50%">HHHH</textPath></text>"#)
+        let layer = try layer(
+            #"<text font-size="10" text-anchor="middle"><textPath href='#p' startOffset="50%">HHHH</textPath></text>"#
+        )
         let bounds = try #require(shapes(in: layer).first?.0.bounds)
         #expect(abs(bounds.midX - 50) < 1)
     }
-#endif
+    #endif
 
     private func approx(_ lhs: Point, _ rhs: Point) -> Bool {
         abs(lhs.x - rhs.x) < 0.0001 && abs(lhs.y - rhs.y) < 0.0001

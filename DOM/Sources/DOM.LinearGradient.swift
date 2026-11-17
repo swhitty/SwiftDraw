@@ -32,7 +32,7 @@
 package extension DOM {
 
     final class LinearGradient: Element {
-        
+
         package var id: String
         package var x1: Coordinate?
         package var y1: Coordinate?
@@ -66,7 +66,7 @@ package extension DOM {
             self.stops = []
             self.gradientTransform = []
         }
-        
+
         package struct Stop: Equatable {
             package var offset: Float
             package var color: Color
@@ -82,13 +82,9 @@ package extension DOM {
 }
 
 extension DOM.LinearGradient: Equatable {
-    package static func ==(lhs: DOM.LinearGradient, rhs: DOM.LinearGradient) -> Bool {
-        return lhs.id == rhs.id &&
-        lhs.x1 == rhs.x1 &&
-        lhs.y1 == rhs.y1 &&
-        lhs.x2 == rhs.x2 &&
-        lhs.y2 == rhs.y2 &&
-        lhs.stops == rhs.stops
+    package static func == (lhs: DOM.LinearGradient, rhs: DOM.LinearGradient) -> Bool {
+        return lhs.id == rhs.id && lhs.x1 == rhs.x1 && lhs.y1 == rhs.y1 && lhs.x2 == rhs.x2 && lhs.y2 == rhs.y2
+            && lhs.stops == rhs.stops
     }
 }
 

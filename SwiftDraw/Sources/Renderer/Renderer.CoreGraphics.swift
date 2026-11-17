@@ -83,7 +83,7 @@ struct CGTransformingPattern: Hashable {
 }
 
 struct CGProvider: RendererTypeProvider {
-  
+
     typealias Types = CGTypes
 
     func createFloat(from float: LayerTree.Float) -> CGFloat {
@@ -99,25 +99,31 @@ struct CGProvider: RendererTypeProvider {
     }
 
     func createRect(from rect: LayerTree.Rect) -> CGRect {
-        return CGRect(x: CGFloat(rect.x),
-                      y: CGFloat(rect.y),
-                      width: CGFloat(rect.width),
-                      height: CGFloat(rect.height))
+        return CGRect(
+            x: CGFloat(rect.x),
+            y: CGFloat(rect.y),
+            width: CGFloat(rect.width),
+            height: CGFloat(rect.height)
+        )
     }
 
     func createColor(from color: LayerTree.Color) -> CGColor {
         switch color {
         case .none: return createSRGB(r: 0, g: 0, b: 0, a: 0)
         case let .rgba(r, g, b, a, .srgb):
-            return createSRGB(r: CGFloat(r),
-                              g: CGFloat(g),
-                              b: CGFloat(b),
-                              a: CGFloat(a))
+            return createSRGB(
+                r: CGFloat(r),
+                g: CGFloat(g),
+                b: CGFloat(b),
+                a: CGFloat(a)
+            )
         case let .rgba(r, g, b, a, .p3):
-            return createP3(r: CGFloat(r),
-                            g: CGFloat(g),
-                            b: CGFloat(b),
-                            a: CGFloat(a))
+            return createP3(
+                r: CGFloat(r),
+                g: CGFloat(g),
+                b: CGFloat(b),
+                a: CGFloat(a)
+            )
         case .gray(white: let w, a: let a):
             return createColor(w: CGFloat(w), a: CGFloat(a))
         }
@@ -136,24 +142,32 @@ struct CGProvider: RendererTypeProvider {
         let colors = gradient.stops.map { createColor(from: $0.color) } as CFArray
         var points = gradient.stops.map { createFloat(from: $0.offset) }
 
-        return CGGradient(colorsSpace: createColorSpace(for: gradient.colorSpace),
-                          colors: colors,
-                          locations: &points)!
+        return CGGradient(
+            colorsSpace: createColorSpace(for: gradient.colorSpace),
+            colors: colors,
+            locations: &points
+        )!
     }
 
     private func createSRGB(r: CGFloat, g: CGFloat, b: CGFloat, a: CGFloat) -> CGColor {
-        return CGColor(colorSpace: CGColorSpace.sRGBSpace,
-                       components: [r, g, b, a])!
+        return CGColor(
+            colorSpace: CGColorSpace.sRGBSpace,
+            components: [r, g, b, a]
+        )!
     }
 
     private func createP3(r: CGFloat, g: CGFloat, b: CGFloat, a: CGFloat) -> CGColor {
-        return CGColor(colorSpace: CGColorSpace.displayP3Space,
-                       components: [r, g, b, a])!
+        return CGColor(
+            colorSpace: CGColorSpace.displayP3Space,
+            components: [r, g, b, a]
+        )!
     }
 
     private func createColor(w: CGFloat, a: CGFloat) -> CGColor {
-        return CGColor(colorSpace: CGColorSpaceCreateExtendedGray(),
-                       components: [w, a])!
+        return CGColor(
+            colorSpace: CGColorSpaceCreateExtendedGray(),
+            components: [w, a]
+        )!
     }
 
     func createBlendMode(from mode: LayerTree.BlendMode) -> CGBlendMode {
@@ -165,30 +179,34 @@ struct CGProvider: RendererTypeProvider {
         }
     }
     func createTransform(from transform: LayerTree.Transform.Matrix) -> CGAffineTransform {
-        return CGAffineTransform(a: CGFloat(transform.a),
-                                 b: CGFloat(transform.b),
-                                 c: CGFloat(transform.c),
-                                 d: CGFloat(transform.d),
-                                 tx: CGFloat(transform.tx),
-                                 ty: CGFloat(transform.ty))
+        return CGAffineTransform(
+            a: CGFloat(transform.a),
+            b: CGFloat(transform.b),
+            c: CGFloat(transform.c),
+            d: CGFloat(transform.d),
+            tx: CGFloat(transform.tx),
+            ty: CGFloat(transform.ty)
+        )
     }
 
     func createPath(from shape: LayerTree.Shape) -> CGPath {
         switch shape {
         case .line(let points):
             let path = CGMutablePath()
-            path.addLines(between: points.map{ createPoint(from: $0) })
+            path.addLines(between: points.map { createPoint(from: $0) })
             return path
         case .rect(let frame, let radii):
-            return CGPath(roundedRect: createRect(from: frame),
-                          cornerWidth: createFloat(from: radii.width),
-                          cornerHeight: createFloat(from: radii.height),
-                          transform: nil)
+            return CGPath(
+                roundedRect: createRect(from: frame),
+                cornerWidth: createFloat(from: radii.width),
+                cornerHeight: createFloat(from: radii.height),
+                transform: nil
+            )
         case .ellipse(let frame):
             return CGPath(ellipseIn: createRect(from: frame), transform: nil)
         case .polygon(let points):
             let path = CGMutablePath()
-            path.addLines(between: points.map{ createPoint(from: $0) })
+            path.addLines(between: points.map { createPoint(from: $0) })
             path.closeSubpath()
             return path
         case .path(let path):
@@ -205,9 +223,11 @@ struct CGProvider: RendererTypeProvider {
             case .line(let p):
                 cgPath.addLine(to: createPoint(from: p))
             case .cubic(let p, let cp1, let cp2):
-                cgPath.addCurve(to: createPoint(from: p),
-                                control1: createPoint(from: cp1),
-                                control2: createPoint(from: cp2))
+                cgPath.addCurve(
+                    to: createPoint(from: p),
+                    control1: createPoint(from: cp1),
+                    control2: createPoint(from: cp2)
+                )
             case .close:
                 cgPath.closeSubpath()
             }
@@ -245,25 +265,38 @@ struct CGProvider: RendererTypeProvider {
             path.addPath(outline, transform: flip.concatenating(origin))
             if boldOffset > 0 {
                 // a second copy, offset; filled nonzero, the two copies merge
-                path.addPath(outline, transform: flip.concatenating(origin.translatedBy(x: boldOffset * CGFloat(run.scaleX), y: 0)))
+                path.addPath(
+                    outline,
+                    transform: flip.concatenating(origin.translatedBy(x: boldOffset * CGFloat(run.scaleX), y: 0))
+                )
             }
         }
         return path
     }
 
-    func createPath(from text: String, at origin: LayerTree.Point, with attributes: LayerTree.TextAttributes) -> Types.Path? {
+    func createPath(
+        from text: String,
+        at origin: LayerTree.Point,
+        with attributes: LayerTree.TextAttributes
+    ) -> Types.Path? {
         let font = CGProvider.createFont(for: attributes)
         guard let path = text.toPath(font: font.font, synthesis: font.synthesis(for:)) else { return nil }
         var transform = CGAffineTransform(translationX: createFloat(from: origin.x), y: createFloat(from: origin.y))
         return path.copy(using: &transform)
     }
 
-    private static func createCTFont(for font: LayerTree.TextAttributes.Font, size: CGFloat, weight: Int, isItalic: Bool) -> CTFont? {
+    private static func createCTFont(
+        for font: LayerTree.TextAttributes.Font,
+        size: CGFloat,
+        weight: Int,
+        isItalic: Bool
+    ) -> CTFont? {
         switch font {
         case .truetype(let data):
             // an @font-face font is already the face matching the weight and style
             guard let provider = CGDataProvider(data: data as CFData),
-                  let cgFont = CGFont(provider) else { return nil }
+                let cgFont = CGFont(provider)
+            else { return nil }
             return CTFontCreateWithGraphicsFont(cgFont, size, nil, nil)
         case .name(let name):
             let ctFont = CTFontCreateWithName(name as CFString, size, nil)
@@ -331,7 +364,12 @@ struct CGProvider: RendererTypeProvider {
         )
     }
 
-    private static func fontSynthesis(for font: LayerTree.TextAttributes.Font, ctFont: CTFont, weight: Int, isItalic: Bool) -> LayerTree.FontSynthesis {
+    private static func fontSynthesis(
+        for font: LayerTree.TextAttributes.Font,
+        ctFont: CTFont,
+        weight: Int,
+        isItalic: Bool
+    ) -> LayerTree.FontSynthesis {
         switch font {
         case .synthesized(_, let synthesis):
             return synthesis
@@ -362,8 +400,10 @@ struct CGProvider: RendererTypeProvider {
         let font = CTFontCreateWithName(name as CFString, 12, nil)
         let postScriptName = CTFontCopyPostScriptName(font) as String
         let fullName = CTFontCopyFullName(font) as String
-        guard postScriptName.caseInsensitiveCompare(name) == .orderedSame
-                || fullName.caseInsensitiveCompare(name) == .orderedSame else {
+        guard
+            postScriptName.caseInsensitiveCompare(name) == .orderedSame
+                || fullName.caseInsensitiveCompare(name) == .orderedSame
+        else {
             return nil
         }
         return postScriptName
@@ -386,14 +426,17 @@ struct CGProvider: RendererTypeProvider {
         guard let matches = CTFontDescriptorCreateMatchingFontDescriptors(request, nil) as? [CTFontDescriptor] else {
             return nil
         }
-        let faces = matches.compactMap { descriptor -> (descriptor: CTFontDescriptor, weight: Int, isItalic: Bool, width: CGFloat)? in
+        let faces = matches.compactMap {
+            descriptor -> (descriptor: CTFontDescriptor, weight: Int, isItalic: Bool, width: CGFloat)? in
             guard CTFontDescriptorCopyAttribute(descriptor, kCTFontFamilyNameAttribute) as? String == family,
-                  let traits = CTFontDescriptorCopyAttribute(descriptor, kCTFontTraitsAttribute) as? [CFString: Any] else {
+                let traits = CTFontDescriptorCopyAttribute(descriptor, kCTFontTraitsAttribute) as? [CFString: Any]
+            else {
                 return nil
             }
             let coreTextWeight = (traits[kCTFontWeightTrait] as? NSNumber).map { CGFloat($0.doubleValue) } ?? 0
             let width = (traits[kCTFontWidthTrait] as? NSNumber).map { CGFloat($0.doubleValue) } ?? 0
-            let symbolic = (traits[kCTFontSymbolicTrait] as? NSNumber).map { CTFontSymbolicTraits(rawValue: $0.uint32Value) } ?? []
+            let symbolic =
+                (traits[kCTFontSymbolicTrait] as? NSNumber).map { CTFontSymbolicTraits(rawValue: $0.uint32Value) } ?? []
             return (descriptor, cssWeight(for: coreTextWeight), symbolic.contains(.traitItalic), width)
         }
         // font-stretch: normal, the narrowest distance from the normal width
@@ -403,8 +446,8 @@ struct CGProvider: RendererTypeProvider {
         let slanted = normalWidth.filter { $0.isItalic == isItalic }
         let candidates = slanted.isEmpty ? normalWidth : slanted
         return candidates.min {
-            LayerTree.Builder.fontWeightRank($0.weight...$0.weight, for: weight) <
-            LayerTree.Builder.fontWeightRank($1.weight...$1.weight, for: weight)
+            LayerTree.Builder.fontWeightRank($0.weight...$0.weight, for: weight)
+                < LayerTree.Builder.fontWeightRank($1.weight...$1.weight, for: weight)
         }?.descriptor
     }
 
@@ -423,10 +466,12 @@ struct CGProvider: RendererTypeProvider {
         if isItalic {
             traits[kCTFontSymbolicTrait] = CTFontSymbolicTraits.traitItalic.rawValue
         }
-        let descriptor = CTFontDescriptorCreateWithAttributes([
-            kCTFontFamilyNameAttribute: family,
-            kCTFontTraitsAttribute: traits
-        ] as CFDictionary)
+        let descriptor = CTFontDescriptorCreateWithAttributes(
+            [
+                kCTFontFamilyNameAttribute: family,
+                kCTFontTraitsAttribute: traits,
+            ] as CFDictionary
+        )
         let font = CTFontCreateWithFontDescriptor(descriptor, size, nil)
         // CoreText falls back to another family when this one is not installed
         guard CTFontCopyFamilyName(font) as String == family else { return nil }
@@ -445,7 +490,7 @@ struct CGProvider: RendererTypeProvider {
 
     private static let coreTextWeightPoints: [(css: CGFloat, ct: CGFloat)] = [
         (1, -1), (100, -0.8), (200, -0.6), (300, -0.4), (400, 0),
-        (500, 0.23), (600, 0.3), (700, 0.4), (800, 0.56), (900, 0.62), (1000, 1)
+        (500, 0.23), (600, 0.3), (700, 0.4), (800, 0.56), (900, 0.62), (1000, 1),
     ]
 
     static func createCTFont(for attributes: LayerTree.TextAttributes) -> CTFont {
@@ -453,14 +498,29 @@ struct CGProvider: RendererTypeProvider {
     }
 
     static func createFont(for attributes: LayerTree.TextAttributes) -> SyntheticFont {
-        createFont(for: attributes.font, size: attributes.size, weight: attributes.weight, isItalic: attributes.isItalic)
+        createFont(
+            for: attributes.font,
+            size: attributes.size,
+            weight: attributes.weight,
+            isItalic: attributes.isItalic
+        )
     }
 
-    static func createCTFont(for fonts: [LayerTree.TextAttributes.Font], size: Float, weight: Int = 400, isItalic: Bool = false) -> CTFont {
+    static func createCTFont(
+        for fonts: [LayerTree.TextAttributes.Font],
+        size: Float,
+        weight: Int = 400,
+        isItalic: Bool = false
+    ) -> CTFont {
         createFont(for: fonts, size: size, weight: weight, isItalic: isItalic).font
     }
 
-    static func createFont(for fonts: [LayerTree.TextAttributes.Font], size: Float, weight: Int = 400, isItalic: Bool = false) -> SyntheticFont {
+    static func createFont(
+        for fonts: [LayerTree.TextAttributes.Font],
+        size: Float,
+        weight: Int = 400,
+        isItalic: Bool = false
+    ) -> SyntheticFont {
         var font: SyntheticFont?
         fontLookup.withLock { _ in
             font = makeFont(for: fonts, size: size, weight: weight, isItalic: isItalic)
@@ -469,14 +529,22 @@ struct CGProvider: RendererTypeProvider {
     }
 
     // within fontLookup
-    private static func makeFont(for fonts: [LayerTree.TextAttributes.Font], size: Float, weight: Int, isItalic: Bool) -> SyntheticFont {
+    private static func makeFont(
+        for fonts: [LayerTree.TextAttributes.Font],
+        size: Float,
+        weight: Int,
+        isItalic: Bool
+    ) -> SyntheticFont {
         let cgSize = CGFloat(size)
         var faces = fonts.compactMap { font -> (CTFont, LayerTree.FontSynthesis)? in
-            guard let ctFont = createCTFont(for: font, size: cgSize, weight: weight, isItalic: isItalic) else { return nil }
+            guard let ctFont = createCTFont(for: font, size: cgSize, weight: weight, isItalic: isItalic) else {
+                return nil
+            }
             return (ctFont, fontSynthesis(for: font, ctFont: ctFont, weight: weight, isItalic: isItalic))
         }
         if faces.isEmpty {
-            let fallback = createCTFont(for: .name("Times"), size: cgSize, weight: weight, isItalic: isItalic)
+            let fallback =
+                createCTFont(for: .name("Times"), size: cgSize, weight: weight, isItalic: isItalic)
                 ?? CTFontCreateWithName("Times" as CFString, cgSize, nil)
             faces = [(fallback, fontSynthesis(for: fallback, weight: weight, isItalic: isItalic))]
         }
@@ -499,9 +567,11 @@ struct CGProvider: RendererTypeProvider {
 
     func createPattern(from pattern: LayerTree.Pattern, contents: [RendererCommand<Types>]) -> CGTransformingPattern {
         let bounds = createRect(from: pattern.frame)
-        return CGTransformingPattern(bounds: bounds,
-                                     contents: contents,
-                                     transform: createTransform(from: pattern.transform))
+        return CGTransformingPattern(
+            bounds: bounds,
+            contents: contents,
+            transform: createTransform(from: pattern.transform)
+        )
     }
 
     func createFillRule(from rule: LayerTree.FillRule) -> CGPathFillRule {
@@ -547,23 +617,25 @@ struct CGProvider: RendererTypeProvider {
 
     func getBounds(from shape: LayerTree.Shape) -> LayerTree.Rect {
         let bounds = createPath(from: shape).boundingBoxOfPath
-        return LayerTree.Rect(x: LayerTree.Float(bounds.origin.x),
-                              y: LayerTree.Float(bounds.origin.y),
-                              width: LayerTree.Float(bounds.width),
-                              height: LayerTree.Float(bounds.height))
+        return LayerTree.Rect(
+            x: LayerTree.Float(bounds.origin.x),
+            y: LayerTree.Float(bounds.origin.y),
+            width: LayerTree.Float(bounds.width),
+            height: LayerTree.Float(bounds.height)
+        )
     }
 }
 
 //TODO: replace with CG implementation
 private extension CGImage {
     static func from(data: Data) -> CGImage? {
-#if canImport(UIKit)
+        #if canImport(UIKit)
         return UIImage(data: data)?.cgImage
-#elseif canImport(AppKit)
+        #elseif canImport(AppKit)
         guard let image = NSImage(data: data) else { return nil }
         var rect = NSRect(x: 0, y: 0, width: image.size.width, height: image.size.height)
         return image.cgImage(forProposedRect: &rect, context: nil, hints: nil)
-#endif
+        #endif
     }
 }
 
@@ -586,10 +658,12 @@ struct CGRenderer: Renderer {
     /// - Parameter baseCTM: the context's default space; defaults to the current CTM.
     ///   Pass the CTM from before any transform the caller applied itself, e.g. a top-left flip.
     /// - Parameter filters: a cache of filtered results to reuse and keep, when the same commands are drawn repeatedly.
-    init(context: CGContext,
-         baseCTM: CGAffineTransform? = nil,
-         maxFilterLayerPixels: Int = CGRenderer.defaultMaxFilterLayerPixels,
-         filters: CGFilterLayerDraw? = nil) {
+    init(
+        context: CGContext,
+        baseCTM: CGAffineTransform? = nil,
+        maxFilterLayerPixels: Int = CGRenderer.defaultMaxFilterLayerPixels,
+        filters: CGFilterLayerDraw? = nil
+    ) {
         self.rootContext = context
         self.rootCTM = baseCTM ?? context.ctm
         self.maxFilterLayerPixels = maxFilterLayerPixels
@@ -607,7 +681,8 @@ struct CGRenderer: Renderer {
         while index < commands.count {
             if case .pushFilterLayer(let filter) = commands[index] {
                 if let end = RendererCommand.matchingPop(in: commands, from: index),
-                   drawCachedFilterLayer(filter, index: index) {
+                    drawCachedFilterLayer(filter, index: index)
+                {
                     index = end + 1
                     continue
                 }
@@ -657,14 +732,16 @@ struct CGRenderer: Renderer {
     func setFill(pattern: CGTransformingPattern) {
         let patternSpace = CGColorSpace(patternBaseSpace: nil)!
         ctx.setFillColorSpace(patternSpace)
-        var alpha : CGFloat = 1.0
+        var alpha: CGFloat = 1.0
 
-        let cgPattern = CGPattern.make(bounds: pattern.bounds,
-                                       matrix: pattern.transform.concatenating(ctx.ctm.concatenating(baseCTM.inverted())),
-                                       step: pattern.bounds.size,
-                                       tiling: .noDistortion,
-                                       isColored: true,
-                                       draw: pattern.draw)
+        let cgPattern = CGPattern.make(
+            bounds: pattern.bounds,
+            matrix: pattern.transform.concatenating(ctx.ctm.concatenating(baseCTM.inverted())),
+            step: pattern.bounds.size,
+            tiling: .noDistortion,
+            isColored: true,
+            draw: pattern.draw
+        )
         ctx.setFillPattern(cgPattern, colorComponents: &alpha)
     }
 
@@ -710,9 +787,13 @@ struct CGRenderer: Renderer {
         let toDevice = ctx.userSpaceToDeviceSpaceTransform
         let deviceRect = visible.applying(toDevice).integral
         let oversample: CGFloat = ctx.isBitmapContext ? 1 : 2
-        guard let mask = CGContext.makeLuminanceMask(deviceRect: deviceRect,
-                                                     oversample: oversample,
-                                                     maxPixels: CGRenderer.maxMaskPixels) else {
+        guard
+            let mask = CGContext.makeLuminanceMask(
+                deviceRect: deviceRect,
+                oversample: oversample,
+                maxPixels: CGRenderer.maxMaskPixels
+            )
+        else {
             ctx.clip(to: .zero)
             return
         }
@@ -756,30 +837,38 @@ struct CGRenderer: Renderer {
     }
 
     func draw(image: CGImage, in rect: CGRect) {
-      pushState()
-      translate(tx: rect.minX, ty: rect.maxY)
-      scale(sx: 1, sy: -1)
-      pushState()
-      ctx.draw(image, in: CGRect(origin: .zero, size: rect.size))
-      popState()
-      popState()
+        pushState()
+        translate(tx: rect.minX, ty: rect.maxY)
+        scale(sx: 1, sy: -1)
+        pushState()
+        ctx.draw(image, in: CGRect(origin: .zero, size: rect.size))
+        popState()
+        popState()
     }
 
     func draw(linear gradient: CGGradient, from start: CGPoint, to end: CGPoint) {
-        ctx.drawLinearGradient(gradient,
-                               start: start,
-                               end: end,
-                               options: [.drawsAfterEndLocation, .drawsBeforeStartLocation]
+        ctx.drawLinearGradient(
+            gradient,
+            start: start,
+            end: end,
+            options: [.drawsAfterEndLocation, .drawsBeforeStartLocation]
         )
     }
 
-    func draw(radial gradient: CGGradient, startCenter: CGPoint, startRadius: CGFloat, endCenter: CGPoint, endRadius: CGFloat) {
-        ctx.drawRadialGradient(gradient,
-                               startCenter: startCenter,
-                               startRadius: startRadius,
-                               endCenter: endCenter,
-                               endRadius: endRadius,
-                               options: [.drawsAfterEndLocation, .drawsBeforeStartLocation]
+    func draw(
+        radial gradient: CGGradient,
+        startCenter: CGPoint,
+        startRadius: CGFloat,
+        endCenter: CGPoint,
+        endRadius: CGFloat
+    ) {
+        ctx.drawRadialGradient(
+            gradient,
+            startCenter: startCenter,
+            startRadius: startRadius,
+            endCenter: endCenter,
+            endRadius: endRadius,
+            options: [.drawsAfterEndLocation, .drawsBeforeStartLocation]
         )
     }
 
@@ -791,8 +880,12 @@ struct CGRenderer: Renderer {
     // their primitive tree (SD12), which keeps several bitmaps alive: the budget is shared between them.
     func pushFilterLayer(_ filter: LayerTree.FilterLayer) {
         let parent = ctx
-        let geometry = FilterLayerGeometry(filter: filter, parent: parent, maxFilterLayerPixels: maxFilterLayerPixels,
-                                           isVector: filters?.isVector(parent) ?? !parent.isBitmapContext)
+        let geometry = FilterLayerGeometry(
+            filter: filter,
+            parent: parent,
+            maxFilterLayerPixels: maxFilterLayerPixels,
+            isVector: filters?.isVector(parent) ?? !parent.isBitmapContext
+        )
         let cacheIndex = filterLayers.pendingIndex
         filterLayers.pendingIndex = nil
 
@@ -821,11 +914,15 @@ struct CGRenderer: Renderer {
         }
 
         // PDF and other vector contexts: filtered groups are rasterized at 2x (2 px per point)
-        guard var layer = CGFilterLayer.make(deviceRect: deviceRect,
-                                             deviations: geometry.deviations,
-                                             maxPixels: geometry.maxPixels,
-                                             oversample: geometry.oversample,
-                                             colorSpace: geometry.colorSpace) else {
+        guard
+            var layer = CGFilterLayer.make(
+                deviceRect: deviceRect,
+                deviations: geometry.deviations,
+                maxPixels: geometry.maxPixels,
+                oversample: geometry.oversample,
+                colorSpace: geometry.colorSpace
+            )
+        else {
             // empty clip or region: draw nothing and allocate nothing
             parent.clip(to: .zero)
             filterLayers.entries.append(CGFilterLayer())
@@ -851,7 +948,8 @@ struct CGRenderer: Renderer {
     // kept with the filter layer just pushed, to rasterize when it is popped
     func setFilterImage(primitive: Int, contents: [RendererCommand<CGTypes>]) {
         guard let last = filterLayers.entries.indices.last,
-              filterLayers.entries[last].filter != nil else { return }
+            filterLayers.entries[last].filter != nil
+        else { return }
         filterLayers.entries[last].images[primitive] = contents
     }
 
@@ -866,14 +964,23 @@ struct CGRenderer: Renderer {
                 let maxPixels = maxFilterLayerPixels / 2
                 offscreen.applyFilter(filter, toPixels: layer.pixelTransform) { index in
                     guard let contents = layer.images[index],
-                          case .image(let image) = filter.primitives[index].effect else { return nil }
-                    return layer.rasterize(contents, isPixelated: image.isPixelated, colorSpace: offscreen.colorSpace,
-                                           maxFilterLayerPixels: maxPixels)
+                        case .image(let image) = filter.primitives[index].effect
+                    else { return nil }
+                    return layer.rasterize(
+                        contents,
+                        isPixelated: image.isPixelated,
+                        colorSpace: offscreen.colorSpace,
+                        maxFilterLayerPixels: maxPixels
+                    )
                 }
             } else {
                 for deviation in layer.deviations {
-                    offscreen.applyGaussianBlur(CGSize(width: deviation.width * layer.scale,
-                                                       height: deviation.height * layer.scale))
+                    offscreen.applyGaussianBlur(
+                        CGSize(
+                            width: deviation.width * layer.scale,
+                            height: deviation.height * layer.scale
+                        )
+                    )
                 }
             }
             if let image = offscreen.makeImage() {
@@ -892,10 +999,15 @@ struct CGRenderer: Renderer {
     private func drawCachedFilterLayer(_ filter: LayerTree.FilterLayer, index: Int) -> Bool {
         guard let filters else { return false }
         let parent = ctx
-        let geometry = FilterLayerGeometry(filter: filter, parent: parent, maxFilterLayerPixels: maxFilterLayerPixels,
-                                           isVector: filters.isVector(parent))
+        let geometry = FilterLayerGeometry(
+            filter: filter,
+            parent: parent,
+            maxFilterLayerPixels: maxFilterLayerPixels,
+            isVector: filters.isVector(parent)
+        )
         guard geometry.deviceRect != nil, !geometry.isPassThrough,
-              let entry = filters.cache.entry(for: geometry.cacheKey(index: index)) else { return false }
+            let entry = filters.cache.entry(for: geometry.cacheKey(index: index))
+        else { return false }
         parent.saveGState()
         parent.clip(to: geometry.region)
         Self.composite(entry.image, deviceRect: entry.deviceRect, scale: entry.scale, into: parent)
@@ -905,8 +1017,10 @@ struct CGRenderer: Renderer {
 
     // draws a filter layer's pixels at its device rect
     private static func composite(_ image: CGImage, deviceRect: CGRect, scale: CGFloat, into parent: CGContext) {
-        let size = CGSize(width: CGFloat(image.width) / scale,
-                          height: CGFloat(image.height) / scale)
+        let size = CGSize(
+            width: CGFloat(image.width) / scale,
+            height: CGFloat(image.height) / scale
+        )
         parent.saveGState()
         parent.concatenate(parent.userSpaceToDeviceSpaceTransform.inverted())
         if scale == 1 {
@@ -947,26 +1061,28 @@ struct FilterLayerGeometry {
 
     /// - Parameter isVector: rasterize as for a vector context (PDF, SwiftUI Canvas): at 2x, without a colour space
     init(filter: LayerTree.FilterLayer, parent: CGContext, maxFilterLayerPixels: Int, isVector: Bool) {
-        region = CGRect(x: CGFloat(filter.region.x),
-                        y: CGFloat(filter.region.y),
-                        width: CGFloat(filter.region.width),
-                        height: CGFloat(filter.region.height))
+        self.region = CGRect(
+            x: CGFloat(filter.region.x),
+            y: CGFloat(filter.region.y),
+            width: CGFloat(filter.region.width),
+            height: CGFloat(filter.region.height)
+        )
         let toDevice = parent.userSpaceToDeviceSpaceTransform
         self.toDevice = toDevice
         // a blur that is not along the device axes (rotation or skew) is sheared by the primitive tree
-        isBlurChain = filter.isBlurChain && !filter.effects.contains { $0.isSheared(toDevice) }
-        deviations = isBlurChain ? filter.effects.compactMap { $0.deviceStdDeviation(toDevice) } : []
+        self.isBlurChain = filter.isBlurChain && !filter.effects.contains { $0.isSheared(toDevice) }
+        self.deviations = isBlurChain ? filter.effects.compactMap { $0.deviceStdDeviation(toDevice) } : []
         self.isVector = isVector
-        oversample = isVector ? 2 : 1
+        self.oversample = isVector ? 2 : 1
         // the offscreen itself, plus the bitmaps of the primitive tree
-        maxPixels = isBlurChain ? maxFilterLayerPixels : maxFilterLayerPixels / (filter.peakBitmapCount + 1)
+        self.maxPixels = isBlurChain ? maxFilterLayerPixels : maxFilterLayerPixels / (filter.peakBitmapCount + 1)
         // Only a bitmap context has a colour space to match: asking a SwiftUI Canvas or other non-bitmap
         // context for one logs "CGBitmapContextGetColorSpace: invalid context". The layer is sRGB then.
-        colorSpace = isVector ? nil : parent.colorSpace
+        self.colorSpace = isVector ? nil : parent.colorSpace
 
         let visible = parent.boundingBoxOfClipPath
         guard !visible.isNull, !visible.isEmpty else {
-            deviceRect = nil
+            self.deviceRect = nil
             return
         }
         var rect = region.applying(toDevice)
@@ -974,7 +1090,7 @@ struct FilterLayerGeometry {
             let spread = filter.deviceSpread(toDevice)
             rect = rect.intersection(visible.applying(toDevice).insetBy(dx: -spread.width, dy: -spread.height))
         }
-        deviceRect = rect
+        self.deviceRect = rect
     }
 
     // blur chains too small to change a pixel (every box size 1) draw straight into the parent
@@ -983,13 +1099,15 @@ struct FilterLayerGeometry {
     }
 
     func cacheKey(index: Int) -> CGFilterLayerCache.Key {
-        CGFilterLayerCache.Key(index: index,
-                               toDevice: toDevice,
-                               // the whole pixels drawn: unaffected by rounding in the clips of alike contexts
-                               deviceRect: (deviceRect ?? .null).integral,
-                               maxPixels: maxPixels,
-                               isVector: isVector,
-                               colorSpace: colorSpace)
+        CGFilterLayerCache.Key(
+            index: index,
+            toDevice: toDevice,
+            // the whole pixels drawn: unaffected by rounding in the clips of alike contexts
+            deviceRect: (deviceRect ?? .null).integral,
+            maxPixels: maxPixels,
+            isVector: isVector,
+            colorSpace: colorSpace
+        )
     }
 }
 
@@ -1012,7 +1130,8 @@ struct CGFilterLayer {
     // user space to offscreen pixels: x right, y down from the first row in memory
     var pixelTransform: CGAffineTransform {
         let height = CGFloat(offscreen?.height ?? 0)
-        return toDevice
+        return
+            toDevice
             .concatenating(CGAffineTransform(translationX: -deviceRect.minX, y: -deviceRect.minY))
             .concatenating(CGAffineTransform(scaleX: scale, y: scale))
             .concatenating(CGAffineTransform(a: 1, b: 0, c: 0, d: -1, tx: 0, ty: height))
@@ -1020,14 +1139,20 @@ struct CGFilterLayer {
 
     // Draws the contents of an feImage into a bitmap of the offscreen's size through the same transform,
     // so its pixels line up with the offscreen's. Only rasterizes: what to draw, and where, comes resolved.
-    func rasterize(_ contents: [RendererCommand<CGTypes>],
-                   isPixelated: Bool,
-                   colorSpace: CGColorSpace?,
-                   maxFilterLayerPixels: Int) -> FilterBitmap? {
+    func rasterize(
+        _ contents: [RendererCommand<CGTypes>],
+        isPixelated: Bool,
+        colorSpace: CGColorSpace?,
+        maxFilterLayerPixels: Int
+    ) -> FilterBitmap? {
         guard let offscreen,
-              let context = CGContext.makeFilterLayer(width: offscreen.width, height: offscreen.height,
-                                                      colorSpace: colorSpace),
-              let data = context.data else { return nil }
+            let context = CGContext.makeFilterLayer(
+                width: offscreen.width,
+                height: offscreen.height,
+                colorSpace: colorSpace
+            ),
+            let data = context.data
+        else { return nil }
         context.scaleBy(x: scale, y: scale)
         context.translateBy(x: -deviceRect.minX, y: -deviceRect.minY)
         context.concatenate(toDevice)
@@ -1048,14 +1173,17 @@ struct CGFilterLayer {
     }
 
     // nil when the device rect is empty or not finite
-    static func make(deviceRect: CGRect,
-                     deviations: [CGSize],
-                     maxPixels: Int,
-                     oversample: CGFloat,
-                     colorSpace: CGColorSpace?) -> CGFilterLayer? {
+    static func make(
+        deviceRect: CGRect,
+        deviations: [CGSize],
+        maxPixels: Int,
+        oversample: CGFloat,
+        colorSpace: CGColorSpace?
+    ) -> CGFilterLayer? {
         guard !deviceRect.isNull, !deviceRect.isInfinite,
-              deviceRect.minX.isFinite, deviceRect.minY.isFinite,
-              deviceRect.width.isFinite, deviceRect.height.isFinite else { return nil }
+            deviceRect.minX.isFinite, deviceRect.minY.isFinite,
+            deviceRect.width.isFinite, deviceRect.height.isFinite
+        else { return nil }
         let rect = deviceRect.integral
         guard rect.width >= 1, rect.height >= 1 else { return nil }
 
@@ -1087,9 +1215,14 @@ private extension LayerTree.FilterLayer.Effect {
     // a blur that is not along the device axes
     func isSheared(_ toDevice: CGAffineTransform) -> Bool {
         guard case let .gaussianBlur(stdDeviation: x, stdDeviationY: y) = self else { return false }
-        let matrix = LayerTree.Transform.Matrix(a: Float(toDevice.a), b: Float(toDevice.b),
-                                                c: Float(toDevice.c), d: Float(toDevice.d),
-                                                tx: 0, ty: 0)
+        let matrix = LayerTree.Transform.Matrix(
+            a: Float(toDevice.a),
+            b: Float(toDevice.b),
+            c: Float(toDevice.c),
+            d: Float(toDevice.d),
+            tx: 0,
+            ty: 0
+        )
         return matrix.blurShear(x, y) != nil
     }
 
@@ -1139,8 +1272,10 @@ private extension LayerTree.FilterLayer {
                 break
             }
         }
-        return CGSize(width: width.isFinite ? min(width, CGRenderer.maxDeviceSpread) : CGRenderer.maxDeviceSpread,
-                      height: height.isFinite ? min(height, CGRenderer.maxDeviceSpread) : CGRenderer.maxDeviceSpread)
+        return CGSize(
+            width: width.isFinite ? min(width, CGRenderer.maxDeviceSpread) : CGRenderer.maxDeviceSpread,
+            height: height.isFinite ? min(height, CGRenderer.maxDeviceSpread) : CGRenderer.maxDeviceSpread
+        )
     }
 }
 
@@ -1158,8 +1293,24 @@ extension CGContext {
         let sRGB = CGColorSpace.sRGBSpace
         let space = colorSpace.flatMap { $0.model == .rgb ? $0 : nil } ?? sRGB
         let info = CGImageAlphaInfo.premultipliedLast.rawValue
-        return CGContext(data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: 0, space: space, bitmapInfo: info) ??
-               CGContext(data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: 0, space: sRGB, bitmapInfo: info)
+        return CGContext(
+            data: nil,
+            width: width,
+            height: height,
+            bitsPerComponent: 8,
+            bytesPerRow: 0,
+            space: space,
+            bitmapInfo: info
+        )
+            ?? CGContext(
+                data: nil,
+                width: width,
+                height: height,
+                bitsPerComponent: 8,
+                bytesPerRow: 0,
+                space: sRGB,
+                bitmapInfo: info
+            )
     }
 
     // Filter Effects 1 §9.16 / SVG 1.1 §15.17: three successive box blurs approximate the gaussian.
@@ -1169,7 +1320,13 @@ extension CGContext {
         Self.applyGaussianBlur(deviation, data: data, width: width, height: height, bytesPerRow: bytesPerRow)
     }
 
-    static func applyGaussianBlur(_ deviation: CGSize, data: UnsafeMutableRawPointer, width: Int, height: Int, bytesPerRow: Int) {
+    static func applyGaussianBlur(
+        _ deviation: CGSize,
+        data: UnsafeMutableRawPointer,
+        width: Int,
+        height: Int,
+        bytesPerRow: Int
+    ) {
         // Each pass treats pixels outside the bitmap as transparent. A box of 2n-1 then covers a whole row
         // (or column) of n from every pixel, so a wider box only divides that sum by more: clamp per axis
         // and scale the result by what the clamp left out, exactly as the wider box would.
@@ -1188,13 +1345,31 @@ extension CGContext {
         guard let temp = calloc(byteCount, 1) else { return }
         defer { free(temp) }
 
-        var src = vImage_Buffer(data: data, height: vImagePixelCount(height), width: vImagePixelCount(width), rowBytes: bytesPerRow)
-        var dst = vImage_Buffer(data: temp, height: vImagePixelCount(height), width: vImagePixelCount(width), rowBytes: bytesPerRow)
+        var src = vImage_Buffer(
+            data: data,
+            height: vImagePixelCount(height),
+            width: vImagePixelCount(width),
+            rowBytes: bytesPerRow
+        )
+        var dst = vImage_Buffer(
+            data: temp,
+            height: vImagePixelCount(height),
+            width: vImagePixelCount(width),
+            rowBytes: bytesPerRow
+        )
         var background: [UInt8] = [0, 0, 0, 0]
         for pass in 0..<3 {
-            let error = vImageBoxConvolve_ARGB8888(&src, &dst, nil, 0, 0,
-                                                   UInt32(sizesY[pass]), UInt32(sizesX[pass]),
-                                                   &background, vImage_Flags(kvImageBackgroundColorFill))
+            let error = vImageBoxConvolve_ARGB8888(
+                &src,
+                &dst,
+                nil,
+                0,
+                0,
+                UInt32(sizesY[pass]),
+                UInt32(sizesX[pass]),
+                &background,
+                vImage_Flags(kvImageBackgroundColorFill)
+            )
             guard error == kvImageNoError else { return }
             swap(&src, &dst)
         }
@@ -1213,14 +1388,16 @@ extension CGContext {
 
     // SD12: evaluates the primitive tree on the offscreen's pixels, SourceGraphic being what was drawn,
     // and leaves the result in their place.
-    func applyFilter(_ filter: LayerTree.FilterLayer,
-                     toPixels transform: CGAffineTransform,
-                     image: @escaping (Int) -> FilterBitmap? = { _ in nil }) {
-        let width = self.width
-        let height = self.height
-        let bytesPerRow = self.bytesPerRow
-        let colorSpace = self.colorSpace
-        guard let data = self.data, width > 0, height > 0 else { return }
+    func applyFilter(
+        _ filter: LayerTree.FilterLayer,
+        toPixels transform: CGAffineTransform,
+        image: @escaping (Int) -> FilterBitmap? = { _ in nil }
+    ) {
+        let width = width
+        let height = height
+        let bytesPerRow = bytesPerRow
+        let colorSpace = colorSpace
+        guard let data = data, width > 0, height > 0 else { return }
         let rowBytes = width * 4
 
         var pixels = [UInt8](repeating: 0, count: rowBytes * height)
@@ -1232,23 +1409,35 @@ extension CGContext {
         }
 
         let environment = LayerTree.FilterLayer.Environment(
-            transform: LayerTree.Transform.Matrix(a: Float(transform.a), b: Float(transform.b),
-                                                  c: Float(transform.c), d: Float(transform.d),
-                                                  tx: Float(transform.tx), ty: Float(transform.ty)),
+            transform: LayerTree.Transform.Matrix(
+                a: Float(transform.a),
+                b: Float(transform.b),
+                c: Float(transform.c),
+                d: Float(transform.d),
+                tx: Float(transform.tx),
+                ty: Float(transform.ty)
+            ),
             blur: { bitmap, x, y in
                 let w = bitmap.width
                 let h = bitmap.height
                 bitmap.pixels.withUnsafeMutableBytes { buffer in
                     guard let base = buffer.baseAddress else { return }
-                    CGContext.applyGaussianBlur(CGSize(width: CGFloat(x), height: CGFloat(y)),
-                                                data: base, width: w, height: h, bytesPerRow: w * 4)
+                    CGContext.applyGaussianBlur(
+                        CGSize(width: CGFloat(x), height: CGFloat(y)),
+                        data: base,
+                        width: w,
+                        height: h,
+                        bytesPerRow: w * 4
+                    )
                 }
             },
             color: { CGContext.filterComponents(of: $0, colorSpace: colorSpace) },
             image: image
         )
-        let result = filter.evaluate(source: FilterBitmap(width: width, height: height, pixels: pixels),
-                                     environment: environment)
+        let result = filter.evaluate(
+            source: FilterBitmap(width: width, height: height, pixels: pixels),
+            environment: environment
+        )
 
         result.pixels.withUnsafeBytes { buffer in
             guard let base = buffer.baseAddress else { return }
@@ -1262,7 +1451,8 @@ extension CGContext {
     // floods are colour matched exactly like the shapes they are composited with.
     static func filterComponents(of color: LayerTree.Color, colorSpace: CGColorSpace?) -> SIMD4<Float> {
         guard let ctx = CGContext.makeFilterLayer(width: 1, height: 1, colorSpace: colorSpace),
-              let data = ctx.data else {
+            let data = ctx.data
+        else {
             return FilterBitmap.components(of: color)
         }
         ctx.setFillColor(CGProvider().createColor(from: color))

@@ -29,7 +29,6 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-
 import SwiftDrawDOM
 
 extension LayerTree.Builder {
@@ -37,8 +36,10 @@ extension LayerTree.Builder {
     /// Filter Effects 1 §12.2: a filter function as the filter primitive it is equivalent to, from
     /// SourceGraphic, in sRGB. A function has no filter region of its own; like resvg, blur and drop-shadow
     /// take a larger region (bbox -50% / 200%) than the default (-10% / 120%) so the blur is rarely cut.
-    static func makeFilter(for function: DOM.FilterFunction,
-                           with state: State) -> (primitives: [LayerTree.FilterPrimitive], region: LayerTree.FilterRegion) {
+    static func makeFilter(
+        for function: DOM.FilterFunction,
+        with state: State
+    ) -> (primitives: [LayerTree.FilterPrimitive], region: LayerTree.FilterRegion) {
         let effect: DOM.Filter.Effect
         var region = LayerTree.FilterRegion()
         let fontSize = state.fontSize
@@ -53,10 +54,14 @@ extension LayerTree.Builder {
             if color == .currentColor {
                 color = .keyword(.black)
             }
-            effect = .dropShadow(DOM.Filter.DropShadow(dx: dx.resolve(fontSize: fontSize),
-                                                       dy: dy.resolve(fontSize: fontSize),
-                                                       stdDeviation: stdDeviation.resolve(fontSize: fontSize),
-                                                       color: color))
+            effect = .dropShadow(
+                DOM.Filter.DropShadow(
+                    dx: dx.resolve(fontSize: fontSize),
+                    dy: dy.resolve(fontSize: fontSize),
+                    stdDeviation: stdDeviation.resolve(fontSize: fontSize),
+                    color: color
+                )
+            )
             region = .function
         case .hueRotate(let degrees):
             effect = .colorMatrix(.hueRotate(degrees))
@@ -67,12 +72,14 @@ extension LayerTree.Builder {
             effect = .colorMatrix(.saturate(1 - min(amount, 1)))
         case .sepia(let amount):
             let a = 1 - min(amount, 1)
-            effect = .colorMatrix(.matrix([
-                0.393 + 0.607 * a, 0.769 - 0.769 * a, 0.189 - 0.189 * a, 0, 0,
-                0.349 - 0.349 * a, 0.686 + 0.314 * a, 0.168 - 0.168 * a, 0, 0,
-                0.272 - 0.272 * a, 0.534 - 0.534 * a, 0.131 + 0.869 * a, 0, 0,
-                0, 0, 0, 1, 0
-            ]))
+            effect = .colorMatrix(
+                .matrix([
+                    0.393 + 0.607 * a, 0.769 - 0.769 * a, 0.189 - 0.189 * a, 0, 0,
+                    0.349 - 0.349 * a, 0.686 + 0.314 * a, 0.168 - 0.168 * a, 0, 0,
+                    0.272 - 0.272 * a, 0.534 - 0.534 * a, 0.131 + 0.869 * a, 0, 0,
+                    0, 0, 0, 1, 0,
+                ])
+            )
         case .invert(let amount):
             let a = min(amount, 1)
             effect = .componentTransfer(colors(.table([a, 1 - a])))

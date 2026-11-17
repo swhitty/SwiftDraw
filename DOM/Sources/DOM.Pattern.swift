@@ -34,7 +34,7 @@ import Foundation
 package extension DOM {
 
     struct Pattern: ContainerElement {
-        
+
         package var id: String
         package var x: Coordinate?
         package var y: Coordinate?
@@ -72,7 +72,7 @@ package extension DOM {
 }
 
 package extension DOM.Pattern {
-    
+
     enum Units: String {
         case userSpaceOnUse
         case objectBoundingBox

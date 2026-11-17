@@ -58,7 +58,9 @@ public struct Arguments: Equatable, Sendable {
             switch arg {
             case "--size":
                 let text = try value(for: arg)
-                guard let parsed = Size(text) else { throw Error("--size must be WxH with positive numbers, got '\(text)'") }
+                guard let parsed = Size(text) else {
+                    throw Error("--size must be WxH with positive numbers, got '\(text)'")
+                }
                 size = parsed
             case "--scale":
                 let text = try value(for: arg)
@@ -95,16 +97,27 @@ public struct Arguments: Equatable, Sendable {
             guard positional.isEmpty else { throw Error("--jobs does not take input files") }
             guard size == nil else { throw Error("--size is for single files; jobs.json gives each size") }
             guard let out else { throw Error("--jobs needs --out <dir>") }
-            return Arguments(mode: .batch(jobs: URL(fileURLWithPath: jobs), out: URL(fileURLWithPath: out)),
-                             scale: scale, fontSmoothing: fontSmoothing, maxDimension: maxDimension)
+            return Arguments(
+                mode: .batch(jobs: URL(fileURLWithPath: jobs), out: URL(fileURLWithPath: out)),
+                scale: scale,
+                fontSmoothing: fontSmoothing,
+                maxDimension: maxDimension
+            )
         }
 
         guard out == nil else { throw Error("--out is for --jobs; give a single file as: in.svg out.png") }
         guard positional.count == 2 else {
-            throw Error(positional.isEmpty ? "missing input and output" : "expected in.svg out.png, got \(positional.count) path(s)")
+            throw Error(
+                positional.isEmpty
+                    ? "missing input and output" : "expected in.svg out.png, got \(positional.count) path(s)"
+            )
         }
         return Arguments(
-            mode: .single(input: URL(fileURLWithPath: positional[0]), output: URL(fileURLWithPath: positional[1]), size: size),
+            mode: .single(
+                input: URL(fileURLWithPath: positional[0]),
+                output: URL(fileURLWithPath: positional[1]),
+                size: size
+            ),
             scale: scale,
             fontSmoothing: fontSmoothing,
             maxDimension: maxDimension
@@ -112,26 +125,26 @@ public struct Arguments: Equatable, Sendable {
     }
 
     public static let usage = """
-    usage: webkit-render in.svg out.png [--size WxH] [--max 1024] [--scale 2] [--font-smoothing]
-           webkit-render --jobs jobs.json --out <dir> [--max 1024] [--scale 2] [--font-smoothing]
-           webkit-render --version
+        usage: webkit-render in.svg out.png [--size WxH] [--max 1024] [--scale 2] [--font-smoothing]
+               webkit-render --jobs jobs.json --out <dir> [--max 1024] [--scale 2] [--font-smoothing]
+               webkit-render --version
 
-    Renders SVGs to opaque sRGB PNGs with WebKit: each SVG is drawn as an <img> at WxH points
-    onto a white canvas of round(W×scale) × round(H×scale) pixels.
+        Renders SVGs to opaque sRGB PNGs with WebKit: each SVG is drawn as an <img> at WxH points
+        onto a white canvas of round(W×scale) × round(H×scale) pixels.
 
-      --size WxH        size in points (single file). Without it the SVG is laid out at its
-                        natural size, scaled down so the longest side is at most --max points
-                        and rounded to whole points
-      --max N           longest side in points for natural sizes (default 1024)
-      --scale N         pixels per point (default 2)
-      --jobs FILE       JSON array of { "name", "svg", "width"?, "height"? } (points); relative
-                        svg paths resolve against the jobs file's directory. Jobs without a size
-                        use the natural size, as --size does
-      --out DIR         writes DIR/<name>.png and DIR/manifest.json
-      --font-smoothing  keep WebKit's font smoothing (off by default: text is drawn antialiased,
-                        closer to filled glyph outlines)
-      --version         print the WebKit bundle version
-    """
+          --size WxH        size in points (single file). Without it the SVG is laid out at its
+                            natural size, scaled down so the longest side is at most --max points
+                            and rounded to whole points
+          --max N           longest side in points for natural sizes (default 1024)
+          --scale N         pixels per point (default 2)
+          --jobs FILE       JSON array of { "name", "svg", "width"?, "height"? } (points); relative
+                            svg paths resolve against the jobs file's directory. Jobs without a size
+                            use the natural size, as --size does
+          --out DIR         writes DIR/<name>.png and DIR/manifest.json
+          --font-smoothing  keep WebKit's font smoothing (off by default: text is drawn antialiased,
+                            closer to filled glyph outlines)
+          --version         print the WebKit bundle version
+        """
 }
 
 /// A size in points.
@@ -148,8 +161,9 @@ public struct Size: Equatable, Sendable {
     public init?(_ text: String) {
         let parts = text.lowercased().split(separator: "x", omittingEmptySubsequences: false)
         guard parts.count == 2,
-              let w = Double(parts[0]), let h = Double(parts[1]),
-              w > 0, h > 0, w.isFinite, h.isFinite else { return nil }
+            let w = Double(parts[0]), let h = Double(parts[1]),
+            w > 0, h > 0, w.isFinite, h.isFinite
+        else { return nil }
         self.init(width: w, height: h)
     }
 

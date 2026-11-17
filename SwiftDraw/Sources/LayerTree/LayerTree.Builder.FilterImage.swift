@@ -29,7 +29,6 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-
 import SwiftDrawDOM
 import Foundation
 
@@ -49,8 +48,10 @@ extension LayerTree.Builder {
         var images = [Int: LayerTree.Layer]()
         for (index, primitive) in primitives.enumerated() {
             guard case .image(let image) = primitive.effect,
-                  let element = referencedElement(of: image) else { continue }
-            let layer = building(FilterImageKey(element: ObjectIdentifier(element)), cycle: nil) { () -> LayerTree.Layer? in
+                let element = referencedElement(of: image)
+            else { continue }
+            let layer = building(FilterImageKey(element: ObjectIdentifier(element)), cycle: nil) {
+                () -> LayerTree.Layer? in
                 buildingContents {
                     makeLayer(from: element, inheriting: makeInheritedState(from: ancestors(of: element)))
                 }
@@ -63,8 +64,9 @@ extension LayerTree.Builder {
     /// The element an `href` of the form `#id` references; nil for an image or a missing element.
     func referencedElement(of image: DOM.Filter.Image) -> DOM.GraphicsElement? {
         guard let href = image.href,
-              href.absoluteString.hasPrefix("#"),
-              let id = href.fragmentID, !id.isEmpty else { return nil }
+            href.absoluteString.hasPrefix("#"),
+            let id = href.fragmentID, !id.isEmpty
+        else { return nil }
         return svg.firstGraphicsElement(with: id)
     }
 

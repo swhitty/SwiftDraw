@@ -30,18 +30,18 @@
 //
 
 extension XMLParser {
-  
-  func parseImage(_ att: any AttributeParser) throws -> DOM.Image {
-    // SVG 2 href, falling back to the deprecated xlink:href when it is missing or invalid
-    let href: DOM.URL = try att.parseHref()
 
-    let image = DOM.Image(href: href)
-    image.x = parseDefaultedLength(att, "x", .horizontal)
-    image.y = parseDefaultedLength(att, "y", .vertical)
-    image.width = parseDefaultedLength(att, "width", .horizontal)
-    image.height = parseDefaultedLength(att, "height", .vertical)
-    image.preserveAspectRatio = parsePreserveAspectRatio(try? att.parseString("preserveAspectRatio"))
+    func parseImage(_ att: any AttributeParser) throws -> DOM.Image {
+        // SVG 2 href, falling back to the deprecated xlink:href when it is missing or invalid
+        let href: DOM.URL = try att.parseHref()
 
-    return image
-  }
+        let image = DOM.Image(href: href)
+        image.x = parseDefaultedLength(att, "x", .horizontal)
+        image.y = parseDefaultedLength(att, "y", .vertical)
+        image.width = parseDefaultedLength(att, "width", .horizontal)
+        image.height = parseDefaultedLength(att, "height", .vertical)
+        image.preserveAspectRatio = parsePreserveAspectRatio(try? att.parseString("preserveAspectRatio"))
+
+        return image
+    }
 }

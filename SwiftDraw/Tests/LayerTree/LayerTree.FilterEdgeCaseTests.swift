@@ -29,7 +29,6 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-
 @testable import SwiftDrawDOM
 @testable import SwiftDraw
 import Foundation
@@ -44,15 +43,17 @@ struct LayerTreeFilterEdgeCaseTests {
     // filters/filter/no-children: a filter without primitives paints transparent black
     @Test(arguments: [
         #"<filter id="f"/>"#,
-        #"<filter id="f"><desc>no primitives</desc></filter>"#
+        #"<filter id="f"><desc>no primitives</desc></filter>"#,
     ])
     func filterWithoutPrimitivesHidesTheElement(filter: String) throws {
-        let layer = try makeFilterLayer(#"""
-        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
-            \#(filter)
-            <rect x="10" y="10" width="80" height="80" fill="green" filter="url(#f)" />
-        </svg>
-        """#)
+        let layer = try makeFilterLayer(
+            #"""
+            <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+                \#(filter)
+                <rect x="10" y="10" width="80" height="80" fill="green" filter="url(#f)" />
+            </svg>
+            """#
+        )
 
         #expect(layer.effects == [.flood(.rgba(r: 0, g: 0, b: 0, a: 0, space: .srgb))])
     }
@@ -60,29 +61,38 @@ struct LayerTreeFilterEdgeCaseTests {
     // disableFilters still draws the element as if it had no filter
     @Test
     func filterWithoutPrimitivesIsDisabledLikeAnyFilter() throws {
-        let commands = try makeCommands(#"""
-        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
-            <filter id="f"/>
-            <rect x="10" y="10" width="80" height="80" fill="green" filter="url(#f)" />
-        </svg>
-        """#, options: .disableFilters)
+        let commands = try makeCommands(
+            #"""
+            <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+                <filter id="f"/>
+                <rect x="10" y="10" width="80" height="80" fill="green" filter="url(#f)" />
+            </svg>
+            """#,
+            options: .disableFilters
+        )
 
         #expect(commands.filterLayers.isEmpty)
-        #expect(commands.contains { if case .fill = $0 { return true }; return false })
+        #expect(
+            commands.contains {
+                if case .fill = $0 { return true }; return false
+            }
+        )
     }
 
     // Figma's no-op prelude on its own is still a filter: it draws the source, it does not hide it
     @Test
     func figmaPreludeAloneIsKept() throws {
-        let layer = try makeFilterLayer(#"""
-        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
-            <filter id="f">
-                <feFlood flood-opacity="0" result="BackgroundImageFix"/>
-                <feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
-            </filter>
-            <rect x="10" y="10" width="80" height="80" fill="green" filter="url(#f)" />
-        </svg>
-        """#)
+        let layer = try makeFilterLayer(
+            #"""
+            <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+                <filter id="f">
+                    <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+                    <feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
+                </filter>
+                <rect x="10" y="10" width="80" height="80" fill="green" filter="url(#f)" />
+            </svg>
+            """#
+        )
 
         #expect(layer.effects == [.flood(.rgba(r: 0, g: 0, b: 0, a: 0, space: .srgb)), .blend(.normal)])
         #expect(layer.primitives[1].inputs == [.sourceGraphic, .primitive(0)])
@@ -91,14 +101,16 @@ struct LayerTreeFilterEdgeCaseTests {
     // filters/filter/everything-via-xlink-href, complex-order-and-xlink-href: SVG 1.1 §15.5, as resvg
     @Test
     func hrefInheritsPrimitivesAndUnsetAttributes() throws {
-        let layer = try makeFilterLayer(#"""
-        <svg width="200" height="200" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-            <filter id="f0" height="1.0"><feGaussianBlur stdDeviation="2" /></filter>
-            <filter id="f1" x="0.1" xlink:href="#f0" />
-            <filter id="f2" y="0.2" href="#f1" />
-            <rect x="20" y="20" width="160" height="160" filter="url(#f2)" />
-        </svg>
-        """#)
+        let layer = try makeFilterLayer(
+            #"""
+            <svg width="200" height="200" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+                <filter id="f0" height="1.0"><feGaussianBlur stdDeviation="2" /></filter>
+                <filter id="f1" x="0.1" xlink:href="#f0" />
+                <filter id="f2" y="0.2" href="#f1" />
+                <rect x="20" y="20" width="160" height="160" filter="url(#f2)" />
+            </svg>
+            """#
+        )
 
         #expect(layer.effects == [.gaussianBlur(stdDeviation: 2, stdDeviationY: 2)])
         #expect(layer.region == LayerTree.Rect(x: 36, y: 52, width: 192, height: 160))
@@ -106,13 +118,15 @@ struct LayerTreeFilterEdgeCaseTests {
 
     @Test
     func ownPrimitivesWinOverHref() throws {
-        let layer = try makeFilterLayer(#"""
-        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
-            <filter id="f0"><feGaussianBlur stdDeviation="2" /></filter>
-            <filter id="f1" href="#f0"><feOffset dx="3" /></filter>
-            <rect x="10" y="10" width="80" height="80" filter="url(#f1)" />
-        </svg>
-        """#)
+        let layer = try makeFilterLayer(
+            #"""
+            <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+                <filter id="f0"><feGaussianBlur stdDeviation="2" /></filter>
+                <filter id="f1" href="#f0"><feOffset dx="3" /></filter>
+                <rect x="10" y="10" width="80" height="80" filter="url(#f1)" />
+            </svg>
+            """#
+        )
 
         #expect(layer.effects == [.offset(dx: 3, dy: 0)])
     }
@@ -120,13 +134,15 @@ struct LayerTreeFilterEdgeCaseTests {
     // a cycle ends the chain: no primitives, so the element is hidden
     @Test
     func hrefCycleTerminates() throws {
-        let layer = try makeFilterLayer(#"""
-        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
-            <filter id="a" href="#b" />
-            <filter id="b" href="#a" />
-            <rect x="10" y="10" width="80" height="80" filter="url(#a)" />
-        </svg>
-        """#)
+        let layer = try makeFilterLayer(
+            #"""
+            <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+                <filter id="a" href="#b" />
+                <filter id="b" href="#a" />
+                <rect x="10" y="10" width="80" height="80" filter="url(#a)" />
+            </svg>
+            """#
+        )
 
         #expect(layer.effects == [.flood(.rgba(r: 0, g: 0, b: 0, a: 0, space: .srgb))])
     }
@@ -135,14 +151,16 @@ struct LayerTreeFilterEdgeCaseTests {
     // resvg and WebKit both read the deprecated inputs as SourceGraphic
     @Test(arguments: ["FillPaint", "StrokePaint", "BackgroundImage", "BackgroundAlpha"])
     func deprecatedInputsAreSourceGraphic(input: String) throws {
-        let layer = try makeFilterLayer(#"""
-        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
-            <filter id="f" filterUnits="userSpaceOnUse" x="0" y="0" width="100" height="100">
-                <feOffset in="\#(input)" dx="50" />
-            </filter>
-            <rect x="10" y="10" width="20" height="20" fill="green" filter="url(#f)" />
-        </svg>
-        """#)
+        let layer = try makeFilterLayer(
+            #"""
+            <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+                <filter id="f" filterUnits="userSpaceOnUse" x="0" y="0" width="100" height="100">
+                    <feOffset in="\#(input)" dx="50" />
+                </filter>
+                <rect x="10" y="10" width="20" height="20" fill="green" filter="url(#f)" />
+            </svg>
+            """#
+        )
 
         #expect(layer.primitives.map(\.inputs) == [[.sourceGraphic]])
     }
@@ -152,15 +170,17 @@ struct LayerTreeFilterEdgeCaseTests {
         ("5", LayerTree.FilterLayer.Effect.gaussianBlur(stdDeviation: 5, stdDeviationY: 5)),
         ("5 10", .gaussianBlur(stdDeviation: 5, stdDeviationY: 10)),
         ("5 10 15", .gaussianBlur(stdDeviation: 0, stdDeviationY: 0)),
-        ("5 10 15 20", .gaussianBlur(stdDeviation: 0, stdDeviationY: 0))
+        ("5 10 15 20", .gaussianBlur(stdDeviation: 0, stdDeviationY: 0)),
     ])
     func stdDeviationValues(value: String, effect: LayerTree.FilterLayer.Effect) throws {
-        let layer = try makeFilterLayer(#"""
-        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
-            <filter id="f"><feGaussianBlur stdDeviation="\#(value)" /></filter>
-            <rect x="10" y="10" width="80" height="80" filter="url(#f)" />
-        </svg>
-        """#)
+        let layer = try makeFilterLayer(
+            #"""
+            <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+                <filter id="f"><feGaussianBlur stdDeviation="\#(value)" /></filter>
+                <rect x="10" y="10" width="80" height="80" filter="url(#f)" />
+            </svg>
+            """#
+        )
 
         #expect(layer.effects == [effect])
     }
@@ -169,33 +189,40 @@ struct LayerTreeFilterEdgeCaseTests {
     @Test
     func unknownColorMatrixTypeAppliesValues() throws {
         let values: [Float] = [-1, 0, 0, 0, 1, 0, -1, 0, 0, 1, 0, 0, -1, 0, 1, -0.21, -0.72, -0.07, 2, 0]
-        let layer = try makeFilterLayer(#"""
-        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
-            <filter id="f">
-                <feColorMatrix type="qwe" values="\#(values.map { "\($0)" }.joined(separator: " "))" />
-                <feColorMatrix type="qwe" values="1 2 3" />
-            </filter>
-            <rect x="10" y="10" width="80" height="80" filter="url(#f)" />
-        </svg>
-        """#)
+        let layer = try makeFilterLayer(
+            #"""
+            <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+                <filter id="f">
+                    <feColorMatrix type="qwe" values="\#(values.map { "\($0)" }.joined(separator: " "))" />
+                    <feColorMatrix type="qwe" values="1 2 3" />
+                </filter>
+                <rect x="10" y="10" width="80" height="80" filter="url(#f)" />
+            </svg>
+            """#
+        )
 
         #expect(layer.effects == [.colorMatrix(values), .colorMatrix(DOM.Filter.ColorMatrix.identity)])
     }
 
     // flood-color/inheritance-3: flood-color is not inherited, but `inherit` takes the <filter>'s value
     @Test(arguments: [
-        (#"flood-color="green""#, #"flood-color="inherit""#, LayerTree.Color.rgba(r: 0, g: Float(128) / 255, b: 0, a: 1, space: .srgb)),
+        (
+            #"flood-color="green""#, #"flood-color="inherit""#,
+            LayerTree.Color.rgba(r: 0, g: Float(128) / 255, b: 0, a: 1, space: .srgb)
+        ),
         (#"flood-color="green""#, "", .rgba(r: 0, g: 0, b: 0, a: 1, space: .srgb)),
         ("", #"flood-color="inherit""#, .rgba(r: 0, g: 0, b: 0, a: 1, space: .srgb)),
-        (#"flood-opacity="0.5""#, #"flood-opacity="inherit""#, .rgba(r: 0, g: 0, b: 0, a: 0.5, space: .srgb))
+        (#"flood-opacity="0.5""#, #"flood-opacity="inherit""#, .rgba(r: 0, g: 0, b: 0, a: 0.5, space: .srgb)),
     ])
     func floodInherit(filter: String, flood: String, color: LayerTree.Color) throws {
-        let layer = try makeFilterLayer(#"""
-        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
-            <filter id="f" \#(filter)><feFlood \#(flood) /></filter>
-            <rect x="10" y="10" width="80" height="80" fill="red" filter="url(#f)" />
-        </svg>
-        """#)
+        let layer = try makeFilterLayer(
+            #"""
+            <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+                <filter id="f" \#(filter)><feFlood \#(flood) /></filter>
+                <rect x="10" y="10" width="80" height="80" fill="red" filter="url(#f)" />
+            </svg>
+            """#
+        )
 
         #expect(layer.effects == [.flood(color)])
     }
@@ -209,7 +236,7 @@ struct FilterShearedBlurTests {
         (LayerTree.Transform.Matrix(a: 2, b: 0, c: 0, d: -3, tx: 0, ty: 0), Float(4), Float(1)),
         (LayerTree.Transform.Matrix(a: 0, b: 1, c: -1, d: 0, tx: 0, ty: 0), 4, 1),
         (LayerTree.Transform.Matrix(a: 0.7071, b: 0.7071, c: -0.7071, d: 0.7071, tx: 0, ty: 0), 3, 3),
-        (LayerTree.Transform.Matrix(a: 0.7071, b: 0.7071, c: -0.7071, d: 0.7071, tx: 0, ty: 0), 0, 0)
+        (LayerTree.Transform.Matrix(a: 0.7071, b: 0.7071, c: -0.7071, d: 0.7071, tx: 0, ty: 0), 0, 0),
     ])
     func axisAlignedBlurIsNotSheared(matrix: LayerTree.Transform.Matrix, x: Float, y: Float) {
         #expect(matrix.blurShear(x, y) == nil)
@@ -220,7 +247,7 @@ struct FilterShearedBlurTests {
         (LayerTree.Transform.Matrix(a: 0.7071, b: 0.7071, c: -0.7071, d: 0.7071, tx: 0, ty: 0), Float(12), Float(0)),
         (LayerTree.Transform.Matrix(a: 0.7071, b: 0.7071, c: -0.7071, d: 0.7071, tx: 0, ty: 0), 0, 12),
         (LayerTree.Transform.Matrix(a: 2, b: 0.5, c: 0.3, d: -1, tx: 0, ty: 0), 3, 7),
-        (LayerTree.Transform.Matrix(a: 1, b: 0, c: 1, d: 1, tx: 0, ty: 0), 4, 4)
+        (LayerTree.Transform.Matrix(a: 1, b: 0, c: 1, d: 1, tx: 0, ty: 0), 4, 4),
     ])
     func shearKeepsCovariance(matrix m: LayerTree.Transform.Matrix, x: Float, y: Float) throws {
         let shear = try #require(m.blurShear(x, y))
@@ -270,13 +297,27 @@ struct FilterShearedBlurTests {
             abs(x - centre) <= 2 && abs(y - centre) <= 2 ? 255 : 0
         }
         let region = LayerTree.Rect(x: -100, y: -100, width: 200, height: 200)
-        let filter = LayerTree.FilterLayer(region: region, primitives: [
-            Primitive(effect: .gaussianBlur(stdDeviation: 4, stdDeviationY: 0), inputs: [.sourceGraphic],
-                      subregion: region, colorInterpolation: .sRGB)
-        ])
+        let filter = LayerTree.FilterLayer(
+            region: region,
+            primitives: [
+                Primitive(
+                    effect: .gaussianBlur(stdDeviation: 4, stdDeviationY: 0),
+                    inputs: [.sourceGraphic],
+                    subregion: region,
+                    colorInterpolation: .sRGB
+                )
+            ]
+        )
         let c = Float(0.5).squareRoot()
         let environment = LayerTree.FilterLayer.Environment(
-            transform: LayerTree.Transform.Matrix(a: c, b: c, c: -c, d: c, tx: Float(centre) + 0.5, ty: Float(centre) + 0.5),
+            transform: LayerTree.Transform.Matrix(
+                a: c,
+                b: c,
+                c: -c,
+                d: c,
+                tx: Float(centre) + 0.5,
+                ty: Float(centre) + 0.5
+            ),
             blur: Self.boxBlur
         )
 
@@ -334,9 +375,11 @@ private extension LayerTreeFilterEdgeCaseTests {
     func makeCommands(_ xml: String, options: SVG.Options = .default) throws -> [RendererCommand<LayerTreeTypes>] {
         let svg = try DOM.SVG.parse(xml: xml)
         let layer = LayerTree.Builder(svg: svg).makeLayer()
-        let generator = LayerTree.CommandGenerator(provider: LayerTreeProvider(),
-                                                   size: .init(svg.width, svg.height),
-                                                   options: options)
+        let generator = LayerTree.CommandGenerator(
+            provider: LayerTreeProvider(),
+            size: .init(svg.width, svg.height),
+            options: options
+        )
         return generator.renderCommands(for: layer, colorConverter: .default)
     }
 

@@ -54,7 +54,11 @@ extension XMLParser {
         }
     }
 
-    func parseReferencedContainers(_ e: XML.Element, ancestry: Ancestry, into containers: inout ReferencedContainers) throws {
+    func parseReferencedContainers(
+        _ e: XML.Element,
+        ancestry: Ancestry,
+        into containers: inout ReferencedContainers
+    ) throws {
         for n in e.children {
             try appendReferencedContainer(n, ancestry: ancestry, into: &containers)
             guard !n.children.isEmpty else { continue }
@@ -67,7 +71,11 @@ extension XMLParser {
 
     /// Kept out of line so the recursive walk keeps a small frame (see `appendSkippingInvalid`).
     @inline(never)
-    private func appendReferencedContainer(_ n: XML.Element, ancestry: Ancestry, into containers: inout ReferencedContainers) throws {
+    private func appendReferencedContainer(
+        _ n: XML.Element,
+        ancestry: Ancestry,
+        into containers: inout ReferencedContainers
+    ) throws {
         switch n.name {
         case "mask":
             let count = containers.masks.count

@@ -32,177 +32,180 @@
 import Foundation
 
 extension XMLParser {
-  // Storage for merging XMLElement attibutes and style properties;
-  // style properties have precedence over element attibutes
-  // <line stroke="none" fill="red" style="stroke: 2" />
-  // attributes["stoke"] == "2"
-  // attributes["fill"] == "red"
-  final class Attributes: AttributeParser {
-    
-    let parser: any AttributeValueParser
-    let options: XMLParser.Options
-    
-    let element: [String: String]
-    let style: [String: String]
-    
-    init(parser: any AttributeValueParser,
-         options: XMLParser.Options = [],
-         element: [String: String],
-         style: [String: String]) {
-      self.parser = parser
-      self.options = options
-      self.element = element
-      self.style = style
-    }
-    
-    func parse<T>(_ key: String, _ exp: (String) throws -> T) throws -> T {
-      do {
-        return try parse(style[key], with: exp, for: key)
-      } catch XMLParser.Error.missingAttribute(_) {
-        return try parse(element[key], with: exp, for: key)
-      } catch let error {
-        guard options.contains(.skipInvalidAttributes) else { throw error }
-      }
-      return try parse(element[key], with: exp, for: key)
-    }
-    
-    // CSS priority flag: `fill: red !important` is read as `fill: red`
-    static func removingImportant(from value: String) -> String {
-      let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
-      guard let range = trimmed.range(of: "important", options: [.caseInsensitive, .backwards]),
-            range.upperBound == trimmed.endIndex else {
-        return value
-      }
-      // `!important` and `! important`
-      let head = trimmed[trimmed.startIndex..<range.lowerBound]
-      guard let bang = head.lastIndex(where: { !$0.isWhitespace }), head[bang] == "!" else {
-        return value
-      }
-      return String(head[head.startIndex..<bang])
-    }
+    // Storage for merging XMLElement attibutes and style properties;
+    // style properties have precedence over element attibutes
+    // <line stroke="none" fill="red" style="stroke: 2" />
+    // attributes["stoke"] == "2"
+    // attributes["fill"] == "red"
+    final class Attributes: AttributeParser {
 
-    func parse<T>(_ value: String?, with expression: (String) throws -> T, for key: String) throws -> T {
-      guard let value = value else { throw XMLParser.Error.missingAttribute(name: key) }
-      guard let result = try? expression(Self.removingImportant(from: value)) else {
-        throw XMLParser.Error.invalidAttribute(name: key, value: value)
-      }
-      return result
+        let parser: any AttributeValueParser
+        let options: XMLParser.Options
+
+        let element: [String: String]
+        let style: [String: String]
+
+        init(
+            parser: any AttributeValueParser,
+            options: XMLParser.Options = [],
+            element: [String: String],
+            style: [String: String]
+        ) {
+            self.parser = parser
+            self.options = options
+            self.element = element
+            self.style = style
+        }
+
+        func parse<T>(_ key: String, _ exp: (String) throws -> T) throws -> T {
+            do {
+                return try parse(style[key], with: exp, for: key)
+            } catch XMLParser.Error.missingAttribute(_) {
+                return try parse(element[key], with: exp, for: key)
+            } catch let error {
+                guard options.contains(.skipInvalidAttributes) else { throw error }
+            }
+            return try parse(element[key], with: exp, for: key)
+        }
+
+        // CSS priority flag: `fill: red !important` is read as `fill: red`
+        static func removingImportant(from value: String) -> String {
+            let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard let range = trimmed.range(of: "important", options: [.caseInsensitive, .backwards]),
+                range.upperBound == trimmed.endIndex
+            else {
+                return value
+            }
+            // `!important` and `! important`
+            let head = trimmed[trimmed.startIndex..<range.lowerBound]
+            guard let bang = head.lastIndex(where: { !$0.isWhitespace }), head[bang] == "!" else {
+                return value
+            }
+            return String(head[head.startIndex..<bang])
+        }
+
+        func parse<T>(_ value: String?, with expression: (String) throws -> T, for key: String) throws -> T {
+            guard let value = value else { throw XMLParser.Error.missingAttribute(name: key) }
+            guard let result = try? expression(Self.removingImportant(from: value)) else {
+                throw XMLParser.Error.invalidAttribute(name: key, value: value)
+            }
+            return result
+        }
     }
-  }
 }
 
 extension XMLParser {
-  
-  struct ValueParser: AttributeValueParser {
-    
-    func parseFloat(_ value: String) throws -> DOM.Float {
-      var scanner = XMLParser.Scanner(text: value)
-      return try scanner.scanFloat()
-    }
-    
-    func parseFloats(_ value: String) throws -> [DOM.Float] {
-      var array = [DOM.Float]()
-      var scanner = XMLParser.Scanner(text: value)
-      
-      while !scanner.isEOF {
-        let vx = try scanner.scanFloat()
-        scanner.scanStringIfPossible(",")
-        array.append(vx)
-      }
-      
-      return array
-    }
-    
-    
-    func parsePercentage(_ value: String) throws -> DOM.Float {
-      var scanner = XMLParser.Scanner(text: value)
-      guard let pc = try? scanner.scanPercentage() else {
-        //try a value between 0.0, 1.0
-        return try scanner.scanPercentageFloat()
-      }
-      return pc
-    }
-    
-    func parseCoordinate(_ value: String) throws -> DOM.Coordinate {
-      var scanner = XMLParser.Scanner(text: value)
-      return try scanner.scanCoordinate()
-    }
 
-    func parseCoordinateOrPercentage(_ value: String) throws -> DOM.Coordinate {
-      var scanner = XMLParser.Scanner(text: value)
-      return try scanner.scanCoordinateOrPercentage()
-    }
+    struct ValueParser: AttributeValueParser {
 
-    func parseLength(_ value: String) throws -> DOM.Length {
-      var scanner = XMLParser.Scanner(text: value)
-      return try scanner.scanLength()
-    }
-    
-    func parseBool(_ value: String) throws -> DOM.Bool {
-      var scanner = XMLParser.Scanner(text: value)
-      return try scanner.scanBool()
-    }
-    
-    func parseFill(_ value: String) throws -> DOM.Fill {
-      return try XMLParser().parseFill(value)
-    }
-    
-    func parseUrl(_ value: String) throws -> DOM.URL {
-      guard let url = URL(maybeData: value) else { throw XMLParser.Error.invalid }
-      return url
-    }
+        func parseFloat(_ value: String) throws -> DOM.Float {
+            var scanner = XMLParser.Scanner(text: value)
+            return try scanner.scanFloat()
+        }
 
-    func parseUrlSelector(_ value: String) throws -> DOM.URL {
-      var scanner = XMLParser.Scanner(text: value)
-      let url = try scanner.scanStringFunction("url")
-      guard !url.isEmpty, scanner.isEOF else {
-        throw XMLParser.Error.invalid
-      }
-      
-      return try parseUrl(url)
-    }
+        func parseFloats(_ value: String) throws -> [DOM.Float] {
+            var array = [DOM.Float]()
+            var scanner = XMLParser.Scanner(text: value)
 
-    /// SVG 2 §10.6: points up to the first error are used, and an odd final coordinate is ignored.
-    func parsePoints(_ value: String) throws -> [DOM.Point] {
-      var points = [DOM.Point]()
-      var scanner = XMLParser.Scanner(text: value)
-      let delimeter = CharacterSet(charactersIn: ",;")
+            while !scanner.isEOF {
+                let vx = try scanner.scanFloat()
+                scanner.scanStringIfPossible(",")
+                array.append(vx)
+            }
 
-      while !scanner.isEOF {
-        guard let x = try? scanner.scanCoordinate() else { break }
-        _ = try? scanner.scanCharacter(matchingAny: delimeter)
-        guard let y = try? scanner.scanCoordinate() else { break }
-        _ = try? scanner.scanCharacter(matchingAny: delimeter)
-        points.append(DOM.Point(x, y))
-      }
+            return array
+        }
 
-      return points
-    }
+        func parsePercentage(_ value: String) throws -> DOM.Float {
+            var scanner = XMLParser.Scanner(text: value)
+            guard let pc = try? scanner.scanPercentage() else {
+                //try a value between 0.0, 1.0
+                return try scanner.scanPercentageFloat()
+            }
+            return pc
+        }
 
-    func parseFontFamily(_ key: String) throws -> [DOM.FontFamily] {
-      var scanner = XMLParser.Scanner(text: key)
-      return try scanner
-        .scanStrings(delimitedBy: ",")
-        .map {
-          var value = $0.unquoted
-          // a quote left open at the end of the value is closed by EOF, it is not part of the name
-          if let first = value.first, first == "'" || first == "\"" { value.removeFirst() }
-          if let keyword = DOM.FontFamily.Keyword(rawValue: value) {
-            return .keyword(keyword)
-          } else {
-            return .name(value)
-          }
+        func parseCoordinate(_ value: String) throws -> DOM.Coordinate {
+            var scanner = XMLParser.Scanner(text: value)
+            return try scanner.scanCoordinate()
+        }
+
+        func parseCoordinateOrPercentage(_ value: String) throws -> DOM.Coordinate {
+            var scanner = XMLParser.Scanner(text: value)
+            return try scanner.scanCoordinateOrPercentage()
+        }
+
+        func parseLength(_ value: String) throws -> DOM.Length {
+            var scanner = XMLParser.Scanner(text: value)
+            return try scanner.scanLength()
+        }
+
+        func parseBool(_ value: String) throws -> DOM.Bool {
+            var scanner = XMLParser.Scanner(text: value)
+            return try scanner.scanBool()
+        }
+
+        func parseFill(_ value: String) throws -> DOM.Fill {
+            return try XMLParser().parseFill(value)
+        }
+
+        func parseUrl(_ value: String) throws -> DOM.URL {
+            guard let url = URL(maybeData: value) else { throw XMLParser.Error.invalid }
+            return url
+        }
+
+        func parseUrlSelector(_ value: String) throws -> DOM.URL {
+            var scanner = XMLParser.Scanner(text: value)
+            let url = try scanner.scanStringFunction("url")
+            guard !url.isEmpty, scanner.isEOF else {
+                throw XMLParser.Error.invalid
+            }
+
+            return try parseUrl(url)
+        }
+
+        /// SVG 2 §10.6: points up to the first error are used, and an odd final coordinate is ignored.
+        func parsePoints(_ value: String) throws -> [DOM.Point] {
+            var points = [DOM.Point]()
+            var scanner = XMLParser.Scanner(text: value)
+            let delimeter = CharacterSet(charactersIn: ",;")
+
+            while !scanner.isEOF {
+                guard let x = try? scanner.scanCoordinate() else { break }
+                _ = try? scanner.scanCharacter(matchingAny: delimeter)
+                guard let y = try? scanner.scanCoordinate() else { break }
+                _ = try? scanner.scanCharacter(matchingAny: delimeter)
+                points.append(DOM.Point(x, y))
+            }
+
+            return points
+        }
+
+        func parseFontFamily(_ key: String) throws -> [DOM.FontFamily] {
+            var scanner = XMLParser.Scanner(text: key)
+            return
+                try scanner
+                .scanStrings(delimitedBy: ",")
+                .map {
+                    var value = $0.unquoted
+                    // a quote left open at the end of the value is closed by EOF, it is not part of the name
+                    if let first = value.first, first == "'" || first == "\"" { value.removeFirst() }
+                    if let keyword = DOM.FontFamily.Keyword(rawValue: value) {
+                        return .keyword(keyword)
+                    } else {
+                        return .name(value)
+                    }
+                }
+        }
+
+        func parseRaw<T: RawRepresentable>(_ value: String) throws -> T where T.RawValue == String {
+            guard let obj = T(rawValue: value.trimmingCharacters(in: .whitespaces)) else {
+                throw XMLParser.Error.invalid
+            }
+            return obj
         }
     }
 
-    func parseRaw<T: RawRepresentable>(_ value: String) throws -> T where T.RawValue == String {
-      guard let obj = T(rawValue: value.trimmingCharacters(in: .whitespaces)) else {
-        throw XMLParser.Error.invalid
-      }
-      return obj
-    }
-  }
-  
 }
 
 extension AttributeParser {

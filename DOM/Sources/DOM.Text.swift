@@ -135,7 +135,7 @@ package extension DOM {
         case text(String)
         case span(TextSpan)
     }
-    
+
     final class Anchor: GraphicsElement, ContainerElement {
         package var href: URL?
         package var childElements = [GraphicsElement]()

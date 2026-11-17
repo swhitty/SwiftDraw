@@ -29,7 +29,6 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-
 import Testing
 @testable import SwiftDrawDOM
 
@@ -37,34 +36,40 @@ struct ParserXMLPaintOrderTests {
 
     typealias Layer = DOM.PaintOrder.Layer
 
-    @Test(arguments: [
-        ("normal", [.fill, .stroke, .markers]),
-        ("fill", [.fill, .stroke, .markers]),
-        ("stroke", [.stroke, .fill, .markers]),
-        ("markers", [.markers, .fill, .stroke]),
-        ("markers stroke", [.markers, .stroke, .fill]),
-        ("stroke markers", [.stroke, .markers, .fill]),
-        ("fill markers stroke", [.fill, .markers, .stroke]),
-        ("  STROKE   markers\tfill ", [.stroke, .markers, .fill])
-    ] as [(String, [Layer])])
+    @Test(
+        arguments: [
+            ("normal", [.fill, .stroke, .markers]),
+            ("fill", [.fill, .stroke, .markers]),
+            ("stroke", [.stroke, .fill, .markers]),
+            ("markers", [.markers, .fill, .stroke]),
+            ("markers stroke", [.markers, .stroke, .fill]),
+            ("stroke markers", [.stroke, .markers, .fill]),
+            ("fill markers stroke", [.fill, .markers, .stroke]),
+            ("  STROKE   markers\tfill ", [.stroke, .markers, .fill]),
+        ] as [(String, [Layer])]
+    )
     func validValues(text: String, layers: [Layer]) {
         #expect(DOM.PaintOrder(text)?.layers == layers)
     }
 
-    @Test(arguments: ["", "  ", "stroke stroke", "fill normal", "normal fill", "stroke,fill", "none", "fill stroke markers fill"])
+    @Test(arguments: [
+        "", "  ", "stroke stroke", "fill normal", "normal fill", "stroke,fill", "none", "fill stroke markers fill",
+    ])
     func invalidValues(text: String) {
         #expect(DOM.PaintOrder(text) == nil)
     }
 
-    @Test(arguments: [
-        ("normal", "normal"),
-        ("fill stroke markers", "normal"),
-        ("stroke", "stroke"),
-        ("stroke fill markers", "stroke"),
-        ("markers", "markers"),
-        ("fill markers", "fill markers"),
-        ("stroke markers fill", "stroke markers")
-    ] as [(String, String)])
+    @Test(
+        arguments: [
+            ("normal", "normal"),
+            ("fill stroke markers", "normal"),
+            ("stroke", "stroke"),
+            ("stroke fill markers", "stroke"),
+            ("markers", "markers"),
+            ("fill markers", "fill markers"),
+            ("stroke markers fill", "stroke markers"),
+        ] as [(String, String)]
+    )
     func shortestValue(text: String, value: String) throws {
         let order = try #require(DOM.PaintOrder(text))
         #expect(order.value == value)
@@ -73,23 +78,29 @@ struct ParserXMLPaintOrderTests {
 
     @Test
     func attributeAndCSS() throws {
-        let svg = try DOM.SVG.parse(xml: """
-        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10">
-          <style>.a { paint-order: markers }</style>
-          <path d="M0 0 H 10" paint-order="stroke"/>
-          <path d="M0 0 H 10" style="paint-order: stroke markers"/>
-          <path d="M0 0 H 10" class="a" paint-order="stroke"/>
-          <path d="M0 0 H 10" paint-order="stroke stroke"/>
-          <path d="M0 0 H 10"/>
-        </svg>
-        """)
-        let orders = svg.childElements.map { DOM.presentationAttributes(for: $0, styles: svg.styles).paintOrder?.layers }
-        #expect(orders == [
-            [.stroke, .fill, .markers],
-            [.stroke, .markers, .fill],
-            [.markers, .fill, .stroke],
-            nil,
-            nil
-        ])
+        let svg = try DOM.SVG.parse(
+            xml: """
+                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10">
+                  <style>.a { paint-order: markers }</style>
+                  <path d="M0 0 H 10" paint-order="stroke"/>
+                  <path d="M0 0 H 10" style="paint-order: stroke markers"/>
+                  <path d="M0 0 H 10" class="a" paint-order="stroke"/>
+                  <path d="M0 0 H 10" paint-order="stroke stroke"/>
+                  <path d="M0 0 H 10"/>
+                </svg>
+                """
+        )
+        let orders = svg.childElements.map {
+            DOM.presentationAttributes(for: $0, styles: svg.styles).paintOrder?.layers
+        }
+        #expect(
+            orders == [
+                [.stroke, .fill, .markers],
+                [.stroke, .markers, .fill],
+                [.markers, .fill, .stroke],
+                nil,
+                nil,
+            ]
+        )
     }
 }

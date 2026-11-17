@@ -30,7 +30,12 @@ struct CGProviderFontLookupTests {
                     let family = families[index % families.count]
                     var count = 0
                     for weight in [300, 400, 700, 900] {
-                        let font = CGProvider.createFont(for: [.name(family)], size: 12, weight: weight, isItalic: index.isMultiple(of: 2))
+                        let font = CGProvider.createFont(
+                            for: [.name(family)],
+                            size: 12,
+                            weight: weight,
+                            isItalic: index.isMultiple(of: 2)
+                        )
                         count += CTFontGetSize(font.font) == 12 ? 1 : 0
                     }
                     _ = CGProvider.installedFontPostScriptName(family)
