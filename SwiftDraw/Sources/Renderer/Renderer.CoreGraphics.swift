@@ -988,7 +988,7 @@ private extension LayerTree.FilterLayer {
                 let vector = CGSize(width: CGFloat(dx), height: CGFloat(dy)).applying(toDevice)
                 width += abs(vector.width)
                 height += abs(vector.height)
-            case .flood, .composite, .merge, .blend, .colorMatrix:
+            case .flood, .composite, .merge, .blend, .colorMatrix, .componentTransfer:
                 break
             }
         }

@@ -274,6 +274,8 @@ extension XMLParser {
         case "feColorMatrix":
             let att: any AttributeParser = try parseAttributes(e)
             return .colorMatrix(parseColorMatrix(att))
+        case "feComponentTransfer":
+            return .componentTransfer(try parseComponentTransfer(e))
         default:
             guard e.name.hasPrefix("fe") else { return nil }
             return .unsupported(name: e.name)
@@ -348,6 +350,52 @@ extension XMLParser {
             // `matrix`, or an unknown type
             guard let values else { return .matrix(identity) }
             return .matrix(values.count == 20 ? values : identity)
+        }
+    }
+
+    // Filter Effects 1 §9.7: a repeated feFuncX replaces the earlier one, as in resvg and WebKit
+    func parseComponentTransfer(_ e: XML.Element) throws -> DOM.Filter.ComponentTransfer {
+        var transfer = DOM.Filter.ComponentTransfer()
+        for n in e.children {
+            switch n.name {
+            case "feFuncR":
+                transfer.r = try parseTransferFunction(n)
+            case "feFuncG":
+                transfer.g = try parseTransferFunction(n)
+            case "feFuncB":
+                transfer.b = try parseTransferFunction(n)
+            case "feFuncA":
+                transfer.a = try parseTransferFunction(n)
+            default:
+                break
+            }
+        }
+        return transfer
+    }
+
+    // An unknown type is the identity. Numbers are plain <number>s: a unit or percentage makes the value
+    // unreadable, which takes the initial value (resvg), and an unreadable tableValues is empty.
+    func parseTransferFunction(_ e: XML.Element) throws -> DOM.Filter.TransferFunction {
+        let att: any AttributeParser = try parseAttributes(e)
+        func number(_ key: String, _ initial: DOM.Float) -> DOM.Float {
+            guard let values = try? att.parseFloats(key), values.count == 1, values[0].isFinite else { return initial }
+            return values[0]
+        }
+        func table() -> [DOM.Float] {
+            guard let values = try? att.parseFloats("tableValues"), values.allSatisfy(\.isFinite) else { return [] }
+            return values
+        }
+        switch (try? att.parseString("type"))?.trimmingCharacters(in: .whitespaces) {
+        case "table":
+            return .table(table())
+        case "discrete":
+            return .discrete(table())
+        case "linear":
+            return .linear(slope: number("slope", 1), intercept: number("intercept", 0))
+        case "gamma":
+            return .gamma(amplitude: number("amplitude", 1), exponent: number("exponent", 1), offset: number("offset", 0))
+        default:
+            return .identity
         }
     }
 

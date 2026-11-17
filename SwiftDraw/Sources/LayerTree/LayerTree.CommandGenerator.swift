@@ -891,6 +891,8 @@ extension LayerTree.CommandGenerator {
             return .blend(mode)
         case .colorMatrix(let matrix):
             return .colorMatrix(matrix.values)
+        case .componentTransfer(let transfer):
+            return .componentTransfer(transfer)
         case .dropShadow:
             // resolved into its primitives by makeDropShadow
             return nil
@@ -1121,6 +1123,8 @@ private extension LayerTree.Filter {
             return "<feBlend>"
         case .colorMatrix:
             return "<feColorMatrix>"
+        case .componentTransfer:
+            return "<feComponentTransfer>"
         case .dropShadow:
             return "<feDropShadow>"
         }

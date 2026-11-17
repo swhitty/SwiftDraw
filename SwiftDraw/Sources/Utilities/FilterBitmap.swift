@@ -132,6 +132,8 @@ extension LayerTree.FilterLayer {
                     result = FilterBitmap.blend(input(0), input(1), mode: mode, linear: isLinear)
                 case .colorMatrix(let matrix):
                     result = FilterBitmap.colorMatrix(input(0), matrix: matrix, linear: isLinear)
+                case .componentTransfer(let transfer):
+                    result = FilterBitmap.componentTransfer(input(0), transfer, linear: isLinear)
                 }
                 result.clip(to: primitive.subregion, transform: environment.transform)
             }
@@ -535,9 +537,28 @@ extension FilterBitmap {
     static func colorMatrix(_ source: FilterBitmap, matrix: [Float], linear: Bool) -> FilterBitmap {
         guard matrix.count == 20 else { return source }
         return matrix.withUnsafeBufferPointer { m in
-            map(source, linear: linear, matrix: m.baseAddress!)
+            map(source, linear: linear, .matrix(m.baseAddress!))
         }
     }
+
+    // Filter Effects 1 §9.7: on non-premultiplied values, each result clamped to 0...1.
+    // Each function is sampled into a table, read with linear interpolation: exact for the table and linear
+    // types between their breakpoints, within 1/255 for the others.
+    static func componentTransfer(_ source: FilterBitmap, _ transfer: DOM.Filter.ComponentTransfer, linear: Bool) -> FilterBitmap {
+        let functions = [transfer.r, transfer.g, transfer.b, transfer.a]
+        guard functions.contains(where: { $0 != .identity }) else { return source }
+        var table = [Float](repeating: 0, count: 4 * (transferSegments + 1))
+        for (channel, function) in functions.enumerated() {
+            for index in 0...transferSegments {
+                table[channel * (transferSegments + 1) + index] = function.evaluate(Float(index) / Float(transferSegments))
+            }
+        }
+        return table.withUnsafeBufferPointer { t in
+            map(source, linear: linear, .transfer(t.baseAddress!))
+        }
+    }
+
+    static let transferSegments = 4096
 
     // Filter Effects 1 §9.4: pixels whose centre falls outside the subregion become transparent black
     mutating func clip(to rect: LayerTree.Rect, transform: LayerTree.Transform.Matrix) {
@@ -737,8 +758,15 @@ private extension FilterBitmap {
         return result
     }
 
+    enum MapOperation {
+        // a 4x5 matrix
+        case matrix(UnsafePointer<Float>)
+        // a table of transferSegments + 1 samples per channel, red to alpha
+        case transfer(UnsafePointer<Float>)
+    }
+
     // Each run of equal pixels is computed once.
-    static func map(_ source: FilterBitmap, linear: Bool, matrix m: UnsafePointer<Float>) -> FilterBitmap {
+    static func map(_ source: FilterBitmap, linear: Bool, _ op: MapOperation) -> FilterBitmap {
         var result = FilterBitmap(width: source.width, height: source.height)
         let unit = unitTable
         let decoding = linearTable
@@ -750,13 +778,13 @@ private extension FilterBitmap {
                 let out = UnsafeMutableRawPointer(outBase)
                 let count = dst.count
                 var key: UInt32 = 0
-                var value = quantize(applyMatrix(m, .zero), linear: linear, encoding: encoding)
+                var value = quantize(apply(op, .zero), linear: linear, encoding: encoding)
                 var i = 0
                 while i < count {
                     let pixel = raw.loadUnaligned(fromByteOffset: i, as: UInt32.self)
                     if pixel != key {
                         key = pixel
-                        value = quantize(applyMatrix(m, load(pixel, linear: linear, unit: unit, decoding: decoding)),
+                        value = quantize(apply(op, load(pixel, linear: linear, unit: unit, decoding: decoding)),
                                          linear: linear, encoding: encoding)
                     }
                     if value != 0 {
@@ -767,6 +795,43 @@ private extension FilterBitmap {
             }
         }
         return result
+    }
+
+    @inline(__always)
+    static func apply(_ op: MapOperation, _ p: FilterPixel) -> FilterPixel {
+        switch op {
+        case .matrix(let m):
+            return applyMatrix(m, p)
+        case .transfer(let t):
+            return applyTransfer(t, p)
+        }
+    }
+
+    // the transfer tables on straight colour, premultiplied again
+    @inline(__always)
+    static func applyTransfer(_ t: UnsafePointer<Float>, _ p: FilterPixel) -> FilterPixel {
+        var c = p
+        if c.a > 0 {
+            c.r /= c.a
+            c.g /= c.a
+            c.b /= c.a
+        }
+        let stride = transferSegments + 1
+        let r = sample(t, c.r)
+        let g = sample(t + stride, c.g)
+        let b = sample(t + 2 * stride, c.b)
+        let a = sample(t + 3 * stride, c.a)
+        return FilterPixel(r: r * a, g: g * a, b: b * a, a: a)
+    }
+
+    // a table of transferSegments + 1 samples over 0...1, interpolated linearly
+    @inline(__always)
+    static func sample(_ t: UnsafePointer<Float>, _ value: Float) -> Float {
+        let x = clamp01(value) * Float(transferSegments)
+        var index = Int(x)
+        if index >= transferSegments { index = transferSegments - 1 }
+        let lower = t[index]
+        return lower + (x - Float(index)) * (t[index + 1] - lower)
     }
 
     // the 4x5 matrix on straight colour, clamped to 0...1 and premultiplied again
@@ -886,6 +951,36 @@ private extension FilterBitmap {
             table[index] = value(index)
         }
         return UnsafePointer(table)
+    }
+}
+
+extension DOM.Filter.TransferFunction {
+
+    // Filter Effects 1 §9.7: the function at a non-premultiplied value 0...1, clamped to 0...1.
+    // A table of one value is that value everywhere.
+    func evaluate(_ c: Float) -> Float {
+        let value: Float
+        switch self {
+        case .identity:
+            value = c
+        case .table(let v):
+            guard !v.isEmpty else { return c }
+            guard v.count > 1 else { value = v[0]; break }
+            let n = Float(v.count - 1)
+            let k = Swift.min(Int(c * n), v.count - 2)
+            value = v[k] + (c * n - Float(k)) * (v[k + 1] - v[k])
+        case .discrete(let v):
+            guard !v.isEmpty else { return c }
+            let k = Swift.min(Int(c * Float(v.count)), v.count - 1)
+            value = v[k]
+        case let .linear(slope: slope, intercept: intercept):
+            value = slope * c + intercept
+        case let .gamma(amplitude: amplitude, exponent: exponent, offset: offset):
+            value = amplitude * Float(pow(Double(c), Double(exponent))) + offset
+        }
+        // NaN as 0
+        guard value == value else { return 0 }
+        return Swift.max(0, Swift.min(1, value))
     }
 }
 
