@@ -204,13 +204,15 @@ struct LayerTreeFilterTests {
         ])
     }
 
-    // text has no measured bounds: drawn unfiltered, neither warned about nor hidden as unsupported
+    // SVG 2 §8.10: the objectBoundingBox filter region of text is that of its glyph cells, measured
+    // with CoreText; without it text has no bounds and is drawn unfiltered, neither warned about nor
+    // hidden as unsupported
     @Test
-    func textWithObjectBoundingBoxBlurIsDrawnUnfiltered() throws {
+    func textWithObjectBoundingBoxBlurIsFilteredByItsBoundingBox() throws {
         let svg = try DOM.SVG.parse(xml: #"""
         <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
             <filter id="blur"><feGaussianBlur stdDeviation="2" /></filter>
-            <text x="10" y="50" filter="url(#blur)">Hi</text>
+            <text x="10" y="50" font-family="Times" font-size="20" filter="url(#blur)">Hi</text>
         </svg>
         """#)
         let root = LayerTree.Builder(svg: svg).makeLayer()
@@ -218,24 +220,53 @@ struct LayerTreeFilterTests {
         let generator = LayerTree.CommandGenerator(provider: LayerTreeProvider(), size: .init(100, 100), options: .hideUnsupportedFilters)
 
         #expect(!layer.hasUnsupportedFilters)
+        #if canImport(CoreText)
+        let bounds = try #require(layer.textBounds)
+        #expect(bounds.x == 10)
+        #expect(bounds.y < 50 && bounds.y + bounds.height > 50)
+        let filter = try #require(generator.makeFilterLayer(for: layer))
+        #expect(filter.region == LayerTree.Rect(
+            x: bounds.x - 0.1 * bounds.width, y: bounds.y - 0.1 * bounds.height,
+            width: 1.2 * bounds.width, height: 1.2 * bounds.height
+        ))
+        #else
         #expect(generator.makeFilterLayer(for: layer) == nil)
+        #endif
     }
 
-    // a group mixing shapes and text has unknown bounds: draw it unfiltered rather than clip the text away
+    // a group mixing shapes and text: its box includes the text's, so the text is not clipped away
     @Test
-    func groupWithTextIsDrawnUnfiltered() throws {
+    func groupWithTextIsFilteredByTheUnionOfItsContents() throws {
         let commands = try makeCommands(#"""
         <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
-            <filter id="blur"><feGaussianBlur stdDeviation="2" /></filter>
-            <g filter="url(#blur)">
+            <filter id="flood" x="0" y="0" width="1" height="1"><feFlood flood-color="green" /></filter>
+            <g filter="url(#flood)">
                 <rect x="10" y="10" width="10" height="10" />
-                <text x="10" y="80">Hello</text>
+                <text x="10" y="80" font-family="Times" font-size="20">Hello</text>
             </g>
         </svg>
         """#, options: .hideUnsupportedFilters)
 
+        #if canImport(CoreText)
+        let region = try #require(commands.filterLayers.first?.region)
+        #expect(region.x == 10 && region.y == 10)
+        #expect(region.width > 10 && region.y + region.height > 80)
+        #else
         #expect(commands.filterLayers.isEmpty)
         #expect(commands.names.prefix(2) == ["setFillColor", "fillPath"])
+        #endif
+    }
+
+    // the text's own box is not measured where no filter needs it
+    @Test
+    func textIsOnlyMeasuredUnderAFilter() throws {
+        let svg = try DOM.SVG.parse(xml: #"""
+        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+            <text x="10" y="50">Hi</text>
+        </svg>
+        """#)
+        let root = LayerTree.Builder(svg: svg).makeLayer()
+        #expect(root.allLayers.allSatisfy { $0.textBounds == nil })
     }
 
     @Test

@@ -257,9 +257,11 @@ extension DOM {
         case ideographic
         case textBeforeEdge = "text-before-edge"
         case textAfterEdge = "text-after-edge"
+        /// the parent's value; `alignment-baseline` is not inherited otherwise
+        case inherit
 
-        /// A value, with the aliases SVG 1.1 and CSS Inline 3 give some of them. nil for `inherit`
-        /// and unknown values, which leave the inherited baseline.
+        /// A value, with the aliases SVG 1.1 and CSS Inline 3 give some of them. nil for unknown
+        /// values, which leave the inherited baseline.
         package init?(css value: String) {
             switch value.trimmingCharacters(in: .whitespaces).lowercased() {
             case "auto", "baseline", "use-script": self = .auto

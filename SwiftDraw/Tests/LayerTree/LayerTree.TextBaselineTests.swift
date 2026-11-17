@@ -84,9 +84,30 @@ struct LayerTreeTextBaselineTests {
         #expect(DOM.TextBaseline(css: value) == expected)
     }
 
-    @Test(arguments: ["inherit", "no-change", "reset-size", "top", ""])
+    @Test(arguments: ["no-change", "reset-size", "top", ""])
     func baselinesThatKeepTheParentsAreNotParsed(value: String) {
         #expect(DOM.TextBaseline(css: value) == nil)
+    }
+
+    @Test
+    func inheritIsParsed() {
+        #expect(DOM.TextBaseline(css: " INHERIT ") == .inherit)
+    }
+
+    // alignment-baseline is not inherited, but `inherit` takes the parent's
+    @Test
+    func alignmentBaselineInheritTakesTheParents() throws {
+        let states = try runStates(#"<g alignment-baseline="hanging"><text alignment-baseline="inherit">A</text></g>"#)
+        #expect(states.map(\.alignmentBaseline) == [.hanging])
+        let plain = try runStates(#"<g alignment-baseline="hanging"><text>A</text></g>"#)
+        #expect(plain.map(\.alignmentBaseline) == [nil])
+    }
+
+    // dominant-baseline is inherited anyway: `inherit` keeps the parent's
+    @Test
+    func dominantBaselineInheritKeepsTheParents() throws {
+        let states = try runStates(#"<g dominant-baseline="central"><text dominant-baseline="inherit">A</text></g>"#)
+        #expect(states.map(\.textBaseline) == [.central])
     }
 
     @Test(arguments: [

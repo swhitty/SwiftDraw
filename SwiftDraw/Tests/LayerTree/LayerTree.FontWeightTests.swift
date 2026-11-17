@@ -152,6 +152,32 @@ struct CGProviderFontWeightTests {
         #expect(postScriptName("NoSuchFamily", weight: 700) == "Times-Bold")
     }
 
+    // CSS Fonts 4 §5.2 over the installed faces, not CoreText's nearest weight trait
+    @Test(arguments: [
+        (450, "HelveticaNeue-Medium"),  // 400–500: heavier up to 500 first
+        (550, "HelveticaNeue-Bold"),    // above 500: heavier first, not the nearer Medium
+        (650, "HelveticaNeue-Bold"),
+        (350, "HelveticaNeue-Light"),   // below 400: lighter first
+        (900, "HelveticaNeue-Bold"),    // nothing heavier of normal width: lighter, not CondensedBlack
+    ] as [(Int, String)])
+    func systemFamilyFaceIsMatchedLikeCSS(weight: Int, expected: String) {
+        #expect(postScriptName("Helvetica Neue", weight: weight) == expected)
+    }
+
+    @Test
+    func systemFamilyFaceKeepsSlantBeforeWeight() {
+        #expect(postScriptName("Helvetica Neue", weight: 550, italic: true) == "HelveticaNeue-BoldItalic")
+        // Times has no light face: 300 has nothing lighter, so the regular
+        #expect(postScriptName("Times", weight: 300) == "Times-Roman")
+    }
+
+    @Test
+    func cssWeightInvertsCoreTextWeight() {
+        for weight in [1, 100, 300, 400, 450, 500, 650, 700, 900, 1000] {
+            #expect(CGProvider.cssWeight(for: CGProvider.coreTextWeight(for: weight)) == weight)
+        }
+    }
+
     @Test
     func coreTextWeightScale() {
         #expect(CGProvider.coreTextWeight(for: 400) == 0)

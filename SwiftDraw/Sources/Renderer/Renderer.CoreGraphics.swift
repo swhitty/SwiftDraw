@@ -369,10 +369,56 @@ struct CGProvider: RendererTypeProvider {
         return postScriptName
     }
 
-    /// The face of a system font family closest to a CSS weight and slant, as CoreText matches it
-    /// (e.g. Helvetica 700 is Helvetica-Bold, 300 is Helvetica-Light, italic is Helvetica-Oblique).
-    /// Within `fontLookup`.
+    /// The face of a system font family closest to a CSS weight and slant (e.g. Helvetica 700 is
+    /// Helvetica-Bold, 300 is Helvetica-Light, italic is Helvetica-Oblique). Faces of normal width are
+    /// matched as CSS Fonts 4 §5.2 does: slant first, then weight (650 picks a bold face over a
+    /// semibold one). Within `fontLookup`.
     private static func createCTFont(family: String, size: CGFloat, weight: Int, isItalic: Bool) -> CTFont? {
+        if let descriptor = matchFace(family: family, weight: weight, isItalic: isItalic) {
+            return CTFontCreateWithFontDescriptor(descriptor, size, nil)
+        }
+        return createCTFontByTraits(family: family, size: size, weight: weight, isItalic: isItalic)
+    }
+
+    /// CSS font matching over the installed faces of a family; nil when CoreText lists none.
+    private static func matchFace(family: String, weight: Int, isItalic: Bool) -> CTFontDescriptor? {
+        let request = CTFontDescriptorCreateWithAttributes([kCTFontFamilyNameAttribute: family] as CFDictionary)
+        guard let matches = CTFontDescriptorCreateMatchingFontDescriptors(request, nil) as? [CTFontDescriptor] else {
+            return nil
+        }
+        let faces = matches.compactMap { descriptor -> (descriptor: CTFontDescriptor, weight: Int, isItalic: Bool, width: CGFloat)? in
+            guard CTFontDescriptorCopyAttribute(descriptor, kCTFontFamilyNameAttribute) as? String == family,
+                  let traits = CTFontDescriptorCopyAttribute(descriptor, kCTFontTraitsAttribute) as? [CFString: Any] else {
+                return nil
+            }
+            let coreTextWeight = (traits[kCTFontWeightTrait] as? NSNumber).map { CGFloat($0.doubleValue) } ?? 0
+            let width = (traits[kCTFontWidthTrait] as? NSNumber).map { CGFloat($0.doubleValue) } ?? 0
+            let symbolic = (traits[kCTFontSymbolicTrait] as? NSNumber).map { CTFontSymbolicTraits(rawValue: $0.uint32Value) } ?? []
+            return (descriptor, cssWeight(for: coreTextWeight), symbolic.contains(.traitItalic), width)
+        }
+        // font-stretch: normal, the narrowest distance from the normal width
+        guard let bestWidth = faces.map({ abs($0.width) }).min() else { return nil }
+        let normalWidth = faces.filter { abs($0.width) == bestWidth }
+        // font-style: italic and oblique faces are both italic to CoreText; else the other slant
+        let slanted = normalWidth.filter { $0.isItalic == isItalic }
+        let candidates = slanted.isEmpty ? normalWidth : slanted
+        return candidates.min {
+            LayerTree.Builder.fontWeightRank($0.weight...$0.weight, for: weight) <
+            LayerTree.Builder.fontWeightRank($1.weight...$1.weight, for: weight)
+        }?.descriptor
+    }
+
+    /// The CSS weight of a CoreText weight trait, the inverse of `coreTextWeight(for:)`
+    static func cssWeight(for coreTextWeight: CGFloat) -> Int {
+        let points = coreTextWeightPoints
+        let w = min(max(coreTextWeight, -1), 1)
+        guard let upper = points.firstIndex(where: { $0.ct >= w }), upper > 0 else { return Int(points[0].css) }
+        let (a, b) = (points[upper - 1], points[upper])
+        return Int((a.css + (b.css - a.css) * (w - a.ct) / (b.ct - a.ct)).rounded())
+    }
+
+    /// The face CoreText matches to the weight and slant traits
+    private static func createCTFontByTraits(family: String, size: CGFloat, weight: Int, isItalic: Bool) -> CTFont? {
         var traits: [CFString: Any] = [kCTFontWeightTrait: coreTextWeight(for: weight)]
         if isItalic {
             traits[kCTFontSymbolicTrait] = CTFontSymbolicTraits.traitItalic.rawValue
@@ -390,15 +436,17 @@ struct CGProvider: RendererTypeProvider {
     /// CSS weights (1–1000) on CoreText's weight trait (−1…1), at the points of `NSFont.Weight`
     /// (ultraLight 100 … black 900), interpolated between them.
     static func coreTextWeight(for weight: Int) -> CGFloat {
-        let points: [(css: CGFloat, ct: CGFloat)] = [
-            (1, -1), (100, -0.8), (200, -0.6), (300, -0.4), (400, 0),
-            (500, 0.23), (600, 0.3), (700, 0.4), (800, 0.56), (900, 0.62), (1000, 1)
-        ]
+        let points = coreTextWeightPoints
         let w = min(max(CGFloat(weight), 1), 1000)
         guard let upper = points.firstIndex(where: { $0.css >= w }), upper > 0 else { return points[0].ct }
         let (a, b) = (points[upper - 1], points[upper])
         return a.ct + (b.ct - a.ct) * (w - a.css) / (b.css - a.css)
     }
+
+    private static let coreTextWeightPoints: [(css: CGFloat, ct: CGFloat)] = [
+        (1, -1), (100, -0.8), (200, -0.6), (300, -0.4), (400, 0),
+        (500, 0.23), (600, 0.3), (700, 0.4), (800, 0.56), (900, 0.62), (1000, 1)
+    ]
 
     static func createCTFont(for attributes: LayerTree.TextAttributes) -> CTFont {
         createFont(for: attributes).font
