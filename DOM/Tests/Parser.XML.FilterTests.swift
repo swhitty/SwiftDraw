@@ -117,12 +117,12 @@ struct ParserXMLFilterTests {
     func parseUnknownPrimitiveIsUnsupported() throws {
         let element = XML.Element.makeMockFilter()
         element.children = [
-            .makeElement("feTurbulence", ["baseFrequency": "0.1"]),
+            .makeElement("feDisplacementMap", ["scale": "10"]),
             .makeElement("desc")
         ]
 
         let filter = try XMLParser().parseFilter(element)
-        #expect(filter.effects == [.unsupported(name: "feTurbulence")])
+        #expect(filter.effects == [.unsupported(name: "feDisplacementMap")])
     }
 
     // SD12: inputs and results are recorded as written; LayerTree resolves the references

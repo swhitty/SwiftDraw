@@ -997,7 +997,12 @@ private extension LayerTree.FilterLayer {
                 let y = CGSize(width: 0, height: CGFloat(ry)).applying(toDevice)
                 width += abs(x.width) + abs(y.width)
                 height += abs(x.height) + abs(y.height)
-            case .flood, .composite, .merge, .blend, .colorMatrix, .componentTransfer:
+            case .convolveMatrix(let matrix):
+                // the kernel reads pixels up to its size away; it is in pixels of the bitmap, at most the
+                // oversample per device pixel
+                width += CGFloat(matrix.orderX) * 2
+                height += CGFloat(matrix.orderY) * 2
+            case .flood, .composite, .merge, .blend, .colorMatrix, .componentTransfer, .turbulence:
                 break
             }
         }

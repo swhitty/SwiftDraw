@@ -164,7 +164,7 @@ extension XMLParser {
             primitive.inputs = [Self.parseFilterInput(e.attributes["in"]), Self.parseFilterInput(e.attributes["in2"])]
         case .flood(.currentColor, let opacity):
             primitive.effect = .flood(color: resolveCurrentColor(att, context: context), opacity: opacity)
-        case .flood:
+        case .flood, .turbulence:
             break
         case .dropShadow(var shadow):
             primitive.inputs = [Self.parseFilterInput(e.attributes["in"])]
@@ -287,6 +287,10 @@ extension XMLParser {
             return .morphology(op ?? .erode,
                                radius: values.first ?? 0,
                                radiusY: values.count > 1 ? values[1] : nil)
+        case "feTurbulence":
+            return .turbulence(try parseTurbulence(e))
+        case "feConvolveMatrix":
+            return .convolveMatrix(try parseConvolveMatrix(e))
         default:
             guard e.name.hasPrefix("fe") else { return nil }
             return .unsupported(name: e.name)
@@ -408,6 +412,60 @@ extension XMLParser {
         default:
             return .identity
         }
+    }
+
+    // Filter Effects 1 §9.21: baseFrequency is one or two numbers, initially 0; an unreadable list takes the
+    // initial value, as in resvg. numOctaves is an integer, initially 1; negative is 0 octaves (no noise).
+    // An unknown type or stitchTiles keeps the initial turbulence and noStitch.
+    func parseTurbulence(_ e: XML.Element) throws -> DOM.Filter.Turbulence {
+        let att: any AttributeParser = try parseAttributes(e)
+        var frequency: [DOM.Float] = (try? att.parseFloats("baseFrequency")) ?? []
+        if frequency.isEmpty || frequency.count > 2 || !frequency.allSatisfy(\.isFinite) {
+            frequency = [0]
+        }
+        var octaves = 1
+        if let value = parseFiniteFloat(att, "numOctaves") {
+            octaves = Int(min(max(value, 0), 1_000_000))
+        }
+        let type: DOM.Filter.TurbulenceType? = try? att.parseRaw("type")
+        let stitch = (try? att.parseString("stitchTiles"))?.trimmingCharacters(in: .whitespaces) == "stitch"
+        return DOM.Filter.Turbulence(baseFrequencyX: frequency[0],
+                                     baseFrequencyY: frequency.count > 1 ? frequency[1] : frequency[0],
+                                     numOctaves: octaves,
+                                     seed: parseFiniteFloat(att, "seed") ?? 0,
+                                     type: type ?? .turbulence,
+                                     stitchTiles: stitch)
+    }
+
+    // Filter Effects 1 §9.9: order is one or two positive integers, initially 3; anything else is an error
+    // (order 0). kernelUnitLength is not read: the kernel is in pixels of the bitmap, as in resvg (Safari spaces
+    // its values a user unit apart).
+    func parseConvolveMatrix(_ e: XML.Element) throws -> DOM.Filter.ConvolveMatrix {
+        let att: any AttributeParser = try parseAttributes(e)
+        var matrix = DOM.Filter.ConvolveMatrix()
+        if let order = try? att.parseString("order") {
+            let values = (try? att.parser.parseFloats(order)) ?? []
+            let isValid = (1...2).contains(values.count) && values.allSatisfy { $0 >= 1 && $0 <= 1_000_000 && $0 == $0.rounded() }
+            matrix.orderX = isValid ? Int(values[0]) : 0
+            matrix.orderY = isValid ? Int(values.count > 1 ? values[1] : values[0]) : 0
+        }
+        if let values = try? att.parseFloats("kernelMatrix") {
+            matrix.kernelMatrix = values.allSatisfy(\.isFinite) ? values : []
+        }
+        matrix.divisor = parseFiniteFloat(att, "divisor")
+        matrix.bias = parseFiniteFloat(att, "bias") ?? 0
+        // a target that is not an integer is out of range
+        func target(_ key: String) -> Int? {
+            guard let value = try? att.parseFloat(key) else { return nil }
+            guard value.isFinite, value == value.rounded(), abs(value) <= 1_000_000 else { return -1 }
+            return Int(value)
+        }
+        matrix.targetX = target("targetX")
+        matrix.targetY = target("targetY")
+        let edgeMode: DOM.Filter.EdgeMode? = try? att.parseRaw("edgeMode")
+        matrix.edgeMode = edgeMode ?? .duplicate
+        matrix.preserveAlpha = (try? att.parseString("preserveAlpha"))?.trimmingCharacters(in: .whitespaces) == "true"
+        return matrix
     }
 
     // Filter Effects 1 §10: `auto` and the two spaces; anything else is dropped so the inherited value applies.

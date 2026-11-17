@@ -197,7 +197,7 @@ struct LayerTreeFilterGraphTests {
         let commands = try makeCommands(#"""
         <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
             <filter id="f">
-                <feTurbulence baseFrequency="0.1" result="noise" />
+                <feDisplacementMap scale="10" result="noise" />
                 <feOffset in="SourceGraphic" dx="2" />
             </filter>
             <rect x="10" y="10" width="50" height="50" filter="url(#f)" />
@@ -214,7 +214,7 @@ struct LayerTreeFilterGraphTests {
         <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
             <filter id="f">
                 <feOffset dx="2" result="o" />
-                <feConvolveMatrix in="o" kernelMatrix="1 0 0 0 1 0 0 0 1" />
+                <feDisplacementMap in="o" scale="10" />
             </filter>
             <rect x="10" y="10" width="50" height="50" filter="url(#f)" />
         </svg>

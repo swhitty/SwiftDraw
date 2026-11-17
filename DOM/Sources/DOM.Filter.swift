@@ -90,6 +90,12 @@ package extension DOM {
 
             // Filter Effects 1 §9.17 feMorphology, in primitiveUnits: radiusY is nil when radius has a single value
             case morphology(MorphologyOperator, radius: DOM.Float, radiusY: DOM.Float? = nil)
+
+            // Filter Effects 1 §9.21 feTurbulence: noise in user space, with no input
+            case turbulence(Turbulence)
+
+            // Filter Effects 1 §9.9 feConvolveMatrix
+            case convolveMatrix(ConvolveMatrix)
         }
 
         // A filter primitive with its wiring (Filter Effects 1 §9.2 in / in2 / result) and subregion (§9.4)
@@ -219,6 +225,77 @@ package extension DOM {
         package enum MorphologyOperator: String, Hashable {
             case erode
             case dilate
+        }
+
+        // Filter Effects 1 §9.21: values as written; a negative frequency is an error, resolved by the layer tree
+        package struct Turbulence: Hashable {
+            package var baseFrequencyX: DOM.Float
+            package var baseFrequencyY: DOM.Float
+            package var numOctaves: Int
+            package var seed: DOM.Float
+            package var type: TurbulenceType
+            package var stitchTiles: Bool
+
+            package init(baseFrequencyX: DOM.Float = 0,
+                         baseFrequencyY: DOM.Float = 0,
+                         numOctaves: Int = 1,
+                         seed: DOM.Float = 0,
+                         type: TurbulenceType = .turbulence,
+                         stitchTiles: Bool = false) {
+                self.baseFrequencyX = baseFrequencyX
+                self.baseFrequencyY = baseFrequencyY
+                self.numOctaves = numOctaves
+                self.seed = seed
+                self.type = type
+                self.stitchTiles = stitchTiles
+            }
+        }
+
+        package enum TurbulenceType: String, Hashable {
+            case fractalNoise
+            case turbulence
+        }
+
+        // Filter Effects 1 §9.9: values as written. An order of 0 is one that could not be read; the layer tree
+        // checks the order, kernel size and target and treats an error as transparent black.
+        package struct ConvolveMatrix: Hashable {
+            package var orderX: Int
+            package var orderY: Int
+            package var kernelMatrix: [DOM.Float]
+            // nil when missing
+            package var divisor: DOM.Float?
+            package var bias: DOM.Float
+            // nil when missing: floor(order / 2)
+            package var targetX: Int?
+            package var targetY: Int?
+            package var edgeMode: EdgeMode
+            package var preserveAlpha: Bool
+
+            package init(orderX: Int = 3,
+                         orderY: Int = 3,
+                         kernelMatrix: [DOM.Float] = [],
+                         divisor: DOM.Float? = nil,
+                         bias: DOM.Float = 0,
+                         targetX: Int? = nil,
+                         targetY: Int? = nil,
+                         edgeMode: EdgeMode = .duplicate,
+                         preserveAlpha: Bool = false) {
+                self.orderX = orderX
+                self.orderY = orderY
+                self.kernelMatrix = kernelMatrix
+                self.divisor = divisor
+                self.bias = bias
+                self.targetX = targetX
+                self.targetY = targetY
+                self.edgeMode = edgeMode
+                self.preserveAlpha = preserveAlpha
+            }
+        }
+
+        package enum EdgeMode: String, Hashable {
+            case duplicate
+            case wrap
+            case none
         }
 
         package enum ColorMatrix: Hashable {

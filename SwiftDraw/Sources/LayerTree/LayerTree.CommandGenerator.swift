@@ -906,10 +906,68 @@ extension LayerTree.CommandGenerator {
             if y == 0 { y = 1 }
             return .morphology(op, radiusX: min(x * scale.width, maximum),
                                radiusY: min(y * scale.height, maximum))
+        case .turbulence(let turbulence):
+            return makeTurbulence(turbulence)
+        case .convolveMatrix(let matrix):
+            return makeConvolveMatrix(matrix)
         case .dropShadow:
             // resolved into its primitives by makeDropShadow
             return nil
         }
+    }
+
+    // Filter Effects 1 §9.21: a negative frequency is an error, transparent black as in resvg and Safari.
+    // baseFrequency is in user space whatever primitiveUnits is, as in resvg and Safari.
+    // The seed is truncated towards zero (the spec's reference code takes an integer).
+    func makeTurbulence(_ turbulence: DOM.Filter.Turbulence) -> LayerTree.FilterLayer.Effect {
+        guard turbulence.baseFrequencyX >= 0, turbulence.baseFrequencyY >= 0 else {
+            return .flood(.none)
+        }
+        let seed = turbulence.seed.rounded(.towardZero)
+        return .turbulence(LayerTree.FilterLayer.Turbulence(
+            baseFrequencyX: turbulence.baseFrequencyX,
+            baseFrequencyY: turbulence.baseFrequencyY,
+            numOctaves: max(0, turbulence.numOctaves),
+            seed: Int(max(-2_147_483_648, min(Double(seed), 2_147_483_647))),
+            isFractalNoise: turbulence.type == .fractalNoise,
+            stitchTiles: turbulence.stitchTiles
+        ))
+    }
+
+    // Filter Effects 1 §9.9: an order that is not a positive integer, a kernelMatrix of another size than
+    // orderX × orderY and a target outside the kernel are errors: transparent black, as in resvg and Safari.
+    // A divisor of zero is an error too, as in resvg and Safari. A missing divisor is the sum of the kernel,
+    // or 1 when that is zero (within rounding: 0.1 × 8 - 0.8 is not quite 0 in Float).
+    func makeConvolveMatrix(_ matrix: DOM.Filter.ConvolveMatrix) -> LayerTree.FilterLayer.Effect {
+        let targetX = matrix.targetX ?? matrix.orderX / 2
+        let targetY = matrix.targetY ?? matrix.orderY / 2
+        let size = matrix.orderX.multipliedReportingOverflow(by: matrix.orderY)
+        guard matrix.orderX > 0, matrix.orderY > 0, !size.overflow,
+              matrix.kernelMatrix.count == size.partialValue,
+              (0..<matrix.orderX).contains(targetX),
+              (0..<matrix.orderY).contains(targetY),
+              matrix.divisor != 0 else {
+            return .flood(.none)
+        }
+        var divisor: Float
+        if let value = matrix.divisor {
+            divisor = value
+        } else {
+            let sum = matrix.kernelMatrix.reduce(0, +)
+            let magnitude = matrix.kernelMatrix.reduce(0) { $0 + abs($1) }
+            divisor = abs(sum) > magnitude * 1e-5 && sum.isFinite ? sum : 1
+        }
+        return .convolveMatrix(LayerTree.FilterLayer.ConvolveMatrix(
+            orderX: matrix.orderX,
+            orderY: matrix.orderY,
+            kernelMatrix: matrix.kernelMatrix,
+            divisor: divisor,
+            bias: matrix.bias,
+            targetX: targetX,
+            targetY: targetY,
+            edgeMode: matrix.edgeMode,
+            preserveAlpha: matrix.preserveAlpha
+        ))
     }
 
     // Geometry bounding box of the layer contents in the layer's user space; stroke excluded.
@@ -1133,6 +1191,10 @@ private extension LayerTree.Filter {
             return "<feComponentTransfer>"
         case .morphology:
             return "<feMorphology>"
+        case .turbulence:
+            return "<feTurbulence>"
+        case .convolveMatrix:
+            return "<feConvolveMatrix>"
         case .dropShadow:
             return "<feDropShadow>"
         }
