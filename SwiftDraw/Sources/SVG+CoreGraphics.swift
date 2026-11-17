@@ -35,7 +35,7 @@ public import Foundation
 
 public extension CGContext {
 
-    func draw(_ svg: SVG, in rect: CGRect? = nil)  {
+    func draw(_ svg: SVG, in rect: CGRect? = nil) {
         draw(svg, in: rect, baseCTM: nil)
     }
 }
@@ -129,12 +129,32 @@ extension CGContext {
         draw(svg, from: source.center, in: dest.center, byTiling: byTiling, tileScale: tileScale, filters: filters)
         draw(svg, from: source.midRight, in: dest.midRight, byTiling: byTiling, tileScale: tileScale, filters: filters)
         draw(svg, from: source.bottomLeft, in: dest.bottomLeft, byTiling: false, tileScale: tileScale, filters: filters)
-        draw(svg, from: source.bottomMid, in: dest.bottomMid, byTiling: byTiling, tileScale: tileScale, filters: filters)
-        draw(svg, from: source.bottomRight, in: dest.bottomRight, byTiling: false, tileScale: tileScale, filters: filters)
+        draw(
+            svg,
+            from: source.bottomMid,
+            in: dest.bottomMid,
+            byTiling: byTiling,
+            tileScale: tileScale,
+            filters: filters
+        )
+        draw(
+            svg,
+            from: source.bottomRight,
+            in: dest.bottomRight,
+            byTiling: false,
+            tileScale: tileScale,
+            filters: filters
+        )
     }
 
-    private func draw(_ svg: SVG, from source: CGRect, in rect: CGRect, byTiling: Bool, tileScale: CGFloat?,
-                      filters: CGFilterLayerDraw?) {
+    private func draw(
+        _ svg: SVG,
+        from source: CGRect,
+        in rect: CGRect,
+        byTiling: Bool,
+        tileScale: CGFloat?,
+        filters: CGFilterLayerDraw?
+    ) {
         saveGState()
         clip(to: [rect])
         if byTiling {
@@ -149,15 +169,21 @@ extension CGContext {
     // Rendering the SVG (filters included) once per tile can take seconds for a small SVG tiled across
     // a window, so a single tile is rasterized at device scale and CoreGraphics repeats the image.
     // PDF keeps vector tiles; any tile count of 1 or less renders directly.
-    private func drawTiles(_ svg: SVG, from source: CGRect, in rect: CGRect, tileScale: CGFloat?,
-                           filters: CGFilterLayerDraw?) {
+    private func drawTiles(
+        _ svg: SVG,
+        from source: CGRect,
+        in rect: CGRect,
+        tileScale: CGFloat?,
+        filters: CGFilterLayerDraw?
+    ) {
         guard source.width > 0, source.height > 0 else { return }
         let visible = rect.intersection(boundingBoxOfClipPath)
         guard !visible.isNull, !visible.isEmpty else { return }
         let tiles = Self.tiles(of: source.size, in: rect, visible: visible)
 
         if tiles.count > 1, !isPDFContext,
-           let image = makeTileImage(svg, from: source, scale: tileScale ?? deviceScale, filters: filters) {
+            let image = makeTileImage(svg, from: source, scale: tileScale ?? deviceScale, filters: filters)
+        {
             draw(image, in: CGRect(origin: rect.origin, size: source.size), byTiling: true)
             return
         }
@@ -185,8 +211,12 @@ extension CGContext {
         let width = Int(ceil(source.width * scale))
         let height = Int(ceil(source.height * scale))
         guard width > 0, height > 0, width * height <= Self.maxTilePixels,
-              let bitmap = CGContext.makeFilterLayer(width: width, height: height,
-                                                     colorSpace: isBitmapContext ? colorSpace : nil) else {
+            let bitmap = CGContext.makeFilterLayer(
+                width: width,
+                height: height,
+                colorSpace: isBitmapContext ? colorSpace : nil
+            )
+        else {
             return nil
         }
         bitmap.scaleBy(x: CGFloat(width) / source.width, y: CGFloat(height) / source.height)
@@ -220,12 +250,14 @@ extension CGContext {
         tiles.reserveCapacity((c1 - c0) * (r1 - r0))
         for r in r0..<r1 {
             for c in c0..<c1 {
-                tiles.append(CGRect(
-                    x: rect.minX + CGFloat(c) * size.width,
-                    y: rect.minY + CGFloat(r) * size.height,
-                    width: size.width,
-                    height: size.height
-                ))
+                tiles.append(
+                    CGRect(
+                        x: rect.minX + CGFloat(c) * size.width,
+                        y: rect.minY + CGFloat(r) * size.height,
+                        width: size.width,
+                        height: size.height
+                    )
+                )
             }
         }
         return tiles
@@ -240,7 +272,8 @@ public extension SVG {
 
         let data = NSMutableData()
         guard let consumer = CGDataConsumer(data: data as CFMutableData),
-              let ctx = CGContext(consumer: consumer, mediaBox: &mediaBox, nil) else {
+            let ctx = CGContext(consumer: consumer, mediaBox: &mediaBox, nil)
+        else {
             throw Error("Failed to create CGContext")
         }
 
@@ -316,27 +349,57 @@ struct Slice9 {
     }
 
     var bottomRight: CGRect {
-        CGRect(x: source.maxX - capInsets.right, y: source.maxY - capInsets.bottom, width: capInsets.right, height: capInsets.bottom)
+        CGRect(
+            x: source.maxX - capInsets.right,
+            y: source.maxY - capInsets.bottom,
+            width: capInsets.right,
+            height: capInsets.bottom
+        )
     }
 
     var midLeft: CGRect {
-        CGRect(x: source.minX, y: capInsets.top, width: capInsets.left, height: source.maxY - capInsets.top - capInsets.bottom)
+        CGRect(
+            x: source.minX,
+            y: capInsets.top,
+            width: capInsets.left,
+            height: source.maxY - capInsets.top - capInsets.bottom
+        )
     }
 
     var midRight: CGRect {
-        CGRect(x: source.maxX - capInsets.right, y: capInsets.top, width: capInsets.right, height: source.maxY - capInsets.top - capInsets.bottom)
+        CGRect(
+            x: source.maxX - capInsets.right,
+            y: capInsets.top,
+            width: capInsets.right,
+            height: source.maxY - capInsets.top - capInsets.bottom
+        )
     }
 
     var topMid: CGRect {
-        CGRect(x: capInsets.left, y: source.minY, width: source.maxX - capInsets.left - capInsets.right, height: capInsets.top)
+        CGRect(
+            x: capInsets.left,
+            y: source.minY,
+            width: source.maxX - capInsets.left - capInsets.right,
+            height: capInsets.top
+        )
     }
 
     var bottomMid: CGRect {
-        CGRect(x: capInsets.left, y: source.maxY - capInsets.bottom, width: source.maxX - capInsets.left - capInsets.right, height: capInsets.bottom)
+        CGRect(
+            x: capInsets.left,
+            y: source.maxY - capInsets.bottom,
+            width: source.maxX - capInsets.left - capInsets.right,
+            height: capInsets.bottom
+        )
     }
 
     var center: CGRect {
-        CGRect(x: capInsets.left, y: capInsets.top, width: source.maxX - capInsets.left - capInsets.right, height: source.maxY - capInsets.top - capInsets.bottom)
+        CGRect(
+            x: capInsets.left,
+            y: capInsets.top,
+            width: source.maxX - capInsets.left - capInsets.right,
+            height: source.maxY - capInsets.top - capInsets.bottom
+        )
     }
 }
 

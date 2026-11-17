@@ -29,7 +29,6 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-
 import Foundation
 import SwiftDrawDOM
 import Testing
@@ -38,15 +37,17 @@ import Testing
 struct LayerTreePaintOrderTests {
 
     private static let marker = """
-    <marker id="m" markerWidth="4" markerHeight="4" refX="2" refY="2" markerUnits="userSpaceOnUse">
-      <rect width="4" height="4" fill="blue" stroke="yellow"/>
-    </marker>
-    """
+        <marker id="m" markerWidth="4" markerHeight="4" refX="2" refY="2" markerUnits="userSpaceOnUse">
+          <rect width="4" height="4" fill="blue" stroke="yellow"/>
+        </marker>
+        """
 
     private func layer(_ body: String) throws -> LayerTree.Layer {
-        let svg = try DOM.SVG.parse(xml: """
-        <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">\(Self.marker)\(body)</svg>
-        """)
+        let svg = try DOM.SVG.parse(
+            xml: """
+                <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">\(Self.marker)\(body)</svg>
+                """
+        )
         return LayerTree.Builder(svg: svg).makeLayer()
     }
 
@@ -59,7 +60,7 @@ struct LayerTreePaintOrderTests {
         .rgba(r: 1, g: 0, b: 0, a: 1, space: .srgb): "red",
         .rgba(r: 0, g: 1, b: 0, a: 1, space: .srgb): "lime",
         .rgba(r: 0, g: 0, b: 1, a: 1, space: .srgb): "blue",
-        .rgba(r: 1, g: 1, b: 0, a: 1, space: .srgb): "yellow"
+        .rgba(r: 1, g: 1, b: 0, a: 1, space: .srgb): "yellow",
     ]
 
     private func name(_ color: LayerTree.Color) -> String {
@@ -86,18 +87,20 @@ struct LayerTreePaintOrderTests {
 
     private static let shape = #"d="M 10 10 H 50 V 50" fill="red" stroke="lime" marker-end="url(#m)""#
 
-    @Test(arguments: [
-        ("", ["fill:red", "stroke:lime", "marker"]),
-        (#"paint-order="normal""#, ["fill:red", "stroke:lime", "marker"]),
-        (#"paint-order="stroke""#, ["stroke:lime", "fill:red", "marker"]),
-        (#"paint-order="markers""#, ["marker", "fill:red", "stroke:lime"]),
-        (#"paint-order="markers stroke""#, ["marker", "stroke:lime", "fill:red"]),
-        (#"paint-order="stroke markers""#, ["stroke:lime", "marker", "fill:red"]),
-        (#"paint-order="stroke markers fill""#, ["stroke:lime", "marker", "fill:red"]),
-        (#"paint-order="fill markers stroke""#, ["fill:red", "marker", "stroke:lime"]),
-        (#"style="paint-order: stroke""#, ["stroke:lime", "fill:red", "marker"]),
-        (#"paint-order="stroke stroke""#, ["fill:red", "stroke:lime", "marker"])
-    ] as [(String, [String])])
+    @Test(
+        arguments: [
+            ("", ["fill:red", "stroke:lime", "marker"]),
+            (#"paint-order="normal""#, ["fill:red", "stroke:lime", "marker"]),
+            (#"paint-order="stroke""#, ["stroke:lime", "fill:red", "marker"]),
+            (#"paint-order="markers""#, ["marker", "fill:red", "stroke:lime"]),
+            (#"paint-order="markers stroke""#, ["marker", "stroke:lime", "fill:red"]),
+            (#"paint-order="stroke markers""#, ["stroke:lime", "marker", "fill:red"]),
+            (#"paint-order="stroke markers fill""#, ["stroke:lime", "marker", "fill:red"]),
+            (#"paint-order="fill markers stroke""#, ["fill:red", "marker", "stroke:lime"]),
+            (#"style="paint-order: stroke""#, ["stroke:lime", "fill:red", "marker"]),
+            (#"paint-order="stroke stroke""#, ["fill:red", "stroke:lime", "marker"]),
+        ] as [(String, [String])]
+    )
     func paintsInOrder(attribute: String, expected: [String]) throws {
         // the marker's own rect always draws its fill then its stroke
         let marker = ["fill:blue", "stroke:yellow"]
@@ -107,24 +110,34 @@ struct LayerTreePaintOrderTests {
 
     @Test
     func isInherited() throws {
-        #expect(try paints(#"<g paint-order="stroke"><path \#(Self.shape)/></g>"#) ==
-                ["stroke:lime", "fill:red", "fill:blue", "stroke:yellow"])
+        #expect(
+            try paints(#"<g paint-order="stroke"><path \#(Self.shape)/></g>"#) == [
+                "stroke:lime", "fill:red", "fill:blue", "stroke:yellow",
+            ]
+        )
         // an invalid value is dropped, so the inherited order applies
-        #expect(try paints(#"<g paint-order="stroke"><path \#(Self.shape) paint-order="fill fill"/></g>"#) ==
-                ["stroke:lime", "fill:red", "fill:blue", "stroke:yellow"])
+        #expect(
+            try paints(#"<g paint-order="stroke"><path \#(Self.shape) paint-order="fill fill"/></g>"#) == [
+                "stroke:lime", "fill:red", "fill:blue", "stroke:yellow",
+            ]
+        )
     }
 
     @Test
     func markerContentsDoNotInheritFromTheShape() throws {
         // the shape's order does not reach the marker's rect, which inherits from <marker>
-        #expect(try paints(#"<path \#(Self.shape) paint-order="stroke"/>"#).suffix(2) == ["fill:blue", "stroke:yellow"])
+        #expect(
+            try paints(#"<path \#(Self.shape) paint-order="stroke"/>"#).suffix(2) == ["fill:blue", "stroke:yellow"]
+        )
     }
 
     @Test(arguments: ["", #"paint-order="normal""#, #"paint-order="fill""#, #"paint-order="fill stroke markers""#])
     func defaultOrderBuildsTheSameTree(attribute: String) throws {
         #expect(try layer("<path \(Self.shape) \(attribute)/>") == layer("<path \(Self.shape)/>"))
-        #expect(try layer(#"<rect width="10" height="10" fill="red" stroke="lime" \#(attribute)/>"#) ==
-                layer(#"<rect width="10" height="10" fill="red" stroke="lime"/>"#))
+        #expect(
+            try layer(#"<rect width="10" height="10" fill="red" stroke="lime" \#(attribute)/>"#)
+                == layer(#"<rect width="10" height="10" fill="red" stroke="lime"/>"#)
+        )
     }
 
     @Test
@@ -142,24 +155,30 @@ struct LayerTreePaintOrderTests {
 
     @Test
     func opacityClipMaskAndFilterStayOnTheElementLayer() throws {
-        let root = try layer("""
-        <clipPath id="c"><rect width="50" height="50"/></clipPath>
-        <mask id="k"><rect width="100" height="100" fill="white"/></mask>
-        <filter id="f"><feGaussianBlur stdDeviation="1"/></filter>
-        <path \(Self.shape) paint-order="stroke" opacity="0.5" clip-path="url(#c)" mask="url(#k)" filter="url(#f)"/>
-        """)
-        let element = try #require(root.contents.compactMap { content -> LayerTree.Layer? in
-            if case let .layer(l) = content, l.opacity == 0.5 { return l } else { return nil }
-        }.first)
+        let root = try layer(
+            """
+            <clipPath id="c"><rect width="50" height="50"/></clipPath>
+            <mask id="k"><rect width="100" height="100" fill="white"/></mask>
+            <filter id="f"><feGaussianBlur stdDeviation="1"/></filter>
+            <path \(Self.shape) paint-order="stroke" opacity="0.5" clip-path="url(#c)" mask="url(#k)" filter="url(#f)"/>
+            """
+        )
+        let element = try #require(
+            root.contents.compactMap { content -> LayerTree.Layer? in
+                if case let .layer(l) = content, l.opacity == 0.5 { return l } else { return nil }
+            }.first
+        )
         #expect(!element.clip.isEmpty)
         #expect(element.mask != nil)
         #expect(!element.filters.isEmpty)
 
         // the stroke, fill and marker are one group inside it, with nothing of their own
         #expect(element.contents.count == 1)
-        let group = try #require(element.contents.first.flatMap { content -> LayerTree.Layer? in
-            if case let .layer(l) = content { return l } else { return nil }
-        })
+        let group = try #require(
+            element.contents.first.flatMap { content -> LayerTree.Layer? in
+                if case let .layer(l) = content { return l } else { return nil }
+            }
+        )
         #expect(group.isPaintOrdered)
         #expect(group.opacity == 1 && group.clip.isEmpty && group.mask == nil && group.filters.isEmpty)
         #expect(group.contents.count == 3)

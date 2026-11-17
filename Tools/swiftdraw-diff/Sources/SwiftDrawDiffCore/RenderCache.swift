@@ -19,8 +19,9 @@ public struct RenderCache: Sendable {
     /// The cached result and PNG, if present. The PNG is nil for a cached failure.
     public func lookup<Meta: Decodable>(_ renderer: String, _ key: String, as: Meta.Type) -> (meta: Meta, png: URL?)? {
         guard let dir = root?.appendingPathComponent("renders/\(renderer)"),
-              let data = try? Data(contentsOf: dir.appendingPathComponent("\(key).json")),
-              let meta = try? JSONDecoder().decode(Meta.self, from: data) else { return nil }
+            let data = try? Data(contentsOf: dir.appendingPathComponent("\(key).json")),
+            let meta = try? JSONDecoder().decode(Meta.self, from: data)
+        else { return nil }
         let png = dir.appendingPathComponent("\(key).png")
         return (meta, FileManager.default.fileExists(atPath: png.path) ? png : nil)
     }

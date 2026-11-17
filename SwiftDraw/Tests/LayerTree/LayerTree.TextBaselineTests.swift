@@ -39,9 +39,11 @@ import CoreText
 struct LayerTreeTextBaselineTests {
 
     private func parse(_ text: String) throws -> DOM.SVG {
-        try DOM.SVG.parse(xml: """
-        <svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" font-family="Times" font-size="100">\(text)</svg>
-        """)
+        try DOM.SVG.parse(
+            xml: """
+                <svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" font-family="Times" font-size="100">\(text)</svg>
+                """
+        )
     }
 
     /// The state of each text node, in order
@@ -71,15 +73,17 @@ struct LayerTreeTextBaselineTests {
 
     // MARK: - parsing
 
-    @Test(arguments: [
-        ("auto", DOM.TextBaseline.auto), ("alphabetic", .alphabetic), ("middle", .middle), ("central", .central),
-        ("hanging", .hanging), ("mathematical", .mathematical), ("ideographic", .ideographic),
-        ("text-before-edge", .textBeforeEdge), ("text-after-edge", .textAfterEdge),
-        // CSS Inline 3 and SVG 1.1 aliases
-        ("text-top", .textBeforeEdge), ("text-bottom", .textAfterEdge),
-        ("before-edge", .textBeforeEdge), ("after-edge", .textAfterEdge),
-        ("baseline", .auto), ("use-script", .auto),
-    ] as [(String, DOM.TextBaseline)])
+    @Test(
+        arguments: [
+            ("auto", DOM.TextBaseline.auto), ("alphabetic", .alphabetic), ("middle", .middle), ("central", .central),
+            ("hanging", .hanging), ("mathematical", .mathematical), ("ideographic", .ideographic),
+            ("text-before-edge", .textBeforeEdge), ("text-after-edge", .textAfterEdge),
+            // CSS Inline 3 and SVG 1.1 aliases
+            ("text-top", .textBeforeEdge), ("text-bottom", .textAfterEdge),
+            ("before-edge", .textBeforeEdge), ("after-edge", .textAfterEdge),
+            ("baseline", .auto), ("use-script", .auto),
+        ] as [(String, DOM.TextBaseline)]
+    )
     func baselinesAreParsed(value: String, expected: DOM.TextBaseline) {
         #expect(DOM.TextBaseline(css: value) == expected)
     }
@@ -110,11 +114,13 @@ struct LayerTreeTextBaselineTests {
         #expect(states.map(\.textBaseline) == [.central])
     }
 
-    @Test(arguments: [
-        ("baseline", DOM.BaselineShift.baseline), ("sub", .sub), ("super", .super), ("inherit", .inherit),
-        ("10", .length(.absolute(10))), ("-2mm", .length(.absolute(-2 * 96 / 25.4))),
-        ("50%", .length(.percentage(50))), ("0.5em", .length(.em(0.5))),
-    ] as [(String, DOM.BaselineShift)])
+    @Test(
+        arguments: [
+            ("baseline", DOM.BaselineShift.baseline), ("sub", .sub), ("super", .super), ("inherit", .inherit),
+            ("10", .length(.absolute(10))), ("-2mm", .length(.absolute(-2 * 96 / 25.4))),
+            ("50%", .length(.percentage(50))), ("0.5em", .length(.em(0.5))),
+        ] as [(String, DOM.BaselineShift)]
+    )
     func baselineShiftIsParsed(value: String, expected: DOM.BaselineShift) throws {
         let text = try #require(try parse(#"<text baseline-shift="\#(value)">A</text>"#).childElements.first)
         switch (text.attributes.baselineShift, expected) {
@@ -129,7 +135,9 @@ struct LayerTreeTextBaselineTests {
 
     @Test
     func dominantBaselineIsInheritedAndAlignmentBaselineIsNot() throws {
-        let states = try runStates(#"<text dominant-baseline="middle">A<tspan alignment-baseline="hanging">B<tspan>C</tspan></tspan></text>"#)
+        let states = try runStates(
+            #"<text dominant-baseline="middle">A<tspan alignment-baseline="hanging">B<tspan>C</tspan></tspan></text>"#
+        )
         #expect(states.map(\.textBaseline) == [.middle, .middle, .middle])
         #expect(states.map(\.alignmentBaseline) == [nil, .hanging, nil])
         let builder = LayerTree.Builder(svg: DOM.SVG(width: 1, height: 1))
@@ -139,13 +147,17 @@ struct LayerTreeTextBaselineTests {
 
     @Test
     func nestedShiftsAddUp() throws {
-        let states = try runStates(#"<text>A<tspan baseline-shift="10">B<tspan baseline-shift="baseline">C<tspan font-size="50" baseline-shift="20%">D</tspan></tspan></tspan></text>"#)
-        #expect(states.map { $0.baselineShifts.map(\.shift) } == [
-            [],
-            [.length(.absolute(10))],
-            [.length(.absolute(10)), .baseline],
-            [.length(.absolute(10)), .baseline, .length(.percentage(20))],
-        ])
+        let states = try runStates(
+            #"<text>A<tspan baseline-shift="10">B<tspan baseline-shift="baseline">C<tspan font-size="50" baseline-shift="20%">D</tspan></tspan></tspan></text>"#
+        )
+        #expect(
+            states.map { $0.baselineShifts.map(\.shift) } == [
+                [],
+                [.length(.absolute(10))],
+                [.length(.absolute(10)), .baseline],
+                [.length(.absolute(10)), .baseline, .length(.percentage(20))],
+            ]
+        )
         // a percentage is of the font-size it was declared at
         #expect(states.last?.baselineShifts.last?.fontSize == 50)
     }
@@ -160,34 +172,51 @@ struct LayerTreeTextBaselineTests {
 
     @Test
     func inheritTakesTheParentsShift() throws {
-        let states = try runStates(#"<text><tspan baseline-shift="10"><tspan baseline-shift="inherit">A</tspan></tspan></text>"#)
+        let states = try runStates(
+            #"<text><tspan baseline-shift="10"><tspan baseline-shift="inherit">A</tspan></tspan></text>"#
+        )
         #expect(states.first?.baselineShifts.map(\.shift) == [.length(.absolute(10)), .length(.absolute(10))])
     }
 
     @Test
     func lengthShiftsRaiseTheText() {
-        let attributes = LayerTree.TextAttributes(color: .black, font: [.name("Times")], size: 100, anchor: .start, baseline: .auto)
-        let shifts = [LayerTree.Builder.BaselineShiftEntry(shift: .length(.absolute(10)), fontSize: 100),
-                      LayerTree.Builder.BaselineShiftEntry(shift: .length(.percentage(20)), fontSize: 50)]
+        let attributes = LayerTree.TextAttributes(
+            color: .black,
+            font: [.name("Times")],
+            size: 100,
+            anchor: .start,
+            baseline: .auto
+        )
+        let shifts = [
+            LayerTree.Builder.BaselineShiftEntry(shift: .length(.absolute(10)), fontSize: 100),
+            LayerTree.Builder.BaselineShiftEntry(shift: .length(.percentage(20)), fontSize: 50),
+        ]
         #expect(LayerTree.Builder.makeBaselineOffset(with: attributes, shifts: shifts) == -20)
     }
 
-#if canImport(CoreText)
-    @Test(arguments: [
-        (DOM.TextBaseline.auto, 0 as LayerTree.Float),
-        (.alphabetic, 0),
-        (.textBeforeEdge, 75),
-        (.textAfterEdge, -25),
-        (.ideographic, -25),
-        (.central, 25),
-        (.hanging, 60),
-        (.mathematical, 37.5),
-    ] as [(DOM.TextBaseline, LayerTree.Float)])
+    #if canImport(CoreText)
+    @Test(
+        arguments: [
+            (DOM.TextBaseline.auto, 0 as LayerTree.Float),
+            (.alphabetic, 0),
+            (.textBeforeEdge, 75),
+            (.textAfterEdge, -25),
+            (.ideographic, -25),
+            (.central, 25),
+            (.hanging, 60),
+            (.mathematical, 37.5),
+        ] as [(DOM.TextBaseline, LayerTree.Float)]
+    )
     func baselinesComeFromTheFontsMetrics(baseline: DOM.TextBaseline, offset: LayerTree.Float) {
         // Times: ascent 0.75 em, descent 0.25 em
         let font = CTFontCreateWithName("Times-Roman" as CFString, 100, nil)
         #expect(abs(LayerTree.Builder.makeYOffset(font: font, baseline: baseline) - offset) < 0.01)
-        #expect(abs(LayerTree.Builder.makeYOffset(font: font, baseline: .middle) - LayerTree.Float(CTFontGetXHeight(font)) / 2) < 0.01)
+        #expect(
+            abs(
+                LayerTree.Builder.makeYOffset(font: font, baseline: .middle) - LayerTree.Float(CTFontGetXHeight(font))
+                    / 2
+            ) < 0.01
+        )
     }
 
     @Test
@@ -215,7 +244,11 @@ struct LayerTreeTextBaselineTests {
         }
         #expect(try y(#"<text x="10" y="100">H</text>"#) == 100)
         #expect(try y(#"<text x="10" y="100" dominant-baseline="hanging">H</text>"#) == 160)
-        #expect(try y(#"<text x="10" y="100"><tspan baseline-shift="super">H</tspan></text>"#).map { abs($0 - 76.709) < 0.01 } == true)
+        #expect(
+            try y(#"<text x="10" y="100"><tspan baseline-shift="super">H</tspan></text>"#).map {
+                abs($0 - 76.709) < 0.01
+            } == true
+        )
     }
-#endif
+    #endif
 }

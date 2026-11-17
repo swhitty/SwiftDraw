@@ -37,16 +37,18 @@ struct RendererCoreGraphicsCostTests {
 
     @Test
     func duplicatePathInstancesRemoved() throws {
-        let source = try SVG.fromXML(#"""
-        <?xml version="1.0" encoding="UTF-8"?>
-        <svg width="64" height="64" version="1.1" xmlns="http://www.w3.org/2000/svg">
-            <clipPath id="cp1">
-                <rect width="30" height="30" />
-            </clipPath>
-            <rect width="30" height="30" fill="red" stroke="blue" />
-            <rect width="30" height="30" fill="pink" stroke="yellow" clip-path="url(#cp1)"/>
-        </svg>
-        """#)
+        let source = try SVG.fromXML(
+            #"""
+            <?xml version="1.0" encoding="UTF-8"?>
+            <svg width="64" height="64" version="1.1" xmlns="http://www.w3.org/2000/svg">
+                <clipPath id="cp1">
+                    <rect width="30" height="30" />
+                </clipPath>
+                <rect width="30" height="30" fill="red" stroke="blue" />
+                <rect width="30" height="30" fill="pink" stroke="yellow" clip-path="url(#cp1)"/>
+            </svg>
+            """#
+        )
 
         let uniquePaths = Set(source.commands.allPaths.map(ObjectIdentifier.init))
         #expect(uniquePaths.count == 1)
@@ -54,13 +56,15 @@ struct RendererCoreGraphicsCostTests {
 
     @Test
     func duplicateImageInstancesRemoved() throws {
-        let source = try SVG.fromXML(#"""
-        <?xml version="1.0" encoding="UTF-8"?>
-        <svg width="64" height="64" version="1.1" xmlns="http://www.w3.org/2000/svg">
-            <image id="dot" width="6" height="6" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg==" />
-            <image id="dot" width="6" height="6" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg==" />
-        </svg>
-        """#)
+        let source = try SVG.fromXML(
+            #"""
+            <?xml version="1.0" encoding="UTF-8"?>
+            <svg width="64" height="64" version="1.1" xmlns="http://www.w3.org/2000/svg">
+                <image id="dot" width="6" height="6" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg==" />
+                <image id="dot" width="6" height="6" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg==" />
+            </svg>
+            """#
+        )
 
         let uniqueImages = Set(source.commands.allImages.map(ObjectIdentifier.init))
         #expect(uniqueImages.count == 1)
@@ -68,12 +72,14 @@ struct RendererCoreGraphicsCostTests {
 
     @Test
     func pathEstimatedCost() throws {
-        let source = try SVG.fromXML(#"""
-        <?xml version="1.0" encoding="UTF-8"?>
-        <svg width="64" height="64" version="1.1" xmlns="http://www.w3.org/2000/svg">
-            <rect width="30" height="30" fill="red" stroke="blue" />
-        </svg>
-        """#)
+        let source = try SVG.fromXML(
+            #"""
+            <?xml version="1.0" encoding="UTF-8"?>
+            <svg width="64" height="64" version="1.1" xmlns="http://www.w3.org/2000/svg">
+                <rect width="30" height="30" fill="red" stroke="blue" />
+            </svg>
+            """#
+        )
 
         #expect(source.commands.allPaths[0].estimatedCost == 168)
         #expect(source.commands.estimatedCost == 232)
@@ -81,12 +87,14 @@ struct RendererCoreGraphicsCostTests {
 
     @Test
     func imageEstimatedCost() throws {
-        let source = try SVG.fromXML(#"""
-        <?xml version="1.0" encoding="UTF-8"?>
-        <svg width="64" height="64" version="1.1" xmlns="http://www.w3.org/2000/svg">
-            <image id="dot" width="6" height="6" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg==" />
-        </svg>
-        """#)
+        let source = try SVG.fromXML(
+            #"""
+            <?xml version="1.0" encoding="UTF-8"?>
+            <svg width="64" height="64" version="1.1" xmlns="http://www.w3.org/2000/svg">
+                <image id="dot" width="6" height="6" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg==" />
+            </svg>
+            """#
+        )
 
         #expect(source.commands.allImages[0].estimatedCost == 100)
         #expect(source.commands.estimatedCost == 108)

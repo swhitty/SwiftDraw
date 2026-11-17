@@ -29,7 +29,6 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-
 @testable import SwiftDraw
 
 #if canImport(AppKit) && !targetEnvironment(macCatalyst)
@@ -41,12 +40,15 @@ final class CGPaintFallbackTests: XCTestCase {
 
     // a solid colour A, a pattern, then colour A again: the last shape must be solid A, not the pattern
     func testSolidColourAfterPatternIsNotPatterned() throws {
-        let pixels = try render(defs: #"<pattern id="p" width="4" height="4" patternUnits="userSpaceOnUse"><rect width="4" height="4" fill="blue" /></pattern>"#,
-                                body: #"""
-            <rect width="8" height="16" fill="red" />
-            <rect x="8" width="4" height="16" fill="url(#p)" />
-            <rect x="12" width="4" height="16" fill="red" />
-        """#)
+        let pixels = try render(
+            defs:
+                #"<pattern id="p" width="4" height="4" patternUnits="userSpaceOnUse"><rect width="4" height="4" fill="blue" /></pattern>"#,
+            body: #"""
+                    <rect width="8" height="16" fill="red" />
+                    <rect x="8" width="4" height="16" fill="url(#p)" />
+                    <rect x="12" width="4" height="16" fill="red" />
+                """#
+        )
         XCTAssertEqual(pixels(2), .red)
         XCTAssertEqual(pixels(10), .blue)
         XCTAssertEqual(pixels(14), .red)
@@ -58,8 +60,11 @@ final class CGPaintFallbackTests: XCTestCase {
     }
 
     func testResolvingServerWinsOverFallback() throws {
-        let pixels = try render(defs: #"<linearGradient id="g"><stop offset="0" stop-color="blue" /><stop offset="1" stop-color="blue" /></linearGradient>"#,
-                                body: #"<rect width="16" height="16" fill="url(#g) #ff0000" />"#)
+        let pixels = try render(
+            defs:
+                #"<linearGradient id="g"><stop offset="0" stop-color="blue" /><stop offset="1" stop-color="blue" /></linearGradient>"#,
+            body: #"<rect width="16" height="16" fill="url(#g) #ff0000" />"#
+        )
         XCTAssertEqual(pixels(8), .blue)
     }
 
@@ -76,12 +81,12 @@ private extension CGPaintFallbackTests {
     /// Draws on white and samples the middle row.
     func render(defs: String, body: String) throws -> (Int) -> Pixel {
         let xml = """
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16">
-            <defs>\(defs)</defs>
-            <rect width="16" height="16" fill="white" />
-            \(body)
-        </svg>
-        """
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16">
+                <defs>\(defs)</defs>
+                <rect width="16" height="16" fill="white" />
+                \(body)
+            </svg>
+            """
         let svg = try XCTUnwrap(SVG(xml: xml))
         let image = svg.rasterize(with: CGSize(width: 16, height: 16), scale: 1)
         let canvas = NSBitmapImageRep(pixelsWide: 16, pixelsHigh: 16)

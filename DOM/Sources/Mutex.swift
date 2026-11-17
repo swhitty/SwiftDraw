@@ -52,7 +52,7 @@ package struct Mutex<Value: ~Copyable>: ~Copyable {
     }
 }
 
-extension Mutex: @unchecked Sendable where Value: ~Copyable { }
+extension Mutex: @unchecked Sendable where Value: ~Copyable {}
 
 import struct os.os_unfair_lock_t
 import struct os.os_unfair_lock

@@ -77,14 +77,16 @@ struct CoordinateFormatter {
 
     func format(_ coordinates: DOM.Coordinate..., precision: Precision? = nil) -> String {
         let precision = precision ?? self.precision
-        return coordinates
+        return
+            coordinates
             .map { formatValue(Double($0), precision: precision) }
             .joined(separator: delimeter.rawValue)
     }
 
     func format(_ coordinates: Double..., precision: Precision? = nil) -> String {
         let precision = precision ?? self.precision
-        return coordinates
+        return
+            coordinates
             .map { formatValue($0, precision: precision) }
             .joined(separator: delimeter.rawValue)
     }

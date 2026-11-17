@@ -39,9 +39,11 @@ struct LayerTreeCSSCascadeTests {
     private struct NoChildLayer: Error {}
 
     private func makeLayer(_ body: String) throws -> LayerTree.Layer {
-        let svg = try DOM.SVG.parse(xml: """
-        <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">\(body)</svg>
-        """)
+        let svg = try DOM.SVG.parse(
+            xml: """
+                <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">\(body)</svg>
+                """
+        )
         return LayerTree.Builder(svg: svg).makeLayer()
     }
 
@@ -71,7 +73,9 @@ struct LayerTreeCSSCascadeTests {
 
     @Test
     func transformFromStyleSheet() throws {
-        let layer = try firstChild(#"<style>.t { transform: translate(10px, 20px) }</style><rect class="t" width="5" height="5"/>"#)
+        let layer = try firstChild(
+            #"<style>.t { transform: translate(10px, 20px) }</style><rect class="t" width="5" height="5"/>"#
+        )
         #expect(layer.transform == [.translate(tx: 10, ty: 20)])
     }
 
@@ -83,17 +87,21 @@ struct LayerTreeCSSCascadeTests {
 
     @Test
     func styleSheetTransformOverridesAttribute() throws {
-        let layer = try firstChild(#"<style>rect { transform: scale(2) }</style><rect transform="translate(5 5)" width="5" height="5"/>"#)
+        let layer = try firstChild(
+            #"<style>rect { transform: scale(2) }</style><rect transform="translate(5 5)" width="5" height="5"/>"#
+        )
         #expect(layer.transform == [.scale(sx: 2, sy: 2)])
     }
 
     @Test
     func maskFromStyleSheet() throws {
-        let layer = try firstChild("""
-        <defs><mask id="m"><rect width="5" height="5" fill="white"/></mask></defs>
-        <style>.masked { mask: url(#m) }</style>
-        <rect class="masked" width="10" height="10"/>
-        """)
+        let layer = try firstChild(
+            """
+            <defs><mask id="m"><rect width="5" height="5" fill="white"/></mask></defs>
+            <style>.masked { mask: url(#m) }</style>
+            <rect class="masked" width="10" height="10"/>
+            """
+        )
         #expect(layer.mask != nil)
     }
 
@@ -101,25 +109,29 @@ struct LayerTreeCSSCascadeTests {
     @Test
     func clipRuleFromStyleSheet() throws {
         let body = """
-        <defs><clipPath id="c"><rect width="5" height="5"/></clipPath></defs>
-        <style>#c rect { clip-rule: evenodd }</style>
-        <rect id="r" clip-path="url(#c)" width="10" height="10"/>
-        """
+            <defs><clipPath id="c"><rect width="5" height="5"/></clipPath></defs>
+            <style>#c rect { clip-rule: evenodd }</style>
+            <rect id="r" clip-path="url(#c)" width="10" height="10"/>
+            """
         let layer = try firstChild(body)
         #expect(layer.clipRule == .evenodd)
-        #expect(try commandStream(body).contains {
-            if case .setClip(path: _, rule: .evenodd) = $0 { return true }
-            return false
-        })
+        #expect(
+            try commandStream(body).contains {
+                if case .setClip(path: _, rule: .evenodd) = $0 { return true }
+                return false
+            }
+        )
     }
 
     @Test
     func clipChildTransformFromStyleSheet() throws {
-        let layer = try firstChild("""
-        <defs><clipPath id="c"><rect class="moved" width="5" height="5"/></clipPath></defs>
-        <style>.moved { transform: translate(3px, 4px) }</style>
-        <rect clip-path="url(#c)" width="10" height="10"/>
-        """)
+        let layer = try firstChild(
+            """
+            <defs><clipPath id="c"><rect class="moved" width="5" height="5"/></clipPath></defs>
+            <style>.moved { transform: translate(3px, 4px) }</style>
+            <rect clip-path="url(#c)" width="10" height="10"/>
+            """
+        )
         #expect(layer.clip.first?.transform == .init(a: 1, b: 0, c: 0, d: 1, tx: 3, ty: 4))
     }
 
@@ -135,46 +147,56 @@ struct LayerTreeCSSCascadeTests {
 
     @Test
     func descendantSelectorFillsCommandStream() throws {
-        let colors = try fills("""
-        <style>g.icon > rect:first-child { fill: #ff0000 }</style>
-        <g class="icon"><rect width="5" height="5"/><rect width="5" height="5"/></g>
-        """)
+        let colors = try fills(
+            """
+            <style>g.icon > rect:first-child { fill: #ff0000 }</style>
+            <g class="icon"><rect width="5" height="5"/><rect width="5" height="5"/></g>
+            """
+        )
         #expect(colors == [Self.red, .black])
     }
 
     @Test
     func oneBadDeclarationKeepsTheSheet() throws {
-        let colors = try fills("""
-        <style>:root { --c: red } .a { fill: var(--c); stroke: #00ff00 } .b { fill: #0000ff }</style>
-        <rect class="a" width="5" height="5"/><rect class="b" width="5" height="5"/>
-        """)
+        let colors = try fills(
+            """
+            <style>:root { --c: red } .a { fill: var(--c); stroke: #00ff00 } .b { fill: #0000ff }</style>
+            <rect class="a" width="5" height="5"/><rect class="b" width="5" height="5"/>
+            """
+        )
         #expect(colors == [.black, Self.blue])
     }
 
     @Test
     func useKeepsTheStyleOfItsOriginalElement() throws {
-        let colors = try fills("""
-        <style>defs > .a { fill: #ff0000 } use { fill: #0000ff }</style>
-        <defs><rect id="r" class="a" width="5" height="5"/><circle id="c" r="2"/></defs>
-        <use href="#r"/><use href="#c"/>
-        """)
+        let colors = try fills(
+            """
+            <style>defs > .a { fill: #ff0000 } use { fill: #0000ff }</style>
+            <defs><rect id="r" class="a" width="5" height="5"/><circle id="c" r="2"/></defs>
+            <use href="#r"/><use href="#c"/>
+            """
+        )
         // the referenced rect matches in <defs>; the circle inherits fill from the styled <use>
         #expect(colors == [Self.red, Self.blue])
     }
 
     @Test
     func rulesApplyInsideNestedSVG() throws {
-        let colors = try fills("""
-        <style>svg svg > rect { fill: #ff0000 }</style>
-        <rect width="5" height="5"/>
-        <svg x="10" width="10" height="10"><rect width="5" height="5"/></svg>
-        """)
+        let colors = try fills(
+            """
+            <style>svg svg > rect { fill: #ff0000 }</style>
+            <rect width="5" height="5"/>
+            <svg x="10" width="10" height="10"><rect width="5" height="5"/></svg>
+            """
+        )
         #expect(colors == [.black, Self.red])
     }
 
     @Test
     func noneTransformOverridesLowerRule() throws {
-        let root = try makeLayer(#"<style>rect { transform: scale(2) } #r { transform: none }</style><rect id="r" width="5" height="5"/>"#)
+        let root = try makeLayer(
+            #"<style>rect { transform: scale(2) } #r { transform: none }</style><rect id="r" width="5" height="5"/>"#
+        )
         // without a transform the rect is a plain shape, not a transformed layer
         #expect(root.contents.count == 1)
         guard case .shape = root.contents.first else {
@@ -185,11 +207,13 @@ struct LayerTreeCSSCascadeTests {
 
     @Test
     func noneMaskOverridesLowerRule() throws {
-        let root = try makeLayer("""
-        <defs><mask id="m"><rect width="5" height="5" fill="white"/></mask></defs>
-        <style>rect { mask: url(#m) } #r { mask: none }</style>
-        <rect id="r" width="10" height="10"/>
-        """)
+        let root = try makeLayer(
+            """
+            <defs><mask id="m"><rect width="5" height="5" fill="white"/></mask></defs>
+            <style>rect { mask: url(#m) } #r { mask: none }</style>
+            <rect id="r" width="10" height="10"/>
+            """
+        )
         // without a mask the rect is a plain shape, not a masked layer
         #expect(root.contents.count == 1)
         guard case .shape = root.contents.first else {
@@ -200,12 +224,14 @@ struct LayerTreeCSSCascadeTests {
 
     @Test
     func stylesheetStrokeWidthIsScaledForSFSymbols() throws {
-        let svg = try DOM.SVG.parse(xml: """
-        <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">
-        <style>g > line { stroke-width: 4 } line.b { stroke-width: 6 !important }</style>
-        <g><line x1="0" y1="0" x2="10" y2="0" stroke="black"/><line class="b" x1="0" y1="0" x2="10" y2="0" stroke="black"/></g>
-        </svg>
-        """)
+        let svg = try DOM.SVG.parse(
+            xml: """
+                <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">
+                <style>g > line { stroke-width: 4 } line.b { stroke-width: 6 !important }</style>
+                <g><line x1="0" y1="0" x2="10" y2="0" stroke="black"/><line class="b" x1="0" y1="0" x2="10" y2="0" stroke="black"/></g>
+                </svg>
+                """
+        )
         StrokeWidthScaler.scale(svg, by: .init(multiplier: 0.5))
         let group = try #require(svg.childElements.first as? DOM.Group)
         #expect(DOM.presentationAttributes(for: group.childElements[0], styles: svg.styles).strokeWidth == 2)
@@ -215,12 +241,14 @@ struct LayerTreeCSSCascadeTests {
 
     @Test
     func complexSelectorStrokeWidthCountsForSFSymbols() throws {
-        let svg = try DOM.SVG.parse(xml: """
-        <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">
-        <style>g > line { stroke-width: 4 }</style>
-        <g><line x1="0" y1="0" x2="10" y2="0" stroke="black"/></g>
-        </svg>
-        """)
+        let svg = try DOM.SVG.parse(
+            xml: """
+                <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">
+                <style>g > line { stroke-width: 4 }</style>
+                <g><line x1="0" y1="0" x2="10" y2="0" stroke="black"/></g>
+                </svg>
+                """
+        )
         // the renderer warns "no effect" when this is 0
         #expect(StrokeWidthScaler.scale(svg, by: .init(multiplier: 0.5)) == 1)
     }

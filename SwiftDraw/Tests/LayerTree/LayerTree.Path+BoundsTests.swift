@@ -40,9 +40,9 @@ final class LayerTreePathBoundsTests: XCTestCase {
     func testBounds() {
         let path = LayerTree.Path([
             .move(to: Point(-50, -50)),
-            .line(to: Point(50, 50))
+            .line(to: Point(50, 50)),
         ])
-        
+
         XCTAssertEqual(
             path.bounds,
             Rect(x: -50, y: -50, width: 100, height: 100)
@@ -53,19 +53,19 @@ final class LayerTreePathBoundsTests: XCTestCase {
         var finder = LayerTree.Path.BoundsFinder()
 
         finder.updateBounds(for: [
-            .move(to: Point(10,10)),
-            .line(to: Point(100,100)),
-            .line(to: Point(80, 102))
+            .move(to: Point(10, 10)),
+            .line(to: Point(100, 100)),
+            .line(to: Point(80, 102)),
         ])
 
         XCTAssertEqual(
             finder.min,
-            Point(10,10)
+            Point(10, 10)
         )
 
         XCTAssertEqual(
             finder.max,
-            Point(100,102)
+            Point(100, 102)
         )
     }
 
@@ -73,19 +73,19 @@ final class LayerTreePathBoundsTests: XCTestCase {
         var finder = LayerTree.Path.BoundsFinder()
 
         finder.updateBounds(for: [
-            .move(to: Point(10,10)),
-            .line(to: Point(100,100)),
-            .cubic(to: Point(75, 50), control1: Point(120, 100), control2: Point(120, 50))
+            .move(to: Point(10, 10)),
+            .line(to: Point(100, 100)),
+            .cubic(to: Point(75, 50), control1: Point(120, 100), control2: Point(120, 50)),
         ])
 
         XCTAssertEqual(
             finder.min,
-            Point(10,10)
+            Point(10, 10)
         )
 
         XCTAssertEqual(
             finder.max,
-            Point(112.8,100)
+            Point(112.8, 100)
         )
     }
 
@@ -93,22 +93,22 @@ final class LayerTreePathBoundsTests: XCTestCase {
         var finder = LayerTree.Path.BoundsFinder()
 
         finder.updateBounds(for: [
-            .move(to: Point(10,10)),
-            .move(to: Point(50,50)),
+            .move(to: Point(10, 10)),
+            .move(to: Point(50, 50)),
             .line(to: Point(100, 100)),
             .line(to: Point(75, 100)),
             .close,
-            .line(to: Point(75, 0))
+            .line(to: Point(75, 0)),
         ])
 
         XCTAssertEqual(
             finder.min,
-            Point(50,0)
+            Point(50, 0)
         )
 
         XCTAssertEqual(
             finder.max,
-            Point(100,100)
+            Point(100, 100)
         )
     }
 
@@ -118,7 +118,7 @@ final class LayerTreePathBoundsTests: XCTestCase {
             .move(to: Point(0, 0)),
             .move(to: Point(50, 10)),
             .line(to: Point(300, 300)),
-            .line(to: Point(200, 15))
+            .line(to: Point(200, 15)),
         ])
 
         XCTAssertEqual(

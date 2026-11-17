@@ -5,13 +5,14 @@ import PackageDescription
 let package = Package(
     name: "SwiftDraw",
     platforms: [
-        .macOS(.v10_15), .iOS(.v13), .tvOS(.v13), .watchOS(.v6), .visionOS(.v1)
+        .macOS(.v10_15), .iOS(.v13), .tvOS(.v13), .watchOS(.v6), .visionOS(.v1),
     ],
     products: [
         .executable(name: "swiftdrawcli", targets: ["CommandLine"]),
         .library(
             name: "SwiftDraw",
-            targets: ["SwiftDraw"]),
+            targets: ["SwiftDraw"]
+        ),
     ],
     dependencies: [],
     targets: [
@@ -50,7 +51,7 @@ let package = Package(
                 .copy("Test.bundle")
             ],
             swiftSettings: .upcomingFeatures
-        )
+        ),
     ]
 )
 
@@ -64,7 +65,7 @@ extension Array where Element == SwiftSetting {
             .enableUpcomingFeature("NonisolatedNonsendingByDefault"),
             .enableUpcomingFeature("InferIsolatedConformances"),
             .enableUpcomingFeature("ImmutableWeakCaptures"),
-            .swiftLanguageMode(.v6)
+            .swiftLanguageMode(.v6),
         ]
     }
 }

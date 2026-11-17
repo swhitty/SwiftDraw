@@ -61,13 +61,24 @@ public struct SVGView: View {
     public var body: some View {
         if let svg {
             if let resizable {
-                SVGView.makeCanvas(svg: svg, capInsets: resizable.capInsets, resizingMode: resizable.mode, renderingMode: renderingMode,
-                                   filterFills: filterFills, didFillFilters: didFillFilters)
-                    .frame(idealWidth: svg.size.width, idealHeight: svg.size.height)
+                SVGView.makeCanvas(
+                    svg: svg,
+                    capInsets: resizable.capInsets,
+                    resizingMode: resizable.mode,
+                    renderingMode: renderingMode,
+                    filterFills: filterFills,
+                    didFillFilters: didFillFilters
+                )
+                .frame(idealWidth: svg.size.width, idealHeight: svg.size.height)
             } else {
-                SVGView.makeCanvas(svg: svg, resizingMode: .stretch, renderingMode: renderingMode,
-                                   filterFills: filterFills, didFillFilters: didFillFilters)
-                    .frame(width: svg.size.width, height: svg.size.height)
+                SVGView.makeCanvas(
+                    svg: svg,
+                    resizingMode: .stretch,
+                    renderingMode: renderingMode,
+                    filterFills: filterFills,
+                    didFillFilters: didFillFilters
+                )
+                .frame(width: svg.size.width, height: svg.size.height)
             }
         }
     }
@@ -151,7 +162,7 @@ public struct SVGView: View {
                 )
             }
         } else {
-        #if !os(watchOS)
+            #if !os(watchOS)
             switch renderingMode {
             case .original:
                 CanvasFallbackView(
@@ -170,7 +181,7 @@ public struct SVGView: View {
                         )
                     )
             }
-        #endif
+            #endif
         }
     }
 }
@@ -178,13 +189,13 @@ public struct SVGView: View {
 @available(iOS 15.0, macOS 12.0, tvOS 15.0, watchOS 8.0, *)
 public extension GraphicsContext {
 
-    func draw(_ svg: SVG, in rect: CGRect? = nil)  {
+    func draw(_ svg: SVG, in rect: CGRect? = nil) {
         withCGContext {
             $0.draw(svg, in: rect)
         }
     }
 
-    func draw(_ svg: SVG, in rect: CGRect, capInsets: EdgeInsets, byTiling: Bool = false)  {
+    func draw(_ svg: SVG, in rect: CGRect, capInsets: EdgeInsets, byTiling: Bool = false) {
         draw(svg, in: rect, capInsets: capInsets, byTiling: byTiling, filters: nil)
     }
 
@@ -194,7 +205,7 @@ public extension GraphicsContext {
         capInsets: EdgeInsets,
         byTiling: Bool = false,
         renderingMode: SVGView.TemplateRenderingMode
-    )  {
+    ) {
         draw(svg, in: rect, capInsets: capInsets, byTiling: byTiling, renderingMode: renderingMode, filters: nil)
     }
 }
@@ -210,7 +221,7 @@ struct CanvasFilters {
 @available(iOS 15.0, macOS 12.0, tvOS 15.0, watchOS 8.0, *)
 extension GraphicsContext {
 
-    func draw(_ svg: SVG, in rect: CGRect, capInsets: EdgeInsets, byTiling: Bool, filters: CanvasFilters?)  {
+    func draw(_ svg: SVG, in rect: CGRect, capInsets: EdgeInsets, byTiling: Bool, filters: CanvasFilters?) {
         // a Canvas context is not a bitmap: its CTM need not carry the display scale tiles are rasterized at
         let scale = environment.displayScale
         let insets = (capInsets.top, capInsets.leading, capInsets.bottom, capInsets.trailing)
@@ -223,7 +234,8 @@ extension GraphicsContext {
                 return
             }
             // a fill replays this draw in a bitmap with the context's device space and clip, as they are now
-            let fill = filters.defersMisses ? CGFilterLayerFill(context: context, cache: filters.cache, draw: draw) : nil
+            let fill =
+                filters.defersMisses ? CGFilterLayerFill(context: context, cache: filters.cache, draw: draw) : nil
             let layers = CGFilterLayerDraw(filters.cache, defersMisses: fill != nil)
             draw(context, layers)
             if layers.didDefer, let fill {
@@ -239,7 +251,7 @@ extension GraphicsContext {
         byTiling: Bool,
         renderingMode: SVGView.TemplateRenderingMode,
         filters: CanvasFilters?
-    )  {
+    ) {
         switch renderingMode {
         case .original:
             draw(svg, in: rect, capInsets: capInsets, byTiling: byTiling, filters: filters)
@@ -247,8 +259,13 @@ extension GraphicsContext {
             if Self.requiresClipToLayerWorkaround(svg, in: rect, byTiling: byTiling) {
                 clipToLayer { mask in
                     mask.scaleBy(x: rect.size.width / svg.size.width, y: rect.size.height / svg.size.height)
-                    mask.draw(svg, in: CGRect(origin: .zero, size: svg.size), capInsets: capInsets, byTiling: false,
-                              filters: filters)
+                    mask.draw(
+                        svg,
+                        in: CGRect(origin: .zero, size: svg.size),
+                        capInsets: capInsets,
+                        byTiling: false,
+                        filters: filters
+                    )
                 }
             } else {
                 clipToLayer { mask in
@@ -264,14 +281,12 @@ extension GraphicsContext {
         in rect: CGRect,
         byTiling: Bool
     ) -> Bool {
-        if #available(
-            iOS 27.0,
-            macOS 27.0,
-            tvOS 27.0,
-            watchOS 27.0,
-            visionOS 27.0,
-            *
-        ) {
+        if #available(iOS 27.0,
+        macOS 27.0,
+        tvOS 27.0,
+        watchOS 27.0,
+        visionOS 27.0,
+        *) {
             return false
         } else {
             // clipToLayer has a bug on OS 26 and earlier with non uniform scale
@@ -300,19 +315,23 @@ extension GraphicsContext {
 private extension SVG {
 
     static var circle: SVG {
-        SVG(xml: """
-        <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="100" height="100">
-          <circle cx="50" cy="50" r="50" fill="orange" />
-        </svg>
-        """)!
+        SVG(
+            xml: """
+                <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="100" height="100">
+                  <circle cx="50" cy="50" r="50" fill="orange" />
+                </svg>
+                """
+        )!
     }
 
     static var circleStroke: SVG {
-        SVG(xml: """
-        <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="100" height="100">
-          <circle cx="50" cy="50" r="45" stroke-width="4" stroke="black" fill="none" />
-        </svg>
-        """)!
+        SVG(
+            xml: """
+                <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="100" height="100">
+                  <circle cx="50" cy="50" r="45" stroke-width="4" stroke="black" fill="none" />
+                </svg>
+                """
+        )!
     }
 }
 #endif

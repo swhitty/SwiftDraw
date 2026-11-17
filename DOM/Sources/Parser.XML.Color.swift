@@ -57,7 +57,7 @@ extension XMLParser {
     private func parseColorNone(data: String) -> DOM.Color? {
         let trimmed = data.trimmingCharacters(in: .whitespaces).lowercased()
         if trimmed == "none" || trimmed == "transparent" {
-            return DOM.Color.none // .none resolves to Optional.none
+            return DOM.Color.none  // .none resolves to Optional.none
         }
         return nil
     }
@@ -84,7 +84,8 @@ extension XMLParser {
     private func parseColorRGB(data: String) throws -> DOM.Color? {
         let raw = data.trimmingCharacters(in: .whitespaces).lowercased()
         guard let open = raw.firstIndex(of: "("),
-              ["rgb", "rgba"].contains(raw[raw.startIndex..<open].trimmingCharacters(in: .whitespaces)) else {
+            ["rgb", "rgba"].contains(raw[raw.startIndex..<open].trimmingCharacters(in: .whitespaces))
+        else {
             return nil
         }
         guard raw.hasSuffix(")") else { throw Error.invalid }
@@ -154,7 +155,8 @@ extension XMLParser {
             .trimmingCharacters(in: .whitespaces)
         guard !remainder.isEmpty else { return .url(url) }
         guard remainder.lowercased().hasPrefix("url(") == false,
-              case .color(let fallback)? = try? parseFill(remainder) else {
+            case .color(let fallback)? = try? parseFill(remainder)
+        else {
             throw Error.invalid
         }
         return .urlWithFallback(url, fallback)
@@ -197,14 +199,16 @@ extension XMLParser {
     private func parseColorHSL(data: String) -> DOM.Color? {
         let raw = data.trimmingCharacters(in: .whitespaces).lowercased()
         guard raw.hasPrefix("hsl"), raw.hasSuffix(")"),
-              let open = raw.firstIndex(of: "(") else {
+            let open = raw.firstIndex(of: "(")
+        else {
             return nil
         }
         let name = raw[raw.startIndex..<open]
         guard name == "hsl" || name == "hsla" else { return nil }
 
         let body = raw[raw.index(after: open)..<raw.index(before: raw.endIndex)]
-        let parts = body
+        let parts =
+            body
             .split(whereSeparator: { $0 == "," || $0 == "/" || $0 == " " || $0 == "\t" })
             .map(String.init)
         guard parts.count == 3 || parts.count == 4 else { return nil }
@@ -220,8 +224,9 @@ extension XMLParser {
         }
 
         guard let h = number(parts[0], suffix: "deg"),
-              let s = percentage(parts[1]),
-              let l = percentage(parts[2]) else {
+            let s = percentage(parts[1]),
+            let l = percentage(parts[2])
+        else {
             return nil
         }
 
@@ -268,8 +273,9 @@ extension XMLParser {
         guard
             let paddedCode = padHex(code),
             paddedCode.count == 6 || paddedCode.count == 8,
-            let hex = Int(paddedCode, radix: 16) else {
-                throw Error.invalid
+            let hex = Int(paddedCode, radix: 16)
+        else {
+            throw Error.invalid
         }
 
         if paddedCode.count == 8 {

@@ -34,9 +34,11 @@ import Testing
 struct LayerTreeStrokeLengthTests {
 
     private func commands(_ body: String) throws -> [RendererCommand<LayerTreeProvider.Types>] {
-        let svg = try DOM.SVG.parse(xml: """
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">\(body)</svg>
-        """)
+        let svg = try DOM.SVG.parse(
+            xml: """
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">\(body)</svg>
+                """
+        )
         let layer = LayerTree.Builder(svg: svg).makeLayer()
         let generator = LayerTree.CommandGenerator(provider: LayerTreeProvider(), size: .zero, options: .default)
         return generator.renderCommands(for: layer, colorConverter: .default)
@@ -56,50 +58,68 @@ struct LayerTreeStrokeLengthTests {
         }
     }
 
-    @Test(arguments: [
-        ("10", 10),
-        ("10px", 10),
-        // percentages of the viewport diagonal / √2, which is 200 for a square viewBox
-        ("10%", 20),
-        ("2em", 40),
-        ("2ex", 20),
-        ("1mm", 96 / 25.4)
-    ] as [(String, Float)])
+    @Test(
+        arguments: [
+            ("10", 10),
+            ("10px", 10),
+            // percentages of the viewport diagonal / √2, which is 200 for a square viewBox
+            ("10%", 20),
+            ("2em", 40),
+            ("2ex", 20),
+            ("1mm", 96 / 25.4),
+        ] as [(String, Float)]
+    )
     func strokeWidth(_ value: String, _ expected: Float) throws {
-        let widths = try lineWidths(#"<g font-size="20"><rect width="10" height="10" fill="none" stroke="black" stroke-width="\#(value)"/></g>"#)
+        let widths = try lineWidths(
+            #"<g font-size="20"><rect width="10" height="10" fill="none" stroke="black" stroke-width="\#(value)"/></g>"#
+        )
         let width = try #require(widths.first)
         #expect(abs(width - expected) < 0.001)
     }
 
     @Test(arguments: ["-1", "abc", "2px junk", "1em1"])
     func invalidStrokeWidthKeepsTheDefault(_ value: String) throws {
-        let widths = try lineWidths(#"<rect width="10" height="10" fill="none" stroke="black" stroke-width="\#(value)"/>"#)
+        let widths = try lineWidths(
+            #"<rect width="10" height="10" fill="none" stroke="black" stroke-width="\#(value)"/>"#
+        )
         #expect(widths.first == 1)
     }
 
     @Test
     func dashArrayInEm() throws {
-        let d = try dashes(#"<g font-size="20"><circle r="70" fill="none" stroke="green" stroke-dasharray="2em 1em"/></g>"#)
+        let d = try dashes(
+            #"<g font-size="20"><circle r="70" fill="none" stroke="green" stroke-dasharray="2em 1em"/></g>"#
+        )
         #expect(d.first?.lengths == [40, 20])
     }
 
     @Test
     func dashOffsetInEm() throws {
-        let d = try dashes(#"<circle r="70" fill="none" font-size="20" stroke="green" stroke-dasharray="10 20" stroke-dashoffset="1.5em"/>"#)
+        let d = try dashes(
+            #"<circle r="70" fill="none" font-size="20" stroke="green" stroke-dasharray="10 20" stroke-dashoffset="1.5em"/>"#
+        )
         #expect(d.first?.phase == 30)
     }
 
     @Test
     func emIsResolvedWhereItIsDeclared() throws {
         // the inherited value is the computed length, not the `em`
-        let d = try dashes(#"<g font-size="10" stroke-dasharray="1em" stroke-width="1em"><circle r="70" fill="none" font-size="40" stroke="green"/></g>"#)
+        let d = try dashes(
+            #"<g font-size="10" stroke-dasharray="1em" stroke-width="1em"><circle r="70" fill="none" font-size="40" stroke="green"/></g>"#
+        )
         #expect(d.first?.lengths == [10, 10])
-        #expect(try lineWidths(#"<g font-size="10" stroke-width="1em"><circle r="70" fill="none" font-size="40" stroke="green"/></g>"#).first == 10)
+        #expect(
+            try lineWidths(
+                #"<g font-size="10" stroke-width="1em"><circle r="70" fill="none" font-size="40" stroke="green"/></g>"#
+            ).first == 10
+        )
     }
 
     @Test
     func emInStyleSheet() throws {
-        let widths = try lineWidths(#"<style>rect { stroke-width: 0.5em }</style><rect width="10" height="10" font-size="30" fill="none" stroke="black"/>"#)
+        let widths = try lineWidths(
+            #"<style>rect { stroke-width: 0.5em }</style><rect width="10" height="10" font-size="30" fill="none" stroke="black"/>"#
+        )
         #expect(widths.first == 15)
     }
 }

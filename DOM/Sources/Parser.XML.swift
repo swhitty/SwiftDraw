@@ -199,7 +199,8 @@ package extension AttributeParser {
                 }
                 scanner = XMLParser.Scanner(text: entry)
                 guard let urlText = try? scanner.scanStringFunction("url"),
-                      let url = try? parser.parseUrl(urlText) else { return nil }
+                    let url = try? parser.parseUrl(urlText)
+                else { return nil }
                 _ = try? scanner.scanString(";")
                 let format = try? scanner.scanStringFunction("format")
                 return .url(url: url, format: format)
@@ -223,7 +224,7 @@ package extension AttributeParser {
             return try parse(key, exp)
         } catch XMLParser.Error.missingAttribute(_) {
             return nil
-        }  catch let error {
+        } catch let error {
             guard options.contains(.skipInvalidAttributes) else { throw error }
         }
         return nil

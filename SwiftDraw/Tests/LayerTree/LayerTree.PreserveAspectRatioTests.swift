@@ -43,8 +43,12 @@ struct LayerTreePreserveAspectRatioTests {
         XMLParser().parsePreserveAspectRatio(value)
     }
 
-    private static let alignNames = ["xMinYMin", "xMidYMin", "xMaxYMin", "xMinYMid", "xMidYMid", "xMaxYMid", "xMinYMax", "xMidYMax", "xMaxYMax"]
-    private static let aligns: [DOM.PreserveAspectRatio.Align] = [.xMinYMin, .xMidYMin, .xMaxYMin, .xMinYMid, .xMidYMid, .xMaxYMid, .xMinYMax, .xMidYMax, .xMaxYMax]
+    private static let alignNames = [
+        "xMinYMin", "xMidYMin", "xMaxYMin", "xMinYMid", "xMidYMid", "xMaxYMid", "xMinYMax", "xMidYMax", "xMaxYMax",
+    ]
+    private static let aligns: [DOM.PreserveAspectRatio.Align] = [
+        .xMinYMin, .xMidYMin, .xMaxYMin, .xMinYMid, .xMidYMid, .xMaxYMid, .xMinYMax, .xMidYMax, .xMaxYMax,
+    ]
 
     @Test(arguments: zip(alignNames, aligns))
     func parsesAlignment(name: String, align: DOM.PreserveAspectRatio.Align) {
@@ -68,18 +72,23 @@ struct LayerTreePreserveAspectRatioTests {
         #expect(parse("xMidYMid meet slice") == nil)
         // the document still parses
         #expect(throws: Never.self) {
-            try DOM.SVG.parse(xml: #"<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 5 5" preserveAspectRatio="bogus"/>"#)
+            try DOM.SVG.parse(
+                xml:
+                    #"<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 5 5" preserveAspectRatio="bogus"/>"#
+            )
         }
     }
 
     @Test
     func parsedOnSVGAndImage() throws {
-        let svg = try DOM.SVG.parse(xml: """
-        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 5 5" preserveAspectRatio="xMinYMax slice">
-        <svg width="4" height="4" preserveAspectRatio="none"/>
-        <image width="4" height="4" preserveAspectRatio="xMaxYMin" href="data:image/png;base64,iVBORw0KGgo="/>
-        </svg>
-        """)
+        let svg = try DOM.SVG.parse(
+            xml: """
+                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 5 5" preserveAspectRatio="xMinYMax slice">
+                <svg width="4" height="4" preserveAspectRatio="none"/>
+                <image width="4" height="4" preserveAspectRatio="xMaxYMin" href="data:image/png;base64,iVBORw0KGgo="/>
+                </svg>
+                """
+        )
         #expect(svg.preserveAspectRatio == PAR(align: .xMinYMax, meetOrSlice: .slice))
         #expect((svg.childElements[0] as? DOM.SVG)?.preserveAspectRatio == PAR(align: .none))
         #expect((svg.childElements[1] as? DOM.Image)?.preserveAspectRatio == PAR(align: .xMaxYMin))
@@ -87,11 +96,18 @@ struct LayerTreePreserveAspectRatioTests {
 
     // MARK: viewBox transform of the root
 
-    private func transform(_ par: String?, viewBox: String = "0 0 100 50", width: Int = 200, height: Int = 200) throws -> [LayerTree.Transform] {
+    private func transform(
+        _ par: String?,
+        viewBox: String = "0 0 100 50",
+        width: Int = 200,
+        height: Int = 200
+    ) throws -> [LayerTree.Transform] {
         let attribute = par.map { #"preserveAspectRatio="\#($0)""# } ?? ""
-        let svg = try DOM.SVG.parse(xml: """
-        <svg xmlns="http://www.w3.org/2000/svg" width="\(width)" height="\(height)" viewBox="\(viewBox)" \(attribute)/>
-        """)
+        let svg = try DOM.SVG.parse(
+            xml: """
+                <svg xmlns="http://www.w3.org/2000/svg" width="\(width)" height="\(height)" viewBox="\(viewBox)" \(attribute)/>
+                """
+        )
         return LayerTree.Builder(svg: svg).makeLayer().transform
     }
 
@@ -124,7 +140,9 @@ struct LayerTreePreserveAspectRatioTests {
 
     @Test
     func viewBoxOriginIsKept() throws {
-        #expect(try transform("xMinYMin", viewBox: "10 20 100 50") == [.scale(sx: 2, sy: 2), .translate(tx: -10, ty: -20)])
+        #expect(
+            try transform("xMinYMin", viewBox: "10 20 100 50") == [.scale(sx: 2, sy: 2), .translate(tx: -10, ty: -20)]
+        )
     }
 
     @Test
@@ -142,12 +160,14 @@ struct LayerTreePreserveAspectRatioTests {
 
     @Test
     func nestedSVGTransformAndClip() throws {
-        let svg = try DOM.SVG.parse(xml: """
-        <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">
-        <svg x="10" y="20" width="40" height="20" viewBox="0 0 10 10" preserveAspectRatio="xMinYMin slice"><rect width="10" height="10"/></svg>
-        <svg x="0" y="0" width="40" height="20" viewBox="0 0 10 10"><rect width="10" height="10"/></svg>
-        </svg>
-        """)
+        let svg = try DOM.SVG.parse(
+            xml: """
+                <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">
+                <svg x="10" y="20" width="40" height="20" viewBox="0 0 10 10" preserveAspectRatio="xMinYMin slice"><rect width="10" height="10"/></svg>
+                <svg x="0" y="0" width="40" height="20" viewBox="0 0 10 10"><rect width="10" height="10"/></svg>
+                </svg>
+                """
+        )
         let root = LayerTree.Builder(svg: svg).makeLayer()
         let layers: [LayerTree.Layer] = root.contents.compactMap {
             if case .layer(let l) = $0 { return l }
@@ -166,7 +186,12 @@ struct LayerTreePreserveAspectRatioTests {
 
     // MARK: image
 
-    private func placement(_ par: PAR, width: Float? = 100, height: Float? = 100, bitmap: LayerTree.Size = .init(50, 100)) -> (dest: LayerTree.Rect, clip: LayerTree.Rect?) {
+    private func placement(
+        _ par: PAR,
+        width: Float? = 100,
+        height: Float? = 100,
+        bitmap: LayerTree.Size = .init(50, 100)
+    ) -> (dest: LayerTree.Rect, clip: LayerTree.Rect?) {
         var image = LayerTree.Image(bitmap: .png(Data([1])))
         image.origin = .init(10, 20)
         image.width = width
@@ -190,8 +215,12 @@ struct LayerTreePreserveAspectRatioTests {
         let p = placement(PAR(align: .xMidYMid, meetOrSlice: .slice))
         #expect(p.dest == .init(x: 10, y: -30, width: 100, height: 200))
         #expect(p.clip == .init(x: 10, y: 20, width: 100, height: 100))
-        #expect(placement(PAR(align: .xMinYMin, meetOrSlice: .slice)).dest == .init(x: 10, y: 20, width: 100, height: 200))
-        #expect(placement(PAR(align: .xMaxYMax, meetOrSlice: .slice)).dest == .init(x: 10, y: -80, width: 100, height: 200))
+        #expect(
+            placement(PAR(align: .xMinYMin, meetOrSlice: .slice)).dest == .init(x: 10, y: 20, width: 100, height: 200)
+        )
+        #expect(
+            placement(PAR(align: .xMaxYMax, meetOrSlice: .slice)).dest == .init(x: 10, y: -80, width: 100, height: 200)
+        )
     }
 
     @Test
@@ -209,16 +238,22 @@ struct LayerTreePreserveAspectRatioTests {
 
     @Test
     func imageWithPreserveAspectRatioStillDraws() throws {
-        let svg = try DOM.SVG.parse(xml: """
-        <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">
-        <image width="100" height="50" preserveAspectRatio="xMidYMid slice" href="data:image/png;base64,iVBORw0KGgo="/>
-        </svg>
-        """)
+        let svg = try DOM.SVG.parse(
+            xml: """
+                <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">
+                <image width="100" height="50" preserveAspectRatio="xMidYMid slice" href="data:image/png;base64,iVBORw0KGgo="/>
+                </svg>
+                """
+        )
         let layer = LayerTree.Builder(svg: svg).makeLayer()
         let generator = LayerTree.CommandGenerator(provider: LayerTreeProvider(), size: .zero, options: .default)
         let commands = generator.renderCommands(for: layer, colorConverter: .default)
         // LayerTreeProvider reports the frame as the bitmap size, so the fit is the identity here
-        #expect(commands.contains { if case .draw = $0 { return true }; return false })
+        #expect(
+            commands.contains {
+                if case .draw = $0 { return true }; return false
+            }
+        )
     }
 
     // MARK: ViewBoxFit
@@ -240,7 +275,7 @@ struct LayerTreePreserveAspectRatioTests {
         let fractions: [String: (x: Float, y: Float)] = [
             "xMinYMin": (0, 0), "xMidYMin": (0.5, 0), "xMaxYMin": (1, 0),
             "xMinYMid": (0, 0.5), "xMidYMid": (0.5, 0.5), "xMaxYMid": (1, 0.5),
-            "xMinYMax": (0, 1), "xMidYMax": (0.5, 1), "xMaxYMax": (1, 1)
+            "xMinYMax": (0, 1), "xMidYMax": (0.5, 1), "xMaxYMax": (1, 1),
         ]
         let f = try #require(fractions[name])
         let par = try #require(parse("\(name) \(mode)"))
@@ -285,7 +320,12 @@ struct LayerTreePreserveAspectRatioTests {
         let box = DOM.SVG.ViewBox(x: 0, y: 0, width: 100, height: 50)
         let fit = LayerTree.Builder.makeViewBoxFit(viewBox: box, width: width, height: height, preserveAspectRatio: nil)
         #expect([fit.sx, fit.sy, fit.tx, fit.ty] == [1, 1, 0, 0])
-        let clip = LayerTree.Builder.makeViewportClip(viewBox: box, width: width, height: height, preserveAspectRatio: nil)
+        let clip = LayerTree.Builder.makeViewportClip(
+            viewBox: box,
+            width: width,
+            height: height,
+            preserveAspectRatio: nil
+        )
         #expect(isFinite(clip))
     }
 
@@ -294,7 +334,7 @@ struct LayerTreePreserveAspectRatioTests {
         (Float.infinity, Float(0), Float(10), Float(10)),
         (Float(0), Float(0), Float.nan, Float(10)),
         // tiny box: the scale overflows to infinity
-        (Float(0), Float(0), Float.leastNonzeroMagnitude, Float(10))
+        (Float(0), Float(0), Float.leastNonzeroMagnitude, Float(10)),
     ])
     func nonFiniteViewBoxFallsBackToViewport(x: Float, y: Float, width: Float, height: Float) {
         let box = DOM.SVG.ViewBox(x: x, y: y, width: width, height: height)
@@ -310,9 +350,11 @@ struct LayerTreePreserveAspectRatioTests {
 
     @Test
     func rootSliceGetsAClipInViewBoxSpace() throws {
-        let svg = try DOM.SVG.parse(xml: """
-        <svg xmlns="http://www.w3.org/2000/svg" width="200" height="100" viewBox="0 0 100 100" preserveAspectRatio="xMinYMin slice"/>
-        """)
+        let svg = try DOM.SVG.parse(
+            xml: """
+                <svg xmlns="http://www.w3.org/2000/svg" width="200" height="100" viewBox="0 0 100 100" preserveAspectRatio="xMinYMin slice"/>
+                """
+        )
         let root = LayerTree.Builder(svg: svg).makeLayer()
         #expect(root.transform == [.scale(sx: 2, sy: 2)])
         #expect(root.clip.first?.shape == .rect(within: .init(x: 0, y: 0, width: 100, height: 50), radii: .zero))
@@ -320,9 +362,11 @@ struct LayerTreePreserveAspectRatioTests {
 
     @Test(arguments: ["xMidYMid meet", "none", "xMinYMin meet"])
     func rootMeetAndNoneAreNotClipped(par: String) throws {
-        let svg = try DOM.SVG.parse(xml: """
-        <svg xmlns="http://www.w3.org/2000/svg" width="200" height="100" viewBox="0 0 100 100" preserveAspectRatio="\(par)"/>
-        """)
+        let svg = try DOM.SVG.parse(
+            xml: """
+                <svg xmlns="http://www.w3.org/2000/svg" width="200" height="100" viewBox="0 0 100 100" preserveAspectRatio="\(par)"/>
+                """
+        )
         #expect(LayerTree.Builder(svg: svg).makeLayer().clip.isEmpty)
     }
 
@@ -330,11 +374,13 @@ struct LayerTreePreserveAspectRatioTests {
 
     @Test
     func nestedSVGWithViewBoxOrigin() throws {
-        let svg = try DOM.SVG.parse(xml: """
-        <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">
-        <svg x="10" y="20" width="40" height="20" viewBox="5 5 10 10" preserveAspectRatio="xMidYMid meet"><rect width="10" height="10"/></svg>
-        </svg>
-        """)
+        let svg = try DOM.SVG.parse(
+            xml: """
+                <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">
+                <svg x="10" y="20" width="40" height="20" viewBox="5 5 10 10" preserveAspectRatio="xMidYMid meet"><rect width="10" height="10"/></svg>
+                </svg>
+                """
+        )
         let root = LayerTree.Builder(svg: svg).makeLayer()
         guard case .layer(let nested)? = root.contents.first else {
             Issue.record("no nested layer")
@@ -372,7 +418,10 @@ struct LayerTreePreserveAspectRatioTests {
         #expect(try content(PAR(align: .xMinYMin)) == .init(a: 2, b: 0, c: 0, d: 2, tx: 5 - 20, ty: -20))
         #expect(try content(PAR(align: .xMaxYMax)) == .init(a: 2, b: 0, c: 0, d: 2, tx: 5 + 20 - 20, ty: -20))
         // slice: scale 4, 20 of overflow in y
-        #expect(try content(PAR(align: .xMinYMid, meetOrSlice: .slice)) == .init(a: 4, b: 0, c: 0, d: 4, tx: 5 - 40, ty: -10 - 40))
+        #expect(
+            try content(PAR(align: .xMinYMid, meetOrSlice: .slice))
+                == .init(a: 4, b: 0, c: 0, d: 4, tx: 5 - 40, ty: -10 - 40)
+        )
         // none: stretched
         #expect(try content(PAR(align: .none)) == .init(a: 4, b: 0, c: 0, d: 2, tx: 5 - 40, ty: -20))
     }
@@ -387,11 +436,13 @@ struct LayerTreePreserveAspectRatioTests {
 
     @Test
     func rootClipPathIntersectsTheSliceViewport() throws {
-        let svg = try DOM.SVG.parse(xml: """
-        <svg xmlns="http://www.w3.org/2000/svg" width="200" height="100" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice" clip-path="url(#c)">
-        <clipPath id="c"><rect width="50" height="50"/></clipPath>
-        <rect width="100" height="100"/></svg>
-        """)
+        let svg = try DOM.SVG.parse(
+            xml: """
+                <svg xmlns="http://www.w3.org/2000/svg" width="200" height="100" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice" clip-path="url(#c)">
+                <clipPath id="c"><rect width="50" height="50"/></clipPath>
+                <rect width="100" height="100"/></svg>
+                """
+        )
         let root = LayerTree.Builder(svg: svg).makeLayer()
         // the viewport clips the outer layer, the root's own clip-path stays on the inner one
         #expect(!root.clip.isEmpty)
@@ -407,14 +458,16 @@ struct LayerTreePreserveAspectRatioTests {
 
     @Test
     func patternParsesAndInheritsPreserveAspectRatio() throws {
-        let svg = try DOM.SVG.parse(xml: """
-        <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="100" height="100">
-        <defs>
-        <pattern id="a" width="40" height="20" patternUnits="userSpaceOnUse" viewBox="0 0 10 10" preserveAspectRatio="xMaxYMax slice"><rect width="10" height="10"/></pattern>
-        <pattern id="b" xlink:href="#a"/>
-        </defs>
-        <rect width="100" height="100" fill="url(#b)"/></svg>
-        """)
+        let svg = try DOM.SVG.parse(
+            xml: """
+                <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="100" height="100">
+                <defs>
+                <pattern id="a" width="40" height="20" patternUnits="userSpaceOnUse" viewBox="0 0 10 10" preserveAspectRatio="xMaxYMax slice"><rect width="10" height="10"/></pattern>
+                <pattern id="b" xlink:href="#a"/>
+                </defs>
+                <rect width="100" height="100" fill="url(#b)"/></svg>
+                """
+        )
         #expect(svg.defs.patterns.first?.preserveAspectRatio == PAR(align: .xMaxYMax, meetOrSlice: .slice))
         let layer = LayerTree.Builder(svg: svg).makeLayer()
         let generator = LayerTree.CommandGenerator(provider: LayerTreeProvider(), size: .zero, options: .default)

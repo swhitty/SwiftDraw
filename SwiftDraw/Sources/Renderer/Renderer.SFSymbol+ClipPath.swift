@@ -40,11 +40,13 @@ extension SFSymbolRenderer {
     /// Returns `nil` when the result is empty (path lies entirely outside the clip region).
     /// Returns the original `path` unchanged when the running platform predates CGPath boolean ops.
     /// `clipCTM` is applied to each clip shape so it sits in the same coordinate space as `path`.
-    static func intersect(path: LayerTree.Path,
-                          with clipShapes: [LayerTree.ClipShape],
-                          clipRule: LayerTree.FillRule?,
-                          clipUnits: LayerTree.ClipUnits,
-                          clipCTM: LayerTree.Transform.Matrix) -> LayerTree.Path? {
+    static func intersect(
+        path: LayerTree.Path,
+        with clipShapes: [LayerTree.ClipShape],
+        clipRule: LayerTree.FillRule?,
+        clipUnits: LayerTree.ClipUnits,
+        clipCTM: LayerTree.Transform.Matrix
+    ) -> LayerTree.Path? {
         guard !clipShapes.isEmpty else { return path }
 
         let pathCG = CGProvider().createPath(from: .path(path))
@@ -58,9 +60,12 @@ extension SFSymbolRenderer {
             let bounds = path.bounds
             guard bounds.width > 0, bounds.height > 0 else { return nil }
             unitsTransform = LayerTree.Transform.Matrix(
-                a: bounds.width, b: 0,
-                c: 0, d: bounds.height,
-                tx: bounds.minX, ty: bounds.minY
+                a: bounds.width,
+                b: 0,
+                c: 0,
+                d: bounds.height,
+                tx: bounds.minX,
+                ty: bounds.minY
             )
         }
 
@@ -85,13 +90,16 @@ extension SFSymbolRenderer {
         }
     }
 
-    private static func makeUnionedCGPath(from clipShapes: [LayerTree.ClipShape],
-                                          preCTM: LayerTree.Transform.Matrix,
-                                          postCTM: LayerTree.Transform.Matrix) -> CGPath {
+    private static func makeUnionedCGPath(
+        from clipShapes: [LayerTree.ClipShape],
+        preCTM: LayerTree.Transform.Matrix,
+        postCTM: LayerTree.Transform.Matrix
+    ) -> CGPath {
         let provider = CGProvider()
         let union = CGMutablePath()
         for clipShape in clipShapes {
-            let combined = preCTM
+            let combined =
+                preCTM
                 .concatenated(clipShape.transform)
                 .concatenated(postCTM)
             let transform = provider.createTransform(from: combined)

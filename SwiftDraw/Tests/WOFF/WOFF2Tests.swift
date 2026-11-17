@@ -54,32 +54,32 @@ struct WOFF2Tests {
     @Test
     func parses_WOFF2_from_Roboto() throws {
         let woff2 = try WOFF2(contentsOf: Bundle.test.url(forResource: "Roboto-Regular.woff2"))
-        
+
         #expect(woff2.header.numTables > 0)
         #expect(!woff2.tables.isEmpty)
         #expect(woff2.fontData.count > 0)
     }
-    
+
     @Test
     func extracts_postscript_name_from_Roboto() throws {
         let woff2 = try WOFF2(contentsOf: Bundle.test.url(forResource: "Roboto-Regular.woff2"))
-        
+
         #expect(woff2.postScriptName == "RobotoRegular")
     }
-    
+
     @Test
     func throws_on_invalid_data() {
         let invalidData = Data([0x00, 0x01, 0x02, 0x03])
-        
+
         #expect(throws: WOFF2Error.self) {
             try WOFF2(data: invalidData)
         }
     }
-    
+
     @Test
     func throws_on_empty_data() {
         let emptyData = Data()
-        
+
         #expect(throws: WOFF2Error.self) {
             try WOFF2(data: emptyData)
         }
@@ -101,28 +101,28 @@ struct WOFF2Tests {
             try WOFF2(data: data)
         }
     }
-    
+
     @Test
     func makes_CGFont_from_Roboto_WOFF2() throws {
         let woff2 = try WOFF2(contentsOf: Bundle.test.url(forResource: "Roboto-Regular.woff2"))
         let cgFont = try woff2.makeCGFont()
-        
+
         #expect(cgFont.postScriptName == "RobotoRegular" as CFString)
     }
-    
+
     @Test
     func makes_CGFont_from_Lato_WOFF2() throws {
         let woff2 = try WOFF2(contentsOf: Bundle.test.url(forResource: "Lato-Regular.woff2"))
         let cgFont = try woff2.makeCGFont()
-        
+
         #expect(cgFont.postScriptName == "Lato-Regular" as CFString)
     }
-    
+
     @Test
     func makes_CGFont_from_SourceCodePro_WOFF2() throws {
         let woff2 = try WOFF2(contentsOf: Bundle.test.url(forResource: "SourceCodePro-Regular.woff2"))
         let cgFont = try woff2.makeCGFont()
-        
+
         #expect(cgFont.postScriptName == "SourceCodeProExtraLight-Regular" as CFString)
     }
 
@@ -145,7 +145,7 @@ struct WOFF2Tests {
             ("Roboto-Regular.woff2", "Roboto"),
             ("Silkscreen-Regular.woff2", "Silkscreen"),
             ("SourceCodePro-Regular.woff2", "Source Code Pro"),
-            ("VT323-Regular.woff2", "VT323")
+            ("VT323-Regular.woff2", "VT323"),
         ]
 
         let sampleText = "The times they are a-changin'"
@@ -179,7 +179,8 @@ struct WOFF2Tests {
 
         var mediaBox = CGRect(x: 0, y: 0, width: pageWidth, height: pageHeight)
         guard let consumer = CGDataConsumer(data: pdfData as CFMutableData),
-              let pdfContext = CGContext(consumer: consumer, mediaBox: &mediaBox, nil) else {
+            let pdfContext = CGContext(consumer: consumer, mediaBox: &mediaBox, nil)
+        else {
             return
         }
 
@@ -201,7 +202,7 @@ struct WOFF2Tests {
             // Draw sample text
             let sampleAttributes: [CFString: Any] = [
                 kCTFontAttributeName: entry.ctFont,
-                kCTForegroundColorAttributeName: blackColor
+                kCTForegroundColorAttributeName: blackColor,
             ]
             let sampleString = CFAttributedStringCreate(nil, sampleText as CFString, sampleAttributes as CFDictionary)!
             let sampleLine = CTLineCreateWithAttributedString(sampleString)
@@ -211,9 +212,13 @@ struct WOFF2Tests {
             // Draw font name label (below sample text)
             let labelAttributes: [CFString: Any] = [
                 kCTFontAttributeName: labelFont,
-                kCTForegroundColorAttributeName: grayColor
+                kCTForegroundColorAttributeName: grayColor,
             ]
-            let labelString = CFAttributedStringCreate(nil, entry.displayName as CFString, labelAttributes as CFDictionary)!
+            let labelString = CFAttributedStringCreate(
+                nil,
+                entry.displayName as CFString,
+                labelAttributes as CFDictionary
+            )!
             let labelLine = CTLineCreateWithAttributedString(labelString)
             pdfContext.textPosition = CGPoint(x: margin, y: baseline - descent - 16)
             CTLineDraw(labelLine, pdfContext)

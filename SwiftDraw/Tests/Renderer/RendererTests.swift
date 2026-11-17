@@ -62,36 +62,39 @@ final class RendererTests: XCTestCase {
             .setBlend(mode: .sourceIn),
             .draw(image: .mock, in: .zero),
             .drawLinearGradient(.mock, from: .zero, to: .zero),
-            .drawRadialGradient(.mock, startCenter: .zero, startRadius: 0, endCenter: .zero, endRadius: 0)
+            .drawRadialGradient(.mock, startCenter: .zero, startRadius: 0, endCenter: .zero, endRadius: 0),
         ])
 
-        XCTAssertEqual(renderer.operations, [
-            "pushState",
-            "popState",
-            "pushTransparencyLayer",
-            "popTransparencyLayer",
-            "concatenateTransform",
-            "translate",
-            "scale",
-            "rotate",
-            "setFillColor",
-            "setFillPattern",
-            "setStrokeColor",
-            "setLineWidth",
-            "setLineCap",
-            "setLineJoin",
-            "setLineMiterLimit",
-            "setLineDash",
-            "setClip",
-            "fillPath",
-            "strokePath",
-            "clipStrokeOutline",
-            "setAlpha",
-            "setBlendMode",
-            "drawImage",
-            "drawLinearGradient",
-            "drawRadialGradient"
-        ])
+        XCTAssertEqual(
+            renderer.operations,
+            [
+                "pushState",
+                "popState",
+                "pushTransparencyLayer",
+                "popTransparencyLayer",
+                "concatenateTransform",
+                "translate",
+                "scale",
+                "rotate",
+                "setFillColor",
+                "setFillPattern",
+                "setStrokeColor",
+                "setLineWidth",
+                "setLineCap",
+                "setLineJoin",
+                "setLineMiterLimit",
+                "setLineDash",
+                "setClip",
+                "fillPath",
+                "strokePath",
+                "clipStrokeOutline",
+                "setAlpha",
+                "setBlendMode",
+                "drawImage",
+                "drawLinearGradient",
+                "drawRadialGradient",
+            ]
+        )
     }
 }
 

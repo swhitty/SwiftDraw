@@ -60,16 +60,20 @@ final class RendererLayerTreeProviderTests: XCTestCase {
     }
 
     func testShape() {
-        let shape = LayerTree.Shape.rect(within: Rect(x: 0, y: 10, width: 20, height: 30),
-                                         radii: .zero)
+        let shape = LayerTree.Shape.rect(
+            within: Rect(x: 0, y: 10, width: 20, height: 30),
+            radii: .zero
+        )
 
         let converted = LayerTreeProvider().createPath(from: shape)
         XCTAssertEqual(converted, [shape])
     }
 
     func testSubPaths() {
-        let rect = LayerTree.Shape.rect(within: Rect(x: 0, y: 10, width: 20, height: 30),
-                                        radii: .zero)
+        let rect = LayerTree.Shape.rect(
+            within: Rect(x: 0, y: 10, width: 20, height: 30),
+            radii: .zero
+        )
         let line = LayerTree.Shape.line(between: [.zero, Point(0, 100)])
 
         let p1 = LayerTreeProvider().createPath(from: rect)
@@ -125,4 +129,3 @@ private extension LayerTree.Image {
         return .png(data: Data())
     }
 }
-

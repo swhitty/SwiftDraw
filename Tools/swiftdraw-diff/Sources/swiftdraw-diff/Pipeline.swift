@@ -47,16 +47,23 @@ struct OutputDirs {
 
     /// Creates the subfolders that names with a relative path (`text/text-anchor/simple-case`) are written into.
     func createSubfolders(for names: [String], base: Bool, resvg: Bool) throws {
-        let parents = Set(names.compactMap { name -> String? in
-            let parent = (name as NSString).deletingLastPathComponent
-            return parent.isEmpty ? nil : parent
-        })
+        let parents = Set(
+            names.compactMap { name -> String? in
+                let parent = (name as NSString).deletingLastPathComponent
+                return parent.isEmpty ? nil : parent
+            }
+        )
         guard !parents.isEmpty else { return }
         var dirs = [head, webkit, svg, diff]
         if base { dirs.append(self.base) }
         if resvg { dirs.append(self.resvg) }
         for dir in dirs {
-            for parent in parents { try FileManager.default.createDirectory(at: dir.appendingPathComponent(parent), withIntermediateDirectories: true) }
+            for parent in parents {
+                try FileManager.default.createDirectory(
+                    at: dir.appendingPathComponent(parent),
+                    withIntermediateDirectories: true
+                )
+            }
         }
     }
 }
@@ -76,16 +83,34 @@ enum Pipeline {
             seen[name] = url
             let data = (try? Data(contentsOf: url)) ?? Data()
             try? data.write(to: dirs.svg.appendingPathComponent("\(name).svg"))
-            return InputFile(name: name, svg: url, data: data, hash: RenderCache.hash(data), text: TextContent.contains(data))
+            return InputFile(
+                name: name,
+                svg: url,
+                data: data,
+                hash: RenderCache.hash(data),
+                text: TextContent.contains(data)
+            )
         }
     }
 
     /// Renders every file with WebKit, then SwiftDraw (head, then base) and resvg at WebKit's size.
     static func render(
-        _ files: [InputFile], options: Options, cache: RenderCache, dirs: OutputDirs,
-        webkit: WebKitRenderer, head: SwiftDrawRenderer, base: SwiftDrawRenderer?, resvg: ResvgRenderer?
+        _ files: [InputFile],
+        options: Options,
+        cache: RenderCache,
+        dirs: OutputDirs,
+        webkit: WebKitRenderer,
+        head: SwiftDrawRenderer,
+        base: SwiftDrawRenderer?,
+        resvg: ResvgRenderer?
     ) async throws -> [RenderedFile] {
-        let webkitResults = try await webkit.render(files, options: options, cache: cache, into: dirs.webkit, scratch: dirs.scratch)
+        let webkitResults = try await webkit.render(
+            files,
+            options: options,
+            cache: cache,
+            into: dirs.webkit,
+            scratch: dirs.scratch
+        )
         let scale = options.scale
 
         // Head first: where WebKit could not size a file, SwiftDraw's own size is used for the rest.
@@ -97,7 +122,13 @@ enum Pipeline {
             if let entry, entry.rendered, let w = entry.layoutWidth, let h = entry.layoutHeight {
                 size = PointSize(width: Int(w), height: Int(h))
             }
-            let (result, used) = await head.render(file, size: size, scale: scale, cache: cache, to: dirs.png(dirs.head, file.name))
+            let (result, used) = await head.render(
+                file,
+                size: size,
+                scale: scale,
+                cache: cache,
+                to: dirs.png(dirs.head, file.name)
+            )
             progress.tick()
             return RenderedFile(file: file, size: size ?? (result.rendered ? used : nil), webkit: entry, head: result)
         }
@@ -107,7 +138,13 @@ enum Pipeline {
             let results = await concurrentMap(rendered) { r -> RenderResult in
                 defer { progress.tick() }
                 guard let size = r.size else { return .failed("no size: neither WebKit nor head rendered it") }
-                return await base.render(r.file, size: size, scale: scale, cache: cache, to: dirs.png(dirs.base, r.file.name)).0
+                return await base.render(
+                    r.file,
+                    size: size,
+                    scale: scale,
+                    cache: cache,
+                    to: dirs.png(dirs.base, r.file.name)
+                ).0
             }
             for i in rendered.indices { rendered[i].base = results[i] }
         }
@@ -116,7 +153,13 @@ enum Pipeline {
             step(resvg.cli == nil ? "Reading \(resvg.label)" : "Rendering with \(resvg.label)")
             let results = await concurrentMap(rendered) { r -> RenderResult in
                 guard let size = r.size else { return .failed("no size") }
-                return await resvg.render(r.file, pixels: size.pixels(scale: scale), scale: scale, cache: cache, to: dirs.png(dirs.resvg, r.file.name))
+                return await resvg.render(
+                    r.file,
+                    pixels: size.pixels(scale: scale),
+                    scale: scale,
+                    cache: cache,
+                    to: dirs.png(dirs.resvg, r.file.name)
+                )
             }
             for i in rendered.indices { rendered[i].resvg = results[i] }
         }
@@ -137,7 +180,9 @@ enum Pipeline {
             let bitmap = try Bitmap(contentsOf: url)
             if bitmap.width == size.width && bitmap.height == size.height { return .success(bitmap) }
             if fit { return .success(bitmap.fitted(width: size.width, height: size.height)) }
-            return .failure(ToolError("image is \(bitmap.width)×\(bitmap.height), expected \(size.width)×\(size.height)"))
+            return .failure(
+                ToolError("image is \(bitmap.width)×\(bitmap.height), expected \(size.width)×\(size.height)")
+            )
         } catch {
             return .failure(ToolError("\(error)"))
         }

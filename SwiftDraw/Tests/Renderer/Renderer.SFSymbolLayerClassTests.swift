@@ -35,10 +35,15 @@ struct RendererSFSymbolLayerClassTests {
 
     // SD10: `.hierarchical-0:secondary` is one class name, not a class plus a pseudo-class
     @Test(arguments: [
-        ("sun-horizon.svg", [".monochrome-0 {", ".monochrome-1 {",
-                             ".multicolor-0:systemYellowColor {", ".multicolor-1:emerald {",
-                             ".hierarchical-0:secondary {", ".hierarchical-1:primary {"]),
-        ("checkmark.svg", [".multicolor-0:custom {"])
+        (
+            "sun-horizon.svg",
+            [
+                ".monochrome-0 {", ".monochrome-1 {",
+                ".multicolor-0:systemYellowColor {", ".multicolor-1:emerald {",
+                ".hierarchical-0:secondary {", ".hierarchical-1:primary {",
+            ]
+        ),
+        ("checkmark.svg", [".multicolor-0:custom {"]),
     ])
     func exportKeepsLayerClassRules(file: String, rules: [String]) throws {
         let url = try Bundle.test.url(forResource: file)

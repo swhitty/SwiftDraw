@@ -122,8 +122,8 @@ extension LayerTree.Builder {
         character.unicodeScalars.contains { scalar in
             switch scalar.value {
             case 0x0600...0x06FF, 0x0700...0x074F, 0x0750...0x077F, 0x07C0...0x07FF,
-                 0x0860...0x086F, 0x08A0...0x08FF, 0x1800...0x18AF,
-                 0xFB50...0xFDFF, 0xFE70...0xFEFF:
+                0x0860...0x086F, 0x08A0...0x08FF, 0x1800...0x18AF,
+                0xFB50...0xFDFF, 0xFE70...0xFEFF:
                 return true
             default:
                 return false
@@ -141,13 +141,16 @@ extension LayerTree.Builder {
         }
     }
 
-#if canImport(CoreText)
+    #if canImport(CoreText)
     /// Shapes `text` in the font of `attributes`: its glyphs in line order, in runs of one face each.
     /// The only place text is shaped; `makeAdvance` and `makeYOffset` are the only other places that
     /// ask CoreText for widths and metrics.
     /// - Parameter ligatures: false keeps only the ligatures the script requires
-    static func makeShapedText(_ text: String, with attributes: LayerTree.TextAttributes,
-                               ligatures: Bool = true) -> [ShapedRun] {
+    static func makeShapedText(
+        _ text: String,
+        with attributes: LayerTree.TextAttributes,
+        ligatures: Bool = true
+    ) -> [ShapedRun] {
         let font = CGProvider.createFont(for: attributes)
         let line = text.toLine(font: font.font, ligatures: ligatures)
         let glyphRuns = CTLineGetGlyphRuns(line)
@@ -171,21 +174,28 @@ extension LayerTree.Builder {
             CTRunGetStringIndices(run, all, &indices)
             var glyphs = [ShapedGlyph]()
             for i in 0..<count {
-                glyphs.append(ShapedGlyph(glyph: UInt16(ids[i]),
-                                          x: LayerTree.Float(positions[i].x + boldAdvance),
-                                          y: LayerTree.Float(positions[i].y),
-                                          advance: LayerTree.Float(advances[i].width + boldOffset),
-                                          index: indices[i]))
+                glyphs.append(
+                    ShapedGlyph(
+                        glyph: UInt16(ids[i]),
+                        x: LayerTree.Float(positions[i].x + boldAdvance),
+                        y: LayerTree.Float(positions[i].y),
+                        advance: LayerTree.Float(advances[i].width + boldOffset),
+                        index: indices[i]
+                    )
+                )
                 boldAdvance += boldOffset
             }
             runs.append(ShapedRun(fontName: CTFontCopyPostScriptName(face) as String, glyphs: glyphs))
         }
         return runs
     }
-#else
-    static func makeShapedText(_ text: String, with attributes: LayerTree.TextAttributes,
-                               ligatures: Bool = true) -> [ShapedRun] {
+    #else
+    static func makeShapedText(
+        _ text: String,
+        with attributes: LayerTree.TextAttributes,
+        ligatures: Bool = true
+    ) -> [ShapedRun] {
         []
     }
-#endif
+    #endif
 }

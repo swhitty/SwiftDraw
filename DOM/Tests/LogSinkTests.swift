@@ -81,11 +81,13 @@ struct LogSinkTests {
             handler(level, "message")
         }
 
-        #expect(streams.lines == [
-            "out: message",
-            "err: Warning: message",
-            "err: message"
-        ])
+        #expect(
+            streams.lines == [
+                "out: message",
+                "err: Warning: message",
+                "err: message",
+            ]
+        )
     }
 
     @Test
@@ -97,10 +99,12 @@ struct LogSinkTests {
             handler(level, "message")
         }
 
-        #expect(streams.lines == [
-            "err: Warning: message",
-            "err: message"
-        ])
+        #expect(
+            streams.lines == [
+                "err: Warning: message",
+                "err: message",
+            ]
+        )
     }
 
     @Test

@@ -13,7 +13,10 @@ struct Comparer {
     var options: Options { session.options }
 
     func run() async throws -> Int32 {
-        let dirs = OutputDirs(root: options.out ?? session.repo.work.appendingPathComponent("compare/report"), headName: "head")
+        let dirs = OutputDirs(
+            root: options.out ?? session.repo.work.appendingPathComponent("compare/report"),
+            headName: "head"
+        )
         try dirs.create(base: true, resvg: session.resvg != nil)
         let files = try Pipeline.inputs(options, dirs: dirs, base: true)
 
@@ -23,18 +26,45 @@ struct Comparer {
         if case .binary = baseRevision {
             // --swiftdraw-path replaces head only
             let sha = try await git(["rev-parse", "--verify", "\(options.base)^{commit}"], in: session.repo.root)
-            base = try await SwiftDrawRenderer.prepare(.commit(ref: options.base, sha: sha), slot: "base", repo: session.repo, cache: session.cache, scale: options.scale)
+            base = try await SwiftDrawRenderer.prepare(
+                .commit(ref: options.base, sha: sha),
+                slot: "base",
+                repo: session.repo,
+                cache: session.cache,
+                scale: options.scale
+            )
         } else {
-            base = try await SwiftDrawRenderer.prepare(baseRevision, slot: "base", repo: session.repo, cache: session.cache, scale: options.scale)
+            base = try await SwiftDrawRenderer.prepare(
+                baseRevision,
+                slot: "base",
+                repo: session.repo,
+                cache: session.cache,
+                scale: options.scale
+            )
         }
-        let head = try await SwiftDrawRenderer.prepare(headRevision, slot: "head", repo: session.repo, cache: session.cache, scale: options.scale)
+        let head = try await SwiftDrawRenderer.prepare(
+            headRevision,
+            slot: "head",
+            repo: session.repo,
+            cache: session.cache,
+            scale: options.scale
+        )
         print("Comparing SwiftDraw: \(base.label) → \(head.label)")
-        if case let .commit(_, baseSHA) = baseRevision, case let .commit(_, headSHA) = headRevision, baseSHA == headSHA {
+        if case let .commit(_, baseSHA) = baseRevision, case let .commit(_, headSHA) = headRevision, baseSHA == headSHA
+        {
             print("note: base and head are the same commit; expect no differences")
         }
 
-        let rendered = try await Pipeline.render(files, options: options, cache: session.cache, dirs: dirs,
-                                                 webkit: session.webkit, head: head, base: base, resvg: session.resvg)
+        let rendered = try await Pipeline.render(
+            files,
+            options: options,
+            cache: session.cache,
+            dirs: dirs,
+            webkit: session.webkit,
+            head: head,
+            base: base,
+            resvg: session.resvg
+        )
         let progress = Progress("Scoring", total: rendered.count)
         let entries = await concurrentMap(rendered) { r -> CompareReport.Entry in
             defer { progress.tick() }
@@ -42,9 +72,18 @@ struct Comparer {
         }
 
         let report = CompareReport(
-            base: base.label, head: head.label, engine: session.engine, resvg: session.resvg?.label, os: session.os,
-            scale: options.scale, tolerance: options.tolerance, match: options.match, fontSmoothing: options.fontSmoothing,
-            textReference: session.resvg == nil ? "webkit" : "resvg", generated: Date(), results: entries
+            base: base.label,
+            head: head.label,
+            engine: session.engine,
+            resvg: session.resvg?.label,
+            os: session.os,
+            scale: options.scale,
+            tolerance: options.tolerance,
+            match: options.match,
+            fontSmoothing: options.fontSmoothing,
+            textReference: session.resvg == nil ? "webkit" : "resvg",
+            generated: Date(),
+            results: entries
         )
         let json = dirs.root.appendingPathComponent("compare.json")
         try JSONEncoder.report.encode(report).write(to: json)
@@ -69,13 +108,21 @@ struct Comparer {
 
         let baseRendered = r.base?.rendered == true, headRendered = r.head.rendered
         var e = CompareReport.Entry(
-            name: name, category: .error,
-            baseStatus: baseRendered ? "rendered" : "failed", headStatus: headRendered ? "rendered" : "failed",
-            size: r.size, redrawn: r.webkit?.redrawn
+            name: name,
+            category: .error,
+            baseStatus: baseRendered ? "rendered" : "failed",
+            headStatus: headRendered ? "rendered" : "failed",
+            size: r.size,
+            redrawn: r.webkit?.redrawn
         )
         guard let px = Pipeline.pixels(r, scale: options.scale) else {
-            e.category = CompareCategory.of(baseRendered: baseRendered, headRendered: headRendered,
-                                            deltas: [], pixelsChanged: 0, tolerance: options.tolerance)
+            e.category = CompareCategory.of(
+                baseRendered: baseRendered,
+                headRendered: headRendered,
+                deltas: [],
+                pixelsChanged: 0,
+                tolerance: options.tolerance
+            )
             e.errors = errors.isEmpty ? nil : errors
             return e
         }
@@ -130,8 +177,11 @@ struct Comparer {
         e.judgedBy = judgedBy.isEmpty ? nil : judgedBy.map(\.0)
         e.resvgSource = r.resvg?.source
         e.category = CompareCategory.of(
-            baseRendered: baseImage != nil, headRendered: headImage != nil,
-            deltas: judgedBy.map(\.1), pixelsChanged: e.pixelsChanged ?? 0, tolerance: options.tolerance,
+            baseRendered: baseImage != nil,
+            headRendered: headImage != nil,
+            deltas: judgedBy.map(\.1),
+            pixelsChanged: e.pixelsChanged ?? 0,
+            tolerance: options.tolerance,
             missingReference: missingReference
         )
         if e.category != .unchanged {
@@ -147,35 +197,54 @@ struct Comparer {
 
     func printSummary(_ report: CompareReport) {
         let refs = [report.engine, report.resvg].compactMap { $0 }.joined(separator: " and ")
-        print("\nReferences: \(refs) · \(report.os) · font smoothing \(report.fontSmoothing ? "on" : "off") · tolerance \(String(format: "%g", report.tolerance)) pts")
+        print(
+            "\nReferences: \(refs) · \(report.os) · font smoothing \(report.fontSmoothing ? "on" : "off") · tolerance \(String(format: "%g", report.tolerance)) pts"
+        )
         let textCount = report.results.filter { $0.text == true }.count
         if report.textReference == "resvg" {
-            printTextSummary(sources: report.results.filter { $0.text == true }.map(\.resvgSource), pngs: options.resvgPNG != nil)
+            printTextSummary(
+                sources: report.results.filter { $0.text == true }.map(\.resvgSource),
+                pngs: options.resvgPNG != nil
+            )
         }
         print("")
         let width = max(10, report.results.map(\.name.count).max() ?? 10)
         let hasResvg = report.resvg != nil
 
-        func side(_ base: Double?, _ head: Double?, _ delta: Double?, baseStatus: String, headStatus: String) -> String {
-            let b = base.map { String(format: "%6.2f%%", $0) } ?? (baseStatus == "failed" ? "failed" : "–").leftPadded(7)
-            let h = head.map { String(format: "%6.2f%%", $0) } ?? (headStatus == "failed" ? "failed" : "–").leftPadded(7)
+        func side(_ base: Double?, _ head: Double?, _ delta: Double?, baseStatus: String, headStatus: String) -> String
+        {
+            let b =
+                base.map { String(format: "%6.2f%%", $0) } ?? (baseStatus == "failed" ? "failed" : "–").leftPadded(7)
+            let h =
+                head.map { String(format: "%6.2f%%", $0) } ?? (headStatus == "failed" ? "failed" : "–").leftPadded(7)
             let d = delta.map { String(format: "%+7.2f", $0) } ?? "       "
             return "\(b) → \(h) \(d)"
         }
         func line(_ e: CompareReport.Entry) -> String {
             let webkitLabel = e.judgedBy?.contains("webkit") == false && e.head != nil ? "webkit*" : "WebKit "
-            var s = "  \(e.name.padded(width))  \(webkitLabel) " + side(e.base, e.head, e.delta, baseStatus: e.baseStatus, headStatus: e.headStatus)
+            var s =
+                "  \(e.name.padded(width))  \(webkitLabel) "
+                + side(e.base, e.head, e.delta, baseStatus: e.baseStatus, headStatus: e.headStatus)
             if hasResvg {
-                s += "   resvg " + side(e.baseResvg, e.headResvg, e.deltaResvg, baseStatus: e.baseStatus, headStatus: e.headStatus)
+                s +=
+                    "   resvg "
+                    + side(e.baseResvg, e.headResvg, e.deltaResvg, baseStatus: e.baseStatus, headStatus: e.headStatus)
                 if let b = e.baseVerdict, let h = e.headVerdict, b != h { s += "   \(b.label) → \(h.label)" }
             }
             if let px = e.pixelsChanged, px > 0 { s += "   \(px) px changed" }
             if e.text == true || e.resvgSource == "cli" && options.resvgPNG != nil {
-                s += "   [" + [e.text == true ? "text" : nil, options.resvgPNG == nil ? nil : e.resvgSource.map { "resvg \($0.uppercased())" }]
+                s +=
+                    "   ["
+                    + [
+                        e.text == true ? "text" : nil,
+                        options.resvgPNG == nil ? nil : e.resvgSource.map { "resvg \($0.uppercased())" },
+                    ]
                     .compactMap { $0 }.joined(separator: ", ") + "]"
             }
             if [.error, .regressed, .noSecondReference].contains(e.category), let errors = e.errors {
-                s += "   (" + errors.sorted { $0.key < $1.key }.map { "\($0.key): \($0.value)" }.joined(separator: "; ") + ")"
+                s +=
+                    "   (" + errors.sorted { $0.key < $1.key }.map { "\($0.key): \($0.value)" }.joined(separator: "; ")
+                    + ")"
             }
             return s
         }
@@ -184,7 +253,10 @@ struct Comparer {
             (.regressed, "Regressed", "further from a reference, not closer to the other"),
             (.mixed, "Mixed", "closer to one reference, further from the other; not a failure, check by eye"),
             (.improved, "Improved", "closer to a reference"),
-            (.noSecondReference, "No second reference", "further from the only reference usable for the file; not a failure, check by eye"),
+            (
+                .noSecondReference, "No second reference",
+                "further from the only reference usable for the file; not a failure, check by eye"
+            ),
             (.changed, "Changed", "pixels differ, scores within tolerance"),
             (.error, "Errors", "no reference rendered"),
         ]
@@ -205,7 +277,9 @@ struct Comparer {
         if report.resvg != nil {
             let all = Verdict.allCases.sorted { $0.rank > $1.rank }
             func counts(_ key: KeyPath<CompareReport.Entry, Verdict?>) -> String {
-                all.map { v in "\(report.results.filter { $0[keyPath: key] == v }.count) \(v.label)" }.joined(separator: " · ")
+                all.map { v in "\(report.results.filter { $0[keyPath: key] == v }.count) \(v.label)" }.joined(
+                    separator: " · "
+                )
             }
             print(String(format: "Verdicts (match < %g%%)", report.match))
             print("  base: " + counts(\.baseVerdict))

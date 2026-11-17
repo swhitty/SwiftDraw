@@ -87,7 +87,6 @@ public extension SVG {
             return true
         }
 
-
         return image
     }
 
@@ -95,7 +94,8 @@ public extension SVG {
         let scale = scale == 0 ? SVG.defaultScale : scale
         let (bounds, pixelsWide, pixelsHigh) = Self.makeBounds(size: size, scale: scale)
         guard let bitmap = makeBitmap(width: pixelsWide, height: pixelsHigh, isOpaque: false),
-              let ctx = NSGraphicsContext(bitmapImageRep: bitmap)?.cgContext else {
+            let ctx = NSGraphicsContext(bitmapImageRep: bitmap)?.cgContext
+        else {
             throw Error("Failed to create CGContext")
         }
 
@@ -114,7 +114,8 @@ public extension SVG {
         let scale = scale == 0 ? SVG.defaultScale : scale
         let (bounds, pixelsWide, pixelsHigh) = Self.makeBounds(size: size, scale: scale)
         guard let bitmap = makeBitmap(width: pixelsWide, height: pixelsHigh, isOpaque: true),
-              let ctx = NSGraphicsContext(bitmapImageRep: bitmap)?.cgContext else {
+            let ctx = NSGraphicsContext(bitmapImageRep: bitmap)?.cgContext
+        else {
             throw Error("Failed to create CGContext")
         }
 
@@ -125,7 +126,12 @@ public extension SVG {
         ctx.fill(bounds)
         ctx.draw(self, in: bounds, baseCTM: base)
 
-        guard let data = bitmap.representation(using: .jpeg, properties: [NSBitmapImageRep.PropertyKey.compressionFactor: quality]) else {
+        guard
+            let data = bitmap.representation(
+                using: .jpeg,
+                properties: [NSBitmapImageRep.PropertyKey.compressionFactor: quality]
+            )
+        else {
             throw Error("Failed to retrieve jpeg data")
         }
         return data

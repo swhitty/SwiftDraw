@@ -29,7 +29,6 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-
 @testable import SwiftDrawDOM
 import Testing
 
@@ -53,21 +52,22 @@ struct ParserGraphicAttributeTests {
         #expect(parsed.clipPath == nil)
         #expect(parsed.mask == nil)
 
-        let att = ["opacity": "95%",
-                   "display": "none",
-                   "stroke": "green",
-                   "stroke-width": "15.0",
-                   "stroke-opacity": "75.6%",
-                   "stroke-linecap": "butt",
-                   "stroke-linejoin": "miter",
-                   "stroke-dasharray": "1 5 10",
-                   "fill": "purple",
-                   "fill-opacity": "25%",
-                   "fill-rule": "evenodd",
-                   "transform": "scale(15)",
-                   "clip-path": "url(#circlePath)",
-                   "mask": "url(#fancyMask)",
-                   "filter": "url(#blur)"
+        let att = [
+            "opacity": "95%",
+            "display": "none",
+            "stroke": "green",
+            "stroke-width": "15.0",
+            "stroke-opacity": "75.6%",
+            "stroke-linecap": "butt",
+            "stroke-linejoin": "miter",
+            "stroke-dasharray": "1 5 10",
+            "fill": "purple",
+            "fill-opacity": "25%",
+            "fill-rule": "evenodd",
+            "transform": "scale(15)",
+            "clip-path": "url(#circlePath)",
+            "mask": "url(#fancyMask)",
+            "filter": "url(#blur)",
         ]
 
         parsed = try XMLParser().parsePresentationAttributes(att)
@@ -140,19 +140,24 @@ struct ParserGraphicAttributeTests {
 struct ParserOpacityTests {
 
     private func opacity(_ value: String) throws -> DOM.Float? {
-        let svg = try DOM.SVG.parse(xml: #"<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"><rect width="1" height="1" opacity="\#(value)"/></svg>"#)
+        let svg = try DOM.SVG.parse(
+            xml:
+                #"<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"><rect width="1" height="1" opacity="\#(value)"/></svg>"#
+        )
         return try #require(svg.childElements.first).attributes.opacity
     }
 
-    @Test(arguments: [
-        ("0.5", 0.5),
-        ("50%", 0.5),
-        (" 0.25 ", 0.25),
-        ("2", 1),
-        ("-1", 0),
-        ("150%", 1),
-        ("1e-1", 0.1)
-    ] as [(String, DOM.Float)])
+    @Test(
+        arguments: [
+            ("0.5", 0.5),
+            ("50%", 0.5),
+            (" 0.25 ", 0.25),
+            ("2", 1),
+            ("-1", 0),
+            ("150%", 1),
+            ("1e-1", 0.1),
+        ] as [(String, DOM.Float)]
+    )
     func validOpacity(_ value: String, _ expected: DOM.Float) throws {
         #expect(try opacity(value) == expected)
     }

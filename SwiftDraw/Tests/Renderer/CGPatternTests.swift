@@ -29,7 +29,6 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-
 @testable import SwiftDraw
 
 #if canImport(AppKit) && !targetEnvironment(macCatalyst)
@@ -42,7 +41,9 @@ final class CGPatternTests: XCTestCase {
 
     func testPatternXOffsetsTiles() throws {
         // tiles at x = 4 + 8k, red in the first half of each tile
-        let colors = try render(pattern: #"<pattern id="p" x="4" width="8" height="16" patternUnits="userSpaceOnUse">\#(stripe)</pattern>"#)
+        let colors = try render(
+            pattern: #"<pattern id="p" x="4" width="8" height="16" patternUnits="userSpaceOnUse">\#(stripe)</pattern>"#
+        )
         XCTAssertEqual(colors(1), .white)
         XCTAssertEqual(colors(5), .red)
         XCTAssertEqual(colors(9), .white)
@@ -51,7 +52,11 @@ final class CGPatternTests: XCTestCase {
 
     func testPatternYOffsetsTiles() throws {
         // horizontal stripes: tiles at y = 4 + 8k, red in the top half of each tile
-        let colors = try render(pattern: #"<pattern id="p" y="4" width="16" height="8" patternUnits="userSpaceOnUse"><rect width="16" height="4" fill="red" /></pattern>"#, column: true)
+        let colors = try render(
+            pattern:
+                #"<pattern id="p" y="4" width="16" height="8" patternUnits="userSpaceOnUse"><rect width="16" height="4" fill="red" /></pattern>"#,
+            column: true
+        )
         XCTAssertEqual(colors(1), .white)
         XCTAssertEqual(colors(5), .red)
         XCTAssertEqual(colors(9), .white)
@@ -59,7 +64,10 @@ final class CGPatternTests: XCTestCase {
     }
 
     func testPatternTransformMovesTiles() throws {
-        let colors = try render(pattern: #"<pattern id="p" width="8" height="16" patternUnits="userSpaceOnUse" patternTransform="translate(2, 0)">\#(stripe)</pattern>"#)
+        let colors = try render(
+            pattern:
+                #"<pattern id="p" width="8" height="16" patternUnits="userSpaceOnUse" patternTransform="translate(2, 0)">\#(stripe)</pattern>"#
+        )
         XCTAssertEqual(colors(1), .white)
         XCTAssertEqual(colors(3), .red)
         XCTAssertEqual(colors(7), .white)
@@ -67,10 +75,12 @@ final class CGPatternTests: XCTestCase {
     }
 
     func testPatternHrefInheritsAttributesAndContent() throws {
-        let colors = try render(pattern: #"""
-            <pattern id="base" x="4" width="8" height="16" patternUnits="userSpaceOnUse">\#(stripe)</pattern>
-            <pattern id="p" xlink:href="#base" patternTransform="translate(-2, 0)" />
-            """#)
+        let colors = try render(
+            pattern: #"""
+                <pattern id="base" x="4" width="8" height="16" patternUnits="userSpaceOnUse">\#(stripe)</pattern>
+                <pattern id="p" xlink:href="#base" patternTransform="translate(-2, 0)" />
+                """#
+        )
         XCTAssertEqual(colors(1), .white)
         XCTAssertEqual(colors(3), .red)
         XCTAssertEqual(colors(7), .white)
@@ -88,7 +98,10 @@ final class CGPatternTests: XCTestCase {
 
     func testPatternViewBoxScalesContent() throws {
         // viewBox 0 0 8 16 into a 16×16 tile: meet scale 1, content centred at x = 4
-        let colors = try render(pattern: #"<pattern id="p" width="16" height="16" viewBox="0 0 8 16" patternUnits="userSpaceOnUse">\#(stripe)</pattern>"#)
+        let colors = try render(
+            pattern:
+                #"<pattern id="p" width="16" height="16" viewBox="0 0 8 16" patternUnits="userSpaceOnUse">\#(stripe)</pattern>"#
+        )
         XCTAssertEqual(colors(1), .white)
         XCTAssertEqual(colors(5), .red)
         XCTAssertEqual(colors(9), .white)
@@ -104,13 +117,23 @@ final class CGPatternTests: XCTestCase {
 
     func testPNGDataPatternTileIsNotFlipped() throws {
         // a single tile with red in its top quarter
-        let colors = try render(pattern: #"<pattern id="p" width="16" height="16" patternUnits="userSpaceOnUse"><rect width="16" height="4" fill="red" /></pattern>"#, column: true, output: .png)
+        let colors = try render(
+            pattern:
+                #"<pattern id="p" width="16" height="16" patternUnits="userSpaceOnUse"><rect width="16" height="4" fill="red" /></pattern>"#,
+            column: true,
+            output: .png
+        )
         XCTAssertEqual(colors(1), .red)
         XCTAssertEqual(colors(14), .white)
     }
 
     func testPNGDataPatternYOffsetsTiles() throws {
-        let colors = try render(pattern: #"<pattern id="p" y="4" width="16" height="8" patternUnits="userSpaceOnUse"><rect width="16" height="4" fill="red" /></pattern>"#, column: true, output: .png)
+        let colors = try render(
+            pattern:
+                #"<pattern id="p" y="4" width="16" height="8" patternUnits="userSpaceOnUse"><rect width="16" height="4" fill="red" /></pattern>"#,
+            column: true,
+            output: .png
+        )
         XCTAssertEqual(colors(1), .white)
         XCTAssertEqual(colors(5), .red)
         XCTAssertEqual(colors(9), .white)
@@ -118,7 +141,12 @@ final class CGPatternTests: XCTestCase {
     }
 
     func testJPEGDataPatternTileIsNotFlipped() throws {
-        let colors = try render(pattern: #"<pattern id="p" width="16" height="16" patternUnits="userSpaceOnUse"><rect width="16" height="4" fill="red" /></pattern>"#, column: true, output: .jpeg)
+        let colors = try render(
+            pattern:
+                #"<pattern id="p" width="16" height="16" patternUnits="userSpaceOnUse"><rect width="16" height="4" fill="red" /></pattern>"#,
+            column: true,
+            output: .jpeg
+        )
         XCTAssertEqual(colors(1), .red)
         XCTAssertEqual(colors(14), .white)
     }
@@ -143,12 +171,12 @@ private extension CGPatternTests {
     /// Samples the middle row, or the middle column when `column` is true.
     func render(pattern: String, column: Bool = false, output: Output = .rasterize) throws -> (Int) -> Pixel {
         let xml = """
-        <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="16" height="16">
-            <defs>\(pattern)</defs>
-            <rect width="16" height="16" fill="white" />
-            <rect width="16" height="16" fill="url(#p)" />
-        </svg>
-        """
+            <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="16" height="16">
+                <defs>\(pattern)</defs>
+                <rect width="16" height="16" fill="white" />
+                <rect width="16" height="16" fill="url(#p)" />
+            </svg>
+            """
         let svg = try XCTUnwrap(SVG(xml: xml))
         let canvas: NSBitmapImageRep
         switch output {

@@ -80,7 +80,7 @@ final class CGFilterLayerCache: Sendable {
 
     private let state = Mutex(State())
 
-    init() { }
+    init() {}
 
     /// Empties the cache unless it was filled drawing an SVG with the same commands at the same size.
     func prepare(for svg: SVG, size: CGSize) {
@@ -270,13 +270,18 @@ struct CGFilterLayerFill: Sendable {
     var draw: @Sendable (CGContext, CGFilterLayerDraw) -> Void
 
     /// nil when the context's clip is not within positive device space, which a bitmap can not cover
-    init?(context: CGContext, cache: CGFilterLayerCache, draw: @escaping @Sendable (CGContext, CGFilterLayerDraw) -> Void) {
+    init?(
+        context: CGContext,
+        cache: CGFilterLayerCache,
+        draw: @escaping @Sendable (CGContext, CGFilterLayerDraw) -> Void
+    ) {
         let toDevice = context.userSpaceToDeviceSpaceTransform
         let clip = context.boundingBoxOfClipPath
         guard !clip.isNull, !clip.isInfinite else { return nil }
         let device = clip.applying(toDevice)
         guard !device.isEmpty, device.minX >= 0, device.minY >= 0, device.maxX.isFinite, device.maxY.isFinite,
-              device.maxX * device.maxY <= CGFloat(Self.maxPixels) else { return nil }
+            device.maxX * device.maxY <= CGFloat(Self.maxPixels)
+        else { return nil }
         self.cache = cache
         self.toDevice = toDevice
         self.clip = clip
@@ -294,9 +299,13 @@ struct CGFilterLayerFill: Sendable {
 
     func replay() {
         let device = clip.applying(toDevice)
-        guard let bitmap = CGContext.makeFilterLayer(width: Int(device.maxX.rounded(.up)),
-                                                     height: Int(device.maxY.rounded(.up)),
-                                                     colorSpace: nil) else { return }
+        guard
+            let bitmap = CGContext.makeFilterLayer(
+                width: Int(device.maxX.rounded(.up)),
+                height: Int(device.maxY.rounded(.up)),
+                colorSpace: nil
+            )
+        else { return }
         // a bitmap's device space has its own transform (y down from the first row): the CTM undoes it
         let base = bitmap.userSpaceToDeviceSpaceTransform
         bitmap.concatenate(toDevice.concatenating(base.inverted()))

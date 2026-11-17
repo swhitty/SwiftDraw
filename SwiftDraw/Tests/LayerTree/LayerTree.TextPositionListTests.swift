@@ -37,9 +37,11 @@ import Testing
 struct LayerTreeTextPositionListTests {
 
     private func parse(_ text: String) throws -> DOM.SVG {
-        try DOM.SVG.parse(xml: """
-        <svg xmlns="http://www.w3.org/2000/svg" width="200" height="200">\(text)</svg>
-        """)
+        try DOM.SVG.parse(
+            xml: """
+                <svg xmlns="http://www.w3.org/2000/svg" width="200" height="200">\(text)</svg>
+                """
+        )
     }
 
     private func textPoint(_ text: String) throws -> LayerTree.Point? {

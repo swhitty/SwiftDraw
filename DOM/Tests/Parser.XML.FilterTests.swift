@@ -29,7 +29,6 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-
 import Foundation
 
 @testable import SwiftDrawDOM
@@ -55,7 +54,7 @@ struct ParserXMLFilterTests {
 
         element.children = [
             .makeElement("feGaussianBlur", ["stdDeviation": "0.5"]),
-            .makeElement("other")
+            .makeElement("other"),
         ]
 
         let filter = try XMLParser().parseFilter(element)
@@ -77,7 +76,7 @@ struct ParserXMLFilterTests {
         let element = XML.Element.makeMockFilter()
         element.children = [
             .makeElement("feGaussianBlur"),
-            .makeElement("feGaussianBlur", ["stdDeviation": "abc"])
+            .makeElement("feGaussianBlur", ["stdDeviation": "abc"]),
         ]
 
         let filter = try XMLParser().parseFilter(element)
@@ -86,12 +85,15 @@ struct ParserXMLFilterTests {
 
     @Test
     func parseRegionAndUnits() throws {
-        let element = XML.Element(name: "filter", attributes: [
-            "id": "f",
-            "x": "-0.2", "y": "-20%", "width": "140%", "height": "1.4",
-            "filterUnits": "objectBoundingBox",
-            "primitiveUnits": "objectBoundingBox"
-        ])
+        let element = XML.Element(
+            name: "filter",
+            attributes: [
+                "id": "f",
+                "x": "-0.2", "y": "-20%", "width": "140%", "height": "1.4",
+                "filterUnits": "objectBoundingBox",
+                "primitiveUnits": "objectBoundingBox",
+            ]
+        )
 
         let filter = try XMLParser().parseFilter(element)
         #expect(filter.x == -0.2)
@@ -104,9 +106,12 @@ struct ParserXMLFilterTests {
 
     @Test
     func parseInvalidRegionKeepsDefaults() throws {
-        let element = XML.Element(name: "filter", attributes: [
-            "id": "f", "x": "left", "filterUnits": "bogus"
-        ])
+        let element = XML.Element(
+            name: "filter",
+            attributes: [
+                "id": "f", "x": "left", "filterUnits": "bogus",
+            ]
+        )
 
         let filter = try XMLParser().parseFilter(element)
         #expect(filter.x == nil)
@@ -118,7 +123,7 @@ struct ParserXMLFilterTests {
         let element = XML.Element.makeMockFilter()
         element.children = [
             .makeElement("feDisplacementMap", ["scale": "10"]),
-            .makeElement("desc")
+            .makeElement("desc"),
         ]
 
         let filter = try XMLParser().parseFilter(element)
@@ -132,15 +137,23 @@ struct ParserXMLFilterTests {
         element.children = [
             .makeElement("feImage", ["xlink:href": "#r", "in": "SourceAlpha", "preserveAspectRatio": "none"]),
             .makeElement("feImage", ["href": "image.png", "image-rendering": "optimizeQuality"]),
-            .makeElement("feImage", [:])
+            .makeElement("feImage", [:]),
         ]
 
         let filter = try XMLParser().parseFilter(element)
-        #expect(filter.effects == [
-            .image(DOM.Filter.Image(href: URL(string: "#r"), preserveAspectRatio: .init(align: .none), isPixelated: true)),
-            .image(DOM.Filter.Image(href: URL(string: "image.png"))),
-            .image(DOM.Filter.Image(isPixelated: true))
-        ])
+        #expect(
+            filter.effects == [
+                .image(
+                    DOM.Filter.Image(
+                        href: URL(string: "#r"),
+                        preserveAspectRatio: .init(align: .none),
+                        isPixelated: true
+                    )
+                ),
+                .image(DOM.Filter.Image(href: URL(string: "image.png"))),
+                .image(DOM.Filter.Image(isPixelated: true)),
+            ]
+        )
         #expect(filter.primitives.map(\.inputs) == [[], [], []])
     }
 
@@ -151,15 +164,17 @@ struct ParserXMLFilterTests {
         element.children = [
             .makeElement("feGaussianBlur", ["in": "SourceGraphic", "stdDeviation": "1", "result": "a"]),
             .makeElement("feGaussianBlur", ["in": "a", "stdDeviation": "2"]),
-            .makeElement("feGaussianBlur", ["in": "SourceAlpha", "stdDeviation": "3"])
+            .makeElement("feGaussianBlur", ["in": "SourceAlpha", "stdDeviation": "3"]),
         ]
 
         let filter = try XMLParser().parseFilter(element)
-        #expect(filter.effects == [
-            .gaussianBlur(stdDeviation: 1),
-            .gaussianBlur(stdDeviation: 2),
-            .gaussianBlur(stdDeviation: 3)
-        ])
+        #expect(
+            filter.effects == [
+                .gaussianBlur(stdDeviation: 1),
+                .gaussianBlur(stdDeviation: 2),
+                .gaussianBlur(stdDeviation: 3),
+            ]
+        )
         #expect(filter.primitives.map(\.inputs) == [[.sourceGraphic], [.result("a")], [.sourceAlpha]])
         #expect(filter.primitives.map(\.result) == ["a", nil, nil])
     }
@@ -185,7 +200,7 @@ struct ParserXMLFilterTests {
         element.children = [
             .makeElement("feOffset", ["dx": "2", "dy": "-3.5", "in": "SourceAlpha", "result": "o"]),
             .makeElement("feOffset", ["dy": "4"]),
-            .makeElement("feOffset", ["dx": "abc", "dy": "1e60"])
+            .makeElement("feOffset", ["dx": "abc", "dy": "1e60"]),
         ]
 
         let filter = try XMLParser().parseFilter(element)
@@ -203,18 +218,20 @@ struct ParserXMLFilterTests {
             .makeElement("feFlood"),
             .makeElement("feFlood", ["flood-color": "none", "flood-opacity": "2"]),
             .makeElement("feFlood", ["flood-color": "currentColor"]),
-            .makeElement("feFlood", ["flood-color": "currentColor", "color": "lime"])
+            .makeElement("feFlood", ["flood-color": "currentColor", "color": "lime"]),
         ]
 
         let filter = try XMLParser().parseFilter(element)
-        #expect(filter.effects == [
-            .flood(color: .keyword(.red), opacity: 0.5),
-            .flood(color: .rgbi(0, 0, 255, 1), opacity: 0.4),
-            .flood(color: .keyword(.black), opacity: 1),
-            .flood(color: .keyword(.black), opacity: 1),
-            .flood(color: .keyword(.blue), opacity: 1),
-            .flood(color: .keyword(.lime), opacity: 1)
-        ])
+        #expect(
+            filter.effects == [
+                .flood(color: .keyword(.red), opacity: 0.5),
+                .flood(color: .rgbi(0, 0, 255, 1), opacity: 0.4),
+                .flood(color: .keyword(.black), opacity: 1),
+                .flood(color: .keyword(.black), opacity: 1),
+                .flood(color: .keyword(.blue), opacity: 1),
+                .flood(color: .keyword(.lime), opacity: 1),
+            ]
+        )
         // feFlood has no input
         #expect(filter.primitives[0].inputs == [])
     }
@@ -230,14 +247,16 @@ struct ParserXMLFilterTests {
             .makeElement("feComposite", ["operator": "xor"]),
             .makeElement("feComposite", ["operator": "lighter"]),
             .makeElement("feComposite", ["operator": "arithmetic", "k2": "-1", "k3": "1", "k4": "x"]),
-            .makeElement("feComposite", ["operator": "plus"])
+            .makeElement("feComposite", ["operator": "plus"]),
         ]
 
         let filter = try XMLParser().parseFilter(element)
-        #expect(filter.effects == [
-            .composite(.over), .composite(.in), .composite(.out), .composite(.atop), .composite(.xor),
-            .composite(.lighter), .composite(.arithmetic(k1: 0, k2: -1, k3: 1, k4: 0)), .composite(.over)
-        ])
+        #expect(
+            filter.effects == [
+                .composite(.over), .composite(.in), .composite(.out), .composite(.atop), .composite(.xor),
+                .composite(.lighter), .composite(.arithmetic(k1: 0, k2: -1, k3: 1, k4: 0)), .composite(.over),
+            ]
+        )
         #expect(filter.primitives[0].inputs == [.sourceGraphic, .result("a")])
         #expect(filter.primitives[1].inputs == [nil, nil])
     }
@@ -249,7 +268,7 @@ struct ParserXMLFilterTests {
             .makeElement("feMergeNode", ["in": "shadow"]),
             .makeElement("desc"),
             .makeElement("feMergeNode"),
-            .makeElement("feMergeNode", ["in": "SourceGraphic"])
+            .makeElement("feMergeNode", ["in": "SourceGraphic"]),
         ]
         let element = XML.Element.makeMockFilter()
         element.children = [merge]
@@ -268,13 +287,15 @@ struct ParserXMLFilterTests {
             .makeElement("feBlend", ["mode": "multiply"]),
             .makeElement("feBlend", ["mode": "color-dodge"]),
             .makeElement("feBlend", ["mode": "luminosity"]),
-            .makeElement("feBlend", ["mode": "plus-darker"])
+            .makeElement("feBlend", ["mode": "plus-darker"]),
         ]
 
         let filter = try XMLParser().parseFilter(element)
-        #expect(filter.effects == [
-            .blend(.normal), .blend(.multiply), .blend(.colorDodge), .blend(.luminosity), .blend(.normal)
-        ])
+        #expect(
+            filter.effects == [
+                .blend(.normal), .blend(.multiply), .blend(.colorDodge), .blend(.luminosity), .blend(.normal),
+            ]
+        )
         #expect(filter.primitives[0].inputs == [.sourceGraphic, .backgroundImage])
     }
 
@@ -285,8 +306,13 @@ struct ParserXMLFilterTests {
         let element = XML.Element.makeMockFilter()
         element.children = [
             // Figma's hard alpha, commas and newlines allowed
-            .makeElement("feColorMatrix", ["in": "SourceAlpha", "type": "matrix",
-                                           "values": "0 0 0 0 0 0 0 0 0 0 0 0 0 0 0,\n0 0 0 127 0"]),
+            .makeElement(
+                "feColorMatrix",
+                [
+                    "in": "SourceAlpha", "type": "matrix",
+                    "values": "0 0 0 0 0 0 0 0 0 0 0 0 0 0 0,\n0 0 0 127 0",
+                ]
+            ),
             .makeElement("feColorMatrix"),
             .makeElement("feColorMatrix", ["values": "1 2 3"]),
             .makeElement("feColorMatrix", ["type": "saturate", "values": "0.25"]),
@@ -295,34 +321,38 @@ struct ParserXMLFilterTests {
             .makeElement("feColorMatrix", ["type": "hueRotate", "values": "90"]),
             .makeElement("feColorMatrix", ["type": "hueRotate"]),
             .makeElement("feColorMatrix", ["type": "luminanceToAlpha"]),
-            .makeElement("feColorMatrix", ["type": "sepia", "values": "1"])
+            .makeElement("feColorMatrix", ["type": "sepia", "values": "1"]),
         ]
 
         let filter = try XMLParser().parseFilter(element)
-        #expect(filter.effects == [
-            .colorMatrix(.matrix(hardAlpha)),
-            .colorMatrix(.matrix(identity)),
-            .colorMatrix(.matrix(identity)),
-            .colorMatrix(.saturate(0.25)),
-            .colorMatrix(.saturate(1)),
-            .colorMatrix(.saturate(1)),
-            .colorMatrix(.hueRotate(90)),
-            .colorMatrix(.hueRotate(0)),
-            .colorMatrix(.luminanceToAlpha),
-            .colorMatrix(.matrix(identity))
-        ])
+        #expect(
+            filter.effects == [
+                .colorMatrix(.matrix(hardAlpha)),
+                .colorMatrix(.matrix(identity)),
+                .colorMatrix(.matrix(identity)),
+                .colorMatrix(.saturate(0.25)),
+                .colorMatrix(.saturate(1)),
+                .colorMatrix(.saturate(1)),
+                .colorMatrix(.hueRotate(90)),
+                .colorMatrix(.hueRotate(0)),
+                .colorMatrix(.luminanceToAlpha),
+                .colorMatrix(.matrix(identity)),
+            ]
+        )
     }
 
     @Test
     func parseSubregionInUserSpace() throws {
-        let svg = try DOM.SVG.parse(xml: #"""
-        <svg width="200" height="100" xmlns="http://www.w3.org/2000/svg">
-            <filter id="f">
-                <feFlood x="10" y="5mm" width="50%" height="25%" />
-                <feOffset dx="1" />
-            </filter>
-        </svg>
-        """#)
+        let svg = try DOM.SVG.parse(
+            xml: #"""
+                <svg width="200" height="100" xmlns="http://www.w3.org/2000/svg">
+                    <filter id="f">
+                        <feFlood x="10" y="5mm" width="50%" height="25%" />
+                        <feOffset dx="1" />
+                    </filter>
+                </svg>
+                """#
+        )
 
         let primitives = try #require(svg.defs.filters.first?.primitives)
         #expect(primitives[0].x == 10)
@@ -348,20 +378,22 @@ struct ParserXMLFilterTests {
 
     @Test
     func parseColorInterpolationFilters() throws {
-        let svg = try DOM.SVG.parse(xml: #"""
-        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
-            <filter id="initial"><feOffset /></filter>
-            <filter id="inkscape" style="color-interpolation-filters:sRGB">
-                <feOffset />
-                <feOffset color-interpolation-filters="linearRGB" />
-                <feOffset color-interpolation-filters="bogus" />
-            </filter>
-            <filter id="figma" color-interpolation-filters="sRGB"><feOffset style="color-interpolation-filters: auto" /></filter>
-            <g color-interpolation-filters="sRGB">
-                <filter id="inherited"><feOffset /></filter>
-            </g>
-        </svg>
-        """#)
+        let svg = try DOM.SVG.parse(
+            xml: #"""
+                <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+                    <filter id="initial"><feOffset /></filter>
+                    <filter id="inkscape" style="color-interpolation-filters:sRGB">
+                        <feOffset />
+                        <feOffset color-interpolation-filters="linearRGB" />
+                        <feOffset color-interpolation-filters="bogus" />
+                    </filter>
+                    <filter id="figma" color-interpolation-filters="sRGB"><feOffset style="color-interpolation-filters: auto" /></filter>
+                    <g color-interpolation-filters="sRGB">
+                        <filter id="inherited"><feOffset /></filter>
+                    </g>
+                </svg>
+                """#
+        )
 
         let spaces = svg.defs.filters.map { ($0.id, $0.primitives.map(\.colorInterpolation)) }
         #expect(spaces.map(\.0) == ["initial", "inkscape", "figma", "inherited"])
@@ -371,27 +403,31 @@ struct ParserXMLFilterTests {
     // an unreadable attribute drops the attribute, never the filter or the document
     @Test
     func parseInvalidPrimitiveAttributesKeepDocument() throws {
-        let svg = try DOM.SVG.parse(xml: #"""
-        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
-            <filter id="f">
-                <feFlood flood-color="var(--x)" flood-opacity="half" x="left" />
-                <feComposite operator="" k1="none" in2="" />
-                <feBlend mode="" />
-                <feColorMatrix type="" values="a b c" />
-                <feOffset dx="" dy="1px" />
-            </filter>
-            <rect width="10" height="10" filter="url(#f)" />
-        </svg>
-        """#)
+        let svg = try DOM.SVG.parse(
+            xml: #"""
+                <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+                    <filter id="f">
+                        <feFlood flood-color="var(--x)" flood-opacity="half" x="left" />
+                        <feComposite operator="" k1="none" in2="" />
+                        <feBlend mode="" />
+                        <feColorMatrix type="" values="a b c" />
+                        <feOffset dx="" dy="1px" />
+                    </filter>
+                    <rect width="10" height="10" filter="url(#f)" />
+                </svg>
+                """#
+        )
 
         let filter = try #require(svg.defs.filters.first)
-        #expect(filter.effects == [
-            .flood(color: .keyword(.black), opacity: 1),
-            .composite(.over),
-            .blend(.normal),
-            .colorMatrix(.matrix([1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0])),
-            .offset(dx: 0, dy: 1)
-        ])
+        #expect(
+            filter.effects == [
+                .flood(color: .keyword(.black), opacity: 1),
+                .composite(.over),
+                .blend(.normal),
+                .colorMatrix(.matrix([1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0])),
+                .offset(dx: 0, dy: 1),
+            ]
+        )
         #expect(filter.primitives[1].inputs == [nil, nil])
         #expect(svg.childElements.count == 1)
     }
@@ -411,7 +447,11 @@ private extension XML.Element {
 /// Figma's layer blur: a transparent flood with the source blended over it in normal mode is a no-op.
 struct ParserXMLFilterNoOpPreludeTests {
 
-    private func effects(flood: [String: String], blend: [String: String], blur: Bool = true) throws -> [DOM.Filter.Effect] {
+    private func effects(
+        flood: [String: String],
+        blend: [String: String],
+        blur: Bool = true
+    ) throws -> [DOM.Filter.Effect] {
         let filter = XML.Element(name: "filter", attributes: ["id": "f"])
         filter.children = [.makeElement("feFlood", flood), .makeElement("feBlend", blend)]
         if blur {
@@ -421,7 +461,9 @@ struct ParserXMLFilterNoOpPreludeTests {
     }
 
     private static let flood = ["flood-opacity": "0", "result": "BackgroundImageFix"]
-    private static let blend = ["mode": "normal", "in": "SourceGraphic", "in2": "BackgroundImageFix", "result": "shape"]
+    private static let blend = [
+        "mode": "normal", "in": "SourceGraphic", "in2": "BackgroundImageFix", "result": "shape",
+    ]
 
     @Test
     func figmaLayerBlurIsAPlainBlur() throws {
@@ -438,10 +480,12 @@ struct ParserXMLFilterNoOpPreludeTests {
     // dropping it would leave no primitives, which hides the element: the pair is kept to draw the source
     @Test
     func preludeAloneIsKept() throws {
-        #expect(try effects(flood: Self.flood, blend: Self.blend, blur: false) == [
-            .flood(color: .keyword(.black), opacity: 0),
-            .blend(.normal)
-        ])
+        #expect(
+            try effects(flood: Self.flood, blend: Self.blend, blur: false) == [
+                .flood(color: .keyword(.black), opacity: 0),
+                .blend(.normal),
+            ]
+        )
     }
 
     @Test
@@ -450,7 +494,7 @@ struct ParserXMLFilterNoOpPreludeTests {
         filter.children = [
             .makeElement("feFlood", Self.flood),
             .makeElement("feBlend", Self.blend),
-            .makeElement("feGaussianBlur", ["in": "shape", "stdDeviation": "2"])
+            .makeElement("feGaussianBlur", ["in": "shape", "stdDeviation": "2"]),
         ]
         #expect(try XMLParser().parseFilter(filter).effects == [.gaussianBlur(stdDeviation: 2)])
     }
@@ -462,7 +506,10 @@ struct ParserXMLFilterNoOpPreludeTests {
         ("multiply blend", flood, ["mode": "multiply", "in": "SourceGraphic", "in2": "BackgroundImageFix"]),
         ("other input", flood, ["mode": "normal", "in": "SourceAlpha", "in2": "BackgroundImageFix"]),
         ("in2 not the flood", flood, ["mode": "normal", "in": "SourceGraphic", "in2": "Other"]),
-        ("blend subregion", flood, ["mode": "normal", "in": "SourceGraphic", "in2": "BackgroundImageFix", "width": "5"])
+        (
+            "blend subregion", flood,
+            ["mode": "normal", "in": "SourceGraphic", "in2": "BackgroundImageFix", "width": "5"]
+        ),
     ])
     func otherFloodOrBlendIsKept(name: String, flood: [String: String], blend: [String: String]) throws {
         let effects = try effects(flood: flood, blend: blend)
@@ -480,7 +527,7 @@ struct ParserXMLFilterNoOpPreludeTests {
         filter.children = [
             .makeElement("feFlood", Self.flood),
             .makeElement("feBlend", Self.blend),
-            .makeElement("feGaussianBlur", ["in": "shape", "stdDeviation": "2"])
+            .makeElement("feGaussianBlur", ["in": "shape", "stdDeviation": "2"]),
         ]
         let primitives = try XMLParser().parseFilter(filter).primitives
         #expect(primitives.map(\.inputs) == [[.sourceGraphic]])
@@ -494,11 +541,11 @@ struct ParserXMLFilterNoOpPreludeTests {
             .makeElement("feFlood", Self.flood),
             .makeElement("feBlend", Self.blend),
             .makeElement("feGaussianBlur", ["in": "shape", "stdDeviation": "2", "result": "blur"]),
-            .makeElement("feMerge")
+            .makeElement("feMerge"),
         ]
         filter.children[3].children = [
             .makeElement("feMergeNode", ["in": "BackgroundImageFix"]),
-            .makeElement("feMergeNode", ["in": "blur"])
+            .makeElement("feMergeNode", ["in": "blur"]),
         ]
         #expect(try XMLParser().parseFilter(filter).primitives.count == 4)
     }

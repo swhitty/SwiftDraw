@@ -63,7 +63,7 @@ public extension SVG {
         expanded(top: -insets.top, left: -insets.left, bottom: -insets.bottom, right: -insets.right)
     }
 
-#if canImport(UIKit)
+    #if canImport(UIKit)
     @available(*, deprecated, message: "add insets via SVG.expand() before rasterize()")
     func rasterize(scale: CGFloat = 0, insets: UIEdgeInsets) -> UIImage {
         inset(insets).rasterize(scale: scale)
@@ -82,7 +82,7 @@ public extension SVG {
     private func inset(_ insets: UIEdgeInsets) -> SVG {
         expanded(top: -insets.top, left: -insets.left, bottom: -insets.bottom, right: -insets.right)
     }
-#endif
+    #endif
 
 }
 #endif

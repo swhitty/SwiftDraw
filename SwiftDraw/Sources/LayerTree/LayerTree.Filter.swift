@@ -29,7 +29,6 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-
 import Foundation
 import SwiftDrawDOM
 
@@ -161,10 +160,12 @@ extension LayerTree.FilterLayer {
     init(region: LayerTree.Rect, effects: [Effect]) {
         self.region = region
         self.primitives = effects.enumerated().map { index, effect in
-            Primitive(effect: effect,
-                      inputs: [index == 0 ? .sourceGraphic : .primitive(index - 1)],
-                      subregion: region,
-                      colorInterpolation: .sRGB)
+            Primitive(
+                effect: effect,
+                inputs: [index == 0 ? .sourceGraphic : .primitive(index - 1)],
+                subregion: region,
+                colorInterpolation: .sRGB
+            )
         }
     }
 
@@ -174,8 +175,9 @@ extension LayerTree.FilterLayer {
         guard !primitives.isEmpty else { return false }
         for (index, primitive) in primitives.enumerated() {
             guard case .gaussianBlur = primitive.effect,
-                  primitive.inputs == [index == 0 ? .sourceGraphic : .primitive(index - 1)],
-                  primitive.subregion == region else { return false }
+                primitive.inputs == [index == 0 ? .sourceGraphic : .primitive(index - 1)],
+                primitive.subregion == region
+            else { return false }
         }
         return true
     }
@@ -190,18 +192,20 @@ extension LayerTree.FilterLayer {
         var inputs = [[Input]]()
         for (index, primitive) in primitives.enumerated() {
             let previous: Input = index == 0 ? .sourceGraphic : .primitive(index - 1)
-            inputs.append(primitive.inputs.map { input in
-                switch input {
-                case .sourceGraphic, .backgroundImage, .backgroundAlpha, .fillPaint, .strokePaint:
-                    return .sourceGraphic
-                case .sourceAlpha:
-                    return .sourceAlpha
-                case .result(let name):
-                    return named[name].map { .primitive($0) } ?? previous
-                case nil:
-                    return previous
+            inputs.append(
+                primitive.inputs.map { input in
+                    switch input {
+                    case .sourceGraphic, .backgroundImage, .backgroundAlpha, .fillPaint, .strokePaint:
+                        return .sourceGraphic
+                    case .sourceAlpha:
+                        return .sourceAlpha
+                    case .result(let name):
+                        return named[name].map { .primitive($0) } ?? previous
+                    case nil:
+                        return previous
+                    }
                 }
-            })
+            )
             if let result = primitive.result {
                 named[result] = index
             }
@@ -263,7 +267,7 @@ extension LayerTree.Filter {
         case .unsupported:
             return false
         case .offset, .flood, .composite, .merge, .blend, .colorMatrix, .dropShadow, .componentTransfer, .morphology,
-             .turbulence, .convolveMatrix, .image:
+            .turbulence, .convolveMatrix, .image:
             return true
         }
     }
@@ -273,8 +277,9 @@ extension LayerTree.Filter {
         switch self {
         case .dropShadow:
             return 5
-        case .gaussianBlur, .unsupported, .offset, .flood, .composite, .merge, .blend, .colorMatrix, .componentTransfer, .morphology,
-             .turbulence, .convolveMatrix, .image:
+        case .gaussianBlur, .unsupported, .offset, .flood, .composite, .merge, .blend, .colorMatrix, .componentTransfer,
+            .morphology,
+            .turbulence, .convolveMatrix, .image:
             return 1
         }
     }
@@ -282,10 +287,12 @@ extension LayerTree.Filter {
 
 extension DOM.Filter.ColorMatrix {
 
-    static let identity: [LayerTree.Float] = [1, 0, 0, 0, 0,
-                                             0, 1, 0, 0, 0,
-                                             0, 0, 1, 0, 0,
-                                             0, 0, 0, 1, 0]
+    static let identity: [LayerTree.Float] = [
+        1, 0, 0, 0, 0,
+        0, 1, 0, 0, 0,
+        0, 0, 1, 0, 0,
+        0, 0, 0, 1, 0,
+    ]
 
     // Filter Effects 1 §9.6: the 4x5 matrix of each type, row-major; a wrong number of values is a pass through.
     // The luminance coefficients are those of Filter Effects 1, their complements exact so that
@@ -296,23 +303,31 @@ extension DOM.Filter.ColorMatrix {
             return values.count == 20 ? values.map { LayerTree.Float($0) } : Self.identity
         case .saturate(let value):
             let s = LayerTree.Float(value)
-            return [0.2126 + 0.7874 * s, 0.7152 - 0.7152 * s, 0.0722 - 0.0722 * s, 0, 0,
-                    0.2126 - 0.2126 * s, 0.7152 + 0.2848 * s, 0.0722 - 0.0722 * s, 0, 0,
-                    0.2126 - 0.2126 * s, 0.7152 - 0.7152 * s, 0.0722 + 0.9278 * s, 0, 0,
-                    0, 0, 0, 1, 0]
+            return [
+                0.2126 + 0.7874 * s, 0.7152 - 0.7152 * s, 0.0722 - 0.0722 * s, 0, 0,
+                0.2126 - 0.2126 * s, 0.7152 + 0.2848 * s, 0.0722 - 0.0722 * s, 0, 0,
+                0.2126 - 0.2126 * s, 0.7152 - 0.7152 * s, 0.0722 + 0.9278 * s, 0, 0,
+                0, 0, 0, 1, 0,
+            ]
         case .hueRotate(let degrees):
             let radians = Double(degrees) * .pi / 180
             let c = LayerTree.Float(cos(radians))
             let s = LayerTree.Float(sin(radians))
-            return [0.2126 + c * 0.7874 - s * 0.2126, 0.7152 - c * 0.7152 - s * 0.7152, 0.0722 - c * 0.0722 + s * 0.9278, 0, 0,
-                    0.2126 - c * 0.2126 + s * 0.143, 0.7152 + c * 0.2848 + s * 0.140, 0.0722 - c * 0.0722 - s * 0.283, 0, 0,
-                    0.2126 - c * 0.2126 - s * 0.7874, 0.7152 - c * 0.7152 + s * 0.7152, 0.0722 + c * 0.9278 + s * 0.0722, 0, 0,
-                    0, 0, 0, 1, 0]
+            return [
+                0.2126 + c * 0.7874 - s * 0.2126, 0.7152 - c * 0.7152 - s * 0.7152, 0.0722 - c * 0.0722 + s * 0.9278, 0,
+                0,
+                0.2126 - c * 0.2126 + s * 0.143, 0.7152 + c * 0.2848 + s * 0.140, 0.0722 - c * 0.0722 - s * 0.283, 0, 0,
+                0.2126 - c * 0.2126 - s * 0.7874, 0.7152 - c * 0.7152 + s * 0.7152, 0.0722 + c * 0.9278 + s * 0.0722, 0,
+                0,
+                0, 0, 0, 1, 0,
+            ]
         case .luminanceToAlpha:
-            return [0, 0, 0, 0, 0,
-                    0, 0, 0, 0, 0,
-                    0, 0, 0, 0, 0,
-                    0.2126, 0.7152, 0.0722, 0, 0]
+            return [
+                0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0,
+                0.2126, 0.7152, 0.0722, 0, 0,
+            ]
         }
     }
 }

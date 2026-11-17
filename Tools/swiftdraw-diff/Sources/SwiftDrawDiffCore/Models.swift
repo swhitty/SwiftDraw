@@ -16,8 +16,18 @@ public struct WebKitManifestEntry: Codable, Equatable, Sendable {
 
     public var rendered: Bool { status == "rendered" }
 
-    public init(name: String, status: String, error: String? = nil, redrawn: Int? = nil, width: Int, height: Int,
-                layoutWidth: Double? = nil, layoutHeight: Double? = nil, naturalWidth: Double? = nil, naturalHeight: Double? = nil) {
+    public init(
+        name: String,
+        status: String,
+        error: String? = nil,
+        redrawn: Int? = nil,
+        width: Int,
+        height: Int,
+        layoutWidth: Double? = nil,
+        layoutHeight: Double? = nil,
+        naturalWidth: Double? = nil,
+        naturalHeight: Double? = nil
+    ) {
         self.name = name
         self.status = status
         self.error = error
@@ -77,8 +87,18 @@ public struct ScoresReport: Codable, Sendable {
     public var generated: Date
     public var results: [Score]
 
-    public init(swiftdraw: String, engine: String, resvg: String?, os: String, scale: Int, match: Double,
-                fontSmoothing: Bool, textReference: String, generated: Date, results: [Score]) {
+    public init(
+        swiftdraw: String,
+        engine: String,
+        resvg: String?,
+        os: String,
+        scale: Int,
+        match: Double,
+        fontSmoothing: Bool,
+        textReference: String,
+        generated: Date,
+        results: [Score]
+    ) {
         self.swiftdraw = swiftdraw
         self.engine = engine
         self.resvg = resvg
@@ -111,8 +131,17 @@ public struct ScoresReport: Codable, Sendable {
         public var errors: [String: String]?
         public var redrawn: Int?
 
-        public init(name: String, status: String, score: Double? = nil, resvg: Double? = nil, webkitResvg: Double? = nil,
-                    verdict: Verdict? = nil, size: PointSize? = nil, errors: [String: String]? = nil, redrawn: Int? = nil) {
+        public init(
+            name: String,
+            status: String,
+            score: Double? = nil,
+            resvg: Double? = nil,
+            webkitResvg: Double? = nil,
+            verdict: Verdict? = nil,
+            size: PointSize? = nil,
+            errors: [String: String]? = nil,
+            redrawn: Int? = nil
+        ) {
             self.name = name
             self.status = status
             self.score = score
@@ -142,8 +171,20 @@ public struct CompareReport: Codable, Sendable {
     public var generated: Date
     public var results: [Entry]
 
-    public init(base: String, head: String, engine: String, resvg: String?, os: String, scale: Int, tolerance: Double,
-                match: Double, fontSmoothing: Bool, textReference: String, generated: Date, results: [Entry]) {
+    public init(
+        base: String,
+        head: String,
+        engine: String,
+        resvg: String?,
+        os: String,
+        scale: Int,
+        tolerance: Double,
+        match: Double,
+        fontSmoothing: Bool,
+        textReference: String,
+        generated: Date,
+        results: [Entry]
+    ) {
         self.base = base
         self.head = head
         self.engine = engine
@@ -188,8 +229,14 @@ public struct CompareReport: Codable, Sendable {
         public var errors: [String: String]?
         public var redrawn: Int?
 
-        public init(name: String, category: CompareCategory, baseStatus: String, headStatus: String,
-                    size: PointSize? = nil, redrawn: Int? = nil) {
+        public init(
+            name: String,
+            category: CompareCategory,
+            baseStatus: String,
+            headStatus: String,
+            size: PointSize? = nil,
+            redrawn: Int? = nil
+        ) {
             self.name = name
             self.category = category
             self.baseStatus = baseStatus

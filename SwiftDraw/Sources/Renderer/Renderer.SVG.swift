@@ -38,9 +38,11 @@ public struct SVGRenderer {
     ///   - path: SVG path data `M x y L x y ...`
     ///   - transform: SVG transform commands `translate(10, 20) roate(30)`
     /// - Returns: SVG path data with transform applied  `M x y L x y ...`
-    public static func makeExpanded(path: String,
-                                    transform: String,
-                                    precision: Int = 4) throws -> String {
+    public static func makeExpanded(
+        path: String,
+        transform: String,
+        precision: Int = 4
+    ) throws -> String {
 
         let domPath = try XMLParser().parsePath(from: path)
         let layerPath = try LayerTree.Builder.createPath(from: domPath)
@@ -53,15 +55,19 @@ public struct SVGRenderer {
     }
 
     static func makeDOM(path: LayerTree.Path, precision: Int) -> String {
-        let formatter = CoordinateFormatter(delimeter: .comma,
-                                            precision: .capped(max: precision))
+        let formatter = CoordinateFormatter(
+            delimeter: .comma,
+            precision: .capped(max: precision)
+        )
         return path.segments
             .map { makeDOM(segment: $0, formatter: formatter) }
             .joined(separator: " ")
     }
 
-    static func makeDOM(segment: LayerTree.Path.Segment,
-                        formatter: CoordinateFormatter) -> String {
+    static func makeDOM(
+        segment: LayerTree.Path.Segment,
+        formatter: CoordinateFormatter
+    ) -> String {
         switch segment {
         case .move(let point):
             let point = formatter.format(point.x, point.y)
@@ -79,5 +85,3 @@ public struct SVGRenderer {
         }
     }
 }
-
-

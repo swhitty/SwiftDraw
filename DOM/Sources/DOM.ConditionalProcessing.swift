@@ -50,7 +50,8 @@ package extension DOM {
     /// user preferring `en-US`, rather than SVG 2's stricter prefix match. An empty list is false.
     static func matchesSystemLanguage(_ value: String, languages: [String]) -> Bool {
         let preferred = Set(languages.compactMap(primaryLanguageSubtag))
-        return value
+        return
+            value
             .split(separator: ",")
             .compactMap { primaryLanguageSubtag(String($0)) }
             .contains { preferred.contains($0) }
@@ -61,7 +62,8 @@ package extension DOM {
     static func primaryLanguageSubtag(_ tag: String) -> String? {
         let trimmed = tag.trimmingCharacters(in: .whitespacesAndNewlines)
         guard let primary = trimmed.split(whereSeparator: { $0 == "-" || $0 == "_" }).first,
-              !primary.isEmpty else { return nil }
+            !primary.isEmpty
+        else { return nil }
         return primary.lowercased()
     }
 }

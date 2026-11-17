@@ -24,26 +24,31 @@ struct ReferenceSVGTests {
     @Test
     func skipsDeclarationCommentsAndDoctype() {
         let svg = #"""
-        <?xml version="1.0"?><!-- <svg> in a comment --><!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "x.dtd"><svg><g/></svg>
-        """#
+            <?xml version="1.0"?><!-- <svg> in a comment --><!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "x.dtd"><svg><g/></svg>
+            """#
         #expect(prepared(svg).hasSuffix("<svg>\(style)<g/></svg>"))
     }
 
     @Test
     func ignoresGreaterThanInAttributes() {
-        #expect(prepared(#"<svg data-x="a>b" data-y='c>d'><g/></svg>"#) == #"<svg data-x="a>b" data-y='c>d'>\#(style)<g/></svg>"#)
+        #expect(
+            prepared(#"<svg data-x="a>b" data-y='c>d'><g/></svg>"#)
+                == #"<svg data-x="a>b" data-y='c>d'>\#(style)<g/></svg>"#
+        )
     }
 
     @Test
     func prefixedRoot() {
-        #expect(prepared(#"<s:svg xmlns:s="http://www.w3.org/2000/svg"><s:g/></s:svg>"#)
-            == #"<s:svg xmlns:s="http://www.w3.org/2000/svg">\#(style)<s:g/></s:svg>"#)
+        #expect(
+            prepared(#"<s:svg xmlns:s="http://www.w3.org/2000/svg"><s:g/></s:svg>"#)
+                == #"<s:svg xmlns:s="http://www.w3.org/2000/svg">\#(style)<s:g/></s:svg>"#
+        )
     }
 
     @Test(arguments: [
-        #"<svg width="10"/>"#,        // self-closing root: nothing to put text in
-        #"<html><svg/></html>"#,      // not an SVG root
-        #"<svg width="10""#,          // unterminated
+        #"<svg width="10"/>"#,  // self-closing root: nothing to put text in
+        #"<html><svg/></html>"#,  // not an SVG root
+        #"<svg width="10""#,  // unterminated
         "",
     ])
     func leavesUnchanged(_ svg: String) {

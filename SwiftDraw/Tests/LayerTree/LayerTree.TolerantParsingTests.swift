@@ -51,12 +51,14 @@ struct LayerTreeTolerantParsingTests {
 
     @Test
     func hslaAndHexAlphaReachCommandStream() throws {
-        let colors = try fillColors("""
-        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10">
-          <rect width="5" height="5" fill="hsla(0, 100%, 50%, 0.25)"/>
-          <rect width="5" height="5" fill="#00ff0080"/>
-        </svg>
-        """)
+        let colors = try fillColors(
+            """
+            <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10">
+              <rect width="5" height="5" fill="hsla(0, 100%, 50%, 0.25)"/>
+              <rect width="5" height="5" fill="#00ff0080"/>
+            </svg>
+            """
+        )
         let a = alphas(colors)
         try #require(a.count == 2)
         #expect(abs(a[0] - 0.25) < 0.001)

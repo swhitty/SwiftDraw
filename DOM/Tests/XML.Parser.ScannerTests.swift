@@ -54,7 +54,7 @@ struct ScannerTests {
 
     @Test
     func scanCharsetEmoji() throws {
-        var scanner =  XMLParser.Scanner(text: "  \t   8badf00d  \t🐶  \t🌞🇦🇺  007")
+        var scanner = XMLParser.Scanner(text: "  \t   8badf00d  \t🐶  \t🌞🇦🇺  007")
         let emoji: Foundation.CharacterSet = "🤠🌞💎🐶\u{1f1e6}\u{1f1fa}"
 
         #expect(throws: (any Error).self) { _ = try scanner.scanString(matchingAny: emoji) }
@@ -69,7 +69,7 @@ struct ScannerTests {
 
     @Test
     func scanString() throws {
-        var scanner =  XMLParser.Scanner(text: "  \t The quick brown fox")
+        var scanner = XMLParser.Scanner(text: "  \t The quick brown fox")
 
         #expect(throws: (any Error).self) { _ = try scanner.scanString("fox") }
         #expect(throws: Never.self) { try scanner.scanString("The") }
@@ -293,18 +293,20 @@ struct ScannerTests {
 
     @Test
     func scanAttributes() throws {
-        var scanner = XMLParser.Scanner(text: #"""
-        {
-           foo: bar;
-           src: url(foo;bar);
-           bar: baz;
-        }
-        """#)
+        var scanner = XMLParser.Scanner(
+            text: #"""
+                {
+                   foo: bar;
+                   src: url(foo;bar);
+                   bar: baz;
+                }
+                """#
+        )
         #expect(
             try scanner.scanAtttributes() == [
                 "foo": "bar",
                 "src": "url(foo;bar)",
-                "bar": "baz"
+                "bar": "baz",
             ]
         )
     }

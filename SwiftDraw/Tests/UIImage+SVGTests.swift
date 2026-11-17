@@ -51,7 +51,8 @@ struct UIImageSVGTests {
 
     @Test
     func imageSize() throws {
-        let image = try SVG.parseXML(#"""
+        let image = try SVG.parseXML(
+            #"""
             <?xml version="1.0" encoding="UTF-8"?>
             <svg width="64" height="64" version="1.1" xmlns="http://www.w3.org/2000/svg">
             </svg>

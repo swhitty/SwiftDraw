@@ -31,7 +31,7 @@
 
 import Foundation
 
-package enum DOM { /* namespace */ }
+package enum DOM { /* namespace */  }
 
 package extension DOM {
     typealias Float = Swift.Float
@@ -67,12 +67,12 @@ extension DOM {
             self.y = y
         }
     }
-    
+
     package enum Fill: Equatable {
         case url(URL)
         case color(DOM.Color)
         case urlWithFallback(URL, DOM.Color)
-        
+
         package func getColor() throws -> DOM.Color {
             switch self {
             case .url, .urlWithFallback:
@@ -82,18 +82,18 @@ extension DOM {
             }
         }
     }
-    
+
     package enum FillRule: String {
         case nonzero
         case evenodd
     }
-    
+
     package enum DisplayMode: String {
         case none
         case inline
         case block
     }
-    
+
     package enum Visibility: String {
         case visible
         case hidden
@@ -128,7 +128,8 @@ extension DOM {
         /// `normal`, or one to three distinct keywords; nil for anything else (a duplicate, an
         /// unknown keyword or an empty value), so the declaration is dropped.
         package init?(_ text: String) {
-            let tokens = text
+            let tokens =
+                text
                 .split(whereSeparator: { $0 == " " || $0 == "\t" || $0 == "\n" || $0 == "\r" })
                 .map { $0.lowercased() }
             if tokens == ["normal"] {
@@ -175,7 +176,7 @@ extension DOM {
         case round
         case square
     }
-    
+
     package enum LineJoin: String {
         case miter
         case round
@@ -234,7 +235,8 @@ extension DOM {
         case oblique
 
         package init?(_ text: String) {
-            let keyword = text.trimmingCharacters(in: .whitespaces).lowercased()
+            let keyword =
+                text.trimmingCharacters(in: .whitespaces).lowercased()
                 .split(separator: " ").first.map(String.init) ?? ""
             switch keyword {
             case "normal": self = .normal

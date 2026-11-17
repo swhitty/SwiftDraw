@@ -29,7 +29,6 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-
 @testable import SwiftDrawDOM
 import Foundation
 import Testing
@@ -61,8 +60,10 @@ struct ParserXMLLengthTests {
 
     @Test
     func percentagesResolveAgainstTheViewBoxNotTheSize() throws {
-        let svg = try parse(#"<rect width="50%" height="50%"/>"#,
-                            root: #"width="400" height="400" viewBox="0 0 20 10""#)
+        let svg = try parse(
+            #"<rect width="50%" height="50%"/>"#,
+            root: #"width="400" height="400" viewBox="0 0 20 10""#
+        )
         let rect = try #require(svg.childElements.first as? DOM.Rect)
         #expect(rect.width == 10)
         #expect(rect.height == 5)
@@ -122,10 +123,12 @@ struct ParserXMLLengthTests {
 
     @Test
     func emAndExUseTheElementFontSize() throws {
-        let svg = try parse(#"""
+        let svg = try parse(
+            #"""
             <rect width="2em" height="2ex"/>
             <g font-size="10"><rect width="2em" height="2ex" style="font-size: 20px"/><rect width="1em" height="1em"/></g>
-            """#)
+            """#
+        )
         let initial = try #require(svg.childElements.first as? DOM.Rect)
         #expect(initial.width == 32)
         #expect(initial.height == 16)
@@ -153,11 +156,13 @@ struct ParserXMLLengthTests {
 
     @Test
     func useImageAndTextPositions() throws {
-        let svg = try parse(#"""
+        let svg = try parse(
+            #"""
             <use href="#a" x="50%" y="1in"/>
             <image href="data:image/png;base64,AAAA" x="25%" y="50%" width="50%" height="10.5"/>
             <text x="10%" y="1em">A</text>
-            """#)
+            """#
+        )
         let use = try #require(svg.childElements[0] as? DOM.Use)
         #expect(use.x == 100)
         #expect(use.y == 96)
@@ -194,9 +199,11 @@ struct ParserXMLLengthTests {
 
     @Test
     func nestedSVGResolvesAgainstTheEnclosingViewport() throws {
-        let svg = try parse(#"""
+        let svg = try parse(
+            #"""
             <svg x="25%" y="10%" width="50%" height="80" viewBox="0 0 10 10"><rect width="50%" height="100%"/></svg>
-            """#)
+            """#
+        )
         let nested = try #require(svg.childElements.first as? DOM.SVG)
         #expect(nested.x == 50)
         #expect(nested.y == 10)
@@ -231,7 +238,9 @@ struct ParserXMLLengthTests {
     @Test
     func percentageWithoutAViewportKeepsItsNumber() throws {
         // an element parsed on its own (outside any <svg>) has no viewport: previous behaviour
-        let rect = try XMLParser().parseRect(XMLParser().parseAttributes(XML.Element(name: "rect", attributes: ["width": "20%", "height": "1"])))
+        let rect = try XMLParser().parseRect(
+            XMLParser().parseAttributes(XML.Element(name: "rect", attributes: ["width": "20%", "height": "1"]))
+        )
         #expect(rect.width == 20)
     }
 }

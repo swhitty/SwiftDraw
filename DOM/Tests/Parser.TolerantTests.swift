@@ -44,8 +44,14 @@ struct TolerantParsingTests {
         try SwiftDrawDOM.XMLParser().parseFill(value).getColor()
     }
 
-    private func expectRGBA(_ value: String, _ r: DOM.Float, _ g: DOM.Float, _ b: DOM.Float, _ a: DOM.Float,
-                            sourceLocation: SourceLocation = #_sourceLocation) throws {
+    private func expectRGBA(
+        _ value: String,
+        _ r: DOM.Float,
+        _ g: DOM.Float,
+        _ b: DOM.Float,
+        _ a: DOM.Float,
+        sourceLocation: SourceLocation = #_sourceLocation
+    ) throws {
         guard case let .rgbf(cr, cg, cb, ca) = try color(value) else {
             Issue.record("not rgbf: \(value)", sourceLocation: sourceLocation)
             return
@@ -86,14 +92,16 @@ struct TolerantParsingTests {
 
     @Test
     func invalidValuesDropTheAttribute() throws {
-        let svg = try parse("""
-        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10">
-          <rect id="a" width="5" height="5" fill="" stroke="inherit" opacity="abc"
-                stroke-width="wide" display="inline-block" stroke-linecap="none"
-                dominant-baseline="text-middle" clip-path="none" mask="none" filter="none"
-                transform="none"/>
-        </svg>
-        """)
+        let svg = try parse(
+            """
+            <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10">
+              <rect id="a" width="5" height="5" fill="" stroke="inherit" opacity="abc"
+                    stroke-width="wide" display="inline-block" stroke-linecap="none"
+                    dominant-baseline="text-middle" clip-path="none" mask="none" filter="none"
+                    transform="none"/>
+            </svg>
+            """
+        )
         #expect(svg.childElements.count == 1)
         let att = svg.childElements[0].attributes
         #expect(att.fill == nil)
@@ -112,11 +120,13 @@ struct TolerantParsingTests {
 
     @Test
     func goodAttributesSurviveBadNeighbours() throws {
-        let svg = try parse("""
-        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10">
-          <rect width="5" height="5" fill="red" stroke-linecap="none" stroke-width="3"/>
-        </svg>
-        """)
+        let svg = try parse(
+            """
+            <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10">
+              <rect width="5" height="5" fill="red" stroke-linecap="none" stroke-width="3"/>
+            </svg>
+            """
+        )
         let att = svg.childElements[0].attributes
         #expect(att.fill == .color(.keyword(.red)))
         #expect(att.strokeWidth == 3)
@@ -125,11 +135,13 @@ struct TolerantParsingTests {
 
     @Test
     func opacityIsClamped() throws {
-        let svg = try parse("""
-        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10">
-          <rect width="5" height="5" opacity="2" fill-opacity="-1" stroke-opacity="0.5"/>
-        </svg>
-        """)
+        let svg = try parse(
+            """
+            <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10">
+              <rect width="5" height="5" opacity="2" fill-opacity="-1" stroke-opacity="0.5"/>
+            </svg>
+            """
+        )
         let att = svg.childElements[0].attributes
         #expect(att.opacity == 1)
         #expect(att.fillOpacity == 0)
@@ -138,11 +150,13 @@ struct TolerantParsingTests {
 
     @Test
     func importantIsIgnored() throws {
-        let svg = try parse("""
-        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10">
-          <rect width="5" height="5" style="fill: red !important; stroke-width: 2 ! important"/>
-        </svg>
-        """)
+        let svg = try parse(
+            """
+            <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10">
+              <rect width="5" height="5" style="fill: red !important; stroke-width: 2 ! important"/>
+            </svg>
+            """
+        )
         // the priority flag is kept apart (SD10) so inline !important beats stylesheet !important
         let att = svg.childElements[0].importantStyle
         #expect(att.fill == .color(.keyword(.red)))
@@ -158,17 +172,19 @@ struct TolerantParsingTests {
 
     @Test
     func plainHrefOnImageAndGradients() throws {
-        let svg = try parse("""
-        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10">
-          <defs>
-            <linearGradient id="base"><stop offset="0" stop-color="red"/></linearGradient>
-            <linearGradient id="derived" href="#base"/>
-            <radialGradient id="rbase"><stop offset="0" stop-color="red"/></radialGradient>
-            <radialGradient id="rderived" href="#rbase"/>
-          </defs>
-          <image width="4" height="4" href="data:image/png;base64,iVBORw0KGgo="/>
-        </svg>
-        """)
+        let svg = try parse(
+            """
+            <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10">
+              <defs>
+                <linearGradient id="base"><stop offset="0" stop-color="red"/></linearGradient>
+                <linearGradient id="derived" href="#base"/>
+                <radialGradient id="rbase"><stop offset="0" stop-color="red"/></radialGradient>
+                <radialGradient id="rderived" href="#rbase"/>
+              </defs>
+              <image width="4" height="4" href="data:image/png;base64,iVBORw0KGgo="/>
+            </svg>
+            """
+        )
         #expect(svg.childElements.count == 1)
         #expect(svg.childElements[0] is DOM.Image)
         #expect(svg.defs.linearGradients.first { $0.id == "derived" }?.href?.fragment == "base")
@@ -209,26 +225,30 @@ struct TolerantParsingTests {
         #expect(try parser.parseStyleAttributes(";") == [:])
         #expect(try parser.parseStyleAttributes("fill:red;;stroke:blue;") == ["fill": "red", "stroke": "blue"])
 
-        let svg = try parse("""
-        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10">
-          <rect width="5" height="5" style="fill:;stroke:red"/>
-        </svg>
-        """)
+        let svg = try parse(
+            """
+            <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10">
+              <rect width="5" height="5" style="fill:;stroke:red"/>
+            </svg>
+            """
+        )
         #expect(svg.childElements.count == 1)
         #expect(svg.childElements[0].style.stroke == .color(.keyword(.red)))
     }
 
     @Test
     func invalidGradientTransformIsDropped() throws {
-        let svg = try parse("""
-        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10">
-          <defs>
-            <linearGradient id="a" gradientTransform="none"><stop offset="0" stop-color="red"/></linearGradient>
-            <radialGradient id="b" gradientTransform="junk(1)"><stop offset="0" stop-color="red"/></radialGradient>
-          </defs>
-          <rect width="5" height="5"/>
-        </svg>
-        """)
+        let svg = try parse(
+            """
+            <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10">
+              <defs>
+                <linearGradient id="a" gradientTransform="none"><stop offset="0" stop-color="red"/></linearGradient>
+                <radialGradient id="b" gradientTransform="junk(1)"><stop offset="0" stop-color="red"/></radialGradient>
+              </defs>
+              <rect width="5" height="5"/>
+            </svg>
+            """
+        )
         #expect(svg.childElements.count == 1)
         #expect(svg.defs.linearGradients.first { $0.id == "a" }?.gradientTransform == [])
         #expect(svg.defs.radialGradients.first { $0.id == "b" }?.gradientTransform == [])
@@ -254,12 +274,14 @@ struct TolerantParsingTests {
 
     @Test
     func negativeStrokeWidthIsDropped() throws {
-        let svg = try parse("""
-        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10">
-          <rect width="5" height="5" stroke-width="-2" font-size="12"/>
-          <rect width="5" height="5" stroke-width="0"/>
-        </svg>
-        """)
+        let svg = try parse(
+            """
+            <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10">
+              <rect width="5" height="5" stroke-width="-2" font-size="12"/>
+              <rect width="5" height="5" stroke-width="0"/>
+            </svg>
+            """
+        )
         #expect(svg.childElements[0].attributes.strokeWidth == nil)
         #expect(svg.childElements[0].attributes.fontSize == 12)
         #expect(svg.childElements[1].attributes.strokeWidth == 0)

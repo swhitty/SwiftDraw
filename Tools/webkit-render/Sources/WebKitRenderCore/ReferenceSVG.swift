@@ -15,8 +15,9 @@ public enum ReferenceSVG {
 
     public static func prepare(_ data: Data, fontSmoothing: Bool) -> Data {
         guard !fontSmoothing,
-              let text = String(data: data, encoding: .utf8),
-              let end = rootTagEnd(in: text) else {
+            let text = String(data: data, encoding: .utf8),
+            let end = rootTagEnd(in: text)
+        else {
             return data
         }
         var prepared = text
@@ -37,7 +38,9 @@ public enum ReferenceSVG {
                 index = close.upperBound
                 continue
             }
-            guard rest.hasPrefix("<svg") || rest.range(of: #"^<[A-Za-z_][\w.-]*:svg"#, options: .regularExpression) != nil else {
+            guard
+                rest.hasPrefix("<svg") || rest.range(of: #"^<[A-Za-z_][\w.-]*:svg"#, options: .regularExpression) != nil
+            else {
                 return nil
             }
             // the end of the start tag: the first `>` outside quoted attribute values

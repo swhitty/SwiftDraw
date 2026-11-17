@@ -29,8 +29,6 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-
-
 @testable import SwiftDrawDOM
 import Foundation
 import Testing
@@ -43,7 +41,7 @@ struct ParserFontFaceInvalidTests {
         "@font-face { font-family: 'Unusable'; src: bogus(x); }",
         "@font-face { this is not a descriptor }",
         "@font-face { font-family 'Garbled' src local('Helvetica') }",
-        "@font-face junk { font-family: 'Prelude'; src: local('Helvetica'); }"
+        "@font-face junk { font-family: 'Prelude'; src: local('Helvetica'); }",
     ]
 
     private static func sheet(around invalidFace: String) -> String {
@@ -69,12 +67,16 @@ struct ParserFontFaceInvalidTests {
 
     @Test(arguments: invalidFaces)
     func invalidFaceKeepsDocumentStyles(face: String) throws {
-        let svg = try DOM.SVG.parse(data: Data("""
-        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10">
-          <style>\(Self.sheet(around: face))</style>
-          <rect class="a" width="10" height="10" />
-        </svg>
-        """.utf8))
+        let svg = try DOM.SVG.parse(
+            data: Data(
+                """
+                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10">
+                  <style>\(Self.sheet(around: face))</style>
+                  <rect class="a" width="10" height="10" />
+                </svg>
+                """.utf8
+            )
+        )
 
         let sheet = try #require(svg.styles.first)
         #expect(sheet.fonts.map(\.family) == ["First", "Last"])
@@ -101,8 +103,8 @@ struct ParserFontFaceInvalidTests {
     func invalidFaceIsReported() {
         let error = XMLParser.InvalidFontFace(error: XMLParser.Error.missingAttribute(name: "src"))
         #expect(
-            XMLParser.makeParsingErrorMessage(for: error, filename: "a.svg") ==
-            #"[parsing error] a.svg  error: invalid @font-face: missingAttribute(name: "src")"#
+            XMLParser.makeParsingErrorMessage(for: error, filename: "a.svg")
+                == #"[parsing error] a.svg  error: invalid @font-face: missingAttribute(name: "src")"#
         )
     }
 }

@@ -12,7 +12,7 @@ struct Session {
     static func start(_ options: Options) async throws -> Session {
         let repo = try await Repo.find()
         let cache = RenderCache(root: options.useCache ? (options.cache ?? RenderCache.defaultRoot) : nil)
-        let resvg = try await ResvgRenderer.prepare(options) // first: fail fast when resvg is missing
+        let resvg = try await ResvgRenderer.prepare(options)  // first: fail fast when resvg is missing
         let webkit = try await WebKitRenderer.prepare(options, repo: repo)
         return Session(options: options, repo: repo, cache: cache, webkit: webkit, resvg: resvg)
     }
@@ -33,14 +33,30 @@ struct Reporter {
     var options: Options { session.options }
 
     func run() async throws -> Int32 {
-        let dirs = OutputDirs(root: options.out ?? session.repo.work.appendingPathComponent("report"), headName: "swiftdraw")
+        let dirs = OutputDirs(
+            root: options.out ?? session.repo.work.appendingPathComponent("report"),
+            headName: "swiftdraw"
+        )
         try dirs.create(base: false, resvg: session.resvg != nil)
         let files = try Pipeline.inputs(options, dirs: dirs, base: false)
-        let head = try await SwiftDrawRenderer.prepare(try await session.revision(options.head), slot: "head",
-                                                       repo: session.repo, cache: session.cache, scale: options.scale)
+        let head = try await SwiftDrawRenderer.prepare(
+            try await session.revision(options.head),
+            slot: "head",
+            repo: session.repo,
+            cache: session.cache,
+            scale: options.scale
+        )
         print("Scoring SwiftDraw \(head.label)")
-        let rendered = try await Pipeline.render(files, options: options, cache: session.cache, dirs: dirs,
-                                                 webkit: session.webkit, head: head, base: nil, resvg: session.resvg)
+        let rendered = try await Pipeline.render(
+            files,
+            options: options,
+            cache: session.cache,
+            dirs: dirs,
+            webkit: session.webkit,
+            head: head,
+            base: nil,
+            resvg: session.resvg
+        )
 
         let progress = Progress("Scoring", total: rendered.count)
         let scores = await concurrentMap(rendered) { r -> ScoresReport.Score in
@@ -48,9 +64,16 @@ struct Reporter {
             return score(r, dirs: dirs)
         }
         let report = ScoresReport(
-            swiftdraw: head.label, engine: session.engine, resvg: session.resvg?.label, os: session.os,
-            scale: options.scale, match: options.match, fontSmoothing: options.fontSmoothing,
-            textReference: session.resvg == nil ? "webkit" : "resvg", generated: Date(), results: scores
+            swiftdraw: head.label,
+            engine: session.engine,
+            resvg: session.resvg?.label,
+            os: session.os,
+            scale: options.scale,
+            match: options.match,
+            fontSmoothing: options.fontSmoothing,
+            textReference: session.resvg == nil ? "webkit" : "resvg",
+            generated: Date(),
+            results: scores
         )
         let json = dirs.root.appendingPathComponent("scores.json")
         try JSONEncoder.report.encode(report).write(to: json)
@@ -108,8 +131,11 @@ struct Reporter {
         if let w = score.score, let s = score.resvg, let wr = score.webkitResvg {
             score.verdict = Verdict(webkit: w, resvg: s, webkitResvg: wr, match: options.match / 100, text: text)
         }
-        if swiftdraw == nil { score.status = "swiftdraw-failed" }
-        else if score.score == nil && score.resvg == nil { score.status = "no-reference" }
+        if swiftdraw == nil {
+            score.status = "swiftdraw-failed"
+        } else if score.score == nil && score.resvg == nil {
+            score.status = "no-reference"
+        }
         score.errors = errors.isEmpty ? nil : errors
         return score
     }
@@ -119,7 +145,8 @@ struct Reporter {
     func printSummary(_ report: ScoresReport) {
         let hasResvg = report.resvg != nil
         let results = report.results.sorted { a, b in
-            let ra = a.verdict?.rank ?? (a.status == "scored" ? 5 : -1), rb = b.verdict?.rank ?? (b.status == "scored" ? 5 : -1)
+            let ra = a.verdict?.rank ?? (a.status == "scored" ? 5 : -1),
+                rb = b.verdict?.rank ?? (b.status == "scored" ? 5 : -1)
             if ra != rb { return ra < rb }
             let sa = max(a.score ?? 2, a.resvg ?? 0), sb = max(b.score ?? 2, b.resvg ?? 0)
             return sa != sb ? sa > sb : a.name < b.name
@@ -128,7 +155,11 @@ struct Reporter {
         let refs = [report.engine, report.resvg].compactMap { $0 }.joined(separator: " and ")
         print("\nDifference from \(refs) · \(report.os) · font smoothing \(report.fontSmoothing ? "on" : "off")")
         if report.textReference == "resvg" {
-            printTextSummary(sources: report.results.filter { $0.text == true }.map(\.resvgSource), pngs: options.resvgPNG != nil, marked: true)
+            printTextSummary(
+                sources: report.results.filter { $0.text == true }.map(\.resvgSource),
+                pngs: options.resvgPNG != nil,
+                marked: true
+            )
         }
         print("")
         var header = "file".padded(width) + "      WebKit"
@@ -138,7 +169,9 @@ struct Reporter {
         for s in results {
             var line = s.name.padded(width) + " " + percent(s.score, s.errors?["webkit"] != nil)
             if hasResvg {
-                line += " " + percent(s.resvg, s.errors?["resvg"] != nil) + "  " + percent(s.webkitResvg, false).leftPadded(12)
+                line +=
+                    " " + percent(s.resvg, s.errors?["resvg"] != nil) + "  "
+                    + percent(s.webkitResvg, false).leftPadded(12)
                 line += "  " + (s.verdict?.label ?? "") + (s.text == true ? " *" : "")
                 if options.resvgPNG != nil, s.resvgSource == "cli" { line += " (resvg CLI)" }
             }
@@ -158,20 +191,31 @@ struct Reporter {
         let errors = report.results.filter { s in s.status == "scored" && s.errors != nil }
         if !errors.isEmpty {
             print("\nReference errors (\(errors.count))")
-            for s in errors { print("  \(s.name): " + s.errors!.sorted { $0.key < $1.key }.map { "\($0.key): \($0.value)" }.joined(separator: "; ")) }
+            for s in errors {
+                print(
+                    "  \(s.name): "
+                        + s.errors!.sorted { $0.key < $1.key }.map { "\($0.key): \($0.value)" }.joined(separator: "; ")
+                )
+            }
         }
 
         func stats(_ values: [Double]) -> String {
             let mean = values.isEmpty ? 0 : values.reduce(0, +) / Double(values.count)
-            return String(format: "%d under 1%% · %d under 5%% · mean %.2f%%",
-                          values.filter { $0 < 0.01 }.count, values.filter { $0 < 0.05 }.count, mean * 100)
+            return String(
+                format: "%d under 1%% · %d under 5%% · mean %.2f%%",
+                values.filter { $0 < 0.01 }.count,
+                values.filter { $0 < 0.05 }.count,
+                mean * 100
+            )
         }
         let failed = report.results.filter { $0.status == "swiftdraw-failed" }.count
         print("\n\(report.results.count) files\(failed > 0 ? " · \(failed) SwiftDraw failed" : "")")
         print("vs WebKit: " + stats(report.results.compactMap(\.score)))
         if hasResvg {
             print("vs resvg:  " + stats(report.results.compactMap(\.resvg)))
-            let counts = Verdict.allCases.sorted { $0.rank > $1.rank }.map { v in "\(report.results.filter { $0.verdict == v }.count) \(v.label)" }
+            let counts = Verdict.allCases.sorted { $0.rank > $1.rank }.map { v in
+                "\(report.results.filter { $0.verdict == v }.count) \(v.label)"
+            }
             print(String(format: "Verdicts (match < %g%%): ", report.match) + counts.joined(separator: " · "))
         }
     }
@@ -181,14 +225,20 @@ struct Reporter {
 /// source ("png", "cli" or nil); `pngs` is whether pre-rendered PNGs were given.
 func printTextSummary(sources: [String?], pngs: Bool, marked: Bool = false) {
     func files(_ n: Int) -> String { "\(n) file\(n == 1 ? "" : "s")" }
-    print("Text: judged by resvg only (\(files(sources.count)) with <text>\(marked ? ", marked *" : "")); WebKit offsets middle- and end-anchored text, so its score is for information")
+    print(
+        "Text: judged by resvg only (\(files(sources.count)) with <text>\(marked ? ", marked *" : "")); WebKit offsets middle- and end-anchored text, so its score is for information"
+    )
     guard pngs else { return }
     let cli = sources.filter { $0 == "cli" }.count, png = sources.filter { $0 == "png" }.count
     if cli > 0 {
-        print("      \(files(cli)) with text rendered by the resvg CLI with SwiftDraw's fallback fonts, not from their PNG")
+        print(
+            "      \(files(cli)) with text rendered by the resvg CLI with SwiftDraw's fallback fonts, not from their PNG"
+        )
     }
     if png > 0 {
-        print("      \(files(png)) with text compared against pre-rendered PNGs, which may use other fonts (resvg's suite uses Noto); add --resvg to render text with the CLI")
+        print(
+            "      \(files(png)) with text compared against pre-rendered PNGs, which may use other fonts (resvg's suite uses Noto); add --resvg to render text with the CLI"
+        )
     }
 }
 
@@ -199,5 +249,7 @@ func percent(_ value: Double?, _ failed: Bool) -> String {
 
 extension String {
     func padded(_ width: Int) -> String { padding(toLength: max(width, count), withPad: " ", startingAt: 0) }
-    func leftPadded(_ width: Int) -> String { count >= width ? self : String(repeating: " ", count: width - count) + self }
+    func leftPadded(_ width: Int) -> String {
+        count >= width ? self : String(repeating: " ", count: width - count) + self
+    }
 }

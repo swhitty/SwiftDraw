@@ -133,14 +133,18 @@ struct CGTextProvider: RendererTypeProvider {
         let optimizer = LayerTree.CommandOptimizer<CGTextTypes>(options: [.skipRedundantState, .skipInitialSaveState])
         let contents = optimizer.optimizeCommands(contents)
 
-        let formatter = CoordinateFormatter(delimeter: .commaSpace,
-                                            precision: .capped(max: 3))
+        let formatter = CoordinateFormatter(
+            delimeter: .commaSpace,
+            precision: .capped(max: 3)
+        )
 
-        let renderer = CGTextRenderer(api: .appKit,
-                                      name: "pattern",
-                                      size: pattern.frame.size,
-                                      commandSize: pattern.frame.size,
-                                      formatter: formatter)
+        let renderer = CGTextRenderer(
+            api: .appKit,
+            name: "pattern",
+            size: pattern.frame.size,
+            commandSize: pattern.frame.size,
+            formatter: formatter
+        )
         renderer.perform(contents)
         let lines = renderer.lines
             .map { "  \($0)" }
@@ -149,26 +153,27 @@ struct CGTextProvider: RendererTypeProvider {
         var matrix = "ctx.ctm.concatenating(baseCTM.inverted())"
         if pattern.transform != .identity {
             let t = pattern.transform
-            let patternTransform = "CGAffineTransform(a: \(createFloat(from: t.a)), b: \(createFloat(from: t.b)), c: \(createFloat(from: t.c)), d: \(createFloat(from: t.d)), tx: \(createFloat(from: t.tx)), ty: \(createFloat(from: t.ty)))"
+            let patternTransform =
+                "CGAffineTransform(a: \(createFloat(from: t.a)), b: \(createFloat(from: t.b)), c: \(createFloat(from: t.c)), d: \(createFloat(from: t.d)), tx: \(createFloat(from: t.tx)), ty: \(createFloat(from: t.ty)))"
             matrix = "\(patternTransform).concatenating(\(matrix))"
         }
 
         return """
-        let patternDraw1: CGPatternDrawPatternCallback = { _, ctx in
-        \(lines)
-        }
-        var patternCallback1 = CGPatternCallbacks(version: 0, drawPattern: patternDraw1, releaseInfo: nil)
-        let pattern1 = CGPattern(
-          info: nil,
-          bounds: \(createRect(from: pattern.frame)),
-          matrix: \(matrix),
-          xStep: \(formatter.format(pattern.frame.width)),
-          yStep: \(formatter.format(pattern.frame.height)),
-          tiling: .constantSpacing,
-          isColored: true,
-          callbacks: &patternCallback1
-        )!
-        """
+            let patternDraw1: CGPatternDrawPatternCallback = { _, ctx in
+            \(lines)
+            }
+            var patternCallback1 = CGPatternCallbacks(version: 0, drawPattern: patternDraw1, releaseInfo: nil)
+            let pattern1 = CGPattern(
+              info: nil,
+              bounds: \(createRect(from: pattern.frame)),
+              matrix: \(matrix),
+              xStep: \(formatter.format(pattern.frame.width)),
+              yStep: \(formatter.format(pattern.frame.height)),
+              tiling: .constantSpacing,
+              isColored: true,
+              callbacks: &patternCallback1
+            )!
+            """
     }
 
     func createPath(from shape: LayerTree.Shape) -> [LayerTree.Shape] {
@@ -181,15 +186,19 @@ struct CGTextProvider: RendererTypeProvider {
 
     /// The outlines of the glyphs: generated code never names glyph ids, which belong to one font file
     func createPath(from glyphs: LayerTree.GlyphRun) -> [LayerTree.Shape]? {
-#if canImport(CoreText)
-    guard let path = CGProvider.createGlyphPath(from: glyphs) else { return nil }
-    return [.path(path.makePath())]
-#else
-    return nil
-#endif
+        #if canImport(CoreText)
+        guard let path = CGProvider.createGlyphPath(from: glyphs) else { return nil }
+        return [.path(path.makePath())]
+        #else
+        return nil
+        #endif
     }
 
-    func createPath(from text: String, at origin: LayerTree.Point, with attributes: LayerTree.TextAttributes) -> [LayerTree.Shape]? {
+    func createPath(
+        from text: String,
+        at origin: LayerTree.Point,
+        with attributes: LayerTree.TextAttributes
+    ) -> [LayerTree.Shape]? {
         nil
     }
 
@@ -233,11 +242,11 @@ struct CGTextProvider: RendererTypeProvider {
     }
 
     func getBounds(from shape: LayerTree.Shape) -> LayerTree.Rect {
-#if canImport(CoreGraphics)
-    return CGProvider().getBounds(from: shape)
-#else
-    return shape.path.bounds
-#endif
+        #if canImport(CoreGraphics)
+        return CGProvider().getBounds(from: shape)
+        #else
+        return shape.path.bounds
+        #endif
     }
 }
 
@@ -256,11 +265,13 @@ public final class CGTextRenderer: Renderer {
         case swiftUI
     }
 
-    init(api: API,
-         name: String,
-         size: LayerTree.Size,
-         commandSize: LayerTree.Size,
-         formatter: CoordinateFormatter) {
+    init(
+        api: API,
+        name: String,
+        size: LayerTree.Size,
+        commandSize: LayerTree.Size,
+        formatter: CoordinateFormatter
+    ) {
         self.api = api
         self.name = name
         self.size = size
@@ -285,9 +296,9 @@ public final class CGTextRenderer: Renderer {
         init?(for color: String) {
             if color.contains("CGColorSpaceCreateExtendedGray()") {
                 self = .gray
-            } else if color.contains("CGColorSpace(name: CGColorSpace.sRGB)!")  {
+            } else if color.contains("CGColorSpace(name: CGColorSpace.sRGB)!") {
                 self = .rgb
-            } else if color.contains("CGColorSpaceCreateDisplayP3()")  {
+            } else if color.contains("CGColorSpaceCreateDisplayP3()") {
                 self = .p3
             } else {
                 return nil
@@ -321,7 +332,7 @@ public final class CGTextRenderer: Renderer {
 
     func updateColor(_ color: String) -> String {
         let space = createOrGetColorSpace(for: color)
-        switch  space {
+        switch space {
         case .gray:
             return color.replacingOccurrences(of: "CGColorSpaceCreateExtendedGray()", with: "gray")
         case .rgb:
@@ -347,10 +358,14 @@ public final class CGTextRenderer: Renderer {
         let d3 = CoordinateFormatter.Precision.capped(max: 3)
         switch color {
         case .none:
-            return createOrGetColor("CGColor(colorSpace: CGColorSpace(name: CGColorSpace.sRGB)!, components: [0, 0, 0, 0])!")
+            return createOrGetColor(
+                "CGColor(colorSpace: CGColorSpace(name: CGColorSpace.sRGB)!, components: [0, 0, 0, 0])!"
+            )
         case let .rgba(r, g, b, a, .srgb):
             let comps = formatter.format(r, g, b, a, precision: d3)
-            return createOrGetColor("CGColor(colorSpace: CGColorSpace(name: CGColorSpace.sRGB)!, components: [\(comps)])!")
+            return createOrGetColor(
+                "CGColor(colorSpace: CGColorSpace(name: CGColorSpace.sRGB)!, components: [\(comps)])!"
+            )
         case let .rgba(r, g, b, a, .p3):
             let comps = formatter.format(r, g, b, a, precision: d3)
             return createOrGetColor("CGColor(colorSpace: CGColorSpaceCreateDisplayP3(), components: [\(comps)])!")
@@ -368,7 +383,8 @@ public final class CGTextRenderer: Renderer {
         let idx = paths.count
         let identifier = "path".makeIdentifier(idx)
         paths[path] = identifier
-        let newPath = path
+        let newPath =
+            path
             .replacingOccurrences(of: "path1", with: identifier)
             .split(separator: "\n")
             .map(String.init)
@@ -384,7 +400,8 @@ public final class CGTextRenderer: Renderer {
         let idx = transforms.count
         let identifier = "transform".makeIdentifier(idx)
         transforms[transform] = identifier
-        let newTransform = transform
+        let newTransform =
+            transform
             .replacingOccurrences(of: "transform1", with: identifier)
             .split(separator: "\n")
             .map(String.init)
@@ -423,13 +440,13 @@ public final class CGTextRenderer: Renderer {
         let space = createOrGetColorSpace(for: gradient.colorSpace)
         let locationsIdentifier = "locations".makeIdentifier(idx)
         let code = """
-        var \(locationsIdentifier): [CGFloat] = [\(pointsTxt)]
-        let \(identifier) = CGGradient(
-          colorsSpace: \(space.rawValue),
-          colors: [\(colorTxt)] as CFArray,
-          locations: &\(locationsIdentifier)
-        )!
-        """.split(separator: "\n").map(String.init)
+            var \(locationsIdentifier): [CGFloat] = [\(pointsTxt)]
+            let \(identifier) = CGGradient(
+              colorsSpace: \(space.rawValue),
+              colors: [\(colorTxt)] as CFArray,
+              locations: &\(locationsIdentifier)
+            )!
+            """.split(separator: "\n").map(String.init)
         lines.append(contentsOf: code)
         return identifier
     }
@@ -445,7 +462,8 @@ public final class CGTextRenderer: Renderer {
         let draw = "patternDraw".makeIdentifier(idx)
         let callback = "patternCallback".makeIdentifier(idx)
         patterns[pattern] = identifier
-        let newPattern = pattern
+        let newPattern =
+            pattern
             .replacingOccurrences(of: "pattern1", with: identifier)
             .replacingOccurrences(of: "patternDraw1", with: draw)
             .replacingOccurrences(of: "patternCallback1", with: callback)
@@ -547,21 +565,21 @@ public final class CGTextRenderer: Renderer {
         let rect = "maskRect".makeIdentifier(maskCount)
         let context = "maskContext".makeIdentifier(maskCount)
         let code = """
-        let \(device) = ctx.userSpaceToDeviceSpaceTransform
-        let \(rect) = ctx.boundingBoxOfClipPath.applying(\(device)).integral
-        let \(context) = CGContext(
-          data: nil,
-          width: max(1, Int(\(rect).width)),
-          height: max(1, Int(\(rect).height)),
-          bitsPerComponent: 8,
-          bytesPerRow: 0,
-          space: CGColorSpaceCreateDeviceGray(),
-          bitmapInfo: CGImageAlphaInfo.none.rawValue
-        )!
-        \(context).fill(CGRect(x: 0, y: 0, width: \(context).width, height: \(context).height))
-        \(context).translateBy(x: -\(rect).minX, y: -\(rect).minY)
-        \(context).concatenate(\(device))
-        """.split(separator: "\n").map(String.init)
+            let \(device) = ctx.userSpaceToDeviceSpaceTransform
+            let \(rect) = ctx.boundingBoxOfClipPath.applying(\(device)).integral
+            let \(context) = CGContext(
+              data: nil,
+              width: max(1, Int(\(rect).width)),
+              height: max(1, Int(\(rect).height)),
+              bitsPerComponent: 8,
+              bytesPerRow: 0,
+              space: CGColorSpaceCreateDeviceGray(),
+              bitmapInfo: CGImageAlphaInfo.none.rawValue
+            )!
+            \(context).fill(CGRect(x: 0, y: 0, width: \(context).width, height: \(context).height))
+            \(context).translateBy(x: -\(rect).minX, y: -\(rect).minY)
+            \(context).concatenate(\(device))
+            """.split(separator: "\n").map(String.init)
         lines.append(contentsOf: code)
 
         let outer = (lines, colorSpaces, colors, paths, transforms, gradients, patterns)
@@ -637,24 +655,34 @@ public final class CGTextRenderer: Renderer {
 
     func draw(linear gradient: LayerTree.Gradient, from start: String, to end: String) {
         let identifier = createOrGetGradient(gradient)
-        lines.append("""
-        ctx.drawLinearGradient(\(identifier),
-                               start: \(start),
-                               end: \(end),
-                               options: [.drawsAfterEndLocation, .drawsBeforeStartLocation])
-        """)
+        lines.append(
+            """
+            ctx.drawLinearGradient(\(identifier),
+                                   start: \(start),
+                                   end: \(end),
+                                   options: [.drawsAfterEndLocation, .drawsBeforeStartLocation])
+            """
+        )
     }
 
-    func draw(radial gradient: LayerTree.Gradient, startCenter: String, startRadius: LayerTree.Float, endCenter: String, endRadius: LayerTree.Float) {
+    func draw(
+        radial gradient: LayerTree.Gradient,
+        startCenter: String,
+        startRadius: LayerTree.Float,
+        endCenter: String,
+        endRadius: LayerTree.Float
+    ) {
         let identifier = createOrGetGradient(gradient)
-        lines.append("""
-        ctx.drawRadialGradient(\(identifier),
-                               startCenter: \(startCenter),
-                               startRadius: \(formatter.format(startRadius)),
-                               endCenter: \(endCenter),
-                               endRadius: \(formatter.format(endRadius)),
-                               options: [.drawsAfterEndLocation, .drawsBeforeStartLocation])
-        """)
+        lines.append(
+            """
+            ctx.drawRadialGradient(\(identifier),
+                                   startCenter: \(startCenter),
+                                   startRadius: \(formatter.format(startRadius)),
+                                   endCenter: \(endCenter),
+                                   endRadius: \(formatter.format(endRadius)),
+                                   options: [.drawsAfterEndLocation, .drawsBeforeStartLocation])
+            """
+        )
     }
 
     // Filters are not generated: the contents are drawn unfiltered, in their own graphics state.
@@ -663,7 +691,7 @@ public final class CGTextRenderer: Renderer {
         lines.append("ctx.saveGState()")
     }
 
-    func setFilterImage(primitive: Int, contents: [RendererCommand<CGTextTypes>]) { }
+    func setFilterImage(primitive: Int, contents: [RendererCommand<CGTextTypes>]) {}
 
     func popFilterLayer() {
         lines.append("ctx.restoreGState()")
@@ -701,7 +729,7 @@ public final class CGTextRenderer: Renderer {
             ) { context, size in
               let scale = CGSize(width: size.width / \(commandSize.width), height: size.height / \(commandSize.height))                                  
               context.withCGContext { ctx in
-        
+
         """
     }
 
@@ -730,7 +758,7 @@ public final class CGTextRenderer: Renderer {
         import Cocoa
         import CoreGraphics
 
-        
+
         extension NSImage {
           static func svgKey(size: NSSize = NSSize(width: \(size.width), height: \(size.height))) -> NSImage {
             NSImage(size: size, flipped: true) { rect in
@@ -801,7 +829,8 @@ extension String.StringInterpolation {
     mutating func appendInterpolation(_ points: [LayerTree.Point], indent: Int) {
         let indentation = String(repeating: " ", count: indent)
         let provider = CGTextProvider(formatter: .init(delimeter: .commaSpace, precision: .capped(max: 3)))
-        let elements = points
+        let elements =
+            points
             .map { "\(indentation)\(provider.createPoint(from: $0))" }
             .joined(separator: ",\n")
         appendLiteral(elements)

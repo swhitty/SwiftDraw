@@ -51,7 +51,7 @@ extension LayerTree {
 extension LayerTree.Color {
 
     static func create(from color: DOM.Color, current: DOM.Color) -> LayerTree.Color {
-        switch(color){
+        switch (color) {
         case .none:
             return .none
         case .currentColor:
@@ -64,34 +64,42 @@ extension LayerTree.Color {
         case let .hex(r, g, b):
             return LayerTree.Color(r, g, b)
         case let .rgbf(r, g, b, a):
-            return .rgba(r: Float(r),
-                         g: Float(g),
-                         b: Float(b),
-                         a: Float(a),
-                         space: .srgb)
+            return .rgba(
+                r: Float(r),
+                g: Float(g),
+                b: Float(b),
+                a: Float(a),
+                space: .srgb
+            )
         case let .p3(r, g, b):
-            return .rgba(r: Float(r),
-                         g: Float(g),
-                         b: Float(b),
-                         a: 1.0,
-                         space: .p3)
+            return .rgba(
+                r: Float(r),
+                g: Float(g),
+                b: Float(b),
+                a: 1.0,
+                space: .p3
+            )
         }
     }
 
     init(_ r: UInt8, _ g: UInt8, _ b: UInt8) {
-        self = .rgba(r: Float(r)/255.0,
-                     g: Float(g)/255.0,
-                     b: Float(b)/255.0,
-                     a: 1.0,
-                     space: .srgb)
+        self = .rgba(
+            r: Float(r) / 255.0,
+            g: Float(g) / 255.0,
+            b: Float(b) / 255.0,
+            a: 1.0,
+            space: .srgb
+        )
     }
 
     init(_ r: UInt8, _ g: UInt8, _ b: UInt8, _ a: DOM.Float) {
-        self = .rgba(r: Float(r)/255.0,
-                     g: Float(g)/255.0,
-                     b: Float(b)/255.0,
-                     a: a,
-                     space: .srgb)
+        self = .rgba(
+            r: Float(r) / 255.0,
+            g: Float(g) / 255.0,
+            b: Float(b) / 255.0,
+            a: a,
+            space: .srgb
+        )
     }
 
     var isOpaque: Bool {
@@ -110,11 +118,13 @@ extension LayerTree.Color {
         case .none:
             return .none
         case let .rgba(r: r, g: g, b: b, a: a, space):
-            return .rgba(r: r,
-                         g: g,
-                         b: b,
-                         a: alpha * a,
-                         space: space)
+            return .rgba(
+                r: r,
+                g: g,
+                b: b,
+                a: alpha * a,
+                space: space
+            )
         case .gray(white: let w, a: let a):
             return .gray(white: w, a: alpha * a)
         }
@@ -137,11 +147,13 @@ extension LayerTree.Color {
             return .none
         case let .rgba(r: r, g: g, b: b, a: a, space: space):
             let newAlpha = a * alpha
-            return .rgba(r: r,
-                         g: g,
-                         b: b,
-                         a: newAlpha,
-                         space: space)
+            return .rgba(
+                r: r,
+                g: g,
+                b: b,
+                a: newAlpha,
+                space: space
+            )
         case .gray(white: let w, a: let a):
             let newAlpha = a * alpha
             return .gray(white: w, a: newAlpha)
@@ -176,7 +188,7 @@ struct LuminanceColorConverter: ColorConverter {
         switch color {
         case .rgba(let r, let g, let b, let a, _):
             // sRGB luminance; masks composite these greys and use the resulting luminance as alpha
-            let luminance = (r*0.2126) + (g*0.7152) + (b*0.0722)
+            let luminance = (r * 0.2126) + (g * 0.7152) + (b * 0.0722)
             return .gray(white: luminance, a: a)
         default:
             return color
@@ -194,7 +206,9 @@ struct LinearLuminanceColorConverter: ColorConverter {
     func createColor(from color: LayerTree.Color) -> LayerTree.Color {
         switch color {
         case .rgba(let r, let g, let b, let a, _):
-            let luminance = (LayerTree.Color.linear(r) * 0.2125) + (LayerTree.Color.linear(g) * 0.7154) + (LayerTree.Color.linear(b) * 0.0721)
+            let luminance =
+                (LayerTree.Color.linear(r) * 0.2125) + (LayerTree.Color.linear(g) * 0.7154)
+                + (LayerTree.Color.linear(b) * 0.0721)
             return .gray(white: luminance, a: a)
         case .gray(let white, let a):
             return .gray(white: LayerTree.Color.linear(white), a: a)

@@ -453,7 +453,7 @@ struct GlyfTransform {
         } else if byte0 == 254 {
             let b1 = UInt16(reader.readUInt8())
             return 506 + b1
-        } else { // byte0 == 255
+        } else {  // byte0 == 255
             let b1 = UInt16(reader.readUInt8())
             return 253 + b1
         }
@@ -468,7 +468,9 @@ struct GlyfTransform {
         return (bitmap[byteIndex] & (1 << bitIndex)) != 0
     }
 
-    private static func computeBbox(from points: [(x: Int16, y: Int16, onCurve: Bool)]) -> (xMin: Int16, yMin: Int16, xMax: Int16, yMax: Int16) {
+    private static func computeBbox(
+        from points: [(x: Int16, y: Int16, onCurve: Bool)]
+    ) -> (xMin: Int16, yMin: Int16, xMax: Int16, yMax: Int16) {
         guard !points.isEmpty else {
             return (0, 0, 0, 0)
         }
@@ -522,7 +524,9 @@ struct GlyfTransform {
         return data
     }
 
-    private static func encodeCoordinates(points: [(x: Int16, y: Int16, onCurve: Bool)]) -> (flags: [UInt8], xCoords: Data, yCoords: Data) {
+    private static func encodeCoordinates(
+        points: [(x: Int16, y: Int16, onCurve: Bool)]
+    ) -> (flags: [UInt8], xCoords: Data, yCoords: Data) {
         var flags: [UInt8] = []
         var xCoords = Data()
         var yCoords = Data()
@@ -596,16 +600,16 @@ struct GlyfTransform {
 // MARK: - Composite Glyph Flags
 
 private struct CompositeFlags {
-    static let arg1And2AreWords: UInt16     = 0x0001
-    static let argsAreXYValues: UInt16      = 0x0002
-    static let roundXYToGrid: UInt16        = 0x0004
-    static let weHaveAScale: UInt16         = 0x0008
-    static let moreComponents: UInt16       = 0x0020
-    static let weHaveAnXAndYScale: UInt16   = 0x0040
-    static let weHaveATwoByTwo: UInt16      = 0x0080
-    static let weHaveInstructions: UInt16   = 0x0100
-    static let useMyMetrics: UInt16         = 0x0200
-    static let overlapCompound: UInt16      = 0x0400
+    static let arg1And2AreWords: UInt16 = 0x0001
+    static let argsAreXYValues: UInt16 = 0x0002
+    static let roundXYToGrid: UInt16 = 0x0004
+    static let weHaveAScale: UInt16 = 0x0008
+    static let moreComponents: UInt16 = 0x0020
+    static let weHaveAnXAndYScale: UInt16 = 0x0040
+    static let weHaveATwoByTwo: UInt16 = 0x0080
+    static let weHaveInstructions: UInt16 = 0x0100
+    static let useMyMetrics: UInt16 = 0x0200
+    static let overlapCompound: UInt16 = 0x0400
 }
 
 // MARK: - Stream Reader
@@ -633,10 +637,9 @@ struct StreamReader {
     }
 
     mutating func readUInt32BE() -> UInt32 {
-        let value = UInt32(data[offset]) << 24 |
-                    UInt32(data[offset + 1]) << 16 |
-                    UInt32(data[offset + 2]) << 8 |
-                    UInt32(data[offset + 3])
+        let value =
+            UInt32(data[offset]) << 24 | UInt32(data[offset + 1]) << 16 | UInt32(data[offset + 2]) << 8
+            | UInt32(data[offset + 3])
         offset += 4
         return value
     }
@@ -668,10 +671,9 @@ private extension Data {
     }
 
     func readUInt32BE(at offset: inout Int) -> UInt32 {
-        let value = UInt32(self[offset]) << 24 |
-                    UInt32(self[offset + 1]) << 16 |
-                    UInt32(self[offset + 2]) << 8 |
-                    UInt32(self[offset + 3])
+        let value =
+            UInt32(self[offset]) << 24 | UInt32(self[offset + 1]) << 16 | UInt32(self[offset + 2]) << 8
+            | UInt32(self[offset + 3])
         offset += 4
         return value
     }

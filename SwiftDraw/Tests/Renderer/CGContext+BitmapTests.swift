@@ -41,8 +41,17 @@ struct CGContextBitmapTests {
     func bitmapContextIsBitmap(bitsPerPixel: Int) throws {
         let space = bitsPerPixel == 8 ? CGColorSpaceCreateDeviceGray() : CGColorSpaceCreateDeviceRGB()
         let info = bitsPerPixel == 8 ? CGImageAlphaInfo.none : .premultipliedLast
-        let ctx = try #require(CGContext(data: nil, width: 4, height: 4, bitsPerComponent: 8, bytesPerRow: 0,
-                                         space: space, bitmapInfo: info.rawValue))
+        let ctx = try #require(
+            CGContext(
+                data: nil,
+                width: 4,
+                height: 4,
+                bitsPerComponent: 8,
+                bytesPerRow: 0,
+                space: space,
+                bitmapInfo: info.rawValue
+            )
+        )
         #expect(ctx.isBitmapContext)
     }
 
@@ -60,8 +69,17 @@ struct CGContextBitmapTests {
 
     @Test
     func layerContextIsNotBitmap() throws {
-        let bitmap = try #require(CGContext(data: nil, width: 4, height: 4, bitsPerComponent: 8, bytesPerRow: 0,
-                                            space: CGColorSpaceCreateDeviceGray(), bitmapInfo: 0))
+        let bitmap = try #require(
+            CGContext(
+                data: nil,
+                width: 4,
+                height: 4,
+                bitsPerComponent: 8,
+                bytesPerRow: 0,
+                space: CGColorSpaceCreateDeviceGray(),
+                bitmapInfo: 0
+            )
+        )
         let layer = try #require(CGLayer(bitmap, size: CGSize(width: 4, height: 4), auxiliaryInfo: nil))
         let ctx = try #require(layer.context)
         #expect(!ctx.isBitmapContext)

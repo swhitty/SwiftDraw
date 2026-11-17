@@ -91,18 +91,20 @@ final class LayerTreeBuilderTests: XCTestCase {
 
         element = DOM.GraphicsElement()
         element.class = "a"
-            XCTAssertEqual(
-                builder.createClipShapes(for: element),
-                [.ellipse(within: LayerTree.Rect(x: 0, y: 0, width: 10, height: 10))]
-            )
+        XCTAssertEqual(
+            builder.createClipShapes(for: element),
+            [.ellipse(within: LayerTree.Rect(x: 0, y: 0, width: 10, height: 10))]
+        )
     }
 
     func testDOMGroupMakesChildContents() {
         let builder = LayerTree.Builder(svg: DOM.SVG(width: 10, height: 10))
 
         let group = DOM.Group()
-        group.childElements = [DOM.Circle(cx: 0, cy: 0, r: 5),
-                               DOM.Line(x1: 0, y1: 0, x2: 10, y2: 10)]
+        group.childElements = [
+            DOM.Circle(cx: 0, cy: 0, r: 5),
+            DOM.Line(x1: 0, y1: 0, x2: 10, y2: 10),
+        ]
 
         let layer = builder.makeLayer(from: group, inheriting: .init())
         XCTAssertEqual(layer.contents.count, 2)

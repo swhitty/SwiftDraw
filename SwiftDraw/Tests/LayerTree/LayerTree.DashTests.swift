@@ -34,18 +34,22 @@ import Foundation
 final class LayerTreeDashTests: XCTestCase {
 
     private func commandStream(_ body: String) throws -> [RendererCommand<LayerTreeProvider.Types>] {
-        let svg = try DOM.SVG.parse(xml: """
-        <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">\(body)</svg>
-        """)
+        let svg = try DOM.SVG.parse(
+            xml: """
+                <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">\(body)</svg>
+                """
+        )
         let layer = LayerTree.Builder(svg: svg).makeLayer()
         let generator = LayerTree.CommandGenerator(provider: LayerTreeProvider(), size: .zero, options: .default)
         return generator.renderCommands(for: layer, colorConverter: .default)
     }
 
     private func dashes(_ svgBody: String, attributes: String = "") throws -> [(phase: Float, lengths: [Float])] {
-        let svg = try DOM.SVG.parse(xml: """
-        <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" \(attributes)>\(svgBody)</svg>
-        """)
+        let svg = try DOM.SVG.parse(
+            xml: """
+                <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" \(attributes)>\(svgBody)</svg>
+                """
+        )
         let layer = LayerTree.Builder(svg: svg).makeLayer()
         let generator = LayerTree.CommandGenerator(provider: LayerTreeProvider(), size: .zero, options: .default)
         return generator.renderCommands(for: layer, colorConverter: .default).compactMap {
@@ -79,13 +83,17 @@ final class LayerTreeDashTests: XCTestCase {
     }
 
     func testNoneOverridesInherited() throws {
-        let d = try dashes(#"<g stroke-dasharray="4 2"><path d="M0 0 L5 5" stroke="black" stroke-dasharray="none"/><path d="M0 0 L9 9" stroke="black"/></g>"#)
+        let d = try dashes(
+            #"<g stroke-dasharray="4 2"><path d="M0 0 L5 5" stroke="black" stroke-dasharray="none"/><path d="M0 0 L9 9" stroke="black"/></g>"#
+        )
         XCTAssertEqual(d.count, 1)
         XCTAssertEqual(d[0].lengths, [4, 2])
     }
 
     func testStyleAttributeAndGroupInheritance() throws {
-        let d = try dashes(#"<g style="stroke-dasharray: 6 3; stroke-dashoffset: 2"><path d="M0 0 L50 50" stroke="black"/></g>"#)
+        let d = try dashes(
+            #"<g style="stroke-dasharray: 6 3; stroke-dashoffset: 2"><path d="M0 0 L50 50" stroke="black"/></g>"#
+        )
         XCTAssertEqual(d[0].lengths, [6, 3])
         XCTAssertEqual(d[0].phase, 2)
     }
@@ -106,7 +114,7 @@ final class LayerTreeDashTests: XCTestCase {
         let names = commands.map { String(describing: $0).prefix(while: { $0 != "(" }) }
         let dash = try XCTUnwrap(names.firstIndex(of: "setLineDash"))
         let stroke = try XCTUnwrap(names.firstIndex(of: "stroke"))
-        XCTAssertEqual(names[dash - 5], "pushState") // push, cap, join, width, miter, dash
+        XCTAssertEqual(names[dash - 5], "pushState")  // push, cap, join, width, miter, dash
         XCTAssertGreaterThan(stroke, dash)
         // explicit reset after the stroke, then pop
         guard case let .setLineDash(phase: phase, lengths: lengths) = commands[stroke + 1] else {
@@ -118,15 +126,19 @@ final class LayerTreeDashTests: XCTestCase {
     }
 
     func testPercentageNonSquareViewport() throws {
-        let d = try dashes(#"<path d="M0 0 L50 50" stroke="black" stroke-dasharray="10% 10%"/>"#,
-                           attributes: #"viewBox="0 0 200 100""#)
+        let d = try dashes(
+            #"<path d="M0 0 L50 50" stroke="black" stroke-dasharray="10% 10%"/>"#,
+            attributes: #"viewBox="0 0 200 100""#
+        )
         // viewBox 200x100: sqrt((200² + 100²) / 2) = 158.11
         XCTAssertEqual(d[0].lengths[0], 15.811, accuracy: 0.01)
     }
 
     func testPercentageUsesViewBoxNotWidthHeight() throws {
-        let d = try dashes(#"<path d="M0 0 L50 50" stroke="black" stroke-dasharray="10% 10%"/>"#,
-                           attributes: #"viewBox="0 0 50 50""#)
+        let d = try dashes(
+            #"<path d="M0 0 L50 50" stroke="black" stroke-dasharray="10% 10%"/>"#,
+            attributes: #"viewBox="0 0 50 50""#
+        )
         XCTAssertEqual(d[0].lengths[0], 5, accuracy: 0.001)
     }
 
@@ -136,13 +148,17 @@ final class LayerTreeDashTests: XCTestCase {
     }
 
     func testInvalidChildDasharrayInheritsFromDashedGroup() throws {
-        let d = try dashes(#"<g stroke-dasharray="4 2"><path d="M0 0 L50 50" stroke="black" stroke-dasharray="4 -2"/></g>"#)
+        let d = try dashes(
+            #"<g stroke-dasharray="4 2"><path d="M0 0 L50 50" stroke="black" stroke-dasharray="4 -2"/></g>"#
+        )
         XCTAssertEqual(d.count, 1)
         XCTAssertEqual(d[0].lengths, [4, 2])
     }
 
     func testStyleNoneOverridesGroup() throws {
-        let d = try dashes(#"<g stroke-dasharray="4 2"><path d="M0 0 L50 50" stroke="black" style="stroke-dasharray:none"/></g>"#)
+        let d = try dashes(
+            #"<g stroke-dasharray="4 2"><path d="M0 0 L50 50" stroke="black" style="stroke-dasharray:none"/></g>"#
+        )
         XCTAssertTrue(d.isEmpty)
     }
 

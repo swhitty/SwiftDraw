@@ -39,9 +39,11 @@ package extension DOM.StyleSheet {
         package var attributes: DOM.PresentationAttributes
         package var importantAttributes: DOM.PresentationAttributes
 
-        package init(selector: ComplexSelector,
-                     attributes: DOM.PresentationAttributes,
-                     importantAttributes: DOM.PresentationAttributes = DOM.PresentationAttributes()) {
+        package init(
+            selector: ComplexSelector,
+            attributes: DOM.PresentationAttributes,
+            importantAttributes: DOM.PresentationAttributes = DOM.PresentationAttributes()
+        ) {
             self.selector = selector
             self.attributes = attributes
             self.importantAttributes = importantAttributes
@@ -135,8 +137,10 @@ package extension DOM.StyleSheet {
         package var attributes = DOM.PresentationAttributes()
         package var importantAttributes = DOM.PresentationAttributes()
 
-        package init(attributes: DOM.PresentationAttributes = DOM.PresentationAttributes(),
-                     importantAttributes: DOM.PresentationAttributes = DOM.PresentationAttributes()) {
+        package init(
+            attributes: DOM.PresentationAttributes = DOM.PresentationAttributes(),
+            importantAttributes: DOM.PresentationAttributes = DOM.PresentationAttributes()
+        ) {
             self.attributes = attributes
             self.importantAttributes = importantAttributes
         }
@@ -441,9 +445,9 @@ package extension DOM.StyleSheet {
         }
 
         private enum Kind: Hashable {
-            case element         // the selector up to `compound` matches the element
-            case anyAncestor     // … matches one of the element's ancestors
-            case anyPrevious     // … matches one of the element's previous siblings
+            case element  // the selector up to `compound` matches the element
+            case anyAncestor  // … matches one of the element's ancestors
+            case anyPrevious  // … matches one of the element's previous siblings
         }
 
         package init(sheets: [DOM.StyleSheet], root: XML.Element) {
@@ -536,8 +540,13 @@ package extension DOM.StyleSheet {
 
         // Walks ancestors (or previous siblings) until one matches the selector up to `i`,
         // or until an element whose answer is already known; every element walked is memoized.
-        private func any(rule: Int, at i: Int, from element: XML.Element, kind: Kind,
-                         next: (XML.Element) -> XML.Element?) -> Bool {
+        private func any(
+            rule: Int,
+            at i: Int,
+            from element: XML.Element,
+            kind: Kind,
+            next: (XML.Element) -> XML.Element?
+        ) -> Bool {
             var walked = [ObjectIdentifier]()
             var current = element
             var result = false
@@ -567,7 +576,8 @@ package extension DOM.StyleSheet {
 
         private func previousSibling(of element: XML.Element) -> XML.Element? {
             guard let p = parent(of: element),
-                  let i = siblingIndex[ObjectIdentifier(element)], i > 0 else { return nil }
+                let i = siblingIndex[ObjectIdentifier(element)], i > 0
+            else { return nil }
             return p.children[i - 1]
         }
 

@@ -56,18 +56,25 @@ final class RendererCoreGraphicsTypesTests: XCTestCase {
 
     func testRect() {
         let r1 = LayerTree.Rect(x: 10, y: 20, width: 30, height: 40)
-        XCTAssertEqual(CGProvider().createRect(from: r1),
-                       CGRect(x: 10, y: 20, width: 30, height: 40))
+        XCTAssertEqual(
+            CGProvider().createRect(from: r1),
+            CGRect(x: 10, y: 20, width: 30, height: 40)
+        )
 
         let r2 = LayerTree.Rect(x: 200.5, y: 300.5, width: 400.5, height: 500.5)
-        XCTAssertEqual(CGProvider().createRect(from: r2),
-                       CGRect(x: 200.5, y: 300.5, width: 400.5, height: 500.5))
+        XCTAssertEqual(
+            CGProvider().createRect(from: r2),
+            CGRect(x: 200.5, y: 300.5, width: 400.5, height: 500.5)
+        )
     }
 
     func testColor() {
         let c = CGProvider().createColor(from: .srgb(r: 0.1, g: 0.2, b: 0.3, a: 0.4))
         //CGFloat(Float(xx)) accounts for floating point margin of error
-        let reference = CGColor(colorSpace: CGColorSpace(name: CGColorSpace.sRGB)!, components: [CGFloat(Float(0.1)), CGFloat(Float(0.2)), CGFloat(Float(0.3)), CGFloat(Float(0.4))])!
+        let reference = CGColor(
+            colorSpace: CGColorSpace(name: CGColorSpace.sRGB)!,
+            components: [CGFloat(Float(0.1)), CGFloat(Float(0.2)), CGFloat(Float(0.3)), CGFloat(Float(0.4))]
+        )!
         XCTAssertEqual(c.components!, reference.components!)
 
         let clear = CGProvider().createColor(from: .none)
@@ -113,29 +120,38 @@ final class RendererCoreGraphicsTypesTests: XCTestCase {
 
     @MainActor
     func testShapeRect() {
-        let path = CGProvider().createPath(from: .rect(within: Rect(x: 10, y: 20, width: 30, height: 40),
-                                                       radii: Size(2, 4)))
+        let path = CGProvider().createPath(
+            from: .rect(
+                within: Rect(x: 10, y: 20, width: 30, height: 40),
+                radii: Size(2, 4)
+            )
+        )
 
-        let expected = CGPath(roundedRect: CGRect(x:10, y: 20, width: 30, height: 40),
-                              cornerWidth: 2.0,
-                              cornerHeight: 4.0,
-                              transform: nil)
+        let expected = CGPath(
+            roundedRect: CGRect(x: 10, y: 20, width: 30, height: 40),
+            cornerWidth: 2.0,
+            cornerHeight: 4.0,
+            transform: nil
+        )
 
         XCTAssertEqual(path, expected)
     }
 
     func testShapeEllipse() {
         let path = CGProvider().createPath(from: .ellipse(within: Rect(x: 10, y: 20, width: 30, height: 40)))
-        let expected = CGPath(ellipseIn: CGRect(x:10, y: 20, width: 30, height: 40), transform: nil)
+        let expected = CGPath(ellipseIn: CGRect(x: 10, y: 20, width: 30, height: 40), transform: nil)
         XCTAssertEqual(path, expected)
     }
 
     func testShapePolygon() {
-        let path = CGProvider().createPath(from: .polygon(between:
-            [.zero,
-             Point(0, 20),
-             Point(20, 20),
-             Point(20, 0)]))
+        let path = CGProvider().createPath(
+            from: .polygon(between: [
+                .zero,
+                Point(0, 20),
+                Point(20, 20),
+                Point(20, 0),
+            ])
+        )
         let expected = CGMutablePath()
         expected.move(to: CGPoint(x: 0, y: 0))
         expected.addLine(to: CGPoint(x: 0, y: 20))
@@ -179,12 +195,17 @@ final class RendererCoreGraphicsTypesTests: XCTestCase {
         p2.closeSubpath()
 
         let segments = CGProvider().createPath(from: [p1, p2]).segments()
-        XCTAssertEqual(segments, [.move(CGPoint(x: 0, y: 0)),
-                                  .line(CGPoint(x: 100, y: 100)),
-                                  .close,
-                                  .move(CGPoint(x: 100, y: 0)),
-                                  .line(CGPoint(x: 200, y: 200)),
-                                  .close])
+        XCTAssertEqual(
+            segments,
+            [
+                .move(CGPoint(x: 0, y: 0)),
+                .line(CGPoint(x: 100, y: 100)),
+                .close,
+                .move(CGPoint(x: 100, y: 0)),
+                .line(CGPoint(x: 200, y: 200)),
+                .close,
+            ]
+        )
     }
 
     //TODO: verify these within type provider

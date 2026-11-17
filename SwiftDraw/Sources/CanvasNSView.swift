@@ -66,7 +66,8 @@ final class CanvasNSView: NSView {
 
     override func draw(_ dirtyRect: NSRect) {
         guard let svg,
-              let ctx = NSGraphicsContext.current?.cgContext else { return }
+            let ctx = NSGraphicsContext.current?.cgContext
+        else { return }
 
         ctx.draw(
             svg,

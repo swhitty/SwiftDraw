@@ -98,15 +98,19 @@ struct LayerTreeProvider: RendererTypeProvider {
 
     /// The outlines of the glyphs: generated code never names glyph ids, which belong to one font file
     func createPath(from glyphs: LayerTree.GlyphRun) -> [LayerTree.Shape]? {
-#if canImport(CoreText)
-    guard let path = CGProvider.createGlyphPath(from: glyphs) else { return nil }
-    return [.path(path.makePath())]
-#else
-    return nil
-#endif
+        #if canImport(CoreText)
+        guard let path = CGProvider.createGlyphPath(from: glyphs) else { return nil }
+        return [.path(path.makePath())]
+        #else
+        return nil
+        #endif
     }
 
-    func createPath(from text: String, at origin: LayerTree.Point, with attributes: LayerTree.TextAttributes) -> [LayerTree.Shape]? {
+    func createPath(
+        from text: String,
+        at origin: LayerTree.Point,
+        with attributes: LayerTree.TextAttributes
+    ) -> [LayerTree.Shape]? {
         return nil
     }
 

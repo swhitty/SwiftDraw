@@ -87,10 +87,14 @@ package extension XMLParser {
             height = height ?? viewBox?.height ?? defaultViewport?.height
 
             guard let w = width else {
-                throw XMLParser.Error.unresolvableDimension(reason: makeUnresolvedReason(attribute: "width", raw: widthRaw, hasViewBox: viewBox != nil))
+                throw XMLParser.Error.unresolvableDimension(
+                    reason: makeUnresolvedReason(attribute: "width", raw: widthRaw, hasViewBox: viewBox != nil)
+                )
             }
             guard let h = height else {
-                throw XMLParser.Error.unresolvableDimension(reason: makeUnresolvedReason(attribute: "height", raw: heightRaw, hasViewBox: viewBox != nil))
+                throw XMLParser.Error.unresolvableDimension(
+                    reason: makeUnresolvedReason(attribute: "height", raw: heightRaw, hasViewBox: viewBox != nil)
+                )
             }
 
             // fractional sizes are kept, but a size past Int (or infinite or NaN) is rejected:
@@ -150,7 +154,9 @@ package extension XMLParser {
     /// element (as Chrome and resvg). Each element is parsed at most once more.
     func parseUnreachedElements(within root: XML.Element) throws {
         // elements whose children are parsed as graphics elements by the other walks
-        let walked: Set<String> = ["svg", "g", "a", "switch", "symbol", "defs", "clipPath", "mask", "pattern", "marker"]
+        let walked: Set<String> = [
+            "svg", "g", "a", "switch", "symbol", "defs", "clipPath", "mask", "pattern", "marker",
+        ]
         var stack: [(element: XML.Element, reached: Bool)] = root.children.reversed().map { ($0, true) }
         while let (element, reached) = stack.popLast() {
             try Task.checkCancellation()
@@ -165,7 +171,8 @@ package extension XMLParser {
                 // <defs>, <clipPath>, <mask>, <pattern> and <marker> are found anywhere in the document
                 stack.append(contentsOf: element.children.reversed().map { ($0, true) })
             } else if Self.graphicsElementNames.contains(element.name),
-                      referenceContext.firstWithID.contains(ObjectIdentifier(element)) {
+                referenceContext.firstWithID.contains(ObjectIdentifier(element))
+            {
                 // parses (and registers) its subtree too
                 _ = try parseGraphicsElements([element])
             } else if element.name != "text" {
@@ -177,7 +184,7 @@ package extension XMLParser {
     /// The elements `parseGraphicsElement(_:)` parses.
     static let graphicsElementNames: Set<String> = [
         "g", "line", "circle", "ellipse", "rect", "polyline", "polygon", "path", "text",
-        "a", "use", "switch", "image", "svg", "symbol"
+        "a", "use", "switch", "image", "svg", "symbol",
     ]
 
     func parseViewBox(_ data: String?) throws -> DOM.SVG.ViewBox? {
@@ -231,10 +238,12 @@ package extension XMLParser {
 
     // the font-size of the root <svg> for its own `em` sizes and those of its contents
     func rootFontSize(_ e: XML.Element) -> DOM.Float {
-        fontSize(attributes: (try? parsePresentationAttributes(e)) ?? DOM.PresentationAttributes(),
-                 style: parseStyleDeclarations(e),
-                 matched: styleContext.matcher?.match(e),
-                 inheriting: DOM.FontSize.initial)
+        fontSize(
+            attributes: (try? parsePresentationAttributes(e)) ?? DOM.PresentationAttributes(),
+            style: parseStyleDeclarations(e),
+            matched: styleContext.matcher?.match(e),
+            inheriting: DOM.FontSize.initial
+        )
     }
 
     private func finite(_ value: DOM.Coordinate) -> DOM.Coordinate? {
@@ -243,7 +252,8 @@ package extension XMLParser {
 
     /// The size of a nested `<svg>` (SVG 1.1 §7.9): percentages resolve against the enclosing
     /// viewport, and a missing (or invalid) width or height is 100%.
-    private func nestedSize(widthRaw: String?, heightRaw: String?, parent: Viewport) -> (DOM.Coordinate, DOM.Coordinate) {
+    private func nestedSize(widthRaw: String?, heightRaw: String?, parent: Viewport) -> (DOM.Coordinate, DOM.Coordinate)
+    {
         let width = widthRaw.flatMap { try? resolveLength($0, .horizontal) }.flatMap(finite) ?? parent.width
         let height = heightRaw.flatMap { try? resolveLength($0, .vertical) }.flatMap(finite) ?? parent.height
         return (width, height)
@@ -263,12 +273,15 @@ package extension XMLParser {
     /// wrapper: the defs walks recurse once per nesting level and must keep their frames small.
     func pushViewport(of e: XML.Element) -> Bool {
         guard e.name == "svg", let parent = lengthContext.viewports.last,
-              let att = try? parseAttributes(e) else {
+            let att = try? parseAttributes(e)
+        else {
             return false
         }
-        let (width, height) = nestedSize(widthRaw: try? att.parseString("width"),
-                                         heightRaw: try? att.parseString("height"),
-                                         parent: parent)
+        let (width, height) = nestedSize(
+            widthRaw: try? att.parseString("width"),
+            heightRaw: try? att.parseString("height"),
+            parent: parent
+        )
         let viewBox = (try? att.parseString("viewBox")).flatMap { try? parseViewBox($0) }
         lengthContext.viewports.append(Self.contentViewport(viewBox: viewBox, width: width, height: height))
         return true
@@ -280,17 +293,18 @@ package extension XMLParser {
 
     func makeUnresolvedReason(attribute: String, raw: String?, hasViewBox: Bool) -> String {
         if let raw, raw.contains("%") {
-            return "<svg> \(attribute)=\"\(raw)\" cannot be resolved without a viewBox or an explicit viewport (--size on the command line)"
+            return
+                "<svg> \(attribute)=\"\(raw)\" cannot be resolved without a viewBox or an explicit viewport (--size on the command line)"
         }
         if raw == nil {
             if hasViewBox {
                 return "<svg> \(attribute) attribute is missing"
             }
-            return "<svg> \(attribute) attribute is missing and no viewBox or explicit viewport (--size on the command line) was provided"
+            return
+                "<svg> \(attribute) attribute is missing and no viewBox or explicit viewport (--size on the command line) was provided"
         }
         return "<svg> \(attribute)=\"\(raw ?? "")\" cannot be resolved"
     }
-
 
     // search all nodes within document for any defs
     // not just the <defs> node
@@ -341,7 +355,6 @@ package extension XMLParser {
 
         return defs
     }
-
 
     func parseClipPaths(_ e: XML.Element) throws -> [DOM.ClipPath] {
         var clipPaths = [DOM.ClipPath]()
@@ -428,7 +441,9 @@ package extension XMLParser {
     /// element uses the initial value `xMidYMid meet`, rather than failing the document.
     func parsePreserveAspectRatio(_ data: String?) -> DOM.PreserveAspectRatio? {
         guard let data else { return nil }
-        var tokens = data.split(whereSeparator: { $0 == " " || $0 == "\t" || $0 == "\n" || $0 == "\r" }).map(String.init)
+        var tokens = data.split(whereSeparator: { $0 == " " || $0 == "\t" || $0 == "\n" || $0 == "\r" }).map(
+            String.init
+        )
         if tokens.first == "defer" { tokens.removeFirst() }
         guard (1...2).contains(tokens.count) else { return nil }
 

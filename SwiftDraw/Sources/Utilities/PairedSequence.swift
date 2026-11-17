@@ -71,7 +71,7 @@ struct PairedSequence<S: Sequence>: Sequence {
         }
 
         mutating func next() -> (S.Element, next: S.Element)? {
-            guard !isComplete else { return  nil }
+            guard !isComplete else { return nil }
 
             guard let element = inner.next() else {
                 isComplete = true
@@ -95,8 +95,9 @@ struct PairedSequence<S: Sequence>: Sequence {
 
         private mutating func makeWrappedIfRequired() -> (S.Element, next: S.Element)? {
             guard options == .nextWrappingToFirst,
-               let first = first,
-               let previous = previous else {
+                let first = first,
+                let previous = previous
+            else {
                 return nil
             }
             self.first = nil

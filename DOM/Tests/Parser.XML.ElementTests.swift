@@ -36,10 +36,12 @@ struct XMLParserElementTests {
 
     @Test
     func line() {
-        let node = ["x1": "0",
-                    "y1": "10",
-                    "x2": "50",
-                    "y2": "60"]
+        let node = [
+            "x1": "0",
+            "y1": "10",
+            "x2": "50",
+            "y2": "60",
+        ]
 
         let parsed = try? XMLParser().parseLine(node)
         #expect(DOM.Line(x1: 0, y1: 10, x2: 50, y2: 60) == parsed)
@@ -47,9 +49,11 @@ struct XMLParserElementTests {
 
     @Test
     func circle() {
-        let node = ["cx": "0",
-                    "cy": "10",
-                    "r": "20"]
+        let node = [
+            "cx": "0",
+            "cy": "10",
+            "r": "20",
+        ]
 
         let parsed = try? XMLParser().parseCircle(node)
         #expect(DOM.Circle(cx: 0, cy: 10, r: 20) == parsed)
@@ -57,10 +61,12 @@ struct XMLParserElementTests {
 
     @Test
     func ellipse() {
-        let node = ["cx": "0",
-                    "cy": "10",
-                    "rx": "20",
-                    "ry": "30"]
+        let node = [
+            "cx": "0",
+            "cy": "10",
+            "rx": "20",
+            "ry": "30",
+        ]
 
         let parsed = try? XMLParser().parseEllipse(node)
         #expect(DOM.Ellipse(cx: 0, cy: 10, rx: 20, ry: 30) == parsed)
@@ -68,10 +74,12 @@ struct XMLParserElementTests {
 
     @Test
     func rect() throws {
-        var node = ["x": "0",
-                    "y": "10",
-                    "width": "20",
-                    "height": "30"]
+        var node = [
+            "x": "0",
+            "y": "10",
+            "width": "20",
+            "height": "30",
+        ]
 
         let rect = DOM.Rect(x: 0, y: 10, width: 20, height: 30)
         #expect(try XMLParser().parseRect(node) == rect)
@@ -94,7 +102,7 @@ struct XMLParserElementTests {
     @Test
     func polygon() {
         let att = ["points": "0, 1,2,3;4;5;6;7;8 9"]
-        let parsed =  try? XMLParser().parsePolygon(att)
+        let parsed = try? XMLParser().parsePolygon(att)
         #expect(DOM.Polygon(0, 1, 2, 3, 4, 5, 6, 7, 8, 9) == parsed)
     }
 
@@ -119,23 +127,29 @@ struct XMLParserElementTests {
 
     @Test
     func elementParserSkipsErrors() {
-        let error = XMLParser().parseError(for: XMLParser.Error.invalid,
-                                           parsing: XML.Element(name: "polygon"),
-                                           with: [.skipInvalidElements])
+        let error = XMLParser().parseError(
+            for: XMLParser.Error.invalid,
+            parsing: XML.Element(name: "polygon"),
+            with: [.skipInvalidElements]
+        )
 
         #expect(error == nil)
     }
 
     @Test
     func elementParserErrorsPreserveLineNumbers() {
-        let invalidElement = XMLParser.Error.invalidElement(name: "polygon",
-                                                            error: XMLParser.Error.invalid,
-                                                            line: 100,
-                                                            column: 50)
+        let invalidElement = XMLParser.Error.invalidElement(
+            name: "polygon",
+            error: XMLParser.Error.invalid,
+            line: 100,
+            column: 50
+        )
 
-        let parseError = XMLParser().parseError(for: invalidElement,
-                                                parsing: XML.Element(name: "polygon"),
-                                                with: [])
+        let parseError = XMLParser().parseError(
+            for: invalidElement,
+            parsing: XML.Element(name: "polygon"),
+            with: []
+        )
 
         switch parseError! {
         case let .invalidElement(_, _, line, column):
@@ -152,9 +166,11 @@ struct XMLParserElementTests {
         let element = XML.Element(name: "polygon")
         element.parsedLocation = (line: 100, column: 50)
 
-        let parseError = XMLParser().parseError(for: XMLParser.Error.invalid,
-                                                parsing: element,
-                                                with: [])
+        let parseError = XMLParser().parseError(
+            for: XMLParser.Error.invalid,
+            parsing: element,
+            with: []
+        )
 
         switch parseError! {
         case let .invalidElement(_, _, line, column):

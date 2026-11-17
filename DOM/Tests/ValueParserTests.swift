@@ -93,7 +93,7 @@ struct ValueParserTests {
         #expect(try parser.parseLength("0") == 0)
         #expect(try parser.parseLength("100") == 100)
         #expect(try parser.parseLength("25") == 25)
-        #expect(try parser.parseLength("1.3") == 1) // should error?
+        #expect(try parser.parseLength("1.3") == 1)  // should error?
 
         #expect(throws: (any Error).self) { _ = try parser.parseLength("asd") }
         #expect(throws: (any Error).self) { _ = try parser.parseLength(" ") }

@@ -40,19 +40,27 @@ final class CGPathSegmentTests: XCTestCase {
         let path = CGMutablePath()
         path.move(to: CGPoint(x: 0, y: 0))
         path.addLine(to: CGPoint(x: 0, y: 100))
-        path.addQuadCurve(to: CGPoint(x: 100, y: 100),
-                          control: CGPoint(x: 50, y: 50))
-        path.addCurve(to: CGPoint(x: 200, y: 100),
-                      control1: CGPoint(x: 100, y: 50),
-                      control2: CGPoint(x: 200, y: 150))
+        path.addQuadCurve(
+            to: CGPoint(x: 100, y: 100),
+            control: CGPoint(x: 50, y: 50)
+        )
+        path.addCurve(
+            to: CGPoint(x: 200, y: 100),
+            control1: CGPoint(x: 100, y: 50),
+            control2: CGPoint(x: 200, y: 150)
+        )
         path.closeSubpath()
 
-        XCTAssertEqual(path.segments(),
-                       [.move(CGPoint(x: 0, y: 0)),
-                        .line(CGPoint(x: 0, y: 100)),
-                        .quad(CGPoint(x: 50, y: 50), CGPoint(x: 100, y: 100)),
-                        .cubic(CGPoint(x: 100, y: 50), CGPoint(x: 200, y: 150), CGPoint(x: 200, y: 100)),
-                        .close])
+        XCTAssertEqual(
+            path.segments(),
+            [
+                .move(CGPoint(x: 0, y: 0)),
+                .line(CGPoint(x: 0, y: 100)),
+                .quad(CGPoint(x: 50, y: 50), CGPoint(x: 100, y: 100)),
+                .cubic(CGPoint(x: 100, y: 50), CGPoint(x: 200, y: 150), CGPoint(x: 200, y: 100)),
+                .close,
+            ]
+        )
     }
 
     func testString() {

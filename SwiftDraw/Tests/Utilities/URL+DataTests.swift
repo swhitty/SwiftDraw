@@ -61,4 +61,3 @@ final class URLTests: XCTestCase {
     }
 
 }
-

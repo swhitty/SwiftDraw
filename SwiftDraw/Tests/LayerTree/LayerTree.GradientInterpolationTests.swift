@@ -54,7 +54,7 @@ struct LayerTreeGradientInterpolationTests {
         ([0, 0, 0, 0.9, 1], [0, 1e-5, 0.9, 1]),
         ([0, 0], [0, 1e-5]),
         ([0, 1, 1, 1], [0, 1, 1]),
-        ([0.5, 0.2, 1], [0.5, 0.5, 1])
+        ([0.5, 0.2, 1], [0.5, 0.5, 1]),
     ]
 
     @Test(arguments: equalOffsets)
@@ -65,12 +65,14 @@ struct LayerTreeGradientInterpolationTests {
 
     @Test
     func repeatedStopsAtZeroKeepFirstAndLastColour() throws {
-        let gradient = try makeLinearGradient("""
-        <linearGradient id="g" x1="0.2" x2="0.8">
-            <stop offset="0" stop-color="black"/><stop offset="0" stop-color="red"/>
-            <stop offset="0" stop-color="gray"/><stop offset="1" stop-color="white"/>
-        </linearGradient>
-        """)
+        let gradient = try makeLinearGradient(
+            """
+            <linearGradient id="g" x1="0.2" x2="0.8">
+                <stop offset="0" stop-color="black"/><stop offset="0" stop-color="red"/>
+                <stop offset="0" stop-color="gray"/><stop offset="1" stop-color="white"/>
+            </linearGradient>
+            """
+        )
         #expect(gradient.gradient.stops.map(\.color) == [Self.black, Self.gray, Self.white])
         #expect(gradient.gradient.stops.map(\.offset) == [0, 1e-5, 1])
     }
@@ -79,7 +81,9 @@ struct LayerTreeGradientInterpolationTests {
 
     @Test
     func negativeFrIsZero() throws {
-        let svg = try parse(#"<radialGradient id="g" fr="-1"><stop offset="0" /><stop offset="1" stop-color="white" /></radialGradient>"#)
+        let svg = try parse(
+            #"<radialGradient id="g" fr="-1"><stop offset="0" /><stop offset="1" stop-color="white" /></radialGradient>"#
+        )
         let element = try #require(svg.defs.radialGradients.first)
         let gradient = try #require(LayerTree.Builder(svg: svg).makeGradient(for: element))
         #expect(gradient.radius == 0)
@@ -100,20 +104,23 @@ struct LayerTreeGradientInterpolationTests {
         (#"gradientTransform="scale(2)""#, .own),
         // resvg keeps the inherited transform for these; WebKit drops it
         (#"gradientTransform="none""#, .inherited),
-        (#"gradientTransform="rotate(""#, .inherited)
+        (#"gradientTransform="rotate(""#, .inherited),
     ]
 
     @Test(arguments: referencingTransforms)
     func gradientTransformThroughHref(_ test: (attribute: String, expected: TransformSource)) throws {
-        let gradient = try makeLinearGradient("""
-        <linearGradient id="base" gradientTransform="translate(5)"><stop offset="0" /><stop offset="1" stop-color="white" /></linearGradient>
-        <linearGradient id="g" href="#base" \(test.attribute) />
-        """)
-        let source: TransformSource = switch gradient.transform {
-        case []: .identity
-        case [.translate(tx: 5, ty: 0)]: .inherited
-        default: .own
-        }
+        let gradient = try makeLinearGradient(
+            """
+            <linearGradient id="base" gradientTransform="translate(5)"><stop offset="0" /><stop offset="1" stop-color="white" /></linearGradient>
+            <linearGradient id="g" href="#base" \(test.attribute) />
+            """
+        )
+        let source: TransformSource =
+            switch gradient.transform {
+            case []: .identity
+            case [.translate(tx: 5, ty: 0)]: .inherited
+            default: .own
+            }
         #expect(source == test.expected)
     }
 
@@ -123,38 +130,46 @@ struct LayerTreeGradientInterpolationTests {
         (#"<linearGradient id="g">"#, .sRGB),
         (#"<linearGradient id="g" color-interpolation="linearRGB">"#, .linearRGB),
         (#"<linearGradient id="g" color-interpolation="auto">"#, .sRGB),
-        (#"<linearGradient id="g" style="color-interpolation: linearRGB">"#, .linearRGB)
+        (#"<linearGradient id="g" style="color-interpolation: linearRGB">"#, .linearRGB),
     ]
 
     @Test(arguments: interpolations)
     func gradientColorInterpolation(_ test: (markup: String, expected: LayerTree.Gradient.Interpolation)) throws {
-        let gradient = try makeLinearGradient(test.markup + #"<stop offset="0" /><stop offset="1" stop-color="white" /></linearGradient>"#)
+        let gradient = try makeLinearGradient(
+            test.markup + #"<stop offset="0" /><stop offset="1" stop-color="white" /></linearGradient>"#
+        )
         #expect(gradient.gradient.interpolation == test.expected)
     }
 
     @Test
     func colorInterpolationInheritsFromParent() throws {
-        let gradient = try makeLinearGradient("""
-        <defs color-interpolation="linearRGB">
-            <linearGradient id="g"><stop offset="0" /><stop offset="1" stop-color="white" /></linearGradient>
-        </defs>
-        """)
+        let gradient = try makeLinearGradient(
+            """
+            <defs color-interpolation="linearRGB">
+                <linearGradient id="g"><stop offset="0" /><stop offset="1" stop-color="white" /></linearGradient>
+            </defs>
+            """
+        )
         #expect(gradient.gradient.interpolation == .linearRGB)
     }
 
     @Test
     func referencingGradientDecidesColorInterpolation() throws {
-        let gradient = try makeLinearGradient("""
-        <linearGradient id="base" color-interpolation="linearRGB"><stop offset="0" /><stop offset="1" stop-color="white" /></linearGradient>
-        <linearGradient id="g" href="#base" />
-        """)
+        let gradient = try makeLinearGradient(
+            """
+            <linearGradient id="base" color-interpolation="linearRGB"><stop offset="0" /><stop offset="1" stop-color="white" /></linearGradient>
+            <linearGradient id="g" href="#base" />
+            """
+        )
         #expect(gradient.gradient.interpolation == .sRGB)
     }
 
     @Test
     func sRGBGradientIsDrawnWithItsOwnStops() {
-        let gradient = LayerTree.Gradient(stops: [Stop(offset: 0, color: Self.red, opacity: 1),
-                                                  Stop(offset: 1, color: Self.black, opacity: 0.5)])
+        let gradient = LayerTree.Gradient(stops: [
+            Stop(offset: 0, color: Self.red, opacity: 1),
+            Stop(offset: 1, color: Self.black, opacity: 0.5),
+        ])
         let resolved = gradient.resolved(using: .default)
         #expect(resolved.stops.map(\.offset) == [0, 1])
         #expect(resolved.stops.map(\.color) == [Self.red, Self.black.withMultiplyingAlpha(0.5)])
@@ -163,16 +178,22 @@ struct LayerTreeGradientInterpolationTests {
     static let linearGradients: [(from: LayerTree.Color, to: LayerTree.Color, opacity: LayerTree.Float)] = [
         (red, black, 1),
         (LayerTree.Color(255, 0, 0), LayerTree.Color(0, 255, 0), 1),
-        (LayerTree.Color(0, 0, 255), LayerTree.Color(255, 255, 0), 0)
+        (LayerTree.Color(0, 0, 255), LayerTree.Color(255, 255, 0), 0),
     ]
 
     /// Unpremultiplied colour interpolated in linear light, alpha interpolated linearly, drawn as
     /// sRGB stops within half a level of 8-bit colour.
     @Test(arguments: linearGradients)
-    func linearRGBGradientIsResampled(_ test: (from: LayerTree.Color, to: LayerTree.Color, opacity: LayerTree.Float)) throws {
-        let gradient = LayerTree.Gradient(stops: [Stop(offset: 0, color: test.from, opacity: 1),
-                                                  Stop(offset: 1, color: test.to, opacity: test.opacity)],
-                                          interpolation: .linearRGB)
+    func linearRGBGradientIsResampled(
+        _ test: (from: LayerTree.Color, to: LayerTree.Color, opacity: LayerTree.Float)
+    ) throws {
+        let gradient = LayerTree.Gradient(
+            stops: [
+                Stop(offset: 0, color: test.from, opacity: 1),
+                Stop(offset: 1, color: test.to, opacity: test.opacity),
+            ],
+            interpolation: .linearRGB
+        )
         let resolved = gradient.resolved(using: .default)
         #expect(resolved.stops.count > 2)
 
@@ -189,9 +210,13 @@ struct LayerTreeGradientInterpolationTests {
 
     @Test
     func linearRGBMidpointIsEncodedHalf() throws {
-        let gradient = LayerTree.Gradient(stops: [Stop(offset: 0, color: Self.red, opacity: 1),
-                                                  Stop(offset: 1, color: Self.black, opacity: 1)],
-                                          interpolation: .linearRGB)
+        let gradient = LayerTree.Gradient(
+            stops: [
+                Stop(offset: 0, color: Self.red, opacity: 1),
+                Stop(offset: 1, color: Self.black, opacity: 1),
+            ],
+            interpolation: .linearRGB
+        )
         let mid = try #require(Self.sample(gradient.resolved(using: .default), at: 0.5))
         #expect(abs(mid.x - 0.7354) < 0.001)
         #expect(mid.y == 0 && mid.z == 0 && mid.w == 1)
@@ -204,16 +229,18 @@ struct LayerTreeGradientInterpolationTests {
         (#"<mask id="m" color-interpolation="linearRGB">"#, .linearLuminance),
         (#"<mask id="m" color-interpolation="sRGB">"#, .luminance),
         (#"<mask id="m" color-interpolation="linearRGB" mask-type="alpha">"#, .alpha),
-        (#"<g color-interpolation="linearRGB"><mask id="m">"#, .linearLuminance)
+        (#"<g color-interpolation="linearRGB"><mask id="m">"#, .linearLuminance),
     ]
 
     @Test(arguments: maskTypes)
     func maskColorInterpolation(_ test: (markup: String, expected: LayerTree.Layer.MaskType)) throws {
         let close = test.markup.hasPrefix("<g") ? "</mask></g>" : "</mask>"
-        let svg = try parse("""
-        \(test.markup)<rect width="10" height="10" fill="white" />\(close)
-        <rect width="10" height="10" fill="green" mask="url(#m)" />
-        """)
+        let svg = try parse(
+            """
+            \(test.markup)<rect width="10" height="10" fill="white" />\(close)
+            <rect width="10" height="10" fill="green" mask="url(#m)" />
+            """
+        )
         let layer = LayerTree.Builder(svg: svg).makeLayer()
         let mask = try #require(Self.masks(in: layer).first)
         #expect(mask.maskType == test.expected)
@@ -224,7 +251,7 @@ struct LayerTreeGradientInterpolationTests {
         (black, 0),
         (red, 0.2125),
         (LayerTree.Color(0, 255, 0), 0.7154),
-        (.gray(white: 0.5, a: 1), 0.2140)
+        (.gray(white: 0.5, a: 1), 0.2140),
     ]
 
     @Test(arguments: linearLuminances)
@@ -241,8 +268,10 @@ struct LayerTreeGradientInterpolationTests {
     /// taken in linear light: white at opacity 0 to black is lin(1 - t) × t (resvg, WebKit).
     @Test
     func sRGBGradientInLinearRGBMaskIsResampled() throws {
-        let gradient = LayerTree.Gradient(stops: [Stop(offset: 0, color: Self.white, opacity: 0),
-                                                  Stop(offset: 1, color: Self.black, opacity: 1)])
+        let gradient = LayerTree.Gradient(stops: [
+            Stop(offset: 0, color: Self.white, opacity: 0),
+            Stop(offset: 1, color: Self.black, opacity: 1),
+        ])
         let resolved = gradient.resolved(using: .linearLuminance)
         for step in 0...20 {
             let t = LayerTree.Float(step) / 20
@@ -253,12 +282,18 @@ struct LayerTreeGradientInterpolationTests {
 
     @Test
     func linearRGBMaskResamplesGradientCommands() throws {
-        let svg = try parse("""
-        <linearGradient id="lg"><stop offset="0" stop-color="white" stop-opacity="0" /><stop offset="1" /></linearGradient>
-        <mask id="m" color-interpolation="linearRGB"><rect width="10" height="10" fill="url(#lg)" /></mask>
-        <rect width="10" height="10" fill="green" mask="url(#m)" />
-        """)
-        let generator = LayerTree.CommandGenerator(provider: LayerTreeProvider(), size: .init(10, 10), options: .default)
+        let svg = try parse(
+            """
+            <linearGradient id="lg"><stop offset="0" stop-color="white" stop-opacity="0" /><stop offset="1" /></linearGradient>
+            <mask id="m" color-interpolation="linearRGB"><rect width="10" height="10" fill="url(#lg)" /></mask>
+            <rect width="10" height="10" fill="green" mask="url(#m)" />
+            """
+        )
+        let generator = LayerTree.CommandGenerator(
+            provider: LayerTreeProvider(),
+            size: .init(10, 10),
+            options: .default
+        )
         let commands = generator.renderCommands(for: LayerTree.Builder(svg: svg).makeLayer(), colorConverter: .default)
         let gradients = commands.flatMap(Self.flattened).compactMap { command -> LayerTree.Gradient? in
             if case let .drawLinearGradient(g, _, _) = command { return g }
@@ -283,10 +318,11 @@ struct LayerTreeGradientInterpolationTests {
 
     static func masks(in layer: LayerTree.Layer) -> [LayerTree.Layer] {
         let own = layer.mask.map { [$0] } ?? []
-        return own + layer.contents.flatMap { contents -> [LayerTree.Layer] in
-            if case let .layer(child) = contents { return masks(in: child) }
-            return []
-        }
+        return own
+            + layer.contents.flatMap { contents -> [LayerTree.Layer] in
+                if case let .layer(child) = contents { return masks(in: child) }
+                return []
+            }
     }
 
     static func flattened(_ command: Command) -> [Command] {
@@ -307,7 +343,8 @@ struct LayerTreeGradientInterpolationTests {
         return ca + (cb - ca) * f
     }
 
-    static func maxDifference(_ a: LayerTree.Gradient.Components, _ b: LayerTree.Gradient.Components) -> LayerTree.Float {
+    static func maxDifference(_ a: LayerTree.Gradient.Components, _ b: LayerTree.Gradient.Components) -> LayerTree.Float
+    {
         let d = a - b
         return max(max(abs(d.x), abs(d.y)), max(abs(d.z), abs(d.w)))
     }

@@ -35,7 +35,7 @@ let package = Package(
             name: "swiftdraw-diff",
             dependencies: [
                 "SwiftDrawDiffCore",
-                .product(name: "Subprocess", package: "swift-subprocess")
+                .product(name: "Subprocess", package: "swift-subprocess"),
             ],
             swiftSettings: .upcomingFeatures
         ),
@@ -43,7 +43,7 @@ let package = Package(
             name: "SwiftDrawDiffCoreTests",
             dependencies: ["SwiftDrawDiffCore"],
             swiftSettings: .upcomingFeatures
-        )
+        ),
     ]
 )
 
@@ -65,7 +65,7 @@ extension Array where Element == SwiftSetting {
             .enableUpcomingFeature("MemberImportVisibility"),
             .enableUpcomingFeature("InternalImportsByDefault"),
 
-            .swiftLanguageMode(.v6)
+            .swiftLanguageMode(.v6),
         ]
     }
 }

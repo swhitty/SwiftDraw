@@ -70,7 +70,8 @@ struct DOMFontSizeTests {
 
     @Test
     func presentationAttributeKeepsTheSpecifiedValue() throws {
-        let xml = #"<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"><g font-size="3em"><text style="font-size: larger">A</text></g></svg>"#
+        let xml =
+            #"<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"><g font-size="3em"><text style="font-size: larger">A</text></g></svg>"#
         let svg = try DOM.SVG.parse(data: Data(xml.utf8))
         let group = try #require(svg.childElements.first as? DOM.Group)
         #expect(group.attributes.fontSize == .relative(3))

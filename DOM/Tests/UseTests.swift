@@ -63,7 +63,7 @@ struct UseTests {
         let legacyParsed = try XMLParser().parseUse([
             "xlink:href": "#line2",
             "x": "20",
-            "y": "30"
+            "y": "30",
         ])
         #expect(legacyParsed.href.fragmentID == "line2")
         #expect(legacyParsed.x == 20)
@@ -74,7 +74,7 @@ struct UseTests {
     func usePrefersHrefWhenBothAttributesArePresent() throws {
         let parsed = try XMLParser().parseUse([
             "href": "#modern",
-            "xlink:href": "#legacy"
+            "xlink:href": "#legacy",
         ])
 
         #expect(parsed.href.fragmentID == "modern")
@@ -85,7 +85,7 @@ struct UseTests {
         #expect(throws: XMLParser.Error.self) {
             _ = try XMLParser().parseUse([
                 "href": "https://[invalid",
-                "xlink:href": "#legacy"
+                "xlink:href": "#legacy",
             ])
         }
     }

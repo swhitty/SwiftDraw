@@ -38,56 +38,76 @@ final class ImageCoreGraphicsTests: XCTestCase {
 
     func testPixelWide() {
         XCTAssertEqual(
-            SVG.makeBounds(size: CGSize(width: 100, height: 50),
-                           scale: 1).pixelsWide,
+            SVG.makeBounds(
+                size: CGSize(width: 100, height: 50),
+                scale: 1
+            ).pixelsWide,
             100
         )
         XCTAssertEqual(
-            SVG.makeBounds(size: CGSize(width: 100.5, height: 50),
-                           scale: 1).pixelsWide,
+            SVG.makeBounds(
+                size: CGSize(width: 100.5, height: 50),
+                scale: 1
+            ).pixelsWide,
             101
         )
         XCTAssertEqual(
-            SVG.makeBounds(size: CGSize(width: 100, height: 50),
-                           scale: 2).pixelsWide,
+            SVG.makeBounds(
+                size: CGSize(width: 100, height: 50),
+                scale: 2
+            ).pixelsWide,
             200
         )
         XCTAssertEqual(
-            SVG.makeBounds(size: CGSize(width: 300, height: 200),
-                           scale: 1).pixelsWide,
+            SVG.makeBounds(
+                size: CGSize(width: 300, height: 200),
+                scale: 1
+            ).pixelsWide,
             300
         )
         XCTAssertEqual(
-            SVG.makeBounds(size: CGSize(width: 300, height: 200),
-                           scale: 2).pixelsWide,
+            SVG.makeBounds(
+                size: CGSize(width: 300, height: 200),
+                scale: 2
+            ).pixelsWide,
             600
         )
     }
 
     func testPixelHigh() {
         XCTAssertEqual(
-            SVG.makeBounds(size: CGSize(width: 100, height: 50),
-                           scale: 1).pixelsHigh,
+            SVG.makeBounds(
+                size: CGSize(width: 100, height: 50),
+                scale: 1
+            ).pixelsHigh,
             50
         )
         XCTAssertEqual(
-            SVG.makeBounds(size: CGSize(width: 100, height: 50.5),
-                           scale: 1).pixelsHigh,
+            SVG.makeBounds(
+                size: CGSize(width: 100, height: 50.5),
+                scale: 1
+            ).pixelsHigh,
             51
         )
         XCTAssertEqual(
-            SVG.makeBounds(size: CGSize(width: 100, height: 50),
-                           scale: 2).pixelsHigh,
+            SVG.makeBounds(
+                size: CGSize(width: 100, height: 50),
+                scale: 2
+            ).pixelsHigh,
             100
         )
         XCTAssertEqual(
-            SVG.makeBounds(size: CGSize(width: 300, height: 200),
-                           scale: 1).pixelsHigh,
+            SVG.makeBounds(
+                size: CGSize(width: 300, height: 200),
+                scale: 1
+            ).pixelsHigh,
             200
         )
         XCTAssertEqual(
-            SVG.makeBounds(size: CGSize(width: 300, height: 200),
-                           scale: 2).pixelsHigh,
+            SVG.makeBounds(
+                size: CGSize(width: 300, height: 200),
+                scale: 2
+            ).pixelsHigh,
             400
         )
     }

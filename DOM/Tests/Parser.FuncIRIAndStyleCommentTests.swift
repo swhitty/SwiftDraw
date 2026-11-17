@@ -16,7 +16,9 @@ import Testing
 struct ParserFuncIRIAndStyleCommentTests {
 
     private func attributes(_ rect: String, styles: String = "") throws -> DOM.PresentationAttributes {
-        let svg = try DOM.SVG.parse(xml: #"<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10">\#(styles)\#(rect)</svg>"#)
+        let svg = try DOM.SVG.parse(
+            xml: #"<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10">\#(styles)\#(rect)</svg>"#
+        )
         let element = try #require(svg.childElements.last)
         return DOM.presentationAttributes(for: element, styles: svg.styles)
     }
@@ -27,19 +29,24 @@ struct ParserFuncIRIAndStyleCommentTests {
         ##"url("#a")"##,
         "url( #a )",
         "url(  '#a'  )",
-        ##"url( "#a")"##
+        ##"url( "#a")"##,
     ]
 
     @Test(arguments: quotedURLs)
     func fillAttribute(_ value: String) throws {
-        let att = try attributes("<rect width='1' height='1' fill='\(value.replacingOccurrences(of: "'", with: "&apos;"))' />")
+        let att = try attributes(
+            "<rect width='1' height='1' fill='\(value.replacingOccurrences(of: "'", with: "&apos;"))' />"
+        )
         #expect(att.fill == .url(URL(string: "#a")!))
     }
 
     @Test(arguments: quotedURLs)
     func everyFuncIRIProperty(_ value: String) throws {
-        let style = "fill:\(value);stroke:\(value);clip-path:\(value);mask:\(value);filter:\(value);marker-start:\(value);marker-mid:\(value);marker-end:\(value)"
-        let att = try attributes(#"<rect width="1" height="1" style="\#(style.replacingOccurrences(of: "\"", with: "&quot;"))" />"#)
+        let style =
+            "fill:\(value);stroke:\(value);clip-path:\(value);mask:\(value);filter:\(value);marker-start:\(value);marker-mid:\(value);marker-end:\(value)"
+        let att = try attributes(
+            #"<rect width="1" height="1" style="\#(style.replacingOccurrences(of: "\"", with: "&quot;"))" />"#
+        )
         let url = URL(string: "#a")!
         #expect(att.fill == .url(url))
         #expect(att.stroke == .url(url))
@@ -54,7 +61,9 @@ struct ParserFuncIRIAndStyleCommentTests {
     @Test(arguments: quotedURLs)
     func clipPathAndMaskAttributes(_ value: String) throws {
         let escaped = value.replacingOccurrences(of: "'", with: "&apos;")
-        let att = try attributes("<rect width='1' height='1' clip-path='\(escaped)' mask='\(escaped)' marker-end='\(escaped)' />")
+        let att = try attributes(
+            "<rect width='1' height='1' clip-path='\(escaped)' mask='\(escaped)' marker-end='\(escaped)' />"
+        )
         #expect(att.clipPath == URL(string: "#a")!)
         #expect(att.mask == URL(string: "#a")!)
         #expect(att.markerEnd == URL(string: "#a")!)
@@ -84,7 +93,7 @@ struct ParserFuncIRIAndStyleCommentTests {
         "fill/**/:green",
         "/* x */ fill: green; /* stroke: red; */",
         "fill:green;/* unterminated",
-        "/*a*//*b*/fill:green"
+        "/*a*//*b*/fill:green",
     ])
     func commentsInStyleAttribute(_ style: String) throws {
         let att = try attributes(#"<rect width="1" height="1" style="\#(style)" />"#)

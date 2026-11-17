@@ -36,19 +36,27 @@ public extension CGTextRenderer {
 
     typealias Size = (width: Int, height: Int)
 
-    static func render(named name: String,
-                       in bundle: Bundle = Bundle.main,
-                       size: Size? = nil,
-                       options: SVG.Options,
-                       api: CGTextRenderer.API,
-                       precision: Int) throws -> String {
+    static func render(
+        named name: String,
+        in bundle: Bundle = Bundle.main,
+        size: Size? = nil,
+        options: SVG.Options,
+        api: CGTextRenderer.API,
+        precision: Int
+    ) throws -> String {
         guard let url = bundle.url(forResource: name, withExtension: nil) else {
             throw Error("File not found.")
         }
         return try render(fileURL: url, size: size, options: options, api: api, precision: precision)
     }
 
-    static func render(fileURL: URL, size: Size? = nil, options: SVG.Options, api: CGTextRenderer.API, precision: Int) throws -> String {
+    static func render(
+        fileURL: URL,
+        size: Size? = nil,
+        options: SVG.Options,
+        api: CGTextRenderer.API,
+        precision: Int
+    ) throws -> String {
         let svg = try DOM.SVG.parse(fileURL: fileURL)
         let size = makeSize(svg: svg, size: size)
         let identifier = fileURL.lastPathComponent
@@ -58,23 +66,27 @@ public extension CGTextRenderer {
             .capitalized
             .replacingOccurrences(of: " ", with: "")
 
-        return cgCodeText(api: api,
-                          name: identifier,
-                          svg: svg,
-                          size: size,
-                          options: options,
-                          precision: precision)
+        return cgCodeText(
+            api: api,
+            name: identifier,
+            svg: svg,
+            size: size,
+            options: options,
+            precision: precision
+        )
     }
 
     static func render(data: Data, options: SVG.Options, api: CGTextRenderer.API, precision: Int) throws -> String {
         let svg = try DOM.SVG.parse(data: data)
         let size = makeSize(svg: svg, size: nil)
-        return cgCodeText(api: api,
-                          name: "Image",
-                          svg: svg,
-                          size: size,
-                          options: options,
-                          precision: precision)
+        return cgCodeText(
+            api: api,
+            name: "Image",
+            svg: svg,
+            size: size,
+            options: options,
+            precision: precision
+        )
     }
 
     static func renderPath(from svgPath: String) throws -> String {
@@ -91,32 +103,40 @@ public extension CGTextRenderer {
         return LayerTree.Size(LayerTree.Float(size.width), LayerTree.Float(size.height))
     }
 
-    private static func cgCodeText(api: CGTextRenderer.API,
-                                   name: String,
-                                   svg: DOM.SVG,
-                                   size: LayerTree.Size,
-                                   options: SVG.Options,
-                                   precision: Int) -> String {
+    private static func cgCodeText(
+        api: CGTextRenderer.API,
+        name: String,
+        svg: DOM.SVG,
+        size: LayerTree.Size,
+        options: SVG.Options,
+        precision: Int
+    ) -> String {
         let layer = LayerTree.Builder(svg: svg).makeLayer()
         let commandSize = LayerTree.Size(svg.width, svg.height)
 
-        let formatter = CoordinateFormatter(delimeter: .commaSpace,
-                                            precision: .capped(max: precision))
+        let formatter = CoordinateFormatter(
+            delimeter: .commaSpace,
+            precision: .capped(max: precision)
+        )
 
-        let generator = LayerTree.CommandGenerator(provider: CGTextProvider(formatter: formatter),
-                                                   size: commandSize,
-                                                   options: options)
+        let generator = LayerTree.CommandGenerator(
+            provider: CGTextProvider(formatter: formatter),
+            size: commandSize,
+            options: options
+        )
 
         let optimizer = LayerTree.CommandOptimizer<CGTextTypes>(options: [.skipRedundantState, .skipInitialSaveState])
         let commands = optimizer.optimizeCommands(
             generator.renderCommands(for: layer, colorConverter: .default)
         )
 
-        let renderer = CGTextRenderer(api: api,
-                                      name: name,
-                                      size: size,
-                                      commandSize: commandSize,
-                                      formatter: formatter)
+        let renderer = CGTextRenderer(
+            api: api,
+            name: name,
+            size: size,
+            commandSize: commandSize,
+            formatter: formatter
+        )
         renderer.perform(commands)
 
         return renderer.makeText()

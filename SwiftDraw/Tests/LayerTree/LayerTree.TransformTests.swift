@@ -58,14 +58,19 @@ final class LayerTreeTransformTests: XCTestCase {
     }
 
     func testRotateMatrix() {
-        let angle = LayerTree.Float.pi/4
+        let angle = LayerTree.Float.pi / 4
         let transform = Transform.rotate(radians: angle)
-        XCTAssertEqual(transform.toMatrix(),
-                       Matrix(a: LayerTree.Float(cos(Double(angle))),
-                              b: LayerTree.Float(sin(Double(angle))),
-                              c: -LayerTree.Float(sin(Double(angle))),
-                              d: LayerTree.Float(cos(Double(angle))),
-                              tx: 0, ty: 0))
+        XCTAssertEqual(
+            transform.toMatrix(),
+            Matrix(
+                a: LayerTree.Float(cos(Double(angle))),
+                b: LayerTree.Float(sin(Double(angle))),
+                c: -LayerTree.Float(sin(Double(angle))),
+                d: LayerTree.Float(cos(Double(angle))),
+                tx: 0,
+                ty: 0
+            )
+        )
     }
 
     func testMatrixConcatenation() {
@@ -91,7 +96,7 @@ final class LayerTreeTransformTests: XCTestCase {
         let rotate = DOM.Transform.rotate(angle: 10)
         let transform = LayerTree.Builder.createTransform(for: rotate)
 
-        let radians = 10*Float.pi/180.0
+        let radians = 10 * Float.pi / 180.0
         XCTAssertEqual(transform, [.rotate(radians: radians)])
     }
 
@@ -99,17 +104,22 @@ final class LayerTreeTransformTests: XCTestCase {
         let rotate = DOM.Transform.rotatePoint(angle: 10, cx: 20, cy: 30)
         let transform = LayerTree.Builder.createTransform(for: rotate)
 
-        let radians = 10*Float.pi/180.0
-        XCTAssertEqual(transform, [.translate(tx: 20, ty: 30),
-                                   .rotate(radians: radians),
-                                   .translate(tx: -20, ty: -30)])
+        let radians = 10 * Float.pi / 180.0
+        XCTAssertEqual(
+            transform,
+            [
+                .translate(tx: 20, ty: 30),
+                .rotate(radians: radians),
+                .translate(tx: -20, ty: -30),
+            ]
+        )
     }
 
     func testDOMMakesSkewXTransform() {
         let skew = DOM.Transform.skewX(angle: 10)
         let transform = LayerTree.Builder.createTransform(for: skew)
 
-        let radians = 10*Float.pi/180.0
+        let radians = 10 * Float.pi / 180.0
         XCTAssertEqual(transform, [.skewX(angle: radians)])
     }
 
@@ -117,7 +127,7 @@ final class LayerTreeTransformTests: XCTestCase {
         let skew = DOM.Transform.skewY(angle: 10)
         let transform = LayerTree.Builder.createTransform(for: skew)
 
-        let radians = 10*Float.pi/180.0
+        let radians = 10 * Float.pi / 180.0
         XCTAssertEqual(transform, [.skewY(angle: radians)])
     }
 
@@ -134,7 +144,12 @@ final class LayerTreeTransformTests: XCTestCase {
         let scale = DOM.Transform.scale(sx: 10, sy: 20)
         let transform = LayerTree.Builder.createTransforms(from: [translate, scale])
 
-        XCTAssertEqual(transform, [.translate(tx: 10, ty: 20),
-                                   .scale(sx: 10, sy: 20)])
+        XCTAssertEqual(
+            transform,
+            [
+                .translate(tx: 10, ty: 20),
+                .scale(sx: 10, sy: 20),
+            ]
+        )
     }
 }

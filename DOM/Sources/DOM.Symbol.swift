@@ -29,7 +29,6 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-
 package extension DOM {
 
     /// `<symbol>`: a template that is never drawn on its own, only by a `<use>` that references it.

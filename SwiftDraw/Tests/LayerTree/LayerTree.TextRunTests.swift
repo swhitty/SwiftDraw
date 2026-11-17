@@ -42,9 +42,11 @@ struct LayerTreeTextRunTests {
     }
 
     private func runs(_ text: String) throws -> [Run] {
-        let svg = try DOM.SVG.parse(xml: """
-        <svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" font-family="Helvetica" font-size="20">\(text)</svg>
-        """)
+        let svg = try DOM.SVG.parse(
+            xml: """
+                <svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" font-family="Helvetica" font-size="20">\(text)</svg>
+                """
+        )
         return runs(in: LayerTree.Builder(svg: svg).makeLayer())
     }
 
@@ -127,13 +129,17 @@ struct LayerTreeTextRunTests {
         #expect(drawn[1].point == LayerTree.Point(10 + advance(drawn[0]) + advance(hidden), 20))
     }
 
-    @Test(arguments: [
-        (DOM.TextAnchor.start, LayerTree.Float(0)),
-        (DOM.TextAnchor.middle, LayerTree.Float(0.5)),
-        (DOM.TextAnchor.end, LayerTree.Float(1)),
-    ] as [(DOM.TextAnchor, LayerTree.Float)])
+    @Test(
+        arguments: [
+            (DOM.TextAnchor.start, LayerTree.Float(0)),
+            (DOM.TextAnchor.middle, LayerTree.Float(0.5)),
+            (DOM.TextAnchor.end, LayerTree.Float(1)),
+        ] as [(DOM.TextAnchor, LayerTree.Float)]
+    )
     func anchorAppliesToTheWholeChunk(anchor: DOM.TextAnchor, fraction: LayerTree.Float) throws {
-        let drawn = try runs(#"<text x="100" y="20" text-anchor="\#(anchor.rawValue)">Te<tspan fill="green">xt</tspan></text>"#)
+        let drawn = try runs(
+            #"<text x="100" y="20" text-anchor="\#(anchor.rawValue)">Te<tspan fill="green">xt</tspan></text>"#
+        )
         try #require(drawn.count == 2)
         let width = advance(Run(string: "Text", point: .zero, attributes: drawn[0].attributes))
         let start = 100 - width * fraction
@@ -143,7 +149,9 @@ struct LayerTreeTextRunTests {
 
     @Test
     func eachChunkIsAnchoredOnItsOwn() throws {
-        let drawn = try runs(#"<text y="20" text-anchor="end"><tspan x="100">Text</tspan><tspan x="150" y="40">T</tspan></text>"#)
+        let drawn = try runs(
+            #"<text y="20" text-anchor="end"><tspan x="100">Text</tspan><tspan x="150" y="40">T</tspan></text>"#
+        )
         try #require(drawn.count == 2)
         #expect(abs(drawn[0].point.x - (100 - advance(drawn[0]))) < 0.001)
         #expect(abs(drawn[1].point.x - (150 - advance(drawn[1]))) < 0.001)
@@ -158,7 +166,10 @@ struct LayerTreeTextRunTests {
 
     @Test
     func aSingleRunIsNotWrappedInALayer() throws {
-        let svg = try DOM.SVG.parse(xml: #"<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><text><tspan x="10" y="20">Text</tspan></text></svg>"#)
+        let svg = try DOM.SVG.parse(
+            xml:
+                #"<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><text><tspan x="10" y="20">Text</tspan></text></svg>"#
+        )
         let text = try #require(svg.childElements.first as? DOM.Text)
         let contents = LayerTree.Builder(svg: svg).makeTextContents(from: text, with: .init())
         guard case .text("Text", LayerTree.Point(10, 20), _)? = contents else {
@@ -169,9 +180,14 @@ struct LayerTreeTextRunTests {
 
     @Test
     func clipTextIsWhiteWhateverTheSpanFill() throws {
-        let svg = try DOM.SVG.parse(xml: #"<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><text>A<tspan fill="red" fill-opacity="0.5">B</tspan></text></svg>"#)
+        let svg = try DOM.SVG.parse(
+            xml:
+                #"<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><text>A<tspan fill="red" fill-opacity="0.5">B</tspan></text></svg>"#
+        )
         let text = try #require(svg.childElements.first as? DOM.Text)
-        let contents = try #require(LayerTree.Builder(svg: svg).makeTextContents(from: text, with: .init(), isClip: true))
+        let contents = try #require(
+            LayerTree.Builder(svg: svg).makeTextContents(from: text, with: .init(), isClip: true)
+        )
         let layer = LayerTree.Layer()
         layer.appendContents(contents)
         #expect(runs(in: layer).map(\.attributes.color) == [.white, .white])

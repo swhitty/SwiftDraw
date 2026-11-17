@@ -63,7 +63,8 @@ final class CanvasUIView: UIView {
 
     override func draw(_ rect: CGRect) {
         guard let svg,
-              let ctx = UIGraphicsGetCurrentContext() else { return }
+            let ctx = UIGraphicsGetCurrentContext()
+        else { return }
 
         ctx.draw(
             svg,

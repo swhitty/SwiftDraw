@@ -29,7 +29,6 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-
 @testable import SwiftDraw
 import SwiftDrawDOM
 import Testing
@@ -40,35 +39,39 @@ struct SFSymbolClipMaskTests {
     /// objectBoundingBox units are resolved by the Builder: the clip reaches the renderers in user space.
     @Test
     func builderResolvesObjectBoundingBoxClipUnits() throws {
-        let svg = try DOM.SVG.parse(xml: #"""
-        <svg width="10" height="10" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <clipPath id="bb" clipPathUnits="objectBoundingBox">
-              <rect x="0" y="0" width="1" height="1"/>
-            </clipPath>
-          </defs>
-          <rect x="0" y="0" width="10" height="10" fill="black" clip-path="url(#bb)"/>
-        </svg>
-        """#)
+        let svg = try DOM.SVG.parse(
+            xml: #"""
+                <svg width="10" height="10" xmlns="http://www.w3.org/2000/svg">
+                  <defs>
+                    <clipPath id="bb" clipPathUnits="objectBoundingBox">
+                      <rect x="0" y="0" width="1" height="1"/>
+                    </clipPath>
+                  </defs>
+                  <rect x="0" y="0" width="10" height="10" fill="black" clip-path="url(#bb)"/>
+                </svg>
+                """#
+        )
         let layer = LayerTree.Builder(svg: svg).makeLayer()
         let clipped = try #require(firstClippedLayer(in: layer))
         #expect(clipped.clipUnits == .userSpaceOnUse)
         #expect(clipped.clip.first?.transform == LayerTree.Transform.Matrix(a: 10, b: 0, c: 0, d: 10, tx: 0, ty: 0))
     }
 
-#if canImport(CoreGraphics)
+    #if canImport(CoreGraphics)
     /// A clip drawn as a mask (here mixed clip-rules) keeps its content, unclipped, in symbol export.
     @Test
     func maskTypeClipKeepsContentUnclipped() throws {
-        let svg = try DOM.SVG.parse(xml: #"""
-        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
-          <clipPath id="c">
-            <rect width="10" height="10" clip-rule="evenodd"/>
-            <rect x="20" width="10" height="10"/>
-          </clipPath>
-          <rect x="0" y="0" width="100" height="100" fill="black" clip-path="url(#c)"/>
-        </svg>
-        """#)
+        let svg = try DOM.SVG.parse(
+            xml: #"""
+                <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+                  <clipPath id="c">
+                    <rect width="10" height="10" clip-rule="evenodd"/>
+                    <rect x="20" width="10" height="10"/>
+                  </clipPath>
+                  <rect x="0" y="0" width="100" height="100" fill="black" clip-path="url(#c)"/>
+                </svg>
+                """#
+        )
         let paths = SFSymbolRenderer.getPaths(for: svg) ?? []
         try #require(paths.count == 1)
         let bounds = paths[0].path.bounds
@@ -77,7 +80,7 @@ struct SFSymbolClipMaskTests {
         #expect(abs(bounds.width - 100) <= 0.5)
         #expect(abs(bounds.height - 100) <= 0.5)
     }
-#endif
+    #endif
 
     private func firstClippedLayer(in layer: LayerTree.Layer) -> LayerTree.Layer? {
         if !layer.clip.isEmpty { return layer }

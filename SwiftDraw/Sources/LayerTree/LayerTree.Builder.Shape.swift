@@ -51,11 +51,12 @@ extension LayerTree.Builder {
             let radii = makeRadii(rx: rect.rx, ry: rect.ry, width: rect.width, height: rect.height)
             return .rect(within: makeRect(from: rect), radii: radii)
         } else if let polyline = element as? DOM.Polyline {
-            return .line(between: polyline.points.map{ Point($0.x, $0.y) })
+            return .line(between: polyline.points.map { Point($0.x, $0.y) })
         } else if let polygon = element as? DOM.Polygon {
-            return .polygon(between: polygon.points.map{ Point($0.x, $0.y) })
+            return .polygon(between: polygon.points.map { Point($0.x, $0.y) })
         } else if let domPath = element as? DOM.Path,
-                  let path = try? createPath(from: domPath) {
+            let path = try? createPath(from: domPath)
+        {
             return .path(path)
         }
 
@@ -63,28 +64,34 @@ extension LayerTree.Builder {
     }
 
     static func makeRect(from rect: DOM.Rect) -> LayerTree.Rect {
-        return LayerTree.Rect(x: rect.x ?? 0,
-                              y: rect.y ?? 0,
-                              width: rect.width,
-                              height: rect.height)
+        return LayerTree.Rect(
+            x: rect.x ?? 0,
+            y: rect.y ?? 0,
+            width: rect.width,
+            height: rect.height
+        )
     }
 
     static func makeRect(from ellipse: DOM.Ellipse) -> LayerTree.Rect {
         let cx = ellipse.cx ?? 0
         let cy = ellipse.cy ?? 0
-        return LayerTree.Rect(x: cx - ellipse.rx,
-                              y: cy - ellipse.ry,
-                              width: ellipse.rx * 2,
-                              height: ellipse.ry * 2)
+        return LayerTree.Rect(
+            x: cx - ellipse.rx,
+            y: cy - ellipse.ry,
+            width: ellipse.rx * 2,
+            height: ellipse.ry * 2
+        )
     }
 
     static func makeRect(from circle: DOM.Circle) -> LayerTree.Rect {
         let cx = circle.cx ?? 0
         let cy = circle.cy ?? 0
-        return LayerTree.Rect(x: cx - circle.r,
-                              y: cy - circle.r,
-                              width: circle.r * 2,
-                              height: circle.r * 2)
+        return LayerTree.Rect(
+            x: cx - circle.r,
+            y: cy - circle.r,
+            width: circle.r * 2,
+            height: circle.r * 2
+        )
     }
 
     /// SVG 2 §10.2: an auto (or negative) `rx` uses `ry` and vice versa,
@@ -92,7 +99,9 @@ extension LayerTree.Builder {
     static func makeRadii(rx: DOM.Float?, ry: DOM.Float?, width: DOM.Float, height: DOM.Float) -> LayerTree.Size {
         let rx = rx.flatMap { $0 >= 0 ? $0 : nil }
         let ry = ry.flatMap { $0 >= 0 ? $0 : nil }
-        return LayerTree.Size(min(rx ?? ry ?? 0, width / 2),
-                              min(ry ?? rx ?? 0, height / 2))
+        return LayerTree.Size(
+            min(rx ?? ry ?? 0, width / 2),
+            min(ry ?? rx ?? 0, height / 2)
+        )
     }
 }

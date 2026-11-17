@@ -80,11 +80,14 @@ package extension XMLParser {
     /// in the order LayerTree applies them (`DOM.presentationAttributes(for:styles:)`): presentation
     /// attribute < matched stylesheet rules < style="" < `!important` rules < `!important` style="",
     /// resolved against the parent's computed font-size. The parent's when none sets it.
-    func fontSize(attributes: DOM.PresentationAttributes,
-                  style: (normal: DOM.PresentationAttributes, important: DOM.PresentationAttributes),
-                  matched: DOM.StyleSheet.Matched?,
-                  inheriting parent: DOM.Float) -> DOM.Float {
-        let specified = style.important.fontSize
+    func fontSize(
+        attributes: DOM.PresentationAttributes,
+        style: (normal: DOM.PresentationAttributes, important: DOM.PresentationAttributes),
+        matched: DOM.StyleSheet.Matched?,
+        inheriting parent: DOM.Float
+    ) -> DOM.Float {
+        let specified =
+            style.important.fontSize
             ?? matched?.importantAttributes.fontSize
             ?? style.normal.fontSize
             ?? matched?.attributes.fontSize
@@ -96,7 +99,8 @@ package extension XMLParser {
         try att.parse(key) { try resolveLength($0, direction) }
     }
 
-    func parseLength(_ att: any AttributeParser, _ key: String, _ direction: LengthDirection) throws -> DOM.Coordinate? {
+    func parseLength(_ att: any AttributeParser, _ key: String, _ direction: LengthDirection) throws -> DOM.Coordinate?
+    {
         try att.parse(key, exp: { try resolveLength($0, direction) })
     }
 }

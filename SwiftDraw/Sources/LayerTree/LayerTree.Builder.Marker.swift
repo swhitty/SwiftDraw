@@ -29,7 +29,6 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-
 import SwiftDrawDOM
 import Foundation
 
@@ -68,8 +67,14 @@ extension LayerTree.Builder {
         var markers = [LayerTree.Layer]()
         func append(_ marker: DOM.Marker?, at vertex: MarkerVertex, isStart: Bool = false) {
             guard let marker, let inner = markerContents(of: marker),
-                  let layer = makeMarkerLayer(for: marker, contents: inner, at: vertex,
-                                              isStart: isStart, strokeWidth: state.strokeWidth) else { return }
+                let layer = makeMarkerLayer(
+                    for: marker,
+                    contents: inner,
+                    at: vertex,
+                    isStart: isStart,
+                    strokeWidth: state.strokeWidth
+                )
+            else { return }
             markers.append(layer)
         }
 
@@ -90,9 +95,11 @@ extension LayerTree.Builder {
     /// the shape alone, or a layer of the shape then its markers. Otherwise the shape is split into a
     /// fill-only and a stroke-only `.shape`, and the markers go where the order puts them. Everything
     /// is in one layer, so the element's opacity, clip, mask and filter still apply to them as a group.
-    func makePaintedContents(_ contents: LayerTree.Layer.Contents,
-                             for element: DOM.GraphicsElement,
-                             with state: State) -> LayerTree.Layer.Contents {
+    func makePaintedContents(
+        _ contents: LayerTree.Layer.Contents,
+        for element: DOM.GraphicsElement,
+        with state: State
+    ) -> LayerTree.Layer.Contents {
         guard case let .shape(shape, stroke, fill) = contents else { return contents }
         let markers = makeMarkerLayers(for: element, with: state)
 
@@ -137,39 +144,48 @@ extension LayerTree.Builder {
     /// `overflow` is visible; nil when it references itself.
     func makeMarkerContents(for marker: DOM.Marker) -> LayerTree.Layer? {
         // A marker drawn inside itself draws nothing
-        building(ObjectIdentifier(marker), cycle: nil) { buildingContents {
-            let attributes = DOM.presentationAttributes(for: marker, styles: svg.styles)
-            // the contents inherit from the marker and its ancestors, not from the shape (SVG 2 §11.6.2),
-            // and `display` does not apply to <marker>
-            var markerState = Self.createState(for: attributes, inheriting: makeInheritedState(from: marker.ancestors),
-                                               viewportDiagonal: viewportDiagonal)
-            markerState.display = .inline
-            let l = LayerTree.Layer()
-            l.opacity = markerState.opacity
-            for child in marker.childElements {
-                l.appendContents(.layer(makeLayer(from: child, inheriting: markerState)))
-            }
+        building(ObjectIdentifier(marker), cycle: nil) {
+            buildingContents {
+                let attributes = DOM.presentationAttributes(for: marker, styles: svg.styles)
+                // the contents inherit from the marker and its ancestors, not from the shape (SVG 2 §11.6.2),
+                // and `display` does not apply to <marker>
+                var markerState = Self.createState(
+                    for: attributes,
+                    inheriting: makeInheritedState(from: marker.ancestors),
+                    viewportDiagonal: viewportDiagonal
+                )
+                markerState.display = .inline
+                let l = LayerTree.Layer()
+                l.opacity = markerState.opacity
+                for child in marker.childElements {
+                    l.appendContents(.layer(makeLayer(from: child, inheriting: markerState)))
+                }
 
-            // the user agent style sheet sets `overflow: hidden` on <marker>, which clips to the viewport
-            let overflow = attributes.overflow ?? .hidden
-            if overflow == .hidden || overflow == .scroll {
-                let viewport = Self.makeViewportClip(viewBox: marker.viewBox,
-                                                     width: marker.markerWidth ?? 3,
-                                                     height: marker.markerHeight ?? 3,
-                                                     preserveAspectRatio: marker.preserveAspectRatio)
-                l.clip = [LayerTree.ClipShape(shape: .rect(within: viewport, radii: .zero), transform: .identity)]
+                // the user agent style sheet sets `overflow: hidden` on <marker>, which clips to the viewport
+                let overflow = attributes.overflow ?? .hidden
+                if overflow == .hidden || overflow == .scroll {
+                    let viewport = Self.makeViewportClip(
+                        viewBox: marker.viewBox,
+                        width: marker.markerWidth ?? 3,
+                        height: marker.markerHeight ?? 3,
+                        preserveAspectRatio: marker.preserveAspectRatio
+                    )
+                    l.clip = [LayerTree.ClipShape(shape: .rect(within: viewport, radii: .zero), transform: .identity)]
+                }
+                return l
             }
-            return l
-        }}
+        }
     }
 
     /// One marker placed at a vertex: its viewport positioned so `refX`/`refY` falls on the vertex,
     /// rotated by `orient`, scaled by the stroke width for `markerUnits="strokeWidth"`.
-    func makeMarkerLayer(for marker: DOM.Marker,
-                         contents: LayerTree.Layer,
-                         at vertex: MarkerVertex,
-                         isStart: Bool,
-                         strokeWidth: LayerTree.Float) -> LayerTree.Layer? {
+    func makeMarkerLayer(
+        for marker: DOM.Marker,
+        contents: LayerTree.Layer,
+        at vertex: MarkerVertex,
+        isStart: Bool,
+        strokeWidth: LayerTree.Float
+    ) -> LayerTree.Layer? {
         let width = marker.markerWidth ?? 3
         let height = marker.markerHeight ?? 3
         // a zero or negative viewport disables the marker
@@ -190,8 +206,12 @@ extension LayerTree.Builder {
             angle = 0
         }
 
-        let fit = Self.makeViewBoxFit(viewBox: marker.viewBox, width: width, height: height,
-                                      preserveAspectRatio: marker.preserveAspectRatio)
+        let fit = Self.makeViewBoxFit(
+            viewBox: marker.viewBox,
+            width: width,
+            height: height,
+            preserveAspectRatio: marker.preserveAspectRatio
+        )
 
         // (x - refX) * viewBoxScale maps the reference point onto the vertex: the viewBox
         // origin and the alignment offset cancel out
@@ -334,18 +354,22 @@ extension LayerTree.Builder {
     }
 
     /// The directions at the start and end of a segment; nil where it has zero length.
-    static func makeDirections(of segment: LayerTree.Path.Segment,
-                               from point: LayerTree.Point) -> (start: LayerTree.Point?, end: LayerTree.Point?) {
+    static func makeDirections(
+        of segment: LayerTree.Path.Segment,
+        from point: LayerTree.Point
+    ) -> (start: LayerTree.Point?, end: LayerTree.Point?) {
         switch segment {
         case .line(let to):
             let direction = makeDirection(from: point, to: to)
             return (direction, direction)
         case let .cubic(to, control1, control2):
             // the first control point distinct from the end point gives the tangent there
-            let start = makeDirection(from: point, to: control1)
+            let start =
+                makeDirection(from: point, to: control1)
                 ?? makeDirection(from: point, to: control2)
                 ?? makeDirection(from: point, to: to)
-            let end = makeDirection(from: control2, to: to)
+            let end =
+                makeDirection(from: control2, to: to)
                 ?? makeDirection(from: control1, to: to)
                 ?? makeDirection(from: point, to: to)
             return (start, end)

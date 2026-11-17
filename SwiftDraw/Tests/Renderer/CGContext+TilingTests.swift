@@ -29,12 +29,14 @@ struct CGContextTilingTests {
         let rect = CGRect(x: 0, y: 0, width: 10_000, height: 10_000)
         let visible = CGRect(x: 15, y: 5, width: 10, height: 10)
         let tiles = CGContext.tiles(of: CGSize(width: 10, height: 10), in: rect, visible: visible)
-        #expect(tiles == [
-            CGRect(x: 10, y: 0, width: 10, height: 10),
-            CGRect(x: 20, y: 0, width: 10, height: 10),
-            CGRect(x: 10, y: 10, width: 10, height: 10),
-            CGRect(x: 20, y: 10, width: 10, height: 10)
-        ])
+        #expect(
+            tiles == [
+                CGRect(x: 10, y: 0, width: 10, height: 10),
+                CGRect(x: 20, y: 0, width: 10, height: 10),
+                CGRect(x: 10, y: 10, width: 10, height: 10),
+                CGRect(x: 20, y: 10, width: 10, height: 10),
+            ]
+        )
     }
 
     @Test(arguments: [false, true])
@@ -81,17 +83,25 @@ struct CGContextTilingTests {
 
     // red top-left quarter, blue along the bottom: wrong in any flip or mirror
     static let asymmetric = """
-    <svg xmlns="http://www.w3.org/2000/svg" width="10" height="8">
-      <rect width="5" height="4" fill="red"/>
-      <rect y="6" width="10" height="2" fill="blue"/>
-      <circle cx="7" cy="3" r="2" fill="green"/>
-    </svg>
-    """
+        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="8">
+          <rect width="5" height="4" fill="red"/>
+          <rect y="6" width="10" height="2" fill="blue"/>
+          <circle cx="7" cy="3" r="2" fill="green"/>
+        </svg>
+        """
 
     static func makeContext(width: Int, height: Int) throws -> CGContext {
-        try #require(CGContext(data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: width * 4,
-                               space: CGColorSpace(name: CGColorSpace.sRGB)!,
-                               bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue))
+        try #require(
+            CGContext(
+                data: nil,
+                width: width,
+                height: height,
+                bitsPerComponent: 8,
+                bytesPerRow: width * 4,
+                space: CGColorSpace(name: CGColorSpace.sRGB)!,
+                bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+            )
+        )
     }
 
     static func render(scale: CGFloat, flipped: Bool, _ draw: (CGContext) -> Void) throws -> [UInt8] {

@@ -52,103 +52,137 @@ struct LayerTreeGradientStopColorTests {
 
     @Test(arguments: Kind.allCases)
     func currentColorFromGradient(_ kind: Kind) throws {
-        let stops = try makeStops(kind, """
-        <\(kind) id="g" color="green">
-            <stop offset="0" stop-color="yellow" /><stop offset="1" stop-color="currentColor" />
-        </\(kind)>
-        """)
+        let stops = try makeStops(
+            kind,
+            """
+            <\(kind) id="g" color="green">
+                <stop offset="0" stop-color="yellow" /><stop offset="1" stop-color="currentColor" />
+            </\(kind)>
+            """
+        )
         #expect(stops == [Self.yellow, Self.green])
     }
 
     @Test(arguments: Kind.allCases)
     func currentColorFromAncestorOfGradient(_ kind: Kind) throws {
-        let stops = try makeStops(kind, """
-        <g color="green"><defs>
-            <\(kind) id="g"><stop offset="0" stop-color="yellow" /><stop offset="1" stop-color="currentColor" /></\(kind)>
-        </defs></g>
-        """)
+        let stops = try makeStops(
+            kind,
+            """
+            <g color="green"><defs>
+                <\(kind) id="g"><stop offset="0" stop-color="yellow" /><stop offset="1" stop-color="currentColor" /></\(kind)>
+            </defs></g>
+            """
+        )
         #expect(stops == [Self.yellow, Self.green])
     }
 
     @Test(arguments: Kind.allCases)
     func currentColorFromStop(_ kind: Kind) throws {
-        let stops = try makeStops(kind, """
-        <\(kind) id="g" color="red">
-            <stop offset="0" stop-color="yellow" /><stop offset="1" style="color: green" stop-color="currentColor" />
-        </\(kind)>
-        """)
+        let stops = try makeStops(
+            kind,
+            """
+            <\(kind) id="g" color="red">
+                <stop offset="0" stop-color="yellow" /><stop offset="1" style="color: green" stop-color="currentColor" />
+            </\(kind)>
+            """
+        )
         #expect(stops == [Self.yellow, Self.green])
     }
 
     @Test(arguments: Kind.allCases)
     func currentColorIgnoresPaintedElement(_ kind: Kind) throws {
-        let stops = try makeStops(kind, """
-        <\(kind) id="g"><stop offset="0" stop-color="yellow" /><stop offset="1" stop-color="currentColor" /></\(kind)>
-        """, painted: #"color="red""#)
+        let stops = try makeStops(
+            kind,
+            """
+            <\(kind) id="g"><stop offset="0" stop-color="yellow" /><stop offset="1" stop-color="currentColor" /></\(kind)>
+            """,
+            painted: #"color="red""#
+        )
         #expect(stops == [Self.yellow, Self.black])
     }
 
     @Test(arguments: Kind.allCases)
     func currentColorFromStyleSheet(_ kind: Kind) throws {
-        let stops = try makeStops(kind, """
-        <style>.c { color: green }</style>
-        <g class="c">
-            <\(kind) id="g"><stop offset="0" stop-color="yellow" /><stop offset="1" stop-color="currentColor" /></\(kind)>
-        </g>
-        """)
+        let stops = try makeStops(
+            kind,
+            """
+            <style>.c { color: green }</style>
+            <g class="c">
+                <\(kind) id="g"><stop offset="0" stop-color="yellow" /><stop offset="1" stop-color="currentColor" /></\(kind)>
+            </g>
+            """
+        )
         #expect(stops == [Self.yellow, Self.green])
     }
 
     @Test(arguments: Kind.allCases)
     func inheritTakesGradientStopColor(_ kind: Kind) throws {
-        let stops = try makeStops(kind, """
-        <\(kind) id="g" stop-color="green">
-            <stop offset="0" stop-color="yellow" /><stop offset="1" stop-color="inherit" />
-        </\(kind)>
-        """)
+        let stops = try makeStops(
+            kind,
+            """
+            <\(kind) id="g" stop-color="green">
+                <stop offset="0" stop-color="yellow" /><stop offset="1" stop-color="inherit" />
+            </\(kind)>
+            """
+        )
         #expect(stops == [Self.yellow, Self.green])
     }
 
     @Test(arguments: Kind.allCases)
     func hrefStopsUseColorOfTheirOwnGradient(_ kind: Kind) throws {
-        let stops = try makeStops(kind, """
-        <g color="green">
-            <\(kind) id="base"><stop offset="0" stop-color="yellow" /><stop offset="1" stop-color="currentColor" /></\(kind)>
-        </g>
-        <\(kind) id="g" href="#base" color="red" />
-        """)
+        let stops = try makeStops(
+            kind,
+            """
+            <g color="green">
+                <\(kind) id="base"><stop offset="0" stop-color="yellow" /><stop offset="1" stop-color="currentColor" /></\(kind)>
+            </g>
+            <\(kind) id="g" href="#base" color="red" />
+            """
+        )
         #expect(stops == [Self.yellow, Self.green])
     }
 
     @Test
     func colorCurrentColorInheritsColor() throws {
-        let svg = try DOM.SVG.parse(xml: """
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20">
-            <g color="green"><rect width="10" height="10" fill="currentColor" color="currentColor" /></g>
-        </svg>
-        """)
-        let fills = makeCommands(svg).compactMap { if case .setFill(let c) = $0 { return c }; return nil }
+        let svg = try DOM.SVG.parse(
+            xml: """
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20">
+                    <g color="green"><rect width="10" height="10" fill="currentColor" color="currentColor" /></g>
+                </svg>
+                """
+        )
+        let fills = makeCommands(svg).compactMap {
+            if case .setFill(let c) = $0 { return c }; return nil
+        }
         #expect(fills == [Self.green])
     }
 
     func makeStops(_ kind: Kind, _ defs: String, painted: String = "") throws -> [LayerTree.Color] {
-        let svg = try DOM.SVG.parse(xml: """
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20">
-            \(defs)
-            <rect width="10" height="10" fill="url(#g)" \(painted) />
-        </svg>
-        """)
-        let gradient = try #require(makeCommands(svg).compactMap { command -> LayerTree.Gradient? in
-            switch command {
-            case let .drawLinearGradient(g, _, _), let .drawRadialGradient(g, _, _, _, _): return g
-            default: return nil
-            }
-        }.first)
+        let svg = try DOM.SVG.parse(
+            xml: """
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20">
+                    \(defs)
+                    <rect width="10" height="10" fill="url(#g)" \(painted) />
+                </svg>
+                """
+        )
+        let gradient = try #require(
+            makeCommands(svg).compactMap { command -> LayerTree.Gradient? in
+                switch command {
+                case let .drawLinearGradient(g, _, _), let .drawRadialGradient(g, _, _, _, _): return g
+                default: return nil
+                }
+            }.first
+        )
         return gradient.stops.map(\.color)
     }
 
     func makeCommands(_ svg: DOM.SVG) -> [Command] {
-        let generator = LayerTree.CommandGenerator(provider: LayerTreeProvider(), size: .init(20, 20), options: .default)
+        let generator = LayerTree.CommandGenerator(
+            provider: LayerTreeProvider(),
+            size: .init(20, 20),
+            options: .default
+        )
         return generator.renderCommands(for: LayerTree.Builder(svg: svg).makeLayer(), colorConverter: .default)
     }
 }

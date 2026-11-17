@@ -143,10 +143,12 @@ public extension SVG {
         expanded(top: padding, left: padding, bottom: padding, right: padding)
     }
 
-    func expanded(top: CGFloat = 0,
-                  left: CGFloat = 0,
-                  bottom: CGFloat = 0,
-                  right: CGFloat = 0) -> SVG {
+    func expanded(
+        top: CGFloat = 0,
+        left: CGFloat = 0,
+        bottom: CGFloat = 0,
+        right: CGFloat = 0
+    ) -> SVG {
         var copy = self
         copy.commands.insert(.translate(tx: left, ty: top), at: 0)
         copy.size.width += left + right
@@ -171,9 +173,11 @@ extension SVG {
         // - LayerTree is converted into RenderCommands
         // - RenderCommands are performed by Renderer (drawn to CGContext)
         let layer = LayerTree.Builder(svg: dom).makeLayer()
-        let generator = LayerTree.CommandGenerator(provider: CGProvider(),
-                                                   size: LayerTree.Size(dom.width, dom.height),
-                                                   options: options)
+        let generator = LayerTree.CommandGenerator(
+            provider: CGProvider(),
+            size: LayerTree.Size(dom.width, dom.height),
+            options: options
+        )
 
         let optimizer = LayerTree.CommandOptimizer<CGTypes>()
         self.commands = optimizer.optimizeCommands(
@@ -183,7 +187,7 @@ extension SVG {
 }
 
 @available(*, unavailable, renamed: "SVG")
-public enum Image { }
+public enum Image {}
 
 #else
 
@@ -237,10 +241,12 @@ public extension SVG {
 
     func expanded(_ padding: CGFloat) -> SVG { self }
 
-    func expanded(top: CGFloat = 0,
-                  left: CGFloat = 0,
-                  bottom: CGFloat = 0,
-                  right: CGFloat = 0) -> SVG { self }
+    func expanded(
+        top: CGFloat = 0,
+        left: CGFloat = 0,
+        bottom: CGFloat = 0,
+        right: CGFloat = 0
+    ) -> SVG { self }
 }
 #endif
 
@@ -266,10 +272,12 @@ public extension SVG {
         self = expanded(padding)
     }
 
-    mutating func expand(top: CGFloat = 0,
-                         left: CGFloat = 0,
-                         bottom: CGFloat = 0,
-                         right: CGFloat = 0) {
+    mutating func expand(
+        top: CGFloat = 0,
+        left: CGFloat = 0,
+        bottom: CGFloat = 0,
+        right: CGFloat = 0
+    ) {
         self = expanded(top: top, left: left, bottom: bottom, right: right)
     }
 }

@@ -100,7 +100,9 @@ extension XML.Formatter {
         func makeStyle(_ sheet: DOM.StyleSheet) throws -> XML.Element? {
             let element = XML.Element(name: "style")
 
-            element.innerText = "\n" + sortSelectors(sheet.attributes.keys)
+            element.innerText =
+                "\n"
+                + sortSelectors(sheet.attributes.keys)
                 .compactMap { encodeSelector($0, attributes: sheet.attributes[$0]!) }
                 .joined(separator: "\n")
                 .indenting(spaces: 8) + "\n    "
@@ -145,8 +147,8 @@ extension XML.Formatter {
             attributes["clip-path"] = graphic.clipPath.map(encodeURL)
             attributes["mask"] = graphic.mask.map(encodeURL)
             attributes["transform"] = graphic.transform?
-                                                    .map(encodeTransform)
-                                                    .joined(separator: " ")
+                .map(encodeTransform)
+                .joined(separator: " ")
             return attributes
         }
 
@@ -170,7 +172,8 @@ extension XML.Formatter {
             return element
         }
 
-        func makeElements<S: Sequence>(from graphicElements: S) throws -> [XML.Element] where S.Element == DOM.GraphicsElement {
+        func makeElements<S: Sequence>(from graphicElements: S) throws -> [XML.Element]
+        where S.Element == DOM.GraphicsElement {
             var elements = [XML.Element]()
             for graphic in graphicElements {
                 let elementName = String(describing: graphic).replacingOccurrences(of: "SwiftDraw.", with: "")
@@ -330,7 +333,8 @@ extension XML.Formatter {
 
         func encodeFontFamily(_ font: [DOM.FontFamily]?) -> String? {
             guard let font else { return nil }
-            return font
+            return
+                font
                 .map(encodeFont)
                 .joined(separator: ", ")
         }
@@ -444,7 +448,16 @@ extension XML.Formatter {
                 let cmd: DOM.Path.Command = space == .absolute ? .quadraticSmooth : .quadraticSmoothRelative
                 let point = formatter.format(x, y)
                 return "\(cmd.rawValue)\(point)"
-            case .arc(rx: let rx, ry: let ry, rotate: let rotate, large: let large, sweep: let sweep, x: let x, y: let y, space: let space):
+            case .arc(
+                rx: let rx,
+                ry: let ry,
+                rotate: let rotate,
+                large: let large,
+                sweep: let sweep,
+                x: let x,
+                y: let y,
+                space: let space
+            ):
                 let cmd: DOM.Path.Command = space == .absolute ? .arc : .arcRelative
                 let r = formatter.format(rx, ry)
                 let rotate = formatter.format(rotate)
@@ -458,7 +471,8 @@ extension XML.Formatter {
             }
         }
 
-        func sortSelectors<S: Sequence>(_ selectors: S) -> [DOM.StyleSheet.Selector] where S.Element == DOM.StyleSheet.Selector {
+        func sortSelectors<S: Sequence>(_ selectors: S) -> [DOM.StyleSheet.Selector]
+        where S.Element == DOM.StyleSheet.Selector {
             let previews = selectors.filter { encodeSelector($0).contains("SFSymbolsPreview") }
             let other = selectors.filter { !encodeSelector($0).contains("SFSymbolsPreview") }
             return other.sorted() + previews.sorted()
@@ -489,7 +503,7 @@ private extension String {
     func indenting(spaces: Int = 0) -> String {
         let pad = String(repeating: " ", count: spaces)
         return components(separatedBy: "\n")
-          .map { "\(pad)\($0)" }
-          .joined(separator: "\n")
+            .map { "\(pad)\($0)" }
+            .joined(separator: "\n")
     }
 }

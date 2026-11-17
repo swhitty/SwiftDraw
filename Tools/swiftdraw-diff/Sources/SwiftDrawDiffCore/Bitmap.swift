@@ -34,15 +34,17 @@ public struct Bitmap: Equatable, Sendable {
     /// An image file's pixel size, read from its header; nil when it isn't a readable image.
     public static func size(of url: URL) -> (width: Int, height: Int)? {
         guard let source = CGImageSourceCreateWithURL(url as CFURL, nil),
-              let props = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any],
-              let w = props[kCGImagePropertyPixelWidth] as? Int, let h = props[kCGImagePropertyPixelHeight] as? Int else { return nil }
+            let props = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any],
+            let w = props[kCGImagePropertyPixelWidth] as? Int, let h = props[kCGImagePropertyPixelHeight] as? Int
+        else { return nil }
         return (w, h)
     }
 
     /// Decodes a PNG (or any image ImageIO reads) and composites it onto white.
     public init(imageData data: Data) throws {
         guard let source = CGImageSourceCreateWithData(data as CFData, nil),
-              let image = CGImageSourceCreateImageAtIndex(source, 0, [kCGImageSourceShouldCache: false] as CFDictionary) else {
+            let image = CGImageSourceCreateImageAtIndex(source, 0, [kCGImageSourceShouldCache: false] as CFDictionary)
+        else {
             throw DecodeError(description: "not a readable image")
         }
         // Read RGB images as sRGB without converting; anything else (grey, indexed) is converted.
@@ -50,10 +52,17 @@ public struct Bitmap: Equatable, Sendable {
         let w = image.width, h = image.height
         var pixels = [UInt8](repeating: 255, count: w * h * 4)
         let drawn = pixels.withUnsafeMutableBytes { buffer -> Bool in
-            guard let ctx = CGContext(
-                data: buffer.baseAddress, width: w, height: h, bitsPerComponent: 8, bytesPerRow: w * 4,
-                space: Self.sRGB, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
-            ) else { return false }
+            guard
+                let ctx = CGContext(
+                    data: buffer.baseAddress,
+                    width: w,
+                    height: h,
+                    bitsPerComponent: 8,
+                    bytesPerRow: w * 4,
+                    space: Self.sRGB,
+                    bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+                )
+            else { return false }
             ctx.interpolationQuality = .none
             ctx.draw(input, in: CGRect(x: 0, y: 0, width: w, height: h))
             return true
@@ -67,7 +76,8 @@ public struct Bitmap: Equatable, Sendable {
     }
 
     public var isBlank: Bool {
-        for i in stride(from: 0, to: pixels.count, by: 4) where pixels[i] < 250 || pixels[i + 1] < 250 || pixels[i + 2] < 250 {
+        for i in stride(from: 0, to: pixels.count, by: 4)
+        where pixels[i] < 250 || pixels[i + 1] < 250 || pixels[i + 2] < 250 {
             return false
         }
         return true
@@ -87,15 +97,31 @@ public struct Bitmap: Equatable, Sendable {
 
     public func pngData() throws -> Data {
         guard let provider = CGDataProvider(data: Data(pixels) as CFData),
-              let image = CGImage(
-                width: width, height: height, bitsPerComponent: 8, bitsPerPixel: 32, bytesPerRow: width * 4,
-                space: Self.sRGB, bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.noneSkipLast.rawValue),
-                provider: provider, decode: nil, shouldInterpolate: false, intent: .defaultIntent
-              ) else {
+            let image = CGImage(
+                width: width,
+                height: height,
+                bitsPerComponent: 8,
+                bitsPerPixel: 32,
+                bytesPerRow: width * 4,
+                space: Self.sRGB,
+                bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.noneSkipLast.rawValue),
+                provider: provider,
+                decode: nil,
+                shouldInterpolate: false,
+                intent: .defaultIntent
+            )
+        else {
             throw DecodeError(description: "could not create a \(width)×\(height) image")
         }
         let data = NSMutableData()
-        guard let dest = CGImageDestinationCreateWithData(data as CFMutableData, UTType.png.identifier as CFString, 1, nil) else {
+        guard
+            let dest = CGImageDestinationCreateWithData(
+                data as CFMutableData,
+                UTType.png.identifier as CFString,
+                1,
+                nil
+            )
+        else {
             throw DecodeError(description: "could not create a PNG encoder")
         }
         CGImageDestinationAddImage(dest, image, nil)

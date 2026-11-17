@@ -51,14 +51,16 @@ struct ParserXMLGradientAttributesTests {
         (#"<g id="g" style="color-interpolation: linearRGB" />"#, .linearRGB),
         (#"<g color-interpolation="linearRGB"><g id="g" /></g>"#, .linearRGB),
         (#"<defs color-interpolation="linearRGB"><g id="g" color-interpolation="sRGB" /></defs>"#, .sRGB),
-        (#"<style>.c { color-interpolation: linearRGB }</style><g class="c"><g id="g" /></g>"#, .linearRGB)
+        (#"<style>.c { color-interpolation: linearRGB }</style><g class="c"><g id="g" /></g>"#, .linearRGB),
     ]
 
     @Test(arguments: Kind.allCases, interpolations)
     func colorInterpolation(_ kind: Kind, _ test: (markup: String, expected: DOM.ColorInterpolation?)) throws {
         // the placeholder <g id="g" /> becomes the gradient, keeping its attributes
         let markup = test.markup.replacingOccurrences(of: #"<g id="g""#, with: "<\(kind) id=\"g\"")
-        let svg = try parse(markup.replacingOccurrences(of: "<\(kind) id=\"g\" />", with: "<\(kind) id=\"g\"></\(kind)>"))
+        let svg = try parse(
+            markup.replacingOccurrences(of: "<\(kind) id=\"g\" />", with: "<\(kind) id=\"g\"></\(kind)>")
+        )
         #expect(colorInterpolation(kind, svg) == test.expected)
     }
 
@@ -66,7 +68,7 @@ struct ParserXMLGradientAttributesTests {
         ("0.2", 0.2),
         ("0", 0),
         ("-1", nil),
-        ("-10%", nil)
+        ("-10%", nil),
     ]
 
     @Test(arguments: frValues)
@@ -80,7 +82,7 @@ struct ParserXMLGradientAttributesTests {
         ("", true),
         ("  ", true),
         ("none", false),
-        ("rotate(", false)
+        ("rotate(", false),
     ]
 
     @Test(arguments: Kind.allCases, transforms)

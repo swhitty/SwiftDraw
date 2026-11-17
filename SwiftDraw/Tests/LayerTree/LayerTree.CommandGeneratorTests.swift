@@ -79,7 +79,9 @@ final class LayerTreeCommandGeneratorTests: XCTestCase {
 
     func testPatternUserSpaceTileIsOffsetByXY() throws {
         let pattern = LayerTree.Pattern(frame: .init(x: 3, y: 4, width: 10, height: 20))
-        let (resolved, content) = try XCTUnwrap(Generator.resolvePattern(pattern, in: .init(x: 50, y: 50, width: 100, height: 100)))
+        let (resolved, content) = try XCTUnwrap(
+            Generator.resolvePattern(pattern, in: .init(x: 50, y: 50, width: 100, height: 100))
+        )
         XCTAssertEqual(resolved.frame, .init(x: 3, y: 4, width: 10, height: 20))
         XCTAssertEqual(resolved.transform, .identity)
         // contents are drawn relative to the tile origin
@@ -88,22 +90,34 @@ final class LayerTreeCommandGeneratorTests: XCTestCase {
 
     func testPatternObjectBoundingBoxTile() throws {
         let pattern = LayerTree.Pattern(frame: .init(x: 0.1, y: 0, width: 0.25, height: 0.5), units: .objectBoundingBox)
-        let (resolved, content) = try XCTUnwrap(Generator.resolvePattern(pattern, in: .init(x: 20, y: 40, width: 200, height: 100)))
+        let (resolved, content) = try XCTUnwrap(
+            Generator.resolvePattern(pattern, in: .init(x: 20, y: 40, width: 200, height: 100))
+        )
         XCTAssertEqual(resolved.frame, .init(x: 40, y: 40, width: 50, height: 50))
         XCTAssertEqual(content, .init(a: 1, b: 0, c: 0, d: 1, tx: 40, ty: 40))
     }
 
     func testPatternObjectBoundingBoxContentUnits() throws {
-        let pattern = LayerTree.Pattern(frame: .init(x: 0, y: 0, width: 10, height: 10), contentUnits: .objectBoundingBox)
-        let (_, content) = try XCTUnwrap(Generator.resolvePattern(pattern, in: .init(x: 20, y: 40, width: 200, height: 100)))
+        let pattern = LayerTree.Pattern(
+            frame: .init(x: 0, y: 0, width: 10, height: 10),
+            contentUnits: .objectBoundingBox
+        )
+        let (_, content) = try XCTUnwrap(
+            Generator.resolvePattern(pattern, in: .init(x: 20, y: 40, width: 200, height: 100))
+        )
         // content scaled by the bounding box size, origin at the tile (not the bounding box)
         XCTAssertEqual(content, .init(a: 200, b: 0, c: 0, d: 100, tx: 0, ty: 0))
     }
 
     func testPatternViewBoxMeetsAndOverridesContentUnits() throws {
-        let pattern = LayerTree.Pattern(frame: .init(x: 5, y: 0, width: 40, height: 20), contentUnits: .objectBoundingBox)
+        let pattern = LayerTree.Pattern(
+            frame: .init(x: 5, y: 0, width: 40, height: 20),
+            contentUnits: .objectBoundingBox
+        )
         pattern.viewBox = .init(x: 10, y: 10, width: 10, height: 10)
-        let (_, content) = try XCTUnwrap(Generator.resolvePattern(pattern, in: .init(x: 0, y: 0, width: 100, height: 100)))
+        let (_, content) = try XCTUnwrap(
+            Generator.resolvePattern(pattern, in: .init(x: 0, y: 0, width: 100, height: 100))
+        )
         // xMidYMid meet: scale 2, centred horizontally (40 - 20) / 2 = 10, viewBox origin -20
         XCTAssertEqual(content, .init(a: 2, b: 0, c: 0, d: 2, tx: 5 + 10 - 20, ty: -20))
     }
@@ -118,8 +132,15 @@ final class LayerTreeCommandGeneratorTests: XCTestCase {
     func testPatternWithEmptyTilePaintsNothing() {
         let bounds = LayerTree.Rect(x: 0, y: 0, width: 10, height: 10)
         XCTAssertNil(Generator.resolvePattern(LayerTree.Pattern(frame: .zero), in: bounds))
-        XCTAssertNil(Generator.resolvePattern(LayerTree.Pattern(frame: .init(x: 0, y: 0, width: -1, height: 5)), in: bounds))
-        XCTAssertNil(Generator.resolvePattern(LayerTree.Pattern(frame: .init(x: 0, y: 0, width: 1, height: 1), units: .objectBoundingBox), in: .zero))
+        XCTAssertNil(
+            Generator.resolvePattern(LayerTree.Pattern(frame: .init(x: 0, y: 0, width: -1, height: 5)), in: bounds)
+        )
+        XCTAssertNil(
+            Generator.resolvePattern(
+                LayerTree.Pattern(frame: .init(x: 0, y: 0, width: 1, height: 1), units: .objectBoundingBox),
+                in: .zero
+            )
+        )
 
         let emptyViewBox = LayerTree.Pattern(frame: .init(x: 0, y: 0, width: 5, height: 5))
         emptyViewBox.viewBox = .init(x: 0, y: 0, width: 0, height: 5)
@@ -155,32 +176,43 @@ final class LayerTreeCommandGeneratorTests: XCTestCase {
         _ = Generator.resolvePattern(userSpace, in: bounds())
         XCTAssertEqual(evaluated, 0)
 
-        let viewBoxOverridesContentUnits = LayerTree.Pattern(frame: .init(x: 0, y: 0, width: 5, height: 5), contentUnits: .objectBoundingBox)
+        let viewBoxOverridesContentUnits = LayerTree.Pattern(
+            frame: .init(x: 0, y: 0, width: 5, height: 5),
+            contentUnits: .objectBoundingBox
+        )
         viewBoxOverridesContentUnits.viewBox = .init(x: 0, y: 0, width: 1, height: 1)
         _ = Generator.resolvePattern(viewBoxOverridesContentUnits, in: bounds())
         XCTAssertEqual(evaluated, 0)
 
-        _ = Generator.resolvePattern(LayerTree.Pattern(frame: .init(x: 0, y: 0, width: 5, height: 5), contentUnits: .objectBoundingBox), in: bounds())
+        _ = Generator.resolvePattern(
+            LayerTree.Pattern(frame: .init(x: 0, y: 0, width: 5, height: 5), contentUnits: .objectBoundingBox),
+            in: bounds()
+        )
         XCTAssertEqual(evaluated, 1)
 
-        _ = Generator.resolvePattern(LayerTree.Pattern(frame: .init(x: 0, y: 0, width: 1, height: 1), units: .objectBoundingBox), in: bounds())
+        _ = Generator.resolvePattern(
+            LayerTree.Pattern(frame: .init(x: 0, y: 0, width: 1, height: 1), units: .objectBoundingBox),
+            in: bounds()
+        )
         XCTAssertEqual(evaluated, 2)
     }
 
     func testPatternCommandsFromInkscapeStyleDocument() throws {
-        let svg = try DOM.SVG.parse(xml: #"""
-        <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="64" height="64">
-            <defs>
-                <pattern id="base" x="2" y="3" width="8" height="8" patternUnits="userSpaceOnUse">
-                    <rect width="4" height="4" fill="red" />
-                </pattern>
-                <pattern id="derived" xlink:href="#base" patternTransform="translate(10, 0)" />
-                <pattern id="empty" />
-            </defs>
-            <rect width="64" height="64" fill="url(#derived)" />
-            <rect width="64" height="64" fill="url(#empty)" />
-        </svg>
-        """#)
+        let svg = try DOM.SVG.parse(
+            xml: #"""
+                <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="64" height="64">
+                    <defs>
+                        <pattern id="base" x="2" y="3" width="8" height="8" patternUnits="userSpaceOnUse">
+                            <rect width="4" height="4" fill="red" />
+                        </pattern>
+                        <pattern id="derived" xlink:href="#base" patternTransform="translate(10, 0)" />
+                        <pattern id="empty" />
+                    </defs>
+                    <rect width="64" height="64" fill="url(#derived)" />
+                    <rect width="64" height="64" fill="url(#empty)" />
+                </svg>
+                """#
+        )
         let layer = LayerTree.Builder(svg: svg).makeLayer()
         let generator = LayerTree.CommandGenerator(provider: LayerTreeProvider(), size: .zero, options: .default)
         let commands = generator.renderCommands(for: layer, colorConverter: .default)
@@ -200,7 +232,10 @@ final class LayerTreeCommandGeneratorTests: XCTestCase {
 
 private extension LayerTree.CommandGenerator {
 
-    func renderCommands(forClip shapes: [LayerTree.Shape], using rule: LayerTree.FillRule?) -> [RendererCommand<P.Types>] {
+    func renderCommands(
+        forClip shapes: [LayerTree.Shape],
+        using rule: LayerTree.FillRule?
+    ) -> [RendererCommand<P.Types>] {
         renderCommands(forClip: shapes.map { LayerTree.ClipShape(shape: $0, transform: .identity) }, using: rule)
     }
 }

@@ -34,7 +34,7 @@ import Foundation
 package extension DOM {
 
     final class Path: GraphicsElement {
-        
+
         // segments[0] should always be a .move
         package var segments: [Segment]
 
@@ -43,31 +43,54 @@ package extension DOM {
             self.segments = [s]
             super.init()
         }
-        
+
         package enum Segment: Equatable {
             case move(x: Coordinate, y: Coordinate, space: CoordinateSpace)
             case line(x: Coordinate, y: Coordinate, space: CoordinateSpace)
             case horizontal(x: Coordinate, space: CoordinateSpace)
             case vertical(y: Coordinate, space: CoordinateSpace)
-            case cubic(x1: Coordinate, y1: Coordinate,
-                       x2: Coordinate, y2: Coordinate,
-                       x: Coordinate, y: Coordinate, space: CoordinateSpace)
-            case cubicSmooth(x2: Coordinate, y2: Coordinate,
-                             x: Coordinate, y: Coordinate, space: CoordinateSpace)
-            case quadratic(x1: Coordinate, y1: Coordinate,
-                           x: Coordinate, y: Coordinate, space: CoordinateSpace)
+            case cubic(
+                x1: Coordinate,
+                y1: Coordinate,
+                x2: Coordinate,
+                y2: Coordinate,
+                x: Coordinate,
+                y: Coordinate,
+                space: CoordinateSpace
+            )
+            case cubicSmooth(
+                x2: Coordinate,
+                y2: Coordinate,
+                x: Coordinate,
+                y: Coordinate,
+                space: CoordinateSpace
+            )
+            case quadratic(
+                x1: Coordinate,
+                y1: Coordinate,
+                x: Coordinate,
+                y: Coordinate,
+                space: CoordinateSpace
+            )
             case quadraticSmooth(x: Coordinate, y: Coordinate, space: CoordinateSpace)
-            case arc(rx: Coordinate, ry: Coordinate, rotate: Coordinate,
-                     large: Bool, sweep: Bool,
-                     x: Coordinate, y: Coordinate, space: CoordinateSpace)
+            case arc(
+                rx: Coordinate,
+                ry: Coordinate,
+                rotate: Coordinate,
+                large: Bool,
+                sweep: Bool,
+                x: Coordinate,
+                y: Coordinate,
+                space: CoordinateSpace
+            )
             case close
-            
+
             package enum CoordinateSpace {
                 case absolute
                 case relative
             }
         }
-        
+
         package enum Command: UnicodeScalar {
             case move = "M"
             case moveRelative = "m"
@@ -89,20 +112,20 @@ package extension DOM {
             case arcRelative = "a"
             case close = "Z"
             case closeAlias = "z"
-            
+
             package var coordinateSpace: Segment.CoordinateSpace {
                 switch self {
                 case .move, .line,
-                        .horizontal, .vertical,
-                        .cubic, .cubicSmooth,
-                        .quadratic, .quadraticSmooth,
-                        .arc, .close, .closeAlias:
+                    .horizontal, .vertical,
+                    .cubic, .cubicSmooth,
+                    .quadratic, .quadraticSmooth,
+                    .arc, .close, .closeAlias:
                     return .absolute
                 case .moveRelative, .lineRelative,
-                        .horizontalRelative, .verticalRelative,
-                        .cubicRelative, .cubicSmoothRelative,
-                        .quadraticRelative, .quadraticSmoothRelative,
-                        .arcRelative:
+                    .horizontalRelative, .verticalRelative,
+                    .cubicRelative, .cubicSmoothRelative,
+                    .quadraticRelative, .quadraticSmoothRelative,
+                    .arcRelative:
                     return .relative
                 }
             }

@@ -86,13 +86,15 @@ struct LayerTreeFontSizeTests {
 
     @Test
     func emLengthsUseTheComputedFontSize() throws {
-        let svg = try parse(#"""
+        let svg = try parse(
+            #"""
             <g font-size="10">
                 <g font-size="2em"><rect width="10em" height="1ex"/><text x="1em" y="2em">A</text></g>
                 <rect font-size="smaller" width="12em" height="1em"/>
                 <rect font-size="large" width="1em" height="1em"/>
             </g>
-            """#)
+            """#
+        )
         let group = try #require(svg.childElements.first as? DOM.Group)
         let nested = try #require(group.childElements.first as? DOM.Group)
         let rect = try #require(nested.childElements.first as? DOM.Rect)
@@ -118,7 +120,9 @@ struct LayerTreeFontSizeTests {
     // MARK: - Helpers
 
     private func parse(_ body: String, root: String = "") throws -> DOM.SVG {
-        try DOM.SVG.parse(xml: #"<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" \#(root)>\#(body)</svg>"#)
+        try DOM.SVG.parse(
+            xml: #"<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" \#(root)>\#(body)</svg>"#
+        )
     }
 
     private func makeLayer(_ body: String, root: String = "") throws -> LayerTree.Layer {

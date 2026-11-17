@@ -37,18 +37,23 @@ import Testing
 struct InvalidElementTests {
 
     private let bad = [
-        #"<path fill="red"/>"#,                  // no d
-        #"<rect height="5"/>"#,                  // no width
-        #"<rect width="5" height="5" x=""/>"#,   // unparseable geometry
+        #"<path fill="red"/>"#,  // no d
+        #"<rect height="5"/>"#,  // no width
+        #"<rect width="5" height="5" x=""/>"#,  // unparseable geometry
         #"<circle r="abc"/>"#,
         #"<polygon points="1,2,3"/>"#,
-        #"<image width="5" height="5"/>"#,       // no href
+        #"<image width="5" height="5"/>"#,  // no href
         #"<line x1="a" y1="0" x2="1" y2="1"/>"#,
     ]
 
-    private func parse(_ body: String, options: SwiftDrawDOM.XMLParser.Options = [.skipInvalidElements]) throws -> DOM.SVG {
-        try DOM.SVG.parse(xml: #"<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10">\#(body)</svg>"#,
-                          options: options)
+    private func parse(
+        _ body: String,
+        options: SwiftDrawDOM.XMLParser.Options = [.skipInvalidElements]
+    ) throws -> DOM.SVG {
+        try DOM.SVG.parse(
+            xml: #"<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10">\#(body)</svg>"#,
+            options: options
+        )
     }
 
     @Test
@@ -61,7 +66,9 @@ struct InvalidElementTests {
 
     @Test
     func invalidElementDropsItsSubtreeOnly() throws {
-        let svg = try parse(#"<g id="g"><path/><rect id="r" width="1" height="1"/></g><rect id="after" width="1" height="1"/>"#)
+        let svg = try parse(
+            #"<g id="g"><path/><rect id="r" width="1" height="1"/></g><rect id="after" width="1" height="1"/>"#
+        )
         #expect(svg.childElements.count == 2)
         let group = try #require(svg.childElements.first as? DOM.Group)
         #expect(group.childElements.compactMap { $0.id } == ["r"])
@@ -69,17 +76,21 @@ struct InvalidElementTests {
 
     @Test
     func invalidElementInsideDefsMaskAndClipKeepsDocument() throws {
-        let svg = try parse(#"""
-        <defs><clipPath id="c"><path/><rect width="1" height="1"/></clipPath></defs>
-        <rect id="ok" width="1" height="1"/>
-        """#)
+        let svg = try parse(
+            #"""
+            <defs><clipPath id="c"><path/><rect width="1" height="1"/></clipPath></defs>
+            <rect id="ok" width="1" height="1"/>
+            """#
+        )
         #expect(svg.childElements.compactMap { $0.id } == ["ok"])
         #expect(svg.defs.clipPaths.first?.childElements.count == 1)
     }
 
     @Test
     func badContainerKeepsValidChildrenOfSiblings() throws {
-        let svg = try parse(#"<g id="a"><rect id="r1" width="1" height="1"/></g><svg width="abc"><rect id="gone" width="1" height="1"/></svg><g id="b"><rect id="r2" width="1" height="1"/></g>"#)
+        let svg = try parse(
+            #"<g id="a"><rect id="r1" width="1" height="1"/></g><svg width="abc"><rect id="gone" width="1" height="1"/></svg><g id="b"><rect id="r2" width="1" height="1"/></g>"#
+        )
         #expect(svg.childElements.compactMap { $0.id } == ["a", "b"])
     }
 
@@ -93,18 +104,22 @@ struct InvalidElementTests {
 
     @Test
     func defsChildWithoutIdIsSkipped() throws {
-        let svg = try parse(#"<defs><path d="M0 0"/><rect id="ok" width="1" height="1"/></defs><rect id="r" width="1" height="1"/>"#)
+        let svg = try parse(
+            #"<defs><path d="M0 0"/><rect id="ok" width="1" height="1"/></defs><rect id="r" width="1" height="1"/>"#
+        )
         #expect(svg.childElements.compactMap { $0.id } == ["r"])
         #expect(Array(svg.defs.elements.keys) == ["ok"])
     }
 
     @Test
     func badChildrenInMaskAndPattern() throws {
-        let svg = try parse(#"""
-        <mask id="m"><path/><rect width="1" height="1"/></mask>
-        <pattern id="p" width="2" height="2"><rect height="1"/><rect width="1" height="1"/></pattern>
-        <rect id="r" width="1" height="1"/>
-        """#)
+        let svg = try parse(
+            #"""
+            <mask id="m"><path/><rect width="1" height="1"/></mask>
+            <pattern id="p" width="2" height="2"><rect height="1"/><rect width="1" height="1"/></pattern>
+            <rect id="r" width="1" height="1"/>
+            """#
+        )
         #expect(svg.childElements.compactMap { $0.id } == ["r"])
         #expect(svg.defs.masks.first?.childElements.count == 1)
         #expect(svg.defs.patterns.first?.childElements.count == 1)
@@ -112,9 +127,11 @@ struct InvalidElementTests {
 
     @Test
     func badRadialGradientUnitsIsDroppedNotTheGradient() throws {
-        let svg = try parse(#"""
-        <radialGradient id="rg" gradientUnits="bogus"><stop offset="0" stop-color="red"/></radialGradient>
-        """#)
+        let svg = try parse(
+            #"""
+            <radialGradient id="rg" gradientUnits="bogus"><stop offset="0" stop-color="red"/></radialGradient>
+            """#
+        )
         #expect(svg.defs.radialGradients.map { $0.id } == ["rg"])
         #expect(svg.defs.radialGradients.first?.gradientUnits == nil)
         #expect(svg.defs.radialGradients.first?.stops.count == 1)
@@ -122,18 +139,20 @@ struct InvalidElementTests {
 
     @Test
     func badDefinitionsAreDroppedNotTheDocument() throws {
-        let svg = try parse(#"""
-        <clipPath><rect width="1" height="1"/></clipPath>
-        <clipPath id="c" clipPathUnits="bogus"><rect width="1" height="1"/></clipPath>
-        <mask><rect width="1" height="1"/></mask>
-        <linearGradient><stop offset="0"/></linearGradient>
-        <linearGradient id="lg" gradientUnits="bogus"/>
-        <radialGradient/>
-        <radialGradient id="rg"><stop offset="0" stop-opacity="abc"/></radialGradient>
-        <filter/>
-        <linearGradient id="good"><stop offset="0" stop-color="red"/></linearGradient>
-        <rect id="r" width="1" height="1"/>
-        """#)
+        let svg = try parse(
+            #"""
+            <clipPath><rect width="1" height="1"/></clipPath>
+            <clipPath id="c" clipPathUnits="bogus"><rect width="1" height="1"/></clipPath>
+            <mask><rect width="1" height="1"/></mask>
+            <linearGradient><stop offset="0"/></linearGradient>
+            <linearGradient id="lg" gradientUnits="bogus"/>
+            <radialGradient/>
+            <radialGradient id="rg"><stop offset="0" stop-opacity="abc"/></radialGradient>
+            <filter/>
+            <linearGradient id="good"><stop offset="0" stop-color="red"/></linearGradient>
+            <rect id="r" width="1" height="1"/>
+            """#
+        )
         #expect(svg.childElements.compactMap { $0.id } == ["r"])
         // since SD8 a bad clipPathUnits drops only that attribute (userSpaceOnUse, as browsers do); the id-less one is skipped
         #expect(svg.defs.clipPaths.map { $0.id } == ["c"])
@@ -158,8 +177,10 @@ struct InvalidElementTests {
 
     @Test
     func rootSvgProblemsStillThrow() {
-        for root in [#"<svg xmlns="http://www.w3.org/2000/svg"></svg>"#,
-                     #"<svg xmlns="http://www.w3.org/2000/svg" width="abc" height="10"></svg>"#] {
+        for root in [
+            #"<svg xmlns="http://www.w3.org/2000/svg"></svg>"#,
+            #"<svg xmlns="http://www.w3.org/2000/svg" width="abc" height="10"></svg>"#,
+        ] {
             #expect(throws: (any Error).self) {
                 try DOM.SVG.parse(xml: root, options: [.skipInvalidElements])
             }
@@ -177,11 +198,11 @@ struct InvalidElementTests {
     @Test
     func strictModeReportsInvalidElementWithLine() throws {
         let xml = """
-        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10">
-          <rect width="1" height="1"/>
-          <path/>
-        </svg>
-        """
+            <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10">
+              <rect width="1" height="1"/>
+              <path/>
+            </svg>
+            """
         do {
             _ = try DOM.SVG.parse(xml: xml, options: [])
             Issue.record("expected a throw")

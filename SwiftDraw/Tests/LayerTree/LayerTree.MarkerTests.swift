@@ -29,7 +29,6 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-
 import Foundation
 import SwiftDrawDOM
 import Testing
@@ -40,9 +39,11 @@ struct LayerTreeMarkerTests {
     typealias Vertex = LayerTree.Builder.MarkerVertex
 
     private func parse(_ body: String) throws -> DOM.SVG {
-        try DOM.SVG.parse(xml: """
-        <svg xmlns="http://www.w3.org/2000/svg" width="200" height="200">\(body)</svg>
-        """)
+        try DOM.SVG.parse(
+            xml: """
+                <svg xmlns="http://www.w3.org/2000/svg" width="200" height="200">\(body)</svg>
+                """
+        )
     }
 
     private func vertices(_ body: String) throws -> [Vertex] {
@@ -54,15 +55,24 @@ struct LayerTreeMarkerTests {
         Vertex(point: LayerTree.Point(x, y), angle: angle)
     }
 
-    private func expectVertices(_ actual: [Vertex], _ expected: [Vertex],
-                                sourceLocation: SourceLocation = #_sourceLocation) {
+    private func expectVertices(
+        _ actual: [Vertex],
+        _ expected: [Vertex],
+        sourceLocation: SourceLocation = #_sourceLocation
+    ) {
         #expect(actual.count == expected.count, sourceLocation: sourceLocation)
         for (a, e) in zip(actual, expected) {
-            #expect(abs(a.point.x - e.point.x) < 0.001 && abs(a.point.y - e.point.y) < 0.001,
-                    "\(a.point) != \(e.point)", sourceLocation: sourceLocation)
+            #expect(
+                abs(a.point.x - e.point.x) < 0.001 && abs(a.point.y - e.point.y) < 0.001,
+                "\(a.point) != \(e.point)",
+                sourceLocation: sourceLocation
+            )
             let delta = (a.angle - e.angle).truncatingRemainder(dividingBy: 360)
-            #expect(abs(delta) < 0.01 || abs(abs(delta) - 360) < 0.01,
-                    "angle \(a.angle) != \(e.angle) at \(e.point)", sourceLocation: sourceLocation)
+            #expect(
+                abs(delta) < 0.01 || abs(abs(delta) - 360) < 0.01,
+                "angle \(a.angle) != \(e.angle) at \(e.point)",
+                sourceLocation: sourceLocation
+            )
         }
     }
 
@@ -94,87 +104,114 @@ struct LayerTreeMarkerTests {
 
     @Test
     func lineVertices() throws {
-        expectVertices(try vertices(#"<line x1="10" y1="10" x2="10" y2="50"/>"#), [
-            vertex(10, 10, 90),
-            vertex(10, 50, 90)
-        ])
+        expectVertices(
+            try vertices(#"<line x1="10" y1="10" x2="10" y2="50"/>"#),
+            [
+                vertex(10, 10, 90),
+                vertex(10, 50, 90),
+            ]
+        )
     }
 
     @Test
     func polylineMidVerticesBisect() throws {
-        expectVertices(try vertices(#"<polyline points="0,0 10,0 10,10 0,10"/>"#), [
-            vertex(0, 0, 0),
-            vertex(10, 0, 45),
-            vertex(10, 10, 135),
-            vertex(0, 10, 180)
-        ])
+        expectVertices(
+            try vertices(#"<polyline points="0,0 10,0 10,10 0,10"/>"#),
+            [
+                vertex(0, 0, 0),
+                vertex(10, 0, 45),
+                vertex(10, 10, 135),
+                vertex(0, 10, 180),
+            ]
+        )
     }
 
     @Test
     func closedSubpathBisectsAtItsStart() throws {
         // SVG 2 §11.6.2: the first and last vertex of a closed subpath bisect the closing and first segments
-        expectVertices(try vertices(#"<polygon points="0,0 10,0 10,10 0,10"/>"#), [
-            vertex(0, 0, -45),
-            vertex(10, 0, 45),
-            vertex(10, 10, 135),
-            vertex(0, 10, 225),
-            vertex(0, 0, -45)
-        ])
-        expectVertices(try vertices(#"<path d="M 0 0 H 10 V 10 H 0 Z"/>"#), [
-            vertex(0, 0, -45),
-            vertex(10, 0, 45),
-            vertex(10, 10, 135),
-            vertex(0, 10, 225),
-            vertex(0, 0, -45)
-        ])
+        expectVertices(
+            try vertices(#"<polygon points="0,0 10,0 10,10 0,10"/>"#),
+            [
+                vertex(0, 0, -45),
+                vertex(10, 0, 45),
+                vertex(10, 10, 135),
+                vertex(0, 10, 225),
+                vertex(0, 0, -45),
+            ]
+        )
+        expectVertices(
+            try vertices(#"<path d="M 0 0 H 10 V 10 H 0 Z"/>"#),
+            [
+                vertex(0, 0, -45),
+                vertex(10, 0, 45),
+                vertex(10, 10, 135),
+                vertex(0, 10, 225),
+                vertex(0, 0, -45),
+            ]
+        )
     }
 
     @Test
     func curvesUseTheirTangents() throws {
-        expectVertices(try vertices(#"<path d="M 0 0 C 0 10 10 10 10 0 Q 20 -10 30 0"/>"#), [
-            vertex(0, 0, 90),
-            vertex(10, 0, -90 + (-45 - -90) / 2),
-            vertex(30, 0, 45)
-        ])
+        expectVertices(
+            try vertices(#"<path d="M 0 0 C 0 10 10 10 10 0 Q 20 -10 30 0"/>"#),
+            [
+                vertex(0, 0, 90),
+                vertex(10, 0, -90 + (-45 - -90) / 2),
+                vertex(30, 0, 45),
+            ]
+        )
     }
 
     @Test
     func curveWithControlPointOnTheEndPoint() throws {
         // the tangent comes from the next distinct control point
-        expectVertices(try vertices(#"<path d="M 0 0 C 0 0 10 10 10 20"/>"#), [
-            vertex(0, 0, 45),
-            vertex(10, 20, 90)
-        ])
+        expectVertices(
+            try vertices(#"<path d="M 0 0 C 0 0 10 10 10 20"/>"#),
+            [
+                vertex(0, 0, 45),
+                vertex(10, 20, 90),
+            ]
+        )
     }
 
     @Test
     func subpathsEachStartAVertex() throws {
-        expectVertices(try vertices(#"<path d="M 0 0 L 10 0 M 20 0 L 20 10"/>"#), [
-            vertex(0, 0, 0),
-            vertex(10, 0, 0),
-            vertex(20, 0, 90),
-            vertex(20, 10, 90)
-        ])
+        expectVertices(
+            try vertices(#"<path d="M 0 0 L 10 0 M 20 0 L 20 10"/>"#),
+            [
+                vertex(0, 0, 0),
+                vertex(10, 0, 0),
+                vertex(20, 0, 90),
+                vertex(20, 10, 90),
+            ]
+        )
     }
 
     @Test
     func arcIsOneSegment() throws {
         // drawn as two curves, but one path command
-        expectVertices(try vertices(#"<path d="M 0 0 A 10 10 0 0 1 20 0 L 30 0"/>"#), [
-            vertex(0, 0, -90),
-            vertex(20, 0, 45),
-            vertex(30, 0, 0)
-        ])
+        expectVertices(
+            try vertices(#"<path d="M 0 0 A 10 10 0 0 1 20 0 L 30 0"/>"#),
+            [
+                vertex(0, 0, -90),
+                vertex(20, 0, 45),
+                vertex(30, 0, 0),
+            ]
+        )
     }
 
     @Test
     func zeroLengthSegmentKeepsThePreviousDirection() throws {
-        expectVertices(try vertices(#"<path d="M 0 0 L 10 0 L 10 0 L 10 10"/>"#), [
-            vertex(0, 0, 0),
-            vertex(10, 0, 0),
-            vertex(10, 0, 45),
-            vertex(10, 10, 90)
-        ])
+        expectVertices(
+            try vertices(#"<path d="M 0 0 L 10 0 L 10 0 L 10 10"/>"#),
+            [
+                vertex(0, 0, 0),
+                vertex(10, 0, 0),
+                vertex(10, 0, 45),
+                vertex(10, 10, 90),
+            ]
+        )
     }
 
     @Test
@@ -196,7 +233,7 @@ struct LayerTreeMarkerTests {
         (0, 90, 45),
         (170, -170, 180),
         (-170, 170, 180),
-        (0, 180, 90)
+        (0, 180, 90),
     ]
 
     @Test(arguments: bisectors)
@@ -216,26 +253,32 @@ struct LayerTreeMarkerTests {
 
     @Test
     func markersAtEachVertex() throws {
-        let layers = try markerLayers("""
-        <marker id="s"/><marker id="m"/><marker id="e"/>
-        <polyline points="0,0 10,0 20,0 30,0" stroke="black"
-                  marker-start="url(#s)" marker-mid="url(#m)" marker-end="url(#e)"/>
-        """)
+        let layers = try markerLayers(
+            """
+            <marker id="s"/><marker id="m"/><marker id="e"/>
+            <polyline points="0,0 10,0 20,0 30,0" stroke="black"
+                      marker-start="url(#s)" marker-mid="url(#m)" marker-end="url(#e)"/>
+            """
+        )
         #expect(layers.count == 4)
-        #expect(layers.map(\.transform.first) == [
-            nil,
-            .translate(tx: 10, ty: 0),
-            .translate(tx: 20, ty: 0),
-            .translate(tx: 30, ty: 0)
-        ])
+        #expect(
+            layers.map(\.transform.first) == [
+                nil,
+                .translate(tx: 10, ty: 0),
+                .translate(tx: 20, ty: 0),
+                .translate(tx: 30, ty: 0),
+            ]
+        )
     }
 
     @Test
     func strokeWidthUnitsScaleTheMarker() throws {
-        let layers = try markerLayers("""
-        <marker id="m" refX="1" refY="2" orient="auto"/>
-        <line x1="10" y1="10" x2="10" y2="50" stroke="black" stroke-width="4" marker-end="url(#m)"/>
-        """)
+        let layers = try markerLayers(
+            """
+            <marker id="m" refX="1" refY="2" orient="auto"/>
+            <line x1="10" y1="10" x2="10" y2="50" stroke="black" stroke-width="4" marker-end="url(#m)"/>
+            """
+        )
         let transform = try #require(layers.first?.transform)
         #expect(layers.count == 1)
         #expect(transform.count == 4)
@@ -245,89 +288,113 @@ struct LayerTreeMarkerTests {
             return
         }
         #expect(abs(radians - .pi / 2) < 0.0001)
-        #expect(transform.dropFirst(2) == [
-            .scale(sx: 4, sy: 4),
-            .translate(tx: -1, ty: -2)
-        ])
+        #expect(
+            transform.dropFirst(2) == [
+                .scale(sx: 4, sy: 4),
+                .translate(tx: -1, ty: -2),
+            ]
+        )
     }
 
     @Test
     func userSpaceOnUseUnitsWithViewBox() throws {
-        let layers = try markerLayers("""
-        <marker id="m" markerUnits="userSpaceOnUse" markerWidth="20" markerHeight="10" viewBox="0 0 10 10"
-                refX="5" refY="5" orient="auto-start-reverse"/>
-        <line x1="10" y1="10" x2="50" y2="10" stroke="black" stroke-width="4" marker-start="url(#m)"/>
-        """)
+        let layers = try markerLayers(
+            """
+            <marker id="m" markerUnits="userSpaceOnUse" markerWidth="20" markerHeight="10" viewBox="0 0 10 10"
+                    refX="5" refY="5" orient="auto-start-reverse"/>
+            <line x1="10" y1="10" x2="50" y2="10" stroke="black" stroke-width="4" marker-start="url(#m)"/>
+            """
+        )
         // the viewBox meets the viewport with a scale of 1, centred
-        #expect(layers.first?.transform == [
-            .translate(tx: 10, ty: 10),
-            .rotate(radians: 180 * .pi / 180),
-            .translate(tx: -5, ty: -5)
-        ])
+        #expect(
+            layers.first?.transform == [
+                .translate(tx: 10, ty: 10),
+                .rotate(radians: 180 * .pi / 180),
+                .translate(tx: -5, ty: -5),
+            ]
+        )
         // clipped to the viewport, which is wider than the viewBox
-        #expect(layers.first.map(clip(of:)) == [
-            LayerTree.ClipShape(shape: .rect(within: LayerTree.Rect(x: -5, y: 0, width: 20, height: 10), radii: .zero),
-                                transform: .identity)
-        ])
+        #expect(
+            layers.first.map(clip(of:)) == [
+                LayerTree.ClipShape(
+                    shape: .rect(within: LayerTree.Rect(x: -5, y: 0, width: 20, height: 10), radii: .zero),
+                    transform: .identity
+                )
+            ]
+        )
     }
 
     @Test
     func overflowVisibleDoesNotClip() throws {
-        let layers = try markerLayers("""
-        <style>#b { overflow: visible }</style>
-        <marker id="a"/><marker id="b"/><marker id="c" overflow="auto"/>
-        <polyline points="5,5 10,5 20,5" stroke="black" marker-start="url(#a)" marker-mid="url(#b)" marker-end="url(#c)"/>
-        """)
+        let layers = try markerLayers(
+            """
+            <style>#b { overflow: visible }</style>
+            <marker id="a"/><marker id="b"/><marker id="c" overflow="auto"/>
+            <polyline points="5,5 10,5 20,5" stroke="black" marker-start="url(#a)" marker-mid="url(#b)" marker-end="url(#c)"/>
+            """
+        )
         #expect(layers.map { clip(of: $0).isEmpty } == [false, true, true])
     }
 
     @Test
     func emptyViewportOrStrokeDrawsNoMarker() throws {
-        let emptyViewport = try markerLayers("""
-        <marker id="m" markerWidth="0"/>
-        <line x2="10" stroke="black" marker-end="url(#m)"/>
-        """)
-        let emptyStroke = try markerLayers("""
-        <marker id="m"/>
-        <line x2="10" stroke="black" stroke-width="0" marker-end="url(#m)"/>
-        """)
+        let emptyViewport = try markerLayers(
+            """
+            <marker id="m" markerWidth="0"/>
+            <line x2="10" stroke="black" marker-end="url(#m)"/>
+            """
+        )
+        let emptyStroke = try markerLayers(
+            """
+            <marker id="m"/>
+            <line x2="10" stroke="black" stroke-width="0" marker-end="url(#m)"/>
+            """
+        )
         #expect(emptyViewport.isEmpty)
         #expect(emptyStroke.isEmpty)
     }
 
     @Test
     func markerPropertiesAreInherited() throws {
-        let layers = try markerLayers("""
-        <marker id="m"/>
-        <g marker-end="url(#m)" stroke="black">
-          <g><line x2="10"/></g>
-        </g>
-        """)
+        let layers = try markerLayers(
+            """
+            <marker id="m"/>
+            <g marker-end="url(#m)" stroke="black">
+              <g><line x2="10"/></g>
+            </g>
+            """
+        )
         #expect(layers.count == 1)
 
-        let none = try markerLayers("""
-        <marker id="m"/>
-        <g marker-end="url(#m)" stroke="black"><line x2="10" marker-end="none"/></g>
-        """)
+        let none = try markerLayers(
+            """
+            <marker id="m"/>
+            <g marker-end="url(#m)" stroke="black"><line x2="10" marker-end="none"/></g>
+            """
+        )
         #expect(none.isEmpty)
     }
 
     @Test
     func noMarkersOnOtherShapes() throws {
-        let layers = try markerLayers("""
-        <marker id="m"><rect width="3" height="3"/></marker>
-        <rect width="10" height="10" marker-start="url(#m)"/>
-        <circle r="10" marker-start="url(#m)"/>
-        """)
+        let layers = try markerLayers(
+            """
+            <marker id="m"><rect width="3" height="3"/></marker>
+            <rect width="10" height="10" marker-start="url(#m)"/>
+            <circle r="10" marker-start="url(#m)"/>
+            """
+        )
         #expect(layers.isEmpty)
     }
 
     @Test
     func contentsInheritFromTheMarkerNotTheShape() throws {
-        let layers = try markerLayers("""
-        <marker id="m" fill="red"><rect width="3" height="3"/></marker>
-        <line x2="10" stroke="black" fill="blue" marker-end="url(#m)"/>
-        """)
+        let layers = try markerLayers(
+            """
+            <marker id="m" fill="red"><rect width="3" height="3"/></marker>
+            <line x2="10" stroke="black" fill="blue" marker-end="url(#m)"/>
+            """
+        )
         let layer = try #require(layers.first)
         let fill = try #require(firstFill(in: layer))
         #expect(fill.fill == .color(.rgba(r: 1, g: 0, b: 0, a: 1, space: .srgb)))
@@ -347,10 +414,12 @@ struct LayerTreeMarkerTests {
     @Test
     func markerReferencingItselfIsDropped() throws {
         // must terminate: the marker's own line would place the marker again
-        let layers = try markerLayers("""
-        <marker id="m" marker-end="url(#m)"><line x2="3" stroke="black"/></marker>
-        <line x2="10" stroke="black" marker-end="url(#m)"/>
-        """)
+        let layers = try markerLayers(
+            """
+            <marker id="m" marker-end="url(#m)"><line x2="3" stroke="black"/></marker>
+            <line x2="10" stroke="black" marker-end="url(#m)"/>
+            """
+        )
         let layer = try #require(layers.first)
         #expect(layers.count == 1)
         #expect(markerLayers(in: layer).isEmpty)
@@ -358,11 +427,13 @@ struct LayerTreeMarkerTests {
 
     @Test
     func markersReferencingEachOtherTerminate() throws {
-        let layers = try markerLayers("""
-        <marker id="a"><line x2="3" stroke="black" marker-end="url(#b)"/></marker>
-        <marker id="b"><line x2="3" stroke="black" marker-end="url(#a)"/></marker>
-        <line x2="10" stroke="black" marker-end="url(#a)"/>
-        """)
+        let layers = try markerLayers(
+            """
+            <marker id="a"><line x2="3" stroke="black" marker-end="url(#b)"/></marker>
+            <marker id="b"><line x2="3" stroke="black" marker-end="url(#a)"/></marker>
+            <line x2="10" stroke="black" marker-end="url(#a)"/>
+            """
+        )
         #expect(layers.count == 1)
     }
 }

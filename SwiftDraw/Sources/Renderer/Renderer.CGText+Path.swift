@@ -22,7 +22,8 @@ extension CGTextRenderer {
         guard
             path.count == 1,
             case let .rect(rect, radii) = path[0],
-            radii == .zero else {
+            radii == .zero
+        else {
             return nil
         }
 
@@ -32,7 +33,8 @@ extension CGTextRenderer {
     func getSimpleEllipse(from path: [LayerTree.Shape]) -> String? {
         guard
             path.count == 1,
-            case let .ellipse(rect) = path[0] else {
+            case let .ellipse(rect) = path[0]
+        else {
             return nil
         }
 
@@ -42,7 +44,8 @@ extension CGTextRenderer {
     func getSimpleLine(from path: [LayerTree.Shape]) -> [LayerTree.Point]? {
         guard
             path.count == 1,
-            case let .line(points) = path[0] else {
+            case let .line(points) = path[0]
+        else {
             return nil
         }
 
@@ -151,11 +154,13 @@ extension CGTextRenderer {
             case .line(let p):
                 lines.append("path1.addLine(to: \(renderPoint(from: p)))")
             case .cubic(let p, let cp1, let cp2):
-                lines.append("""
-                path1.addCurve(to: \(renderPoint(from: p)),
-                               control1: \(renderPoint(from: cp1)),
-                               control2: \(renderPoint(from: cp2)))
-                """)
+                lines.append(
+                    """
+                    path1.addCurve(to: \(renderPoint(from: p)),
+                                   control1: \(renderPoint(from: cp1)),
+                                   control2: \(renderPoint(from: cp2)))
+                    """
+                )
             case .close:
                 lines.append("path1.closeSubpath()")
             }

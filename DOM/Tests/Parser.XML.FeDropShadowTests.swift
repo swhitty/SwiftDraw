@@ -41,20 +41,45 @@ struct ParserXMLFeDropShadowTests {
     @Test
     func defaults() throws {
         let filter = try parseFilter(#"<filter id="f"><feDropShadow /></filter>"#)
-        #expect(filter.effects == [.dropShadow(DropShadow(dx: 2, dy: 2, stdDeviation: 2, stdDeviationY: nil,
-                                                          color: .keyword(.black), opacity: 1))])
+        #expect(
+            filter.effects == [
+                .dropShadow(
+                    DropShadow(
+                        dx: 2,
+                        dy: 2,
+                        stdDeviation: 2,
+                        stdDeviationY: nil,
+                        color: .keyword(.black),
+                        opacity: 1
+                    )
+                )
+            ]
+        )
         #expect(filter.primitives[0].inputs == [nil])
     }
 
     @Test
     func attributes() throws {
-        let filter = try parseFilter(#"""
-        <filter id="f">
-            <feDropShadow dx="-3" dy="4.5" stdDeviation="1.5" flood-color="red" flood-opacity="0.25" />
-        </filter>
-        """#)
-        #expect(filter.effects == [.dropShadow(DropShadow(dx: -3, dy: 4.5, stdDeviation: 1.5,
-                                                          color: .keyword(.red), opacity: 0.25))])
+        let filter = try parseFilter(
+            #"""
+            <filter id="f">
+                <feDropShadow dx="-3" dy="4.5" stdDeviation="1.5" flood-color="red" flood-opacity="0.25" />
+            </filter>
+            """#
+        )
+        #expect(
+            filter.effects == [
+                .dropShadow(
+                    DropShadow(
+                        dx: -3,
+                        dy: 4.5,
+                        stdDeviation: 1.5,
+                        color: .keyword(.red),
+                        opacity: 0.25
+                    )
+                )
+            ]
+        )
     }
 
     @Test(arguments: [
@@ -64,7 +89,7 @@ struct ParserXMLFeDropShadowTests {
         // unreadable: the default 2
         ("abc", DropShadow()),
         ("1 2 3", DropShadow()),
-        ("", DropShadow())
+        ("", DropShadow()),
     ])
     func stdDeviation(value: String, expected: DropShadow) throws {
         let filter = try parseFilter(#"<filter id="f"><feDropShadow stdDeviation="\#(value)" /></filter>"#)
@@ -79,41 +104,51 @@ struct ParserXMLFeDropShadowTests {
 
     @Test
     func floodFromStyle() throws {
-        let filter = try parseFilter(#"""
-        <filter id="f">
-            <feDropShadow style="flood-color: rgb(0, 0, 255); flood-opacity: 40%" />
-            <feDropShadow flood-color="none" flood-opacity="2" />
-        </filter>
-        """#)
-        #expect(filter.effects == [
-            .dropShadow(DropShadow(color: .rgbi(0, 0, 255, 1), opacity: 0.4)),
-            .dropShadow(DropShadow(color: .keyword(.black), opacity: 1))
-        ])
+        let filter = try parseFilter(
+            #"""
+            <filter id="f">
+                <feDropShadow style="flood-color: rgb(0, 0, 255); flood-opacity: 40%" />
+                <feDropShadow flood-color="none" flood-opacity="2" />
+            </filter>
+            """#
+        )
+        #expect(
+            filter.effects == [
+                .dropShadow(DropShadow(color: .rgbi(0, 0, 255, 1), opacity: 0.4)),
+                .dropShadow(DropShadow(color: .keyword(.black), opacity: 1)),
+            ]
+        )
     }
 
     @Test
     func floodCurrentColor() throws {
-        let filter = try parseFilter(#"""
-        <filter id="f" color="blue">
-            <feDropShadow flood-color="currentColor" />
-            <feDropShadow flood-color="currentColor" color="lime" />
-        </filter>
-        """#)
-        #expect(filter.effects == [
-            .dropShadow(DropShadow(color: .keyword(.blue))),
-            .dropShadow(DropShadow(color: .keyword(.lime)))
-        ])
+        let filter = try parseFilter(
+            #"""
+            <filter id="f" color="blue">
+                <feDropShadow flood-color="currentColor" />
+                <feDropShadow flood-color="currentColor" color="lime" />
+            </filter>
+            """#
+        )
+        #expect(
+            filter.effects == [
+                .dropShadow(DropShadow(color: .keyword(.blue))),
+                .dropShadow(DropShadow(color: .keyword(.lime))),
+            ]
+        )
     }
 
     @Test
     func wiringSubregionAndColorInterpolation() throws {
-        let filter = try parseFilter(#"""
-        <filter id="f" primitiveUnits="objectBoundingBox" color-interpolation-filters="sRGB">
-            <feGaussianBlur result="blur" />
-            <feDropShadow in="blur" result="shadow" x="10%" width="0.5" />
-            <feDropShadow in="SourceAlpha" color-interpolation-filters="linearRGB" />
-        </filter>
-        """#)
+        let filter = try parseFilter(
+            #"""
+            <filter id="f" primitiveUnits="objectBoundingBox" color-interpolation-filters="sRGB">
+                <feGaussianBlur result="blur" />
+                <feDropShadow in="blur" result="shadow" x="10%" width="0.5" />
+                <feDropShadow in="SourceAlpha" color-interpolation-filters="linearRGB" />
+            </filter>
+            """#
+        )
         let shadow = filter.primitives[1]
         #expect(shadow.inputs == [.result("blur")])
         #expect(shadow.result == "shadow")
@@ -127,12 +162,14 @@ struct ParserXMLFeDropShadowTests {
 
     @Test
     func parsedFromDocument() throws {
-        let svg = try DOM.SVG.parse(xml: #"""
-        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
-            <filter id="f"><feDropShadow dx="1" /></filter>
-            <rect width="10" height="10" filter="url(#f)" />
-        </svg>
-        """#)
+        let svg = try DOM.SVG.parse(
+            xml: #"""
+                <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+                    <filter id="f"><feDropShadow dx="1" /></filter>
+                    <rect width="10" height="10" filter="url(#f)" />
+                </svg>
+                """#
+        )
         #expect(svg.defs.filters.first?.effects == [.dropShadow(DropShadow(dx: 1))])
     }
 

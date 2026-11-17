@@ -108,7 +108,8 @@ extension CommandLine {
         guard
             let formatString = modifiers[.format],
             let formatString = formatString,
-            let format = Format(rawValue: formatString) else {
+            let format = Format(rawValue: formatString)
+        else {
             throw Error.invalid
         }
 
@@ -152,7 +153,8 @@ extension CommandLine {
 
     static func parseStrokeScale(from value: String??) throws -> SFSymbolRenderer.StrokeWidthScale? {
         guard let value = value,
-              let value = value else {
+            let value = value
+        else {
             return nil
         }
         guard let scale = SFSymbolRenderer.StrokeWidthScale(rawValue: value) else {
@@ -171,7 +173,8 @@ extension CommandLine {
 
     static func parseFileURL(file: String??, within directory: URL) throws -> URL? {
         guard let file = file,
-              let file = file else {
+            let file = file
+        else {
             return nil
         }
         return try parseFileURL(file: file, within: directory)
@@ -179,7 +182,8 @@ extension CommandLine {
 
     static func parseScale(from value: String??) throws -> Scale {
         guard let value = value,
-              let value = value else {
+            let value = value
+        else {
             return .default
         }
 
@@ -191,7 +195,8 @@ extension CommandLine {
 
     static func parsePrecision(from value: String??) throws -> Int? {
         guard let value = value,
-              let value = value else {
+            let value = value
+        else {
             return nil
         }
 
@@ -203,8 +208,9 @@ extension CommandLine {
 
     static func parseSize(from value: String??, format: Format) throws -> Size {
         guard format != .sfsymbol,
-              let value = value,
-              let value = value else {
+            let value = value,
+            let value = value
+        else {
             return .default
         }
 
@@ -213,7 +219,8 @@ extension CommandLine {
             let width = scanner.scanInt32(),
             let _ = scanner.scanString("x"),
             let height = scanner.scanInt32(),
-            width > 0, height > 0 else {
+            width > 0, height > 0
+        else {
             throw Error.invalid
         }
 
@@ -222,8 +229,9 @@ extension CommandLine {
 
     static func parseSymbolSize(from value: String??, format: Format) throws -> SFSymbolRenderer.SizeCategory? {
         guard format == .sfsymbol,
-              let value = value,
-              let value = value else {
+            let value = value,
+            let value = value
+        else {
             return nil
         }
 
@@ -242,7 +250,8 @@ extension CommandLine {
 
     static func parseAPI(from value: String??) throws -> API? {
         guard let value = value,
-              let value = value else {
+            let value = value
+        else {
             return nil
         }
 
@@ -254,7 +263,8 @@ extension CommandLine {
 
     static func parseInsets(from value: String??) throws -> Insets? {
         guard let value = value,
-              let value = value else {
+            let value = value
+        else {
             return nil
         }
 
@@ -269,7 +279,7 @@ extension CommandLine {
         _ = try scanner.scanString(",")
         let bottom = try scanner.scanInset()
         _ = try scanner.scanString(",")
-        let right = try  scanner.scanInset()
+        let right = try scanner.scanInset()
         return Insets(
             top: top,
             left: left,

@@ -29,7 +29,6 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-
 import Foundation
 import Testing
 @testable import SwiftDrawDOM
@@ -37,11 +36,13 @@ import Testing
 struct ParserXMLTextPathTests {
 
     private func parseText(_ body: String) throws -> DOM.Text? {
-        let svg = try DOM.SVG.parse(xml: """
-        <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="100" height="100">
-          \(body)
-        </svg>
-        """)
+        let svg = try DOM.SVG.parse(
+            xml: """
+                <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="100" height="100">
+                  \(body)
+                </svg>
+                """
+        )
         return svg.childElements.compactMap { $0 as? DOM.Text }.first
     }
 
@@ -51,7 +52,7 @@ struct ParserXMLTextPathTests {
 
     @Test(arguments: [
         #"href='#p'"#,
-        #"xlink:href='#p'"#
+        #"xlink:href='#p'"#,
     ])
     func hrefParses(attributes: String) throws {
         let textPath = try parseTextPath(attributes)
@@ -74,7 +75,7 @@ struct ParserXMLTextPathTests {
         ("-4", .length(-4)),
         ("1in", .length(96)),
         ("50%", .percentage(50)),
-        ("12.5%", .percentage(12.5))
+        ("12.5%", .percentage(12.5)),
     ])
     func startOffsetParses(value: String, offset: DOM.TextPath.Offset) throws {
         let textPath = try parseTextPath(#"href='#p' startOffset="\#(value)""#)
@@ -89,7 +90,7 @@ struct ParserXMLTextPathTests {
 
     @Test(arguments: [
         ("left", DOM.TextPath.Side.left),
-        ("right", .right)
+        ("right", .right),
     ])
     func sideParses(value: String, side: DOM.TextPath.Side) throws {
         #expect(try parseTextPath(#"href='#p' side="\#(value)""#).side == side)
@@ -118,14 +119,18 @@ struct ParserXMLTextPathTests {
 
     @Test
     func tspansKeepTheirOrderAndAttributes() throws {
-        let textPath = try parseTextPath(#"href='#p'"#, #"one <tspan fill="red">two <tspan font-weight="bold">three</tspan></tspan> four"#)
+        let textPath = try parseTextPath(
+            #"href='#p'"#,
+            #"one <tspan fill="red">two <tspan font-weight="bold">three</tspan></tspan> four"#
+        )
 
         #expect(DOM.TextRun.plainText(of: textPath.runs) == "one two three four")
         #expect(textPath.runs.count == 3)
         guard textPath.runs.count == 3,
-              case .text(let first) = textPath.runs[0],
-              case .span(let span) = textPath.runs[1],
-              case .text(let last) = textPath.runs[2] else {
+            case .text(let first) = textPath.runs[0],
+            case .span(let span) = textPath.runs[1],
+            case .text(let last) = textPath.runs[2]
+        else {
             Issue.record("unexpected runs")
             return
         }
@@ -146,7 +151,7 @@ struct ParserXMLTextPathTests {
         ("a\t\tb", "a b"),
         ("a <tspan> b </tspan> c", "a b c"),
         ("a<tspan> </tspan>b", "a b"),
-        ("a <tspan>b </tspan>", "a b")
+        ("a <tspan>b </tspan>", "a b"),
     ])
     func whitespaceCollapses(content: String, expected: String) throws {
         let textPath = try parseTextPath(#"href='#p'"#, content)

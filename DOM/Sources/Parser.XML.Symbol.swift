@@ -57,13 +57,18 @@ extension XMLParser {
         // the <use> gives it. Lengths are resolved once, so that is the size every <use> of it agrees on.
         let id = e.attributes["id"]
         let enclosing = lengthContext.viewports.last
-        let viewport = symbol.viewBox.map { Viewport(width: $0.width, height: $0.height) }
+        let viewport =
+            symbol.viewBox.map { Viewport(width: $0.width, height: $0.height) }
             ?? id.flatMap { lengthContext.symbolViewports[$0] }.map {
-                Viewport(width: $0.width ?? symbol.width ?? enclosing?.width ?? 0,
-                         height: $0.height ?? symbol.height ?? enclosing?.height ?? 0)
+                Viewport(
+                    width: $0.width ?? symbol.width ?? enclosing?.width ?? 0,
+                    height: $0.height ?? symbol.height ?? enclosing?.height ?? 0
+                )
             }
-            ?? Viewport(width: symbol.width ?? enclosing?.width ?? 0,
-                        height: symbol.height ?? enclosing?.height ?? 0)
+            ?? Viewport(
+                width: symbol.width ?? enclosing?.width ?? 0,
+                height: symbol.height ?? enclosing?.height ?? 0
+            )
         lengthContext.viewports.append(viewport)
         defer { lengthContext.viewports.removeLast() }
         symbol.childElements = try parseGraphicsElements(e.children)
@@ -80,8 +85,9 @@ extension XMLParser {
         while let e = stack.popLast() {
             stack.append(contentsOf: e.children)
             guard e.name == "use",
-                  let href = e.attributes["href"] ?? e.attributes["xlink:href"],
-                  href.hasPrefix("#") else { continue }
+                let href = e.attributes["href"] ?? e.attributes["xlink:href"],
+                href.hasPrefix("#")
+            else { continue }
             let id = String(href.dropFirst())
             func absolute(_ key: String, _ direction: LengthDirection) -> DOM.Coordinate?? {
                 guard let raw = e.attributes[key] else { return .some(nil) }
@@ -89,7 +95,8 @@ extension XMLParser {
                 return .some(value)
             }
             guard let width = absolute("width", .horizontal),
-                  let height = absolute("height", .vertical) else {
+                let height = absolute("height", .vertical)
+            else {
                 ambiguous.insert(id)
                 continue
             }

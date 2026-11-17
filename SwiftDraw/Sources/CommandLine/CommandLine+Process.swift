@@ -44,11 +44,13 @@ public extension CommandLine {
         switch config.format {
         case .swift:
             let api = makeTextAPI(for: config.api)
-            let code = try CGTextRenderer.render(fileURL: config.input,
-                                                 size: config.size.renderSize,
-                                                 options: config.options,
-                                                 api: api,
-                                                 precision: config.precision ?? 2)
+            let code = try CGTextRenderer.render(
+                fileURL: config.input,
+                size: config.size.renderSize,
+                options: config.options,
+                api: api,
+                precision: config.precision ?? 2
+            )
             return code.data(using: .utf8)!
         case .sfsymbol:
             let renderer = SFSymbolRenderer(
@@ -92,7 +94,7 @@ public extension CommandLine {
     }
 
     static func makeTextAPI(for api: CommandLine.API?) -> CGTextRenderer.API {
-        guard let api = api else { return .swiftUI}
+        guard let api = api else { return .swiftUI }
         switch api {
         case .appkit: return .appKit
         case .uikit: return .uiKit
@@ -104,17 +106,20 @@ public extension CommandLine {
         #if canImport(CoreGraphics)
         switch config.format {
         case .jpeg:
-            return try image
+            return
+                try image
                 .inset(makeImageInsets(for: config.insets))
                 .size(config.size.cgValue)
                 .jpegData(scale: config.scale.cgValue)
         case .pdf:
-            return try image
+            return
+                try image
                 .inset(makeImageInsets(for: config.insets))
                 .size(config.size.cgValue)
                 .pdfData()
         case .png:
-            return try image
+            return
+                try image
                 .inset(makeImageInsets(for: config.insets))
                 .size(config.size.cgValue)
                 .pngData(scale: config.scale.cgValue)
@@ -130,9 +135,10 @@ public extension CommandLine {
         guard !insets.isEmpty else { return .zero }
 
         guard insets.top != nil,
-              insets.left != nil,
-              insets.right != nil,
-              insets.bottom != nil else {
+            insets.left != nil,
+            insets.right != nil,
+            insets.bottom != nil
+        else {
             throw Error.unsupported
         }
         return SVG.Insets(

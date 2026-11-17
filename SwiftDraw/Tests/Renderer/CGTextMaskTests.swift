@@ -38,15 +38,17 @@ struct CGTextMaskTests {
 
     @Test
     func maskIsDrawnIntoGreyscaleBitmapThenClipped() throws {
-        let lines = try makeLines(#"""
-        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
-            <mask id="m">
-                <rect width="100" height="100" fill="white" />
-                <rect width="50" height="100" fill="black" opacity="0.5" />
-            </mask>
-            <rect width="100" height="100" fill="red" mask="url(#m)" />
-        </svg>
-        """#)
+        let lines = try makeLines(
+            #"""
+            <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+                <mask id="m">
+                    <rect width="100" height="100" fill="white" />
+                    <rect width="50" height="100" fill="black" opacity="0.5" />
+                </mask>
+                <rect width="100" height="100" fill="red" mask="url(#m)" />
+            </svg>
+            """#
+        )
 
         let create = try #require(lines.firstIndex { $0.hasPrefix("let maskContext1 = CGContext(") })
         let scope = try #require(lines.firstIndex(of: "let ctx = maskContext1"))
@@ -62,12 +64,14 @@ struct CGTextMaskTests {
     @Test
     func identifiersDeclaredInMaskAreDeclaredAgainOutside() throws {
         // the same colour is used inside the mask's scope and after it
-        let lines = try makeLines(#"""
-        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
-            <mask id="m"><rect width="100" height="100" fill="white" /></mask>
-            <rect width="100" height="100" fill="white" mask="url(#m)" />
-        </svg>
-        """#)
+        let lines = try makeLines(
+            #"""
+            <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+                <mask id="m"><rect width="100" height="100" fill="white" /></mask>
+                <rect width="100" height="100" fill="white" mask="url(#m)" />
+            </svg>
+            """#
+        )
 
         let declarations = lines.filter { $0.hasPrefix("let color1 = ") }
         #expect(declarations.count == 2)

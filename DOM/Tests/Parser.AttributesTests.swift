@@ -38,11 +38,13 @@ struct AttributeParserTests {
     @Test
     func parserOrder() throws {
         let parser = XMLParser.ValueParser()
-        
-        let att = XMLParser.Attributes(parser: parser,
-                                       element: ["x": "10", "y": "20.0", "fill": "red"],
-                                       style:  ["x": "d", "fill": "green"])
-        
+
+        let att = XMLParser.Attributes(
+            parser: parser,
+            element: ["x": "10", "y": "20.0", "fill": "red"],
+            style: ["x": "d", "fill": "green"]
+        )
+
         //parse from style
         #expect(try att.parseColor("fill") == .keyword(.green))
         #expect(throws: (any Error).self) {
@@ -60,12 +62,13 @@ struct AttributeParserTests {
         #expect(try att.parseFloat("y") == 20)
 
         //SkipInvalidAttributes
-        let another = XMLParser.Attributes(parser: parser,
-                                           options: [.skipInvalidAttributes],
-                                           element: att.element,
-                                           style:  att.style)
-        
-        
+        let another = XMLParser.Attributes(
+            parser: parser,
+            options: [.skipInvalidAttributes],
+            element: att.element,
+            style: att.style
+        )
+
         #expect(try another.parseColor("fill") == .keyword(.green))
         #expect(try another.parseFloat("x") == 10)
         #expect(try another.parseFloat("y") == 20)
@@ -83,7 +86,7 @@ struct AttributeParserTests {
     @Test
     func dictionary() throws {
         let att = ["x": "20", "y": "30", "fill": "#a0a0a0", "display": "none", "some": "random"]
-        
+
         #expect(try att.parseCoordinate("x") == 20.0)
         #expect(try att.parseCoordinate("y") == 30.0)
         #expect(try att.parseColor("fill") == .hex(160, 160, 160))
@@ -127,7 +130,7 @@ struct AttributeParserTests {
             try att.parseFloats("some")
         }
     }
-    
+
     @Test
     func parsePoints() throws {
         let att = ["x": "20 30 40 50", "some": "random"]
@@ -136,7 +139,7 @@ struct AttributeParserTests {
         // SVG 2 §10.6: points before the first error are kept
         #expect(try att.parsePoints("some") == [])
     }
-    
+
     @Test
     func parseLength() throws {
         let att = ["x": "20", "y": "aa"]
@@ -149,7 +152,7 @@ struct AttributeParserTests {
             try att.parseLength("y") as DOM.Length?
         }
     }
-    
+
     @Test
     func parseBool() throws {
         let att = ["x": "true", "y": "5"]
@@ -162,7 +165,7 @@ struct AttributeParserTests {
             try att.parseBool("y") as Bool?
         }
     }
-    
+
     @Test
     func parseURL() throws {
         let att = ["clip": "http://www.test.com", "mask": "20 twenty"]
@@ -172,7 +175,7 @@ struct AttributeParserTests {
             try att.parseUrl(" ")
         }
     }
-    
+
     @Test
     func parseURLSelector() throws {
         let att = ["clip": "url('#shape')", "mask": "aa", "font": "url(data:;base64,f00d)"]
@@ -184,4 +187,3 @@ struct AttributeParserTests {
         }
     }
 }
-

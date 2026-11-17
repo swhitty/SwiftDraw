@@ -37,17 +37,23 @@ import Testing
 struct ParserXMLStyleSheetCascadeMainTests {
 
     private func parse(_ body: String) throws -> DOM.SVG {
-        try DOM.SVG.parse(data: Data("""
-        <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">\(body)</svg>
-        """.utf8))
+        try DOM.SVG.parse(
+            data: Data(
+                """
+                <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">\(body)</svg>
+                """.utf8
+            )
+        )
     }
 
     @Test
     func emResolvesAgainstComplexSelectorFontSize() throws {
-        let svg = try parse("""
-        <style>g > rect { font-size: 20px }</style>
-        <g><rect width="2em" height="1em"/></g>
-        """)
+        let svg = try parse(
+            """
+            <style>g > rect { font-size: 20px }</style>
+            <g><rect width="2em" height="1em"/></g>
+            """
+        )
         let rect = try #require((svg.childElements.first as? DOM.Group)?.childElements.first as? DOM.Rect)
         #expect(rect.width == 40)
         #expect(rect.height == 20)
@@ -55,30 +61,36 @@ struct ParserXMLStyleSheetCascadeMainTests {
 
     @Test
     func emFollowsImportantRuleOverStyleAttribute() throws {
-        let svg = try parse("""
-        <style>.big { font-size: 30px !important }</style>
-        <rect class="big" style="font-size: 10px" width="1em" height="1em"/>
-        """)
+        let svg = try parse(
+            """
+            <style>.big { font-size: 30px !important }</style>
+            <rect class="big" style="font-size: 10px" width="1em" height="1em"/>
+            """
+        )
         let rect = try #require(svg.childElements.first as? DOM.Rect)
         #expect(rect.width == 30)
     }
 
     @Test
     func rootFontSizeComesFromRootSelector() throws {
-        let svg = try parse("""
-        <style>:root { font-size: 8px }</style>
-        <rect width="2em" height="1em"/>
-        """)
+        let svg = try parse(
+            """
+            <style>:root { font-size: 8px }</style>
+            <rect width="2em" height="1em"/>
+            """
+        )
         let rect = try #require(svg.childElements.first as? DOM.Rect)
         #expect(rect.width == 16)
     }
 
     @Test
     func clipPathOwnCascadeUsesComplexSelectors() throws {
-        let svg = try parse("""
-        <style>defs > clipPath { clip-rule: evenodd } #c { transform: scale(2) !important }</style>
-        <defs><clipPath id="c" style="transform: scale(3)"><rect width="5" height="5"/></clipPath></defs>
-        """)
+        let svg = try parse(
+            """
+            <style>defs > clipPath { clip-rule: evenodd } #c { transform: scale(2) !important }</style>
+            <defs><clipPath id="c" style="transform: scale(3)"><rect width="5" height="5"/></clipPath></defs>
+            """
+        )
         let clip = try #require(svg.defs.clipPaths.first)
         let attributes = DOM.presentationAttributes(for: clip, styles: svg.styles)
         #expect(attributes.clipRule == .evenodd)
@@ -87,10 +99,12 @@ struct ParserXMLStyleSheetCascadeMainTests {
 
     @Test
     func clipPathDisplayFromAttributeSelector() throws {
-        let svg = try parse("""
-        <style>clipPath[data-hidden] rect { display: none }</style>
-        <defs><clipPath id="c" data-hidden="1"><rect width="5" height="5"/></clipPath></defs>
-        """)
+        let svg = try parse(
+            """
+            <style>clipPath[data-hidden] rect { display: none }</style>
+            <defs><clipPath id="c" data-hidden="1"><rect width="5" height="5"/></clipPath></defs>
+            """
+        )
         let clip = try #require(svg.defs.clipPaths.first)
         let rect = try #require(clip.childElements.first)
         #expect(DOM.presentationAttributes(for: rect, styles: svg.styles).display == DOM.DisplayMode.none)
@@ -98,10 +112,12 @@ struct ParserXMLStyleSheetCascadeMainTests {
 
     @Test
     func fontWeightAndStyleCascadeFromComplexSelectors() throws {
-        let svg = try parse("""
-        <style>g text:first-child { font-weight: bold; font-style: italic }</style>
-        <g><text font-weight="300">a</text><text font-weight="300">b</text></g>
-        """)
+        let svg = try parse(
+            """
+            <style>g text:first-child { font-weight: bold; font-style: italic }</style>
+            <g><text font-weight="300">a</text><text font-weight="300">b</text></g>
+            """
+        )
         let group = try #require(svg.childElements.first as? DOM.Group)
         let first = DOM.presentationAttributes(for: group.childElements[0], styles: svg.styles)
         let second = DOM.presentationAttributes(for: group.childElements[1], styles: svg.styles)
@@ -112,12 +128,14 @@ struct ParserXMLStyleSheetCascadeMainTests {
 
     @Test
     func invalidFontFaceKeepsComplexRules() throws {
-        let sheet = try XMLParser(options: .skipInvalidElements).parseStyleSheetElement("""
-        g > .a { fill: red; }
-        @font-face { font-family: 'NoSource'; }
-        @font-face { font-family: 'Valid'; src: local('Helvetica'); }
-        rect:first-child { fill: blue; }
-        """)
+        let sheet = try XMLParser(options: .skipInvalidElements).parseStyleSheetElement(
+            """
+            g > .a { fill: red; }
+            @font-face { font-family: 'NoSource'; }
+            @font-face { font-family: 'Valid'; src: local('Helvetica'); }
+            rect:first-child { fill: blue; }
+            """
+        )
         #expect(sheet.fonts.map(\.family) == ["Valid"])
         #expect(sheet.rules.count == 2)
     }

@@ -55,7 +55,7 @@ package extension DOM {
             self.id = id
             self.primitives = []
         }
-        
+
         package enum Effect: Hashable {
             // stdDeviationY is nil when stdDeviation has a single value
             case gaussianBlur(stdDeviation: DOM.Float, stdDeviationY: DOM.Float? = nil)
@@ -119,10 +119,12 @@ package extension DOM {
             // the computed color-interpolation-filters, inherited from the <filter> and its ancestors
             package var colorInterpolation: ColorInterpolation
 
-            package init(effect: Effect,
-                         inputs: [Input?] = [],
-                         result: String? = nil,
-                         colorInterpolation: ColorInterpolation = .linearRGB) {
+            package init(
+                effect: Effect,
+                inputs: [Input?] = [],
+                result: String? = nil,
+                colorInterpolation: ColorInterpolation = .linearRGB
+            ) {
                 self.effect = effect
                 self.inputs = inputs
                 self.result = result
@@ -181,12 +183,14 @@ package extension DOM {
             package var opacity: DOM.Float
 
             // the initial values: a black shadow 2 units right and down, blurred by 2
-            package init(dx: DOM.Float = 2,
-                         dy: DOM.Float = 2,
-                         stdDeviation: DOM.Float = 2,
-                         stdDeviationY: DOM.Float? = nil,
-                         color: DOM.Color = .keyword(.black),
-                         opacity: DOM.Float = 1) {
+            package init(
+                dx: DOM.Float = 2,
+                dy: DOM.Float = 2,
+                stdDeviation: DOM.Float = 2,
+                stdDeviationY: DOM.Float? = nil,
+                color: DOM.Color = .keyword(.black),
+                opacity: DOM.Float = 1
+            ) {
                 self.dx = dx
                 self.dy = dy
                 self.stdDeviation = stdDeviation
@@ -203,10 +207,12 @@ package extension DOM {
             package var b: TransferFunction
             package var a: TransferFunction
 
-            package init(r: TransferFunction = .identity,
-                         g: TransferFunction = .identity,
-                         b: TransferFunction = .identity,
-                         a: TransferFunction = .identity) {
+            package init(
+                r: TransferFunction = .identity,
+                g: TransferFunction = .identity,
+                b: TransferFunction = .identity,
+                a: TransferFunction = .identity
+            ) {
                 self.r = r
                 self.g = g
                 self.b = b
@@ -239,12 +245,14 @@ package extension DOM {
             package var type: TurbulenceType
             package var stitchTiles: Bool
 
-            package init(baseFrequencyX: DOM.Float = 0,
-                         baseFrequencyY: DOM.Float = 0,
-                         numOctaves: Int = 1,
-                         seed: DOM.Float = 0,
-                         type: TurbulenceType = .turbulence,
-                         stitchTiles: Bool = false) {
+            package init(
+                baseFrequencyX: DOM.Float = 0,
+                baseFrequencyY: DOM.Float = 0,
+                numOctaves: Int = 1,
+                seed: DOM.Float = 0,
+                type: TurbulenceType = .turbulence,
+                stitchTiles: Bool = false
+            ) {
                 self.baseFrequencyX = baseFrequencyX
                 self.baseFrequencyY = baseFrequencyY
                 self.numOctaves = numOctaves
@@ -274,15 +282,17 @@ package extension DOM {
             package var edgeMode: EdgeMode
             package var preserveAlpha: Bool
 
-            package init(orderX: Int = 3,
-                         orderY: Int = 3,
-                         kernelMatrix: [DOM.Float] = [],
-                         divisor: DOM.Float? = nil,
-                         bias: DOM.Float = 0,
-                         targetX: Int? = nil,
-                         targetY: Int? = nil,
-                         edgeMode: EdgeMode = .duplicate,
-                         preserveAlpha: Bool = false) {
+            package init(
+                orderX: Int = 3,
+                orderY: Int = 3,
+                kernelMatrix: [DOM.Float] = [],
+                divisor: DOM.Float? = nil,
+                bias: DOM.Float = 0,
+                targetX: Int? = nil,
+                targetY: Int? = nil,
+                edgeMode: EdgeMode = .duplicate,
+                preserveAlpha: Bool = false
+            ) {
                 self.orderX = orderX
                 self.orderY = orderY
                 self.kernelMatrix = kernelMatrix
@@ -304,9 +314,11 @@ package extension DOM {
             // image-rendering: optimizeSpeed, pixelated or crisp-edges sample the nearest pixel
             package var isPixelated: Bool
 
-            package init(href: DOM.URL? = nil,
-                         preserveAspectRatio: DOM.PreserveAspectRatio = .default,
-                         isPixelated: Bool = false) {
+            package init(
+                href: DOM.URL? = nil,
+                preserveAspectRatio: DOM.PreserveAspectRatio = .default,
+                isPixelated: Bool = false
+            ) {
                 self.href = href
                 self.preserveAspectRatio = preserveAspectRatio
                 self.isPixelated = isPixelated

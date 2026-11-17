@@ -82,8 +82,9 @@ extension LayerTree {
         /// already being built or exceeds the depth or document budget.
         func building<R>(_ key: some Hashable, cycle: R, _ build: () throws -> R) rethrows -> R {
             guard active.depth < Self.maxReferenceDepth,
-                  active.total < Self.maxReferences,
-                  active.elements.insert(key).inserted else { return cycle }
+                active.total < Self.maxReferences,
+                active.elements.insert(key).inserted
+            else { return cycle }
             active.depth += 1
             active.total += 1
             defer {
@@ -114,17 +115,21 @@ extension LayerTree {
             // where its transform-origin percentages resolve. The outermost <svg> has a CSS box, so its
             // transform-origin defaults to `50% 50%` rather than `0 0` (as in resvg and browsers).
             let attributes = DOM.presentationAttributes(for: svg, styles: self.svg.styles)
-            let rootTransform = Builder.createTransforms(from: attributes.transform ?? [],
-                                                         origin: attributes.transformOrigin ?? .init(x: .fraction(0.5), y: .fraction(0.5)),
-                                                         viewport: LayerTree.Size(LayerTree.Float(svg.width), LayerTree.Float(svg.height)))
-            l.transform = rootTransform + Builder.makeTransform(
-                x: svg.x,
-                y: svg.y,
-                viewBox: svg.viewBox,
-                width: svg.width,
-                height: svg.height,
-                preserveAspectRatio: svg.preserveAspectRatio
+            let rootTransform = Builder.createTransforms(
+                from: attributes.transform ?? [],
+                origin: attributes.transformOrigin ?? .init(x: .fraction(0.5), y: .fraction(0.5)),
+                viewport: LayerTree.Size(LayerTree.Float(svg.width), LayerTree.Float(svg.height))
             )
+            l.transform =
+                rootTransform
+                + Builder.makeTransform(
+                    x: svg.x,
+                    y: svg.y,
+                    viewBox: svg.viewBox,
+                    width: svg.width,
+                    height: svg.height,
+                    preserveAspectRatio: svg.preserveAspectRatio
+                )
             // `slice` lets the viewBox overflow the viewport, which clips it (also when drawn into a larger context).
             // layer.clip applies after layer.transform, so the viewport is expressed in viewBox space.
             if let par = svg.preserveAspectRatio, par.align != .none, par.meetOrSlice == .slice {
@@ -159,7 +164,12 @@ extension LayerTree {
             height: DOM.Coordinate,
             preserveAspectRatio: DOM.PreserveAspectRatio? = nil
         ) -> [LayerTree.Transform] {
-            let fit = makeViewBoxFit(viewBox: viewBox, width: width, height: height, preserveAspectRatio: preserveAspectRatio)
+            let fit = makeViewBoxFit(
+                viewBox: viewBox,
+                width: width,
+                height: height,
+                preserveAspectRatio: preserveAspectRatio
+            )
             let position = LayerTree.Transform.translate(tx: (x ?? 0) + fit.tx, ty: (y ?? 0) + fit.ty)
             let scale = LayerTree.Transform.scale(sx: fit.sx, sy: fit.sy)
             let translate = LayerTree.Transform.translate(tx: -fit.viewBox.x, ty: -fit.viewBox.y)
@@ -188,11 +198,14 @@ extension LayerTree {
             width: DOM.Coordinate,
             height: DOM.Coordinate,
             preserveAspectRatio: DOM.PreserveAspectRatio?
-        ) -> (viewBox: DOM.SVG.ViewBox, sx: LayerTree.Float, sy: LayerTree.Float, tx: LayerTree.Float, ty: LayerTree.Float) {
+        ) -> (
+            viewBox: DOM.SVG.ViewBox, sx: LayerTree.Float, sy: LayerTree.Float, tx: LayerTree.Float, ty: LayerTree.Float
+        ) {
             var box = DOM.SVG.ViewBox(x: 0, y: 0, width: .init(width), height: .init(height))
             if let viewBox, viewBox.x.isFinite, viewBox.y.isFinite,
-               viewBox.width.isFinite, viewBox.height.isFinite,
-               viewBox.width > 0, viewBox.height > 0 {
+                viewBox.width.isFinite, viewBox.height.isFinite,
+                viewBox.width > 0, viewBox.height > 0
+            {
                 box = viewBox
             }
             // an empty or non-finite viewport (or one that overflows the fit) has no mapping: identity
@@ -200,8 +213,10 @@ extension LayerTree {
                 return (box, 1, 1, 0, 0)
             }
             let fit = (preserveAspectRatio ?? .default).fit(
-                contentWidth: box.width, contentHeight: box.height,
-                viewportWidth: .init(width), viewportHeight: .init(height)
+                contentWidth: box.width,
+                contentHeight: box.height,
+                viewportWidth: .init(width),
+                viewportHeight: .init(height)
             )
             // the free space of an exact fit is only rounding noise
             let tx = abs(fit.tx) < 1e-4 ? 0 : fit.tx
@@ -220,7 +235,12 @@ extension LayerTree {
             height: DOM.Coordinate,
             preserveAspectRatio: DOM.PreserveAspectRatio?
         ) -> LayerTree.Rect {
-            let fit = makeViewBoxFit(viewBox: viewBox, width: width, height: height, preserveAspectRatio: preserveAspectRatio)
+            let fit = makeViewBoxFit(
+                viewBox: viewBox,
+                width: width,
+                height: height,
+                preserveAspectRatio: preserveAspectRatio
+            )
             return LayerTree.Rect(
                 x: fit.viewBox.x - fit.tx / fit.sx,
                 y: fit.viewBox.y - fit.ty / fit.sy,
@@ -245,7 +265,8 @@ extension LayerTree {
                 // before any transform, clip, mask, filter or opacity is built for it;
                 // SVG 2 §5.8: so does a conditional processing attribute that evaluates to false
                 if newState.display == .none || Self.isHiddenLeaf(currentElement, newState)
-                    || !currentElement.passesConditions(languages: languages) {
+                    || !currentElement.passesConditions(languages: languages)
+                {
                     if parentLayer == nil {
                         resultLayer = Layer()
                     }
@@ -375,68 +396,87 @@ extension LayerTree {
 
         /// `attributes` is the cascade of `element`: its `mask` may come from a stylesheet rule.
         /// `state` is the element's, to measure the bounding box of text.
-        func createMaskLayer(for element: DOM.GraphicsElement, attributes: DOM.PresentationAttributes,
-                             state: State? = nil) -> Layer? {
+        func createMaskLayer(
+            for element: DOM.GraphicsElement,
+            attributes: DOM.PresentationAttributes,
+            state: State? = nil
+        ) -> Layer? {
             guard let maskId = attributes.mask?.fragmentID,
-                  let mask = svg.defs.masks.first(where: { $0.id == maskId }),
-                  !isInvalid(element, .mask) else { return nil }
+                let mask = svg.defs.masks.first(where: { $0.id == maskId }),
+                !isInvalid(element, .mask)
+            else { return nil }
 
             // SVG 1.1 §14.4: maskUnits places the mask region, maskContentUnits the contents
             let regionUnits = mask.maskUnits ?? .objectBoundingBox
             let contentUnits = mask.maskContentUnits ?? .userSpaceOnUse
-            let bounds = (regionUnits == .objectBoundingBox || contentUnits == .objectBoundingBox)
+            let bounds =
+                (regionUnits == .objectBoundingBox || contentUnits == .objectBoundingBox)
                 ? makeBoundingBox(for: element, state: state) : nil
             // a bounding box that cannot be measured (text without CoreText): ignore the mask
             if contentUnits == .objectBoundingBox && bounds == nil { return nil }
 
             // A mask reached again inside itself is invalid, so the element it is on is not masked
-            return building(ObjectIdentifier(mask), cycle: nil) { () -> Layer? in buildingContents {
-                let l = Layer()
-                if DOM.presentationAttributes(for: mask, styles: svg.styles).maskType == .alpha {
-                    l.maskType = .alpha
-                } else if makeColorInterpolation(for: mask) == .linearRGB {
-                    l.maskType = .linearLuminance
-                }
+            return building(ObjectIdentifier(mask), cycle: nil) { () -> Layer? in
+                buildingContents {
+                    let l = Layer()
+                    if DOM.presentationAttributes(for: mask, styles: svg.styles).maskType == .alpha {
+                        l.maskType = .alpha
+                    } else if makeColorInterpolation(for: mask) == .linearRGB {
+                        l.maskType = .linearLuminance
+                    }
 
-                let content = Layer()
-                if contentUnits == .objectBoundingBox, let bounds {
-                    // an empty bounding box masks everything away
-                    guard bounds.width > 0, bounds.height > 0 else { return l }
-                    content.transform = [.matrix(Transform.Matrix(a: bounds.width, b: 0, c: 0, d: bounds.height,
-                                                                  tx: bounds.x, ty: bounds.y))]
-                }
+                    let content = Layer()
+                    if contentUnits == .objectBoundingBox, let bounds {
+                        // an empty bounding box masks everything away
+                        guard bounds.width > 0, bounds.height > 0 else { return l }
+                        content.transform = [
+                            .matrix(
+                                Transform.Matrix(
+                                    a: bounds.width,
+                                    b: 0,
+                                    c: 0,
+                                    d: bounds.height,
+                                    tx: bounds.x,
+                                    ty: bounds.y
+                                )
+                            )
+                        ]
+                    }
 
-                // the contents inherit from the mask's ancestors, not from the masked element
-                var maskState = createState(for: mask, inheriting: makeInheritedState(from: mask.ancestors))
-                // SVG 1.1 §11.5: `display` does not apply to `<mask>`; only its children can be hidden
-                maskState.display = .inline
-                mask.childElements.forEach {
-                    let contents = Layer.Contents.layer(makeLayer(from: $0, inheriting: maskState))
-                    content.appendContents(contents)
-                }
+                    // the contents inherit from the mask's ancestors, not from the masked element
+                    var maskState = createState(for: mask, inheriting: makeInheritedState(from: mask.ancestors))
+                    // SVG 1.1 §11.5: `display` does not apply to `<mask>`; only its children can be hidden
+                    maskState.display = .inline
+                    mask.childElements.forEach {
+                        let contents = Layer.Contents.layer(makeLayer(from: $0, inheriting: maskState))
+                        content.appendContents(contents)
+                    }
 
-                if let region = makeMaskRegion(for: mask, bounds: bounds) {
-                    // a zero or negative region disables rendering of the element
-                    guard region.width > 0, region.height > 0 else { return l }
-                    let clipped = Layer()
-                    clipped.clip = [ClipShape(shape: .rect(within: region, radii: .zero), transform: .identity)]
-                    clipped.appendContents(.layer(content))
-                    l.appendContents(.layer(clipped))
-                } else if content.transform.isEmpty {
-                    content.contents.forEach(l.appendContents)
-                } else {
-                    l.appendContents(.layer(content))
-                }
+                    if let region = makeMaskRegion(for: mask, bounds: bounds) {
+                        // a zero or negative region disables rendering of the element
+                        guard region.width > 0, region.height > 0 else { return l }
+                        let clipped = Layer()
+                        clipped.clip = [ClipShape(shape: .rect(within: region, radii: .zero), transform: .identity)]
+                        clipped.appendContents(.layer(content))
+                        l.appendContents(.layer(clipped))
+                    } else if content.transform.isEmpty {
+                        content.contents.forEach(l.appendContents)
+                    } else {
+                        l.appendContents(.layer(content))
+                    }
 
-                return l
-            }}
+                    return l
+                }
+            }
         }
 
         // `filter` is not inherited: it applies once, to the element that references it.
         // Each url() and filter function in the list is one filter, applied in order. A url() to a missing
         // <filter> is skipped; when every entry is such a url() the element is not rendered (nil), as resvg.
-        func makeFilters(for attributes: DOM.PresentationAttributes,
-                         with state: State) -> [(primitives: [FilterPrimitive], region: FilterRegion)]? {
+        func makeFilters(
+            for attributes: DOM.PresentationAttributes,
+            with state: State
+        ) -> [(primitives: [FilterPrimitive], region: FilterRegion)]? {
             guard let values = attributes.filter else { return [] }
             var filters = [(primitives: [FilterPrimitive], region: FilterRegion)]()
             var hasMissingURL = false
@@ -444,10 +484,12 @@ extension LayerTree {
                 switch value {
                 case .url(let url):
                     if let filterId = url.fragmentID,
-                       let filter = svg.defs.filters.first(where: { $0.id == filterId }) {
+                        let filter = svg.defs.filters.first(where: { $0.id == filterId })
+                    {
                         let filter = resolvingHref(filter)
                         // Filter Effects 1 §5.1: a filter without primitives paints transparent black, hiding the element
-                        let primitives = filter.primitives.isEmpty
+                        let primitives =
+                            filter.primitives.isEmpty
                             ? [DOM.Filter.Primitive(effect: .flood(color: .keyword(.black), opacity: 0))]
                             : filter.primitives
                         filters.append((primitives, makeFilterRegion(for: filter)))
@@ -480,7 +522,8 @@ extension LayerTree {
             var visited: Set<String> = [filter.id]
             var href = filter.href
             while let id = href?.fragmentID, visited.insert(id).inserted,
-                  let referenced = svg.defs.filters.first(where: { $0.id == id }) {
+                let referenced = svg.defs.filters.first(where: { $0.id == id })
+            {
                 if resolved.primitives.isEmpty { resolved.primitives = referenced.primitives }
                 resolved.x = resolved.x ?? referenced.x
                 resolved.y = resolved.y ?? referenced.y
@@ -505,7 +548,6 @@ extension LayerTree {
         }
     }
 }
-
 
 extension LayerTree.Builder {
 
@@ -537,20 +579,22 @@ extension LayerTree.Builder {
                     }
                 }
             case .urlWithFallback:
-                stroke = .color(.none) // resolved to .url or .color above
+                stroke = .color(.none)  // resolved to .url or .color above
             }
         } else {
             stroke = .color(.none)
         }
 
-        return LayerTree.StrokeAttributes(color: stroke,
-                                          width: state.strokeWidth,
-                                          cap: state.strokeLineCap,
-                                          join: state.strokeLineJoin,
-                                          miterLimit: state.strokeLineMiterLimit,
-                                          dashArray: makeDashArray(with: state),
-                                          dashOffset: makeDashOffset(with: state),
-                                          opacity: state.strokeOpacity)
+        return LayerTree.StrokeAttributes(
+            color: stroke,
+            width: state.strokeWidth,
+            cap: state.strokeLineCap,
+            join: state.strokeLineJoin,
+            miterLimit: state.strokeLineMiterLimit,
+            dashArray: makeDashArray(with: state),
+            dashOffset: makeDashOffset(with: state),
+            opacity: state.strokeOpacity
+        )
     }
 
     /// Length of the viewport diagonal / sqrt(2), the reference for percentages (SVG 1.1 §7.10).
@@ -572,7 +616,11 @@ extension LayerTree.Builder {
     }
 
     /// A length in user units: `em` against the font-size, a percentage against the viewport diagonal.
-    static func resolve(_ length: DOM.DashLength, fontSize: LayerTree.Float, viewportDiagonal: LayerTree.Float) -> LayerTree.Float {
+    static func resolve(
+        _ length: DOM.DashLength,
+        fontSize: LayerTree.Float,
+        viewportDiagonal: LayerTree.Float
+    ) -> LayerTree.Float {
         switch length {
         case .absolute(let value): return value
         case .percentage(let value): return value / 100 * viewportDiagonal
@@ -635,18 +683,23 @@ extension LayerTree.Builder {
             .withAlpha(state.fillOpacity).maybeNone()
 
         if case .url(let patternId) = state.fill,
-           let element = svg.defs.patterns.first(where: { $0.id == patternId.fragmentID }) {
+            let element = svg.defs.patterns.first(where: { $0.id == patternId.fragmentID })
+        {
             let pattern = makePattern(for: element)
             return LayerTree.FillAttributes(pattern: pattern, rule: state.fillRule, opacity: state.fillOpacity)
         } else if case .url(let gradientId) = state.fill,
-                  let paint = makeGradientPaint(for: gradientId) {
+            let paint = makeGradientPaint(for: gradientId)
+        {
             switch paint {
             case .linear(let gradient):
                 return LayerTree.FillAttributes(linear: gradient, rule: state.fillRule, opacity: state.fillOpacity)
             case .radial(let gradient):
                 return LayerTree.FillAttributes(radial: gradient, rule: state.fillRule, opacity: state.fillOpacity)
             case .color(let color):
-                return LayerTree.FillAttributes(color: color.withAlpha(state.fillOpacity).maybeNone(), rule: state.fillRule)
+                return LayerTree.FillAttributes(
+                    color: color.withAlpha(state.fillOpacity).maybeNone(),
+                    rule: state.fillRule
+                )
             }
         } else {
             return LayerTree.FillAttributes(color: fill, rule: state.fillRule)
@@ -702,7 +755,11 @@ extension LayerTree.Builder {
         )
     }
 
-    func makeFonts(with font: DOM.FontFamily, weight: Int = 400, style: DOM.FontStyle = .normal) -> [LayerTree.TextAttributes.Font] {
+    func makeFonts(
+        with font: DOM.FontFamily,
+        weight: Int = 400,
+        style: DOM.FontStyle = .normal
+    ) -> [LayerTree.TextAttributes.Font] {
         switch font {
         case .name(let name):
             return makeFonts(faceName: name, weight: weight, style: style)
@@ -721,7 +778,11 @@ extension LayerTree.Builder {
 
     /// The `@font-face` fonts of a family that best match the weight and style, or the family by name
     /// when the document declares none (the renderer then picks the weight and style from the system).
-    func makeFonts(faceName: String, weight: Int = 400, style: DOM.FontStyle = .normal) -> [LayerTree.TextAttributes.Font] {
+    func makeFonts(
+        faceName: String,
+        weight: Int = 400,
+        style: DOM.FontStyle = .normal
+    ) -> [LayerTree.TextAttributes.Font] {
         let faces = Self.matchFontFaces(svg.fontFaces(for: faceName), weight: weight, style: style)
         // each face uses the first of its sources that loads (a local font that is installed, a URL that decodes)
         let fonts = faces.compactMap { face -> LayerTree.TextAttributes.Font? in
@@ -776,7 +837,8 @@ extension LayerTree.Builder {
     /// The bold and oblique an `@font-face` face needs synthesized, from its declared `font-weight` and
     /// `font-style` (not the font file's own): bold when 600 or heavier is asked for and the face is
     /// lighter, oblique when italic or oblique is asked for and the face is normal.
-    static func makeFontSynthesis(for face: DOM.FontFace, weight: Int, style: DOM.FontStyle) -> LayerTree.FontSynthesis {
+    static func makeFontSynthesis(for face: DOM.FontFace, weight: Int, style: DOM.FontStyle) -> LayerTree.FontSynthesis
+    {
         LayerTree.FontSynthesis(
             weight: weight,
             isItalic: style != .normal,
@@ -833,26 +895,35 @@ extension LayerTree.Builder {
             chain.lazy.compactMap(value).first
         }
 
-        let units: LayerTree.PatternUnits = inherited(\.patternUnits) == .userSpaceOnUse ? .userSpaceOnUse : .objectBoundingBox
+        let units: LayerTree.PatternUnits =
+            inherited(\.patternUnits) == .userSpaceOnUse ? .userSpaceOnUse : .objectBoundingBox
 
         // Percentages are fractions of the bounding box under objectBoundingBox, and of the
         // viewport (in user units) under userSpaceOnUse: as in WebKit, the viewport the
         // referenced pattern is defined in, also for values it inherits.
         let viewport = userSpaceViewport(element.viewport)
-        func geometry(_ key: String, _ value: (DOM.Pattern) -> DOM.Coordinate?, viewport length: LayerTree.Float) -> LayerTree.Float {
+        func geometry(
+            _ key: String,
+            _ value: (DOM.Pattern) -> DOM.Coordinate?,
+            viewport length: LayerTree.Float
+        ) -> LayerTree.Float {
             guard let source = chain.first(where: { value($0) != nil }),
-                  let coordinate = value(source) else { return 0 }
+                let coordinate = value(source)
+            else { return 0 }
             if units == .userSpaceOnUse && source.percentageAttributes.contains(key) {
                 return coordinate * length
             }
             return coordinate
         }
 
-        let frame = LayerTree.Rect(x: geometry("x", \.x, viewport: viewport.width),
-                                   y: geometry("y", \.y, viewport: viewport.height),
-                                   width: geometry("width", \.width, viewport: viewport.width),
-                                   height: geometry("height", \.height, viewport: viewport.height))
-        let contentUnits: LayerTree.PatternUnits = inherited(\.patternContentUnits) == .objectBoundingBox ? .objectBoundingBox : .userSpaceOnUse
+        let frame = LayerTree.Rect(
+            x: geometry("x", \.x, viewport: viewport.width),
+            y: geometry("y", \.y, viewport: viewport.height),
+            width: geometry("width", \.width, viewport: viewport.width),
+            height: geometry("height", \.height, viewport: viewport.height)
+        )
+        let contentUnits: LayerTree.PatternUnits =
+            inherited(\.patternContentUnits) == .objectBoundingBox ? .objectBoundingBox : .userSpaceOnUse
         let pattern = LayerTree.Pattern(frame: frame, contentUnits: contentUnits, units: units)
         if let viewBox = inherited(\.viewBox) {
             pattern.viewBox = LayerTree.Rect(x: viewBox.x, y: viewBox.y, width: viewBox.width, height: viewBox.height)
@@ -860,16 +931,22 @@ extension LayerTree.Builder {
         pattern.preserveAspectRatio = inherited(\.preserveAspectRatio) ?? .default
         // transform-origin belongs to the pattern whose patternTransform applies
         let transformSource = chain.first { $0.patternTransform != nil }
-        pattern.transform = Self.createTransforms(from: transformSource?.patternTransform ?? [],
-                                                  origin: transformSource?.transformOrigin,
-                                                  viewport: viewport).toMatrix()
+        pattern.transform = Self.createTransforms(
+            from: transformSource?.patternTransform ?? [],
+            origin: transformSource?.transformOrigin,
+            viewport: viewport
+        ).toMatrix()
         let template = chain.first(where: { !$0.childElements.isEmpty })
         // the contents inherit from the pattern's ancestors, not from the element it fills
         let state = makeInheritedState(from: template?.ancestors ?? [])
         // A pattern reached again inside itself paints nothing
-        building(element.id, cycle: ()) { buildingContents {
-            pattern.contents = (template?.childElements ?? []).map { .layer(makeLayer(from: $0, inheriting: state)) }
-        }}
+        building(element.id, cycle: ()) {
+            buildingContents {
+                pattern.contents = (template?.childElements ?? []).map {
+                    .layer(makeLayer(from: $0, inheriting: state))
+                }
+            }
+        }
         return pattern
     }
 
@@ -880,8 +957,9 @@ extension LayerTree.Builder {
         var visited: Set<String> = [element.id]
         var current = element
         while let id = current.href?.fragmentID,
-              !visited.contains(id),
-              let next = svg.defs.patterns.first(where: { $0.id == id }) {
+            !visited.contains(id),
+            let next = svg.defs.patterns.first(where: { $0.id == id })
+        {
             visited.insert(id)
             chain.append(next)
             current = next
@@ -899,8 +977,12 @@ extension LayerTree.Builder {
         let units = Self.createUnits(from: chain.lazy.compactMap(\.units).first)
         // as in WebKit, percentages resolve in the viewport the referenced gradient is defined in,
         // also for values it inherits
-        let geometry = GradientGeometry(chain: chain.compactMap(\.linear), percentageAttributes: \.percentageAttributes,
-                                        units: units, viewport: userSpaceViewport(element.viewport))
+        let geometry = GradientGeometry(
+            chain: chain.compactMap(\.linear),
+            percentageAttributes: \.percentageAttributes,
+            units: units,
+            viewport: userSpaceViewport(element.viewport)
+        )
 
         // SVG 1.1 §13.2.2: x1, y1, y2 default to 0% and x2 to 100%
         var gradient = LayerTree.LinearGradient(
@@ -926,8 +1008,12 @@ extension LayerTree.Builder {
         let units = Self.createUnits(from: chain.lazy.compactMap(\.units).first)
         // as in WebKit, percentages resolve in the viewport the referenced gradient is defined in,
         // also for values it inherits
-        let geometry = GradientGeometry(chain: chain.compactMap(\.radial), percentageAttributes: \.percentageAttributes,
-                                        units: units, viewport: userSpaceViewport(element.viewport))
+        let geometry = GradientGeometry(
+            chain: chain.compactMap(\.radial),
+            percentageAttributes: \.percentageAttributes,
+            units: units,
+            viewport: userSpaceViewport(element.viewport)
+        )
 
         // SVG 1.1 §13.2.3: cx, cy, r default to 50%; fx, fy to cx, cy; fr (SVG 2) to 0%
         let cx = geometry.x("cx", \.cx) ?? geometry.width(0.5)
@@ -985,15 +1071,22 @@ extension LayerTree.Builder {
 
         func width(_ fraction: LayerTree.Float) -> LayerTree.Float { scale(fraction, by: viewport.width) }
         func height(_ fraction: LayerTree.Float) -> LayerTree.Float { scale(fraction, by: viewport.height) }
-        func diagonal(_ fraction: LayerTree.Float) -> LayerTree.Float { scale(fraction, by: viewport.normalizedDiagonal) }
+        func diagonal(_ fraction: LayerTree.Float) -> LayerTree.Float {
+            scale(fraction, by: viewport.normalizedDiagonal)
+        }
 
         private func scale(_ fraction: LayerTree.Float, by length: LayerTree.Float) -> LayerTree.Float {
             units == .userSpaceOnUse ? fraction * length : fraction
         }
 
-        private func resolve(_ key: String, _ value: (Element) -> DOM.Coordinate?, against length: LayerTree.Float) -> LayerTree.Float? {
+        private func resolve(
+            _ key: String,
+            _ value: (Element) -> DOM.Coordinate?,
+            against length: LayerTree.Float
+        ) -> LayerTree.Float? {
             guard let source = chain.first(where: { value($0) != nil }),
-                  let coordinate = value(source) else { return nil }
+                let coordinate = value(source)
+            else { return nil }
             let isPercentage = percentageAttributes(source).contains(key)
             return isPercentage ? scale(LayerTree.Float(coordinate), by: length) : LayerTree.Float(coordinate)
         }
@@ -1113,8 +1206,9 @@ extension LayerTree.Builder {
 
         var result = [LayerTree.Gradient.Stop]()
         for (index, stop) in clamped.enumerated() {
-            let isBetween = index > 0 && index < clamped.count - 1 &&
-                clamped[index - 1].offset == stop.offset && clamped[index + 1].offset == stop.offset
+            let isBetween =
+                index > 0 && index < clamped.count - 1 && clamped[index - 1].offset == stop.offset
+                && clamped[index + 1].offset == stop.offset
             if !isBetween {
                 result.append(stop)
             }
@@ -1142,17 +1236,21 @@ extension LayerTree.Builder {
 
     func makeGradientStops(for element: DOM.LinearGradient) -> [LayerTree.Gradient.Stop] {
         return element.stops.map {
-            LayerTree.Gradient.Stop(offset: $0.offset,
-                                    color: LayerTree.Color.create(from: $0.color, current: .none),
-                                    opacity: $0.opacity)
+            LayerTree.Gradient.Stop(
+                offset: $0.offset,
+                color: LayerTree.Color.create(from: $0.color, current: .none),
+                opacity: $0.opacity
+            )
         }
     }
 
     func makeGradientStops(for element: DOM.RadialGradient) -> [LayerTree.Gradient.Stop] {
         return element.stops.map {
-            LayerTree.Gradient.Stop(offset: $0.offset,
-                                    color: LayerTree.Color.create(from: $0.color, current: .none),
-                                    opacity: $0.opacity)
+            LayerTree.Gradient.Stop(
+                offset: $0.offset,
+                color: LayerTree.Color.create(from: $0.color, current: .none),
+                opacity: $0.opacity
+            )
         }
     }
 
@@ -1249,9 +1347,11 @@ extension LayerTree.Builder {
         return state
     }
 
-    static func createState(for attributes: DOM.PresentationAttributes,
-                            inheriting existing: State,
-                            viewportDiagonal: LayerTree.Float) -> State {
+    static func createState(
+        for attributes: DOM.PresentationAttributes,
+        inheriting existing: State,
+        viewportDiagonal: LayerTree.Float
+    ) -> State {
         var state = State()
         // `em`, `%`, keywords, `larger` and `smaller` resolve against the parent (CSS Fonts 4 §2.5);
         // the `em` lengths below resolve against this computed size
@@ -1273,9 +1373,10 @@ extension LayerTree.Builder {
         }
 
         state.stroke = attributes.stroke ?? existing.stroke
-        state.strokeWidth = attributes.strokeWidth.map {
-            resolve($0, fontSize: state.fontSize, viewportDiagonal: viewportDiagonal)
-        } ?? existing.strokeWidth
+        state.strokeWidth =
+            attributes.strokeWidth.map {
+                resolve($0, fontSize: state.fontSize, viewportDiagonal: viewportDiagonal)
+            } ?? existing.strokeWidth
         state.strokeOpacity = attributes.strokeOpacity ?? existing.strokeOpacity
         state.strokeLineCap = attributes.strokeLineCap ?? existing.strokeLineCap
         state.strokeLineJoin = attributes.strokeLineJoin ?? existing.strokeLineJoin
@@ -1322,12 +1423,14 @@ extension LayerTree.Builder {
     static func createTransform(for dom: DOM.Transform) -> [LayerTree.Transform] {
         switch dom {
         case let .matrix(a, b, c, d, e, f):
-            let matrix = LayerTree.Transform.Matrix(a: Float(a),
-                                                    b: Float(b),
-                                                    c: Float(c),
-                                                    d: Float(d),
-                                                    tx: Float(e),
-                                                    ty: Float(f))
+            let matrix = LayerTree.Transform.Matrix(
+                a: Float(a),
+                b: Float(b),
+                c: Float(c),
+                d: Float(d),
+                tx: Float(e),
+                ty: Float(f)
+            )
             return [.matrix(matrix)]
 
         case let .translate(tx, ty):
@@ -1337,21 +1440,21 @@ extension LayerTree.Builder {
             return [.scale(sx: Float(sx), sy: Float(sy))]
 
         case .rotate(let angle):
-            let radians = Float(angle)*Float.pi/180.0
+            let radians = Float(angle) * Float.pi / 180.0
             return [.rotate(radians: radians)]
 
         case let .rotatePoint(angle, cx, cy):
-            let radians = Float(angle)*Float.pi/180.0
+            let radians = Float(angle) * Float.pi / 180.0
             let t1 = LayerTree.Transform.translate(tx: cx, ty: cy)
             let t2 = LayerTree.Transform.rotate(radians: radians)
             let t3 = LayerTree.Transform.translate(tx: -cx, ty: -cy)
             return [t1, t2, t3]
 
         case let .skewX(angle):
-            let radians = Float(angle)*Float.pi/180.0
+            let radians = Float(angle) * Float.pi / 180.0
             return [.skewX(angle: radians)]
         case let .skewY(angle):
-            let radians = Float(angle)*Float.pi/180.0
+            let radians = Float(angle) * Float.pi / 180.0
             return [.skewY(angle: radians)]
         }
     }
@@ -1380,15 +1483,17 @@ extension LayerTree.Builder {
     }
 
     static func createTransforms(from transforms: [DOM.Transform]) -> [LayerTree.Transform] {
-        return transforms.flatMap{ createTransform(for: $0) }
+        return transforms.flatMap { createTransform(for: $0) }
     }
 
     /// A transform applied around its `transform-origin`: `translate(o) · transform · translate(-o)`
     /// (CSS Transforms 1 §6). Percentages and keywords resolve against `viewport`: SVG elements
     /// default to `transform-box: view-box`, as in resvg.
-    static func createTransforms(from transforms: [DOM.Transform],
-                                 origin: DOM.TransformOrigin?,
-                                 viewport: LayerTree.Size) -> [LayerTree.Transform] {
+    static func createTransforms(
+        from transforms: [DOM.Transform],
+        origin: DOM.TransformOrigin?,
+        viewport: LayerTree.Size
+    ) -> [LayerTree.Transform] {
         let transform = createTransforms(from: transforms)
         guard !transform.isEmpty, let origin else { return transform }
         let x = origin.x.resolved(against: viewport.width)
@@ -1399,13 +1504,13 @@ extension LayerTree.Builder {
 
     /// The `transform` of an element's cascade around its `transform-origin`, with percentages of the root viewport.
     func createTransforms(from attributes: DOM.PresentationAttributes) -> [LayerTree.Transform] {
-        Self.createTransforms(from: attributes.transform ?? [],
-                              origin: attributes.transformOrigin,
-                              viewport: userSpaceViewport(nil))
+        Self.createTransforms(
+            from: attributes.transform ?? [],
+            origin: attributes.transformOrigin,
+            viewport: userSpaceViewport(nil)
+        )
     }
 }
-
-
 
 private extension DOM.Fill {
 

@@ -60,8 +60,10 @@ extension XMLParser {
     /// A `<textPath>` with its runs of text and `<tspan>`, or nil when it has no characters to draw.
     func parseTextPath(_ e: XML.Element, inheriting whiteSpace: DOM.WhiteSpace = .collapse) throws -> DOM.TextPath? {
         let att = try parseAttributes(e)
-        let runs = DOM.TextRun.collapsingWhitespace(try parseTextRuns(e),
-                                                    whiteSpace: parseWhiteSpace(e, att: att) ?? whiteSpace)
+        let runs = DOM.TextRun.collapsingWhitespace(
+            try parseTextRuns(e),
+            whiteSpace: parseWhiteSpace(e, att: att) ?? whiteSpace
+        )
         guard !DOM.TextRun.plainText(of: runs).isEmpty else { return nil }
 
         let textPath = DOM.TextPath(href: try? att.parseHref(), runs: runs)
@@ -70,7 +72,9 @@ extension XMLParser {
             textPath.path = try? parsePath(from: data)
         }
         textPath.startOffset = try? att.parse("startOffset") { try Self.parseTextPathOffset($0) }
-        textPath.side = e.attributes["side"].flatMap { DOM.TextPath.Side(rawValue: $0.trimmingCharacters(in: .whitespaces)) }
+        textPath.side = e.attributes["side"].flatMap {
+            DOM.TextPath.Side(rawValue: $0.trimmingCharacters(in: .whitespaces))
+        }
         try applyTextContentAttributes(of: e, att: att, to: textPath)
         return textPath
     }
@@ -111,10 +115,12 @@ extension XMLParser {
         let fontSize = lengthContext.fontSize
         defer { lengthContext.fontSize = fontSize }
         let att = try parseAttributes(e)
-        lengthContext.fontSize = self.fontSize(attributes: try parsePresentationAttributes(e),
-                                               style: parseStyleDeclarations(e),
-                                               matched: styleContext.matcher?.match(e),
-                                               inheriting: fontSize)
+        lengthContext.fontSize = self.fontSize(
+            attributes: try parsePresentationAttributes(e),
+            style: parseStyleDeclarations(e),
+            matched: styleContext.matcher?.match(e),
+            inheriting: fontSize
+        )
 
         let span = DOM.TextSpan(runs: try parseTextRuns(e))
         try applyTextContentAttributes(of: e, att: att, to: span)
@@ -131,7 +137,8 @@ extension XMLParser {
     /// CSS `white-space`, else `xml:space`; nil when neither is set, and the parent's applies.
     func parseWhiteSpace(_ e: XML.Element, att: any AttributeParser) -> DOM.WhiteSpace? {
         if let value = try? att.parseString("white-space") {
-            switch XMLParser.Attributes.removingImportant(from: value).trimmingCharacters(in: .whitespaces).lowercased() {
+            switch XMLParser.Attributes.removingImportant(from: value).trimmingCharacters(in: .whitespaces).lowercased()
+            {
             case "pre", "pre-wrap", "break-spaces":
                 return .preserve
             case "normal", "nowrap", "pre-line":
@@ -151,7 +158,8 @@ extension XMLParser {
     }
 
     /// id, class, presentation attributes and style of a `<textPath>` or `<tspan>`
-    func applyTextContentAttributes(of e: XML.Element, att: any AttributeParser, to element: DOM.GraphicsElement) throws {
+    func applyTextContentAttributes(of e: XML.Element, att: any AttributeParser, to element: DOM.GraphicsElement) throws
+    {
         let elementAtt = try parseElementAttributes(att)
         element.id = elementAtt.id
         element.class = elementAtt.class
@@ -178,7 +186,11 @@ extension XMLParser {
     }
 
     /// A `<list-of-lengths>` separated by commas and/or whitespace; nil when missing or any value is invalid.
-    func parseDefaultedLengthList(_ att: any AttributeParser, _ key: String, _ direction: LengthDirection) -> [DOM.Coordinate]? {
+    func parseDefaultedLengthList(
+        _ att: any AttributeParser,
+        _ key: String,
+        _ direction: LengthDirection
+    ) -> [DOM.Coordinate]? {
         try? att.parse(key) { try parseLengthList($0, direction) } as [DOM.Coordinate]?
     }
 
@@ -239,7 +251,11 @@ package extension DOM.TextRun {
         return collapsed
     }
 
-    private static func collapse(_ runs: [DOM.TextRun], whiteSpace: DOM.WhiteSpace, previousIsSpace: inout Bool) -> [DOM.TextRun] {
+    private static func collapse(
+        _ runs: [DOM.TextRun],
+        whiteSpace: DOM.WhiteSpace,
+        previousIsSpace: inout Bool
+    ) -> [DOM.TextRun] {
         runs.map { run in
             switch run {
             case .text(let text):
@@ -255,9 +271,11 @@ package extension DOM.TextRun {
                 }
                 return .text(result)
             case .span(let span):
-                span.runs = collapse(span.runs,
-                                     whiteSpace: span.whiteSpace ?? whiteSpace,
-                                     previousIsSpace: &previousIsSpace)
+                span.runs = collapse(
+                    span.runs,
+                    whiteSpace: span.whiteSpace ?? whiteSpace,
+                    previousIsSpace: &previousIsSpace
+                )
                 return .span(span)
             }
         }

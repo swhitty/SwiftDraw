@@ -41,17 +41,17 @@ import Testing
 struct CGRendererNestedPatternTests {
 
     static let svg = #"""
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24">
-        <pattern id="inner" patternUnits="userSpaceOnUse" width="3" height="4">
-            <rect x="2" width="2" height="4" fill="lime" />
-        </pattern>
-        <pattern id="outer" patternUnits="userSpaceOnUse" width="12" height="12">
-            <rect width="12" height="12" fill="url(#inner)" />
-        </pattern>
-        <rect width="24" height="24" fill="white" />
-        <rect width="24" height="24" fill="url(#outer)" />
-    </svg>
-    """#
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24">
+            <pattern id="inner" patternUnits="userSpaceOnUse" width="3" height="4">
+                <rect x="2" width="2" height="4" fill="lime" />
+            </pattern>
+            <pattern id="outer" patternUnits="userSpaceOnUse" width="12" height="12">
+                <rect width="12" height="12" fill="url(#inner)" />
+            </pattern>
+            <rect width="24" height="24" fill="white" />
+            <rect width="24" height="24" fill="url(#outer)" />
+        </svg>
+        """#
 
     @Test(arguments: [1, 1.5, 2, 2.25, 3] as [CGFloat])
     func innerTileIsClipped(scale: CGFloat) throws {
@@ -111,9 +111,15 @@ private extension CGRendererNestedPatternTests {
         var bytes = [UInt8](repeating: 0, count: width * height * 4)
         let space = try #require(CGColorSpace(name: CGColorSpace.sRGB))
         bytes.withUnsafeMutableBytes { buffer in
-            let ctx = CGContext(data: buffer.baseAddress, width: width, height: height,
-                                bitsPerComponent: 8, bytesPerRow: width * 4, space: space,
-                                bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!
+            let ctx = CGContext(
+                data: buffer.baseAddress,
+                width: width,
+                height: height,
+                bitsPerComponent: 8,
+                bytesPerRow: width * 4,
+                space: space,
+                bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+            )!
             let base = ctx.ctm
             // SVG coordinates are y-down
             ctx.translateBy(x: 0, y: CGFloat(height))

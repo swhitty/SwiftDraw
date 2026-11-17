@@ -107,18 +107,20 @@ struct ParserXMLPatternTests {
 
     @Test
     func documentKeepsInheritedAndIncompletePatterns() throws {
-        let svg = try DOM.SVG.parse(xml: #"""
-        <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="64" height="64">
-            <defs>
-                <pattern id="base" width="8" height="8" patternUnits="userSpaceOnUse">
-                    <rect width="4" height="4" fill="red" />
-                </pattern>
-                <pattern id="derived" xlink:href="#base" patternTransform="rotate(45)" />
-                <pattern width="8" height="8" />
-            </defs>
-            <rect width="64" height="64" fill="url(#derived)" />
-        </svg>
-        """#)
+        let svg = try DOM.SVG.parse(
+            xml: #"""
+                <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="64" height="64">
+                    <defs>
+                        <pattern id="base" width="8" height="8" patternUnits="userSpaceOnUse">
+                            <rect width="4" height="4" fill="red" />
+                        </pattern>
+                        <pattern id="derived" xlink:href="#base" patternTransform="rotate(45)" />
+                        <pattern width="8" height="8" />
+                    </defs>
+                    <rect width="64" height="64" fill="url(#derived)" />
+                </svg>
+                """#
+        )
 
         #expect(svg.defs.patterns.map(\.id) == ["base", "derived"])
         let derived = try #require(svg.defs.patterns.last)

@@ -37,7 +37,8 @@ extension LayerTree.Path {
     }
 
     var reversed: LayerTree.Path {
-        var reversed = segments
+        var reversed =
+            segments
             .reversed()
             .paired(with: .nextSkippingLast)
             .compactMap { segment, next in
@@ -89,9 +90,9 @@ import CoreGraphics
 
 private struct SubPathNode {
     let path: LayerTree.Path
-#if canImport(CoreGraphics)
+    #if canImport(CoreGraphics)
     let cgPath: CGPath
-#endif
+    #endif
 
     let bounds: LayerTree.Rect
     let direction: LayerTree.Path.Direction

@@ -29,8 +29,6 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-
-
 @testable import SwiftDraw
 @testable import SwiftDrawDOM
 import Foundation
@@ -40,15 +38,21 @@ struct LayerTreeFontSynthesisTests {
 
     private let regular = Data(base64Encoded: "AAAA")!
 
-    private func fonts(faceWeight: String = "400", faceStyle: String = "normal", _ attributes: String) throws -> [LayerTree.TextAttributes.Font] {
-        let svg = try DOM.SVG.parse(xml: """
-        <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">
-          <style>
-            @font-face { font-family: 'F'; font-weight: \(faceWeight); font-style: \(faceStyle); src: url(data:font/truetype;base64,AAAA) format('truetype'); }
-          </style>
-          <text font-family="F" \(attributes)>a</text>
-        </svg>
-        """)
+    private func fonts(
+        faceWeight: String = "400",
+        faceStyle: String = "normal",
+        _ attributes: String
+    ) throws -> [LayerTree.TextAttributes.Font] {
+        let svg = try DOM.SVG.parse(
+            xml: """
+                <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">
+                  <style>
+                    @font-face { font-family: 'F'; font-weight: \(faceWeight); font-style: \(faceStyle); src: url(data:font/truetype;base64,AAAA) format('truetype'); }
+                  </style>
+                  <text font-family="F" \(attributes)>a</text>
+                </svg>
+                """
+        )
         let layer = LayerTree.Builder(svg: svg).makeLayer()
         func find(_ layer: LayerTree.Layer) -> [LayerTree.TextAttributes.Font]? {
             for contents in layer.contents {
@@ -63,18 +67,21 @@ struct LayerTreeFontSynthesisTests {
         return try #require(find(layer))
     }
 
-    @Test(arguments: [
-        ("", []),
-        (#"font-weight="500""#, []),
-        (#"font-weight="599""#, []),
-        (#"font-weight="600""#, .bold),
-        (#"font-weight="bold""#, .bold),
-        (#"font-style="italic""#, .oblique),
-        (#"font-style="oblique""#, .oblique),
-        (#"font-weight="900" font-style="italic""#, [.bold, .oblique])
-    ] as [(String, LayerTree.FontSynthesis)])
+    @Test(
+        arguments: [
+            ("", []),
+            (#"font-weight="500""#, []),
+            (#"font-weight="599""#, []),
+            (#"font-weight="600""#, .bold),
+            (#"font-weight="bold""#, .bold),
+            (#"font-style="italic""#, .oblique),
+            (#"font-style="oblique""#, .oblique),
+            (#"font-weight="900" font-style="italic""#, [.bold, .oblique]),
+        ] as [(String, LayerTree.FontSynthesis)]
+    )
     func regularFaceIsSynthesized(attributes: String, synthesis: LayerTree.FontSynthesis) throws {
-        let expected: LayerTree.TextAttributes.Font = synthesis.isEmpty ? .truetype(regular) : .synthesized(.truetype(regular), synthesis)
+        let expected: LayerTree.TextAttributes.Font =
+            synthesis.isEmpty ? .truetype(regular) : .synthesized(.truetype(regular), synthesis)
         #expect(try fonts(attributes) == [expected])
     }
 
@@ -86,7 +93,7 @@ struct LayerTreeFontSynthesisTests {
         ("100 900", "normal", #"font-weight="bold""#),
         ("400", "italic", #"font-style="italic""#),
         ("400", "oblique", #"font-style="italic""#),
-        ("400", "italic", #"font-style="oblique""#)
+        ("400", "italic", #"font-style="oblique""#),
     ])
     func faceWithTheWeightOrSlantIsNotSynthesized(faceWeight: String, faceStyle: String, attributes: String) throws {
         #expect(try fonts(faceWeight: faceWeight, faceStyle: faceStyle, attributes) == [.truetype(regular)])
@@ -100,24 +107,41 @@ struct LayerTreeFontSynthesisTests {
 
     @Test
     func systemFamilyIsLeftToTheRenderer() throws {
-        let svg = try DOM.SVG.parse(xml: """
-        <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><text font-family="Chalkduster">a</text></svg>
-        """)
+        let svg = try DOM.SVG.parse(
+            xml: """
+                <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><text font-family="Chalkduster">a</text></svg>
+                """
+        )
         let builder = LayerTree.Builder(svg: svg)
         #expect(builder.makeFonts(faceName: "Chalkduster", weight: 700, style: .italic) == [.name("Chalkduster")])
     }
 
-    @Test(arguments: [
-        (400, false, 400, false, []),
-        (599, false, 400, false, []),
-        (600, false, 599, false, .bold),
-        (700, false, 600, false, []),
-        (700, true, 700, false, .oblique),
-        (400, true, 400, true, []),
-        (400, false, 700, true, [])
-    ] as [(Int, Bool, Int, Bool, LayerTree.FontSynthesis)])
-    func synthesisThresholds(weight: Int, isItalic: Bool, faceWeight: Int, faceIsItalic: Bool, synthesis: LayerTree.FontSynthesis) {
-        #expect(LayerTree.FontSynthesis(weight: weight, isItalic: isItalic, faceWeight: faceWeight, faceIsItalic: faceIsItalic) == synthesis)
+    @Test(
+        arguments: [
+            (400, false, 400, false, []),
+            (599, false, 400, false, []),
+            (600, false, 599, false, .bold),
+            (700, false, 600, false, []),
+            (700, true, 700, false, .oblique),
+            (400, true, 400, true, []),
+            (400, false, 700, true, []),
+        ] as [(Int, Bool, Int, Bool, LayerTree.FontSynthesis)]
+    )
+    func synthesisThresholds(
+        weight: Int,
+        isItalic: Bool,
+        faceWeight: Int,
+        faceIsItalic: Bool,
+        synthesis: LayerTree.FontSynthesis
+    ) {
+        #expect(
+            LayerTree.FontSynthesis(
+                weight: weight,
+                isItalic: isItalic,
+                faceWeight: faceWeight,
+                faceIsItalic: faceIsItalic
+            ) == synthesis
+        )
     }
 }
 
@@ -160,13 +184,22 @@ struct CGProviderFontSynthesisTests {
         let data = try Data(contentsOf: Bundle.test.url(forResource: "Roboto-Regular.ttf"))
         let plain = CGProvider.createFont(for: [.truetype(data)], size: 12, weight: 700, isItalic: true)
         #expect(plain.synthesis(for: plain.font) == [])
-        let synthesized = CGProvider.createFont(for: [.synthesized(.truetype(data), .bold)], size: 12, weight: 700, isItalic: true)
+        let synthesized = CGProvider.createFont(
+            for: [.synthesized(.truetype(data), .bold)],
+            size: 12,
+            weight: 700,
+            isItalic: true
+        )
         #expect(synthesized.synthesis(for: synthesized.font) == .bold)
     }
 
     // MARK: - outlines
 
-    private func attributes(_ font: LayerTree.TextAttributes.Font, size: Float = 100, anchor: DOM.TextAnchor = .start) throws -> LayerTree.TextAttributes {
+    private func attributes(
+        _ font: LayerTree.TextAttributes.Font,
+        size: Float = 100,
+        anchor: DOM.TextAnchor = .start
+    ) throws -> LayerTree.TextAttributes {
         LayerTree.TextAttributes(color: .black, font: [font], size: size, anchor: anchor, baseline: .alphabetic)
     }
 
@@ -175,7 +208,8 @@ struct CGProviderFontSynthesisTests {
     }
 
     private func bounds(_ text: String, _ font: LayerTree.TextAttributes.Font, size: Float = 100) throws -> CGRect {
-        try #require(CGProvider().createPath(from: text, at: .zero, with: attributes(font, size: size))).boundingBoxOfPath
+        try #require(CGProvider().createPath(from: text, at: .zero, with: attributes(font, size: size)))
+            .boundingBoxOfPath
     }
 
     @Test(arguments: [24 as Float, 100])
@@ -203,7 +237,10 @@ struct CGProviderFontSynthesisTests {
     @Test
     func boldWidensAnchoredText() throws {
         let regular = LayerTree.Builder.makeOffset(for: "IIII", with: try attributes(roboto(), anchor: .end))
-        let bold = LayerTree.Builder.makeOffset(for: "IIII", with: try attributes(.synthesized(roboto(), .bold), anchor: .end))
+        let bold = LayerTree.Builder.makeOffset(
+            for: "IIII",
+            with: try attributes(.synthesized(roboto(), .bold), anchor: .end)
+        )
         #expect(abs((regular.width - bold.width) - 4 * 100 / 36) < 0.001)
     }
 

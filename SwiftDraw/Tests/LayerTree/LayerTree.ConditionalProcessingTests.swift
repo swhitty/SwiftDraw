@@ -29,7 +29,6 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-
 @testable import SwiftDraw
 import SwiftDrawDOM
 import Testing
@@ -39,23 +38,37 @@ import Testing
 /// conditions fail are not rendered. Each rect is identified by its width.
 struct LayerTreeConditionalProcessingTests {
 
-    @Test(arguments: [
-        // no conditions: the first child
-        (#"<rect width="1" height="1"/><rect width="2" height="1"/>"#, [1]),
-        // requiredExtensions fails whatever its value
-        (#"<rect width="1" height="1" requiredExtensions="http://example.org/bogus"/><rect width="2" height="1"/>"#, [2]),
-        (#"<rect width="1" height="1" requiredExtensions=""/><rect width="2" height="1"/>"#, [2]),
-        // requiredFeatures was removed in SVG 2 and is ignored, as in browsers
-        (#"<rect width="1" height="1" requiredFeatures="http://www.w3.org/TR/SVG11/feature#Shape"/><rect width="2" height="1"/>"#, [1]),
-        (#"<rect width="1" height="1" systemLanguage="ru-RU"/><rect width="2" height="1"/>"#, [2]),
-        (#"<rect width="1" height="1" systemLanguage="en"/><rect width="2" height="1"/>"#, [1]),
-        // a selected child that draws nothing still ends the switch
-        (#"<rect width="1" height="1" display="none"/><rect width="2" height="1"/>"#, []),
-        // no child passes
-        (#"<rect width="1" height="1" systemLanguage="ru"/><rect width="2" height="1" requiredExtensions="x"/>"#, []),
-        // only direct children are considered, a group's conditions included
-        (#"<g systemLanguage="fr"><rect width="1" height="1"/></g><g><rect width="2" height="1"/><rect width="3" height="1"/></g>"#, [2, 3]),
-    ] as [(String, [Float])])
+    @Test(
+        arguments: [
+            // no conditions: the first child
+            (#"<rect width="1" height="1"/><rect width="2" height="1"/>"#, [1]),
+            // requiredExtensions fails whatever its value
+            (
+                #"<rect width="1" height="1" requiredExtensions="http://example.org/bogus"/><rect width="2" height="1"/>"#,
+                [2]
+            ),
+            (#"<rect width="1" height="1" requiredExtensions=""/><rect width="2" height="1"/>"#, [2]),
+            // requiredFeatures was removed in SVG 2 and is ignored, as in browsers
+            (
+                #"<rect width="1" height="1" requiredFeatures="http://www.w3.org/TR/SVG11/feature#Shape"/><rect width="2" height="1"/>"#,
+                [1]
+            ),
+            (#"<rect width="1" height="1" systemLanguage="ru-RU"/><rect width="2" height="1"/>"#, [2]),
+            (#"<rect width="1" height="1" systemLanguage="en"/><rect width="2" height="1"/>"#, [1]),
+            // a selected child that draws nothing still ends the switch
+            (#"<rect width="1" height="1" display="none"/><rect width="2" height="1"/>"#, []),
+            // no child passes
+            (
+                #"<rect width="1" height="1" systemLanguage="ru"/><rect width="2" height="1" requiredExtensions="x"/>"#,
+                []
+            ),
+            // only direct children are considered, a group's conditions included
+            (
+                #"<g systemLanguage="fr"><rect width="1" height="1"/></g><g><rect width="2" height="1"/><rect width="3" height="1"/></g>"#,
+                [2, 3]
+            ),
+        ] as [(String, [Float])]
+    )
     func switchSelectsFirstPassingChild(_ children: String, _ widths: [Float]) throws {
         let svg = try parse("<switch>\(children)</switch>")
         #expect(rectWidths(svg, languages: ["en-US"]) == widths)
@@ -74,13 +87,17 @@ struct LayerTreeConditionalProcessingTests {
         (" , ", false),
     ])
     func systemLanguageMatchesPrimarySubtag(_ value: String, _ matches: Bool) throws {
-        let svg = try parse(#"<switch><rect width="1" height="1" systemLanguage="\#(value)"/><rect width="2" height="1"/></switch>"#)
+        let svg = try parse(
+            #"<switch><rect width="1" height="1" systemLanguage="\#(value)"/><rect width="2" height="1"/></switch>"#
+        )
         #expect(rectWidths(svg, languages: ["en-US"]) == (matches ? [1] : [2]))
     }
 
     @Test
     func systemLanguageUsesEveryPreferredLanguage() throws {
-        let svg = try parse(#"<switch><rect width="1" height="1" systemLanguage="ru"/><rect width="2" height="1"/></switch>"#)
+        let svg = try parse(
+            #"<switch><rect width="1" height="1" systemLanguage="ru"/><rect width="2" height="1"/></switch>"#
+        )
         #expect(rectWidths(svg, languages: ["de_DE", "ru-RU"]) == [1])
         #expect(rectWidths(svg, languages: ["de_DE"]) == [2])
         #expect(rectWidths(svg, languages: []) == [2])
@@ -88,34 +105,45 @@ struct LayerTreeConditionalProcessingTests {
 
     @Test
     func switchKeepsItsOwnAttributes() throws {
-        let svg = try parse(#"<switch fill="green" transform="scale(2)"><rect width="1" height="1" requiredExtensions="x"/><rect width="2" height="1"/></switch>"#)
+        let svg = try parse(
+            #"<switch fill="green" transform="scale(2)"><rect width="1" height="1" requiredExtensions="x"/><rect width="2" height="1"/></switch>"#
+        )
         let root = LayerTree.Builder(svg: svg, languages: ["en"]).makeLayer()
-        let layer = try #require(root.contents.compactMap { if case .layer(let l) = $0 { return l } else { return nil } }.first)
+        let layer = try #require(
+            root.contents.compactMap { if case .layer(let l) = $0 { return l } else { return nil } }.first
+        )
         #expect(layer.transform == [.scale(sx: 2, sy: 2)])
         #expect(rectWidths(svg, languages: ["en"]) == [2])
     }
 
     @Test
     func failingConditionsOutsideSwitchRemoveTheElement() throws {
-        let svg = try parse(#"""
-        <rect width="1" height="1"/>
-        <rect width="2" height="1" systemLanguage="ru-RU"/>
-        <g requiredExtensions="x"><rect width="3" height="1"/></g>
-        <rect width="4" height="1" systemLanguage="en"/>
-        """#)
+        let svg = try parse(
+            #"""
+            <rect width="1" height="1"/>
+            <rect width="2" height="1" systemLanguage="ru-RU"/>
+            <g requiredExtensions="x"><rect width="3" height="1"/></g>
+            <rect width="4" height="1" systemLanguage="en"/>
+            """#
+        )
         #expect(rectWidths(svg, languages: ["en-US"]) == [1, 4])
     }
 
     @Test
     func useOfFailingElementDrawsNothing() throws {
-        let svg = try parse(##"<defs><rect id="r" width="1" height="1" systemLanguage="ru"/></defs><use href="#r"/><use href="#r" systemLanguage="ru"/>"##)
+        let svg = try parse(
+            ##"<defs><rect id="r" width="1" height="1" systemLanguage="ru"/></defs><use href="#r"/><use href="#r" systemLanguage="ru"/>"##
+        )
         #expect(rectWidths(svg, languages: ["en"]).isEmpty)
         #expect(rectWidths(svg, languages: ["ru"]) == [1, 1])
     }
 
     @Test
     func rootSVGWithFailingConditionsDrawsNothing() throws {
-        let svg = try DOM.SVG.parse(xml: #"<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" systemLanguage="ru-RU"><rect width="1" height="1"/></svg>"#)
+        let svg = try DOM.SVG.parse(
+            xml:
+                #"<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" systemLanguage="ru-RU"><rect width="1" height="1"/></svg>"#
+        )
         #expect(svg.systemLanguage == "ru-RU")
         #expect(rectWidths(svg, languages: ["en-US"]).isEmpty)
         #expect(rectWidths(svg, languages: ["ru"]) == [1])
@@ -123,7 +151,9 @@ struct LayerTreeConditionalProcessingTests {
 
     @Test
     func domParsesConditionalAttributes() throws {
-        let svg = try parse(#"<switch><rect width="1" height="1" systemLanguage="en, fr" requiredExtensions=""/></switch>"#)
+        let svg = try parse(
+            #"<switch><rect width="1" height="1" systemLanguage="en, fr" requiredExtensions=""/></switch>"#
+        )
         let sw = try #require(svg.childElements.first as? DOM.Switch)
         let rect = try #require(sw.childElements.first)
         #expect(rect.systemLanguage == "en, fr")

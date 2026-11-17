@@ -92,7 +92,12 @@ public struct SFSymbolRenderer {
         return try render(default: regularDOM, ultralight: ultralightDOM, black: blackDOM)
     }
 
-    private func makeVariant(regular: URL, explicit: URL?, scale: StrokeWidthScale?, variant: Variant) throws -> DOM.SVG? {
+    private func makeVariant(
+        regular: URL,
+        explicit: URL?,
+        scale: StrokeWidthScale?,
+        variant: Variant
+    ) throws -> DOM.SVG? {
         if let explicit {
             if scale != nil {
                 LogSink.warning("explicit --\(variant.rawValue) overrides --\(variant.rawValue)-stroke-width.")
@@ -116,24 +121,46 @@ public struct SFSymbolRenderer {
 
         template.svg.styles = image.styles.map(makeSymbolStyleSheet)
 
-        let boundsRegular = try makeBounds(svg: image, paths: pathsRegular, destination: template.regular.bounds, for: .regular)
+        let boundsRegular = try makeBounds(
+            svg: image,
+            paths: pathsRegular,
+            destination: template.regular.bounds,
+            for: .regular
+        )
         template.regular.appendPaths(pathsRegular, from: boundsRegular, isLegacy: isLegacyInsets)
 
         if let ultralight = ultralight,
-           let paths = Self.getPaths(for: ultralight) {
-            let bounds = try makeBounds(svg: ultralight, paths: paths, destination: template.ultralight.bounds, for: .ultralight)
+            let paths = Self.getPaths(for: ultralight)
+        {
+            let bounds = try makeBounds(
+                svg: ultralight,
+                paths: paths,
+                destination: template.ultralight.bounds,
+                for: .ultralight
+            )
             template.ultralight.appendPaths(paths, from: bounds, isLegacy: isLegacyInsets)
         } else {
-            let bounds = try makeBounds(svg: image, paths: pathsRegular, destination: template.ultralight.bounds, for: .ultralight)
+            let bounds = try makeBounds(
+                svg: image,
+                paths: pathsRegular,
+                destination: template.ultralight.bounds,
+                for: .ultralight
+            )
             template.ultralight.appendPaths(pathsRegular, from: bounds, isLegacy: isLegacyInsets)
         }
 
         if let black = black,
-           let paths = Self.getPaths(for: black) {
+            let paths = Self.getPaths(for: black)
+        {
             let bounds = try makeBounds(svg: black, paths: paths, destination: template.black.bounds, for: .black)
             template.black.appendPaths(paths, from: bounds, isLegacy: isLegacyInsets)
         } else {
-            let bounds = try makeBounds(svg: image, paths: pathsRegular, destination: template.black.bounds, for: .black)
+            let bounds = try makeBounds(
+                svg: image,
+                paths: pathsRegular,
+                destination: template.black.bounds,
+                for: .black
+            )
             template.black.appendPaths(pathsRegular, from: bounds, isLegacy: isLegacyInsets)
         }
 
@@ -164,10 +191,8 @@ public struct SFSymbolRenderer {
 
     static func containsAcceptedName(_ string: String?) -> Bool {
         guard let string = string else { return false }
-        return string.contains("hierarchical-") ||
-        string.contains("monochrome-") ||
-        string.contains("multicolor-") ||
-        string.contains("SFSymbolsPreview")
+        return string.contains("hierarchical-") || string.contains("monochrome-") || string.contains("multicolor-")
+            || string.contains("SFSymbolsPreview")
     }
 }
 
@@ -196,7 +221,12 @@ extension SFSymbolRenderer {
     /// The rect of the source SVG that is aligned to the template: its top and bottom map to the cap height
     /// and baseline, its left and right to the margins. Insets are measured from the edges of the SVG in its
     /// own units; any edge left as `auto` is derived from the content.
-    func makeBounds(svg: DOM.SVG, paths: [SymbolPath], destination: LayerTree.Rect, for variant: Variant) throws -> LayerTree.Rect {
+    func makeBounds(
+        svg: DOM.SVG,
+        paths: [SymbolPath],
+        destination: LayerTree.Rect,
+        for variant: Variant
+    ) throws -> LayerTree.Rect {
         let content = Self.makeAutoBounds(for: paths)
         guard !isLegacyInsets else {
             return try makeLegacyBounds(svg: svg, auto: content, for: variant)
@@ -207,7 +237,9 @@ extension SFSymbolRenderer {
         let height = LayerTree.Float(svg.height)
 
         // auto sizes the content to fit within the default margins and between the baseline and cap height
-        let autoScale = Self.makeFiniteScale(min(destination.width / content.width, destination.height / content.height))
+        let autoScale = Self.makeFiniteScale(
+            min(destination.width / content.width, destination.height / content.height)
+        )
         let autoHeight = destination.height / autoScale
         let top = insets.top.map { LayerTree.Float($0) } ?? (content.midY - autoHeight / 2)
         let bottom = insets.bottom.map { LayerTree.Float($0) } ?? (height - content.midY - autoHeight / 2)
@@ -225,7 +257,13 @@ extension SFSymbolRenderer {
             throw Error("Invalid insets")
         }
 
-        Self.printInsets(top: Double(top), left: Double(left), bottom: Double(bottom), right: Double(right), variant: variant)
+        Self.printInsets(
+            top: Double(top),
+            left: Double(left),
+            bottom: Double(bottom),
+            right: Double(right),
+            variant: variant
+        )
         return LayerTree.Rect(x: left, y: top, width: boundsWidth, height: boundsHeight)
     }
 
@@ -270,8 +308,10 @@ extension SFSymbolRenderer {
         var path: LayerTree.Path
     }
 
-    static func getSymbolPaths(for layer: LayerTree.Layer,
-                               ctm: LayerTree.Transform.Matrix = .identity) -> [SymbolPath] {
+    static func getSymbolPaths(
+        for layer: LayerTree.Layer,
+        ctm: LayerTree.Transform.Matrix = .identity
+    ) -> [SymbolPath] {
 
         let isSFSymbolLayer = containsAcceptedName(layer.class)
         guard isSFSymbolLayer || layer.opacity > 0 else { return [] }
@@ -318,11 +358,13 @@ extension SFSymbolRenderer {
         }
 
         if !layer.clip.isEmpty {
-            paths = applyClip(to: paths,
-                              clipShapes: layer.clip,
-                              clipRule: layer.clipRule,
-                              clipUnits: layer.clipUnits,
-                              ctm: ctm)
+            paths = applyClip(
+                to: paths,
+                clipShapes: layer.clip,
+                clipRule: layer.clipRule,
+                clipUnits: layer.clipUnits,
+                ctm: ctm
+            )
         }
 
         return paths
@@ -359,73 +401,83 @@ extension SFSymbolRenderer {
         }
     }
 
-    static func applyClip(to paths: [SymbolPath],
-                          clipShapes: [LayerTree.ClipShape],
-                          clipRule: LayerTree.FillRule?,
-                          clipUnits: LayerTree.ClipUnits,
-                          ctm: LayerTree.Transform.Matrix) -> [SymbolPath] {
-#if canImport(CoreGraphics)
+    static func applyClip(
+        to paths: [SymbolPath],
+        clipShapes: [LayerTree.ClipShape],
+        clipRule: LayerTree.FillRule?,
+        clipUnits: LayerTree.ClipUnits,
+        ctm: LayerTree.Transform.Matrix
+    ) -> [SymbolPath] {
+        #if canImport(CoreGraphics)
         var result = [SymbolPath]()
         result.reserveCapacity(paths.count)
         for symbolPath in paths {
-            if let clipped = intersect(path: symbolPath.path,
-                                       with: clipShapes,
-                                       clipRule: clipRule,
-                                       clipUnits: clipUnits,
-                                       clipCTM: ctm) {
+            if let clipped = intersect(
+                path: symbolPath.path,
+                with: clipShapes,
+                clipRule: clipRule,
+                clipUnits: clipUnits,
+                clipCTM: ctm
+            ) {
                 result.append(SymbolPath(class: symbolPath.class, path: clipped))
             }
         }
         return result
-#else
+        #else
         LogSink.warning("clip-path requires CoreGraphics.")
         return paths
-#endif
+        #endif
     }
 
-    static func makeFillPath(for shape: LayerTree.Shape,
-                             fill: LayerTree.FillAttributes,
-                             preserve: Bool) -> LayerTree.Path? {
+    static func makeFillPath(
+        for shape: LayerTree.Shape,
+        fill: LayerTree.FillAttributes,
+        preserve: Bool
+    ) -> LayerTree.Path? {
         if preserve || (fill.fill != .none && fill.opacity > 0) {
             return shape.path
         }
         return nil
     }
 
-    static func makeStrokePath(for shape: LayerTree.Shape,
-                               stroke: LayerTree.StrokeAttributes,
-                               preserve: Bool) -> LayerTree.Path? {
+    static func makeStrokePath(
+        for shape: LayerTree.Shape,
+        stroke: LayerTree.StrokeAttributes,
+        preserve: Bool
+    ) -> LayerTree.Path? {
         if preserve || (stroke.color != .none && stroke.width > 0) {
-#if canImport(CoreGraphics)
+            #if canImport(CoreGraphics)
             return expandOutlines(for: shape.path, stroke: stroke)
-#else
+            #else
             LogSink.warning("expanding stroke outlines requires macOS.")
             return nil
-#endif
+            #endif
         }
 
         return nil
     }
 
-    static func makePath(for text: String,
-                         at point: LayerTree.Point,
-                         with attributes: LayerTree.TextAttributes) -> LayerTree.Path? {
-#if canImport(CoreGraphics)
+    static func makePath(
+        for text: String,
+        at point: LayerTree.Point,
+        with attributes: LayerTree.TextAttributes
+    ) -> LayerTree.Path? {
+        #if canImport(CoreGraphics)
         let cgPath = CGProvider().createPath(from: text, at: point, with: attributes)
         return cgPath?.makePath()
-#else
+        #else
         LogSink.warning("expanding text outlines requires macOS.")
         return nil
-#endif
+        #endif
     }
 
     static func makePath(for run: LayerTree.GlyphRun) -> LayerTree.Path? {
-#if canImport(CoreText)
+        #if canImport(CoreText)
         CGProvider.createGlyphPath(from: run)?.makePath()
-#else
+        #else
         LogSink.warning("expanding text outlines requires macOS.")
         return nil
-#endif
+        #endif
     }
 
     static func makeAutoBounds(for paths: [SymbolPath]) -> LayerTree.Rect {
@@ -445,13 +497,15 @@ extension SFSymbolRenderer {
         )
     }
 
-    static func makeTransformation(from source: LayerTree.Rect,
-                                   to destination: LayerTree.Rect) -> LayerTree.Transform.Matrix {
+    static func makeTransformation(
+        from source: LayerTree.Rect,
+        to destination: LayerTree.Rect
+    ) -> LayerTree.Transform.Matrix {
         let scale = min(destination.width / source.width, destination.height / source.height)
         let scaleMidX = source.midX * scale
         let scaleMidY = source.midY * scale
         let tx = destination.midX - scaleMidX
-        let ty =  destination.midY - scaleMidY
+        let ty = destination.midY - scaleMidY
         let t = LayerTree.Transform
             .translate(tx: tx, ty: ty)
         return LayerTree.Transform
@@ -461,8 +515,10 @@ extension SFSymbolRenderer {
     }
 
     /// Scales `source` so its height matches `destination` and centres it within `destination`.
-    static func makeAlignment(from source: LayerTree.Rect,
-                              to destination: LayerTree.Rect) -> LayerTree.Transform.Matrix {
+    static func makeAlignment(
+        from source: LayerTree.Rect,
+        to destination: LayerTree.Rect
+    ) -> LayerTree.Transform.Matrix {
         let scale = makeFiniteScale(destination.height / source.height)
         return LayerTree.Transform
             .scale(sx: scale, sy: scale)
@@ -474,9 +530,11 @@ extension SFSymbolRenderer {
             )
     }
 
-    static func convertPaths(_ paths: [LayerTree.Path],
-                             from source: LayerTree.Rect,
-                             to destination: LayerTree.Rect) -> [DOM.Path] {
+    static func convertPaths(
+        _ paths: [LayerTree.Path],
+        from source: LayerTree.Rect,
+        to destination: LayerTree.Rect
+    ) -> [DOM.Path] {
         let matrix = makeTransformation(from: source, to: destination)
         return paths.map { $0.applying(matrix: matrix) }
             .map(makeDOMPath)
@@ -549,9 +607,11 @@ struct SFSymbolTemplate {
     /// 1. Different segment counts: inserts degenerate cubics to align paths
     /// 2. Same count but different types: promotes lines to degenerate cubics
     mutating func normalizeVariants() {
-        let pathCount = min(ultralight.contents.paths.count,
-                            regular.contents.paths.count,
-                            black.contents.paths.count)
+        let pathCount = min(
+            ultralight.contents.paths.count,
+            regular.contents.paths.count,
+            black.contents.paths.count
+        )
         for i in 0..<pathCount {
             Self.normalizeSegments(
                 &ultralight.contents.paths[i].segments,
@@ -576,7 +636,8 @@ struct SFSymbolTemplate {
         let blackPaths = black.contents.paths
 
         guard ultralightPaths.count == regularPaths.count,
-              regularPaths.count == blackPaths.count else {
+            regularPaths.count == blackPaths.count
+        else {
             throw Self.makeVariantError(
                 "path count is \(ultralightPaths.count)/\(regularPaths.count)/\(blackPaths.count) (ultralight/regular/black)"
             )
@@ -588,7 +649,8 @@ struct SFSymbolTemplate {
             let blackTypes = blackPaths[index].segments.map(\.commandType)
 
             guard ultralightTypes.count == regularTypes.count,
-                  regularTypes.count == blackTypes.count else {
+                regularTypes.count == blackTypes.count
+            else {
                 throw Self.makeVariantError(
                     "path \(index) has \(ultralightTypes.count)/\(regularTypes.count)/\(blackTypes.count) segments (ultralight/regular/black)"
                 )
@@ -823,7 +885,7 @@ extension SFSymbolRenderer.SizeCategory {
 
     var name: String {
         switch self {
-        case .small: 
+        case .small:
             return "S"
         case .medium:
             return "M"
@@ -855,64 +917,64 @@ extension SFSymbolTemplate {
 
     static func make() throws -> Self {
         let svg = """
-        <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-        <svg width="800" height="600" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-            <g id="Notes" font-family="'LucidaGrande', 'Lucida Grande', sans-serif" font-weight="500" font-size="13px">
-                  <rect x="0" y="0" width="800" height="600" fill="white"/>
-                <g font-weight="500" font-size="13px">
-                    <text x="18px" y="176px">Small</text>
-                    <text x="18px" y="376px">Medium</text>
-                    <text x="18px" y="576px">Large</text>
+            <?xml version="1.0" encoding="UTF-8" standalone="no"?>
+            <svg width="800" height="600" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+                <g id="Notes" font-family="'LucidaGrande', 'Lucida Grande', sans-serif" font-weight="500" font-size="13px">
+                      <rect x="0" y="0" width="800" height="600" fill="white"/>
+                    <g font-weight="500" font-size="13px">
+                        <text x="18px" y="176px">Small</text>
+                        <text x="18px" y="376px">Medium</text>
+                        <text x="18px" y="576px">Large</text>
+                    </g>
+                    <g font-weight="300" font-size="9px">
+                        <text x="250px" y="30px">Ultralight</text>
+                        <text x="450px" y="30px">Regular</text>
+                     <text x="650px" y="30px">Black</text>
+                     <text id="template-version" fill="#505050" x="785.0" y="575.0" text-anchor="end">Template v.3.0</text>
+                     <a href="https://github.com/swhitty/SwiftDraw">
+                        <text fill="#505050" x="785.0" y="590.0" text-anchor="end">https://github.com/swhitty/SwiftDraw</text>
+                     </a>
+                    </g>
                 </g>
-                <g font-weight="300" font-size="9px">
-                    <text x="250px" y="30px">Ultralight</text>
-                    <text x="450px" y="30px">Regular</text>
-                 <text x="650px" y="30px">Black</text>
-                 <text id="template-version" fill="#505050" x="785.0" y="575.0" text-anchor="end">Template v.3.0</text>
-                 <a href="https://github.com/swhitty/SwiftDraw">
-                    <text fill="#505050" x="785.0" y="590.0" text-anchor="end">https://github.com/swhitty/SwiftDraw</text>
-                 </a>
+
+                <g id="Guides" stroke="rgb(39,170,225)" stroke-width="0.5px">
+                    <path id="Capline-S" d="M18,76 l800,0" />
+                    <path id="H-reference"
+                        d="M85,145.755 L87.685,145.755 L113.369,79.287 L114.052002,79.287
+                           L114.052002,76 L112.148,76 L85,145.755 Z
+                           M95.693,121.536 L130.996,121.536 L130.263,119.313 L96.474,119.313 L95.693,121.536 Z
+                           M139.14999,145.755 L141.787,145.755 L114.638,76 L113.466,76 L113.466,79.287 L139.14999,145.755 Z" stroke="none" />
+                    <path id="Baseline-S" d="M18,146 l800,0" />
+
+                    <path id="left-margin-Ultralight-S" d="M221,56 l0,110" />
+                    <path id="right-margin-Ultralight-S" d="M309,56 l0,110" />
+
+                    <path id="left-margin-Regular-S" d="M421,56 l0,110" />
+                    <path id="right-margin-Regular-S" d="M509,56 l0,110" />
+
+                    <path id="left-margin-Black-S" d="M621,56 l0,110" />
+                    <path id="right-margin-Black-S" d="M709,56 l0,110" />
+
+                    <path id="Capline-M" d="M18,276 l800,0" />
+                    <path id="Baseline-M" d="M18,346 l800,0" />
+
+                    <path id="Capline-L" d="M18,476 l800,0" />
+                    <path id="Baseline-L" d="M18,546 l800,0" />
                 </g>
-            </g>
 
-            <g id="Guides" stroke="rgb(39,170,225)" stroke-width="0.5px">
-                <path id="Capline-S" d="M18,76 l800,0" />
-                <path id="H-reference"
-                    d="M85,145.755 L87.685,145.755 L113.369,79.287 L114.052002,79.287
-                       L114.052002,76 L112.148,76 L85,145.755 Z
-                       M95.693,121.536 L130.996,121.536 L130.263,119.313 L96.474,119.313 L95.693,121.536 Z
-                       M139.14999,145.755 L141.787,145.755 L114.638,76 L113.466,76 L113.466,79.287 L139.14999,145.755 Z" stroke="none" />
-                <path id="Baseline-S" d="M18,146 l800,0" />
-
-                <path id="left-margin-Ultralight-S" d="M221,56 l0,110" />
-                <path id="right-margin-Ultralight-S" d="M309,56 l0,110" />
-
-                <path id="left-margin-Regular-S" d="M421,56 l0,110" />
-                <path id="right-margin-Regular-S" d="M509,56 l0,110" />
-
-                <path id="left-margin-Black-S" d="M621,56 l0,110" />
-                <path id="right-margin-Black-S" d="M709,56 l0,110" />
-
-                <path id="Capline-M" d="M18,276 l800,0" />
-                <path id="Baseline-M" d="M18,346 l800,0" />
-
-                <path id="Capline-L" d="M18,476 l800,0" />
-                <path id="Baseline-L" d="M18,546 l800,0" />
-            </g>
-
-            <g id="Symbols">
-                <g id="Ultralight-S">
-                    <!-- Insert Contents -->
+                <g id="Symbols">
+                    <g id="Ultralight-S">
+                        <!-- Insert Contents -->
+                    </g>
+                    <g id="Regular-S">
+                        <!-- Insert Contents -->
+                    </g>
+                    <g id="Black-S">
+                        <!-- Insert Contents -->
+                    </g>
                 </g>
-                <g id="Regular-S">
-                    <!-- Insert Contents -->
-                </g>
-                <g id="Black-S">
-                    <!-- Insert Contents -->
-                </g>
-            </g>
-        </svg>
-        """
+            </svg>
+            """
         return try .parse(svg)
     }
 }
@@ -939,11 +1001,17 @@ private extension ContainerElement {
 
 private extension SFSymbolTemplate.Variant {
 
-    mutating func appendPaths(_ paths: [SFSymbolRenderer.SymbolPath], from source: LayerTree.Rect, isLegacy: Bool = false) {
-        let matrix = isLegacy
+    mutating func appendPaths(
+        _ paths: [SFSymbolRenderer.SymbolPath],
+        from source: LayerTree.Rect,
+        isLegacy: Bool = false
+    ) {
+        let matrix =
+            isLegacy
             ? SFSymbolRenderer.makeTransformation(from: source, to: bounds)
             : SFSymbolRenderer.makeAlignment(from: source, to: bounds)
-        contents.paths = paths
+        contents.paths =
+            paths
             .map {
                 let transformed = $0.path.applying(matrix: matrix)
                 let dom = SFSymbolRenderer.makeDOMPath(for: transformed)
@@ -1012,9 +1080,9 @@ extension DOM.Path.Segment {
         case .cubic(_, _, _, _, let x, let y, _):
             return (x, y)
         case .horizontal(let x, _):
-            return (x, 0) // y stays same, caller tracks
+            return (x, 0)  // y stays same, caller tracks
         case .vertical(let y, _):
-            return (0, y) // x stays same, caller tracks
+            return (0, y)  // x stays same, caller tracks
         default:
             return nil
         }

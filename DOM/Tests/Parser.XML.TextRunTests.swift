@@ -34,21 +34,26 @@ import Testing
 struct ParserXMLTextRunTests {
 
     private func parseText(_ text: String) throws -> DOM.Text {
-        let svg = try DOM.SVG.parse(xml: """
-        <svg xmlns="http://www.w3.org/2000/svg" width="200" height="200">\(text)</svg>
-        """)
+        let svg = try DOM.SVG.parse(
+            xml: """
+                <svg xmlns="http://www.w3.org/2000/svg" width="200" height="200">\(text)</svg>
+                """
+        )
         return try #require(svg.childElements.first as? DOM.Text)
     }
 
     @Test
     func runsKeepDocumentOrderAndTheirOwnAttributes() throws {
-        let text = try parseText(#"<text>Te<tspan fill="green" font-size="20">xt<tspan font-weight="bold">!</tspan></tspan>?</text>"#)
+        let text = try parseText(
+            #"<text>Te<tspan fill="green" font-size="20">xt<tspan font-weight="bold">!</tspan></tspan>?</text>"#
+        )
         #expect(text.value == "Text!?")
         #expect(text.runs.count == 3)
 
         guard case .text("Te") = text.runs[0],
-              case .span(let span) = text.runs[1],
-              case .text("?") = text.runs[2] else {
+            case .span(let span) = text.runs[1],
+            case .text("?") = text.runs[2]
+        else {
             Issue.record("unexpected runs \(text.runs)")
             return
         }
@@ -63,30 +68,37 @@ struct ParserXMLTextRunTests {
         #expect(DOM.TextRun.plainText(of: inner.runs) == "!")
     }
 
-    @Test(arguments: [
-        // collapsed: leading and trailing space of the whole text removed, single spaces between runs
-        (#"<text>  Text  <tspan>  Text  </tspan>  Text  </text>"#, "Text Text Text"),
-        ("<text>\n  <tspan>\n    <tspan>\n      Text\n    </tspan>\n  </tspan>\n</text>", "Text"),
-        ("<text>A\tlot\n of   spaces</text>", "A lot of spaces"),
-        // preserved: each newline and tab is a space
-        (#"<text xml:space="preserve">Text    Text</text>"#, "Text    Text"),
-        ("<text xml:space=\"preserve\"> A\n\tB </text>", " A  B "),
-        (#"<text><tspan xml:space="preserve">Text    Text</tspan></text>"#, "Text    Text"),
-        (#"<text style="white-space: pre"> Text  Text </text>"#, " Text  Text "),
-        (#"<text xml:space="preserve" white-space="normal"> Text  Text </text>"#, "Text Text"),
-        // mixed: collapsible space following a preserved space is removed
-        ("<text>\n  Text  <tspan xml:space=\"preserve\">  Text  </tspan>  Text\n</text>", "Text   Text  Text"),
-        (#"<text xml:space="preserve">  Text  <tspan xml:space="default">  Text  </tspan>  Text  </text>"#, "  Text  Text   Text  "),
-        // a no-break space is not white space
-        ("<text>a\u{00A0}\u{00A0}b </text>", "a\u{00A0}\u{00A0}b"),
-    ] as [(String, String)])
+    @Test(
+        arguments: [
+            // collapsed: leading and trailing space of the whole text removed, single spaces between runs
+            (#"<text>  Text  <tspan>  Text  </tspan>  Text  </text>"#, "Text Text Text"),
+            ("<text>\n  <tspan>\n    <tspan>\n      Text\n    </tspan>\n  </tspan>\n</text>", "Text"),
+            ("<text>A\tlot\n of   spaces</text>", "A lot of spaces"),
+            // preserved: each newline and tab is a space
+            (#"<text xml:space="preserve">Text    Text</text>"#, "Text    Text"),
+            ("<text xml:space=\"preserve\"> A\n\tB </text>", " A  B "),
+            (#"<text><tspan xml:space="preserve">Text    Text</tspan></text>"#, "Text    Text"),
+            (#"<text style="white-space: pre"> Text  Text </text>"#, " Text  Text "),
+            (#"<text xml:space="preserve" white-space="normal"> Text  Text </text>"#, "Text Text"),
+            // mixed: collapsible space following a preserved space is removed
+            ("<text>\n  Text  <tspan xml:space=\"preserve\">  Text  </tspan>  Text\n</text>", "Text   Text  Text"),
+            (
+                #"<text xml:space="preserve">  Text  <tspan xml:space="default">  Text  </tspan>  Text  </text>"#,
+                "  Text  Text   Text  "
+            ),
+            // a no-break space is not white space
+            ("<text>a\u{00A0}\u{00A0}b </text>", "a\u{00A0}\u{00A0}b"),
+        ] as [(String, String)]
+    )
     func whiteSpaceIsCollapsedOrPreserved(xml: String, expected: String) throws {
         #expect(try parseText(xml).value == expected)
     }
 
     @Test
     func spanPositionsAreKept() throws {
-        let text = try parseText(#"<text font-size="10"><tspan x="1 2" y="3" dx="2em" dy="4,5">Te</tspan><tspan font-size="20" dx="1em">xt</tspan></text>"#)
+        let text = try parseText(
+            #"<text font-size="10"><tspan x="1 2" y="3" dx="2em" dy="4,5">Te</tspan><tspan font-size="20" dx="1em">xt</tspan></text>"#
+        )
         guard case .span(let first) = text.runs[0], case .span(let second) = text.runs[1] else {
             Issue.record("expected two tspans")
             return
@@ -138,9 +150,11 @@ struct ParserXMLTextRunTests {
 
     @Test(arguments: ["<text>  </text>", "<text><tspan> </tspan></text>", "<text><title>T</title></text>"])
     func textWithoutCharactersIsNotDrawn(xml: String) throws {
-        let svg = try DOM.SVG.parse(xml: """
-        <svg xmlns="http://www.w3.org/2000/svg" width="200" height="200">\(xml)</svg>
-        """)
+        let svg = try DOM.SVG.parse(
+            xml: """
+                <svg xmlns="http://www.w3.org/2000/svg" width="200" height="200">\(xml)</svg>
+                """
+        )
         #expect(svg.childElements.isEmpty)
     }
 }

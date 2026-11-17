@@ -135,10 +135,12 @@ extension LayerTree.Color {
         self = LayerTree.Color.create(from: color, current: .none)
     }
 
-    static func srgb(r: LayerTree.Float,
-                     g: LayerTree.Float,
-                     b: LayerTree.Float,
-                     a: LayerTree.Float) -> Self {
+    static func srgb(
+        r: LayerTree.Float,
+        g: LayerTree.Float,
+        b: LayerTree.Float,
+        a: LayerTree.Float
+    ) -> Self {
         .rgba(r: r, g: g, b: b, a: a, space: .srgb)
     }
 }

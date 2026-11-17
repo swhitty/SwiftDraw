@@ -40,16 +40,18 @@ struct CGRendererCSSCascadeTests {
     // a stylesheet transform and a descendant selector reach the pixels
     @Test
     func styleSheetTransformAndSelectorDrawPixels() throws {
-        let bitmap = try render(#"""
-        <svg width="40" height="20" xmlns="http://www.w3.org/2000/svg">
-            <style>
-                .moved { transform: translate(20px, 0) }
-                g.icon > rect:first-child { fill: #ff0000 }
-                rect { fill: #0000ff }
-            </style>
-            <g class="icon"><rect class="moved" width="10" height="10"/><rect y="10" width="10" height="10"/></g>
-        </svg>
-        """#)
+        let bitmap = try render(
+            #"""
+            <svg width="40" height="20" xmlns="http://www.w3.org/2000/svg">
+                <style>
+                    .moved { transform: translate(20px, 0) }
+                    g.icon > rect:first-child { fill: #ff0000 }
+                    rect { fill: #0000ff }
+                </style>
+                <g class="icon"><rect class="moved" width="10" height="10"/><rect y="10" width="10" height="10"/></g>
+            </svg>
+            """#
+        )
 
         // the red square moved from x 0…10 to x 20…30
         #expect(bitmap.rgba(x: 5, y: 5) == [0, 0, 0, 0])
@@ -76,9 +78,15 @@ struct CGRendererCSSCascadeTests {
         var bytes = [UInt8](repeating: 0, count: width * height * 4)
         let space = CGColorSpace(name: CGColorSpace.sRGB)!
         bytes.withUnsafeMutableBytes { buffer in
-            let ctx = CGContext(data: buffer.baseAddress, width: width, height: height,
-                                bitsPerComponent: 8, bytesPerRow: width * 4, space: space,
-                                bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!
+            let ctx = CGContext(
+                data: buffer.baseAddress,
+                width: width,
+                height: height,
+                bitsPerComponent: 8,
+                bytesPerRow: width * 4,
+                space: space,
+                bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+            )!
             ctx.translateBy(x: 0, y: CGFloat(height))
             ctx.scaleBy(x: 1, y: -1)
             CGRenderer(context: ctx).perform(svg.commands)

@@ -88,15 +88,16 @@ extension LayerTree {
 
         var simpleContents: Contents? {
             guard contents.count == 1,
-                  let first = contents.first,
-                  `class` == nil,
-                  opacity == 1.0,
-                  transform == [],
-                  clip == [],
-                  mask == nil,
-                  filters == [],
-                  filterImages.isEmpty,
-                  textBounds == nil else { return nil }
+                let first = contents.first,
+                `class` == nil,
+                opacity == 1.0,
+                transform == [],
+                clip == [],
+                mask == nil,
+                filters == [],
+                filterImages.isEmpty,
+                textBounds == nil
+            else { return nil }
 
             return first
         }
@@ -117,22 +118,13 @@ extension LayerTree {
             textBounds.hash(into: &hasher)
         }
 
-        static func ==(lhs: Layer, rhs: Layer) -> Bool {
-            return lhs.class == rhs.class &&
-            lhs.contents == rhs.contents &&
-            lhs.opacity == rhs.opacity &&
-            lhs.transform == rhs.transform &&
-            lhs.clip == rhs.clip &&
-            lhs.clipRule == rhs.clipRule &&
-            lhs.clipUnits == rhs.clipUnits &&
-            lhs.mask == rhs.mask &&
-            lhs.maskIsClip == rhs.maskIsClip &&
-            lhs.maskType == rhs.maskType &&
-            lhs.filters == rhs.filters &&
-            lhs.filterRegion == rhs.filterRegion &&
-            lhs.filterImages == rhs.filterImages &&
-            lhs.isPaintOrdered == rhs.isPaintOrdered &&
-            lhs.textBounds == rhs.textBounds
+        static func == (lhs: Layer, rhs: Layer) -> Bool {
+            return lhs.class == rhs.class && lhs.contents == rhs.contents && lhs.opacity == rhs.opacity
+                && lhs.transform == rhs.transform && lhs.clip == rhs.clip && lhs.clipRule == rhs.clipRule
+                && lhs.clipUnits == rhs.clipUnits && lhs.mask == rhs.mask && lhs.maskIsClip == rhs.maskIsClip
+                && lhs.maskType == rhs.maskType && lhs.filters == rhs.filters && lhs.filterRegion == rhs.filterRegion
+                && lhs.filterImages == rhs.filterImages && lhs.isPaintOrdered == rhs.isPaintOrdered
+                && lhs.textBounds == rhs.textBounds
         }
     }
 
@@ -190,7 +182,7 @@ extension LayerTree {
             self.rule = rule
             self.opacity = opacity
         }
-        
+
         enum Fill: Hashable {
             case color(Color)
             case pattern(Pattern)
@@ -275,7 +267,7 @@ extension LayerTree.Layer.Contents: CustomDebugStringConvertible {
         switch self {
         case .image:
             return "image"
-        case .layer(let l): 
+        case .layer(let l):
             return "layer-\(l.contents.map(\.debugDescription).joined(separator: ", "))"
         case .shape(let s, _, _):
             return "shape-\(s.debugDescription)"
@@ -291,11 +283,11 @@ extension LayerTree.Shape: CustomDebugStringConvertible {
 
     var debugDescription: String {
         switch self {
-            case .ellipse: return "ellipse"
-            case .rect: return "rect"
-            case .line: return "line"
-            case .path: return "path"
-            case .polygon: return "polygon"
+        case .ellipse: return "ellipse"
+        case .rect: return "rect"
+        case .line: return "line"
+        case .path: return "path"
+        case .polygon: return "polygon"
         }
     }
 }

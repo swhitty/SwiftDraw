@@ -66,9 +66,11 @@ extension LayerTree {
             segments.append(.line(to: point))
         }
 
-        func curve(to point: LayerTree.Point,
-                   control1: LayerTree.Point,
-                   control2: LayerTree.Point) {
+        func curve(
+            to point: LayerTree.Point,
+            control1: LayerTree.Point,
+            control2: LayerTree.Point
+        ) {
             segments.append(.cubic(to: point, control1: control1, control2: control2))
         }
 
@@ -80,7 +82,7 @@ extension LayerTree {
             hasher.combine(segments)
         }
 
-        static func ==(lhs: LayerTree.Path, rhs: LayerTree.Path) -> Bool {
+        static func == (lhs: LayerTree.Path, rhs: LayerTree.Path) -> Bool {
             return lhs.segments == rhs.segments
         }
     }
@@ -100,7 +102,7 @@ extension LayerTree.Path {
 
     var location: LayerTree.Point? {
         guard let location = segments.last?.location else {
-            return segments.last(where:\.isMove)?.location
+            return segments.last(where: \.isMove)?.location
         }
 
         return location
@@ -133,7 +135,6 @@ extension LayerTree.Path.Segment {
     }
 }
 
-
 extension LayerTree.Path {
 
     func applying(matrix: LayerTree.Transform.Matrix) -> LayerTree.Path {
@@ -152,15 +153,16 @@ extension LayerTree.Path.Segment {
         case .line(let point):
             return .line(to: matrix.transform(point: point))
         case .cubic(let p, let cp1, let cp2):
-            return .cubic(to: matrix.transform(point: p),
-                          control1: matrix.transform(point: cp1),
-                          control2: matrix.transform(point: cp2))
+            return .cubic(
+                to: matrix.transform(point: p),
+                control1: matrix.transform(point: cp1),
+                control2: matrix.transform(point: cp2)
+            )
         case .close:
             return .close
         }
     }
 }
-
 
 extension Sequence where Element == LayerTree.Path.Segment {
 
@@ -179,6 +181,6 @@ extension Sequence where Element == LayerTree.Path.Segment {
     }
 }
 
-prefix func !(direction: LayerTree.Path.Direction) -> LayerTree.Path.Direction  {
+prefix func ! (direction: LayerTree.Path.Direction) -> LayerTree.Path.Direction {
     direction.opposite
 }

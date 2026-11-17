@@ -40,10 +40,10 @@ struct RendererSFSymbolInsetsTests {
 
     // A 20×20 box inside a 24×24 canvas.
     static let box = """
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-        <rect x="2" y="2" width="20" height="20" />
-    </svg>
-    """
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+            <rect x="2" y="2" width="20" height="20" />
+        </svg>
+        """
 
     @Test
     func autoFillsCapHeightOnASmallCanvas() throws {
@@ -55,11 +55,13 @@ struct RendererSFSymbolInsetsTests {
 
     @Test
     func autoPadsTheMarginsInTemplateUnits() throws {
-        let narrow = try Self.render("""
-        <svg xmlns="http://www.w3.org/2000/svg" width="240" height="240">
-            <rect x="110" y="20" width="20" height="200" />
-        </svg>
-        """)
+        let narrow = try Self.render(
+            """
+            <svg xmlns="http://www.w3.org/2000/svg" width="240" height="240">
+                <rect x="110" y="20" width="20" height="200" />
+            </svg>
+            """
+        )
 
         #expect(narrow.content.isClose(to: .init(x: 461.5, y: 76, width: 7, height: 70)))
         #expect(narrow.margins.isClose(to: 451.5, 478.5))
@@ -74,7 +76,7 @@ struct RendererSFSymbolInsetsTests {
         // side insets move the margins and leave the scale alone
         (CommandLine.Insets(top: 3, left: -5, bottom: 3, right: -5), LayerTree.Float(70) / 18),
         (CommandLine.Insets(top: 8, left: -8, bottom: 8, right: -8), LayerTree.Float(70) / 8),
-        (CommandLine.Insets(top: 8, left: 8, bottom: 8, right: 8), LayerTree.Float(70) / 8)
+        (CommandLine.Insets(top: 8, left: 8, bottom: 8, right: 8), LayerTree.Float(70) / 8),
     ])
     func insetRectMapsToCapHeightAndMargins(insets: CommandLine.Insets, scale: LayerTree.Float) throws {
         let symbol = try Self.render(Self.box, insets: insets)
@@ -85,12 +87,16 @@ struct RendererSFSymbolInsetsTests {
         let width = (24 - left - right) * scale
         let midX = LayerTree.Float(465)
 
-        #expect(symbol.content.isClose(to: .init(
-            x: midX - width / 2 + (2 - left) * scale,
-            y: 76 + (2 - top) * scale,
-            width: 20 * scale,
-            height: 20 * scale
-        )))
+        #expect(
+            symbol.content.isClose(
+                to: .init(
+                    x: midX - width / 2 + (2 - left) * scale,
+                    y: 76 + (2 - top) * scale,
+                    width: 20 * scale,
+                    height: 20 * scale
+                )
+            )
+        )
         #expect(symbol.margins.isClose(to: midX - width / 2, midX + width / 2))
     }
 
@@ -110,7 +116,9 @@ struct RendererSFSymbolInsetsTests {
         let symbol = try Self.render(Self.box, insets: .init(top: 3, bottom: 3))
 
         let scale = LayerTree.Float(70) / 18
-        #expect(symbol.content.isClose(to: .init(x: 465 - 10 * scale, y: 76 - scale, width: 20 * scale, height: 20 * scale)))
+        #expect(
+            symbol.content.isClose(to: .init(x: 465 - 10 * scale, y: 76 - scale, width: 20 * scale, height: 20 * scale))
+        )
         #expect(symbol.margins.isClose(to: symbol.content.minX - 10, symbol.content.maxX + 10))
     }
 
@@ -119,7 +127,10 @@ struct RendererSFSymbolInsetsTests {
         // auto alignment prints --insets 2,-0.8571,2,-0.8571 for the box
         let padding = 10.0 * 20 / 70
         let auto = try Self.render(Self.box)
-        let explicit = try Self.render(Self.box, insets: .init(top: 2, left: 2 - padding, bottom: 2, right: 2 - padding))
+        let explicit = try Self.render(
+            Self.box,
+            insets: .init(top: 2, left: 2 - padding, bottom: 2, right: 2 - padding)
+        )
 
         #expect(explicit.content.isClose(to: auto.content))
         #expect(explicit.margins.isClose(to: auto.margins.left, auto.margins.right))
@@ -138,7 +149,7 @@ struct RendererSFSymbolInsetsTests {
     @Test(arguments: [
         // --legacy keeps the scale capped by the default margin width
         (CommandLine.Insets(top: 8, left: 0, bottom: 8, right: 0), LayerTree.Float(88) / 24),
-        (CommandLine.Insets(top: 8, left: -8, bottom: 8, right: -8), LayerTree.Float(88) / 40)
+        (CommandLine.Insets(top: 8, left: -8, bottom: 8, right: -8), LayerTree.Float(88) / 40),
     ])
     func legacyInsetsAreUnchanged(insets: CommandLine.Insets, scale: LayerTree.Float) throws {
         let symbol = try Self.render(Self.box, insets: insets, isLegacy: true)
@@ -164,7 +175,8 @@ private extension RendererSFSymbolInsetsTests {
         }
     }
 
-    static func render(_ source: String, insets: CommandLine.Insets = .init(), isLegacy: Bool = false) throws -> Symbol {
+    static func render(_ source: String, insets: CommandLine.Insets = .init(), isLegacy: Bool = false) throws -> Symbol
+    {
         let renderer = SFSymbolRenderer(
             size: .small,
             options: [],
@@ -188,9 +200,7 @@ private extension RendererSFSymbolInsetsTests {
 private extension LayerTree.Rect {
 
     func isClose(to other: LayerTree.Rect, within tolerance: LayerTree.Float = 0.01) -> Bool {
-        abs(minX - other.minX) < tolerance &&
-        abs(minY - other.minY) < tolerance &&
-        abs(width - other.width) < tolerance &&
-        abs(height - other.height) < tolerance
+        abs(minX - other.minX) < tolerance && abs(minY - other.minY) < tolerance && abs(width - other.width) < tolerance
+            && abs(height - other.height) < tolerance
     }
 }

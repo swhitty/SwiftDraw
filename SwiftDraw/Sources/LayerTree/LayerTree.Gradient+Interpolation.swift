@@ -60,8 +60,10 @@ extension LayerTree.Gradient {
     /// Stops drawn in sRGB that differ from this gradient by at most `tolerance` in any component.
     /// Colours are interpolated unpremultiplied, as WebKit and resvg do with `color-interpolation`,
     /// in the gradient's own space (Display P3 when any stop is), and converted with `converter`.
-    func resampled(using converter: any ColorConverter = .default,
-                   tolerance: LayerTree.Float = 0.5 / 255) -> LayerTree.Gradient {
+    func resampled(
+        using converter: any ColorConverter = .default,
+        tolerance: LayerTree.Float = 0.5 / 255
+    ) -> LayerTree.Gradient {
         let space = colorSpace
         let colors = stops.map { Self.components(of: $0.color, opacity: $0.opacity, in: space) }
 
@@ -77,8 +79,13 @@ extension LayerTree.Gradient {
                 let from = (offset: stops[index - 1].offset, color: colors[index - 1])
                 let to = (offset: stops[index].offset, color: color)
 
-                func subdivide(_ t0: LayerTree.Float, _ s0: Sample,
-                               _ t1: LayerTree.Float, _ s1: Sample, depth: Int) {
+                func subdivide(
+                    _ t0: LayerTree.Float,
+                    _ s0: Sample,
+                    _ t1: LayerTree.Float,
+                    _ s1: Sample,
+                    depth: Int
+                ) {
                     let t = (t0 + t1) / 2
                     let s = converted(interpolate(from.color, to.color, t))
                     let d = s.components - (s0.components + s1.components) * 0.5
@@ -109,7 +116,11 @@ extension LayerTree.Gradient {
     }
 
     /// Unpremultiplied components in `space`, the alpha multiplied by `opacity`.
-    static func components(of color: LayerTree.Color, opacity: LayerTree.Float, in space: LayerTree.ColorSpace) -> Components {
+    static func components(
+        of color: LayerTree.Color,
+        opacity: LayerTree.Float,
+        in space: LayerTree.ColorSpace
+    ) -> Components {
         switch color {
         case .none:
             return .zero

@@ -131,10 +131,11 @@ extension LayerTree {
             var commands = commands
 
             if options.contains(.skipInitialSaveState),
-               let pushIdx = commands.firstIndex(where: \.isPushState),
-               let popIdx = commands.firstIndex(where: \.isPopState),
-               pushIdx == commands.indices.first,
-               popIdx == commands.indices.last {
+                let pushIdx = commands.firstIndex(where: \.isPushState),
+                let popIdx = commands.firstIndex(where: \.isPopState),
+                pushIdx == commands.indices.first,
+                popIdx == commands.indices.last
+            {
                 commands.remove(at: popIdx)
                 commands.remove(at: pushIdx)
             }

@@ -67,7 +67,8 @@ extension LayerTree.Builder {
         // against the document-wide reference budget, so any number of elements may share a clip.
         // Each nested clip-path costs native stack, so nesting stops at maxReferenceDepth.
         guard activeClips.count < Self.maxReferenceDepth,
-              activeClips.insert(id).inserted else { return nil }
+            activeClips.insert(id).inserted
+        else { return nil }
         defer { activeClips.remove(id) }
 
         var units = LayerTree.Transform.Matrix.identity
@@ -76,8 +77,14 @@ extension LayerTree.Builder {
             guard let bounds = bounds() else { return nil }
             // an empty bounding box clips everything away
             guard bounds.width > 0, bounds.height > 0 else { return .shapes([.empty], .nonzero) }
-            units = LayerTree.Transform.Matrix(a: bounds.width, b: 0, c: 0, d: bounds.height,
-                                               tx: bounds.x, ty: bounds.y)
+            units = LayerTree.Transform.Matrix(
+                a: bounds.width,
+                b: 0,
+                c: 0,
+                d: bounds.height,
+                tx: bounds.x,
+                ty: bounds.y
+            )
         }
 
         // the <clipPath>'s own cascade: attributes < CSS rules < style=""
@@ -124,8 +131,11 @@ extension LayerTree.Builder {
 
     /// The shapes and text a `<clipPath>` child contributes: a `<use>` contributes the shape or text
     /// it references directly; any other element is ignored (SVG 1.1 §14.3.5).
-    func makeClipMembers(for element: DOM.GraphicsElement, inheriting rule: LayerTree.FillRule,
-                         visibility inherited: DOM.Visibility = .visible) -> [ClipMember] {
+    func makeClipMembers(
+        for element: DOM.GraphicsElement,
+        inheriting rule: LayerTree.FillRule,
+        visibility inherited: DOM.Visibility = .visible
+    ) -> [ClipMember] {
         let attributes = DOM.presentationAttributes(for: element, styles: svg.styles)
         let visibility = attributes.visibility ?? inherited
         // SVG 1.1 §14.3.5: children with `display="none"` or hidden `visibility` do not contribute to the clip
@@ -135,8 +145,9 @@ extension LayerTree.Builder {
 
         if let use = element as? DOM.Use {
             guard let id = use.href.fragmentID,
-                  let referenced = svg.firstGraphicsElement(with: id),
-                  !(referenced is DOM.Use) else { return [] }
+                let referenced = svg.firstGraphicsElement(with: id),
+                !(referenced is DOM.Use)
+            else { return [] }
             let translate = LayerTree.Transform.translate(tx: use.x ?? 0, ty: use.y ?? 0).toMatrix()
             // the cycle guard and reference budget that every <use> expansion spends
             return building(ObjectIdentifier(use), cycle: []) {
@@ -147,8 +158,14 @@ extension LayerTree.Builder {
                 }
             }
         } else if Self.makeShape(from: element) != nil || element is DOM.Text {
-            return [ClipMember(element: element, transform: transform, rule: rule,
-                               clipID: attributes.clipPath?.fragmentID)]
+            return [
+                ClipMember(
+                    element: element,
+                    transform: transform,
+                    rule: rule,
+                    clipID: attributes.clipPath?.fragmentID
+                )
+            ]
         }
         return []
     }
@@ -185,7 +202,8 @@ extension LayerTree.Builder {
     /// A `clip-path` on a `<clipPath>` child clips that child only, in the child's user space.
     private func applyMemberClip(of member: ClipMember, to layer: LayerTree.Layer, state: State? = nil) {
         guard let id = member.clipID,
-              let clip = makeClip(id: id, bounds: { makeBoundingBox(for: member.element, state: state) }) else { return }
+            let clip = makeClip(id: id, bounds: { makeBoundingBox(for: member.element, state: state) })
+        else { return }
         apply(clip, to: layer)
     }
 
@@ -228,12 +246,15 @@ extension LayerTree.Builder {
                 case .em(let value): return value * DOM.FontSize.initial
                 }
             }
-            return LayerTree.Rect(x: bounds.x + fraction(x) * bounds.width,
-                                  y: bounds.y + fraction(y) * bounds.height,
-                                  width: fraction(width) * bounds.width,
-                                  height: fraction(height) * bounds.height)
+            return LayerTree.Rect(
+                x: bounds.x + fraction(x) * bounds.width,
+                y: bounds.y + fraction(y) * bounds.height,
+                width: fraction(width) * bounds.width,
+                height: fraction(height) * bounds.height
+            )
         case .userSpaceOnUse:
-            let viewport = svg.viewBox.map { LayerTree.Size($0.width, $0.height) }
+            let viewport =
+                svg.viewBox.map { LayerTree.Size($0.width, $0.height) }
                 ?? LayerTree.Size(LayerTree.Float(svg.width), LayerTree.Float(svg.height))
             func length(_ length: DOM.DashLength, _ reference: LayerTree.Float) -> LayerTree.Float {
                 switch length {
@@ -242,10 +263,12 @@ extension LayerTree.Builder {
                 case .em(let value): return value * DOM.FontSize.initial
                 }
             }
-            return LayerTree.Rect(x: length(x, viewport.width),
-                                  y: length(y, viewport.height),
-                                  width: length(width, viewport.width),
-                                  height: length(height, viewport.height))
+            return LayerTree.Rect(
+                x: length(x, viewport.width),
+                y: length(y, viewport.height),
+                width: length(width, viewport.width),
+                height: length(height, viewport.height)
+            )
         }
     }
 
@@ -272,7 +295,12 @@ extension LayerTree.Builder {
 
     /// Measurement keeps its own visited set, depth cap and step budget: it never spends the
     /// document-wide reference budget that `<use>`, masks and patterns share.
-    private func makeBounds(for element: DOM.GraphicsElement, state: State?, depth: Int, visited: inout Set<String>) -> Bounds {
+    private func makeBounds(
+        for element: DOM.GraphicsElement,
+        state: State?,
+        depth: Int,
+        visited: inout Set<String>
+    ) -> Bounds {
         guard depth < 32, measurement.spend() else { return .unknown }
 
         if let shape = Self.makeShape(from: element) {
@@ -282,21 +310,33 @@ extension LayerTree.Builder {
             return Bounds(LayerTree.Rect(x: image.x ?? 0, y: image.y ?? 0, width: width, height: height))
         } else if let use = element as? DOM.Use {
             guard let id = use.href.fragmentID,
-                  let referenced = svg.firstGraphicsElement(with: id) else { return .empty }
+                let referenced = svg.firstGraphicsElement(with: id)
+            else { return .empty }
             guard visited.insert(id).inserted else { return .empty }
             defer { visited.remove(id) }
             let referencedState = state.map { createState(for: referenced, inheriting: $0) }
-            let referencedBounds = makeBounds(for: referenced, state: referencedState, depth: depth + 1, visited: &visited)
+            let referencedBounds = makeBounds(
+                for: referenced,
+                state: referencedState,
+                depth: depth + 1,
+                visited: &visited
+            )
             guard case .known(let bounds) = referencedBounds else { return referencedBounds }
             if let symbol = referenced as? DOM.Symbol {
                 let viewport = makeSymbolViewport(for: use, symbol: symbol)
                 guard viewport.width > 0, viewport.height > 0 else { return .empty }
                 // the bounding box is the geometry, not clipped by the viewport (as for a nested <svg>)
-                let transform = Self.makeSymbolTransform(symbol, x: viewport.x, y: viewport.y,
-                                                         width: viewport.width, height: viewport.height).toMatrix()
+                let transform = Self.makeSymbolTransform(
+                    symbol,
+                    x: viewport.x,
+                    y: viewport.y,
+                    width: viewport.width,
+                    height: viewport.height
+                ).toMatrix()
                 return Bounds(bounds.applying(transform))
             }
-            let transform = createTransforms(from: DOM.presentationAttributes(for: referenced, styles: svg.styles)).toMatrix()
+            let transform = createTransforms(from: DOM.presentationAttributes(for: referenced, styles: svg.styles))
+                .toMatrix()
                 .concatenated(LayerTree.Transform.translate(tx: use.x ?? 0, ty: use.y ?? 0).toMatrix())
             return Bounds(bounds.applying(transform))
         } else if let container = element as? any ContainerElement {
@@ -313,8 +353,13 @@ extension LayerTree.Builder {
                 case .known(let bounds):
                     let transform: LayerTree.Transform.Matrix
                     if let svg = child as? DOM.SVG {
-                        transform = Self.makeTransform(x: svg.x, y: svg.y, viewBox: svg.viewBox,
-                                                       width: svg.width, height: svg.height).toMatrix()
+                        transform = Self.makeTransform(
+                            x: svg.x,
+                            y: svg.y,
+                            viewBox: svg.viewBox,
+                            width: svg.width,
+                            height: svg.height
+                        ).toMatrix()
                     } else {
                         transform = createTransforms(from: childAttributes).toMatrix()
                     }
@@ -393,7 +438,7 @@ extension LayerTree.Rect {
             LayerTree.Point(x, y),
             LayerTree.Point(x + width, y),
             LayerTree.Point(x, y + height),
-            LayerTree.Point(x + width, y + height)
+            LayerTree.Point(x + width, y + height),
         ].map(matrix.transform(point:))
         let xs = points.map(\.x)
         let ys = points.map(\.y)

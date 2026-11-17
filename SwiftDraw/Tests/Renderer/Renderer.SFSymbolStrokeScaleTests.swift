@@ -145,16 +145,18 @@ final class RendererSFSymbolStrokeScaleTests: XCTestCase {
     // MARK: - Walker recurses through groups
 
     func testScalesNestedGroups() throws {
-        let svg = try DOM.SVG.parse(xml: #"""
-        <?xml version="1.0" encoding="UTF-8"?>
-        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
-            <g stroke="black" stroke-width="10">
-                <g stroke-width="20">
-                    <line x1="0" y1="0" x2="100" y2="100" stroke-width="30"/>
-                </g>
-            </g>
-        </svg>
-        """#)
+        let svg = try DOM.SVG.parse(
+            xml: #"""
+                <?xml version="1.0" encoding="UTF-8"?>
+                <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+                    <g stroke="black" stroke-width="10">
+                        <g stroke-width="20">
+                            <line x1="0" y1="0" x2="100" y2="100" stroke-width="30"/>
+                        </g>
+                    </g>
+                </svg>
+                """#
+        )
 
         let count = StrokeWidthScaler.scale(svg, by: .init(multiplier: 0.5))
         XCTAssertEqual(count, 3)
@@ -163,17 +165,19 @@ final class RendererSFSymbolStrokeScaleTests: XCTestCase {
     // MARK: - Walker visits clipPath defs
 
     func testScalesInsideClipPath() throws {
-        let svg = try DOM.SVG.parse(xml: #"""
-        <?xml version="1.0" encoding="UTF-8"?>
-        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-                <clipPath id="cp">
-                    <rect x="0" y="0" width="50" height="50" stroke-width="6"/>
-                </clipPath>
-            </defs>
-            <rect x="0" y="0" width="100" height="100" stroke="black" stroke-width="4" clip-path="url(#cp)"/>
-        </svg>
-        """#)
+        let svg = try DOM.SVG.parse(
+            xml: #"""
+                <?xml version="1.0" encoding="UTF-8"?>
+                <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <clipPath id="cp">
+                            <rect x="0" y="0" width="50" height="50" stroke-width="6"/>
+                        </clipPath>
+                    </defs>
+                    <rect x="0" y="0" width="100" height="100" stroke="black" stroke-width="4" clip-path="url(#cp)"/>
+                </svg>
+                """#
+        )
 
         let count = StrokeWidthScaler.scale(svg, by: .init(multiplier: 0.5))
         XCTAssertEqual(count, 2)

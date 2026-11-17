@@ -81,8 +81,10 @@ final class ImageRenderer {
     private let bitmap: NSBitmapImageRep
 
     init(pixelsWide: Int, pixelsHigh: Int) {
-        self.bitmap = NSBitmapImageRep(pixelsWide: pixelsWide,
-                                       pixelsHigh: pixelsHigh)
+        self.bitmap = NSBitmapImageRep(
+            pixelsWide: pixelsWide,
+            pixelsHigh: pixelsHigh
+        )
         let context = NSGraphicsContext(bitmapImageRep: bitmap)!.cgContext
         self.renderer = CGRenderer(context: context)
     }
@@ -94,10 +96,12 @@ final class ImageRenderer {
 
 private extension CGPath {
 
-    static func rect(x: CGFloat = 0,
-                     y: CGFloat = 0,
-                     width: CGFloat = 2,
-                     height: CGFloat = 2) -> CGPath {
+    static func rect(
+        x: CGFloat = 0,
+        y: CGFloat = 0,
+        width: CGFloat = 2,
+        height: CGFloat = 2
+    ) -> CGPath {
 
         let rect = CGRect(x: x, y: y, width: width, height: height)
         return CGPath(rect: rect, transform: nil)

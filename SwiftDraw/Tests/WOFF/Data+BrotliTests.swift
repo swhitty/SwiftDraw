@@ -49,7 +49,7 @@ struct DataBrotliTests {
     @Test
     func brotli_throws_on_invalid_data() {
         let invalidData = Data([0x00, 0x01, 0x02, 0x03])
-        
+
         #expect(throws: BrotliError.self) {
             try invalidData.decompressBrotli(decompressedSize: 100)
         }

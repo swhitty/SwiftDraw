@@ -36,22 +36,26 @@ import Testing
 struct ParserXMLMarkerTests {
 
     private func parse(_ body: String) throws -> DOM.SVG {
-        try DOM.SVG.parse(xml: """
-        <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">\(body)</svg>
-        """)
+        try DOM.SVG.parse(
+            xml: """
+                <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">\(body)</svg>
+                """
+        )
     }
 
     @Test
     func markerAttributes() throws {
-        let svg = try parse("""
-        <defs>
-          <marker id="m" markerWidth="6" markerHeight="8" refX="1" refY="2" orient="auto"
-                  markerUnits="userSpaceOnUse" viewBox="0 0 10 20" preserveAspectRatio="xMinYMax slice">
-            <path d="M 0 0 L 10 5 Z"/>
-            <circle r="2"/>
-          </marker>
-        </defs>
-        """)
+        let svg = try parse(
+            """
+            <defs>
+              <marker id="m" markerWidth="6" markerHeight="8" refX="1" refY="2" orient="auto"
+                      markerUnits="userSpaceOnUse" viewBox="0 0 10 20" preserveAspectRatio="xMinYMax slice">
+                <path d="M 0 0 L 10 5 Z"/>
+                <circle r="2"/>
+              </marker>
+            </defs>
+            """
+        )
 
         let marker = try #require(svg.defs.markers.first)
         #expect(svg.defs.markers.count == 1)
@@ -71,10 +75,12 @@ struct ParserXMLMarkerTests {
 
     @Test
     func missingOrInvalidAttributesUseTheDefaults() throws {
-        let svg = try parse("""
-        <marker id="m" markerWidth="wide" markerUnits="pixels" orient="sideways" viewBox="0 0"/>
-        <marker/>
-        """)
+        let svg = try parse(
+            """
+            <marker id="m" markerWidth="wide" markerUnits="pixels" orient="sideways" viewBox="0 0"/>
+            <marker/>
+            """
+        )
 
         let marker = try #require(svg.defs.markers.first)
         #expect(svg.defs.markers.count == 1)
@@ -88,10 +94,12 @@ struct ParserXMLMarkerTests {
 
     @Test
     func markersAnywhereInTheDocument() throws {
-        let svg = try parse("""
-        <marker id="a"/>
-        <g><defs><marker id="b"/></defs></g>
-        """)
+        let svg = try parse(
+            """
+            <marker id="a"/>
+            <g><defs><marker id="b"/></defs></g>
+            """
+        )
         #expect(svg.defs.markers.map(\.id) == ["a", "b"])
     }
 
@@ -102,7 +110,7 @@ struct ParserXMLMarkerTests {
         (" -30 ", .angle(-30)),
         ("45deg", .angle(45)),
         ("100grad", .angle(90)),
-        ("0.5turn", .angle(180))
+        ("0.5turn", .angle(180)),
     ]
 
     @Test(arguments: orients)
@@ -130,7 +138,7 @@ struct ParserXMLMarkerTests {
             "marker-start": "url(#a)",
             "marker-mid": "url(#b)",
             "marker-end": "none",
-            "overflow": "visible"
+            "overflow": "visible",
         ])
         #expect(att.markerStart?.fragmentID == "a")
         #expect(att.markerMid?.fragmentID == "b")
@@ -148,10 +156,12 @@ struct ParserXMLMarkerTests {
 
     @Test
     func markerShorthandInStyle() throws {
-        let svg = try parse("""
-        <path d="M 0 0 L 10 10" style="marker: url(#a); marker-end: url(#b)"/>
-        <path d="M 0 0 L 10 10" style="marker-end: url(#b); marker: url(#a)"/>
-        """)
+        let svg = try parse(
+            """
+            <path d="M 0 0 L 10 10" style="marker: url(#a); marker-end: url(#b)"/>
+            <path d="M 0 0 L 10 10" style="marker-end: url(#b); marker: url(#a)"/>
+            """
+        )
         let first = DOM.presentationAttributes(for: svg.childElements[0], styles: svg.styles)
         #expect(first.markerStart?.fragmentID == "a")
         #expect(first.markerMid?.fragmentID == "a")
@@ -164,15 +174,17 @@ struct ParserXMLMarkerTests {
 
     @Test
     func markerShorthandInStyleSheet() throws {
-        let svg = try parse("""
-        <style>
-          .series { marker: url(#dot) }
-          .series.last { marker-start: none }
-          marker { overflow: visible }
-        </style>
-        <marker id="dot"/>
-        <polyline class="series last" points="0,0 10,10 20,0"/>
-        """)
+        let svg = try parse(
+            """
+            <style>
+              .series { marker: url(#dot) }
+              .series.last { marker-start: none }
+              marker { overflow: visible }
+            </style>
+            <marker id="dot"/>
+            <polyline class="series last" points="0,0 10,10 20,0"/>
+            """
+        )
         let att = DOM.presentationAttributes(for: svg.childElements[0], styles: svg.styles)
         #expect(att.markerStart == DOM.noneURL)
         #expect(att.markerMid?.fragmentID == "dot")

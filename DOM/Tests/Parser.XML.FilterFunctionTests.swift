@@ -29,7 +29,6 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-
 import Foundation
 @testable import SwiftDrawDOM
 import Testing
@@ -46,11 +45,28 @@ struct ParserXMLFilterFunctionTests {
         ("blur(1mm)", .blur(Length(1, unit: .millimeter))),
         ("blur(0.5em)", .blur(Length(0.5, unit: .em))),
         ("BLUR( 2 )", .blur(Length(2))),
-        ("drop-shadow(blue 4 5 6)", .dropShadow(color: .keyword(.blue), dx: Length(4), dy: Length(5), stdDeviation: Length(6))),
-        ("drop-shadow(4 5 6 blue)", .dropShadow(color: .keyword(.blue), dx: Length(4), dy: Length(5), stdDeviation: Length(6))),
+        (
+            "drop-shadow(blue 4 5 6)",
+            .dropShadow(color: .keyword(.blue), dx: Length(4), dy: Length(5), stdDeviation: Length(6))
+        ),
+        (
+            "drop-shadow(4 5 6 blue)",
+            .dropShadow(color: .keyword(.blue), dx: Length(4), dy: Length(5), stdDeviation: Length(6))
+        ),
         ("drop-shadow(-4 5)", .dropShadow(color: nil, dx: Length(-4), dy: Length(5), stdDeviation: Length(0))),
-        ("drop-shadow(currentColor 1 2)", .dropShadow(color: nil, dx: Length(1), dy: Length(2), stdDeviation: Length(0))),
-        ("drop-shadow(red 1em 2mm 3)", .dropShadow(color: .keyword(.red), dx: Length(1, unit: .em), dy: Length(2, unit: .millimeter), stdDeviation: Length(3))),
+        (
+            "drop-shadow(currentColor 1 2)",
+            .dropShadow(color: nil, dx: Length(1), dy: Length(2), stdDeviation: Length(0))
+        ),
+        (
+            "drop-shadow(red 1em 2mm 3)",
+            .dropShadow(
+                color: .keyword(.red),
+                dx: Length(1, unit: .em),
+                dy: Length(2, unit: .millimeter),
+                stdDeviation: Length(3)
+            )
+        ),
         ("hue-rotate()", .hueRotate(degrees: 0)),
         ("hue-rotate(0)", .hueRotate(degrees: 0)),
         ("hue-rotate(45deg)", .hueRotate(degrees: 45)),
@@ -66,7 +82,7 @@ struct ParserXMLFilterFunctionTests {
         ("invert(0.25)", .invert(0.25)),
         ("opacity(0%)", .opacity(0)),
         ("brightness()", .brightness(1)),
-        ("contrast(1.5)", .contrast(1.5))
+        ("contrast(1.5)", .contrast(1.5)),
     ])
     func function(value: String, function: DOM.FilterFunction) throws {
         #expect(try XMLParser.parseFilterValue(value) == [.function(function)])
@@ -84,12 +100,14 @@ struct ParserXMLFilterFunctionTests {
 
     @Test
     func list() throws {
-        #expect(try XMLParser.parseFilterValue("url(#a) grayscale()  url('#b')opacity(0.5)") == [
-            .url(URL(string: "#a")!),
-            .function(.grayscale(1)),
-            .url(URL(string: "#b")!),
-            .function(.opacity(0.5))
-        ])
+        #expect(
+            try XMLParser.parseFilterValue("url(#a) grayscale()  url('#b')opacity(0.5)") == [
+                .url(URL(string: "#a")!),
+                .function(.grayscale(1)),
+                .url(URL(string: "#b")!),
+                .function(.opacity(0.5)),
+            ]
+        )
     }
 
     @Test
@@ -104,7 +122,7 @@ struct ParserXMLFilterFunctionTests {
         "drop-shadow(blue 3% 4% 5%)", "drop-shadow(1 2 -3)", "drop-shadow(red 1 2 blue)",
         "hue-rotate(45)", "hue-rotate(random)", "hue-rotate(1deg 2deg)",
         "grayscale(-1)", "opacity(1 2)", "saturate(1px)", "unknown(1)", "url()",
-        "grayscale() hue-rotate(random) opacity(0.5)", "url(#a), blur(2)"
+        "grayscale() hue-rotate(random) opacity(0.5)", "url(#a), blur(2)",
     ])
     func invalid(value: String) {
         #expect(throws: (any Error).self) { try XMLParser.parseFilterValue(value) }
@@ -112,12 +130,14 @@ struct ParserXMLFilterFunctionTests {
 
     @Test
     func invalidAttributeIsDropped() throws {
-        let svg = try DOM.SVG.parse(xml: #"""
-        <svg width="10" height="10" xmlns="http://www.w3.org/2000/svg">
-            <rect id="valid" width="10" height="10" filter="url(#f) blur(2)" />
-            <rect id="invalid" width="10" height="10" filter="url(#f) blur(-2)" />
-        </svg>
-        """#)
+        let svg = try DOM.SVG.parse(
+            xml: #"""
+                <svg width="10" height="10" xmlns="http://www.w3.org/2000/svg">
+                    <rect id="valid" width="10" height="10" filter="url(#f) blur(2)" />
+                    <rect id="invalid" width="10" height="10" filter="url(#f) blur(-2)" />
+                </svg>
+                """#
+        )
         #expect(svg.childElements[0].attributes.filter == [.url(URL(string: "#f")!), .function(.blur(Length(2)))])
         #expect(svg.childElements[1].attributes.filter == nil)
     }
@@ -125,20 +145,24 @@ struct ParserXMLFilterFunctionTests {
     // an invalid declaration leaves a lower rule in place
     @Test
     func cascade() throws {
-        let svg = try DOM.SVG.parse(xml: #"""
-        <svg width="10" height="10" xmlns="http://www.w3.org/2000/svg">
-            <style>rect { filter: sepia(50%) !important } #b { filter: none }</style>
-            <rect id="a" width="10" height="10" style="filter: blur(-1)" />
-            <rect id="b" width="10" height="10" style="filter: grayscale()" />
-            <rect width="10" height="10" filter="invert()" style="filter: hue-rotate(90deg)" />
-        </svg>
-        """#)
+        let svg = try DOM.SVG.parse(
+            xml: #"""
+                <svg width="10" height="10" xmlns="http://www.w3.org/2000/svg">
+                    <style>rect { filter: sepia(50%) !important } #b { filter: none }</style>
+                    <rect id="a" width="10" height="10" style="filter: blur(-1)" />
+                    <rect id="b" width="10" height="10" style="filter: grayscale()" />
+                    <rect width="10" height="10" filter="invert()" style="filter: hue-rotate(90deg)" />
+                </svg>
+                """#
+        )
         let attributes = svg.childElements.map { DOM.presentationAttributes(for: $0, styles: svg.styles).filter }
-        #expect(attributes == [
-            [.function(.sepia(0.5))],
-            [.function(.sepia(0.5))],
-            [.function(.sepia(0.5))]
-        ])
+        #expect(
+            attributes == [
+                [.function(.sepia(0.5))],
+                [.function(.sepia(0.5))],
+                [.function(.sepia(0.5))],
+            ]
+        )
     }
 
     @Test

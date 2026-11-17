@@ -110,7 +110,11 @@ extension LayerTree.Builder {
         Point(2 * point.x - control.x, 2 * point.y - control.y)
     }
 
-    static func makeSegment(from segment: DOM.Path.Segment, last point: Point, previous control: Point?) -> Path.Segment? {
+    static func makeSegment(
+        from segment: DOM.Path.Segment,
+        last point: Point,
+        previous control: Point?
+    ) -> Path.Segment? {
         if let s = createMove(from: segment, last: point) {
             return s
         } else if let s = createLine(from: segment, last: point) {
@@ -134,7 +138,11 @@ extension LayerTree.Builder {
         return nil
     }
 
-    static func makeSegments(from segment: DOM.Path.Segment, last point: Point, previous control: Point?) throws -> [Path.Segment] {
+    static func makeSegments(
+        from segment: DOM.Path.Segment,
+        last point: Point,
+        previous control: Point?
+    ) throws -> [Path.Segment] {
         if let s = createArc(from: segment, last: point) {
             return s
         } else if let s = makeSegment(from: segment, last: point, previous: control) {
@@ -170,7 +178,7 @@ extension LayerTree.Builder {
         guard case let .horizontal(x, space) = segment else { return nil }
 
         switch space {
-        case .relative: return .line(to: Point(x + point.x , point.y))
+        case .relative: return .line(to: Point(x + point.x, point.y))
         case .absolute: return .line(to: Point(x, point.y))
         }
     }
@@ -179,7 +187,7 @@ extension LayerTree.Builder {
         guard case let .vertical(y, space) = segment else { return nil }
 
         switch space {
-        case .relative: return .line(to: Point(point.x , y + point.y))
+        case .relative: return .line(to: Point(point.x, y + point.y))
         case .absolute: return .line(to: Point(point.x, y))
         }
     }
@@ -192,28 +200,42 @@ extension LayerTree.Builder {
         let cp2 = Point(x2, y2)
 
         switch space {
-        case .relative: return .cubic(to: p.absolute(from: point),
-                                      control1: cp1.absolute(from: point),
-                                      control2: cp2.absolute(from: point))
+        case .relative:
+            return .cubic(
+                to: p.absolute(from: point),
+                control1: cp1.absolute(from: point),
+                control2: cp2.absolute(from: point)
+            )
         case .absolute: return .cubic(to: p, control1: cp1, control2: cp2)
         }
     }
 
-    static func createCubicSmooth(from segment: DOM.Path.Segment, last point: Point, previous control: Point) -> Path.Segment? {
+    static func createCubicSmooth(
+        from segment: DOM.Path.Segment,
+        last point: Point,
+        previous control: Point
+    ) -> Path.Segment? {
         guard case let .cubicSmooth(x2, y2, x, y, space) = segment else { return nil }
 
-        let delta = Point(point.x - control.x,
-                          point.y - control.y)
+        let delta = Point(
+            point.x - control.x,
+            point.y - control.y
+        )
 
         let p = Point(x, y)
-        let cp1 = Point(point.x + delta.x,
-                        point.y + delta.y)
+        let cp1 = Point(
+            point.x + delta.x,
+            point.y + delta.y
+        )
         let cp2 = Point(x2, y2)
 
         switch space {
-        case .relative: return .cubic(to: p.absolute(from: point),
-                                      control1: cp1,
-                                      control2: cp2.absolute(from: point))
+        case .relative:
+            return .cubic(
+                to: p.absolute(from: point),
+                control1: cp1,
+                control2: cp2.absolute(from: point)
+            )
         case .absolute: return .cubic(to: p, control1: cp1, control2: cp2)
         }
     }
@@ -236,19 +258,27 @@ extension LayerTree.Builder {
         //Approximate a quadratic curve using cubic curve.
         //Converting the quadratic control point into 2 cubic control points
 
-        let ratio = Float(2.0/3.0)
+        let ratio = Float(2.0 / 3.0)
 
-        let cp1 = Point(origin.x + (controlPoint.x - origin.x) * ratio,
-                        origin.y + (controlPoint.y - origin.y) * ratio)
+        let cp1 = Point(
+            origin.x + (controlPoint.x - origin.x) * ratio,
+            origin.y + (controlPoint.y - origin.y) * ratio
+        )
 
-        let cp2 = Point(final.x + (controlPoint.x - final.x) * ratio,
-                        final.y + (controlPoint.y - final.y) * ratio)
+        let cp2 = Point(
+            final.x + (controlPoint.x - final.x) * ratio,
+            final.y + (controlPoint.y - final.y) * ratio
+        )
 
         return .cubic(to: final, control1: cp1, control2: cp2)
     }
 
     /// `previous` is the control point of the previous quadratic (Q or T) command, or the current point.
-    static func createQuadraticSmooth(from segment: DOM.Path.Segment, last point: Point, previous control: Point) -> Path.Segment? {
+    static func createQuadraticSmooth(
+        from segment: DOM.Path.Segment,
+        last point: Point,
+        previous control: Point
+    ) -> Path.Segment? {
         guard case let .quadraticSmooth(x, y, space) = segment else { return nil }
 
         let final = space == .absolute ? Point(x, y) : Point(x, y).absolute(from: point)
@@ -265,22 +295,35 @@ extension LayerTree.Builder {
         case .absolute: p = Point(x, y)
         }
 
-        return makeArc(from: point, to: p,
-                       large: large, sweep: sweep,
-                       rx: LayerTree.Float(rx),
-                       ry: LayerTree.Float(ry),
-                       rotation: LayerTree.Float(rotate))
+        return makeArc(
+            from: point,
+            to: p,
+            large: large,
+            sweep: sweep,
+            rx: LayerTree.Float(rx),
+            ry: LayerTree.Float(ry),
+            rotation: LayerTree.Float(rotate)
+        )
     }
 
-    static func makeArc(from point: LayerTree.Point,
-                        to destination: LayerTree.Point,
-                        large: Bool, sweep: Bool,
-                        rx: LayerTree.Float, ry: LayerTree.Float,
-                        rotation: LayerTree.Float) -> [Path.Segment] {
-        makeCubic(from: point, to: destination,
-                  large: large, sweep: sweep,
-                  rx: rx, ry: ry,
-                  rotation: rotation).map(LayerTree.Path.Segment.cubic)
+    static func makeArc(
+        from point: LayerTree.Point,
+        to destination: LayerTree.Point,
+        large: Bool,
+        sweep: Bool,
+        rx: LayerTree.Float,
+        ry: LayerTree.Float,
+        rotation: LayerTree.Float
+    ) -> [Path.Segment] {
+        makeCubic(
+            from: point,
+            to: destination,
+            large: large,
+            sweep: sweep,
+            rx: rx,
+            ry: ry,
+            rotation: rotation
+        ).map(LayerTree.Path.Segment.cubic)
     }
 
     static func createClose(from segment: DOM.Path.Segment) -> Path.Segment? {

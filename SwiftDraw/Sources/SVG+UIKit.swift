@@ -33,8 +33,8 @@
 public import UIKit
 
 public extension UIGraphicsImageRendererContext {
-    func draw(_ svg: SVG, in rect: CGRect? = nil)  {
-        cgContext.draw(svg, in: rect )
+    func draw(_ svg: SVG, in rect: CGRect? = nil) {
+        cgContext.draw(svg, in: rect)
     }
 
     func draw(_ svg: SVG, in rect: CGRect, byTiling: Bool) {

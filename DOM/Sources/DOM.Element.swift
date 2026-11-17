@@ -36,14 +36,14 @@ package protocol ContainerElement {
 }
 
 package protocol ElementAttributes {
-    var id: String?  { get set }
-    var `class`: String?  { get set }
+    var id: String? { get set }
+    var `class`: String? { get set }
 }
 
 package extension DOM {
 
     class Element {}
-    
+
     class GraphicsElement: Element, ElementAttributes {
         package var id: String?
         package var `class`: String?
@@ -59,7 +59,7 @@ package extension DOM {
         package var systemLanguage: String?
         package var requiredExtensions: String?
     }
-    
+
     final class Line: GraphicsElement {
         package var x1: Coordinate
         package var y1: Coordinate
@@ -74,7 +74,7 @@ package extension DOM {
             super.init()
         }
     }
-    
+
     final class Circle: GraphicsElement {
         package var cx: Coordinate?
         package var cy: Coordinate?
@@ -87,7 +87,7 @@ package extension DOM {
             super.init()
         }
     }
-    
+
     final class Ellipse: GraphicsElement {
         package var cx: Coordinate?
         package var cy: Coordinate?
@@ -102,7 +102,7 @@ package extension DOM {
             super.init()
         }
     }
-    
+
     final class Rect: GraphicsElement {
         package var x: Coordinate?
         package var y: Coordinate?
@@ -120,7 +120,7 @@ package extension DOM {
             super.init()
         }
     }
-    
+
     final class Polyline: GraphicsElement {
         package var points: [Point]
 
@@ -129,7 +129,7 @@ package extension DOM {
             super.init()
         }
     }
-    
+
     final class Polygon: GraphicsElement {
         package var points: [Point]
 
@@ -138,7 +138,7 @@ package extension DOM {
             super.init()
         }
     }
-    
+
     final class Group: GraphicsElement, ContainerElement {
         package var childElements = [GraphicsElement]()
     }

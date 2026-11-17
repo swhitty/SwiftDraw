@@ -36,9 +36,11 @@ import Testing
 struct LayerTreeShapeEdgeCaseTests {
 
     private func shapes(_ body: String) throws -> [LayerTree.Shape] {
-        let svg = try DOM.SVG.parse(xml: """
-        <svg xmlns="http://www.w3.org/2000/svg" width="200" height="200">\(body)</svg>
-        """)
+        let svg = try DOM.SVG.parse(
+            xml: """
+                <svg xmlns="http://www.w3.org/2000/svg" width="200" height="200">\(body)</svg>
+                """
+        )
         return shapes(in: LayerTree.Builder(svg: svg).makeLayer())
     }
 
@@ -89,7 +91,11 @@ struct LayerTreeShapeEdgeCaseTests {
     ])
     func rectRadii(attributes: String, radii: LayerTree.Size) throws {
         let rect = LayerTree.Rect(x: 20, y: 20, width: 160, height: 80)
-        #expect(try shapes(#"<rect x="20" y="20" width="160" height="80" \#(attributes)/>"#) == [.rect(within: rect, radii: radii)])
+        #expect(
+            try shapes(#"<rect x="20" y="20" width="160" height="80" \#(attributes)/>"#) == [
+                .rect(within: rect, radii: radii)
+            ]
+        )
     }
 
     @Test(arguments: [
@@ -135,7 +141,8 @@ struct LayerTreeShapeEdgeCaseTests {
     ])
     func pointsIgnoreAnOddCoordinateAndAnythingAfterAnError(element: String) throws {
         let points = [LayerTree.Point(20, 40), LayerTree.Point(160, 180), LayerTree.Point(30, 150)]
-        let expected: LayerTree.Shape = element.hasPrefix("<polyline") ? .line(between: points) : .polygon(between: points)
+        let expected: LayerTree.Shape =
+            element.hasPrefix("<polyline") ? .line(between: points) : .polygon(between: points)
         #expect(try shapes(element) == [expected])
     }
 }

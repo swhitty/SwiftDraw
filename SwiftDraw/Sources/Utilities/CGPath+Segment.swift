@@ -39,11 +39,11 @@ import UIKit
 #endif
 
 extension CGPath {
-    func doApply(action: @escaping (CGPathElement)->()) {
+    func doApply(action: @escaping (CGPathElement) -> ()) {
         var action = action
         withUnsafeMutablePointer(to: &action) { action in
             apply(info: action) {
-                let action = $0!.bindMemory(to: ((CGPathElement)->()).self, capacity: 1).pointee
+                let action = $0!.bindMemory(to: ((CGPathElement) -> ()).self, capacity: 1).pointee
                 action($1.pointee)
             }
         }
@@ -115,16 +115,24 @@ extension CGPath {
     }
 
     /// The control points of the cubic Bézier equal to the quadratic from `start` through `control` to `end`
-    static func makeCubicControls(from start: CGPoint, quadControl control: CGPoint, to end: CGPoint) -> (CGPoint, CGPoint) {
-        (CGPoint(x: start.x + 2 / 3 * (control.x - start.x), y: start.y + 2 / 3 * (control.y - start.y)),
-         CGPoint(x: end.x + 2 / 3 * (control.x - end.x), y: end.y + 2 / 3 * (control.y - end.y)))
+    static func makeCubicControls(
+        from start: CGPoint,
+        quadControl control: CGPoint,
+        to end: CGPoint
+    ) -> (CGPoint, CGPoint) {
+        (
+            CGPoint(x: start.x + 2 / 3 * (control.x - start.x), y: start.y + 2 / 3 * (control.y - start.y)),
+            CGPoint(x: end.x + 2 / 3 * (control.x - end.x), y: end.y + 2 / 3 * (control.y - end.y))
+        )
     }
 }
 
 private extension LayerTree.Point {
     init(_ p: CGPoint) {
-        self.init(LayerTree.Float(p.x),
-                  LayerTree.Float((p.y)))
+        self.init(
+            LayerTree.Float(p.x),
+            LayerTree.Float((p.y))
+        )
     }
 }
 
@@ -163,9 +171,11 @@ extension String {
     }
 
     /// The glyphs of the text in line order, with the bold and oblique each run's font needs synthesized
-    func toGlyphs(font: CTFont,
-                  kerning: Bool = true,
-                  synthesis: (CTFont) -> LayerTree.FontSynthesis = { _ in [] }) -> [Glyph] {
+    func toGlyphs(
+        font: CTFont,
+        kerning: Bool = true,
+        synthesis: (CTFont) -> LayerTree.FontSynthesis = { _ in [] }
+    ) -> [Glyph] {
         let line = toLine(font: font, kerning: kerning)
         let glyphRuns = CTLineGetGlyphRuns(line)
         var glyphs = [Glyph]()
@@ -197,7 +207,10 @@ extension String {
                     outline.addPath(glyphPath, transform: flip)
                     if boldOffset > 0 {
                         // a second copy, offset; filled nonzero, the two copies merge
-                        outline.addPath(glyphPath, transform: flip.concatenating(CGAffineTransform(translationX: boldOffset, y: 0)))
+                        outline.addPath(
+                            glyphPath,
+                            transform: flip.concatenating(CGAffineTransform(translationX: boldOffset, y: 0))
+                        )
                     }
                 }
                 glyphs.append(Glyph(path: outline, x: position.x + boldAdvance, advance: advance.width + boldOffset))

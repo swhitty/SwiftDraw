@@ -60,7 +60,11 @@ protocol RendererTypeProvider {
     func createTransform(from transform: LayerTree.Transform.Matrix) -> Types.Transform
     func createPath(from shape: LayerTree.Shape) -> Types.Path
     func createPath(from subPaths: [Types.Path]) -> Types.Path
-    func createPath(from text: String, at origin: LayerTree.Point, with attributes: LayerTree.TextAttributes) -> Types.Path?
+    func createPath(
+        from text: String,
+        at origin: LayerTree.Point,
+        with attributes: LayerTree.TextAttributes
+    ) -> Types.Path?
     func createPath(from glyphs: LayerTree.GlyphRun) -> Types.Path?
     func createPattern(from pattern: LayerTree.Pattern, contents: [RendererCommand<Types>]) -> Types.Pattern
     func createFillRule(from rule: LayerTree.FillRule) -> Types.FillRule
@@ -103,7 +107,13 @@ protocol Renderer {
     func fill(path: Types.Path, rule: Types.FillRule)
     func draw(image: Types.Image, in rect: Types.Rect)
     func draw(linear gradient: Types.Gradient, from start: Types.Point, to end: Types.Point)
-    func draw(radial gradient: Types.Gradient, startCenter: Types.Point, startRadius: Types.Float, endCenter: Types.Point, endRadius: Types.Float)
+    func draw(
+        radial gradient: Types.Gradient,
+        startCenter: Types.Point,
+        startRadius: Types.Float,
+        endCenter: Types.Point,
+        endRadius: Types.Float
+    )
 
     func pushFilterLayer(_ filter: LayerTree.FilterLayer)
     // what an feImage primitive of the innermost filter layer draws, in the layer's user space
@@ -165,7 +175,13 @@ extension Renderer {
         case .drawLinearGradient(let g, let start, let end):
             draw(linear: g, from: start, to: end)
         case let .drawRadialGradient(g, startCenter, startRadius, endCenter, endRadius):
-            draw(radial: g, startCenter: startCenter, startRadius: startRadius, endCenter: endCenter, endRadius: endRadius)
+            draw(
+                radial: g,
+                startCenter: startCenter,
+                startRadius: startRadius,
+                endCenter: endCenter,
+                endRadius: endRadius
+            )
         case .pushFilterLayer(let f):
             pushFilterLayer(f)
         case let .filterImage(primitive, contents):
@@ -212,7 +228,13 @@ enum RendererCommand<Types: RendererTypes>: @unchecked Sendable {
 
     case draw(image: Types.Image, in: Types.Rect)
     case drawLinearGradient(Types.Gradient, from: Types.Point, to: Types.Point)
-    case drawRadialGradient(Types.Gradient, startCenter: Types.Point, startRadius: Types.Float, endCenter: Types.Point, endRadius: Types.Float)
+    case drawRadialGradient(
+        Types.Gradient,
+        startCenter: Types.Point,
+        startRadius: Types.Float,
+        endCenter: Types.Point,
+        endRadius: Types.Float
+    )
 
     case pushTransparencyLayer
     case popTransparencyLayer
@@ -225,10 +247,9 @@ enum RendererCommand<Types: RendererTypes>: @unchecked Sendable {
     case popFilterLayer
 }
 
-
 #if canImport(CoreGraphics)
 import CoreGraphics
 
-extension RendererCommand<CGTypes>: Equatable { }
-extension RendererCommand<CGTypes>: Hashable { }
+extension RendererCommand<CGTypes>: Equatable {}
+extension RendererCommand<CGTypes>: Hashable {}
 #endif

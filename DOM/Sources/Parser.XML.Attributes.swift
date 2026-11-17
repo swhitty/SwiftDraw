@@ -45,10 +45,12 @@ extension XMLParser {
         let element: [String: String]
         let style: [String: String]
 
-        init(parser: any AttributeValueParser,
-             options: XMLParser.Options = [],
-             element: [String: String],
-             style: [String: String]) {
+        init(
+            parser: any AttributeValueParser,
+            options: XMLParser.Options = [],
+            element: [String: String],
+            style: [String: String]
+        ) {
             self.parser = parser
             self.options = options
             self.element = element
@@ -70,7 +72,8 @@ extension XMLParser {
         static func removingImportant(from value: String) -> String {
             let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
             guard let range = trimmed.range(of: "important", options: [.caseInsensitive, .backwards]),
-                  range.upperBound == trimmed.endIndex else {
+                range.upperBound == trimmed.endIndex
+            else {
                 return value
             }
             // `!important` and `! important`
@@ -112,7 +115,6 @@ extension XMLParser {
 
             return array
         }
-
 
         func parsePercentage(_ value: String) throws -> DOM.Float {
             var scanner = XMLParser.Scanner(text: value)
@@ -181,7 +183,8 @@ extension XMLParser {
 
         func parseFontFamily(_ key: String) throws -> [DOM.FontFamily] {
             var scanner = XMLParser.Scanner(text: key)
-            return try scanner
+            return
+                try scanner
                 .scanStrings(delimitedBy: ",")
                 .map {
                     var value = $0.unquoted

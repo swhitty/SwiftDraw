@@ -29,7 +29,6 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-
 @testable import SwiftDrawDOM
 @testable import SwiftDraw
 import Foundation
@@ -39,31 +38,50 @@ import Testing
 struct LayerTreeFilterImageTests {
 
     // a 16×16 PNG, as in resvg's tests
-    static let png = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQAQMAAAAlPW0iAAAAB3RJTUUH4gMLDwAjrsLbtwAAAAlwSFlzAAAuIwAALiMBeKU/dgAAABl0RVh0Q29tbWVudABDcmVhdGVkIHdpdGggR0lNUFeBDhcAAAAGUExURQAA/xjQP14JpdQAAAABYktHRACIBR1IAAAAFklEQVR42mMAgvp/IJTAhgdB1ADVAgDvdAnxN1Ib1gAAAABJRU5ErkJggg=="
+    static let png =
+        "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQAQMAAAAlPW0iAAAAB3RJTUUH4gMLDwAjrsLbtwAAAAlwSFlzAAAuIwAALiMBeKU/dgAAABl0RVh0Q29tbWVudABDcmVhdGVkIHdpdGggR0lNUFeBDhcAAAAGUExURQAA/xjQP14JpdQAAAABYktHRACIBR1IAAAAFklEQVR42mMAgvp/IJTAhgdB1ADVAgDvdAnxN1Ib1gAAAABJRU5ErkJggg=="
 
     @Test
     func parsesImage() throws {
-        let svg = try DOM.SVG.parse(xml: ##"""
-        <svg width="200" height="200" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-            <filter id="a"><feImage xlink:href="#r" preserveAspectRatio="xMinYMax slice" in="SourceAlpha"/></filter>
-            <filter id="b" image-rendering="optimizeSpeed"><feImage href="#r"/><feImage href="#r" style="image-rendering: auto"/></filter>
-            <filter id="c"><feImage href=""/><feImage/><feImage image-rendering="pixelated"/></filter>
-        </svg>
-        """##)
+        let svg = try DOM.SVG.parse(
+            xml: ##"""
+                <svg width="200" height="200" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+                    <filter id="a"><feImage xlink:href="#r" preserveAspectRatio="xMinYMax slice" in="SourceAlpha"/></filter>
+                    <filter id="b" image-rendering="optimizeSpeed"><feImage href="#r"/><feImage href="#r" style="image-rendering: auto"/></filter>
+                    <filter id="c"><feImage href=""/><feImage/><feImage image-rendering="pixelated"/></filter>
+                </svg>
+                """##
+        )
         let a = try #require(svg.defs.filters.first { $0.id == "a" })
-        #expect(a.effects == [.image(DOM.Filter.Image(href: URL(string: "#r"),
-                                                      preserveAspectRatio: .init(align: .xMinYMax, meetOrSlice: .slice)))])
+        #expect(
+            a.effects == [
+                .image(
+                    DOM.Filter.Image(
+                        href: URL(string: "#r"),
+                        preserveAspectRatio: .init(align: .xMinYMax, meetOrSlice: .slice)
+                    )
+                )
+            ]
+        )
         // no input
         #expect(a.primitives[0].inputs.isEmpty)
 
         let b = try #require(svg.defs.filters.first { $0.id == "b" })
-        #expect(b.effects == [.image(DOM.Filter.Image(href: URL(string: "#r"), isPixelated: true)),
-                              .image(DOM.Filter.Image(href: URL(string: "#r"), isPixelated: false))])
+        #expect(
+            b.effects == [
+                .image(DOM.Filter.Image(href: URL(string: "#r"), isPixelated: true)),
+                .image(DOM.Filter.Image(href: URL(string: "#r"), isPixelated: false)),
+            ]
+        )
 
         let c = try #require(svg.defs.filters.first { $0.id == "c" })
-        #expect(c.effects == [.image(DOM.Filter.Image()),
-                              .image(DOM.Filter.Image()),
-                              .image(DOM.Filter.Image(isPixelated: true))])
+        #expect(
+            c.effects == [
+                .image(DOM.Filter.Image()),
+                .image(DOM.Filter.Image()),
+                .image(DOM.Filter.Image(isPixelated: true)),
+            ]
+        )
     }
 
     // link-to-an-element: drawn in user space, offset to the subregion's origin (the filter region here)
@@ -79,11 +97,22 @@ struct LayerTreeFilterImageTests {
 
     // with-x-y, with-x-y-and-protruding-subregion: x and y move the element, width and height do not scale it;
     // the subregion is clipped to the filter region
-    @Test(arguments: [
-        (##"x="50" y="50""##, LayerTree.Rect(x: 86, y: 86, width: 120, height: 120), LayerTree.Rect(x: 50, y: 50, width: 146, height: 146)),
-        (##"x="50" y="50" width="30" height="30""##, LayerTree.Rect(x: 86, y: 86, width: 120, height: 120), LayerTree.Rect(x: 50, y: 50, width: 30, height: 30)),
-        (##"x="-20" y="0""##, LayerTree.Rect(x: 16, y: 36, width: 120, height: 120), LayerTree.Rect(x: 4, y: 4, width: 168, height: 188))
-    ] as [(String, LayerTree.Rect, LayerTree.Rect)])
+    @Test(
+        arguments: [
+            (
+                ##"x="50" y="50""##, LayerTree.Rect(x: 86, y: 86, width: 120, height: 120),
+                LayerTree.Rect(x: 50, y: 50, width: 146, height: 146)
+            ),
+            (
+                ##"x="50" y="50" width="30" height="30""##, LayerTree.Rect(x: 86, y: 86, width: 120, height: 120),
+                LayerTree.Rect(x: 50, y: 50, width: 30, height: 30)
+            ),
+            (
+                ##"x="-20" y="0""##, LayerTree.Rect(x: 16, y: 36, width: 120, height: 120),
+                LayerTree.Rect(x: 4, y: 4, width: 168, height: 188)
+            ),
+        ] as [(String, LayerTree.Rect, LayerTree.Rect)]
+    )
     func elementSubregion(attributes: String, bounds: LayerTree.Rect, subregion: LayerTree.Rect) throws {
         let filter = try makeFilterLayer(##"<feImage href="#r" \##(attributes)/>"##)
         let image = try #require(filter.image)
@@ -94,7 +123,10 @@ struct LayerTreeFilterImageTests {
     // objectBoundingBox places the subregion in fractions of the bounding box (20, 20, 160, 160)
     @Test
     func elementSubregionInObjectBoundingBox() throws {
-        let filter = try makeFilterLayer(##"<feImage href="#r" x="0.25" y="0.5"/>"##, primitiveUnits: "objectBoundingBox")
+        let filter = try makeFilterLayer(
+            ##"<feImage href="#r" x="0.25" y="0.5"/>"##,
+            primitiveUnits: "objectBoundingBox"
+        )
         let image = try #require(filter.image)
         #expect(image.layer.transform == [.translate(tx: 60, ty: 100)])
     }
@@ -104,9 +136,11 @@ struct LayerTreeFilterImageTests {
     func elementKeepsItsTransformAndOpacity() throws {
         let filter = try makeFilterLayer(##"<feImage href="#t"/>"##)
         let image = try #require(filter.image)
-        let element = try #require(image.layer.contents.first.flatMap {
-            if case .layer(let layer) = $0 { return layer } else { return nil }
-        })
+        let element = try #require(
+            image.layer.contents.first.flatMap {
+                if case .layer(let layer) = $0 { return layer } else { return nil }
+            }
+        )
         #expect(element.transform == [.translate(tx: 10, ty: 0)])
         #expect(element.opacity == 0.5)
     }
@@ -137,7 +171,7 @@ struct LayerTreeFilterImageTests {
         ##"<feImage href="#lg"/>"##,
         ##"<feImage href="#f"/>"##,
         ##"<feImage href="#empty"/>"##,
-        ##"<feImage href="image.png"/>"##
+        ##"<feImage href="image.png"/>"##,
     ])
     func unresolvedReferenceIsTransparent(primitive: String) throws {
         let filter = try makeFilterLayer(primitive)
@@ -148,35 +182,48 @@ struct LayerTreeFilterImageTests {
     // filter, draws nothing there (as Chrome and Safari)
     @Test(arguments: [
         ##"<rect id="self" width="10" height="10" filter="url(#f)"/>"##,
-        ##"<g id="self" filter="url(#f)"><rect width="10" height="10"/></g>"##
+        ##"<g id="self" filter="url(#f)"><rect width="10" height="10"/></g>"##,
     ])
     func recursiveReferenceDrawsNothing(element: String) throws {
-        let svg = try DOM.SVG.parse(xml: ##"""
-        <svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">
-            <filter id="f"><feImage href="#self"/></filter>
-            \##(element)
-        </svg>
-        """##)
+        let svg = try DOM.SVG.parse(
+            xml: ##"""
+                <svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">
+                    <filter id="f"><feImage href="#self"/></filter>
+                    \##(element)
+                </svg>
+                """##
+        )
         let layer = LayerTree.Builder(svg: svg).makeLayer()
         // the copy drawn inside the filter has the reference dropped
         let outer = try #require(layer.filtered.first)
         let inner = try #require(outer.filterImages[0]?.filtered.first)
         #expect(inner.filterImages.isEmpty)
-        let generator = LayerTree.CommandGenerator(provider: LayerTreeProvider(), size: .init(200, 200), options: .default)
+        let generator = LayerTree.CommandGenerator(
+            provider: LayerTreeProvider(),
+            size: .init(200, 200),
+            options: .default
+        )
         #expect(generator.makeFilterLayer(for: inner)?.effects == [.flood(.none)])
     }
 
     // embedded-png, with-subregion: an image is fitted into the subregion before the filter region clips it
-    @Test(arguments: [
-        ("", LayerTree.Rect(x: 4, y: 4, width: 192, height: 192)),
-        (##"x="50" width="100""##, LayerTree.Rect(x: 50, y: 4, width: 100, height: 192)),
-        (##"x="-20" width="100""##, LayerTree.Rect(x: -20, y: 4, width: 100, height: 192))
-    ] as [(String, LayerTree.Rect)])
+    @Test(
+        arguments: [
+            ("", LayerTree.Rect(x: 4, y: 4, width: 192, height: 192)),
+            (##"x="50" width="100""##, LayerTree.Rect(x: 50, y: 4, width: 100, height: 192)),
+            (##"x="-20" width="100""##, LayerTree.Rect(x: -20, y: 4, width: 100, height: 192)),
+        ] as [(String, LayerTree.Rect)]
+    )
     func imageFillsTheSubregion(attributes: String, frame: LayerTree.Rect) throws {
-        let filter = try makeFilterLayer(##"<feImage href="\##(Self.png)" preserveAspectRatio="none" \##(attributes)/>"##)
+        let filter = try makeFilterLayer(
+            ##"<feImage href="\##(Self.png)" preserveAspectRatio="none" \##(attributes)/>"##
+        )
         let image = try #require(filter.image)
         let bitmap = try #require(image.layer.images.first)
-        #expect(LayerTree.Rect(x: bitmap.origin.x, y: bitmap.origin.y, width: bitmap.width ?? 0, height: bitmap.height ?? 0) == frame)
+        #expect(
+            LayerTree.Rect(x: bitmap.origin.x, y: bitmap.origin.y, width: bitmap.width ?? 0, height: bitmap.height ?? 0)
+                == frame
+        )
         #expect(bitmap.preserveAspectRatio == .init(align: .none, meetOrSlice: .meet))
         #expect(image.layer.transform.isEmpty)
     }
@@ -184,8 +231,10 @@ struct LayerTreeFilterImageTests {
     // with-subregion-1: objectBoundingBox fractions of the bounding box; y and height take the filter region
     @Test
     func imageSubregionInObjectBoundingBox() throws {
-        let filter = try makeFilterLayer(##"<feImage x="0.25" width="0.5" href="\##(Self.png)" image-rendering="pixelated"/>"##,
-                                         primitiveUnits: "objectBoundingBox")
+        let filter = try makeFilterLayer(
+            ##"<feImage x="0.25" width="0.5" href="\##(Self.png)" image-rendering="pixelated"/>"##,
+            primitiveUnits: "objectBoundingBox"
+        )
         let image = try #require(filter.image)
         let bitmap = try #require(image.layer.images.first)
         #expect(bitmap.origin == LayerTree.Point(60, 4))
@@ -197,28 +246,38 @@ struct LayerTreeFilterImageTests {
     // the renderer is handed what each feImage draws, after the filter layer is pushed
     @Test
     func commandsCarryTheContents() throws {
-        let svg = try DOM.SVG.parse(xml: ##"""
-        <svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">
-            <filter id="f"><feFlood/><feImage href="#r" result="i"/><feComposite in="i" in2="SourceGraphic"/></filter>
-            <rect id="r" x="36" y="36" width="120" height="120" fill="green" />
-            <rect x="20" y="20" width="160" height="160" fill="red" filter="url(#f)" />
-        </svg>
-        """##)
+        let svg = try DOM.SVG.parse(
+            xml: ##"""
+                <svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">
+                    <filter id="f"><feFlood/><feImage href="#r" result="i"/><feComposite in="i" in2="SourceGraphic"/></filter>
+                    <rect id="r" x="36" y="36" width="120" height="120" fill="green" />
+                    <rect x="20" y="20" width="160" height="160" fill="red" filter="url(#f)" />
+                </svg>
+                """##
+        )
         let layer = LayerTree.Builder(svg: svg).makeLayer()
-        let generator = LayerTree.CommandGenerator(provider: LayerTreeProvider(), size: .init(200, 200), options: .default)
+        let generator = LayerTree.CommandGenerator(
+            provider: LayerTreeProvider(),
+            size: .init(200, 200),
+            options: .default
+        )
         let commands = generator.renderCommands(for: layer, colorConverter: .default)
-        let index = try #require(commands.firstIndex {
-            if case .pushFilterLayer = $0 { return true } else { return false }
-        })
+        let index = try #require(
+            commands.firstIndex {
+                if case .pushFilterLayer = $0 { return true } else { return false }
+            }
+        )
         // the flood is outside the primary tree: the image is primitive 0
         guard case let .filterImage(primitive, contents) = commands[index + 1] else {
             Issue.record("expected filterImage, got \(commands[index + 1])")
             return
         }
         #expect(primitive == 0)
-        #expect(contents.contains {
-            if case .fill = $0 { return true } else { return false }
-        })
+        #expect(
+            contents.contains {
+                if case .fill = $0 { return true } else { return false }
+            }
+        )
     }
 
     // the image is the primitive's result, clipped to its subregion; without one it is transparent
@@ -226,14 +285,26 @@ struct LayerTreeFilterImageTests {
     func evaluatesTheRasterizedImage() {
         let region = LayerTree.Rect(x: 0, y: 0, width: 4, height: 2)
         let layer = LayerTree.Layer()
-        let filter = LayerTree.FilterLayer(region: region, primitives: [
-            .init(effect: .image(.init(layer: layer, isPixelated: false)), inputs: [],
-                  subregion: LayerTree.Rect(x: 1, y: 0, width: 2, height: 2), colorInterpolation: .linearRGB)
-        ])
+        let filter = LayerTree.FilterLayer(
+            region: region,
+            primitives: [
+                .init(
+                    effect: .image(.init(layer: layer, isPixelated: false)),
+                    inputs: [],
+                    subregion: LayerTree.Rect(x: 1, y: 0, width: 2, height: 2),
+                    colorInterpolation: .linearRGB
+                )
+            ]
+        )
         let opaque = FilterBitmap(width: 4, height: 2, pixels: [UInt8](repeating: 255, count: 32))
         var requested = [Int]()
-        let environment = LayerTree.FilterLayer.Environment(transform: .identity, blur: { _, _, _ in },
-                                                           image: { requested.append($0); return opaque })
+        let environment = LayerTree.FilterLayer.Environment(
+            transform: .identity,
+            blur: { _, _, _ in },
+            image: {
+                requested.append($0); return opaque
+            }
+        )
         let result = filter.evaluate(source: FilterBitmap(width: 4, height: 2), environment: environment)
         #expect(requested == [0])
         #expect(result.pixel(x: 0, y: 0) == [0, 0, 0, 0])
@@ -248,29 +319,38 @@ struct LayerTreeFilterImageTests {
 
 private extension LayerTreeFilterImageTests {
 
-    func makeFilterLayer(_ primitive: String, primitiveUnits: String = "userSpaceOnUse") throws -> LayerTree.FilterLayer {
-        let svg = try DOM.SVG.parse(xml: ##"""
-        <svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-                <rect id="r" x="36" y="36" width="120" height="120" fill="green" />
-                <rect id="t" width="60" height="60" fill="green" opacity="0.5" transform="translate(10)" />
-                <rect id="empty" fill="green" />
-                <g id="g"><rect width="60" height="60" fill="green" /></g>
-                <use id="u" href="#g" />
-                <g id="blues" fill="blue"><rect id="inner" width="60" height="60" /></g>
-                <linearGradient id="lg"><stop offset="0" stop-color="green" /></linearGradient>
-            </defs>
-            <filter id="f" primitiveUnits="\##(primitiveUnits)">\##(primitive)</filter>
-            <rect x="20" y="20" width="160" height="160" fill="red" filter="url(#f)" />
-        </svg>
-        """##)
+    func makeFilterLayer(_ primitive: String, primitiveUnits: String = "userSpaceOnUse") throws -> LayerTree.FilterLayer
+    {
+        let svg = try DOM.SVG.parse(
+            xml: ##"""
+                <svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <rect id="r" x="36" y="36" width="120" height="120" fill="green" />
+                        <rect id="t" width="60" height="60" fill="green" opacity="0.5" transform="translate(10)" />
+                        <rect id="empty" fill="green" />
+                        <g id="g"><rect width="60" height="60" fill="green" /></g>
+                        <use id="u" href="#g" />
+                        <g id="blues" fill="blue"><rect id="inner" width="60" height="60" /></g>
+                        <linearGradient id="lg"><stop offset="0" stop-color="green" /></linearGradient>
+                    </defs>
+                    <filter id="f" primitiveUnits="\##(primitiveUnits)">\##(primitive)</filter>
+                    <rect x="20" y="20" width="160" height="160" fill="red" filter="url(#f)" />
+                </svg>
+                """##
+        )
         let layer = LayerTree.Builder(svg: svg).makeLayer()
-        let generator = LayerTree.CommandGenerator(provider: LayerTreeProvider(), size: .init(200, 200), options: .default)
+        let generator = LayerTree.CommandGenerator(
+            provider: LayerTreeProvider(),
+            size: .init(200, 200),
+            options: .default
+        )
         let commands = generator.renderCommands(for: layer, colorConverter: .default)
-        return try #require(commands.compactMap {
-            if case .pushFilterLayer(let filter) = $0 { return filter }
-            return nil
-        }.first)
+        return try #require(
+            commands.compactMap {
+                if case .pushFilterLayer(let filter) = $0 { return filter }
+                return nil
+            }.first
+        )
     }
 }
 
@@ -285,14 +365,19 @@ private extension LayerTree.Layer {
 
     // the layers with filters, in drawing order
     var filtered: [LayerTree.Layer] {
-        (filters.isEmpty ? [] : [self]) + contents.flatMap { contents -> [LayerTree.Layer] in
-            if case .layer(let layer) = contents { return layer.filtered } else { return [] }
-        }
+        (filters.isEmpty ? [] : [self])
+            + contents.flatMap { contents -> [LayerTree.Layer] in
+                if case .layer(let layer) = contents { return layer.filtered } else { return [] }
+            }
     }
 
     // the bounds of the shapes and images, in this layer's space (its own transform applied)
     var bounds: LayerTree.Rect? {
-        let generator = LayerTree.CommandGenerator(provider: LayerTreeProvider(), size: .init(200, 200), options: .default)
+        let generator = LayerTree.CommandGenerator(
+            provider: LayerTreeProvider(),
+            size: .init(200, 200),
+            options: .default
+        )
         let wrapper = LayerTree.Layer()
         wrapper.contents = [.layer(self)]
         return generator.makeBounds(for: wrapper)
