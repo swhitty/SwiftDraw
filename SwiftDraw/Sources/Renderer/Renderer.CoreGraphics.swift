@@ -72,7 +72,9 @@ struct CGTransformingPattern: Hashable {
     }
 
     func draw(_ ctx: CGContext) {
-        let renderer = CGRenderer(context: ctx)
+        // the cell is a bitmap whose default space is the identity: a pattern drawn inside the cell
+        // is relative to it, including the device scale the cell is drawn at
+        let renderer = CGRenderer(context: ctx, baseCTM: .identity)
         renderer.perform(contents)
     }
 }
@@ -570,7 +572,7 @@ struct CGRenderer: Renderer {
         let cgPattern = CGPattern.make(bounds: pattern.bounds,
                                        matrix: pattern.transform.concatenating(ctx.ctm.concatenating(baseCTM.inverted())),
                                        step: pattern.bounds.size,
-                                       tiling: .constantSpacingMinimalDistortion,
+                                       tiling: .noDistortion,
                                        isColored: true,
                                        draw: pattern.draw)
         ctx.setFillPattern(cgPattern, colorComponents: &alpha)

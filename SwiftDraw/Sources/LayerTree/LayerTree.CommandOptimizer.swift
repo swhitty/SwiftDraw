@@ -107,6 +107,11 @@ extension LayerTree {
                 state.push(state.top)
             case .popState:
                 state.pop()
+            case .pushTransparencyLayer, .popTransparencyLayer:
+                // a transparency layer draws with alpha 1 and the normal blend mode, and is composited
+                // with the alpha set before it: a nested layer's equal opacity is not redundant
+                state.top.opacity = nil
+                state.top.blendMode = nil
             case .pushFilterLayer:
                 // filter layers draw into a fresh graphics state
                 state.push(State())
