@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="200" viewBox="0 0 400 200">
+  <!-- SVG 2 §5.6: what a <use> draws, and how -->
+
+  <defs>
+    <!-- a referenced <svg> takes the <use>'s width and height in place of its own,
+         keeping its x, y and viewBox, and clips to that viewport -->
+    <svg id="badge" x="10" y="10" width="40" height="40" viewBox="0 0 20 20">
+      <circle cx="10" cy="10" r="14" fill="crimson"/>
+      <circle cx="10" cy="10" r="6" fill="gold"/>
+    </svg>
+
+    <svg id="plain">
+      <rect x="10" y="10" width="200" height="200" fill="seagreen"/>
+    </svg>
+
+    <!-- the instance inherits from the <use>, not from these ancestors -->
+    <g fill="red" transform="scale(4)" opacity="0.2">
+      <rect id="nested" width="60" height="40"/>
+    </g>
+
+    <!-- the first element with an id wins -->
+    <circle id="dup" cx="30" cy="30" r="25" fill="royalblue"/>
+    <circle id="dup" cx="30" cy="30" r="25" fill="red"/>
+  </defs>
+
+  <use href="#badge"/>
+  <use href="#badge" x="50" width="80" height="80"/>
+  <use href="#badge" x="140" width="80" height="40"/>
+
+  <!-- an <svg> without a size is 100%, unless the <use> sizes it: clipped to 80 × 80 here -->
+  <use href="#plain" x="230" width="80" height="80"/>
+
+  <use href="#nested" x="10" y="110" fill="darkorange"/>
+  <use href="#dup" x="90" y="110"/>
+
+  <!-- elements inside an unknown element, and inside a <clipPath>, can still be referenced -->
+  <unknown>
+    <rect id="hidden" width="60" height="60" fill="purple"/>
+  </unknown>
+  <use href="#hidden" x="170" y="120"/>
+
+  <clipPath id="clip">
+    <g><rect id="clipped" width="60" height="60" fill="teal"/></g>
+  </clipPath>
+  <use href="#clipped" x="250" y="120"/>
+</svg>

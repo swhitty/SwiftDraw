@@ -50,11 +50,14 @@ package extension XMLParser {
             styleContext.matcher = DOM.StyleSheet.Matcher(sheets: styles, root: e)
             lengthContext.fontSize = rootFontSize(e)
             lengthContext.symbolViewports = makeSymbolUseSizes(within: e)
+            referenceContext.firstWithID = Self.firstElementsWithID(within: e)
         }
         defer {
             if isRoot {
                 styleContext.matcher = nil
                 lengthContext.symbolViewports = [:]
+                referenceContext.firstWithID = []
+                referenceContext.elements = [:]
             }
         }
 
@@ -119,8 +122,63 @@ package extension XMLParser {
         applyStyle(of: e, to: svg)
         parseConditionalAttributes(att, into: svg)
 
+        if isRoot {
+            try parseUnreachedElements(within: e)
+            svg.elementsByID = referenceContext.elements
+        }
+
         return svg
     }
+
+    /// The XML elements that are the first in the document with their id: as `getElementById`,
+    /// a `<use>` references only the first, whatever its kind.
+    static func firstElementsWithID(within root: XML.Element) -> Set<ObjectIdentifier> {
+        var seen = Set<String>()
+        var first = Set<ObjectIdentifier>()
+        var stack = [root]
+        while let element = stack.popLast() {
+            if let id = element.attributes["id"], seen.insert(id).inserted {
+                first.insert(ObjectIdentifier(element))
+            }
+            stack.append(contentsOf: element.children.reversed())
+        }
+        return first
+    }
+
+    /// Parses the graphics elements no other walk reaches, so a `<use>` can still reference them:
+    /// those inside elements that are not rendered and are not containers, such as an unknown
+    /// element (as Chrome and resvg). Each element is parsed at most once more.
+    func parseUnreachedElements(within root: XML.Element) throws {
+        // elements whose children are parsed as graphics elements by the other walks
+        let walked: Set<String> = ["svg", "g", "a", "switch", "symbol", "defs", "clipPath", "mask", "pattern", "marker"]
+        var stack: [(element: XML.Element, reached: Bool)] = root.children.reversed().map { ($0, true) }
+        while let (element, reached) = stack.popLast() {
+            try Task.checkCancellation()
+            if reached {
+                // text holds no graphics elements, and leaves no children
+                if walked.contains(element.name) {
+                    stack.append(contentsOf: element.children.reversed().map { ($0, true) })
+                } else if !Self.graphicsElementNames.contains(element.name) {
+                    stack.append(contentsOf: element.children.reversed().map { ($0, false) })
+                }
+            } else if walked.contains(element.name) && !Self.graphicsElementNames.contains(element.name) {
+                // <defs>, <clipPath>, <mask>, <pattern> and <marker> are found anywhere in the document
+                stack.append(contentsOf: element.children.reversed().map { ($0, true) })
+            } else if Self.graphicsElementNames.contains(element.name),
+                      referenceContext.firstWithID.contains(ObjectIdentifier(element)) {
+                // parses (and registers) its subtree too
+                _ = try parseGraphicsElements([element])
+            } else if element.name != "text" {
+                stack.append(contentsOf: element.children.reversed().map { ($0, false) })
+            }
+        }
+    }
+
+    /// The elements `parseGraphicsElement(_:)` parses.
+    static let graphicsElementNames: Set<String> = [
+        "g", "line", "circle", "ellipse", "rect", "polyline", "polygon", "path", "text",
+        "a", "use", "switch", "image", "svg", "symbol"
+    ]
 
     func parseViewBox(_ data: String?) throws -> DOM.SVG.ViewBox? {
         guard let data = data else { return nil }
@@ -277,7 +335,7 @@ package extension XMLParser {
 
         for e in elements {
             // an element without an id can never be referenced; skip it rather than fail
-            guard let id = e.id else { continue }
+            guard let id = e.id, defs[id] == nil else { continue }
             defs[id] = e
         }
 

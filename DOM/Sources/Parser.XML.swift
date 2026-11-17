@@ -61,6 +61,16 @@ package struct XMLParser {
         var symbolViewports = [String: (width: DOM.Coordinate?, height: DOM.Coordinate?)]()
     }
 
+    // the elements a <use> can reference, collected while parsing the root <svg>
+    let referenceContext = ReferenceContext()
+
+    final class ReferenceContext {
+        // the XML elements that are the first in the document with their id
+        var firstWithID = Set<ObjectIdentifier>()
+        // the graphics element parsed from each of them, by id
+        var elements = [String: DOM.GraphicsElement]()
+    }
+
     // stylesheet matcher for the document being parsed (set while parsing the root <svg>)
     let styleContext = StyleContext()
 

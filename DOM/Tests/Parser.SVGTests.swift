@@ -42,6 +42,8 @@ struct ParserSVGTests {
 
         var parsed = try parser.parseSVG(node)
         let expected = DOM.SVG(width: 100, height: 200)
+        // a parsed document indexes the elements a <use> can reference
+        expected.elementsByID = [:]
         #expect(parsed == expected)
 
         let expected2 = expected

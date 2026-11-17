@@ -52,6 +52,9 @@ package extension DOM {
 package extension DOM.SVG {
 
     func firstGraphicsElement(with id: String) -> DOM.GraphicsElement? {
+        if let elementsByID {
+            return elementsByID[id]
+        }
         if let def = defs.elements[id] {
             return def
         }

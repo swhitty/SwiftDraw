@@ -63,11 +63,51 @@ extension LayerTree.Builder {
         let x = use.x ?? 0.0
         let y = use.y ?? 0.0
 
+        if let nested = element as? DOM.SVG {
+            return .layer(makeNestedSVGLayer(l, svg: nested, use: use))
+        }
+
         if x != 0 || y != 0 {
             l.transform.insert(.translate(tx: x, ty: y), at: 0)
         }
 
         return .layer(l)
+    }
+
+    /// Places an `<svg>` drawn by a `<use>` in its viewport (SVG 2 §5.6): the `<use>`'s width and
+    /// height replace the `<svg>`'s own when set, with its x, y, viewBox and preserveAspectRatio,
+    /// clipped to the viewport as any nested `<svg>`, and offset by the `<use>`'s x, y.
+    func makeNestedSVGLayer(_ contents: LayerTree.Layer, svg nested: DOM.SVG, use: DOM.Use) -> LayerTree.Layer {
+        let width = use.width ?? nested.width
+        let height = use.height ?? nested.height
+        guard width > 0, height > 0, width.isFinite, height.isFinite else {
+            return LayerTree.Layer()
+        }
+
+        var transform = [LayerTree.Transform]()
+        if (use.x ?? 0) != 0 || (use.y ?? 0) != 0 {
+            transform.append(.translate(tx: use.x ?? 0, ty: use.y ?? 0))
+        }
+        // as a nested <svg> in the document, its own transform is replaced by the viewport mapping
+        transform += Self.makeTransform(x: nested.x, y: nested.y, viewBox: nested.viewBox,
+                                        width: width, height: height,
+                                        preserveAspectRatio: nested.preserveAspectRatio)
+        let bounds = Self.makeViewportClip(viewBox: nested.viewBox, width: width, height: height,
+                                           preserveAspectRatio: nested.preserveAspectRatio)
+        let clip = [LayerTree.ClipShape(shape: .rect(within: bounds, radii: .zero), transform: .identity)]
+
+        // layer.clip applies after layer.transform; an <svg>'s own clip-path stays on an inner layer
+        guard contents.clip.isEmpty else {
+            contents.transform = []
+            let outer = LayerTree.Layer()
+            outer.transform = transform
+            outer.clip = clip
+            outer.contents = [.layer(contents)]
+            return outer
+        }
+        contents.transform = transform
+        contents.clip = clip
+        return contents
     }
 
     /// Places the contents of a `<symbol>` in the viewport its `<use>` establishes (SVG 2 §5.6),

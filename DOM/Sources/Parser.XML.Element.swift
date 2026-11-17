@@ -140,6 +140,11 @@ extension XMLParser {
         ge.style = style.normal
         ge.importantStyle = style.important
         ge.matchedStyle = matched
+
+        if let id = ge.id, referenceContext.firstWithID.contains(ObjectIdentifier(e)),
+           referenceContext.elements[id] == nil {
+            referenceContext.elements[id] = ge
+        }
         return ge
     }
 
