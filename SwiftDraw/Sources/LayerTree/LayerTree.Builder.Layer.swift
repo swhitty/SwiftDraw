@@ -34,10 +34,15 @@ import Foundation
 
 extension LayerTree.Builder {
 
-    func makeShapeContents(from shape: LayerTree.Shape, with state: State) -> LayerTree.Layer.Contents {
-        let bounds = shape.bounds
-        let stroke = makeStrokeAttributes(with: state, bounds: bounds)
-        let fill = makeFillAttributes(with: state, bounds: bounds)
+    /// - Parameter boundingBox: the box objectBoundingBox paint servers resolve against, when it is not
+    ///   the shape's own (each run of a text uses the whole text's)
+    func makeShapeContents(from shape: LayerTree.Shape, with state: State,
+                           boundingBox: LayerTree.Rect? = nil) -> LayerTree.Layer.Contents {
+        let bounds = boundingBox ?? shape.bounds
+        var stroke = makeStrokeAttributes(with: state, bounds: bounds)
+        var fill = makeFillAttributes(with: state, bounds: bounds)
+        stroke.boundingBox = boundingBox
+        fill.boundingBox = boundingBox
         return .shape(shape, stroke, fill)
     }
 

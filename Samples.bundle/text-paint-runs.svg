@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="200" viewBox="0 0 240 200" font-family="Helvetica" font-size="34" font-weight="bold">
+  <!-- paint on text with several runs: an objectBoundingBox gradient spans the whole text,
+       paint-order applies per run, and objectBoundingBox clips use the text's box -->
+  <linearGradient id="lg">
+    <stop offset="0" stop-color="#fc0"/>
+    <stop offset="1" stop-color="#06c"/>
+  </linearGradient>
+  <radialGradient id="rg">
+    <stop offset="0" stop-color="white"/>
+    <stop offset="1" stop-color="#c03"/>
+  </radialGradient>
+  <pattern id="dots" patternUnits="userSpaceOnUse" width="8" height="8">
+    <circle cx="4" cy="4" r="3" fill="#06c"/>
+  </pattern>
+  <clipPath id="half" clipPathUnits="objectBoundingBox">
+    <rect width="1" height="0.6"/>
+  </clipPath>
+
+  <!-- one gradient across the runs, and rotated glyphs within it -->
+  <text x="10" y="40" fill="url(#lg)">Gra<tspan font-style="italic">di</tspan><tspan rotate="15">ent</tspan></text>
+  <!-- a stroke paint server on a run, and a tspan with its own fill -->
+  <text x="10" y="90" fill="url(#rg)" stroke="#333" stroke-width="1">Rad<tspan fill="#090" stroke="url(#dots)" stroke-width="4">ial</tspan></text>
+  <!-- paint-order: the stroke of the second run is drawn first -->
+  <text x="10" y="140" fill="#fc0" stroke="#06c" stroke-width="5" stroke-linejoin="round">Or<tspan paint-order="stroke">der</tspan></text>
+  <!-- clipped to the top 60% of the text's box, after its transform -->
+  <text x="150" y="150" fill="#c03" clip-path="url(#half)" transform="rotate(-20 190 140)">Clip</text>
+</svg>

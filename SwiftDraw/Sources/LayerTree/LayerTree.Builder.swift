@@ -305,10 +305,10 @@ extension LayerTree {
             let l = Layer()
             l.class = element.class
             l.transform = createTransforms(from: attributes)
-            l.mask = createMaskLayer(for: element, attributes: attributes)
+            l.mask = createMaskLayer(for: element, attributes: attributes, state: state)
             // clip-rule comes from the <clipPath> contents and objectBoundingBox units are resolved
             // here, so every clip reaches the renderers in user space (SVG 1.1 §14.3.5)
-            if let clip = makeClip(for: element) {
+            if let clip = makeClip(for: element, state: state) {
                 apply(clip, to: l)
             }
             l.opacity = state.opacity
@@ -366,7 +366,9 @@ extension LayerTree {
         }
 
         /// `attributes` is the cascade of `element`: its `mask` may come from a stylesheet rule.
-        func createMaskLayer(for element: DOM.GraphicsElement, attributes: DOM.PresentationAttributes) -> Layer? {
+        /// `state` is the element's, to measure the bounding box of text.
+        func createMaskLayer(for element: DOM.GraphicsElement, attributes: DOM.PresentationAttributes,
+                             state: State? = nil) -> Layer? {
             guard let maskId = attributes.mask?.fragmentID,
                   let mask = svg.defs.masks.first(where: { $0.id == maskId }),
                   !isInvalid(element, .mask) else { return nil }
@@ -375,8 +377,8 @@ extension LayerTree {
             let regionUnits = mask.maskUnits ?? .objectBoundingBox
             let contentUnits = mask.maskContentUnits ?? .userSpaceOnUse
             let bounds = (regionUnits == .objectBoundingBox || contentUnits == .objectBoundingBox)
-                ? makeBoundingBox(for: element) : nil
-            // the bounding box of text is unknown here: ignore the mask
+                ? makeBoundingBox(for: element, state: state) : nil
+            // a bounding box that cannot be measured (text without CoreText): ignore the mask
             if contentUnits == .objectBoundingBox && bounds == nil { return nil }
 
             // A mask reached again inside itself is invalid, so the element it is on is not masked
