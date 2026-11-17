@@ -241,6 +241,18 @@ struct LayerTreeTextPathTests {
     }
 
     @Test
+    func spanWithoutDisplayIsNotDrawnAndTakesNoSpace() throws {
+        let hidden = try layer(#"<text font-size="20"><textPath href='#p'>a<tspan display="none" fill="red">MMM</tspan>b</textPath></text>"#)
+        let plain = try layer(#"<text font-size="20"><textPath href='#p'>ab</textPath></text>"#)
+        let black = LayerTree.FillAttributes.Fill.color(.rgba(r: 0, g: 0, b: 0, a: 1, space: .srgb))
+        #expect(shapes(in: hidden).map(\.1.fill) == [black, black])
+        // "b" ends where it does without the hidden span
+        let end = try #require(shapes(in: hidden).last?.0.bounds.maxX)
+        let plainEnd = try #require(shapes(in: plain).last?.0.bounds.maxX)
+        #expect(abs(end - plainEnd) < 0.01)
+    }
+
+    @Test
     func glyphsOffTheEndOfThePathAreNotDrawn() throws {
         let layer = try layer(#"<text font-size="20"><textPath href='#p'>MMMMMMMMMMMMMMMMMMMM</textPath></text>"#)
         let bounds = try #require(shapes(in: layer).first?.0.bounds)

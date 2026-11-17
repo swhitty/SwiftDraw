@@ -339,8 +339,6 @@ extension LayerTree {
                 if let textPath = text.textPath {
                     return makeTextPathContents(from: textPath, with: state)
                 }
-                // a font-size of 0 draws nothing (CoreText would fall back to its default size)
-                guard state.fontSize > 0 else { return nil }
                 return makeTextContents(from: text, with: state)
             } else if let image = element as? DOM.Image {
                 return isVisible ? try? Builder.makeImageContents(from: image) : nil

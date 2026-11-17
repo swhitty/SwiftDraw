@@ -122,7 +122,10 @@ extension LayerTree.Builder {
                                     dy: Self.makeYOffset(font: font.font, baseline: attributes.baseline)))
                     width += glyphs.reduce(0) { $0 + $1.advance }
                 case .span(let span):
-                    layout(span.runs, state: createState(for: span, inheriting: state))
+                    // a <tspan> with display="none" is not drawn and takes no space
+                    let spanState = createState(for: span, inheriting: state)
+                    guard spanState.display != .none else { continue }
+                    layout(span.runs, state: spanState)
                 }
             }
         }
