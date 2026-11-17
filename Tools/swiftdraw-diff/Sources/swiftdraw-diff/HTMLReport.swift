@@ -51,7 +51,7 @@ enum HTMLReport {
 
     static func write(compare report: CompareReport, dirs: OutputDirs, to url: URL) throws {
         var assets: [String: String] = [:]
-        let order: [CompareCategory: Double] = [.regressed: 5, .error: 4, .mixed: 3, .improved: 2, .changed: 1, .unchanged: 0]
+        let order: [CompareCategory: Double] = [.regressed: 5, .error: 4, .mixed: 3, .noSecondReference: 3, .improved: 2, .changed: 1, .unchanged: 0]
         let rows = report.results.map { e -> Row in
             let cells = cells(e.name, dirs: dirs, assets: &assets, [
                 ("Live SVG (this browser)", dirs.svg, "svg"), ("WebKit", dirs.webkit, "png"), ("resvg", dirs.resvg, "png"),
@@ -122,7 +122,7 @@ enum HTMLReport {
     .badge:empty { display:none; }
     .badge.regressed, .badge.swiftdraw-bug, .badge.swiftdraw-failed { background:var(--bad); }
     .badge.improved, .badge.pass { background:var(--ok); }
-    .badge.mixed, .badge.changed, .badge.unclear { background:var(--warn); }
+    .badge.mixed, .badge.no-second-reference, .badge.changed, .badge.unclear { background:var(--warn); }
     .cells { display:flex; gap:12px; flex-wrap:wrap; align-items:flex-start; }
     figure { margin:0; } figcaption { color:var(--muted); font-size:11px; margin-bottom:4px; }
     .frame { background:#fff; border:1px solid var(--line); line-height:0; }

@@ -60,23 +60,28 @@ swiftdraw-diff runs three renderers and diffs their PNGs:
 
 - `webkit-render` (`Tools/webkit-render`, built on first use) renders each SVG and decides its size: the browser's natural size, clamped to `--max` and rounded to whole points. Every renderer draws at that size.
 - `swiftdrawcli`, built from this repo for each revision. The working copy is rebuilt on every run, so uncommitted changes are always included; a commit's build is cached by SHA in `~/Library/Caches/swiftdraw-diff`, so the first compare against a new base takes about a minute and later ones reuse it.
-- `resvg` from `PATH`, with SwiftDraw's fallback fonts (Times, Helvetica, Courier) so text is comparable.
+- `resvg` from `PATH`, with SwiftDraw's fallback fonts (Times, Helvetica, Courier) and CSS's 16px default font size so text is comparable.
 
 `--swiftdraw-path`, `--webkit-render-path` and `--resvg-path` use a given binary instead. WebKit, resvg and committed SwiftDraw renders are cached too; pass `--no-cache` to render everything.
 
 To score one revision without comparing, drop `compare`: `swiftdraw-diff Samples.bundle --resvg` scores the working copy, `--head 0.30.0` a tag or branch.
 
+A directory is searched recursively, and each file is named by its path inside it (`text/text-anchor/simple-case`), as are its outputs. So the whole [resvg test suite](https://github.com/linebender/resvg/tree/main/crates/resvg/tests/tests) is one run: `swiftdraw-diff <resvg>/crates/resvg/tests/tests --resvg`. To score against the suite's own PNGs instead, pass `--resvg-png sibling --scale 2` (they are 300×300, and WebKit sizes the 200×200 viewBox-only tests at 150×150 points). Add `--resvg` as well to render the files whose PNG is missing or a different size with the resvg CLI.
+
 ### Reading the result
 
 - Exit code `1` means at least one file **regressed**: it moved further from a reference by more than `--tolerance` percentage points (default 0.5) without moving closer to the other, or it stopped rendering. Exit `0` means no regressions; `2` means the tool failed.
-- The summary lists **Regressed**, **Mixed**, **Improved** and **Changed** files. Each shows `base% → head%` and the change against WebKit and, with `--resvg`, against resvg. Unchanged files are only counted.
+- The summary lists **Regressed**, **Mixed**, **Improved**, **No second reference** and **Changed** files. Each shows `base% → head%` and the change against WebKit and, with `--resvg`, against resvg. Unchanged files are only counted.
 - **Mixed** means closer to one reference and further from the other, such as fixing something WebKit gets wrong. It does not fail the run; check those files by eye.
+- **No second reference** means further from a reference while the other could not be used for that file (resvg failed, or its `--resvg-png` image is missing or the wrong size). Without it a fix for a WebKit bug looks like a regression, so it does not fail the run; check those files by eye.
+- **Text is judged by resvg.** With `--resvg`, a file containing `<text>` is categorised by its resvg score alone, and where all three renderers differ its verdict is **SwiftDraw bug** rather than unclear. WebKit's `<img>` path shifts middle- and end-anchored text by a few units, while Chrome, resvg and SwiftDraw agree. Its WebKit score is still shown, marked `webkit*` in compare and `*` in report; `compare.json` and `scores.json` record `textReference` and, per file, `text` (and `judgedBy` in compare). Without resvg, text is judged by WebKit as before.
 - With `--resvg`, each file also gets a verdict, shown as `base → head` when it changes. Two images count as the same below `--match` percent (default 1).
   - **pass**: SwiftDraw matches both references.
   - **pass, WebKit differs**: SwiftDraw matches resvg, and WebKit is the odd one out.
   - **pass, resvg differs**: SwiftDraw matches WebKit, and resvg is the odd one out. Often a feature that WebKit's `<img>` path and SwiftDraw both lack.
-  - **SwiftDraw bug**: the references agree, and SwiftDraw matches neither.
-  - **unclear**: all three differ.
+  - **SwiftDraw bug**: the references agree, and SwiftDraw matches neither. For text, also when all three differ.
+  - **unclear**: all three differ (never for text).
+  - compare also prints how many files have each verdict at base and at head.
 - Judge by the change between base and head, not the absolute score. Many samples are already imperfect (e.g. `display`, `use`, `mask-composite`); a file staying at a high score is not a regression.
 - Text is compared with WebKit's font smoothing off (`-webkit-font-smoothing: antialiased`), because SwiftDraw fills glyph outlines and macOS smoothing makes WebKit's glyphs heavier. Pass `--font-smoothing` to compare against WebKit's default, as browsers show it. Text samples still keep a few percent from glyph positioning; judge them by eye at `--scale 3`.
 - A **Redrawn** list means WebKit first drew an image blank (a timing glitch under load) and it was scored from a later draw. That's informational. An image that stays blank after the retries is scored as blank, so a real blank render still shows up as a regression.

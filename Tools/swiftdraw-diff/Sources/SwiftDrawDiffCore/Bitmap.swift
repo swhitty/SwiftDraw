@@ -31,6 +31,14 @@ public struct Bitmap: Equatable, Sendable {
         public var description: String
     }
 
+    /// An image file's pixel size, read from its header; nil when it isn't a readable image.
+    public static func size(of url: URL) -> (width: Int, height: Int)? {
+        guard let source = CGImageSourceCreateWithURL(url as CFURL, nil),
+              let props = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any],
+              let w = props[kCGImagePropertyPixelWidth] as? Int, let h = props[kCGImagePropertyPixelHeight] as? Int else { return nil }
+        return (w, h)
+    }
+
     /// Decodes a PNG (or any image ImageIO reads) and composites it onto white.
     public init(imageData data: Data) throws {
         guard let source = CGImageSourceCreateWithData(data as CFData, nil),

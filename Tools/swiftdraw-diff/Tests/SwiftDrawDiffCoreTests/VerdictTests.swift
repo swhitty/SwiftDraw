@@ -1,3 +1,4 @@
+import Foundation
 import Testing
 @testable import SwiftDrawDiffCore
 
@@ -15,6 +16,30 @@ struct VerdictTests {
     ])
     func verdict(webkit: Double, resvg: Double, webkitResvg: Double, expected: Verdict) {
         #expect(Verdict(webkit: webkit, resvg: resvg, webkitResvg: webkitResvg, match: 0.01) == expected)
+    }
+
+    @Test(arguments: [
+        // with text, resvg decides where all three differ; everything else is as without
+        (0.30, 0.30, 0.20, Verdict.swiftdrawBug),   // WebKit's anchor offset no longer makes it unclear
+        (0.20, 0.0, 0.20, .webkitDiffers),
+        (0.0, 0.30, 0.30, .resvgDiffers),
+        (0.0, 0.0, 0.0, .pass),
+    ])
+    func textVerdict(webkit: Double, resvg: Double, webkitResvg: Double, expected: Verdict) {
+        #expect(Verdict(webkit: webkit, resvg: resvg, webkitResvg: webkitResvg, match: 0.01, text: true) == expected)
+    }
+
+    @Test(arguments: [
+        ("<svg><text x='1'>a</text></svg>", true),
+        ("<svg><text>a</text></svg>", true),
+        ("<svg><svg:text\n>a</svg:text></svg>", true),
+        ("<svg><text/></svg>", true),
+        ("<svg><textPath/></svg>", false),
+        ("<svg><rect/></svg>", false),
+        ("<svg><!-- context --><tspan/></svg>", false),
+    ])
+    func detectsText(svg: String, expected: Bool) {
+        #expect(TextContent.contains(Data(svg.utf8)) == expected)
     }
 
     @Test
@@ -44,6 +69,22 @@ struct CompareCategoryTests {
     func category(deltas: [Double], pixelsChanged: Int, expected: CompareCategory) {
         #expect(CompareCategory.of(baseRendered: true, headRendered: true,
                                    deltas: deltas, pixelsChanged: pixelsChanged, tolerance: 0.5) == expected)
+    }
+
+    @Test(arguments: [
+        // one reference where two were expected: moving away from it isn't a regression
+        ([0.6], CompareCategory.noSecondReference),
+        ([-0.6], .improved),
+        ([0.2], .changed),
+    ])
+    func missingReference(deltas: [Double], expected: CompareCategory) {
+        #expect(CompareCategory.of(baseRendered: true, headRendered: true, deltas: deltas, pixelsChanged: 10,
+                                   tolerance: 0.5, missingReference: true) == expected)
+    }
+
+    @Test
+    func encodesNoSecondReference() {
+        #expect(CompareCategory.noSecondReference.rawValue == "no-second-reference")
     }
 
     @Test

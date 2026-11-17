@@ -35,7 +35,7 @@ struct Reporter {
     func run() async throws -> Int32 {
         let dirs = OutputDirs(root: options.out ?? session.repo.work.appendingPathComponent("report"), headName: "swiftdraw")
         try dirs.create(base: false, resvg: session.resvg != nil)
-        let files = try Pipeline.inputs(options, copyTo: dirs.svg)
+        let files = try Pipeline.inputs(options, dirs: dirs, base: false)
         let head = try await SwiftDrawRenderer.prepare(try await session.revision(options.head), slot: "head",
                                                        repo: session.repo, cache: session.cache, scale: options.scale)
         print("Scoring SwiftDraw \(head.label)")
@@ -50,7 +50,7 @@ struct Reporter {
         let report = ScoresReport(
             swiftdraw: head.label, engine: session.engine, resvg: session.resvg?.label, os: session.os,
             scale: options.scale, match: options.match, fontSmoothing: options.fontSmoothing,
-            generated: Date(), results: scores
+            textReference: session.resvg == nil ? "webkit" : "resvg", generated: Date(), results: scores
         )
         let json = dirs.root.appendingPathComponent("scores.json")
         try JSONEncoder.report.encode(report).write(to: json)
@@ -87,7 +87,7 @@ struct Reporter {
         }
         let swiftdraw = load("swiftdraw", dirs.head, r.head)
         let webkit = load("webkit", dirs.webkit, r.webkitResult)
-        let resvg = load("resvg", dirs.resvg, r.resvg, fit: session.resvg?.isPNG == false)
+        let resvg = load("resvg", dirs.resvg, r.resvg, fit: true)
         let blur = Diff.blur(scale: options.scale)
 
         if let swiftdraw, let webkit, let d = Diff.compare(webkit, swiftdraw, blur: blur) {
@@ -101,8 +101,11 @@ struct Reporter {
         if let webkit, let resvg {
             score.webkitResvg = Diff.compare(webkit, resvg, blur: blur)?.score
         }
+        // With resvg, text is judged by resvg alone: WebKit's <img> path offsets middle- and end-anchored text.
+        let text = session.resvg != nil && r.file.text
+        if text { score.text = true }
         if let w = score.score, let s = score.resvg, let wr = score.webkitResvg {
-            score.verdict = Verdict(webkit: w, resvg: s, webkitResvg: wr, match: options.match / 100)
+            score.verdict = Verdict(webkit: w, resvg: s, webkitResvg: wr, match: options.match / 100, text: text)
         }
         if swiftdraw == nil { score.status = "swiftdraw-failed" }
         else if score.score == nil && score.resvg == nil { score.status = "no-reference" }
@@ -122,7 +125,12 @@ struct Reporter {
         }
         let width = max(8, results.map(\.name.count).max() ?? 8)
         let refs = [report.engine, report.resvg].compactMap { $0 }.joined(separator: " and ")
-        print("\nDifference from \(refs) · \(report.os) · font smoothing \(report.fontSmoothing ? "on" : "off")\n")
+        print("\nDifference from \(refs) · \(report.os) · font smoothing \(report.fontSmoothing ? "on" : "off")")
+        let textCount = report.results.filter { $0.text == true }.count
+        if report.textReference == "resvg" {
+            print("Text: judged by resvg only (\(textCount) file\(textCount == 1 ? "" : "s") with <text>, marked *); WebKit offsets middle- and end-anchored text, so its score is for information")
+        }
+        print("")
         var header = "file".padded(width) + "      WebKit"
         if hasResvg { header += "       resvg  WebKit↔resvg  verdict" }
         print(header)
@@ -131,7 +139,7 @@ struct Reporter {
             var line = s.name.padded(width) + " " + percent(s.score, s.errors?["webkit"] != nil)
             if hasResvg {
                 line += " " + percent(s.resvg, s.errors?["resvg"] != nil) + "  " + percent(s.webkitResvg, false).leftPadded(12)
-                line += "  " + (s.verdict?.label ?? "")
+                line += "  " + (s.verdict?.label ?? "") + (s.text == true ? " *" : "")
             }
             if s.status == "swiftdraw-failed" {
                 line = s.name.padded(width) + "  SwiftDraw failed: " + (s.errors?["swiftdraw"] ?? "?")

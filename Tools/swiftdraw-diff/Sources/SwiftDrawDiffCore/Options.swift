@@ -10,14 +10,20 @@ public struct Options: Equatable, Sendable {
         case compare
     }
 
-    /// Where resvg's images come from.
-    public enum ResvgSource: Equatable, Sendable {
-        /// Run the resvg CLI.
-        case cli
-        /// Pre-rendered PNGs: `foo.png` next to `foo.svg`.
+    /// Where pre-rendered resvg PNGs come from.
+    public enum ResvgPNGSource: Equatable, Sendable {
+        /// `foo.png` next to `foo.svg`.
         case sibling
-        /// Pre-rendered PNGs: `<dir>/foo.png`.
+        /// `<dir>/<name>.png`, where name is the SVG's report name (its path relative to the input directory).
         case directory(URL)
+    }
+
+    /// One SVG to score, and the name its outputs are written under.
+    public struct SVGInput: Equatable, Sendable {
+        public var url: URL
+        /// The path relative to the input directory without `.svg`, e.g. `text/text-anchor/simple-case`;
+        /// the file name for a file given directly.
+        public var name: String
     }
 
     public var command = Command.report
@@ -36,8 +42,12 @@ public struct Options: Equatable, Sendable {
     public var fontSmoothing = false
     public var html = false
     public var out: URL?
-    /// nil: WebKit only.
-    public var resvg: ResvgSource?
+    /// Run the resvg CLI (`--resvg`): the reference, or the fallback for files without a usable `--resvg-png`.
+    public var resvgCLI = false
+    /// Pre-rendered resvg PNGs (`--resvg-png`).
+    public var resvgPNG: ResvgPNGSource?
+    /// Whether resvg is a reference at all; WebKit only when false.
+    public var usesResvg: Bool { resvgCLI || resvgPNG != nil }
     public var swiftdrawPath: URL?
     public var webkitRenderPath: URL?
     public var resvgPath: URL?
@@ -85,13 +95,13 @@ public struct Options: Equatable, Sendable {
             case "--font-smoothing": o.fontSmoothing = true
             case "--html": o.html = true
             case "--out": o.out = try path(a)
-            case "--resvg": o.resvg = o.resvg ?? .cli
+            case "--resvg": o.resvgCLI = true
             case "--resvg-png":
                 let v = try value(a)
-                o.resvg = v == "sibling" ? .sibling : .directory(URL(fileURLWithPath: v))
+                o.resvgPNG = v == "sibling" ? .sibling : .directory(URL(fileURLWithPath: v))
             case "--swiftdraw-path": o.swiftdrawPath = try path(a)
             case "--webkit-render-path": o.webkitRenderPath = try path(a)
-            case "--resvg-path": o.resvgPath = try path(a); o.resvg = o.resvg ?? .cli
+            case "--resvg-path": o.resvgPath = try path(a); o.resvgCLI = true
             case "--cache": o.cache = try path(a)
             case "--no-cache": o.useCache = false
             case _ where a.hasPrefix("-"): throw Error("unknown option \(a)")
@@ -103,22 +113,28 @@ public struct Options: Equatable, Sendable {
         guard !o.inputs.isEmpty else { throw Error("no SVG files or directories given") }
         if o.command == .report && args.contains("--base") { throw Error("--base is for compare") }
         if o.swiftdrawPath != nil && o.head != nil { throw Error("--swiftdraw-path replaces --head; give one") }
-        if o.resvg == .sibling || { if case .directory = o.resvg { return true }; return false }() {
-            if o.resvgPath != nil { throw Error("--resvg-path runs resvg; --resvg-png uses pre-rendered PNGs; give one") }
-        }
         return o
     }
 
-    /// The SVG files named by `inputs`; directories contribute their `.svg` files (not recursively), sorted.
-    public func svgFiles(fileManager fm: FileManager = .default) -> [URL] {
-        inputs.flatMap { url -> [URL] in
+    /// The SVG files named by `inputs`. Directories contribute every `.svg` file below them (recursively,
+    /// skipping hidden files), named by their path relative to the directory and sorted by that name.
+    public func svgFiles(fileManager fm: FileManager = .default) -> [SVGInput] {
+        inputs.flatMap { url -> [SVGInput] in
             var isDir: ObjCBool = false
             fm.fileExists(atPath: url.path, isDirectory: &isDir)
-            guard isDir.boolValue else { return [url.standardizedFileURL] }
-            let items = (try? fm.contentsOfDirectory(at: url, includingPropertiesForKeys: nil)) ?? []
+            let url = url.standardizedFileURL.resolvingSymlinksInPath()
+            guard isDir.boolValue else { return [SVGInput(url: url, name: url.deletingPathExtension().lastPathComponent)] }
+            let root = url.path.hasSuffix("/") ? url.path : url.path + "/"
+            let items = fm.enumerator(at: url, includingPropertiesForKeys: nil, options: [.skipsHiddenFiles])?
+                .compactMap { $0 as? URL } ?? []
             return items.filter { $0.pathExtension.lowercased() == "svg" }
-                .map(\.standardizedFileURL)
-                .sorted { $0.lastPathComponent < $1.lastPathComponent }
+                .compactMap { item -> SVGInput? in
+                    let item = item.standardizedFileURL.resolvingSymlinksInPath()
+                    guard item.path.hasPrefix(root) else { return nil }
+                    let relative = String(item.path.dropFirst(root.count))
+                    return SVGInput(url: item, name: String(relative.dropLast(item.pathExtension.count + 1)))
+                }
+                .sorted { $0.name < $1.name }
         }
     }
 
@@ -137,8 +153,16 @@ public struct Options: Equatable, Sendable {
       WebKit always (Tools/webkit-render, built on first use). It also decides each SVG's size.
       --resvg                 also score against resvg (on PATH; brew install resvg)
       --resvg-png sibling|DIR also score against pre-rendered PNGs: foo.png beside foo.svg, or in DIR.
-                              Must match the compare size (resvg's bundled PNGs need --scale 1)
+                              A PNG must be the compare size; with --resvg too, files whose PNG is
+                              missing or another size are rendered with the resvg CLI instead.
+                              resvg's bundled test PNGs are 300×300 and WebKit sizes its 200×200
+                              viewBox-only tests at 150×150 pt, so they need --scale 2
       --match 1               percent below which two images count as the same in verdicts
+
+    text:
+      With resvg, files containing <text> are judged by resvg alone: their verdict and compare
+      category ignore WebKit, which offsets middle- and end-anchored text. Their WebKit score is
+      still shown, for information.
 
     renderers (built or found automatically; override with a path):
       --swiftdraw-path BIN    a swiftdrawcli binary to score instead of building one
