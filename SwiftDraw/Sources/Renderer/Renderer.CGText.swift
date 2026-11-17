@@ -653,6 +653,8 @@ public final class CGTextRenderer: Renderer {
     lines.append("ctx.saveGState()")
   }
 
+  func setFilterImage(primitive: Int, contents: [RendererCommand<CGTextTypes>]) { }
+
   func popFilterLayer() {
     lines.append("ctx.restoreGState()")
   }

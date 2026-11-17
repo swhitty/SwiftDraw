@@ -316,10 +316,12 @@ extension LayerTree {
             if let last = filters.last {
                 l.filters = last.primitives
                 l.filterRegion = last.region
+                l.filterImages = makeFilterImages(for: last.primitives)
                 for filter in filters.dropLast().reversed() {
                     let inner = Layer()
                     inner.filters = filter.primitives
                     inner.filterRegion = filter.region
+                    inner.filterImages = makeFilterImages(for: filter.primitives)
                     contents.appendContents(.layer(inner))
                     contents = inner
                 }

@@ -105,6 +105,8 @@ protocol Renderer {
     func draw(radial gradient: Types.Gradient, startCenter: Types.Point, startRadius: Types.Float, endCenter: Types.Point, endRadius: Types.Float)
 
     func pushFilterLayer(_ filter: LayerTree.FilterLayer)
+    // what an feImage primitive of the innermost filter layer draws, in the layer's user space
+    func setFilterImage(primitive: Int, contents: [RendererCommand<Types>])
     func popFilterLayer()
 }
 
@@ -165,6 +167,8 @@ extension Renderer {
             draw(radial: g, startCenter: startCenter, startRadius: startRadius, endCenter: endCenter, endRadius: endRadius)
         case .pushFilterLayer(let f):
             pushFilterLayer(f)
+        case let .filterImage(primitive, contents):
+            setFilterImage(primitive: primitive, contents: contents)
         case .popFilterLayer:
             popFilterLayer()
         }
@@ -214,6 +218,9 @@ enum RendererCommand<Types: RendererTypes>: @unchecked Sendable {
 
     // draws the following commands offscreen until popFilterLayer, then composites the filtered result
     case pushFilterLayer(LayerTree.FilterLayer)
+    // the contents an feImage primitive of the filter layer draws, rasterized when the layer is popped;
+    // draws nothing itself
+    case filterImage(primitive: Int, contents: [RendererCommand<Types>])
     case popFilterLayer
 }
 

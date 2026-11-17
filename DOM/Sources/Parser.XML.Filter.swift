@@ -76,7 +76,8 @@ extension XMLParser {
             colorInterpolation: parseColorInterpolation(e) ?? colorInterpolation,
             color: try? nodeAtt.parseColor("color"),
             floodColor: parseFloodColor(nodeAtt),
-            floodOpacity: parseClampedFraction(nodeAtt, "flood-opacity") ?? 1
+            floodOpacity: parseClampedFraction(nodeAtt, "flood-opacity") ?? 1,
+            isPixelated: parseImageRendering(e) ?? false
         )
         node.primitives = try parsePrimitives(e.children[...], context: context, skippingPrelude: true)
         if node.primitives.isEmpty {
@@ -148,6 +149,8 @@ extension XMLParser {
         // the <filter>'s flood-color and flood-opacity, for `inherit`
         var floodColor: DOM.Color = .keyword(.black)
         var floodOpacity: DOM.Float = 1
+        // the <filter>'s image-rendering, inherited by <feImage>
+        var isPixelated = false
     }
 
     func parsePrimitive(_ e: XML.Element, context: PrimitiveContext) throws -> DOM.Filter.Primitive? {
@@ -166,6 +169,9 @@ extension XMLParser {
             primitive.effect = .flood(color: resolveCurrentColor(att, context: context), opacity: opacity)
         case .flood, .turbulence:
             break
+        case .image(var image):
+            image.isPixelated = parseImageRendering(e) ?? context.isPixelated
+            primitive.effect = .image(image)
         case .dropShadow(var shadow):
             primitive.inputs = [Self.parseFilterInput(e.attributes["in"])]
             if shadow.color == .currentColor {
@@ -291,6 +297,13 @@ extension XMLParser {
             return .turbulence(try parseTurbulence(e))
         case "feConvolveMatrix":
             return .convolveMatrix(try parseConvolveMatrix(e))
+        case "feImage":
+            let att: any AttributeParser = try parseAttributes(e)
+            // SVG 2 href, falling back to xlink:href; image-rendering is inherited, so set by parsePrimitive
+            return .image(DOM.Filter.Image(
+                href: try? att.parseHref(),
+                preserveAspectRatio: parsePreserveAspectRatio(try? att.parseString("preserveAspectRatio")) ?? .default
+            ))
         default:
             guard e.name.hasPrefix("fe") else { return nil }
             return .unsupported(name: e.name)
@@ -479,6 +492,27 @@ extension XMLParser {
         }
         guard let value else { return nil }
         return DOM.Filter.ColorInterpolation(rawValue: Attributes.removingImportant(from: value).trimmingCharacters(in: .whitespaces))
+    }
+
+    // image-rendering (CSS Images 3 §5.3, SVG 1.1 §15.16): true for the keywords that sample the nearest pixel,
+    // false for the smooth ones; nil when missing or unknown so the inherited value applies.
+    // Read from the attribute or style="" only, as color-interpolation-filters.
+    func parseImageRendering(_ e: XML.Element) -> Bool? {
+        let key = "image-rendering"
+        var value = e.attributes[key]
+        if let style = e.attributes["style"], style.contains(key),
+           let declared = try? parseStyleAttributes(style)[key] {
+            value = declared
+        }
+        guard let value else { return nil }
+        switch Attributes.removingImportant(from: value).trimmingCharacters(in: .whitespaces) {
+        case "optimizeSpeed", "pixelated", "crisp-edges":
+            return true
+        case "auto", "optimizeQuality", "smooth", "high-quality":
+            return false
+        default:
+            return nil
+        }
     }
 
     func parseFiniteFloat(_ att: any AttributeParser, _ key: String) -> DOM.Float? {

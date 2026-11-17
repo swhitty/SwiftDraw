@@ -125,6 +125,25 @@ struct ParserXMLFilterTests {
         #expect(filter.effects == [.unsupported(name: "feDisplacementMap")])
     }
 
+    // Filter Effects 1 §9.15: href as written, with no input; image-rendering is inherited from the <filter>
+    @Test
+    func parseImage() throws {
+        let element = XML.Element(name: "filter", attributes: ["id": "f", "image-rendering": "pixelated"])
+        element.children = [
+            .makeElement("feImage", ["xlink:href": "#r", "in": "SourceAlpha", "preserveAspectRatio": "none"]),
+            .makeElement("feImage", ["href": "image.png", "image-rendering": "optimizeQuality"]),
+            .makeElement("feImage", [:])
+        ]
+
+        let filter = try XMLParser().parseFilter(element)
+        #expect(filter.effects == [
+            .image(DOM.Filter.Image(href: URL(string: "#r"), preserveAspectRatio: .init(align: .none), isPixelated: true)),
+            .image(DOM.Filter.Image(href: URL(string: "image.png"))),
+            .image(DOM.Filter.Image(isPixelated: true))
+        ])
+        #expect(filter.primitives.map(\.inputs) == [[], [], []])
+    }
+
     // SD12: inputs and results are recorded as written; LayerTree resolves the references
     @Test
     func parseInputChain() throws {

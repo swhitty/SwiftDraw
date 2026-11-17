@@ -46,6 +46,9 @@ extension LayerTree {
         var maskIsClip = false
         var filters: [FilterPrimitive] = []
         var filterRegion = FilterRegion()
+        /// The elements `<feImage>` primitives of `filters` draw, by primitive index (Filter Effects 1 §9.15),
+        /// in the layer's user space
+        var filterImages: [Int: Layer] = [:]
         /// The contents are one shape's fill, stroke and markers in a `paint-order` other than the
         /// default, with the shape split into a fill-only and a stroke-only `.shape`.
         var isPaintOrdered = false
@@ -86,7 +89,8 @@ extension LayerTree {
                   transform == [],
                   clip == [],
                   mask == nil,
-                  filters == [] else { return nil }
+                  filters == [],
+                  filterImages.isEmpty else { return nil }
 
             return first
         }
@@ -102,6 +106,7 @@ extension LayerTree {
             maskType.hash(into: &hasher)
             filters.hash(into: &hasher)
             filterRegion.hash(into: &hasher)
+            filterImages.hash(into: &hasher)
             isPaintOrdered.hash(into: &hasher)
         }
 
@@ -118,6 +123,7 @@ extension LayerTree {
             lhs.maskType == rhs.maskType &&
             lhs.filters == rhs.filters &&
             lhs.filterRegion == rhs.filterRegion &&
+            lhs.filterImages == rhs.filterImages &&
             lhs.isPaintOrdered == rhs.isPaintOrdered
         }
     }

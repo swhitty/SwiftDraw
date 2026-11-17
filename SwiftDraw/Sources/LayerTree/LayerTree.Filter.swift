@@ -100,6 +100,18 @@ extension LayerTree {
             case turbulence(Turbulence)
             // a kernel in pixels of the bitmap, checked
             case convolveMatrix(ConvolveMatrix)
+            // a layer drawn in user space, with no input
+            case image(Image)
+        }
+
+        // Filter Effects 1 §9.15 feImage: what to draw, resolved into the user space of the filter: an image
+        // placed in the primitive subregion, or a referenced element offset to the subregion's origin.
+        // Renderers rasterize it into the filter's pixels; the result is clipped to the subregion.
+        // Sendable as the rest of the filter: a layer tree is only read once it is built (as RendererCommand).
+        struct Image: Hashable, @unchecked Sendable {
+            var layer: LayerTree.Layer
+            // sample images at the nearest pixel (image-rendering)
+            var isPixelated: Bool
         }
 
         // Filter Effects 1 §9.21: frequencies in user space, never negative; the stitch tile is the subregion
@@ -251,7 +263,7 @@ extension LayerTree.Filter {
         case .unsupported:
             return false
         case .offset, .flood, .composite, .merge, .blend, .colorMatrix, .dropShadow, .componentTransfer, .morphology,
-             .turbulence, .convolveMatrix:
+             .turbulence, .convolveMatrix, .image:
             return true
         }
     }
@@ -262,7 +274,7 @@ extension LayerTree.Filter {
         case .dropShadow:
             return 5
         case .gaussianBlur, .unsupported, .offset, .flood, .composite, .merge, .blend, .colorMatrix, .componentTransfer, .morphology,
-             .turbulence, .convolveMatrix:
+             .turbulence, .convolveMatrix, .image:
             return 1
         }
     }
