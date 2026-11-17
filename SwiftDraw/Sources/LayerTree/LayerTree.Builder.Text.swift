@@ -45,87 +45,190 @@ extension LayerTree.Builder {
         var state: State
         /// The start of the run on the baseline, before `text-anchor` and the baseline shift
         var origin: LayerTree.Point
+        var advance: LayerTree.Float = 0
+        /// `rotate` of a single character in degrees, about its origin
+        var rotate: LayerTree.Float = 0
     }
 
-    /// SVG 1.1 §10.4 text chunk: runs drawn one after the other from an absolute position.
-    /// `text-anchor` shifts the chunk as a whole by its advance.
+    /// SVG 2 §11.5.3 text chunk: runs drawn one after the other from an absolute position.
+    /// `text-anchor` shifts the chunk as a whole.
     struct TextChunk {
         var runs = [TextRunPlacement]()
-        /// where the pen is after the last run
-        var end: LayerTree.Float = 0
 
         var anchor: DOM.TextAnchor {
             runs.first?.state.textAnchor ?? .start
         }
 
-        var advance: LayerTree.Float {
-            guard let start = runs.first?.origin.x else { return 0 }
-            return end - start
+        /// SVG 2 §11.5.2 "Apply anchoring": the chunk spans from the leftmost to the rightmost edge
+        /// of its runs (a negative `dx` can move a run before the first), and that span is aligned
+        /// to the chunk's first position.
+        var shift: LayerTree.Float {
+            guard let x = runs.first?.origin.x else { return 0 }
+            var minX = LayerTree.Float.infinity
+            var maxX = -LayerTree.Float.infinity
+            for run in runs {
+                let edges = [run.origin.x, run.origin.x + run.advance]
+                minX = min(minX, edges.min()!)
+                maxX = max(maxX, edges.max()!)
+            }
+            switch anchor {
+            case .start: return x - minX
+            case .middle: return x - (minX + maxX) / 2
+            case .end: return x - maxX
+            }
         }
     }
 
-    /// The runs of `text` laid out on one line, split into text chunks. Each run starts where the
-    /// previous one's advance ends; an absolute `x` or `y` on a `<tspan>` starts a new chunk there.
-    /// A `<tspan>` with `display="none"` takes no space. Only the first value of each position list
-    /// is applied for now.
-    func makeTextChunks(for text: DOM.Text, with state: State) -> [TextChunk] {
-        var chunks = [TextChunk]()
-        var current = TextChunk()
-        var pen = LayerTree.Point(LayerTree.Float(text.x ?? 0) + LayerTree.Float(text.dxList.first ?? 0),
-                                  LayerTree.Float(text.y ?? 0) + LayerTree.Float(text.dyList.first ?? 0))
+    /// An addressable character (a grapheme cluster) of the text, with the state of its innermost
+    /// `<tspan>` and its resolved position adjustments (SVG 2 §11.5.2)
+    struct TextCharacter {
+        var character: Character
+        var state: State
+        /// the text node it belongs to: characters of one node share their state
+        var run: Int
+        var x: LayerTree.Float?
+        var y: LayerTree.Float?
+        var dx: LayerTree.Float = 0
+        var dy: LayerTree.Float = 0
+        var rotate: LayerTree.Float = 0
+    }
 
-        // consecutive runs in the same font are measured together, as browsers and resvg shape them,
-        // so kerning applies across a change of colour: each run ends where the joined text would.
-        // A `dx` or `dy` moves the pen without breaking the shaping.
-        var shaped: (font: LayerTree.TextAttributes, text: String, advance: LayerTree.Float)?
+    /// The addressable characters of `text`, in order, each with the `x`, `y`, `dx`, `dy` and `rotate`
+    /// that apply to it. A list indexes the characters of its element, descendants included; a
+    /// descendant's own list overrides it for the characters it covers. Characters past the end of a
+    /// list take no value, except for `rotate`, whose last value repeats. A `<tspan>` with
+    /// `display="none"` has no addressable characters.
+    func makeTextCharacters(for text: DOM.Text, with state: State) -> [TextCharacter] {
+        struct Lists {
+            var range: Range<Int>
+            var x: [DOM.Coordinate]
+            var y: [DOM.Coordinate]
+            var dx: [DOM.Coordinate]
+            var dy: [DOM.Coordinate]
+            var rotate: [DOM.Float]
+        }
+        var characters = [TextCharacter]()
+        // in document order, so an ancestor's lists are applied before its descendants'
+        var lists = [Lists]()
+        var runCount = 0
 
-        func layout(_ runs: [DOM.TextRun], state: State) {
+        func collect(_ runs: [DOM.TextRun], state: State) {
             for run in runs {
                 switch run {
                 case .text(let string):
-                    // a font-size of 0 draws nothing (CoreText would fall back to its default size)
-                    guard !string.isEmpty, state.fontSize > 0 else { continue }
-                    var font = makeTextAttributes(with: state)
-                    font.color = .none
-                    font.anchor = .start
-                    font.baseline = .auto
-                    let advance = Self.makeAdvance(for: string, with: font)
-                    var origin = pen
-                    if let previous = shaped, previous.font == font {
-                        let text = previous.text + string
-                        let total = Self.makeAdvance(for: text, with: font)
-                        pen.x += total - previous.advance
-                        origin.x = pen.x - advance
-                        shaped = (font, text, total)
-                    } else {
-                        pen.x += advance
-                        shaped = (font, string, advance)
+                    runCount += 1
+                    for character in string {
+                        characters.append(TextCharacter(character: character, state: state, run: runCount))
                     }
-                    current.runs.append(TextRunPlacement(string: string, state: state, origin: origin))
-                    current.end = pen.x
                 case .span(let span):
                     let spanState = createState(for: span, inheriting: state)
                     guard spanState.display != .none else { continue }
-                    let x = span.xList.first
-                    let y = span.yList.first
-                    if x != nil || y != nil {
-                        // a text chunk is shaped on its own
-                        shaped = nil
-                        if !current.runs.isEmpty {
-                            chunks.append(current)
-                            current = TextChunk()
-                        }
-                        pen = LayerTree.Point(x.map { LayerTree.Float($0) } ?? pen.x,
-                                              y.map { LayerTree.Float($0) } ?? pen.y)
-                    }
-                    pen.x += LayerTree.Float(span.dxList.first ?? 0)
-                    pen.y += LayerTree.Float(span.dyList.first ?? 0)
-                    layout(span.runs, state: spanState)
+                    let index = lists.count
+                    let start = characters.count
+                    lists.append(Lists(range: start..<start, x: span.xList, y: span.yList,
+                                       dx: span.dxList, dy: span.dyList, rotate: span.rotateList))
+                    collect(span.runs, state: spanState)
+                    lists[index].range = start..<characters.count
                 }
             }
         }
 
-        layout(text.runs, state: state)
+        lists.append(Lists(range: 0..<0, x: text.xList, y: text.yList,
+                           dx: text.dxList, dy: text.dyList, rotate: text.rotateList))
+        collect(text.runs, state: state)
+        lists[0].range = 0..<characters.count
+
+        for list in lists {
+            func apply(_ values: [DOM.Coordinate], _ keyPath: WritableKeyPath<TextCharacter, LayerTree.Float?>) {
+                for (offset, value) in zip(list.range, values) {
+                    characters[offset][keyPath: keyPath] = LayerTree.Float(value)
+                }
+            }
+            func apply(_ values: [DOM.Coordinate], _ keyPath: WritableKeyPath<TextCharacter, LayerTree.Float>) {
+                for (offset, value) in zip(list.range, values) {
+                    characters[offset][keyPath: keyPath] = LayerTree.Float(value)
+                }
+            }
+            apply(list.x, \.x)
+            apply(list.y, \.y)
+            apply(list.dx, \.dx)
+            apply(list.dy, \.dy)
+            if let last = list.rotate.last {
+                for (offset, index) in list.range.enumerated() {
+                    characters[index].rotate = LayerTree.Float(offset < list.rotate.count ? list.rotate[offset] : last)
+                }
+            }
+        }
+        return characters
+    }
+
+    /// The characters of `text` laid out on one line, split into text chunks. Each character starts
+    /// where the previous one's advance ends, moved by its `dx` and `dy`; an absolute `x` or `y`
+    /// starts a new chunk there. Characters of one text node that are not positioned or rotated on
+    /// their own are drawn together as a run, so their kerning and ligatures are kept.
+    func makeTextChunks(for text: DOM.Text, with state: State) -> [TextChunk] {
+        var chunks = [TextChunk]()
+        var current = TextChunk()
+        var pen = LayerTree.Point.zero
+
+        // consecutive runs in the same font are measured together, as browsers and resvg shape them,
+        // so kerning applies across a change of colour: each run ends where the joined text would.
+        // A `dx` or `dy` moves the pen without breaking the shaping; a new chunk is shaped on its own.
+        var shaped: (font: LayerTree.TextAttributes, text: String, advance: LayerTree.Float)?
+        var pending: (string: String, state: State, run: Int, rotate: LayerTree.Float)?
+
+        func place(_ string: String, state: State, rotate: LayerTree.Float) {
+            var font = makeTextAttributes(with: state)
+            font.color = .none
+            font.anchor = .start
+            font.baseline = .auto
+            let advance = Self.makeAdvance(for: string, with: font)
+            var origin = pen
+            if let previous = shaped, previous.font == font {
+                let text = previous.text + string
+                let total = Self.makeAdvance(for: text, with: font)
+                pen.x += total - previous.advance
+                origin.x = pen.x - advance
+                shaped = (font, text, total)
+            } else {
+                pen.x += advance
+                shaped = (font, string, advance)
+            }
+            // the run's advance as placed: from its origin to where the shaped text ends
+            current.runs.append(TextRunPlacement(string: string, state: state, origin: origin,
+                                                 advance: pen.x - origin.x, rotate: rotate))
+        }
+
+        func flush() {
+            guard let run = pending else { return }
+            place(run.string, state: run.state, rotate: run.rotate)
+            pending = nil
+        }
+
+        for character in makeTextCharacters(for: text, with: state) {
+            // a font-size of 0 draws nothing (CoreText would fall back to its default size)
+            guard character.state.fontSize > 0 else { continue }
+            let isAbsolute = character.x != nil || character.y != nil
+            let isAdjusted = isAbsolute || character.dx != 0 || character.dy != 0 || character.rotate != 0
+
+            if let run = pending, run.run == character.run, run.rotate == 0, !isAdjusted {
+                pending?.string.append(character.character)
+                continue
+            }
+            flush()
+            if isAbsolute {
+                shaped = nil
+                if !current.runs.isEmpty {
+                    chunks.append(current)
+                    current = TextChunk()
+                }
+                pen = LayerTree.Point(character.x ?? pen.x, character.y ?? pen.y)
+            }
+            pen.x += character.dx
+            pen.y += character.dy
+            pending = (String(character.character), character.state, character.run, character.rotate)
+        }
+        flush()
         if !current.runs.isEmpty {
             chunks.append(current)
         }
@@ -138,7 +241,7 @@ extension LayerTree.Builder {
     func makeTextContents(from text: DOM.Text, with state: State, isClip: Bool = false) -> LayerTree.Layer.Contents? {
         var contents = [LayerTree.Layer.Contents]()
         for chunk in makeTextChunks(for: text, with: state) {
-            let shift = Self.makeXOffset(width: Double(chunk.advance), anchor: chunk.anchor)
+            let shift = chunk.shift
             for run in chunk.runs {
                 // SVG 1.1 §11.6.2: a hidden run is not drawn, but keeps its advance
                 guard run.state.visibility == .visible else { continue }
@@ -149,8 +252,17 @@ extension LayerTree.Builder {
                     state.stroke = .color(.none)
                 }
                 let point = LayerTree.Point(run.origin.x + shift, run.origin.y)
-                if let runContents = makeTextRunContents(run.string, at: point, with: state) {
+                guard let runContents = makeTextRunContents(run.string, at: point, with: state) else { continue }
+                if run.rotate == 0 {
                     contents.append(runContents)
+                } else {
+                    // `rotate` turns the glyph about its origin, clockwise in degrees
+                    let layer = LayerTree.Layer()
+                    layer.transform = [.translate(tx: point.x, ty: point.y),
+                                       .rotate(radians: run.rotate * .pi / 180),
+                                       .translate(tx: -point.x, ty: -point.y)]
+                    layer.appendContents(runContents)
+                    contents.append(.layer(layer))
                 }
             }
         }

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="200" viewBox="0 0 240 200" font-family="Helvetica" font-size="22">
+  <!-- x, y, dx, dy and rotate lists position each character -->
+  <path d="M120 0 V200" stroke="silver"/>
+  <text x="10 40 70" y="30">ABCD</text>
+  <text x="130" y="30" dy="0 -4 -4 8 8" fill="teal">wave</text>
+  <text x="10" y="70" rotate="0 15 30 45 60 75 90">rotated</text>
+  <!-- a tspan's lists override its parent's for its own characters; rotate repeats its last value -->
+  <text x="10" y="110" rotate="-10" fill="purple">Ab<tspan fill="orange" rotate="20" dy="0 4">cde</tspan>fg</text>
+  <!-- each absolute position starts a chunk, anchored on its own -->
+  <text x="120 120" y="150 180" text-anchor="middle">L<tspan fill="crimson">ine</tspan></text>
+  <!-- a negative dx: the chunk is anchored on its leftmost edge -->
+  <text x="230" y="150" dx="0 -50" text-anchor="end" fill="green">XYZ</text>
+</svg>
