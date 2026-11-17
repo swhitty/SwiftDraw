@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
+  <g fill="none" stroke-width="4">
+    <!-- Path data is rendered up to the first error -->
+    <path d="M 10 10 L 50 50 L 90#10" stroke="green"/>
+    <path d="M 10 60 L 50 90 L 90" stroke="green"/>
+
+    <!-- S and T only reflect the control point of C/S and Q/T -->
+    <path d="M 110 10 A 20 15 20 1 1 170 40 s 10 15 -40 25" stroke="green"/>
+    <path d="M 110 70 T 120 140 S 190 140 190 70" stroke="green"/>
+    <path d="M 10 160 Q 30 120 50 160 T 90 160 T 130 160" stroke="green"/>
+  </g>
+
+  <!-- After closepath the current point is the start of the subpath -->
+  <path d="M 140 150 L 140 160 L 150 150 z L 190 190 L 160 190" fill="green"/>
+</svg>

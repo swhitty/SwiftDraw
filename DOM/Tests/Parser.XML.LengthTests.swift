@@ -106,6 +106,20 @@ struct ParserXMLLengthTests {
         #expect(close(rect.ry, 96))
     }
 
+    @Test(arguments: ["44mmx", "5cap", "10px px", "50%x", "10 20", "1in;"])
+    func trailingCharactersMakeALengthInvalid(width: String) throws {
+        // the invalid width drops the rect, as resvg's rect/invalid-length and rect/cap-values
+        let svg = try parse(#"<rect width="\#(width)" height="10"/>"#)
+        #expect(svg.childElements.isEmpty)
+    }
+
+    @Test(arguments: [("10", 10.0), (" 10 ", 10), ("10px ", 10), ("50% ", 100), (" 1in", 96)])
+    func surroundingWhitespaceIsAllowed(width: String, expected: Double) throws {
+        let svg = try parse(#"<rect width="\#(width)" height="10"/>"#)
+        let rect = try #require(svg.childElements.first as? DOM.Rect)
+        #expect(close(rect.width, DOM.Coordinate(expected)))
+    }
+
     @Test
     func emAndExUseTheElementFontSize() throws {
         let svg = try parse(#"""

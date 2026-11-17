@@ -133,12 +133,8 @@ struct AttributeParserTests {
         let att = ["x": "20 30 40 50", "some": "random"]
         #expect(try att.parsePoints("x") == [DOM.Point(20, 30), DOM.Point(40, 50)])
         #expect(try att.parsePoints("missing") == nil)
-        #expect(throws: (any Error).self) {
-            try att.parsePoints("some")
-        }
-        #expect(throws: (any Error).self) {
-            try att.parsePoints("some") as [DOM.Point]?
-        }
+        // SVG 2 §10.6: points before the first error are kept
+        #expect(try att.parsePoints("some") == [])
     }
     
     @Test

@@ -162,23 +162,20 @@ extension XMLParser {
       return try parseUrl(url)
     }
 
+    /// SVG 2 §10.6: points up to the first error are used, and an odd final coordinate is ignored.
     func parsePoints(_ value: String) throws -> [DOM.Point] {
       var points = [DOM.Point]()
       var scanner = XMLParser.Scanner(text: value)
       let delimeter = CharacterSet(charactersIn: ",;")
-      
+
       while !scanner.isEOF {
-        let px = try? scanner.scanCoordinate()
+        guard let x = try? scanner.scanCoordinate() else { break }
         _ = try? scanner.scanCharacter(matchingAny: delimeter)
-        let py = try? scanner.scanCoordinate()
+        guard let y = try? scanner.scanCoordinate() else { break }
         _ = try? scanner.scanCharacter(matchingAny: delimeter)
-        
-        guard let x = px,
-          let y = py else { throw XMLParser.Error.invalid }
-        
         points.append(DOM.Point(x, y))
       }
-      
+
       return points
     }
 

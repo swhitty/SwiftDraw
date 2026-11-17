@@ -207,13 +207,10 @@ extension LayerTree.Builder {
         case let polygon as DOM.Polygon:
             return polygon.points.count > 1 ? lines(polygon.points) + [[.close]] : []
         case let domPath as DOM.Path:
-            let path = LayerTree.Path()
+            var state = PathState()
             var groups = [[LayerTree.Path.Segment]]()
             for segment in domPath.segments {
-                guard let segments = try? makeSegments(from: segment,
-                                                       last: path.location ?? .zero,
-                                                       previous: path.lastControl) else { break }
-                path.segments.append(contentsOf: segments)
+                guard let segments = try? makeSegments(from: segment, state: &state) else { break }
                 groups.append(segments)
             }
             // path data must begin with a moveto

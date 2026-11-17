@@ -62,12 +62,15 @@ package extension XMLParser {
 
         var lastCommand: Command?
 
+        // SVG 2 §9.5.4: render the path up to (not including) the first command in error
         repeat {
-            guard let cmd = nextPathCommand(&scanner, lastCommand: lastCommand) else {
-                throw Error.invalid
+            guard let cmd = nextPathCommand(&scanner, lastCommand: lastCommand),
+                  let segment = try? parsePathSegment(for: cmd, with: &scanner) else {
+                guard !segments.isEmpty else { throw Error.invalid }
+                break
             }
             lastCommand = cmd
-            segments.append(try parsePathSegment(for: cmd, with: &scanner))
+            segments.append(segment)
         } while !scanner.isAtEnd
 
         return segments

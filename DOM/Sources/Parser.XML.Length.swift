@@ -53,13 +53,18 @@ package extension XMLParser {
         let number = try scanner.scanDouble()
 
         if scanner.scanStringIfPossible("%") {
+            guard scanner.isEOF else { throw XMLParser.Error.invalid }
             guard let viewport = lengthContext.viewports.last else {
                 return DOM.Coordinate(number)
             }
             return DOM.Coordinate(number / 100) * viewport.reference(for: direction)
         }
 
-        switch scanner.scanUnit() {
+        let unit = scanner.scanUnit()
+        // anything after the unit (`44mmx`, or an unsupported unit such as `5cap`) is invalid
+        guard scanner.isEOF else { throw XMLParser.Error.invalid }
+
+        switch unit {
         case .em:
             return DOM.Coordinate(number) * lengthContext.fontSize
         case .ex:

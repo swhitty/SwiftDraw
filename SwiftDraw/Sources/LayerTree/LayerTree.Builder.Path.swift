@@ -41,15 +41,73 @@ extension LayerTree.Builder {
 
     static func createPath(from element: DOM.Path) throws -> LayerTree.Path {
         let path = Path()
+        var state = PathState()
 
         for s in element.segments {
-            let segments = try makeSegments(from: s,
-                                            last: path.location ?? Point.zero,
-                                            previous: path.lastControl)
-            path.segments.append(contentsOf: segments)
+            // SVG 2 §9.5.3: a command after closepath starts a new subpath at the closed subpath's start
+            if state.isClosed, !s.isMove {
+                path.segments.append(.move(to: state.location))
+            }
+            path.segments.append(contentsOf: try makeSegments(from: s, state: &state))
         }
 
         return path
+    }
+
+    /// The current point and the control point the next smooth curve reflects.
+    struct PathState {
+        var location: Point = .zero
+        var subpathStart: Point = .zero
+        var isClosed = false
+        /// The second control point of the previous command when it was C, c, S or s.
+        var cubicControl: Point?
+        /// The control point of the previous command when it was Q, q, T or t.
+        var quadraticControl: Point?
+    }
+
+    /// The drawn segments of one path command, updating the current point and reflected control points.
+    static func makeSegments(from segment: DOM.Path.Segment, state: inout PathState) throws -> [Path.Segment] {
+        let point = state.location
+        let previous: Point?
+        switch segment {
+        case .cubicSmooth: previous = state.cubicControl
+        case .quadraticSmooth: previous = state.quadraticControl
+        default: previous = nil
+        }
+
+        let segments = try makeSegments(from: segment, last: point, previous: previous)
+
+        state.cubicControl = nil
+        state.quadraticControl = nil
+        state.isClosed = false
+
+        switch segment {
+        case .move:
+            state.location = segments.last?.location ?? point
+            state.subpathStart = state.location
+        case .close:
+            state.location = state.subpathStart
+            state.isClosed = true
+        case .cubic, .cubicSmooth:
+            if case let .cubic(_, _, control2)? = segments.last {
+                state.cubicControl = control2
+            }
+            state.location = segments.last?.location ?? point
+        case let .quadratic(x1, y1, _, _, space):
+            let control = Point(x1, y1)
+            state.quadraticControl = space == .relative ? control.absolute(from: point) : control
+            state.location = segments.last?.location ?? point
+        case .quadraticSmooth:
+            state.quadraticControl = reflect(previous ?? point, about: point)
+            state.location = segments.last?.location ?? point
+        default:
+            state.location = segments.last?.location ?? point
+        }
+        return segments
+    }
+
+    static func reflect(_ control: Point, about point: Point) -> Point {
+        Point(2 * point.x - control.x, 2 * point.y - control.y)
     }
 
     static func makeSegment(from segment: DOM.Path.Segment, last point: Point, previous control: Point?) -> Path.Segment? {
@@ -189,23 +247,12 @@ extension LayerTree.Builder {
         return .cubic(to: final, control1: cp1, control2: cp2)
     }
 
+    /// `previous` is the control point of the previous quadratic (Q or T) command, or the current point.
     static func createQuadraticSmooth(from segment: DOM.Path.Segment, last point: Point, previous control: Point) -> Path.Segment? {
         guard case let .quadraticSmooth(x, y, space) = segment else { return nil }
 
-        let delta = Point(point.x - control.x,
-                          point.y - control.y)
-
-        let cp1 = Point(point.x + delta.x,
-                        point.y + delta.y)
-
         let final = space == .absolute ? Point(x, y) : Point(x, y).absolute(from: point)
-        let cpX = (final.x - point.x)*Float(1.0/3.0)
-        let cpY = (final.y - point.y)*Float(1.0/3.0)
-
-        let cp2 = Point(cp1.x + cpX,
-                        cp1.y + cpY)
-
-        return .cubic(to: final, control1: cp1, control2: cp2)
+        return createCubic(from: point, to: final, quadratic: reflect(control, about: point))
     }
 
     static func createArc(from segment: DOM.Path.Segment, last point: Point) -> [Path.Segment]? {
@@ -241,6 +288,13 @@ extension LayerTree.Builder {
         return .close
     }
 
+}
+
+private extension DOM.Path.Segment {
+    var isMove: Bool {
+        guard case .move = self else { return false }
+        return true
+    }
 }
 
 extension LayerTree.Point {
