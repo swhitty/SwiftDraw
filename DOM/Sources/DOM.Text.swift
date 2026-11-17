@@ -39,9 +39,11 @@ package extension DOM {
         /// Every value of `x` and `y`, one per character (SVG 1.1 §10.4); `x` and `y` are the first.
         package var xList: [Coordinate] = []
         package var yList: [Coordinate] = []
-        /// `dx` and `dy`, one per character; only the first of each is applied for now.
+        /// `dx` and `dy`, one per character
         package var dxList: [Coordinate] = []
         package var dyList: [Coordinate] = []
+        /// `rotate` in degrees, one per character; the last value applies to the remaining characters
+        package var rotateList: [Float] = []
         /// The characters of the text: the plain text of `runs`
         package var value: String
         /// The character data and `<tspan>` children, in document order, with white space already
@@ -91,12 +93,14 @@ package extension DOM {
     /// A `<tspan>` within text content: its own presentation attributes over its runs.
     final class TextSpan: GraphicsElement {
         package var runs: [TextRun]
-        /// Absolute `x` and `y`, and relative `dx` and `dy`: lists with one value per character (SVG 1.1 §10.5).
-        /// An absolute position starts a new text chunk. Only the first of each is applied for now.
+        /// Absolute `x` and `y`, relative `dx` and `dy`, and `rotate`: lists with one value per character
+        /// (SVG 2 §11.5.2). They override the lists of the span's ancestors for its own characters.
+        /// An absolute position starts a new text chunk.
         package var xList: [Coordinate] = []
         package var yList: [Coordinate] = []
         package var dxList: [Coordinate] = []
         package var dyList: [Coordinate] = []
+        package var rotateList: [Float] = []
         /// `xml:space` or CSS `white-space` of the span; nil inherits
         package var whiteSpace: WhiteSpace?
 

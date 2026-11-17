@@ -32,8 +32,8 @@ import SwiftDrawDOM
 @testable import SwiftDraw
 import Testing
 
-/// SVG 1.1 §10.4: `x` and `y` on `<text>` are lists of lengths. Until per-character positioning
-/// exists, the text is drawn at the first value.
+/// SVG 1.1 §10.4: `x` and `y` on `<text>` are lists of lengths. The text starts at the first value;
+/// the others position the following characters (see `LayerTreeTextCharacterTests`).
 struct LayerTreeTextPositionListTests {
 
     private func parse(_ text: String) throws -> DOM.SVG {
@@ -64,7 +64,7 @@ struct LayerTreeTextPositionListTests {
         #"<text x="50" y="100 134">Te<tspan fill="green">xt</tspan></text>"#,
         #"<text><tspan x="50 60" y="100 134">Text</tspan></text>"#,
     ])
-    func textIsDrawnAtTheFirstValue(text: String) throws {
+    func textStartsAtTheFirstValue(text: String) throws {
         #expect(try textPoint(text) == LayerTree.Point(50, 100))
     }
 

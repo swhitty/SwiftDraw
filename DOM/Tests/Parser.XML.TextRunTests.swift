@@ -102,11 +102,27 @@ struct ParserXMLTextRunTests {
 
     @Test
     func textPositionsAreKept() throws {
-        let text = try parseText(#"<text x="1" y="2" dx="3 4" dy="5">Text</text>"#)
+        let text = try parseText(#"<text x="1" y="2" dx="3 4" dy="5" rotate="10, -20 1.5">Text</text>"#)
         #expect(text.x == 1)
         #expect(text.y == 2)
         #expect(text.dxList == [3, 4])
         #expect(text.dyList == [5])
+        #expect(text.rotateList == [10, -20, 1.5])
+    }
+
+    @Test(arguments: ["5mm", "10 abc", ",", ""])
+    func anInvalidRotateListIsIgnored(rotate: String) throws {
+        #expect(try parseText(#"<text rotate="\#(rotate)">Text</text>"#).rotateList.isEmpty)
+    }
+
+    @Test
+    func spanRotateIsKept() throws {
+        let text = try parseText(#"<text>A<tspan rotate="45">B</tspan></text>"#)
+        guard case .span(let span) = text.runs[1] else {
+            Issue.record("expected a tspan")
+            return
+        }
+        #expect(span.rotateList == [45])
     }
 
     @Test

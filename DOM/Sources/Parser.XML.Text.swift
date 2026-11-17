@@ -122,6 +122,7 @@ extension XMLParser {
         span.yList = parseDefaultedLengthList(att, "y", .vertical) ?? []
         span.dxList = parseDefaultedLengthList(att, "dx", .horizontal) ?? []
         span.dyList = parseDefaultedLengthList(att, "dy", .vertical) ?? []
+        span.rotateList = parseNumberList(att, "rotate") ?? []
         span.whiteSpace = parseWhiteSpace(e, att: att)
         return span
     }
@@ -163,13 +164,13 @@ extension XMLParser {
         return element
     }
 
-    /// SVG 1.1 §10.4: x, y, dx and dy are lists, one value per character. Only the first is used for now;
-    /// per-character positioning keeps the rest.
+    /// SVG 2 §11.5.2: x, y, dx, dy and rotate are lists, one value per character.
     func applyPositions(_ att: any AttributeParser, to element: DOM.Text) {
         element.xList = parseDefaultedLengthList(att, "x", .horizontal) ?? []
         element.yList = parseDefaultedLengthList(att, "y", .vertical) ?? []
         element.dxList = parseDefaultedLengthList(att, "dx", .horizontal) ?? []
         element.dyList = parseDefaultedLengthList(att, "dy", .vertical) ?? []
+        element.rotateList = parseNumberList(att, "rotate") ?? []
         element.x = element.xList.first
         element.y = element.yList.first
     }
@@ -177,6 +178,21 @@ extension XMLParser {
     /// A `<list-of-lengths>` separated by commas and/or whitespace; nil when missing or any value is invalid.
     func parseDefaultedLengthList(_ att: any AttributeParser, _ key: String, _ direction: LengthDirection) -> [DOM.Coordinate]? {
         try? att.parse(key) { try parseLengthList($0, direction) } as [DOM.Coordinate]?
+    }
+
+    /// A `<list-of-numbers>` such as `rotate`; nil when missing or any value is invalid (`5mm`).
+    func parseNumberList(_ att: any AttributeParser, _ key: String) -> [DOM.Float]? {
+        guard let value = try? att.parseString(key) else { return nil }
+        let separators = CharacterSet.whitespacesAndNewlines.union(CharacterSet(charactersIn: ","))
+        let values = value.components(separatedBy: separators).filter { !$0.isEmpty }
+        guard !values.isEmpty else { return nil }
+        var numbers = [DOM.Float]()
+        for value in values {
+            var scanner = XMLParser.Scanner(text: value)
+            guard let number = try? scanner.scanDouble(), scanner.isEOF else { return nil }
+            numbers.append(DOM.Float(number))
+        }
+        return numbers
     }
 
     func parseLengthList(_ value: String, _ direction: LengthDirection) throws -> [DOM.Coordinate] {
