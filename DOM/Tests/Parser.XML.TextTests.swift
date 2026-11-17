@@ -39,7 +39,7 @@ struct ParserXMLTextTests {
     @Test
     func textNodeParses() throws {
         let el = XML.Element(name: "text", attributes: [:])
-        el.innerText = "Simon"
+        el.appendText("Simon")
         el.attributes["x"] = "1"
         el.attributes["y"] = "2"
         el.attributes["font-family"] = "'Futura', sans-serif"
@@ -62,21 +62,30 @@ struct ParserXMLTextTests {
     @Test
     func textTSpanNodeParses() throws {
         let tspan = XML.Element(name: "tspan", attributes: [:])
-        tspan.innerText = "Simon"
+        tspan.appendText("Simon")
         tspan.attributes["x"] = "1"
         tspan.attributes["y"] = "2"
         tspan.attributes["font-family"] = "'Futura', sans-serif"
         tspan.attributes["font-size"] = "12.5"
         tspan.attributes["text-anchor"] = "end"
         let el = XML.Element(name: "text", attributes: [:])
-        el.children.append(tspan)
+        el.appendChild(tspan)
 
         let parsed = try XMLParser().parseGraphicsElement(el) as? DOM.Text
         let text = try #require(parsed)
 
-        #expect(text.x == 1)
-        #expect(text.y == 2)
+        // the tspan's position starts its own text chunk
+        #expect(text.x == nil)
+        #expect(text.y == nil)
         #expect(text.value == "Simon")
+        guard case .span(let span) = try #require(text.runs.first) else {
+            Issue.record("expected a tspan run")
+            return
+        }
+        #expect(span.xList == [1])
+        #expect(span.yList == [2])
+        #expect(span.attributes.fontSize == 12.5)
+        #expect(span.attributes.textAnchor == .end)
     }
 
     @Test
@@ -85,7 +94,7 @@ struct ParserXMLTextTests {
         let first = try XMLParser().parseText(["x": "1", "y": "1"], element: el)
         #expect(first == nil)
 
-        el.innerText = "    "
+        el.appendText("    ")
         let second = try XMLParser().parseText(["x": "1", "y": "1"], element: el)
         #expect(second == nil)
     }

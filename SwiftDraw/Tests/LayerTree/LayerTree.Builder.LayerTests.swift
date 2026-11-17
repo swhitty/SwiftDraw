@@ -40,7 +40,7 @@ final class LayerTreeBuilderLayerTests: XCTestCase {
     let builder = LayerTree.Builder(svg: DOM.SVG(width: 10, height: 10))
     let contents = builder.makeTextContents(from: text, with: .init())
 
-    guard case .text(let t, _, _) = contents else { XCTFail(); return }
+    guard case .text(let t, _, _)? = contents else { XCTFail(); return }
     XCTAssertEqual(t, "Hello")
   }
   

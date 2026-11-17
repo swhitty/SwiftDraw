@@ -174,10 +174,8 @@ extension LayerTree.Builder {
                 if let contents = makeTextPathContents(from: textPath, with: state, isClip: true) {
                     l.appendContents(contents)
                 }
-            } else if state.fontSize > 0,
-                      case .text(let string, let point, var attributes) = makeTextContents(from: text, with: state) {
-                attributes.color = .white
-                l.appendContents(.text(string, point, attributes))
+            } else if let contents = makeTextContents(from: text, with: state, isClip: true) {
+                l.appendContents(contents)
             }
             applyMemberClip(of: member, to: l)
         }

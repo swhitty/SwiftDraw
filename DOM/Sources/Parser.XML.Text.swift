@@ -34,26 +34,20 @@ import Foundation
 extension XMLParser {
 
     func parseText(_ att: any AttributeParser, element: XML.Element) throws -> DOM.Text? {
+        let whiteSpace = parseWhiteSpace(element, att: att) ?? .collapse
         if let textPath = element.children.first(where: { $0.name == "textPath" }) {
             // text outside the <textPath> is not drawn
-            guard let path = try parseTextPath(textPath) else { return nil }
+            guard let path = try parseTextPath(textPath, inheriting: whiteSpace) else { return nil }
             let text = try parseText(att, value: DOM.TextRun.plainText(of: path.runs))
             text.textPath = path
             return text
         }
 
-        guard
-            let text = element.innerText?.trimmingCharacters(in: .whitespacesAndNewlines),
-            !text.isEmpty else {
-            if let tspan = element.children.first(where: { $0.name == "tspan" }),
-               let text = tspan.innerText?.trimmingCharacters(in: .whitespacesAndNewlines) {
-                let tspanAtt = try parseAttributes(tspan)
-                return try parseText(tspanAtt, value: text)
-            }
-            return nil
-        }
-
-        return try parseText(att, value: text)
+        let runs = DOM.TextRun.collapsingWhitespace(try parseTextRuns(element), whiteSpace: whiteSpace)
+        guard !DOM.TextRun.plainText(of: runs).isEmpty else { return nil }
+        let text = DOM.Text(runs: runs)
+        applyPositions(att, to: text)
+        return text
     }
 
     func parseAnchor(_ att: any AttributeParser, element: XML.Element) throws -> DOM.Anchor? {
@@ -64,9 +58,10 @@ extension XMLParser {
     }
 
     /// A `<textPath>` with its runs of text and `<tspan>`, or nil when it has no characters to draw.
-    func parseTextPath(_ e: XML.Element) throws -> DOM.TextPath? {
+    func parseTextPath(_ e: XML.Element, inheriting whiteSpace: DOM.WhiteSpace = .collapse) throws -> DOM.TextPath? {
         let att = try parseAttributes(e)
-        let runs = DOM.TextRun.collapsingWhitespace(try parseTextRuns(e))
+        let runs = DOM.TextRun.collapsingWhitespace(try parseTextRuns(e),
+                                                    whiteSpace: parseWhiteSpace(e, att: att) ?? whiteSpace)
         guard !DOM.TextRun.plainText(of: runs).isEmpty else { return nil }
 
         let textPath = DOM.TextPath(href: try? att.parseHref(), runs: runs)
@@ -102,15 +97,55 @@ extension XMLParser {
             case .text(let text):
                 runs.append(.text(text))
             case .element(let child) where child.name == "tspan":
-                let span = DOM.TextSpan(runs: try parseTextRuns(child))
-                try applyTextContentAttributes(of: child, att: try parseAttributes(child), to: span)
-                runs.append(.span(span))
+                runs.append(.span(try parseTextSpan(child)))
             case .element:
                 // other children (<title>, <desc>, nested <textPath>…) draw nothing
                 ()
             }
         }
         return runs
+    }
+
+    func parseTextSpan(_ e: XML.Element) throws -> DOM.TextSpan {
+        // `em` lengths of the span (and of its children) are relative to its own font-size
+        let fontSize = lengthContext.fontSize
+        defer { lengthContext.fontSize = fontSize }
+        let att = try parseAttributes(e)
+        lengthContext.fontSize = self.fontSize(attributes: try parsePresentationAttributes(e),
+                                               style: parseStyleDeclarations(e),
+                                               matched: styleContext.matcher?.match(e),
+                                               inheriting: fontSize)
+
+        let span = DOM.TextSpan(runs: try parseTextRuns(e))
+        try applyTextContentAttributes(of: e, att: att, to: span)
+        span.xList = parseDefaultedLengthList(att, "x", .horizontal) ?? []
+        span.yList = parseDefaultedLengthList(att, "y", .vertical) ?? []
+        span.dxList = parseDefaultedLengthList(att, "dx", .horizontal) ?? []
+        span.dyList = parseDefaultedLengthList(att, "dy", .vertical) ?? []
+        span.whiteSpace = parseWhiteSpace(e, att: att)
+        return span
+    }
+
+    /// CSS `white-space`, else `xml:space`; nil when neither is set, and the parent's applies.
+    func parseWhiteSpace(_ e: XML.Element, att: any AttributeParser) -> DOM.WhiteSpace? {
+        if let value = try? att.parseString("white-space") {
+            switch XMLParser.Attributes.removingImportant(from: value).trimmingCharacters(in: .whitespaces).lowercased() {
+            case "pre", "pre-wrap", "break-spaces":
+                return .preserve
+            case "normal", "nowrap", "pre-line":
+                return .collapse
+            default:
+                break
+            }
+        }
+        switch e.attributes["xml:space"]?.trimmingCharacters(in: .whitespaces) {
+        case "preserve":
+            return .preserve
+        case "default":
+            return .collapse
+        default:
+            return nil
+        }
     }
 
     /// id, class, presentation attributes and style of a `<textPath>` or `<tspan>`
@@ -124,13 +159,19 @@ extension XMLParser {
 
     func parseText(_ att: any AttributeParser, value: String) throws -> DOM.Text {
         let element = DOM.Text(value: value)
-        // SVG 1.1 §10.4: x and y are lists, one value per character. Only the first is used for now;
-        // per-character positioning keeps the rest.
+        applyPositions(att, to: element)
+        return element
+    }
+
+    /// SVG 1.1 §10.4: x, y, dx and dy are lists, one value per character. Only the first is used for now;
+    /// per-character positioning keeps the rest.
+    func applyPositions(_ att: any AttributeParser, to element: DOM.Text) {
         element.xList = parseDefaultedLengthList(att, "x", .horizontal) ?? []
         element.yList = parseDefaultedLengthList(att, "y", .vertical) ?? []
+        element.dxList = parseDefaultedLengthList(att, "dx", .horizontal) ?? []
+        element.dyList = parseDefaultedLengthList(att, "dy", .vertical) ?? []
         element.x = element.xList.first
         element.y = element.yList.first
-        return element
     }
 
     /// A `<list-of-lengths>` separated by commas and/or whitespace; nil when missing or any value is invalid.
@@ -158,23 +199,25 @@ package extension DOM.TextRun {
         }.joined()
     }
 
-    /// SVG 1.1 §10.15 white space (xml:space="default"): newlines and tabs become spaces, runs of spaces
-    /// collapse to one across element boundaries, and leading and trailing spaces are removed.
-    static func collapsingWhitespace(_ runs: [DOM.TextRun]) -> [DOM.TextRun] {
+    /// SVG 1.1 §10.15 white space. Where it collapses (xml:space="default"), newlines and tabs become
+    /// spaces, runs of spaces collapse to one across element boundaries, and leading and trailing spaces
+    /// of the whole text are removed. Where it is preserved, each newline and tab is a space and every
+    /// space is kept. A `<tspan>` may change the mode for its own characters.
+    static func collapsingWhitespace(_ runs: [DOM.TextRun], whiteSpace: DOM.WhiteSpace = .collapse) -> [DOM.TextRun] {
         var previousIsSpace = true
-        var collapsed = collapse(runs, previousIsSpace: &previousIsSpace)
-        trimTrailingSpace(&collapsed)
+        var collapsed = collapse(runs, whiteSpace: whiteSpace, previousIsSpace: &previousIsSpace)
+        trimTrailingSpace(&collapsed, whiteSpace: whiteSpace)
         return collapsed
     }
 
-    private static func collapse(_ runs: [DOM.TextRun], previousIsSpace: inout Bool) -> [DOM.TextRun] {
+    private static func collapse(_ runs: [DOM.TextRun], whiteSpace: DOM.WhiteSpace, previousIsSpace: inout Bool) -> [DOM.TextRun] {
         runs.map { run in
             switch run {
             case .text(let text):
                 var result = ""
                 for character in text {
-                    if character.isWhitespace {
-                        if !previousIsSpace { result.append(" ") }
+                    if isXMLSpace(character) {
+                        if whiteSpace == .preserve || !previousIsSpace { result.append(" ") }
                         previousIsSpace = true
                     } else {
                         result.append(character)
@@ -183,27 +226,34 @@ package extension DOM.TextRun {
                 }
                 return .text(result)
             case .span(let span):
-                span.runs = collapse(span.runs, previousIsSpace: &previousIsSpace)
+                span.runs = collapse(span.runs,
+                                     whiteSpace: span.whiteSpace ?? whiteSpace,
+                                     previousIsSpace: &previousIsSpace)
                 return .span(span)
             }
         }
     }
 
-    /// Removes the space at the end of the last characters; true once characters were found.
+    /// XML white space only: a no-break space (U+00A0) is a character like any other
+    private static func isXMLSpace(_ character: Character) -> Bool {
+        character == " " || character == "\n" || character == "\t" || character == "\r" || character == "\r\n"
+    }
+
+    /// Removes the collapsible space at the end of the last characters; true once characters were found.
     @discardableResult
-    private static func trimTrailingSpace(_ runs: inout [DOM.TextRun]) -> Bool {
+    private static func trimTrailingSpace(_ runs: inout [DOM.TextRun], whiteSpace: DOM.WhiteSpace) -> Bool {
         for index in runs.indices.reversed() {
             switch runs[index] {
             case .text(let text):
                 guard !text.isEmpty else { continue }
-                if text.hasSuffix(" ") {
+                if whiteSpace == .collapse, text.hasSuffix(" ") {
                     let trimmed = String(text.dropLast())
                     runs[index] = .text(trimmed)
                     if trimmed.isEmpty { continue }
                 }
                 return true
             case .span(let span):
-                if trimTrailingSpace(&span.runs) { return true }
+                if trimTrailingSpace(&span.runs, whiteSpace: span.whiteSpace ?? whiteSpace) { return true }
             }
         }
         return false

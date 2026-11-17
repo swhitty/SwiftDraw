@@ -39,7 +39,14 @@ package extension DOM {
         /// Every value of `x` and `y`, one per character (SVG 1.1 §10.4); `x` and `y` are the first.
         package var xList: [Coordinate] = []
         package var yList: [Coordinate] = []
+        /// `dx` and `dy`, one per character; only the first of each is applied for now.
+        package var dxList: [Coordinate] = []
+        package var dyList: [Coordinate] = []
+        /// The characters of the text: the plain text of `runs`
         package var value: String
+        /// The character data and `<tspan>` children, in document order, with white space already
+        /// collapsed. Text built from `value` alone is a single run.
+        package var runs: [TextRun]
         /// The text is laid out along a path instead (its runs replace `value`)
         package var textPath: TextPath?
 
@@ -47,6 +54,12 @@ package extension DOM {
             self.x = x
             self.y = y
             self.value = value
+            self.runs = [.text(value)]
+        }
+
+        package init(runs: [TextRun]) {
+            self.value = TextRun.plainText(of: runs)
+            self.runs = runs
         }
     }
 
@@ -78,10 +91,25 @@ package extension DOM {
     /// A `<tspan>` within text content: its own presentation attributes over its runs.
     final class TextSpan: GraphicsElement {
         package var runs: [TextRun]
+        /// Absolute `x` and `y`, and relative `dx` and `dy`: lists with one value per character (SVG 1.1 §10.5).
+        /// An absolute position starts a new text chunk. Only the first of each is applied for now.
+        package var xList: [Coordinate] = []
+        package var yList: [Coordinate] = []
+        package var dxList: [Coordinate] = []
+        package var dyList: [Coordinate] = []
+        /// `xml:space` or CSS `white-space` of the span; nil inherits
+        package var whiteSpace: WhiteSpace?
 
         package init(runs: [TextRun] = []) {
             self.runs = runs
         }
+    }
+
+    /// How white space in character data is handled: `xml:space="default"` (CSS `white-space: normal`)
+    /// collapses it, `xml:space="preserve"` (`white-space: pre`) keeps every space.
+    enum WhiteSpace: Equatable {
+        case collapse
+        case preserve
     }
 
     /// Character data and `<tspan>` elements, in document order
