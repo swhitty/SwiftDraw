@@ -426,8 +426,9 @@ struct ParserXMLStyleSheetCascadeTests {
         #expect(last.stroke == .color(.keyword(.red)))
         #expect(last.strokeWidth == 2)
         #expect(DOM.presentationAttributes(for: group.childElements[0], styles: svg.styles).stroke == nil)
-        // generous bound for debug builds on CI; the quadratic matcher took far longer
-        #expect(elapsed < 20)
+        // generous bound for debug builds on CI, where Windows takes up to ~21s; the quadratic
+        // matcher took far longer
+        #expect(elapsed < 60)
     }
 
     // MARK: - Third review
