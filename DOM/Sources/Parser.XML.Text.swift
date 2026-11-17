@@ -123,6 +123,7 @@ extension XMLParser {
         span.dxList = parseDefaultedLengthList(att, "dx", .horizontal) ?? []
         span.dyList = parseDefaultedLengthList(att, "dy", .vertical) ?? []
         span.rotateList = parseNumberList(att, "rotate") ?? []
+        (span.textLength, span.lengthAdjust) = parseTextLength(att)
         span.whiteSpace = parseWhiteSpace(e, att: att)
         return span
     }
@@ -171,6 +172,7 @@ extension XMLParser {
         element.dxList = parseDefaultedLengthList(att, "dx", .horizontal) ?? []
         element.dyList = parseDefaultedLengthList(att, "dy", .vertical) ?? []
         element.rotateList = parseNumberList(att, "rotate") ?? []
+        (element.textLength, element.lengthAdjust) = parseTextLength(att)
         element.x = element.xList.first
         element.y = element.yList.first
     }
@@ -178,6 +180,17 @@ extension XMLParser {
     /// A `<list-of-lengths>` separated by commas and/or whitespace; nil when missing or any value is invalid.
     func parseDefaultedLengthList(_ att: any AttributeParser, _ key: String, _ direction: LengthDirection) -> [DOM.Coordinate]? {
         try? att.parse(key) { try parseLengthList($0, direction) } as [DOM.Coordinate]?
+    }
+
+    /// `textLength` (a non-negative length; `inherit` and invalid values are ignored) and `lengthAdjust`
+    func parseTextLength(_ att: any AttributeParser) -> (DOM.Coordinate?, DOM.LengthAdjust?) {
+        let length = (try? att.parse("textLength") { try resolveLength($0, .horizontal) } as DOM.Coordinate?)
+            .flatMap { $0 }
+            .flatMap { $0 >= 0 && $0.isFinite ? $0 : nil }
+        let adjust = (try? att.parseString("lengthAdjust")).flatMap {
+            DOM.LengthAdjust(rawValue: $0.trimmingCharacters(in: .whitespaces))
+        }
+        return (length, adjust)
     }
 
     /// A `<list-of-numbers>` such as `rotate`; nil when missing or any value is invalid (`5mm`).

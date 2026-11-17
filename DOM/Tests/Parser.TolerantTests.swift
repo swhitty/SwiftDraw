@@ -90,7 +90,7 @@ struct TolerantParsingTests {
         <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10">
           <rect id="a" width="5" height="5" fill="" stroke="inherit" opacity="abc"
                 stroke-width="wide" display="inline-block" stroke-linecap="none"
-                dominant-baseline="text-top" clip-path="none" mask="none" filter="none"
+                dominant-baseline="text-middle" clip-path="none" mask="none" filter="none"
                 transform="none"/>
         </svg>
         """)

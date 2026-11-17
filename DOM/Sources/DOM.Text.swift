@@ -44,6 +44,9 @@ package extension DOM {
         package var dyList: [Coordinate] = []
         /// `rotate` in degrees, one per character; the last value applies to the remaining characters
         package var rotateList: [Float] = []
+        /// `textLength` and `lengthAdjust`: the advance the text is fitted to
+        package var textLength: Coordinate?
+        package var lengthAdjust: LengthAdjust?
         /// The characters of the text: the plain text of `runs`
         package var value: String
         /// The character data and `<tspan>` children, in document order, with white space already
@@ -101,12 +104,23 @@ package extension DOM {
         package var dxList: [Coordinate] = []
         package var dyList: [Coordinate] = []
         package var rotateList: [Float] = []
+        /// `textLength` and `lengthAdjust`: the advance the span's characters are fitted to
+        package var textLength: Coordinate?
+        package var lengthAdjust: LengthAdjust?
         /// `xml:space` or CSS `white-space` of the span; nil inherits
         package var whiteSpace: WhiteSpace?
 
         package init(runs: [TextRun] = []) {
             self.runs = runs
         }
+    }
+
+    /// SVG 2 §11.5.4 `lengthAdjust`: how text is fitted to its `textLength`
+    enum LengthAdjust: String {
+        /// the space between the characters changes
+        case spacing
+        /// the glyphs are stretched or squeezed horizontally too
+        case spacingAndGlyphs
     }
 
     /// How white space in character data is handled: `xml:space="default"` (CSS `white-space: normal`)

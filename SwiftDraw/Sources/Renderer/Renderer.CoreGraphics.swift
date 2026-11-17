@@ -236,8 +236,8 @@ struct CGProvider: RendererTypeProvider {
         let synthesis = font.synthesis(for: face)
         let boldOffset = synthesis.contains(.bold) ? String.syntheticBoldOffset(for: face) : 0
         var skew = synthesis.contains(.oblique) ? String.syntheticObliqueTransform : .identity
-        // glyph space is y up: flip it about the baseline
-        let flip = CGAffineTransform(a: 1, b: 0, c: 0, d: -1, tx: 0, ty: 0)
+        // glyph space is y up: flip it about the baseline, and stretch it for spacingAndGlyphs
+        let flip = CGAffineTransform(a: CGFloat(run.scaleX), b: 0, c: 0, d: -1, tx: 0, ty: 0)
         let path = CGMutablePath()
         for (glyph, position) in zip(run.glyphs, run.positions) {
             guard let outline = CTFontCreatePathForGlyph(face, CGGlyph(glyph), &skew) else { continue }
@@ -245,7 +245,7 @@ struct CGProvider: RendererTypeProvider {
             path.addPath(outline, transform: flip.concatenating(origin))
             if boldOffset > 0 {
                 // a second copy, offset; filled nonzero, the two copies merge
-                path.addPath(outline, transform: flip.concatenating(origin.translatedBy(x: boldOffset, y: 0)))
+                path.addPath(outline, transform: flip.concatenating(origin.translatedBy(x: boldOffset * CGFloat(run.scaleX), y: 0)))
             }
         }
         return path
