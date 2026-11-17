@@ -73,6 +73,8 @@ package extension DOM {
             package var patterns = [Pattern]()
             package var filters = [Filter]()
             package var markers = [Marker]()
+            /// The position of each mask, pattern and marker id in the document; empty for documents built in code.
+            package var documentOrder = [String: Int]()
 
             package var elements = [String: GraphicsElement]()
         }
@@ -108,6 +110,9 @@ package extension DOM {
         package var y: DashLength?
         package var width: DashLength?
         package var height: DashLength?
+        /// Holders of the presentation attributes of the mask's ancestors, outermost first, which its
+        /// contents inherit; empty for masks built in code.
+        package var ancestors = [GraphicsElement]()
 
         init(id: String, childElements: [GraphicsElement] = []) {
             super.init()

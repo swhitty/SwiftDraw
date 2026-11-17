@@ -42,13 +42,15 @@ extension LayerTree {
         /// The user's preferred languages for `systemLanguage` (BCP 47 tags, most preferred first).
         let languages: [String]
 
-        // The use, mask and pattern elements being built. Reaching one again is a cycle.
+        // The use, mask, pattern and marker elements being built. Reaching one again is a cycle.
         private final class Active {
             var elements = Set<AnyHashable>()
             var depth = 0
             var total = 0
         }
         private let active = Active()
+        // References dropped because they are recursive, found once per document.
+        let recursion = Recursion()
         // The clip paths being resolved (SD8): cycles are dropped without spending the reference budget.
         let activeClips = ActiveClipSet()
         // Bounds the elements visited measuring objectBoundingBox clips and mask regions (SD8).
@@ -76,7 +78,7 @@ extension LayerTree {
             #endif
         }
 
-        /// Builds a referenced use, mask or pattern, or returns `cycle` when the reference is
+        /// Builds a referenced use, mask, pattern or marker, or returns `cycle` when the reference is
         /// already being built or exceeds the depth or document budget.
         func building<R>(_ key: some Hashable, cycle: R, _ build: () throws -> R) rethrows -> R {
             guard active.depth < Self.maxReferenceDepth,
@@ -368,7 +370,8 @@ extension LayerTree {
         /// `attributes` is the cascade of `element`: its `mask` may come from a stylesheet rule.
         func createMaskLayer(for element: DOM.GraphicsElement, attributes: DOM.PresentationAttributes) -> Layer? {
             guard let maskId = attributes.mask?.fragmentID,
-                  let mask = svg.defs.masks.first(where: { $0.id == maskId }) else { return nil }
+                  let mask = svg.defs.masks.first(where: { $0.id == maskId }),
+                  !isInvalid(element, .mask) else { return nil }
 
             // SVG 1.1 §14.4: maskUnits places the mask region, maskContentUnits the contents
             let regionUnits = mask.maskUnits ?? .objectBoundingBox
@@ -378,8 +381,8 @@ extension LayerTree {
             // the bounding box of text is unknown here: ignore the mask
             if contentUnits == .objectBoundingBox && bounds == nil { return nil }
 
-            // A mask inside itself is empty, so it hides what it masks
-            return building(ObjectIdentifier(mask), cycle: Layer()) {
+            // A mask reached again inside itself is invalid, so the element it is on is not masked
+            return building(ObjectIdentifier(mask), cycle: nil) { () -> Layer? in buildingContents {
                 let l = Layer()
                 if DOM.presentationAttributes(for: mask, styles: svg.styles).maskType == .alpha {
                     l.maskType = .alpha
@@ -393,7 +396,8 @@ extension LayerTree {
                                                                   tx: bounds.x, ty: bounds.y))]
                 }
 
-                var maskState = createState(for: mask, inheriting: State())
+                // the contents inherit from the mask's ancestors, not from the masked element
+                var maskState = createState(for: mask, inheriting: makeInheritedState(from: mask.ancestors))
                 // SVG 1.1 §11.5: `display` does not apply to `<mask>`; only its children can be hidden
                 maskState.display = .inline
                 mask.childElements.forEach {
@@ -415,7 +419,7 @@ extension LayerTree {
                 }
 
                 return l
-            }
+            }}
         }
 
         // `filter` is not inherited: it applies once, to the element that references it.
@@ -846,11 +850,13 @@ extension LayerTree.Builder {
         pattern.transform = Self.createTransforms(from: transformSource?.patternTransform ?? [],
                                                   origin: transformSource?.transformOrigin,
                                                   viewport: viewport).toMatrix()
-        let children = chain.first(where: { !$0.childElements.isEmpty })?.childElements ?? []
-        // A pattern inside itself is empty
-        building(element.id, cycle: ()) {
-            pattern.contents = children.compactMap { .layer(makeLayer(from: $0, inheriting: .init())) }
-        }
+        let template = chain.first(where: { !$0.childElements.isEmpty })
+        // the contents inherit from the pattern's ancestors, not from the element it fills
+        let state = makeInheritedState(from: template?.ancestors ?? [])
+        // A pattern reached again inside itself paints nothing
+        building(element.id, cycle: ()) { buildingContents {
+            pattern.contents = (template?.childElements ?? []).map { .layer(makeLayer(from: $0, inheriting: state)) }
+        }}
         return pattern
     }
 
@@ -1158,8 +1164,15 @@ extension LayerTree.Builder {
     }
 
     func createState(for element: DOM.GraphicsElement, inheriting existing: State) -> State {
-        let attributes = DOM.presentationAttributes(for: element, styles: svg.styles)
-        return Self.createState(for: attributes, inheriting: existing, viewportDiagonal: viewportDiagonal)
+        var state = createReferencedState(for: element, inheriting: existing)
+        // recursive references to patterns and markers are dropped (see makeInvalidReferences)
+        guard !invalidReferences.isEmpty else { return state }
+        if isInvalid(element, .fill) { state.fill = .color(.none) }
+        if isInvalid(element, .stroke) { state.stroke = .color(.none) }
+        if isInvalid(element, .markerStart) { state.markerStart = nil }
+        if isInvalid(element, .markerMid) { state.markerMid = nil }
+        if isInvalid(element, .markerEnd) { state.markerEnd = nil }
+        return state
     }
 
     static func createState(for attributes: DOM.PresentationAttributes,

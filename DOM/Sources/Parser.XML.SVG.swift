@@ -241,10 +241,13 @@ package extension XMLParser {
         defs.clipPaths = try parseClipPaths(e)
         defs.linearGradients = try parseLinearGradients(e)
         defs.radialGradients = try parseRadialGradients(e)
-        defs.masks = try parseMasks(e)
-        defs.patterns = try parsePatterns(e)
+        var containers = ReferencedContainers()
+        try parseReferencedContainers(e, ancestry: Ancestry(element: e, parent: nil), into: &containers)
+        defs.masks = containers.masks
+        defs.patterns = containers.patterns
+        defs.markers = containers.markers
+        defs.documentOrder = containers.documentOrder
         defs.filters = try parseFilters(e)
-        defs.markers = try parseMarkers(e)
 
         defs.elements = try findDefElements(within: e).reduce(into: [String: DOM.GraphicsElement]()) {
             let defs = try parseDefsElements($1)
@@ -315,19 +318,6 @@ package extension XMLParser {
         return clip
     }
 
-    func parseMasks(_ e: XML.Element) throws -> [DOM.Mask] {
-        var masks = [DOM.Mask]()
-
-        for n in e.children {
-            if n.name == "mask" {
-                try appendSkippingInvalid(&masks, n, parseMask)
-            } else {
-                masks.append(contentsOf: try parseMasks(n))
-            }
-        }
-        return masks
-    }
-
     func parseMask(_ e: XML.Element) throws -> DOM.Mask {
         guard e.name == "mask" else { throw Error.invalid }
 
@@ -347,25 +337,6 @@ package extension XMLParser {
         mask.width = e.attributes["width"].flatMap(XMLParser.parseDashLength)
         mask.height = e.attributes["height"].flatMap(XMLParser.parseDashLength)
         return mask
-    }
-
-    func parsePatterns(_ e: XML.Element) throws -> [DOM.Pattern] {
-        var patterns = [DOM.Pattern]()
-
-        for n in e.children {
-            if n.name == "pattern" {
-                // a pattern without an id can never be referenced; skip it rather than fail
-                guard n.attributes["id"] != nil else { continue }
-                try appendSkippingInvalid(&patterns, n, parsePattern)
-            } else if n.name == "svg" {
-                let pushed = pushViewport(of: n)
-                defer { if pushed { popViewport() } }
-                patterns.append(contentsOf: try parsePatterns(n))
-            } else {
-                patterns.append(contentsOf: try parsePatterns(n))
-            }
-        }
-        return patterns
     }
 
     func parsePattern(_ e: XML.Element) throws -> DOM.Pattern {

@@ -47,6 +47,9 @@ package extension DOM {
         package var markerUnits: Units?
         package var viewBox: SVG.ViewBox?
         package var preserveAspectRatio: PreserveAspectRatio?
+        /// Holders of the presentation attributes of the marker's ancestors, outermost first, which its
+        /// contents inherit; empty for markers built in code.
+        package var ancestors = [GraphicsElement]()
 
         package init(id: String, childElements: [GraphicsElement] = []) {
             super.init()

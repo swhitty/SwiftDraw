@@ -48,9 +48,12 @@ extension LayerTree.Builder {
             throw LayerTree.Error.invalid("missing referenced element: \(use.href)")
         }
 
-        // A use inside itself draws nothing
-        let l = building(ObjectIdentifier(element), cycle: LayerTree.Layer()) {
-            makeLayer(from: element, inheriting: state)
+        // A use that draws itself again, directly or through other uses, draws nothing (as Chrome and resvg)
+        guard !isRecursive(use) else { return .layer(LayerTree.Layer()) }
+
+        // and the guard bounds uses reached again through masks, patterns and markers
+        let l = building(ObjectIdentifier(use), cycle: LayerTree.Layer()) {
+            expanding(use) { makeLayer(from: element, inheriting: state) }
         }
 
         if let symbol = element as? DOM.Symbol {

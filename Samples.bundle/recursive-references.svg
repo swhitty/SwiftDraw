@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="200" height="200" viewBox="0 0 200 200">
+  <!-- A reference back to the pattern, mask or marker it is in is dropped: only the one closing the cycle -->
+  <pattern id="p1" patternUnits="userSpaceOnUse" width="20" height="20">
+    <rect width="20" height="20" fill="url(#p2)" stroke="green" stroke-width="2"/>
+  </pattern>
+  <pattern id="p2" patternUnits="userSpaceOnUse" width="20" height="20">
+    <circle cx="10" cy="10" r="5" fill="url(#p1)" stroke="teal" stroke-width="2"/>
+  </pattern>
+  <rect x="10" y="10" width="80" height="80" fill="url(#p1)" stroke="black"/>
+
+  <!-- pattern contents inherit from the pattern's ancestors: the fill here is recursive -->
+  <g fill="url(#p3)">
+    <pattern id="p3" patternUnits="userSpaceOnUse" width="20" height="20">
+      <rect width="10" height="10" fill="purple"/>
+      <rect x="11" y="11" width="8" height="8" stroke="orange" stroke-width="2"/>
+    </pattern>
+    <rect x="110" y="10" width="80" height="80" stroke="black"/>
+  </g>
+
+  <!-- mask1 → mask2 → mask3 → mask1: the rect in mask3 draws unmasked -->
+  <mask id="m1"><rect x="20" y="110" width="60" height="80" fill="white" mask="url(#m2)"/></mask>
+  <mask id="m2"><rect x="10" y="120" width="80" height="60" fill="white" mask="url(#m3)"/></mask>
+  <mask id="m3"><rect x="30" y="130" width="60" height="60" fill="white" mask="url(#m1)"/></mask>
+  <rect x="10" y="110" width="80" height="80" fill="none" stroke="black"/>
+  <rect x="10" y="110" width="80" height="80" fill="steelblue" mask="url(#m1)"/>
+
+  <!-- a <use> of its own ancestor draws nothing; the rect draws once -->
+  <g id="g1">
+    <use x="10" y="10" xlink:href="#g1"/>
+    <rect x="110" y="110" width="80" height="80" fill="crimson" opacity="0.5"/>
+  </g>
+</svg>

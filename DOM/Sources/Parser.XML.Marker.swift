@@ -34,22 +34,6 @@ import Foundation
 
 extension XMLParser {
 
-    // every <marker> in the document, wherever it is (like <pattern> and <mask>)
-    func parseMarkers(_ e: XML.Element) throws -> [DOM.Marker] {
-        var markers = [DOM.Marker]()
-
-        for n in e.children {
-            if n.name == "marker" {
-                // a marker without an id can never be referenced; skip it rather than fail
-                guard n.attributes["id"] != nil else { continue }
-                try appendSkippingInvalid(&markers, n, parseMarker)
-            } else {
-                markers.append(contentsOf: try parseMarkers(n))
-            }
-        }
-        return markers
-    }
-
     func parseMarker(_ e: XML.Element) throws -> DOM.Marker {
         guard e.name == "marker" else { throw Error.invalid }
 
