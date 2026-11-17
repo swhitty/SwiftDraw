@@ -104,6 +104,7 @@ struct Reporter {
         // With resvg, text is judged by resvg alone: WebKit's <img> path offsets middle- and end-anchored text.
         let text = session.resvg != nil && r.file.text
         if text { score.text = true }
+        score.resvgSource = r.resvg?.source
         if let w = score.score, let s = score.resvg, let wr = score.webkitResvg {
             score.verdict = Verdict(webkit: w, resvg: s, webkitResvg: wr, match: options.match / 100, text: text)
         }
@@ -126,9 +127,8 @@ struct Reporter {
         let width = max(8, results.map(\.name.count).max() ?? 8)
         let refs = [report.engine, report.resvg].compactMap { $0 }.joined(separator: " and ")
         print("\nDifference from \(refs) · \(report.os) · font smoothing \(report.fontSmoothing ? "on" : "off")")
-        let textCount = report.results.filter { $0.text == true }.count
         if report.textReference == "resvg" {
-            print("Text: judged by resvg only (\(textCount) file\(textCount == 1 ? "" : "s") with <text>, marked *); WebKit offsets middle- and end-anchored text, so its score is for information")
+            printTextSummary(sources: report.results.filter { $0.text == true }.map(\.resvgSource), pngs: options.resvgPNG != nil, marked: true)
         }
         print("")
         var header = "file".padded(width) + "      WebKit"
@@ -140,6 +140,7 @@ struct Reporter {
             if hasResvg {
                 line += " " + percent(s.resvg, s.errors?["resvg"] != nil) + "  " + percent(s.webkitResvg, false).leftPadded(12)
                 line += "  " + (s.verdict?.label ?? "") + (s.text == true ? " *" : "")
+                if options.resvgPNG != nil, s.resvgSource == "cli" { line += " (resvg CLI)" }
             }
             if s.status == "swiftdraw-failed" {
                 line = s.name.padded(width) + "  SwiftDraw failed: " + (s.errors?["swiftdraw"] ?? "?")
@@ -173,6 +174,21 @@ struct Reporter {
             let counts = Verdict.allCases.sorted { $0.rank > $1.rank }.map { v in "\(report.results.filter { $0.verdict == v }.count) \(v.label)" }
             print(String(format: "Verdicts (match < %g%%): ", report.match) + counts.joined(separator: " · "))
         }
+    }
+}
+
+/// The text rule, and where text files' resvg images came from. `sources` holds each text file's resvg
+/// source ("png", "cli" or nil); `pngs` is whether pre-rendered PNGs were given.
+func printTextSummary(sources: [String?], pngs: Bool, marked: Bool = false) {
+    func files(_ n: Int) -> String { "\(n) file\(n == 1 ? "" : "s")" }
+    print("Text: judged by resvg only (\(files(sources.count)) with <text>\(marked ? ", marked *" : "")); WebKit offsets middle- and end-anchored text, so its score is for information")
+    guard pngs else { return }
+    let cli = sources.filter { $0 == "cli" }.count, png = sources.filter { $0 == "png" }.count
+    if cli > 0 {
+        print("      \(files(cli)) with text rendered by the resvg CLI with SwiftDraw's fallback fonts, not from their PNG")
+    }
+    if png > 0 {
+        print("      \(files(png)) with text compared against pre-rendered PNGs, which may use other fonts (resvg's suite uses Noto); add --resvg to render text with the CLI")
     }
 }
 

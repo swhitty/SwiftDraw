@@ -254,8 +254,8 @@ struct ResvgRenderer: Sendable {
         let binary: URL
         if let path = options.resvgPath { binary = path } else { binary = try await resolve("resvg") }
         let id = RenderCache.hash("resvg", version, fontArguments.joined(separator: " "))
-        labels.append("resvg \(version)")
-        return ResvgRenderer(png: options.resvgPNG, cli: binary, label: labels.joined(separator: ", else "), cacheID: "resvg-\(id)")
+        labels.append(labels.isEmpty ? "resvg \(version)" : "resvg \(version) for text and unusable PNGs")
+        return ResvgRenderer(png: options.resvgPNG, cli: binary, label: labels.joined(separator: ", "), cacheID: "resvg-\(id)")
     }
 
     private static func resolve(_ name: String) async throws -> URL {
@@ -265,10 +265,12 @@ struct ResvgRenderer: Sendable {
 
     /// Renders (or copies) one file's image to `png` at `pixels`. A pre-rendered PNG is used only when it
     /// is exactly `pixels`; otherwise the CLI renders it, or, without the CLI, the file has no resvg image.
+    /// With the CLI, text is always rendered by it: pre-rendered PNGs (such as resvg's test suite, drawn
+    /// with its own Noto fonts) use other fonts than SwiftDraw's fallbacks.
     func render(_ file: InputFile, pixels: (width: Int, height: Int), scale: Int, cache: RenderCache, to png: URL) async -> RenderResult {
         let fm = FileManager.default
         var unusable: String?
-        if let source = self.png {
+        if let source = self.png, Options.prefersResvgPNG(hasPNGs: true, hasCLI: cli != nil, text: file.text) {
             let src: URL
             switch source {
             case let .directory(dir): src = dir.appendingPathComponent("\(file.name).png")
@@ -280,12 +282,12 @@ struct ResvgRenderer: Sendable {
                 unusable = "\(src.lastPathComponent) is \(size.width)×\(size.height), expected \(pixels.width)×\(pixels.height)"
                     + Self.scaleHint(png: size, pixels: pixels, scale: scale)
             } else {
-                do { try fm.copyItem(at: src, to: png) } catch { return .failed("\(error)") }
-                return .ok
+                do { try fm.copyItem(at: src, to: png) } catch { return .failed("\(error)").from("png") }
+                return RenderResult.ok.from("png")
             }
         }
-        guard let cli else { return .failed(unusable ?? "no resvg image") }
-        return await render(file, cli: cli, pixels: pixels, cache: cache, to: png)
+        guard let cli else { return .failed(unusable ?? "no resvg image").from("png") }
+        return await render(file, cli: cli, pixels: pixels, cache: cache, to: png).from("cli")
     }
 
     /// The `--scale` that would make a pre-rendered PNG fit, when there is one.
