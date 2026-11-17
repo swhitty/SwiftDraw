@@ -289,6 +289,8 @@ extension XMLParser {
                                radiusY: values.count > 1 ? values[1] : nil)
         case "feTurbulence":
             return .turbulence(try parseTurbulence(e))
+        case "feConvolveMatrix":
+            return .convolveMatrix(try parseConvolveMatrix(e))
         default:
             guard e.name.hasPrefix("fe") else { return nil }
             return .unsupported(name: e.name)
@@ -433,6 +435,37 @@ extension XMLParser {
                                      seed: parseFiniteFloat(att, "seed") ?? 0,
                                      type: type ?? .turbulence,
                                      stitchTiles: stitch)
+    }
+
+    // Filter Effects 1 §9.9: order is one or two positive integers, initially 3; anything else is an error
+    // (order 0). kernelUnitLength is not read: the kernel is in pixels of the bitmap, as in resvg (Safari spaces
+    // its values a user unit apart).
+    func parseConvolveMatrix(_ e: XML.Element) throws -> DOM.Filter.ConvolveMatrix {
+        let att: any AttributeParser = try parseAttributes(e)
+        var matrix = DOM.Filter.ConvolveMatrix()
+        if let order = try? att.parseString("order") {
+            let values = (try? att.parser.parseFloats(order)) ?? []
+            let isValid = (1...2).contains(values.count) && values.allSatisfy { $0 >= 1 && $0 <= 1_000_000 && $0 == $0.rounded() }
+            matrix.orderX = isValid ? Int(values[0]) : 0
+            matrix.orderY = isValid ? Int(values.count > 1 ? values[1] : values[0]) : 0
+        }
+        if let values = try? att.parseFloats("kernelMatrix") {
+            matrix.kernelMatrix = values.allSatisfy(\.isFinite) ? values : []
+        }
+        matrix.divisor = parseFiniteFloat(att, "divisor")
+        matrix.bias = parseFiniteFloat(att, "bias") ?? 0
+        // a target that is not an integer is out of range
+        func target(_ key: String) -> Int? {
+            guard let value = try? att.parseFloat(key) else { return nil }
+            guard value.isFinite, value == value.rounded(), abs(value) <= 1_000_000 else { return -1 }
+            return Int(value)
+        }
+        matrix.targetX = target("targetX")
+        matrix.targetY = target("targetY")
+        let edgeMode: DOM.Filter.EdgeMode? = try? att.parseRaw("edgeMode")
+        matrix.edgeMode = edgeMode ?? .duplicate
+        matrix.preserveAlpha = (try? att.parseString("preserveAlpha"))?.trimmingCharacters(in: .whitespaces) == "true"
+        return matrix
     }
 
     // Filter Effects 1 §10: `auto` and the two spaces; anything else is dropped so the inherited value applies.

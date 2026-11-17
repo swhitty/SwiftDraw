@@ -141,6 +141,12 @@ extension LayerTree.FilterLayer {
                     result = FilterBitmap.turbulence(width: width, height: height, turbulence,
                                                      tile: primitive.subregion, transform: environment.transform,
                                                      linear: isLinear)
+                case .convolveMatrix(let matrix):
+                    // the kernel stays on the pixel axes, facing user space's x and y (it is not rotated)
+                    result = FilterBitmap.convolve(input(0), matrix,
+                                                   flipX: environment.transform.a < 0,
+                                                   flipY: environment.transform.d < 0,
+                                                   linear: isLinear)
                 }
                 result.clip(to: primitive.subregion, transform: environment.transform)
             }
@@ -169,9 +175,12 @@ extension LayerTree.FilterLayer {
                 alive += 1
             }
             alive += primitive.inputs.filter { $0 == .transparent }.count
-            if case .morphology = primitive.effect {
+            switch primitive.effect {
+            case .morphology, .convolveMatrix:
                 // its four channels as Float
                 alive += 4
+            default:
+                break
             }
             peak = max(peak, alive)
         }

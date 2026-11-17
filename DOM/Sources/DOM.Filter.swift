@@ -93,6 +93,9 @@ package extension DOM {
 
             // Filter Effects 1 §9.21 feTurbulence: noise in user space, with no input
             case turbulence(Turbulence)
+
+            // Filter Effects 1 §9.9 feConvolveMatrix
+            case convolveMatrix(ConvolveMatrix)
         }
 
         // A filter primitive with its wiring (Filter Effects 1 §9.2 in / in2 / result) and subregion (§9.4)
@@ -251,6 +254,48 @@ package extension DOM {
         package enum TurbulenceType: String, Hashable {
             case fractalNoise
             case turbulence
+        }
+
+        // Filter Effects 1 §9.9: values as written. An order of 0 is one that could not be read; the layer tree
+        // checks the order, kernel size and target and treats an error as transparent black.
+        package struct ConvolveMatrix: Hashable {
+            package var orderX: Int
+            package var orderY: Int
+            package var kernelMatrix: [DOM.Float]
+            // nil when missing
+            package var divisor: DOM.Float?
+            package var bias: DOM.Float
+            // nil when missing: floor(order / 2)
+            package var targetX: Int?
+            package var targetY: Int?
+            package var edgeMode: EdgeMode
+            package var preserveAlpha: Bool
+
+            package init(orderX: Int = 3,
+                         orderY: Int = 3,
+                         kernelMatrix: [DOM.Float] = [],
+                         divisor: DOM.Float? = nil,
+                         bias: DOM.Float = 0,
+                         targetX: Int? = nil,
+                         targetY: Int? = nil,
+                         edgeMode: EdgeMode = .duplicate,
+                         preserveAlpha: Bool = false) {
+                self.orderX = orderX
+                self.orderY = orderY
+                self.kernelMatrix = kernelMatrix
+                self.divisor = divisor
+                self.bias = bias
+                self.targetX = targetX
+                self.targetY = targetY
+                self.edgeMode = edgeMode
+                self.preserveAlpha = preserveAlpha
+            }
+        }
+
+        package enum EdgeMode: String, Hashable {
+            case duplicate
+            case wrap
+            case none
         }
 
         package enum ColorMatrix: Hashable {

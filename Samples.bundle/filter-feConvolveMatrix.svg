@@ -1,0 +1,44 @@
+<svg width="300" height="200" viewBox="0 0 300 200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <pattern id="checks" patternUnits="userSpaceOnUse" width="20" height="20">
+      <rect width="10" height="10" fill="#e76f51" opacity="0.75" />
+      <rect x="5" y="5" width="10" height="10" fill="#264653" opacity="0.75" />
+    </pattern>
+    <!-- Filter Effects 1 §9.9: a box blur; the divisor defaults to the sum of the kernel -->
+    <filter id="box">
+      <feConvolveMatrix order="5" kernelMatrix="1 1 1 1 1  1 1 1 1 1  1 1 1 1 1  1 1 1 1 1  1 1 1 1 1" />
+    </filter>
+    <radialGradient id="glow">
+      <stop offset="0" stop-color="#2a9d8f" />
+      <stop offset="1" stop-color="#e9c46a" />
+    </radialGradient>
+    <!-- sharpen colour only, keeping the input's alpha -->
+    <filter id="sharpen">
+      <feConvolveMatrix kernelMatrix="0 -2 0  -2 9 -2  0 -2 0" preserveAlpha="true" />
+    </filter>
+    <!-- emboss -->
+    <filter id="emboss">
+      <feConvolveMatrix kernelMatrix="-2 -1 0  -1 1 1  0 1 2" />
+    </filter>
+    <!-- the kernel is turned 180°: this one moves the image up and left by 3 pixels -->
+    <filter id="shift" x="0" y="0" width="1" height="1">
+      <feConvolveMatrix order="4" targetX="0" targetY="0" edgeMode="none"
+                        kernelMatrix="1 0 0 0  0 0 0 0  0 0 0 0  0 0 0 0" />
+    </filter>
+    <!-- wrap takes pixels from the opposite edge of the region -->
+    <filter id="wrap" x="0" y="0" width="1" height="1">
+      <feConvolveMatrix order="9 1" edgeMode="wrap" kernelMatrix="1 1 1 1 1 1 1 1 1" />
+    </filter>
+    <!-- a kernel of the wrong size is an error: nothing is drawn -->
+    <filter id="error">
+      <feConvolveMatrix order="3" kernelMatrix="1 2 3 4" />
+    </filter>
+  </defs>
+  <rect x="10" y="10" width="85" height="85" fill="url(#checks)" filter="url(#box)" />
+  <circle cx="147" cy="52" r="40" fill="url(#glow)" stroke="#457b9d" stroke-width="4" stroke-dasharray="6 3" filter="url(#sharpen)" />
+  <rect x="200" y="10" width="85" height="85" fill="url(#checks)" filter="url(#emboss)" />
+  <rect x="10" y="110" width="85" height="85" fill="url(#checks)" filter="url(#shift)" />
+  <rect x="105" y="110" width="85" height="85" fill="url(#checks)" filter="url(#wrap)" />
+  <rect x="210" y="110" width="80" height="80" fill="#e63946" filter="url(#error)" />
+  <rect x="210" y="110" width="80" height="80" fill="none" stroke="#999" stroke-dasharray="4" />
+</svg>
