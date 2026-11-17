@@ -1,0 +1,8 @@
+# Commits that only reformatted code. `git blame` skips them with:
+#   git config blame.ignoreRevsFile .git-blame-ignore-revs
+# GitHub's blame view reads this file automatically.
+
+# Indent with 4 spaces throughout
+f0485711b0473f59be1231360f67f1fb37477ff6
+# Format with swift-format
+d19fc38f8481fc903507eebabcd140fc30f3c3e9
