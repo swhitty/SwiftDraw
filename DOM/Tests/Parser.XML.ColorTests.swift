@@ -88,7 +88,7 @@ struct ParserColorTests {
 
     @Test(arguments: [
         // fractional channels (CSS Color 4)
-        ("rgb(10.5, 20.2, 30.9)", DOM.Color.rgbf(10.5 / 255, 20.2 / 255, 30.9 / 255, 1)),
+        ("rgb(10.5, 20.2, 30.9)", .rgbf(10.5 / 255, 20.2 / 255, 30.9 / 255, 1)),
         ("rgb(0.8, 127.5, 14.2)", .rgbf(0.8 / 255, 127.5 / 255, 14.2 / 255, 1)),
         // channels and alpha clamp to range
         ("rgb(-10%, 50%, 120%)", .rgbf(0, 0.5, 1, 1)),
@@ -101,7 +101,7 @@ struct ParserColorTests {
         ("rgb(1 2 3)", .rgbi(1, 2, 3, 1)),
         ("rgb(1 2 3 / 50%)", .rgbi(1, 2, 3, 0.5)),
         ("rgb(10% 20% 30% / 0.5)", .rgbf(0.1, 0.2, 0.3, 0.5))
-    ])
+    ] as [(String, DOM.Color)])
     func colorRGBValues(_ text: String, _ expected: DOM.Color) throws {
         #expect(try XMLParser().parseColor(text) == expected)
     }

@@ -145,14 +145,14 @@ struct ParserOpacityTests {
     }
 
     @Test(arguments: [
-        ("0.5", DOM.Float(0.5)),
+        ("0.5", 0.5),
         ("50%", 0.5),
         (" 0.25 ", 0.25),
         ("2", 1),
         ("-1", 0),
         ("150%", 1),
         ("1e-1", 0.1)
-    ])
+    ] as [(String, DOM.Float)])
     func validOpacity(_ value: String, _ expected: DOM.Float) throws {
         #expect(try opacity(value) == expected)
     }

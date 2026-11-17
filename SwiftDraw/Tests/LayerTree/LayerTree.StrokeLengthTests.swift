@@ -57,14 +57,14 @@ struct LayerTreeStrokeLengthTests {
     }
 
     @Test(arguments: [
-        ("10", Float(10)),
+        ("10", 10),
         ("10px", 10),
         // percentages of the viewport diagonal / √2, which is 200 for a square viewBox
         ("10%", 20),
         ("2em", 40),
         ("2ex", 20),
-        ("1mm", Float(96 / 25.4))
-    ])
+        ("1mm", 96 / 25.4)
+    ] as [(String, Float)])
     func strokeWidth(_ value: String, _ expected: Float) throws {
         let widths = try lineWidths(#"<g font-size="20"><rect width="10" height="10" fill="none" stroke="black" stroke-width="\#(value)"/></g>"#)
         let width = try #require(widths.first)
