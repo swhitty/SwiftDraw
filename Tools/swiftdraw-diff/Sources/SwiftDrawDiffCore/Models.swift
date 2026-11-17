@@ -49,9 +49,17 @@ public struct RenderResult: Codable, Equatable, Sendable {
     public var rendered: Bool
     /// Why it did not render.
     public var error: String?
+    /// For resvg: where the image came from, "png" (pre-rendered) or "cli".
+    public var source: String?
 
     public static let ok = RenderResult(rendered: true, error: nil)
     public static func failed(_ error: String) -> RenderResult { RenderResult(rendered: false, error: error) }
+
+    public func from(_ source: String) -> RenderResult {
+        var r = self
+        r.source = source
+        return r
+    }
 }
 
 /// `scores.json`, written by report mode.
@@ -96,6 +104,8 @@ public struct ScoresReport: Codable, Sendable {
         public var verdict: Verdict?
         /// True when the file contains text, which is judged by resvg.
         public var text: Bool?
+        /// Where the resvg image came from: "png" (pre-rendered) or "cli".
+        public var resvgSource: String?
         /// Points, as rendered.
         public var size: PointSize?
         public var errors: [String: String]?
@@ -167,6 +177,8 @@ public struct CompareReport: Codable, Sendable {
         public var text: Bool?
         /// The references the category was decided by ("webkit", "resvg"); the others are for information.
         public var judgedBy: [String]?
+        /// Where the resvg image came from: "png" (pre-rendered) or "cli".
+        public var resvgSource: String?
         /// Pixels that differ between base and head (exact, unblurred).
         public var pixelsChanged: Int?
         /// "rendered" or "failed".

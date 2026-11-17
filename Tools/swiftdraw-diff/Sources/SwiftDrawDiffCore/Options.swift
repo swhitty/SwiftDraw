@@ -42,10 +42,18 @@ public struct Options: Equatable, Sendable {
     public var fontSmoothing = false
     public var html = false
     public var out: URL?
-    /// Run the resvg CLI (`--resvg`): the reference, or the fallback for files without a usable `--resvg-png`.
+    /// Run the resvg CLI (`--resvg`): the reference, or, with `--resvg-png`, the reference for text and
+    /// for files without a usable PNG.
     public var resvgCLI = false
     /// Pre-rendered resvg PNGs (`--resvg-png`).
     public var resvgPNG: ResvgPNGSource?
+    /// Whether a file should be scored against its pre-rendered resvg PNG (when the PNG is usable) rather
+    /// than the CLI. Text goes to the CLI whenever it can: pre-rendered PNGs, like resvg's test suite with
+    /// its Noto fonts, use other fonts than SwiftDraw's fallbacks, which the CLI is given.
+    public static func prefersResvgPNG(hasPNGs: Bool, hasCLI: Bool, text: Bool) -> Bool {
+        hasPNGs && !(text && hasCLI)
+    }
+
     /// Whether resvg is a reference at all; WebKit only when false.
     public var usesResvg: Bool { resvgCLI || resvgPNG != nil }
     public var swiftdrawPath: URL?
@@ -153,8 +161,11 @@ public struct Options: Equatable, Sendable {
       WebKit always (Tools/webkit-render, built on first use). It also decides each SVG's size.
       --resvg                 also score against resvg (on PATH; brew install resvg)
       --resvg-png sibling|DIR also score against pre-rendered PNGs: foo.png beside foo.svg, or in DIR.
-                              A PNG must be the compare size; with --resvg too, files whose PNG is
-                              missing or another size are rendered with the resvg CLI instead.
+                              A PNG must be the compare size. With --resvg too, the resvg CLI renders
+                              files whose PNG is missing or another size, and every file with <text>:
+                              pre-rendered PNGs use their own fonts (resvg's suite uses Noto), while the
+                              CLI uses SwiftDraw's fallback fonts. Without --resvg, text is compared
+                              against the PNGs, and the summary says so.
                               resvg's bundled test PNGs are 300×300 and WebKit sizes its 200×200
                               viewBox-only tests at 150×150 pt, so they need --scale 2
       --match 1               percent below which two images count as the same in verdicts

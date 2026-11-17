@@ -64,6 +64,18 @@ struct OptionsTests {
     }
 
     @Test(arguments: [
+        // hasPNGs, hasCLI, text, expected
+        (true, true, false, true),      // PNG when usable, the CLI otherwise
+        (true, true, true, false),      // text always goes to the CLI: the PNGs use other fonts
+        (true, false, true, true),      // no CLI: text is compared against the PNG, and the summary says so
+        (false, true, false, false),
+        (false, true, true, false),
+    ])
+    func resvgPNGOrCLI(hasPNGs: Bool, hasCLI: Bool, text: Bool, expected: Bool) {
+        #expect(Options.prefersResvgPNG(hasPNGs: hasPNGs, hasCLI: hasCLI, text: text) == expected)
+    }
+
+    @Test(arguments: [
         [],                                             // no inputs
         ["missing.svg"],                                // no such file (and not a command)
         ["help", "score"],                              // unknown subcommands are not files

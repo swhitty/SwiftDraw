@@ -128,6 +128,7 @@ struct Comparer {
         // the wrong size, or WebKit failed): moving away from the one left isn't proof of a regression.
         let missingReference = session.resvg != nil && judgedBy.count < 2 && !(text && e.deltaResvg != nil)
         e.judgedBy = judgedBy.isEmpty ? nil : judgedBy.map(\.0)
+        e.resvgSource = r.resvg?.source
         e.category = CompareCategory.of(
             baseRendered: baseImage != nil, headRendered: headImage != nil,
             deltas: judgedBy.map(\.1), pixelsChanged: e.pixelsChanged ?? 0, tolerance: options.tolerance,
@@ -149,7 +150,7 @@ struct Comparer {
         print("\nReferences: \(refs) · \(report.os) · font smoothing \(report.fontSmoothing ? "on" : "off") · tolerance \(String(format: "%g", report.tolerance)) pts")
         let textCount = report.results.filter { $0.text == true }.count
         if report.textReference == "resvg" {
-            print("Text: judged by resvg only (\(textCount) file\(textCount == 1 ? "" : "s") with <text>); WebKit offsets middle- and end-anchored text, so its score is for information")
+            printTextSummary(sources: report.results.filter { $0.text == true }.map(\.resvgSource), pngs: options.resvgPNG != nil)
         }
         print("")
         let width = max(10, report.results.map(\.name.count).max() ?? 10)
@@ -169,7 +170,10 @@ struct Comparer {
                 if let b = e.baseVerdict, let h = e.headVerdict, b != h { s += "   \(b.label) → \(h.label)" }
             }
             if let px = e.pixelsChanged, px > 0 { s += "   \(px) px changed" }
-            if e.text == true { s += "   [text: resvg]" }
+            if e.text == true || e.resvgSource == "cli" && options.resvgPNG != nil {
+                s += "   [" + [e.text == true ? "text" : nil, options.resvgPNG == nil ? nil : e.resvgSource.map { "resvg \($0.uppercased())" }]
+                    .compactMap { $0 }.joined(separator: ", ") + "]"
+            }
             if [.error, .regressed, .noSecondReference].contains(e.category), let errors = e.errors {
                 s += "   (" + errors.sorted { $0.key < $1.key }.map { "\($0.key): \($0.value)" }.joined(separator: "; ") + ")"
             }
