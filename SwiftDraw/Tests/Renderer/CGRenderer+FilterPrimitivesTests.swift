@@ -278,6 +278,51 @@ struct CGRendererFilterPrimitivesTests {
         #expect(bitmap.alpha(x: 70, y: 70) == 1)
     }
 
+    // feImage: the referenced element replaces the filtered one, offset to the subregion and clipped to it,
+    // and the filter's transform applies to it (link-on-an-element-with-transform)
+    @Test
+    func imageDrawsTheReferencedElement() throws {
+        let bitmap = try render(##"""
+        <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+            <defs><rect id="r" width="30" height="30" fill="#00ff00" /></defs>
+            <filter id="f" x="0" y="0" width="1" height="1"><feImage href="#r" x="10" /></filter>
+            <rect x="20" y="20" width="40" height="40" fill="red" filter="url(#f)" transform="translate(10 10)" />
+        </svg>
+        """##)
+
+        // the element at 10...40 × 20...50 in the filter's user space, clipped to the region from 20, then moved by 10
+        #expect(bitmap.rgba(x: 32, y: 35) == [0, 255, 0, 255])
+        #expect(bitmap.rgba(x: 48, y: 58) == [0, 255, 0, 255])
+        #expect(bitmap.rgba(x: 25, y: 35) == [0, 0, 0, 0])
+        #expect(bitmap.rgba(x: 52, y: 35) == [0, 0, 0, 0])
+        #expect(bitmap.rgba(x: 35, y: 15) == [0, 0, 0, 0])
+        #expect(bitmap.rgba(x: 55, y: 55) == [0, 0, 0, 0])
+    }
+
+    // feImage: an embedded image fills the subregion; optimizeSpeed keeps its pixels sharp
+    @Test
+    func imageDrawsAnEmbeddedPNG() throws {
+        let svg = ##"""
+        <svg width="160" height="160" xmlns="http://www.w3.org/2000/svg">
+            <filter id="f" x="0" y="0" width="1" height="1">
+                <feImage image-rendering="RENDERING" href="PNG" />
+            </filter>
+            <rect width="160" height="160" fill="red" filter="url(#f)" />
+        </svg>
+        """##.replacingOccurrences(of: "PNG", with: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQAQMAAAAlPW0iAAAAB3RJTUUH4gMLDwAjrsLbtwAAAAlwSFlzAAAuIwAALiMBeKU/dgAAABl0RVh0Q29tbWVudABDcmVhdGVkIHdpdGggR0lNUFeBDhcAAAAGUExURQAA/xjQP14JpdQAAAABYktHRACIBR1IAAAAFklEQVR42mMAgvp/IJTAhgdB1ADVAgDvdAnxN1Ib1gAAAABJRU5ErkJggg==")
+        let sharp = try render(svg.replacingOccurrences(of: "RENDERING", with: "optimizeSpeed"))
+        let smooth = try render(svg.replacingOccurrences(of: "RENDERING", with: "auto"))
+
+        // 10 points per image pixel: the red is gone, every pixel opaque
+        #expect(sharp.alpha(x: 5, y: 5) == 1)
+        #expect(sharp.rgba(x: 5, y: 5)[0] < 40)
+        // the nearest pixel leaves only the image's two colours; smoothing blends their edges
+        let colours = Set((0..<160).map { sharp.rgba(x: $0, y: 80) })
+        #expect(colours.count == 2)
+        #expect(Set((0..<160).map { smooth.rgba(x: $0, y: 80) }).count > 2)
+    }
+
+
     // the flood colour goes through the same colour matching as a fill
     @Test
     func floodMatchesFillColor() throws {

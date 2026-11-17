@@ -84,6 +84,8 @@ extension LayerTree.Builder {
         var recursiveUses = [ObjectIdentifier: Bool]()
         /// Elements visited checking `<use>` for recursion, document-wide.
         var useSteps = 0
+        /// The ancestors of the elements `<feImage>` references, found once each.
+        var ancestors = [ObjectIdentifier: [DOM.GraphicsElement]]()
     }
 
     /// Edges followed finding recursive references, document-wide. Past it the remaining

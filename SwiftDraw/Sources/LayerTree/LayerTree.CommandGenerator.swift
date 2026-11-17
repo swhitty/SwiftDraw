@@ -99,6 +99,13 @@ extension LayerTree {
                     // filter is applied before clipping, masking and opacity
                     if let filterLayer = state.filterLayer {
                         commands.append(.pushFilterLayer(filterLayer))
+                        // what each feImage draws, for the renderer to rasterize into the filter's pixels
+                        for (index, primitive) in filterLayer.primitives.enumerated() {
+                            if case .image(let image) = primitive.effect {
+                                commands.append(.filterImage(primitive: index,
+                                                             contents: renderCommands(for: image.layer, colorConverter: colorConverter)))
+                            }
+                        }
                     }
 
                     //push render of all of the layer contents in reverse order
@@ -763,6 +770,18 @@ extension LayerTree.CommandGenerator {
             let subregion = makeSubregion(for: primitive, inputs: sources, resolved: primitives,
                                           region: filterRegion, units: units)
             let colorInterpolation: LayerTree.FilterLayer.ColorInterpolation = primitive.colorInterpolation == .linearRGB ? .linearRGB : .sRGB
+            if case .image(let image) = primitive.effect {
+                let placement = makeUnclippedSubregion(for: primitive, inputs: sources, resolved: primitives,
+                                                       region: filterRegion, units: units)
+                positions[index] = primitives.count
+                primitives.append(LayerTree.FilterLayer.Primitive(
+                    effect: makeFilterImage(image, element: layer.filterImages[index], placement: placement),
+                    inputs: sources,
+                    subregion: subregion,
+                    colorInterpolation: colorInterpolation
+                ))
+                continue
+            }
             if case .dropShadow(let shadow) = primitive.effect {
                 primitives.append(contentsOf: makeDropShadow(shadow, input: sources.first ?? .sourceGraphic,
                                                              first: primitives.count,
@@ -795,6 +814,27 @@ extension LayerTree.CommandGenerator {
                        resolved: [LayerTree.FilterLayer.Primitive],
                        region: LayerTree.Rect,
                        units: LayerTree.Rect) -> LayerTree.Rect {
+        guard let rect = makeUnclippedSubregion(for: primitive, inputs: inputs, resolved: resolved,
+                                                region: region, units: units) else { return .zero }
+        // the default is already within the region: keep it exact
+        guard primitive.x != nil || primitive.y != nil || primitive.width != nil || primitive.height != nil else {
+            return rect
+        }
+        let minX = max(rect.minX, region.minX)
+        let minY = max(rect.minY, region.minY)
+        let maxX = min(rect.maxX, region.maxX)
+        let maxY = min(rect.maxY, region.maxY)
+        guard maxX > minX, maxY > minY else { return .zero }
+        return LayerTree.Rect(x: minX, y: minY, width: maxX - minX, height: maxY - minY)
+    }
+
+    // The subregion's x, y, width and height in user space, before the filter region clips them;
+    // nil when the primitive is disabled
+    func makeUnclippedSubregion(for primitive: LayerTree.FilterPrimitive,
+                                inputs: [LayerTree.FilterLayer.Input],
+                                resolved: [LayerTree.FilterLayer.Primitive],
+                                region: LayerTree.Rect,
+                                units: LayerTree.Rect) -> LayerTree.Rect? {
         var rect: LayerTree.Rect? = inputs.isEmpty ? region : nil
         for input in inputs {
             guard case .primitive(let source) = input else {
@@ -805,8 +845,7 @@ extension LayerTree.CommandGenerator {
             guard !other.isEmpty else { continue }
             rect = rect.map { $0.union(other) } ?? other
         }
-        guard let rect else { return .zero }
-        // the default is already within the region: keep it exact
+        guard let rect else { return nil }
         guard primitive.x != nil || primitive.y != nil || primitive.width != nil || primitive.height != nil else {
             return rect
         }
@@ -819,14 +858,36 @@ extension LayerTree.CommandGenerator {
         if !y.isFinite { y = rect.y }
         if !width.isFinite { width = rect.width }
         if !height.isFinite { height = rect.height }
-        guard width > 0, height > 0 else { return .zero }
+        guard width > 0, height > 0 else { return nil }
+        return LayerTree.Rect(x: x, y: y, width: width, height: height)
+    }
 
-        let minX = max(x, region.minX)
-        let minY = max(y, region.minY)
-        let maxX = min(x + width, region.maxX)
-        let maxY = min(y + height, region.maxY)
-        guard maxX > minX, maxY > minY else { return .zero }
-        return LayerTree.Rect(x: minX, y: minY, width: maxX - minX, height: maxY - minY)
+    // Filter Effects 1 §9.15: a referenced element is drawn as a <use> would, offset to the origin of the
+    // subregion (`placement`, before the filter region clips it); its own transform applies, but the
+    // subregion's size does not scale it, as in resvg and Chrome. An image is fitted into the subregion per
+    // preserveAspectRatio, as <image> into its viewport. Anything else (a missing, recursive or non-graphics
+    // element, an image that cannot be loaded, a disabled primitive) is transparent black.
+    func makeFilterImage(_ image: DOM.Filter.Image,
+                         element: LayerTree.Layer?,
+                         placement: LayerTree.Rect?) -> LayerTree.FilterLayer.Effect {
+        guard let placement else { return .flood(.none) }
+        let layer = LayerTree.Layer()
+        if let element {
+            if placement.x != 0 || placement.y != 0 {
+                layer.transform = [.translate(tx: placement.x, ty: placement.y)]
+            }
+            layer.appendContents(.layer(element))
+        } else if let decoded = image.href?.decodedData,
+                  var bitmap = LayerTree.Image(mimeType: decoded.mimeType, data: decoded.data) {
+            bitmap.origin = placement.origin
+            bitmap.width = placement.width
+            bitmap.height = placement.height
+            bitmap.preserveAspectRatio = image.preserveAspectRatio
+            layer.appendContents(.image(bitmap))
+        } else {
+            return .flood(.none)
+        }
+        return .image(LayerTree.FilterLayer.Image(layer: layer, isPixelated: image.isPixelated))
     }
 
     // Filter Effects 1 §9.12: feDropShadow is the blur of the input's alpha, offset, flooded with the
@@ -910,6 +971,9 @@ extension LayerTree.CommandGenerator {
             return makeTurbulence(turbulence)
         case .convolveMatrix(let matrix):
             return makeConvolveMatrix(matrix)
+        case .image:
+            // resolved with its subregion by makeFilterImage
+            return nil
         case .dropShadow:
             // resolved into its primitives by makeDropShadow
             return nil
@@ -1195,6 +1259,8 @@ private extension LayerTree.Filter {
             return "<feTurbulence>"
         case .convolveMatrix:
             return "<feConvolveMatrix>"
+        case .image:
+            return "<feImage>"
         case .dropShadow:
             return "<feDropShadow>"
         }

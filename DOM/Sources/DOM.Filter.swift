@@ -96,6 +96,9 @@ package extension DOM {
 
             // Filter Effects 1 §9.9 feConvolveMatrix
             case convolveMatrix(ConvolveMatrix)
+
+            // Filter Effects 1 §9.15 feImage: an image, or an element by `#id`, with no input
+            case image(Image)
         }
 
         // A filter primitive with its wiring (Filter Effects 1 §9.2 in / in2 / result) and subregion (§9.4)
@@ -289,6 +292,24 @@ package extension DOM {
                 self.targetY = targetY
                 self.edgeMode = edgeMode
                 self.preserveAlpha = preserveAlpha
+            }
+        }
+
+        // Filter Effects 1 §9.15: href as written, resolved by the layer tree: a `#id` references an element,
+        // anything else is an image
+        package struct Image: Hashable {
+            // nil when missing or empty
+            package var href: DOM.URL?
+            package var preserveAspectRatio: DOM.PreserveAspectRatio
+            // image-rendering: optimizeSpeed, pixelated or crisp-edges sample the nearest pixel
+            package var isPixelated: Bool
+
+            package init(href: DOM.URL? = nil,
+                         preserveAspectRatio: DOM.PreserveAspectRatio = .default,
+                         isPixelated: Bool = false) {
+                self.href = href
+                self.preserveAspectRatio = preserveAspectRatio
+                self.isPixelated = isPixelated
             }
         }
 

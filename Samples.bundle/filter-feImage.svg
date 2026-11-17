@@ -1,0 +1,38 @@
+<svg width="300" height="200" viewBox="0 0 300 200" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <defs>
+    <g id="badge" fill="#264653">
+      <circle cx="20" cy="20" r="20" />
+      <rect x="10" y="10" width="20" height="20" fill="#e9c46a" transform="rotate(45 20 20)" />
+    </g>
+    <!-- Filter Effects 1 §9.15: an element drawn as by a <use>, moved to the subregion's x and y -->
+    <filter id="element" x="0" y="0" width="1" height="1">
+      <feImage xlink:href="#badge" x="30" y="30" />
+    </filter>
+    <!-- objectBoundingBox places the subregion; width and height clip the element, they do not scale it -->
+    <filter id="bbox" primitiveUnits="objectBoundingBox" x="0" y="0" width="1" height="1">
+      <feImage href="#badge" x="0.5" y="0.25" width="0.25" height="0.5" />
+    </filter>
+    <!-- an image, fitted into the subregion; the source graphic shows through where it leaves space -->
+    <filter id="image" x="0" y="0" width="1" height="1">
+      <feImage href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQAQMAAAAlPW0iAAAAB3RJTUUH4gMLDwAjrsLbtwAAAAlwSFlzAAAuIwAALiMBeKU/dgAAABl0RVh0Q29tbWVudABDcmVhdGVkIHdpdGggR0lNUFeBDhcAAAAGUExURQAA/xjQP14JpdQAAAABYktHRACIBR1IAAAAFklEQVR42mMAgvp/IJTAhgdB1ADVAgDvdAnxN1Ib1gAAAABJRU5ErkJggg==" result="image" />
+      <feMerge>
+        <feMergeNode in="SourceGraphic" />
+        <feMergeNode in="image" />
+      </feMerge>
+    </filter>
+    <!-- image-rendering samples the nearest pixel; preserveAspectRatio="none" stretches it -->
+    <filter id="pixelated" x="0" y="0" width="1" height="1" image-rendering="optimizeSpeed">
+      <feImage preserveAspectRatio="none" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQAQMAAAAlPW0iAAAAB3RJTUUH4gMLDwAjrsLbtwAAAAlwSFlzAAAuIwAALiMBeKU/dgAAABl0RVh0Q29tbWVudABDcmVhdGVkIHdpdGggR0lNUFeBDhcAAAAGUExURQAA/xjQP14JpdQAAAABYktHRACIBR1IAAAAFklEQVR42mMAgvp/IJTAhgdB1ADVAgDvdAnxN1Ib1gAAAABJRU5ErkJggg==" />
+    </filter>
+  </defs>
+
+  <rect x="10" y="10" width="80" height="80" fill="#e76f51" filter="url(#element)" />
+  <rect x="10" y="10" width="80" height="80" fill="none" stroke="black" />
+
+  <rect x="110" y="10" width="80" height="80" fill="#e76f51" filter="url(#bbox)" transform="rotate(10 150 50)" />
+  <rect x="110" y="10" width="80" height="80" fill="none" stroke="black" transform="rotate(10 150 50)" />
+
+  <rect x="210" y="10" width="80" height="80" fill="#e76f51" filter="url(#image)" transform="skewX(-10) translate(10)" />
+
+  <rect x="10" y="110" width="280" height="80" fill="#e76f51" filter="url(#pixelated)" />
+</svg>

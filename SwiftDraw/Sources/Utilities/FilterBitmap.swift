@@ -75,6 +75,9 @@ extension LayerTree.FilterLayer {
         var blur: (inout FilterBitmap, Float, Float) -> Void
         // straight (non-premultiplied) RGBA of a colour in the encoding of the bitmaps
         var color: (LayerTree.Color) -> SIMD4<Float> = FilterBitmap.components(of:)
+        // the pixels an feImage primitive (by index) draws, rasterized through `transform` at the size of the
+        // bitmaps; nil draws nothing
+        var image: (Int) -> FilterBitmap? = { _ in nil }
     }
 
     // The result of the last primitive, given SourceGraphic: the layer contents drawn over the filter region.
@@ -147,6 +150,10 @@ extension LayerTree.FilterLayer {
                                                    flipX: environment.transform.a < 0,
                                                    flipY: environment.transform.d < 0,
                                                    linear: isLinear)
+                case .image:
+                    // drawn in the encoding of the bitmaps, which linearRGB primitives decode as they read it
+                    result = environment.image(index).flatMap { $0.width == width && $0.height == height ? $0 : nil }
+                        ?? FilterBitmap(width: width, height: height)
                 }
                 result.clip(to: primitive.subregion, transform: environment.transform)
             }
@@ -179,6 +186,9 @@ extension LayerTree.FilterLayer {
             case .morphology, .convolveMatrix:
                 // its four channels as Float
                 alive += 4
+            case .image:
+                // the context it is rasterized in
+                alive += 1
             default:
                 break
             }

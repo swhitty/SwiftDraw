@@ -761,13 +761,28 @@ struct CGRenderer: Renderer {
         filterLayers.entries.append(layer)
     }
 
+    // kept with the filter layer just pushed, to rasterize when it is popped
+    func setFilterImage(primitive: Int, contents: [RendererCommand<CGTypes>]) {
+        guard let last = filterLayers.entries.indices.last,
+              filterLayers.entries[last].filter != nil else { return }
+        filterLayers.entries[last].images[primitive] = contents
+    }
+
     func popFilterLayer() {
         guard let layer = filterLayers.entries.popLast() else { return }
         let parent = ctx
 
         if let offscreen = layer.offscreen {
             if let filter = layer.filter {
-                offscreen.applyFilter(filter, toPixels: layer.pixelTransform)
+                // this layer's bitmaps stay alive while the image is drawn: filters within it get half the
+                // budget, so a chain of feImage references stays within twice the budget in all
+                let maxPixels = maxFilterLayerPixels / 2
+                offscreen.applyFilter(filter, toPixels: layer.pixelTransform) { index in
+                    guard let contents = layer.images[index],
+                          case .image(let image) = filter.primitives[index].effect else { return nil }
+                    return layer.rasterize(contents, isPixelated: image.isPixelated, colorSpace: offscreen.colorSpace,
+                                           maxFilterLayerPixels: maxPixels)
+                }
             } else {
                 for deviation in layer.deviations {
                     offscreen.applyGaussianBlur(CGSize(width: deviation.width * layer.scale,
@@ -904,6 +919,8 @@ struct CGFilterLayer {
     var toDevice: CGAffineTransform = .identity
     // where the result is kept, when drawing with a cache
     var cacheKey: CGFilterLayerCache.Key?
+    // what each feImage primitive draws, by primitive index
+    var images: [Int: [RendererCommand<CGTypes>]] = [:]
 
     // user space to offscreen pixels: x right, y down from the first row in memory
     var pixelTransform: CGAffineTransform {
@@ -912,6 +929,35 @@ struct CGFilterLayer {
             .concatenating(CGAffineTransform(translationX: -deviceRect.minX, y: -deviceRect.minY))
             .concatenating(CGAffineTransform(scaleX: scale, y: scale))
             .concatenating(CGAffineTransform(a: 1, b: 0, c: 0, d: -1, tx: 0, ty: height))
+    }
+
+    // Draws the contents of an feImage into a bitmap of the offscreen's size through the same transform,
+    // so its pixels line up with the offscreen's. Only rasterizes: what to draw, and where, comes resolved.
+    func rasterize(_ contents: [RendererCommand<CGTypes>],
+                   isPixelated: Bool,
+                   colorSpace: CGColorSpace?,
+                   maxFilterLayerPixels: Int) -> FilterBitmap? {
+        guard let offscreen,
+              let context = CGContext.makeFilterLayer(width: offscreen.width, height: offscreen.height,
+                                                      colorSpace: colorSpace),
+              let data = context.data else { return nil }
+        context.scaleBy(x: scale, y: scale)
+        context.translateBy(x: -deviceRect.minX, y: -deviceRect.minY)
+        context.concatenate(toDevice)
+        context.interpolationQuality = isPixelated ? .none : .default
+        CGRenderer(context: context, baseCTM: .identity, maxFilterLayerPixels: maxFilterLayerPixels).perform(contents)
+
+        let width = context.width
+        let height = context.height
+        let rowBytes = width * 4
+        var bitmap = FilterBitmap(width: width, height: height)
+        bitmap.pixels.withUnsafeMutableBytes { buffer in
+            guard let base = buffer.baseAddress else { return }
+            for row in 0..<height {
+                memcpy(base + row * rowBytes, data + row * context.bytesPerRow, rowBytes)
+            }
+        }
+        return bitmap
     }
 
     // nil when the device rect is empty or not finite
@@ -1002,7 +1048,7 @@ private extension LayerTree.FilterLayer {
                 // oversample per device pixel
                 width += CGFloat(matrix.orderX) * 2
                 height += CGFloat(matrix.orderY) * 2
-            case .flood, .composite, .merge, .blend, .colorMatrix, .componentTransfer, .turbulence:
+            case .flood, .composite, .merge, .blend, .colorMatrix, .componentTransfer, .turbulence, .image:
                 break
             }
         }
@@ -1080,7 +1126,9 @@ extension CGContext {
 
     // SD12: evaluates the primitive tree on the offscreen's pixels, SourceGraphic being what was drawn,
     // and leaves the result in their place.
-    func applyFilter(_ filter: LayerTree.FilterLayer, toPixels transform: CGAffineTransform) {
+    func applyFilter(_ filter: LayerTree.FilterLayer,
+                     toPixels transform: CGAffineTransform,
+                     image: @escaping (Int) -> FilterBitmap? = { _ in nil }) {
         let width = self.width
         let height = self.height
         let bytesPerRow = self.bytesPerRow
@@ -1109,7 +1157,8 @@ extension CGContext {
                                                 data: base, width: w, height: h, bytesPerRow: w * 4)
                 }
             },
-            color: { CGContext.filterComponents(of: $0, colorSpace: colorSpace) }
+            color: { CGContext.filterComponents(of: $0, colorSpace: colorSpace) },
+            image: image
         )
         let result = filter.evaluate(source: FilterBitmap(width: width, height: height, pixels: pixels),
                                      environment: environment)

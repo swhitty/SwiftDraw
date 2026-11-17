@@ -150,6 +150,10 @@ final class MockRenderer: Renderer {
     operations.append("pushFilterLayer")
   }
 
+  func setFilterImage(primitive: Int, contents: [RendererCommand<LayerTreeTypes>]) {
+    operations.append("setFilterImage")
+  }
+
   func popFilterLayer() {
     operations.append("popFilterLayer")
   }
