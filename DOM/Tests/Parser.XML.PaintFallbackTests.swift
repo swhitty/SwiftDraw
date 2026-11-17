@@ -53,10 +53,14 @@ struct ParserPaintFallbackTests {
         #expect(try XMLParser().parseFill("url(#g) none") == .urlWithFallback(URL(string: "#g")!, .none))
     }
 
-    @Test
-    func unreadableFallbackKeepsTheServer() throws {
-        #expect(try XMLParser().parseFill("url(#g) nonsense") == .url(URL(string: "#g")!))
-        #expect(try XMLParser().parseFill("url(#g) url(#h)") == .url(URL(string: "#g")!))
+    // WebKit and resvg drop the whole value, including `icc-color(…)` fallbacks
+    @Test(arguments: [
+        "url(#g) nonsense",
+        "url(#g) url(#h)",
+        "url(#g) green icc-color(acmecmyk, 0.11, 0.48, 0.83, 0.00)"
+    ])
+    func unreadableFallbackIsInvalid(_ value: String) {
+        #expect(throws: (any Error).self) { try XMLParser().parseFill(value) }
     }
 
     @Test

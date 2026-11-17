@@ -553,21 +553,27 @@ extension LayerTree.Builder {
         return ((w * w + h * h) / 2).squareRoot()
     }
 
-    func makeDashLength(_ length: DOM.DashLength) -> LayerTree.Float {
+    func makeDashLength(_ length: DOM.DashLength, fontSize: LayerTree.Float) -> LayerTree.Float {
+        Self.resolve(length, fontSize: fontSize, viewportDiagonal: viewportDiagonal)
+    }
+
+    /// A length in user units: `em` against the font-size, a percentage against the viewport diagonal.
+    static func resolve(_ length: DOM.DashLength, fontSize: LayerTree.Float, viewportDiagonal: LayerTree.Float) -> LayerTree.Float {
         switch length {
         case .absolute(let value): return value
         case .percentage(let value): return value / 100 * viewportDiagonal
+        case .em(let value): return value * fontSize
         }
     }
 
     func makeDashOffset(with state: State) -> LayerTree.Float {
-        let offset = makeDashLength(state.strokeDashOffset)
+        let offset = makeDashLength(state.strokeDashOffset, fontSize: state.fontSize)
         return offset.isFinite ? offset : 0
     }
 
     /// SVG 1.1 §11.4: odd-length lists repeat to even length; a zero sum renders solid.
     func makeDashArray(with state: State) -> [LayerTree.Float] {
-        var lengths = state.strokeDashArray.map(makeDashLength)
+        var lengths = state.strokeDashArray.map { makeDashLength($0, fontSize: state.fontSize) }
         guard !lengths.isEmpty, lengths.allSatisfy({ $0 >= 0 && $0.isFinite }), lengths.reduce(0, +) > 0 else {
             return []
         }
@@ -1153,11 +1159,21 @@ extension LayerTree.Builder {
 
     func createState(for element: DOM.GraphicsElement, inheriting existing: State) -> State {
         let attributes = DOM.presentationAttributes(for: element, styles: svg.styles)
-        return Self.createState(for: attributes, inheriting: existing)
+        return Self.createState(for: attributes, inheriting: existing, viewportDiagonal: viewportDiagonal)
     }
 
-    static func createState(for attributes: DOM.PresentationAttributes, inheriting existing: State) -> State {
+    static func createState(for attributes: DOM.PresentationAttributes,
+                            inheriting existing: State,
+                            viewportDiagonal: LayerTree.Float) -> State {
         var state = State()
+        // `em`, `%`, keywords, `larger` and `smaller` resolve against the parent (CSS Fonts 4 §2.5);
+        // the `em` lengths below resolve against this computed size
+        state.fontSize = attributes.fontSize?.resolved(inheriting: existing.fontSize) ?? existing.fontSize
+        // an `em` is computed where it is declared and inherited as an absolute length (CSS Values 4 §6.1)
+        func computed(_ length: DOM.DashLength) -> DOM.DashLength {
+            guard case .em(let value) = length else { return length }
+            return .absolute(value * state.fontSize)
+        }
 
         state.opacity = attributes.opacity ?? 1.0
         state.display = attributes.display ?? existing.display
@@ -1170,20 +1186,20 @@ extension LayerTree.Builder {
         }
 
         state.stroke = attributes.stroke ?? existing.stroke
-        state.strokeWidth = attributes.strokeWidth ?? existing.strokeWidth
+        state.strokeWidth = attributes.strokeWidth.map {
+            resolve($0, fontSize: state.fontSize, viewportDiagonal: viewportDiagonal)
+        } ?? existing.strokeWidth
         state.strokeOpacity = attributes.strokeOpacity ?? existing.strokeOpacity
         state.strokeLineCap = attributes.strokeLineCap ?? existing.strokeLineCap
         state.strokeLineJoin = attributes.strokeLineJoin ?? existing.strokeLineJoin
-        state.strokeDashArray = attributes.strokeDashArray ?? existing.strokeDashArray
-        state.strokeDashOffset = attributes.strokeDashOffset ?? existing.strokeDashOffset
+        state.strokeDashArray = attributes.strokeDashArray?.map(computed) ?? existing.strokeDashArray
+        state.strokeDashOffset = attributes.strokeDashOffset.map(computed) ?? existing.strokeDashOffset
 
         state.fill = attributes.fill ?? existing.fill
         state.fillOpacity = attributes.fillOpacity ?? existing.fillOpacity
         state.fillRule = attributes.fillRule ?? existing.fillRule
 
         state.fontFamily = attributes.fontFamily ?? existing.fontFamily
-        // `em`, `%`, keywords, `larger` and `smaller` resolve against the parent (CSS Fonts 4 §2.5)
-        state.fontSize = attributes.fontSize?.resolved(inheriting: existing.fontSize) ?? existing.fontSize
         state.fontWeight = attributes.fontWeight?.resolved(inheriting: existing.fontWeight) ?? existing.fontWeight
         state.fontStyle = attributes.fontStyle ?? existing.fontStyle
         state.textAnchor = attributes.textAnchor ?? existing.textAnchor

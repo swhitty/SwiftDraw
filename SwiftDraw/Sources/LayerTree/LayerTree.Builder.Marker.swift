@@ -104,7 +104,7 @@ extension LayerTree.Builder {
             let attributes = DOM.presentationAttributes(for: marker, styles: svg.styles)
             // the contents inherit from the marker, not from the shape (SVG 2 §11.6.2), and
             // `display` does not apply to <marker>
-            var markerState = Self.createState(for: attributes, inheriting: State())
+            var markerState = Self.createState(for: attributes, inheriting: State(), viewportDiagonal: viewportDiagonal)
             markerState.display = .inline
             let l = LayerTree.Layer()
             l.opacity = markerState.opacity

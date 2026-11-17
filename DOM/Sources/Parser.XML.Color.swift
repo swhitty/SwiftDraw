@@ -45,12 +45,8 @@ extension XMLParser {
       return .color(c)
     } else if let c = parseColorNone(data: data) {
       return .color(c)
-    } else if let c = parseColorNone(data: data) {
-      return .color(c)
     } else if let paint = try parseURLPaint(data: data) {
       return paint
-    } else if let c = try parseColorRGBA(data: data) {
-      return .color(c)
     } else if let c = parseColorHSL(data: data) {
       return .color(c)
     }
@@ -82,30 +78,69 @@ extension XMLParser {
     return .keyword(keyword)
   }
   
+  /// `rgb()` and `rgba()` (CSS Color 4 §5.1): both take an optional alpha, with commas or
+  /// `r g b / a`. Red, green and blue are all numbers (0–255, fractions allowed) or all
+  /// percentages, clamped to range; mixing them is invalid. Alpha is a number or a percentage.
   private func parseColorRGB(data: String) throws -> DOM.Color? {
-    var scanner = XMLParser.Scanner(text: data)
-    guard scanner.scanStringIfPossible("rgb(") else { return nil }
-    
-    if let c = try? parseColorRGBf(data: data) {
-      return c
+    let raw = data.trimmingCharacters(in: .whitespaces).lowercased()
+    guard let open = raw.firstIndex(of: "("),
+          ["rgb", "rgba"].contains(raw[raw.startIndex..<open].trimmingCharacters(in: .whitespaces)) else {
+      return nil
     }
-    
-    return try parseColorRGBi(data: data)
-  }
-  
-  private func parseColorRGBA(data: String) throws -> DOM.Color? {
-    var scanner = XMLParser.Scanner(text: data)
-    guard scanner.scanStringIfPossible("rgba(") else { return nil }
-    
-    if let c = try? parseColorRGBAf(data: data) {
-      return c
+    guard raw.hasSuffix(")") else { throw Error.invalid }
+    let body = raw[raw.index(after: open)..<raw.index(before: raw.endIndex)]
+
+    var parts: [Substring]
+    var alphaPart: Substring?
+    if body.contains(",") {
+      parts = body.split(separator: ",", omittingEmptySubsequences: false)
+        .map { $0.trimmingCharacters(in: .whitespaces)[...] }
+      guard parts.count == 3 || parts.count == 4 else { throw Error.invalid }
+      if parts.count == 4 { alphaPart = parts.removeLast() }
+    } else {
+      let slash = body.split(separator: "/", omittingEmptySubsequences: false)
+      guard slash.count <= 2 else { throw Error.invalid }
+      parts = slash[0].split(whereSeparator: { $0 == " " || $0 == "\t" })
+      guard parts.count == 3 else { throw Error.invalid }
+      if slash.count == 2 { alphaPart = slash[1].trimmingCharacters(in: .whitespaces)[...] }
     }
-    
-    return try parseColorRGBAi(data: data)
+
+    enum Component {
+      case number(DOM.Float)
+      case percentage(DOM.Float)
+    }
+    func component(_ text: Substring) throws -> Component {
+      if text.hasSuffix("%"), let v = Double(text.dropLast()), v.isFinite {
+        return .percentage(DOM.Float(min(max(v, 0), 100) / 100))
+      }
+      guard let v = Double(text), v.isFinite else { throw Error.invalid }
+      return .number(DOM.Float(v))
+    }
+
+    var alpha: DOM.Float = 1
+    if let alphaPart {
+      switch try component(alphaPart) {
+      case .number(let v): alpha = min(max(v, 0), 1)
+      case .percentage(let v): alpha = v
+      }
+    }
+
+    switch try (component(parts[0]), component(parts[1]), component(parts[2])) {
+    case let (.number(r), .number(g), .number(b)):
+      let channels = [r, g, b].map { min(max($0, 0), 255) }
+      if channels.allSatisfy({ $0 == $0.rounded() }) {
+        return .rgbi(UInt8(channels[0]), UInt8(channels[1]), UInt8(channels[2]), alpha)
+      }
+      return .rgbf(channels[0] / 255, channels[1] / 255, channels[2] / 255, alpha)
+    case let (.percentage(r), .percentage(g), .percentage(b)):
+      return .rgbf(r, g, b, alpha)
+    default:
+      throw Error.invalid
+    }
   }
-  
+
   /// SVG 1.1 §11.2: `<funciri> [ none | currentColor | <color> ]`, the fallback is used when the server does not resolve.
-  /// An unreadable fallback is dropped rather than failing the paint.
+  /// An unreadable fallback (`icc-color(…)`, which browsers do not support) makes the whole value invalid.
   private func parseURLPaint(data: String) throws -> DOM.Fill? {
     var scanner = XMLParser.Scanner(text: data)
     guard data.trimmingCharacters(in: .whitespaces).lowercased().hasPrefix("url(") else {
@@ -120,7 +155,7 @@ extension XMLParser {
     guard !remainder.isEmpty else { return .url(url) }
     guard remainder.lowercased().hasPrefix("url(") == false,
           case .color(let fallback)? = try? parseFill(remainder) else {
-      return .url(url)
+      throw Error.invalid
     }
     return .urlWithFallback(url, fallback)
   }
@@ -142,66 +177,6 @@ extension XMLParser {
     
     return url
   }
-  
-  private func parseIntColor(data: String, requireAlpha: Bool) throws -> DOM.Color {
-    var scanner = XMLParser.Scanner(text: data)
-    try scanner.scanString(requireAlpha ? "rgba(" : "rgb(")
-
-    let r = try scanner.scanUInt8()
-    scanner.scanStringIfPossible(",")
-    let g = try scanner.scanUInt8()
-    scanner.scanStringIfPossible(",")
-    let b = try scanner.scanUInt8()
-    var a: Float = 1.0
-    
-    if requireAlpha {
-      scanner.scanStringIfPossible(",")
-      a = try scanner.scanAlpha()
-    } else if scanner.scanStringIfPossible(",") {
-      a = try scanner.scanAlpha()
-    }
-
-    try scanner.scanString(")")
-    return .rgbi(r, g, b, min(1, a))
-  }
-  
-  private func parseColorRGBi(data: String) throws -> DOM.Color {
-    return try parseIntColor(data: data, requireAlpha: false)
-  }
-  
-  private func parseColorRGBAi(data: String) throws -> DOM.Color {
-    return try parseIntColor(data: data, requireAlpha: true)
-  }
-  
-  private func parsePercentageColor(data: String, withAlpha: Bool) throws -> DOM.Color {
-    var scanner = XMLParser.Scanner(text: data)
-    try scanner.scanString(withAlpha ? "rgba(" : "rgb(")
-    
-    let r = try scanner.scanPercentage()
-    scanner.scanStringIfPossible(",")
-    let g = try scanner.scanPercentage()
-    scanner.scanStringIfPossible(",")
-    let b = try scanner.scanPercentage()
-    
-    var a: Float = 1.0
-    if withAlpha {
-      scanner.scanStringIfPossible(",")
-      a = try scanner.scanFloat()  // Opacity
-    }
-    
-    try scanner.scanString(")")
-    
-    return .rgbf(r, g, b, a)
-  }
-  
-  private func parseColorRGBf(data: String) throws -> DOM.Color {
-    return try parsePercentageColor(data: data, withAlpha: false)
-  }
-  
-  private func parseColorRGBAf(data: String) throws -> DOM.Color {
-    return try parsePercentageColor(data: data, withAlpha: true)
-  }
-
   
   private func parseColorP3(data: String) throws -> DOM.Color? {
     var scanner = XMLParser.Scanner(text: data)
