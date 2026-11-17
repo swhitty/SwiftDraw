@@ -348,15 +348,25 @@ extension XMLParser {
         return result
     }
 
-    /// The `marker` shorthand sets `marker-start`, `marker-mid` and `marker-end` (SVG 2 §11.6.4).
-    /// It is a CSS property only, not a presentation attribute; expanded in place so a later
-    /// longhand still overrides it, and an earlier one is overridden.
+    /// The `marker` shorthand sets `marker-start`, `marker-mid` and `marker-end` (SVG 2 §11.6.4), and
+    /// `font` sets `font-style`, `font-weight`, `font-size` and `font-family` (CSS Fonts 4 §2.8).
+    /// They are CSS properties only, not presentation attributes (SVG 2 §6.6); expanded in place so a
+    /// later longhand still overrides them, and an earlier one is overridden. An invalid `font` is dropped.
     static func expandingShorthands(_ declarations: [CSSDeclaration]) -> [CSSDeclaration] {
-        guard declarations.contains(where: { $0.name == "marker" }) else { return declarations }
+        guard declarations.contains(where: { $0.name == "marker" || $0.name == "font" }) else { return declarations }
         return declarations.flatMap { d -> [CSSDeclaration] in
-            guard d.name == "marker" else { return [d] }
-            return ["marker-start", "marker-mid", "marker-end"].map {
-                CSSDeclaration(name: $0, value: d.value, important: d.important)
+            switch d.name {
+            case "marker":
+                return ["marker-start", "marker-mid", "marker-end"].map {
+                    CSSDeclaration(name: $0, value: d.value, important: d.important)
+                }
+            case "font":
+                let value = XMLParser.Attributes.removingImportant(from: d.value)
+                return (parseFontShorthand(value) ?? []).map {
+                    CSSDeclaration(name: $0.name, value: $0.value, important: d.important)
+                }
+            default:
+                return [d]
             }
         }
     }

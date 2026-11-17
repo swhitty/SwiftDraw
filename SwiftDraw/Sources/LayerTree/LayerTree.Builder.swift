@@ -230,10 +230,12 @@ extension LayerTree {
         }
 
         func makeLayer(from root: DOM.GraphicsElement, inheriting previousState: State) -> Layer {
-            var stack: [(DOM.GraphicsElement, State, Layer?)] = [(root, previousState, nil)]
+            // `isFiltered`: the element or an ancestor has a filter, so text measures its bounding box
+            // for an objectBoundingBox filter region
+            var stack: [(DOM.GraphicsElement, State, Layer?, isFiltered: Bool)] = [(root, previousState, nil, false)]
             var resultLayer: Layer? = nil
 
-            while let (currentElement, currentState, parentLayer) = stack.popLast() {
+            while let (currentElement, currentState, parentLayer, parentIsFiltered) = stack.popLast() {
                 // a <symbol> is only drawn as the root of a <use> that references it
                 if currentElement is DOM.Symbol, parentLayer != nil {
                     continue
@@ -257,12 +259,16 @@ extension LayerTree {
                     continue
                 }
 
+                let isFiltered = parentIsFiltered || !layer.filters.isEmpty
                 if let contents = makeContents(from: currentElement, with: newState) {
                     contentLayer.appendContents(contents)
+                    if isFiltered, let text = currentElement as? DOM.Text {
+                        contentLayer.textBounds = makeTextBounds(for: text, with: newState)
+                    }
                 } else if let container = currentElement as? any ContainerElement {
                     // Push children in reverse so they are processed in the original order
                     for child in container.childElements.reversed() {
-                        stack.append((child, newState, contentLayer))
+                        stack.append((child, newState, contentLayer, isFiltered))
                     }
                 }
 
@@ -743,25 +749,28 @@ extension LayerTree.Builder {
             return []
         }
         let candidates = faces.filter { $0.style == bestStyle }
-
-        // lower is better: (tier, distance) where tier orders the search directions of §5.2 step 4
-        func rank(_ range: ClosedRange<Int>) -> (Int, Int) {
-            if range.contains(weight) { return (0, 0) }
-            let below = range.upperBound < weight
-            let distance = below ? weight - range.upperBound : range.lowerBound - weight
-            switch weight {
-            case 400...500:
-                // heavier up to 500, then lighter, then heavier past 500
-                if !below && range.lowerBound <= 500 { return (1, distance) }
-                return below ? (2, distance) : (3, distance)
-            case ..<400:
-                return below ? (1, distance) : (2, distance)
-            default:
-                return below ? (2, distance) : (1, distance)
-            }
-        }
+        func rank(_ range: ClosedRange<Int>) -> (Int, Int) { fontWeightRank(range, for: weight) }
         guard let best = candidates.map({ rank($0.weight) }).min(by: { $0 < $1 }) else { return [] }
         return candidates.filter { rank($0.weight) == best }
+    }
+
+    /// How well a face of `weights` matches the desired `weight` in CSS Fonts 4 §5.2 step 4; lower
+    /// is better: (tier, distance), where the tier orders the directions searched. Between 400 and
+    /// 500, heavier faces up to 500 come first, then lighter, then heavier; below 400 lighter first;
+    /// above 500 heavier first.
+    static func fontWeightRank(_ weights: ClosedRange<Int>, for weight: Int) -> (Int, Int) {
+        if weights.contains(weight) { return (0, 0) }
+        let below = weights.upperBound < weight
+        let distance = below ? weight - weights.upperBound : weights.lowerBound - weight
+        switch weight {
+        case 400...500:
+            if !below && weights.lowerBound <= 500 { return (1, distance) }
+            return below ? (2, distance) : (3, distance)
+        case ..<400:
+            return below ? (1, distance) : (2, distance)
+        default:
+            return below ? (2, distance) : (1, distance)
+        }
     }
 
     /// The bold and oblique an `@font-face` face needs synthesized, from its declared `font-weight` and
@@ -1281,8 +1290,12 @@ extension LayerTree.Builder {
         state.fontWeight = attributes.fontWeight?.resolved(inheriting: existing.fontWeight) ?? existing.fontWeight
         state.fontStyle = attributes.fontStyle ?? existing.fontStyle
         state.textAnchor = attributes.textAnchor ?? existing.textAnchor
-        state.textBaseline = attributes.dominantBaseline ?? existing.textBaseline
-        state.alignmentBaseline = attributes.alignmentBaseline == .auto ? nil : attributes.alignmentBaseline
+        state.textBaseline = attributes.dominantBaseline.flatMap { $0 == .inherit ? nil : $0 } ?? existing.textBaseline
+        switch attributes.alignmentBaseline {
+        case .auto?, nil: state.alignmentBaseline = nil
+        case .inherit?: state.alignmentBaseline = existing.alignmentBaseline
+        case let baseline?: state.alignmentBaseline = baseline
+        }
         state.baselineShift = attributes.baselineShift == .inherit ? existing.baselineShift : attributes.baselineShift
         state.baselineShifts = existing.baselineShifts
         // `em` is of the element's computed font-size; the parser resolves percentages of the viewport

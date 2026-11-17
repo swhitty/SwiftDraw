@@ -52,6 +52,9 @@ extension LayerTree {
         /// The contents are one shape's fill, stroke and markers in a `paint-order` other than the
         /// default, with the shape split into a fill-only and a stroke-only `.shape`.
         var isPaintOrdered = false
+        /// The bounding box of the text this layer draws, in its user space (SVG 2 §8.10), where a
+        /// filter needs it for an objectBoundingBox region. nil when not measured.
+        var textBounds: Rect?
 
         enum MaskType: Hashable {
             case luminance
@@ -92,7 +95,8 @@ extension LayerTree {
                   clip == [],
                   mask == nil,
                   filters == [],
-                  filterImages.isEmpty else { return nil }
+                  filterImages.isEmpty,
+                  textBounds == nil else { return nil }
 
             return first
         }
@@ -110,6 +114,7 @@ extension LayerTree {
             filterRegion.hash(into: &hasher)
             filterImages.hash(into: &hasher)
             isPaintOrdered.hash(into: &hasher)
+            textBounds.hash(into: &hasher)
         }
 
         static func ==(lhs: Layer, rhs: Layer) -> Bool {
@@ -126,7 +131,8 @@ extension LayerTree {
             lhs.filters == rhs.filters &&
             lhs.filterRegion == rhs.filterRegion &&
             lhs.filterImages == rhs.filterImages &&
-            lhs.isPaintOrdered == rhs.isPaintOrdered
+            lhs.isPaintOrdered == rhs.isPaintOrdered &&
+            lhs.textBounds == rhs.textBounds
         }
     }
 

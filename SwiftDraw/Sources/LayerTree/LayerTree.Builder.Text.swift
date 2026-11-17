@@ -699,7 +699,7 @@ extension LayerTree.Builder {
         let ascent = LayerTree.Float(CTFontGetAscent(font))
         let descent = LayerTree.Float(CTFontGetDescent(font))
         switch baseline {
-        case .auto, .alphabetic:
+        case .auto, .alphabetic, .inherit:
             return 0
         case .textBeforeEdge:
             return ascent

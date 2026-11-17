@@ -1044,11 +1044,22 @@ extension LayerTree.CommandGenerator {
     }
 
     // Geometry bounding box of the layer contents in the layer's user space; stroke excluded.
-    // nil when the contents include text, which is not measured: the filter is then dropped
-    // rather than clipping the text away.
+    // Text counts with the box the builder measured for it (`textBounds`); nil when the contents
+    // include text that was not measured: the filter is then dropped rather than clipping the text away.
     func makeBounds(for layer: LayerTree.Layer) -> LayerTree.Rect? {
-        guard !layer.containsText else { return nil }
         var points = [LayerTree.Point]()
+        guard appendBounds(of: layer, to: &points, isTextMeasured: false), !points.isEmpty else { return nil }
+        return .makeBounds(between: points)
+    }
+
+    /// Appends the corners of the layer's contents; false when it draws text without a measured box.
+    /// - Parameter isTextMeasured: an ancestor's `textBounds` already covers the text of this layer
+    private func appendBounds(of layer: LayerTree.Layer, to points: inout [LayerTree.Point], isTextMeasured: Bool) -> Bool {
+        var isTextMeasured = isTextMeasured
+        if let bounds = layer.textBounds {
+            points.append(contentsOf: bounds.corners)
+            isTextMeasured = true
+        }
         for contents in layer.contents {
             switch contents {
             case .shape(let shape, _, _):
@@ -1060,16 +1071,15 @@ extension LayerTree.CommandGenerator {
                     points.append(contentsOf: LayerTree.Rect(x: image.origin.x, y: image.origin.y, width: width, height: height).corners)
                 }
             case .text, .glyphs:
-                break
+                guard isTextMeasured else { return false }
             case .layer(let child):
-                if let rect = makeBounds(for: child) {
-                    let matrix = child.transform.toMatrix()
-                    points.append(contentsOf: rect.corners.map { matrix.transform(point: $0) })
-                }
+                var childPoints = [LayerTree.Point]()
+                guard appendBounds(of: child, to: &childPoints, isTextMeasured: isTextMeasured) else { return false }
+                let matrix = child.transform.toMatrix()
+                points.append(contentsOf: childPoints.map { matrix.transform(point: $0) })
             }
         }
-        guard !points.isEmpty else { return nil }
-        return .makeBounds(between: points)
+        return true
     }
 
     func logUnsupportedFilters(_ filters: [LayerTree.FilterPrimitive]) {

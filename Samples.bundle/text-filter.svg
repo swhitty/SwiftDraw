@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="160" viewBox="0 0 240 160" font-family="Times" font-size="32">
+  <!-- objectBoundingBox filter regions of text: its glyph cells, without trailing letter-spacing -->
+  <filter id="flood" x="0" y="0" width="1" height="1">
+    <feFlood flood-color="gold"/>
+  </filter>
+  <filter id="shadow">
+    <feGaussianBlur stdDeviation="2"/>
+    <feOffset dx="2" dy="3" result="blur"/>
+    <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+  <text x="10" y="40" filter="url(#flood)">Text</text>
+  <text x="10" y="40">Text</text>
+  <text x="110" y="40" letter-spacing="10" filter="url(#flood)">Text</text>
+  <text x="110" y="40" letter-spacing="10">Text</text>
+  <!-- a group: the union of its shapes and text -->
+  <g filter="url(#flood)">
+    <rect x="10" y="60" width="20" height="20" fill="teal"/>
+    <text x="40" y="100" font-size="24">grouped</text>
+  </g>
+  <rect x="10" y="60" width="20" height="20" fill="teal"/>
+  <text x="40" y="100" font-size="24">grouped</text>
+  <!-- the default region (-10%, 120%) around the text, for a shadow -->
+  <text x="10" y="145" fill="crimson" filter="url(#shadow)">Shadow</text>
+  <!-- alignment-baseline: inherit takes the parent's -->
+  <path d="M150 130 H235" stroke="silver"/>
+  <g alignment-baseline="hanging" font-size="24">
+    <text x="150" y="130" alignment-baseline="inherit">Abg</text>
+  </g>
+</svg>

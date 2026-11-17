@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="260" height="200" viewBox="0 0 260 200">
+  <!-- matplotlib writes the CSS `font` shorthand on every label (svg.fonttype='none') -->
+  <style>
+    .title { font: bold 14px 'DejaVu Sans', Helvetica, sans-serif }
+    .tick { font: 10px 'DejaVu Sans' }
+  </style>
+  <g font-weight="bold" font-style="italic" font-size="30">
+    <text class="title" x="140" y="20" style="text-anchor: middle">font: shorthand</text>
+    <path d="M50 30 V160 H250" fill="none" stroke="black" stroke-width="0.8"/>
+    <polyline points="50,150 90,120 130,128 170,80 210,60 250,40" fill="none" stroke="#1f77b4" stroke-width="1.5"/>
+    <g stroke="black" stroke-width="0.8">
+      <path d="M50 160 v3.5 M100 160 v3.5 M150 160 v3.5 M200 160 v3.5 M250 160 v3.5"/>
+      <path d="M50 160 h-3.5 M50 120 h-3.5 M50 80 h-3.5 M50 40 h-3.5"/>
+    </g>
+    <!-- the parts the shorthand leaves out are reset: these labels are not bold, italic or 30px -->
+    <g class="tick">
+      <text x="50" y="175" style="font: 10px 'DejaVu Sans'; text-anchor: middle">0</text>
+      <text x="100" y="175" style="font: 10px 'DejaVu Sans'; text-anchor: middle">1</text>
+      <text x="150" y="175" style="font: 10px 'DejaVu Sans'; text-anchor: middle">2</text>
+      <text x="200" y="175" style="font: 10px 'DejaVu Sans'; text-anchor: middle">3</text>
+      <text x="250" y="175" style="font: 10px 'DejaVu Sans'; text-anchor: middle">4</text>
+      <text x="43" y="163.5" style="font: 10px 'DejaVu Sans'; text-anchor: end">0.0</text>
+      <text x="43" y="123.5" style="font: 10px 'DejaVu Sans'; text-anchor: end">0.5</text>
+      <text x="43" y="83.5" style="font: 10px 'DejaVu Sans'; text-anchor: end">1.0</text>
+      <text x="43" y="43.5" style="font: 10px 'DejaVu Sans'; text-anchor: end">1.5</text>
+    </g>
+    <text x="150" y="192" style="font: italic 12px Helvetica, sans-serif; text-anchor: middle">time (s)</text>
+    <text transform="translate(16 95) rotate(-90)" style="font: 600 12px Helvetica; text-anchor: middle">value</text>
+    <!-- an invalid shorthand is ignored; a shorthand overrides earlier longhands -->
+    <text x="60" y="60" style="font-weight: bold; font: 12px Courier">overridden</text>
+    <text x="60" y="76" style="font-size: 12px; font: serif" font-style="normal">invalid font</text>
+  </g>
+</svg>
