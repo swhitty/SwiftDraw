@@ -43,6 +43,9 @@ package extension DOM {
 
         package var styles = [StyleSheet]()
         package var defs = Defs()
+        /// The graphics elements a `<use>` can reference, by id: the first element in the document
+        /// with each id, wherever it is. nil for documents built in code.
+        package var elementsByID: [String: GraphicsElement]?
 
         package init(x: Coordinate? = nil, y: Coordinate? = nil, width: Coordinate, height: Coordinate) {
             self.x = x
