@@ -94,6 +94,8 @@ extension LayerTree {
             case colorMatrix([Float])
             // a function per channel, applied to non-premultiplied values
             case componentTransfer(DOM.Filter.ComponentTransfer)
+            // user units; a radius of zero leaves that direction unchanged
+            case morphology(DOM.Filter.MorphologyOperator, radiusX: Float, radiusY: Float)
         }
 
         enum Input: Hashable {
@@ -220,7 +222,7 @@ extension LayerTree.Filter {
             return true
         case .unsupported:
             return false
-        case .offset, .flood, .composite, .merge, .blend, .colorMatrix, .dropShadow, .componentTransfer:
+        case .offset, .flood, .composite, .merge, .blend, .colorMatrix, .dropShadow, .componentTransfer, .morphology:
             return true
         }
     }
@@ -230,7 +232,7 @@ extension LayerTree.Filter {
         switch self {
         case .dropShadow:
             return 5
-        case .gaussianBlur, .unsupported, .offset, .flood, .composite, .merge, .blend, .colorMatrix, .componentTransfer:
+        case .gaussianBlur, .unsupported, .offset, .flood, .composite, .merge, .blend, .colorMatrix, .componentTransfer, .morphology:
             return 1
         }
     }

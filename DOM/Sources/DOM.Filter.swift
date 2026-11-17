@@ -87,6 +87,9 @@ package extension DOM {
 
             // Filter Effects 1 §9.7 feComponentTransfer: one function per channel, from the feFuncX children
             case componentTransfer(ComponentTransfer)
+
+            // Filter Effects 1 §9.17 feMorphology, in primitiveUnits: radiusY is nil when radius has a single value
+            case morphology(MorphologyOperator, radius: DOM.Float, radiusY: DOM.Float? = nil)
         }
 
         // A filter primitive with its wiring (Filter Effects 1 §9.2 in / in2 / result) and subregion (§9.4)
@@ -211,6 +214,11 @@ package extension DOM {
             case discrete([DOM.Float])
             case linear(slope: DOM.Float, intercept: DOM.Float)
             case gamma(amplitude: DOM.Float, exponent: DOM.Float, offset: DOM.Float)
+        }
+
+        package enum MorphologyOperator: String, Hashable {
+            case erode
+            case dilate
         }
 
         package enum ColorMatrix: Hashable {

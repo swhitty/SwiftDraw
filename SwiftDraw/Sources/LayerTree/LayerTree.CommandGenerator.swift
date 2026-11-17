@@ -893,6 +893,18 @@ extension LayerTree.CommandGenerator {
             return .colorMatrix(matrix.values)
         case .componentTransfer(let transfer):
             return .componentTransfer(transfer)
+        case let .morphology(op, radius: x, radiusY: y):
+            // Filter Effects 1 §9.17: a negative radius, or both zero, disables the primitive (the input).
+            // One zero with the other positive is 1, as in resvg, Chrome and Safari.
+            var x = x
+            var y = y ?? x
+            guard x >= 0, y >= 0, x > 0 || y > 0 else {
+                return .morphology(op, radiusX: 0, radiusY: 0)
+            }
+            if x == 0 { x = 1 }
+            if y == 0 { y = 1 }
+            return .morphology(op, radiusX: min(x * scale.width, maximum),
+                               radiusY: min(y * scale.height, maximum))
         case .dropShadow:
             // resolved into its primitives by makeDropShadow
             return nil
@@ -1125,6 +1137,8 @@ private extension LayerTree.Filter {
             return "<feColorMatrix>"
         case .componentTransfer:
             return "<feComponentTransfer>"
+        case .morphology:
+            return "<feMorphology>"
         case .dropShadow:
             return "<feDropShadow>"
         }

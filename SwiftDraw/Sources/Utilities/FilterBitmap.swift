@@ -134,6 +134,9 @@ extension LayerTree.FilterLayer {
                     result = FilterBitmap.colorMatrix(input(0), matrix: matrix, linear: isLinear)
                 case .componentTransfer(let transfer):
                     result = FilterBitmap.componentTransfer(input(0), transfer, linear: isLinear)
+                case let .morphology(op, radiusX: rx, radiusY: ry):
+                    let radius = environment.transform.pixelRadius(rx, ry)
+                    result = FilterBitmap.morphology(input(0), op, radiusX: radius.x, radiusY: radius.y, linear: isLinear)
                 }
                 result.clip(to: primitive.subregion, transform: environment.transform)
             }
@@ -162,6 +165,10 @@ extension LayerTree.FilterLayer {
                 alive += 1
             }
             alive += primitive.inputs.filter { $0 == .transparent }.count
+            if case .morphology = primitive.effect {
+                // its four channels as Float
+                alive += 4
+            }
             peak = max(peak, alive)
         }
         return peak
@@ -249,6 +256,19 @@ extension LayerTree.Transform.Matrix {
         let slope = q / r
         let across = max(0, p - q * slope).squareRoot()
         return (across, r.squareRoot(), slope, isTransposed)
+    }
+
+    // Filter Effects 1 §9.17: a radius in user units as whole pixels along the pixel axes (the extent of the
+    // rectangle, as for a blur), rounded down
+    // as WebKit and Chrome do, and at most a million (beyond the bitmap, every window is the whole row)
+    func pixelRadius(_ x: Float, _ y: Float) -> (x: Int, y: Int) {
+        func whole(_ value: Float) -> Int {
+            // a little tolerance so 10 × 1.5 is 15, not 14.999…; an overflow is the largest radius
+            let value = (value + 0.001).rounded(.down)
+            guard value >= 1 else { return 0 }
+            return Int(Swift.min(value, 1_000_000))
+        }
+        return (whole((a * x).hypot(c * y)), whole((b * x).hypot(d * y)))
     }
 
     func vector(_ x: Float, _ y: Float) -> (x: Float, y: Float) {
@@ -369,12 +389,7 @@ extension FilterBitmap {
     // color-interpolation-filters does not apply to feFlood (Filter Effects 1 §10).
     static func flood(width: Int, height: Int, color: SIMD4<Float>) -> FilterBitmap {
         var result = FilterBitmap(width: width, height: height)
-        let premultiplied = FilterPixel(r: color.x * color.w, g: color.y * color.w, b: color.z * color.w, a: color.w)
-        // not stored through a pointer into a local array: optimized builds (Swift 6.4, -O) kept only the
-        // first byte, so every flood was transparent in Release while Debug tests passed
-        let bytes = quantize(premultiplied, linear: false, encoding: encodingTable)
-        let pixel: [UInt8] = [UInt8(truncatingIfNeeded: bytes), UInt8(truncatingIfNeeded: bytes >> 8),
-                              UInt8(truncatingIfNeeded: bytes >> 16), UInt8(truncatingIfNeeded: bytes >> 24)]
+        let pixel = encode(FilterPixel(r: color.x * color.w, g: color.y * color.w, b: color.z * color.w, a: color.w), linear: false)
         guard pixel != [0, 0, 0, 0] else { return result }
         result.pixels.withUnsafeMutableBufferPointer { dst in
             var i = 0
@@ -387,6 +402,15 @@ extension FilterBitmap {
             }
         }
         return result
+    }
+
+    // the stored bytes of a premultiplied pixel, r first
+    static func encode(_ pixel: FilterPixel, linear: Bool) -> [UInt8] {
+        // not stored through a pointer into a local array: optimized builds (Swift 6.4, -O) kept only the
+        // first byte, so every flood was transparent in Release while Debug tests passed
+        let bytes = quantize(pixel, linear: linear, encoding: encodingTable)
+        return [UInt8(truncatingIfNeeded: bytes), UInt8(truncatingIfNeeded: bytes >> 8),
+                UInt8(truncatingIfNeeded: bytes >> 16), UInt8(truncatingIfNeeded: bytes >> 24)]
     }
 
     // Filter Effects 1 §9.18: shifted by a vector in pixels; uncovered pixels are transparent black and
@@ -559,6 +583,128 @@ extension FilterBitmap {
     }
 
     static let transferSegments = 4096
+
+    // Filter Effects 1 §9.17: the minimum (erode) or maximum (dilate) of each premultiplied channel over a
+    // rectangle 2·radius + 1 pixels wide, in the colour space of the primitive. Pixels outside the bitmap
+    // are not in the rectangle, as in resvg and Skia. Separable, and each pass is van Herk/Gil-Werman:
+    // three comparisons a pixel whatever the radius.
+    static func morphology(_ source: FilterBitmap,
+                           _ op: DOM.Filter.MorphologyOperator,
+                           radiusX: Int,
+                           radiusY: Int,
+                           linear: Bool) -> FilterBitmap {
+        let width = source.width
+        let height = source.height
+        let rx = Swift.min(Swift.max(radiusX, 0), width)
+        let ry = Swift.min(Swift.max(radiusY, 0), height)
+        guard rx > 0 || ry > 0, width > 0, height > 0 else { return source }
+
+        let count = width * height
+        let values = UnsafeMutablePointer<Float>.allocate(capacity: count * 4)
+        defer { values.deallocate() }
+        let unit = unitTable
+        let decoding = linearTable
+        let encoding = encodingTable
+        source.pixels.withUnsafeBytes { src in
+            guard let raw = src.baseAddress else { return }
+            var i = 0
+            while i < count {
+                let p = load(raw.loadUnaligned(fromByteOffset: i * 4, as: UInt32.self), linear: linear, unit: unit, decoding: decoding)
+                values[i * 4] = p.r
+                values[i * 4 + 1] = p.g
+                values[i * 4 + 2] = p.b
+                values[i * 4 + 3] = p.a
+                i += 1
+            }
+        }
+
+        let isDilate = op == .dilate
+        let longest = Swift.max(width + 2 * rx, height + 2 * ry)
+        let scratch = UnsafeMutablePointer<Float>.allocate(capacity: longest * 3)
+        defer { scratch.deallocate() }
+        if rx > 0 {
+            var y = 0
+            while y < height {
+                var channel = 0
+                while channel < 4 {
+                    extremes(values + y * width * 4 + channel, stride: 4, count: width, radius: rx, isMax: isDilate, scratch: scratch)
+                    channel += 1
+                }
+                y += 1
+            }
+        }
+        if ry > 0 {
+            var x = 0
+            while x < width * 4 {
+                extremes(values + x, stride: width * 4, count: height, radius: ry, isMax: isDilate, scratch: scratch)
+                x += 1
+            }
+        }
+
+        var result = FilterBitmap(width: width, height: height)
+        result.pixels.withUnsafeMutableBytes { dst in
+            guard let out = dst.baseAddress else { return }
+            var i = 0
+            while i < count {
+                let p = FilterPixel(r: values[i * 4], g: values[i * 4 + 1], b: values[i * 4 + 2], a: values[i * 4 + 3])
+                let value = quantize(p, linear: linear, encoding: encoding)
+                if value != 0 {
+                    store(value, out, i * 4)
+                }
+                i += 1
+            }
+        }
+        return result
+    }
+
+    // In place, each value becomes the minimum or maximum of the values up to radius away along the line.
+    // The line is padded by radius at each end with a value that never wins, then split into blocks of the
+    // window size: a window spans at most two blocks, so it is the suffix extreme of one and the prefix
+    // extreme of the next. scratch holds 3 × (count + 2 × radius) values.
+    static func extremes(_ line: UnsafeMutablePointer<Float>, stride: Int, count: Int, radius: Int, isMax: Bool,
+                         scratch: UnsafeMutablePointer<Float>) {
+        let window = 2 * radius + 1
+        let length = count + 2 * radius
+        let padded = scratch
+        let prefix = scratch + length
+        let suffix = scratch + 2 * length
+        let identity: Float = isMax ? -1 : 2
+
+        var i = 0
+        while i < length {
+            let source = i - radius
+            padded[i] = source >= 0 && source < count ? line[source * stride] : identity
+            i += 1
+        }
+        var start = 0
+        while start < length {
+            let end = Swift.min(start + window, length)
+            prefix[start] = padded[start]
+            var j = start + 1
+            while j < end {
+                prefix[j] = pick(prefix[j - 1], padded[j], isMax)
+                j += 1
+            }
+            suffix[end - 1] = padded[end - 1]
+            j = end - 2
+            while j >= start {
+                suffix[j] = pick(suffix[j + 1], padded[j], isMax)
+                j -= 1
+            }
+            start = end
+        }
+        // the window of value i is padded[i ... i + 2 × radius]
+        i = 0
+        while i < count {
+            line[i * stride] = pick(suffix[i], prefix[i + window - 1], isMax)
+            i += 1
+        }
+    }
+
+    @inline(__always)
+    static func pick(_ x: Float, _ y: Float, _ isMax: Bool) -> Float {
+        isMax ? maximum(x, y) : minimum(x, y)
+    }
 
     // Filter Effects 1 §9.4: pixels whose centre falls outside the subregion become transparent black
     mutating func clip(to rect: LayerTree.Rect, transform: LayerTree.Transform.Matrix) {

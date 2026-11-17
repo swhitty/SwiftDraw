@@ -276,6 +276,17 @@ extension XMLParser {
             return .colorMatrix(parseColorMatrix(att))
         case "feComponentTransfer":
             return .componentTransfer(try parseComponentTransfer(e))
+        case "feMorphology":
+            let att: any AttributeParser = try parseAttributes(e)
+            // Filter Effects 1 §9.17: one or two numbers, initially 0; an unreadable list takes the initial value
+            var values: [DOM.Float] = (try? att.parseFloats("radius")) ?? []
+            if values.count > 2 || !values.allSatisfy(\.isFinite) {
+                values = []
+            }
+            let op: DOM.Filter.MorphologyOperator? = try? att.parseRaw("operator")
+            return .morphology(op ?? .erode,
+                               radius: values.first ?? 0,
+                               radiusY: values.count > 1 ? values[1] : nil)
         default:
             guard e.name.hasPrefix("fe") else { return nil }
             return .unsupported(name: e.name)
