@@ -45,6 +45,9 @@ package extension DOM {
         package var patternContentUnits: Units?
 
         package var childElements: [DOM.GraphicsElement] = []
+        /// Holders of the presentation attributes of the pattern's ancestors and of the pattern itself,
+        /// outermost first, which its contents inherit; empty for patterns built in code.
+        package var ancestors: [DOM.GraphicsElement] = []
 
         package var href: URL?
         package var viewBox: DOM.SVG.ViewBox?
