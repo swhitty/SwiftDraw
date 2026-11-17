@@ -906,10 +906,30 @@ extension LayerTree.CommandGenerator {
             if y == 0 { y = 1 }
             return .morphology(op, radiusX: min(x * scale.width, maximum),
                                radiusY: min(y * scale.height, maximum))
+        case .turbulence(let turbulence):
+            return makeTurbulence(turbulence)
         case .dropShadow:
             // resolved into its primitives by makeDropShadow
             return nil
         }
+    }
+
+    // Filter Effects 1 §9.21: a negative frequency is an error, transparent black as in resvg and Safari.
+    // baseFrequency is in user space whatever primitiveUnits is, as in resvg and Safari.
+    // The seed is truncated towards zero (the spec's reference code takes an integer).
+    func makeTurbulence(_ turbulence: DOM.Filter.Turbulence) -> LayerTree.FilterLayer.Effect {
+        guard turbulence.baseFrequencyX >= 0, turbulence.baseFrequencyY >= 0 else {
+            return .flood(.none)
+        }
+        let seed = turbulence.seed.rounded(.towardZero)
+        return .turbulence(LayerTree.FilterLayer.Turbulence(
+            baseFrequencyX: turbulence.baseFrequencyX,
+            baseFrequencyY: turbulence.baseFrequencyY,
+            numOctaves: max(0, turbulence.numOctaves),
+            seed: Int(max(-2_147_483_648, min(Double(seed), 2_147_483_647))),
+            isFractalNoise: turbulence.type == .fractalNoise,
+            stitchTiles: turbulence.stitchTiles
+        ))
     }
 
     // Geometry bounding box of the layer contents in the layer's user space; stroke excluded.
@@ -1133,6 +1153,8 @@ private extension LayerTree.Filter {
             return "<feComponentTransfer>"
         case .morphology:
             return "<feMorphology>"
+        case .turbulence:
+            return "<feTurbulence>"
         case .dropShadow:
             return "<feDropShadow>"
         }

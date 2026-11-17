@@ -96,6 +96,18 @@ extension LayerTree {
             case componentTransfer(DOM.Filter.ComponentTransfer)
             // user units; a radius of zero leaves that direction unchanged
             case morphology(DOM.Filter.MorphologyOperator, radiusX: Float, radiusY: Float)
+            // noise in user space, with no input
+            case turbulence(Turbulence)
+        }
+
+        // Filter Effects 1 §9.21: frequencies in user space, never negative; the stitch tile is the subregion
+        struct Turbulence: Hashable {
+            var baseFrequencyX: Float
+            var baseFrequencyY: Float
+            var numOctaves: Int
+            var seed: Int
+            var isFractalNoise: Bool
+            var stitchTiles: Bool
         }
 
         enum Input: Hashable {
@@ -222,7 +234,8 @@ extension LayerTree.Filter {
             return true
         case .unsupported:
             return false
-        case .offset, .flood, .composite, .merge, .blend, .colorMatrix, .dropShadow, .componentTransfer, .morphology:
+        case .offset, .flood, .composite, .merge, .blend, .colorMatrix, .dropShadow, .componentTransfer, .morphology,
+             .turbulence:
             return true
         }
     }
@@ -232,7 +245,8 @@ extension LayerTree.Filter {
         switch self {
         case .dropShadow:
             return 5
-        case .gaussianBlur, .unsupported, .offset, .flood, .composite, .merge, .blend, .colorMatrix, .componentTransfer, .morphology:
+        case .gaussianBlur, .unsupported, .offset, .flood, .composite, .merge, .blend, .colorMatrix, .componentTransfer, .morphology,
+             .turbulence:
             return 1
         }
     }

@@ -90,6 +90,9 @@ package extension DOM {
 
             // Filter Effects 1 §9.17 feMorphology, in primitiveUnits: radiusY is nil when radius has a single value
             case morphology(MorphologyOperator, radius: DOM.Float, radiusY: DOM.Float? = nil)
+
+            // Filter Effects 1 §9.21 feTurbulence: noise in user space, with no input
+            case turbulence(Turbulence)
         }
 
         // A filter primitive with its wiring (Filter Effects 1 §9.2 in / in2 / result) and subregion (§9.4)
@@ -219,6 +222,35 @@ package extension DOM {
         package enum MorphologyOperator: String, Hashable {
             case erode
             case dilate
+        }
+
+        // Filter Effects 1 §9.21: values as written; a negative frequency is an error, resolved by the layer tree
+        package struct Turbulence: Hashable {
+            package var baseFrequencyX: DOM.Float
+            package var baseFrequencyY: DOM.Float
+            package var numOctaves: Int
+            package var seed: DOM.Float
+            package var type: TurbulenceType
+            package var stitchTiles: Bool
+
+            package init(baseFrequencyX: DOM.Float = 0,
+                         baseFrequencyY: DOM.Float = 0,
+                         numOctaves: Int = 1,
+                         seed: DOM.Float = 0,
+                         type: TurbulenceType = .turbulence,
+                         stitchTiles: Bool = false) {
+                self.baseFrequencyX = baseFrequencyX
+                self.baseFrequencyY = baseFrequencyY
+                self.numOctaves = numOctaves
+                self.seed = seed
+                self.type = type
+                self.stitchTiles = stitchTiles
+            }
+        }
+
+        package enum TurbulenceType: String, Hashable {
+            case fractalNoise
+            case turbulence
         }
 
         package enum ColorMatrix: Hashable {

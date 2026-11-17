@@ -145,7 +145,7 @@ struct LayerTreeFilterTests {
         <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
             <filter id="shadow">
                 <feGaussianBlur in="SourceAlpha" stdDeviation="2" />
-                <feTurbulence baseFrequency="0.1" />
+                <feDisplacementMap scale="10" />
             </filter>
             <rect x="0" y="0" width="10" height="10" filter="url(#shadow)" />
         </svg>
@@ -158,7 +158,7 @@ struct LayerTreeFilterTests {
     func unsupportedPrimitiveIsHiddenWithOption() throws {
         let commands = try makeCommands(#"""
         <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
-            <filter id="noise"><feTurbulence baseFrequency="0.1" /></filter>
+            <filter id="noise"><feDisplacementMap scale="10" /></filter>
             <rect x="0" y="0" width="10" height="10" filter="url(#noise)" />
             <rect x="20" y="0" width="10" height="10" />
         </svg>
@@ -293,7 +293,7 @@ struct LayerTreeFilterTests {
     // hideUnsupportedFilters hides only unsupported filters: a blur is rendered
     @Test(arguments: [("feGaussianBlur stdDeviation=\"2\"", true),
                       ("feFlood flood-color=\"blue\"", true),
-                      ("feTurbulence baseFrequency=\"0.1\"", false)])
+                      ("feDisplacementMap scale=\"10\"", false)])
     func hideUnsupportedFiltersKeepsSupportedFilterContents(primitive: String, hasContents: Bool) throws {
         let svg = try DOM.SVG.parse(xml: """
         <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
@@ -328,7 +328,7 @@ struct LayerTreeFilterTests {
     func disableFiltersTakesPrecedenceOverHideUnsupportedFilters() throws {
         let xml = #"""
         <svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
-            <filter id="noise"><feTurbulence baseFrequency="0.1" /></filter>
+            <filter id="noise"><feDisplacementMap scale="10" /></filter>
             <rect x="10" y="10" width="20" height="20" filter="url(#noise)" />
         </svg>
         """#

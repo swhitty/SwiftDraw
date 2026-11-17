@@ -137,6 +137,10 @@ extension LayerTree.FilterLayer {
                 case let .morphology(op, radiusX: rx, radiusY: ry):
                     let radius = environment.transform.pixelRadius(rx, ry)
                     result = FilterBitmap.morphology(input(0), op, radiusX: radius.x, radiusY: radius.y, linear: isLinear)
+                case .turbulence(let turbulence):
+                    result = FilterBitmap.turbulence(width: width, height: height, turbulence,
+                                                     tile: primitive.subregion, transform: environment.transform,
+                                                     linear: isLinear)
                 }
                 result.clip(to: primitive.subregion, transform: environment.transform)
             }
@@ -794,7 +798,8 @@ struct FilterPixel {
     static let zero = FilterPixel(r: 0, g: 0, b: 0, a: 0)
 }
 
-private extension FilterBitmap {
+// internal so the kernels in other files share them
+extension FilterBitmap {
 
     enum CombineOperation {
         case over

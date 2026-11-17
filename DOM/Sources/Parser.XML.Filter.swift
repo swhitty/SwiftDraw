@@ -164,7 +164,7 @@ extension XMLParser {
             primitive.inputs = [Self.parseFilterInput(e.attributes["in"]), Self.parseFilterInput(e.attributes["in2"])]
         case .flood(.currentColor, let opacity):
             primitive.effect = .flood(color: resolveCurrentColor(att, context: context), opacity: opacity)
-        case .flood:
+        case .flood, .turbulence:
             break
         case .dropShadow(var shadow):
             primitive.inputs = [Self.parseFilterInput(e.attributes["in"])]
@@ -287,6 +287,8 @@ extension XMLParser {
             return .morphology(op ?? .erode,
                                radius: values.first ?? 0,
                                radiusY: values.count > 1 ? values[1] : nil)
+        case "feTurbulence":
+            return .turbulence(try parseTurbulence(e))
         default:
             guard e.name.hasPrefix("fe") else { return nil }
             return .unsupported(name: e.name)
@@ -408,6 +410,29 @@ extension XMLParser {
         default:
             return .identity
         }
+    }
+
+    // Filter Effects 1 §9.21: baseFrequency is one or two numbers, initially 0; an unreadable list takes the
+    // initial value, as in resvg. numOctaves is an integer, initially 1; negative is 0 octaves (no noise).
+    // An unknown type or stitchTiles keeps the initial turbulence and noStitch.
+    func parseTurbulence(_ e: XML.Element) throws -> DOM.Filter.Turbulence {
+        let att: any AttributeParser = try parseAttributes(e)
+        var frequency: [DOM.Float] = (try? att.parseFloats("baseFrequency")) ?? []
+        if frequency.isEmpty || frequency.count > 2 || !frequency.allSatisfy(\.isFinite) {
+            frequency = [0]
+        }
+        var octaves = 1
+        if let value = parseFiniteFloat(att, "numOctaves") {
+            octaves = Int(min(max(value, 0), 1_000_000))
+        }
+        let type: DOM.Filter.TurbulenceType? = try? att.parseRaw("type")
+        let stitch = (try? att.parseString("stitchTiles"))?.trimmingCharacters(in: .whitespaces) == "stitch"
+        return DOM.Filter.Turbulence(baseFrequencyX: frequency[0],
+                                     baseFrequencyY: frequency.count > 1 ? frequency[1] : frequency[0],
+                                     numOctaves: octaves,
+                                     seed: parseFiniteFloat(att, "seed") ?? 0,
+                                     type: type ?? .turbulence,
+                                     stitchTiles: stitch)
     }
 
     // Filter Effects 1 §10: `auto` and the two spaces; anything else is dropped so the inherited value applies.
