@@ -333,7 +333,7 @@ extension LayerTree {
             if let shape = Builder.makeShape(from: element) {
                 guard isVisible else { return nil }
                 let contents = makeShapeContents(from: shape, with: state)
-                return makeMarkedContents(contents, for: element, with: state) ?? contents
+                return makePaintedContents(contents, for: element, with: state)
             } else if let text = element as? DOM.Text {
                 guard isVisible else { return nil }
                 if let textPath = text.textPath {
@@ -1133,6 +1133,7 @@ extension LayerTree.Builder {
         var markerStart: DOM.URL?
         var markerMid: DOM.URL?
         var markerEnd: DOM.URL?
+        var paintOrder: DOM.PaintOrder
 
         init() {
             //default root SVG element state
@@ -1160,6 +1161,7 @@ extension LayerTree.Builder {
             fontSize = DOM.FontSize.initial
             fontWeight = 400
             fontStyle = .normal
+            paintOrder = .normal
         }
     }
 
@@ -1221,6 +1223,7 @@ extension LayerTree.Builder {
         state.markerStart = attributes.markerStart ?? existing.markerStart
         state.markerMid = attributes.markerMid ?? existing.markerMid
         state.markerEnd = attributes.markerEnd ?? existing.markerEnd
+        state.paintOrder = attributes.paintOrder ?? existing.paintOrder
 
         return state
     }

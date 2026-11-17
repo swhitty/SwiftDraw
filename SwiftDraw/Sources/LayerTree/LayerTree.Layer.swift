@@ -46,6 +46,9 @@ extension LayerTree {
         var maskIsClip = false
         var filters: [FilterPrimitive] = []
         var filterRegion = FilterRegion()
+        /// The contents are one shape's fill, stroke and markers in a `paint-order` other than the
+        /// default, with the shape split into a fill-only and a stroke-only `.shape`.
+        var isPaintOrdered = false
 
         enum MaskType: Hashable {
             case luminance
@@ -97,6 +100,7 @@ extension LayerTree {
             maskType.hash(into: &hasher)
             filters.hash(into: &hasher)
             filterRegion.hash(into: &hasher)
+            isPaintOrdered.hash(into: &hasher)
         }
 
         static func ==(lhs: Layer, rhs: Layer) -> Bool {
@@ -111,7 +115,8 @@ extension LayerTree {
             lhs.maskIsClip == rhs.maskIsClip &&
             lhs.maskType == rhs.maskType &&
             lhs.filters == rhs.filters &&
-            lhs.filterRegion == rhs.filterRegion
+            lhs.filterRegion == rhs.filterRegion &&
+            lhs.isPaintOrdered == rhs.isPaintOrdered
         }
     }
 

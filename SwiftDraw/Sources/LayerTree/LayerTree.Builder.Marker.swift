@@ -45,17 +45,15 @@ extension LayerTree.Builder {
         var angle: LayerTree.Float
     }
 
-    /// The shape with its markers drawn after its fill and stroke, or nil when it has none.
-    func makeMarkedContents(_ contents: LayerTree.Layer.Contents,
-                            for element: DOM.GraphicsElement,
-                            with state: State) -> LayerTree.Layer.Contents? {
+    /// The markers of a shape in the order they are drawn; empty when it has none.
+    func makeMarkerLayers(for element: DOM.GraphicsElement, with state: State) -> [LayerTree.Layer] {
         let start = resolveMarker(state.markerStart)
         let mid = resolveMarker(state.markerMid)
         let end = resolveMarker(state.markerEnd)
-        guard start != nil || mid != nil || end != nil else { return nil }
+        guard start != nil || mid != nil || end != nil else { return [] }
 
         let vertices = Self.makeMarkerVertices(for: element)
-        guard !vertices.isEmpty else { return nil }
+        guard !vertices.isEmpty else { return [] }
 
         // the contents of each marker are built once and shared by all its vertices
         var cache = [ObjectIdentifier: LayerTree.Layer?]()
@@ -83,11 +81,50 @@ extension LayerTree.Builder {
             }
         }
         append(end, at: vertices[vertices.count - 1])
+        return markers
+    }
 
-        guard !markers.isEmpty else { return nil }
+    /// The fill, stroke and markers of a shape in its `paint-order` (SVG 2 §13.6).
+    ///
+    /// Fill followed directly by stroke stays one `.shape`, so the default order draws as it always has:
+    /// the shape alone, or a layer of the shape then its markers. Otherwise the shape is split into a
+    /// fill-only and a stroke-only `.shape`, and the markers go where the order puts them. Everything
+    /// is in one layer, so the element's opacity, clip, mask and filter still apply to them as a group.
+    func makePaintedContents(_ contents: LayerTree.Layer.Contents,
+                             for element: DOM.GraphicsElement,
+                             with state: State) -> LayerTree.Layer.Contents {
+        guard case let .shape(shape, stroke, fill) = contents else { return contents }
+        let markers = makeMarkerLayers(for: element, with: state)
+
+        var noFill = fill
+        var noStroke = stroke
+        noFill.fill = .color(.none)
+        noStroke.color = .color(.none)
+        let hasFill = fill.fill != .color(.none)
+        let hasStroke = stroke.color != .color(.none)
+
+        var items = [LayerTree.Layer.Contents]()
+        let order = state.paintOrder.layers
+        var index = order.startIndex
+        while index < order.endIndex {
+            switch order[index] {
+            case .fill where index + 1 < order.endIndex && order[index + 1] == .stroke:
+                items.append(contents)
+                index += 1
+            case .fill:
+                if hasFill { items.append(.shape(shape, noStroke, fill)) }
+            case .stroke:
+                if hasStroke { items.append(.shape(shape, stroke, noFill)) }
+            case .markers:
+                items.append(contentsOf: markers.map { .layer($0) })
+            }
+            index += 1
+        }
+
+        guard items.count > 1 else { return items.first ?? contents }
         let l = LayerTree.Layer()
-        l.appendContents(contents)
-        markers.forEach { l.appendContents(.layer($0)) }
+        l.isPaintOrdered = items != [contents] + markers.map { .layer($0) }
+        items.forEach(l.appendContents)
         return .layer(l)
     }
 
