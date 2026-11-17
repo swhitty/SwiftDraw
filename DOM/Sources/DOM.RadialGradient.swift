@@ -46,6 +46,10 @@ package extension DOM {
         package var stops: [Stop]
         package var gradientUnits: Units?
         package var gradientTransform: [Transform]
+        /// whether `gradientTransform` was specified (possibly empty), so it is not inherited through href
+        package var hasGradientTransform = false
+        /// the computed `color-interpolation` (inherited from the gradient's ancestors); nil is sRGB
+        package var colorInterpolation: ColorInterpolation?
         /// `transform-origin` of the paint server transform (SVG 2), not inherited through href
         package var transformOrigin: TransformOrigin?
         package var spreadMethod: SpreadMethod?

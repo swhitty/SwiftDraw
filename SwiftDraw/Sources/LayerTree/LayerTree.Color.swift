@@ -151,6 +151,14 @@ extension LayerTree.Color {
 
 protocol ColorConverter {
   func createColor(from color: LayerTree.Color) -> LayerTree.Color
+
+  /// Whether converting a colour interpolated between two others gives the colour interpolated
+  /// between the converted ones, so gradient stops can be converted on their own.
+  var preservesInterpolation: Bool { get }
+}
+
+extension ColorConverter {
+  var preservesInterpolation: Bool { true }
 }
 
 struct DefaultColorConverter: ColorConverter {
@@ -178,6 +186,28 @@ struct LuminanceColorConverter: ColorConverter {
 
 extension ColorConverter where Self == LuminanceColorConverter {
     static var luminance: LuminanceColorConverter { LuminanceColorConverter() }
+}
+
+// `color-interpolation: linearRGB` on a mask: the luminance of the colour in linear light (SVG 1.1 §14.4),
+// as WebKit and resvg compute it for each pixel of the mask's contents
+struct LinearLuminanceColorConverter: ColorConverter {
+  func createColor(from color: LayerTree.Color) -> LayerTree.Color {
+    switch color {
+    case .rgba(let r, let g, let b, let a, _):
+      let luminance = (LayerTree.Color.linear(r) * 0.2125) + (LayerTree.Color.linear(g) * 0.7154) + (LayerTree.Color.linear(b) * 0.0721)
+      return .gray(white: luminance, a: a)
+    case .gray(let white, let a):
+      return .gray(white: LayerTree.Color.linear(white), a: a)
+    case .none:
+      return .none
+    }
+  }
+
+  var preservesInterpolation: Bool { false }
+}
+
+extension ColorConverter where Self == LinearLuminanceColorConverter {
+    static var linearLuminance: LinearLuminanceColorConverter { LinearLuminanceColorConverter() }
 }
 
 // `mask-type: alpha` keeps only the alpha: white over the mask's black backdrop has the luminance of its alpha

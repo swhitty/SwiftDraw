@@ -550,6 +550,7 @@ extension LayerTree {
             //commands.append(contentsOf: renderCommands(forClip: layer.clip))
             let converter: any ColorConverter = switch layer.maskType {
             case .luminance: .luminance
+            case .linearLuminance: .linearLuminance
             case .alpha: .alpha
             }
             let drawMask = layer.contents.flatMap{
@@ -620,7 +621,7 @@ extension LayerTree {
                 }
             }
 
-            let converted = stops.convertColor(using: colorConverter)
+            let converted = stops.resolved(using: colorConverter)
             let gradient = provider.createGradient(from: converted)
             let start = provider.createPoint(from: pathStart)
             let end = provider.createPoint(from: pathEnd)
@@ -642,7 +643,7 @@ extension LayerTree {
             let endCenter = gradient.endCenter
             let endRadius = gradient.endRadius
 
-            let converted =  gradient.gradient.convertColor(using: colorConverter)
+            let converted = gradient.gradient.resolved(using: colorConverter)
             let gradient = provider.createGradient(from: converted)
             let apha = provider.createFloat(from: opacity)
             commands.append(.setAlpha(apha))
@@ -1000,7 +1001,7 @@ extension LayerTree.Gradient {
                                    color: stop.color, opacity: stop.opacity))
             }
         }
-        return LayerTree.Gradient(stops: result)
+        return LayerTree.Gradient(stops: result, interpolation: interpolation)
     }
 
     /// The stops completed so the first and last colours fill 0 and 1.
@@ -1055,17 +1056,21 @@ private extension LayerTree.Gradient.Stop {
 
 extension LayerTree.Color {
 
+    /// The sRGB transfer curve, from encoded to linear light.
+    static func linear(_ v: LayerTree.Float) -> LayerTree.Float {
+        v <= 0.04045 ? v / 12.92 : LayerTree.Float(pow(Double((v + 0.055) / 1.055), 2.4))
+    }
+
+    /// The sRGB transfer curve, from linear light to encoded. Clamped to 0...1.
+    static func encode(_ v: LayerTree.Float) -> LayerTree.Float {
+        let c = min(1, max(0, v))
+        return c <= 0.0031308 ? c * 12.92 : LayerTree.Float(1.055 * pow(Double(c), 1 / 2.4) - 0.055)
+    }
+
     /// Display P3 shares sRGB's transfer curve: convert through linear light. Clamped to 0...1.
     static func convert(r: LayerTree.Float, g: LayerTree.Float, b: LayerTree.Float,
                         from: LayerTree.ColorSpace, to: LayerTree.ColorSpace) -> (LayerTree.Float, LayerTree.Float, LayerTree.Float) {
         guard from != to else { return (r, g, b) }
-        func linear(_ v: LayerTree.Float) -> LayerTree.Float {
-            v <= 0.04045 ? v / 12.92 : LayerTree.Float(pow(Double((v + 0.055) / 1.055), 2.4))
-        }
-        func encode(_ v: LayerTree.Float) -> LayerTree.Float {
-            let c = min(1, max(0, v))
-            return c <= 0.0031308 ? c * 12.92 : LayerTree.Float(1.055 * pow(Double(c), 1 / 2.4) - 0.055)
-        }
         let (lr, lg, lb) = (linear(r), linear(g), linear(b))
         if from == .p3 {
             return (encode(1.2249401 * lr - 0.2249404 * lg),
@@ -1102,17 +1107,6 @@ private extension LayerTree.Transform.Matrix {
                     c: -c / determinant, d: a / determinant,
                     tx: (c * ty - d * tx) / determinant,
                     ty: (b * tx - a * ty) / determinant)
-    }
-}
-
-private extension LayerTree.Gradient {
-    func convertColor(using converter: any ColorConverter) -> LayerTree.Gradient {
-        let stops: [LayerTree.Gradient.Stop] = stops.map { stop in
-            var stop = stop
-            stop.color = converter.createColor(from: stop.color).withMultiplyingAlpha(stop.opacity)
-            return stop
-        }
-        return LayerTree.Gradient(stops: stops)
     }
 }
 
