@@ -55,14 +55,15 @@ struct LayerTreePaintOrderTests {
         return generator.renderCommands(for: try layer(body), colorConverter: .default)
     }
 
+    private static let names: [LayerTree.Color: String] = [
+        .rgba(r: 1, g: 0, b: 0, a: 1, space: .srgb): "red",
+        .rgba(r: 0, g: 1, b: 0, a: 1, space: .srgb): "lime",
+        .rgba(r: 0, g: 0, b: 1, a: 1, space: .srgb): "blue",
+        .rgba(r: 1, g: 1, b: 0, a: 1, space: .srgb): "yellow"
+    ]
+
     private func name(_ color: LayerTree.Color) -> String {
-        switch color {
-        case .rgba(1, 0, 0, _, _): return "red"
-        case .rgba(0, 1, 0, _, _): return "lime"
-        case .rgba(0, 0, 1, _, _): return "blue"
-        case .rgba(1, 1, 0, _, _): return "yellow"
-        default: return "\(color)"
-        }
+        Self.names[color, default: "\(color)"]
     }
 
     /// Each fill and stroke as `fill:<colour>` or `stroke:<colour>`, and `[` `]` for transparency layers.
@@ -155,10 +156,10 @@ struct LayerTreePaintOrderTests {
         #expect(!element.filters.isEmpty)
 
         // the stroke, fill and marker are one group inside it, with nothing of their own
-        guard case let .layer(group)? = element.contents.first, element.contents.count == 1 else {
-            Issue.record("expected one group in \(element.contents)")
-            return
-        }
+        #expect(element.contents.count == 1)
+        let group = try #require(element.contents.first.flatMap { content -> LayerTree.Layer? in
+            if case let .layer(l) = content { return l } else { return nil }
+        })
         #expect(group.isPaintOrdered)
         #expect(group.opacity == 1 && group.clip.isEmpty && group.mask == nil && group.filters.isEmpty)
         #expect(group.contents.count == 3)

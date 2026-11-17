@@ -148,11 +148,11 @@ extension DOM {
         package var value: String {
             guard self != .normal else { return "normal" }
             // trailing keywords that are in their default order anyway are left out
-            for count in 1..<layers.count {
-                let value = layers.prefix(count).map(\.rawValue).joined(separator: " ")
-                if PaintOrder(value) == self { return value }
+            func value(_ count: Int) -> String {
+                layers.prefix(count).map(\.rawValue).joined(separator: " ")
             }
-            return layers.map(\.rawValue).joined(separator: " ")
+            let count = (1..<layers.count).first { PaintOrder(value($0)) == self } ?? layers.count
+            return value(count)
         }
     }
 
