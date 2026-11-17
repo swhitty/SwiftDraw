@@ -124,9 +124,25 @@ extension XMLParser {
 
     func parseText(_ att: any AttributeParser, value: String) throws -> DOM.Text {
         let element = DOM.Text(value: value)
-        element.x = parseDefaultedLength(att, "x", .horizontal)
-        element.y = parseDefaultedLength(att, "y", .vertical)
+        // SVG 1.1 §10.4: x and y are lists, one value per character. Only the first is used for now;
+        // per-character positioning keeps the rest.
+        element.xList = parseDefaultedLengthList(att, "x", .horizontal) ?? []
+        element.yList = parseDefaultedLengthList(att, "y", .vertical) ?? []
+        element.x = element.xList.first
+        element.y = element.yList.first
         return element
+    }
+
+    /// A `<list-of-lengths>` separated by commas and/or whitespace; nil when missing or any value is invalid.
+    func parseDefaultedLengthList(_ att: any AttributeParser, _ key: String, _ direction: LengthDirection) -> [DOM.Coordinate]? {
+        try? att.parse(key) { try parseLengthList($0, direction) } as [DOM.Coordinate]?
+    }
+
+    func parseLengthList(_ value: String, _ direction: LengthDirection) throws -> [DOM.Coordinate] {
+        let separators = CharacterSet.whitespacesAndNewlines.union(CharacterSet(charactersIn: ","))
+        let values = value.components(separatedBy: separators).filter { !$0.isEmpty }
+        guard !values.isEmpty else { throw XMLParser.Error.invalid }
+        return try values.map { try resolveLength($0, direction) }
     }
 }
 

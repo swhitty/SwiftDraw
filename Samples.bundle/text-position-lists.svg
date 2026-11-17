@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="120" viewBox="0 0 200 120" font-family="Helvetica" font-size="24">
+  <!-- x and y are lists of lengths; each line is drawn at least at its first value -->
+  <text x="10" y="30 64">Te<tspan fill="green">xt</tspan></text>
+  <text x="10, 40 70" y="70">List</text>
+  <text><tspan x="10 30" y="110 120" fill="green">Span</tspan></text>
+</svg>

@@ -36,6 +36,9 @@ package extension DOM {
     final class Text: GraphicsElement {
         package var x: Coordinate?
         package var y: Coordinate?
+        /// Every value of `x` and `y`, one per character (SVG 1.1 §10.4); `x` and `y` are the first.
+        package var xList: [Coordinate] = []
+        package var yList: [Coordinate] = []
         package var value: String
         /// The text is laid out along a path instead (its runs replace `value`)
         package var textPath: TextPath?
