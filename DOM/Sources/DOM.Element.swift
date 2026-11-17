@@ -54,6 +54,10 @@ package extension DOM {
         package var matchedStyle: StyleSheet.Matched?
         // style="" declarations marked !important
         package var importantStyle = PresentationAttributes()
+
+        // SVG 2 §5.8 conditional processing attributes, nil when absent
+        package var systemLanguage: String?
+        package var requiredExtensions: String?
     }
     
     final class Line: GraphicsElement {

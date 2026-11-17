@@ -117,6 +117,7 @@ package extension XMLParser {
         // attributes and style="" stay separate so stylesheet rules fall between them
         svg.attributes = try parsePresentationAttributes(e)
         applyStyle(of: e, to: svg)
+        parseConditionalAttributes(att, into: svg)
 
         return svg
     }
