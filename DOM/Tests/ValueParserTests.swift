@@ -33,7 +33,6 @@ import Foundation
 import Testing
 @testable import SwiftDrawDOM
 
-@Suite("Value Parser Tests")
 struct ValueParserTests {
 
     var parser = XMLParser.ValueParser()

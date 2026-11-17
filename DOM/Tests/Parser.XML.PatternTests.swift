@@ -34,7 +34,6 @@ import Testing
 
 private typealias Coordinate = DOM.Coordinate
 
-@Suite("Parser XML Pattern Tests")
 struct ParserXMLPatternTests {
 
     @Test

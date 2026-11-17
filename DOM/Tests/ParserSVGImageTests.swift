@@ -33,7 +33,6 @@ import Testing
 @testable import SwiftDrawDOM
 import Foundation
 
-@Suite("Parser SVG Image Tests")
 struct ParserSVGImageTests {
 
     @Test

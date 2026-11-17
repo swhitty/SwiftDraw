@@ -32,7 +32,6 @@
 import Testing
 @testable import SwiftDrawDOM
 
-@Suite("Parser Transform Tests")
 struct ParserTransformTests {
 
     @Test

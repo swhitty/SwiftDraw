@@ -32,7 +32,6 @@
 import Testing
 @testable import SwiftDrawDOM
 
-@Suite("Parser XML Text Tests")
 struct ParserXMLTextTests {
 
     @Test

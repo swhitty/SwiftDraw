@@ -33,7 +33,6 @@ import Testing
 import Foundation
 @testable import SwiftDrawDOM
 
-@Suite("Parser XML StyleSheet Cascade Tests")
 struct ParserXMLStyleSheetCascadeTests {
 
     typealias Selector = DOM.StyleSheet.ComplexSelector
